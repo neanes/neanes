@@ -15,7 +15,9 @@ import { useTemplateRef } from 'vue';
 
 import SettledScorePages from '@/components/SettledScorePages.vue';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Page } from '@/models/Page';
 import { Workspace } from '@/models/Workspace';
+import { renderGeometry } from '@/services/documents/renderGeometry';
 import type {
   PngRenderOptions,
   ScoreRenderSnapshot,
@@ -49,7 +51,16 @@ function failed(error: Error) {
 }
 const settledPages =
   useTemplateRef<InstanceType<typeof SettledScorePages>>('settledPages');
-async function complete() {
+async function complete(pages: Page[]) {
+  if (
+    props.png?.expectedGeometry !== undefined &&
+    renderGeometry(workspace.score, pages) !== props.png.expectedGeometry
+  ) {
+    failed(
+      new Error('LAYOUT_CONFLICT: PNG layout differs from page discovery'),
+    );
+    return;
+  }
   if (props.png) {
     try {
       const selected = settledPages
@@ -68,7 +79,15 @@ async function complete() {
           const data = (
             await toPng(page, {
               fontEmbedCSS,
-              pixelRatio: props.png.dpi / 96,
+              pixelRatio:
+                props.png.maxEdge === undefined
+                  ? props.png.dpi / 96
+                  : Math.min(
+                      props.png.dpi / 96,
+                      props.png.maxEdge /
+                        Math.max(page.scrollWidth, page.scrollHeight),
+                    ),
+              skipAutoScale: props.png.maxEdge !== undefined,
               style: {
                 margin: '0',
                 ...(props.png.transparentBackground

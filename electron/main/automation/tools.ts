@@ -55,6 +55,8 @@ const descriptions: Record<AutomationTool, string> = {
     'Replace the complete document properties (title and author) in one undo step. Requires the last read revision. Does not save.',
   save_document:
     'Save a workspace to an explicit path, or its source path. Existing destinations require overwrite, except saving to the unchanged source. Requires the last read revision.',
+  preview_page:
+    'Return one full-page opaque PNG as an MCP image content block, with metadata in text/structuredContent (no image data in JSON). Unsaved interactive and isolated documents are supported. Requires expectedRevision; optionally pass expectedLayoutId from get_pages/get_page_elements. Uses the shared detached renderer and settled page discovery. One-based physical pageNumber. maxEdge defaults to 1600 pixels (256-2048); preserves aspect ratio, at most 4 MiB PNG. No score or output files are written. Captured revision and layoutId identify the inspected layout; concurrent source edits reject with REVISION_CONFLICT. Does not select, edit or save. Rendering cancellation/failure disposes resources.',
   export_pdf:
     'Export a document to an explicit PDF path without a dialog. Does not save the score. Existing destinations require overwrite. Requires the last read revision.',
 };
@@ -84,6 +86,7 @@ export function automationTools(): Tool[] {
           'get_element',
           'get_selection',
           'get_pages',
+          'preview_page',
           'get_page_elements',
           'get_paragraph_styles',
         ].includes(tool),
@@ -97,6 +100,7 @@ export function automationTools(): Tool[] {
           'get_element',
           'get_selection',
           'get_pages',
+          'preview_page',
           'get_page_elements',
           'get_paragraph_styles',
           'create_session',

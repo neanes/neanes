@@ -109,6 +109,14 @@ export const automationSchemas = {
     filePath: filePath.optional(),
     overwrite: z.boolean().default(false),
   }),
+  preview_page: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision,
+    expectedLayoutId: layoutReadShape.expectedLayoutId,
+    pageNumber: z.number().int().positive(),
+    maxEdge: z.number().int().min(256).max(2048).default(1600),
+  }),
   export_pdf: z.strictObject({
     sessionId,
     documentId,

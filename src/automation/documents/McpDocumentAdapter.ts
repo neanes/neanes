@@ -5,6 +5,7 @@ import { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
 import { cloneScoreForLayout } from '@/services/documents/layoutSnapshot';
 import { paragraphStyleDefinition } from '@/services/documents/paragraphStyles';
+import { renderGeometry } from '@/services/documents/renderGeometry';
 
 import { getElementCatalog } from '../contracts/elementSchemas';
 import {
@@ -12,6 +13,7 @@ import {
   automationError,
   automationErrorCodes,
 } from '../contracts/errors';
+import type { PreviewImage } from '../contracts/preview';
 import type { AutomationRequest } from '../contracts/protocol';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
@@ -43,6 +45,12 @@ export class McpDocumentAdapter {
       overwrite: boolean,
     ) => Promise<void>,
     private renderPages: (workspace: Workspace) => Promise<Page[]>,
+    private previewPage: (
+      workspace: Workspace,
+      pageNumber: number,
+      maxEdge: number,
+      expectedGeometry: string,
+    ) => Promise<PreviewImage>,
     private mode: 'interactive' | 'headless' = 'interactive',
   ) {}
 
@@ -186,7 +194,8 @@ export class McpDocumentAdapter {
       request.tool === 'get_element' ||
       request.tool === 'get_selection' ||
       request.tool === 'get_pages' ||
-      request.tool === 'get_page_elements'
+      request.tool === 'get_page_elements' ||
+      request.tool === 'preview_page'
     ) {
       const summary = this.summary(workspace);
       if (
@@ -205,7 +214,8 @@ export class McpDocumentAdapter {
       }
       if (
         request.tool === 'get_pages' ||
-        request.tool === 'get_page_elements'
+        request.tool === 'get_page_elements' ||
+        request.tool === 'preview_page'
       ) {
         const { score, sources } = cloneScoreForLayout(workspace.score);
         const copy = new Workspace(false);
@@ -279,6 +289,42 @@ export class McpDocumentAdapter {
               actualLayoutId: layoutId,
             },
           });
+        }
+        if (request.tool === 'preview_page') {
+          if (layout.pages[request.arguments.pageNumber - 1] === undefined) {
+            throw new Error('INVALID_PAGE_NUMBER');
+          }
+          const image = await this.previewPage(
+            copy,
+            request.arguments.pageNumber,
+            request.arguments.maxEdge,
+            renderGeometry(copy.score, pages),
+          );
+          if (!this.documents.list().includes(workspace)) {
+            throw new Error('DOCUMENT_NOT_FOUND');
+          }
+          this.documents.prepare(workspace);
+          const completed = this.summary(workspace);
+          if (completed.revision !== summary.revision) {
+            throw new AutomationError({
+              code: 'REVISION_CONFLICT',
+              message:
+                'The document changed while rendering the preview. Read it again.',
+              details: {
+                expectedRevision: summary.revision,
+                actualRevision: completed.revision,
+              },
+            });
+          }
+          return {
+            ...completed,
+            capturedRevision: summary.revision,
+            layoutId,
+            pageCount: layout.pages.length,
+            pageNumber: request.arguments.pageNumber,
+            mimeType: 'image/png',
+            ...image,
+          };
         }
         return {
           ...current,

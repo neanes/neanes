@@ -81,6 +81,7 @@ import {
   setAccessEnabled,
 } from './automation/access';
 import { startAutomationHost } from './automation/host';
+import { renderPagePreview } from './automation/preview';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
@@ -3111,6 +3112,15 @@ async function createAutomationHost(
         saving = false;
       }
     },
+    previewPage: (args, signal) =>
+      renderPagePreview({
+        args,
+        signal,
+        parent: win ?? undefined,
+        preload,
+        entry: path.join(process.env.DIST!, 'export.html'),
+        devServerUrl: url,
+      }),
     printPdf: (args, signal) => renderWorkspacePdfSnapshot(args, signal),
   });
 }

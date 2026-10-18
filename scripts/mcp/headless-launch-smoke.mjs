@@ -106,6 +106,30 @@ try {
       },
     ],
   });
+  const layout = await call(first, 'get_pages', {
+    sessionId,
+    documentId: document.documentId,
+  });
+  const preview = await first.callTool({
+    name: 'preview_page',
+    arguments: {
+      sessionId,
+      documentId: document.documentId,
+      expectedRevision: layout.revision,
+      expectedLayoutId: layout.layoutId,
+      pageNumber: 1,
+      maxEdge: 512,
+    },
+  });
+  assert.ok(!preview.isError, JSON.stringify(preview.structuredContent));
+  assert.equal(preview.content[1].type, 'image');
+  assert.equal(preview.content[1].mimeType, 'image/png');
+  assert.ok(
+    Math.max(
+      preview.structuredContent.result.width,
+      preview.structuredContent.result.height,
+    ) <= 512,
+  );
   const scorePath = path.join(files, 'headless.byzx');
   document = await call(first, 'save_document', {
     sessionId,

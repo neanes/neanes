@@ -6,11 +6,27 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '@/services/documents/fileTypes';
+import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 
 import { unwrapAutomationOutcome } from '../contracts/errors';
+import type { PreviewImage } from '../contracts/preview';
 
 export class AutomationIpcClient {
   requestId = '';
+  async previewPage(
+    snapshot: ScoreRenderSnapshot,
+    pageNumber: number,
+    maxEdge: number,
+    expectedGeometry: string,
+  ): Promise<PreviewImage> {
+    return unwrapAutomationOutcome(
+      await window.ipcRenderer.invoke(
+        IpcRendererChannels.AutomationPreviewPage,
+        this.requestId,
+        { snapshot, pageNumber, maxEdge, expectedGeometry },
+      ),
+    );
+  }
   async authorizeRequest() {
     unwrapAutomationOutcome(
       await window.ipcRenderer.invoke(

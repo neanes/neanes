@@ -7,6 +7,7 @@ import {
   AutomationError,
   automationOutcome,
 } from '../../../src/automation/contracts/errors';
+import type { PreviewImage } from '../../../src/automation/contracts/preview';
 import type {
   AutomationMessage,
   AutomationReply,
@@ -23,6 +24,7 @@ import type {
 } from '../../../src/services/documents/fileTypes';
 import { registerAgentHost } from './access';
 import { AutomationFiles } from './files';
+import type { PreviewPageOptions } from './preview';
 import { startMcpServer } from './server';
 
 export async function startAutomationHost(options: {
@@ -34,6 +36,10 @@ export async function startAutomationHost(options: {
   initiallyReady?: boolean;
   onStateChange?(): void;
   version: string;
+  previewPage(
+    args: PreviewPageOptions,
+    signal: AbortSignal,
+  ): Promise<PreviewImage>;
   printPdf(args: PdfExportOptions, signal: AbortSignal): Promise<Buffer>;
   withFileLock<T>(operation: () => Promise<T>): Promise<T>;
   runExclusive<T>(operation: () => Promise<T>): Promise<T>;
@@ -165,6 +171,35 @@ export async function startAutomationHost(options: {
       }),
   );
 
+  ipcMain.handle(
+    IpcRendererChannels.AutomationPreviewPage,
+    (event, requestId: string, args: PreviewPageOptions) =>
+      automationOutcome(async () => {
+        await options.authorize();
+        requireRequest(event, 'preview_page', requestId);
+        const signal = exportController!.signal;
+        signal.throwIfAborted();
+        let image: PreviewImage;
+        try {
+          image = await options.previewPage(args, signal);
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message.startsWith('EXPORT_RENDER_FAILED: LAYOUT_CONFLICT:')
+          ) {
+            throw new Error(
+              'LAYOUT_CONFLICT: PNG layout differs from page discovery',
+            );
+          }
+          throw error;
+        }
+        signal.throwIfAborted();
+        await options.authorize();
+        requireRequest(event, 'preview_page', requestId);
+        return image;
+      }),
+  );
+
   function invalidate() {
     ready = false;
     failure = 'EDITOR_DISCONNECTED';
@@ -192,6 +227,7 @@ export async function startAutomationHost(options: {
       IpcRendererChannels.AutomationReadScore,
       IpcRendererChannels.AutomationWriteScore,
       IpcRendererChannels.AutomationExportPdf,
+      IpcRendererChannels.AutomationPreviewPage,
     ]) {
       ipcMain.removeHandler(channel);
     }
@@ -216,11 +252,16 @@ export async function startAutomationHost(options: {
           throw new Error('EDITOR_NOT_READY');
         }
         const requestId = randomUUID();
-        if (request.tool === 'export_pdf' && signal.aborted) {
+        if (
+          (request.tool === 'export_pdf' || request.tool === 'preview_page') &&
+          signal.aborted
+        ) {
           throw new Error('EXPORT_CANCELLED');
         }
         exportController =
-          request.tool === 'export_pdf' ? new AbortController() : null;
+          request.tool === 'export_pdf' || request.tool === 'preview_page'
+            ? new AbortController()
+            : null;
         const onCancel = () =>
           exportController?.abort(new Error('EXPORT_CANCELLED'));
         signal.addEventListener('abort', onCancel, { once: true });

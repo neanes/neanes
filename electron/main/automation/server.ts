@@ -13,6 +13,7 @@ import {
   AutomationError,
   automationError,
 } from '../../../src/automation/contracts/errors';
+import { previewImageSchema } from '../../../src/automation/contracts/preview';
 import {
   type AutomationRequest,
   automationSchemas,
@@ -99,6 +100,7 @@ export async function startMcpServer(options: McpServerOptions) {
       CallToolRequestSchema,
       async ({ params }, extra) => {
         let outcome;
+        let imageData: string | undefined;
         try {
           if (!Object.hasOwn(automationSchemas, params.name)) {
             throw new AutomationError({
@@ -123,7 +125,23 @@ export async function startMcpServer(options: McpServerOptions) {
             () => undefined,
             () => undefined,
           );
-          const result = await pending;
+          let result = await pending;
+          if (request.tool === 'preview_page') {
+            const image = previewImageSchema.safeParse({
+              imageData: Reflect.get(result as object, 'imageData'),
+              width: Reflect.get(result as object, 'width'),
+              height: Reflect.get(result as object, 'height'),
+            });
+            if (!image.success) {
+              throw new Error(
+                'INTERNAL_ERROR: The preview returned an invalid image',
+              );
+            }
+            imageData = image.data.imageData;
+            const metadata = { ...(result as Record<string, unknown>) };
+            delete metadata.imageData;
+            result = metadata;
+          }
           // Serialize once to the wire representation before validating optional save-format fields.
           const parsed = automationResultSchemas[request.tool].safeParse(
             JSON.parse(JSON.stringify(result)),
@@ -142,7 +160,18 @@ export async function startMcpServer(options: McpServerOptions) {
         return {
           ...(!outcome.success ? { isError: true } : {}),
           structuredContent: outcome,
-          content: [{ type: 'text' as const, text: JSON.stringify(outcome) }],
+          content: [
+            { type: 'text' as const, text: JSON.stringify(outcome) },
+            ...(outcome.success && imageData !== undefined
+              ? [
+                  {
+                    type: 'image' as const,
+                    data: imageData,
+                    mimeType: 'image/png',
+                  },
+                ]
+              : []),
+          ],
         };
       },
     );

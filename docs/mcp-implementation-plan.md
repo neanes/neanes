@@ -1,6 +1,6 @@
 # Neanes MCP implementation plan
 
-Implementation handoff, updated 2026-10-17. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, search, selection and settled-page reads, and validated element/lyric transactions. Headless launch, the stdio bridge, and persistent UI access settings are implemented. Immediate work is private copying of unsaved editor content for temporary exports, followed by visual previews. Folder jobs are deferred until deemed necessary; other composition assistance and musical contract/test follow-ups are backlog. Inspect the working tree before continuing.
+Implementation handoff, updated 2026-10-17. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, search, selection and settled-page reads, and validated element/lyric transactions. Headless launch, the stdio bridge, and persistent UI access settings are implemented. Bounded PNG page previews are implemented. Private copying of unsaved editor content is deferred: users can save first, then open saved content privately for temporary edits and exports. Folder jobs are deferred until deemed necessary; other composition assistance and musical contract/test follow-ups are backlog. Inspect the working tree before continuing.
 
 ## Agent access control
 
@@ -93,7 +93,7 @@ into a generic editing framework. Universal musical rules belong in model
 setters or small shared functions; Vue owns interaction, and automation `elementEdits.ts`
 retains reference resolution, sequential draft actions, validation, and planning.
 Measure-bar cycling and repeated UI tempo-selection code are separate UI cleanup
-opportunities, not missing shared API rules. These follow-ups do not block the immediate private-copy and visual-preview work below.
+opportunities, not missing shared API rules. These follow-ups do not block the preview work below; private copying is deferred.
 
 ## Client connection and startup - 2026-10-17
 
@@ -153,7 +153,7 @@ orders, live editor reuse/discovery, save/reopen/PDF, policy refusal/revocation,
 Setup and test commands are in scripts/mcp/README.md; the user guide is
 `docs/guide/agent-access.md`. Folder jobs are deferred; temporary exports of saved
 scores already use private sessions and ordinary edits. Copying unsaved editor
-content remains immediate work. macOS is the platform exercised for runtime/packaging; Windows/Linux
+content is deferred. macOS is the platform exercised for runtime/packaging; Windows/Linux
 runtime parity and physical printing remain unverified.
 
 Always-on verification: 825 unit tests passed (6 skipped); lint/type checking,
@@ -213,7 +213,7 @@ and Retry after releasing the port. Test apps were stopped.
 - [x] Interactive selection inspection (`get_selection`), including remembered background-tab selection.
 - [x] Settled page summaries and element occurrences (`get_pages`, `get_page_elements`) with revision/layout conflict checks.
 
-**Still required in the immediate scope:**
+**Deferred private-copy scope:**
 
 - [ ] Copy current unsaved editor content into a private document without saving or changing the original, so agents can edit the copy, export, and discard it using existing tools.
 
@@ -223,7 +223,7 @@ Saved-score transformations already compose from existing APIs: create a fresh s
 
 **Element-transaction milestone verification (historical):** 779 unit tests passed (6 skipped); lint, type checking, and the production Electron build passed. `scripts/mcp/element-edit-smoke.mjs` validates successful requests against published input schemas and checks transactions, Quick BPM defaults, atomic lyric overflow rejection, locks, save/reopen, PDF, and optional UI undo/redo for interactive/isolated documents. `element-discovery-smoke.mjs` covers both document modes and stale revisions after save-identical child changes. Earlier checks in this session also passed the web production build, existing lifecycle/background-style/isolation/recovery/hidden-export regressions, and MCP-disabled startup. Test apps were stopped. Idle expiry and physical printing retain the limitations noted elsewhere.
 
-**Dependencies and sequence:** Rendering, isolated ownership/lifecycle, discovery, and transactions are complete. Add private copying of current editor content on top of shared document/session operations, then reuse existing edits and detached export. Native folder jobs are deferred and are not a Stage 2 completion requirement. Stage 2 remains open for the unsaved-content copy capability.
+**Dependencies and sequence:** Rendering, isolated ownership/lifecycle, discovery, and transactions are complete. Private copying of current editor content is deferred. Users can save first, open the saved file privately, and use ordinary edits and detached export. Native folder jobs are deferred and are not a Stage 2 completion requirement. Stage 2 remains open for the unsaved-content copy capability.
 
 **Acceptance criteria:** Agents can construct representative scores without clicks; invalid edit batches leave no partial musical edits and successful batches form one undo step. Isolated processing does not alter user tabs, selection, unsaved content, or undo history. A private copy captures the current editor content under revision protection, including documents with no saved path, without changing the source document or writing a score file. Agents can edit, export, and discard that copy with existing tools. An export-only transformation, including failure/cancellation, leaves the original content, selection, unsaved state, history, and revision untouched. Existing output-conflict and private-session cleanup semantics apply.
 
@@ -243,22 +243,23 @@ Saved-score transformations already compose from existing APIs: create a fresh s
 
 **Acceptance:** All three Electron output routes share detached rendering completion and cleanup; dialogs, destination handling, and filesystem policy remain outside score rendering. This does not add isolated documents, editing tools, jobs, or transformations. Physical printer output was not tested; native success was verified through system Save as PDF.
 
-### Stage 3: Visual previews - immediate planned scope
+### Stage 3: Visual previews - initial page scope complete
 
 **Objective:** Let agents and users inspect rendered results through visual previews of a document page or passage. Search, selection, and settled-page discovery already exist; PDF export alone is not a dedicated image-preview API.
 
 **Dependencies:** Existing detached rendering, settled page discovery, and document/revision contracts. Private copying of unsaved editor content supports previews of temporary edits; native folder jobs are not a prerequisite.
 
-**Open design:** Choose the initial page/passage scope, image format and delivery, resolution and size limits, and how results identify the captured document revision and layout. Reuse rendering readiness and disposal rather than adding another renderer.
+**Initial scope:** `preview_page` returns one full-page opaque PNG as an MCP image content block, with revision/layout/page metadata in the JSON response. Physical page numbers are one-based; optional expected layout IDs match page discovery. The maximum image edge defaults to 1600 pixels (256-2048), at up to 192 DPI and 4 MiB PNG. Concurrent source edits reject the result. Reuse existing settled page discovery and the detached PNG renderer, including cancellation and disposal. Passage crops and multi-page responses are deferred.
 
 **Acceptance criteria:** An agent can obtain a bounded visual preview of interactive or isolated content, including unsaved content, tied to the captured revision and layout. Previewing preserves document content, selection, unsaved state, history, and revision, and disposes rendering resources on success, failure, and cancellation. Concurrent-edit and output/delivery behavior must be explicit. Richer composition operations and musical/layout diagnostics are backlog.
 
 ## Remaining work and open design questions
 
-- **Immediate: private copies of unsaved editor content.** Define a revision-protected way to copy current live content into an isolated document, including never-saved scores. Resolve pending-input settlement, source/name metadata for export tokens, ownership, and returned document identity/revision. Preserve live content/selection/history/revisions and source files. Reuse existing element/style edits, PDF export, and session discard; a new transformation contract is not in the immediate scope.
-- **Immediate: visual previews.** Define the focused preview API and bounded image delivery using existing detached rendering and page discovery. Keep musical diagnostics and higher-level composition operations out of this scope.
+- **Deferred: private copies of unsaved editor content.** Define a revision-protected way to copy current live content into an isolated document, including never-saved scores. Resolve pending-input settlement, source/name metadata for export tokens, ownership, and returned document identity/revision. Preserve live content/selection/history/revisions and source files. Reuse existing element/style edits, PDF export, and session discard; a new transformation contract is not in the immediate scope.
+- **Completed: bounded full-page PNG previews.** `preview_page` supports unsaved interactive/private content through the existing rendering and page-discovery infrastructure. Passage crops and multi-page responses remain deferred. Musical diagnostics and higher-level composition operations remain out of scope.
 - **Deferred until deemed necessary: folder discovery/jobs.** Agents enumerate files and orchestrate existing private document/style/save/PDF tools. Reconsider native jobs only for a concrete need such as execution independent of the client connection, in-app progress/cancellation, or consistent batch behavior across clients. If resumed, define enumeration/recursion/symlink limits, source/output selection, dry runs, per-file outcomes, overwrite/source conflicts, lifetime, and responsive status/cancellation under the serialized request queue. Native jobs do not block the immediate plan.
 - **Backlog: musical contract/test follow-ups.** Retain the three UI/MCP audit items above: focused property-schema guidance, exact expression and retained martyria state regressions, and manual versus automatic martyria layout coverage. Preserve partial-update semantics. Any contextual expression-selection operation needs a separate scope decision.
+- **Backlog: canonical rich-text edits through CKEditor.** Keep whole-field HTML replacement in `edit_elements`, but normalize supplied rich-text fields through an isolated instance of Neanes' configured CKEditor and obtain canonical `getData()` output before committing. Flush pending interactive input and check revisions; finish normalization and whole-batch validation before mutation, then recheck revisions after asynchronous preparation. Commit canonical content as one application undo step and settle rendering through existing measurement. Omitted panels stay unchanged; an empty string clears a panel. Apply the same contract to rich-text annotations. Report normalized fields and optionally return canonical HTML. Normalization/validation failures leave the document unchanged; post-commit measurement failures retain `editsApplied` reporting. Verify edit/render/save/reopen/interactive-edit/undo round trips in foreground, background, and private documents. Selection-based formatting and text-range operations require a separate future design. This is backlog, not a release requirement.
 - **Backlog: richer composition assistance.** Context-preserving edits inside tied/Greek melisma groups, musical diagnostics, layout diagnostics, and contextual composition operations remain candidates without committed APIs or sequence. Current range assignment intentionally rejects unsupported boundaries; do not describe this as transparent context-aware parsing. Only visual previews remain in the immediate Stage 3 scope.
 - **Known limits:** Isolated sessions run in the editor or a private headless worker; each host retains its serialized MCP request queue. Workers use built-in document defaults and do not expose unsaved editor contents. macOS is the platform exercised for real startup/packaging; Windows/Linux parity and display-server-free deployment remain unverified. Native custom-paper blank sheets remain a separate baseline-reproduced issue (see Stage 2.5). Source conflict checks use time/size rather than filesystem locking; timeout/cancellation can have an uncertain outcome. Newly mounted rich-text editors can normalize imported content and advance revisions; clients must reread before writes. A pre-existing rich-text undo-after-tab-switch issue was observed before the page refactor (saving can reapply stale editor data); recheck separately rather than treating it as fixed by the measurement-queue change.
 - **Verification:** Continue pure unit tests and real Electron smoke tests; no mocks, spies, fakes, or DOM emulation. Preserve the current focus, pending-input flush, repeated-header instance, overlay, token, and paper-size regressions. Recheck normal editor operation, nonfatal MCP startup failure/retry, and the web build when changing shared operations.
@@ -299,13 +300,26 @@ additions, with 55,609 output-schema characters; `get_elements` output remains
 verification results. Electron smoke tests and builds were not rerun for that
 status check.
 
-## Immediate implementation sequence
+## Current implementation status
 
-Startup, bridge, and access settings are implemented. Continue with:
+The user prioritized PNG previews on 2026-10-18 and deferred live-document
+copying. `preview_page` now exposes bounded full-page PNG inspection through the
+existing detached renderer, with revision/layout checks, metadata-only JSON,
+and one MCP image content block. PNG rendering must settle to the same geometry
+as page discovery before the image is delivered.
 
-1. **Private copies of unsaved editor content.** Design and implement the focused live-document copy capability using existing isolated sessions. Verify never-saved and modified saved documents, pending input, revision conflicts, export metadata, and preservation of source files and interactive state. Exercise hiding ison indicators with ordinary edits on the copy, PDF export, and discard, including failure/cancellation and output conflicts. Keep transformation orchestration in the client.
-2. **Visual previews.** Scope and implement bounded rendered previews using the existing rendering foundation and page discovery. Verify interactive/isolated and unsaved content, captured revision/layout identity, resource cleanup, and unchanged source state. Choose the initial preview format and delivery contract before exposing tools.
+Verification: 830 unit tests passed (6 skipped); lint, type checking, Electron
+production compilation, web production, and docs builds passed. The disposable
+Electron preview regression covered unsaved interactive/private documents,
+multiple pages, pixel bounds and visible content, saved custom landscape scores
+with rich text and embedded images, source-file preservation, stale revision and
+layout errors, concurrent edits, cancellation, broken-image failure, and renderer
+disposal. The headless bridge regression also obtained a PNG preview with matching
+page-discovery metadata. Generated PNGs were visually inspected. Test apps and
+workers were stopped.
 
-Reassess Stage 2 against its revised acceptance criteria after the private-copy work. Folder jobs remain deferred until deemed necessary. Musical contract/test follow-ups, richer passage/lyric operations, musical/layout diagnostics, and contextual composition operations remain backlog and do not block this sequence. Native blank-sheet troubleshooting remains separate unless explicitly requested.
+Private copying remains the deferred Stage 2 item. Folder jobs, passage crops,
+musical contract/test follow-ups, richer composition operations, and native
+blank-sheet troubleshooting remain separate work.
 
 For setup and verification commands, use `scripts/mcp/README.md`. For editing, start at `src/automation/documents/` (`elementDiscovery.ts`, `elementEdits.ts`) and `src/automation/contracts/` (`elementPropertySchemas.ts`, `elementEditSchema.ts`, `lyricSyntax.ts`, `elementSchemas.ts`, `jsonSchema.ts`), plus the shared `LyricService`. Automation organization and dependency rules are documented in `src/automation/README.md`. Lifecycle entry points are `DocumentService`, `src/automation/sessions/isolatedSessions.ts`, `McpDocumentAdapter`, the editor hooks in `TheEditor.vue`, the automation host, and `ScoreFiles`. Rendering entry points are `ScoreRenderSnapshot`/`SnapshotRenderRequest` in `scoreRenderSnapshot.ts`, `renderSnapshot.ts`, the PDF wrapper `renderPdf.ts`, `ExportRenderer.vue`, `ScorePrintPages.vue`, and `ScorePageContent.vue`; shared font/layout helpers live in `src/services/documents/` and `useScoreRendering.ts`. Detailed contracts belong in source and schemas rather than this plan.

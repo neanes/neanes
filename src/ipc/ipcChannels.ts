@@ -98,6 +98,7 @@ export enum IpcRendererChannels {
   AutomationReadScore = 'AutomationReadScore',
   AutomationWriteScore = 'AutomationWriteScore',
   AutomationExportPdf = 'AutomationExportPdf',
+  AutomationPreviewPage = 'AutomationPreviewPage',
   DownloadUpdate = 'DownloadUpdate',
   RestartToInstallUpdate = 'RestartToInstallUpdate',
 

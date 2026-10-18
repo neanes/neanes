@@ -15,6 +15,9 @@ export interface ScoreRenderSnapshot {
 
 export interface PngRenderOptions {
   dpi: number;
+  // Preview-only bound; ordinary PNG exports retain their requested DPI.
+  maxEdge?: number;
+  expectedGeometry?: string;
   pageNumbers: number[] | null;
   transparentBackground: boolean;
 }

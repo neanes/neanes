@@ -124,6 +124,15 @@ export const automationResultSchemas = {
     savedRevision: revision,
     savedContentUnchanged: z.boolean(),
   }),
+  preview_page: documentSummarySchema.extend({
+    capturedRevision: revision,
+    layoutId: z.string().regex(/^[a-f0-9]{64}$/),
+    pageCount: z.number().int().nonnegative(),
+    pageNumber: z.number().int().positive(),
+    mimeType: z.literal('image/png'),
+    width: z.number().int().positive().max(2048),
+    height: z.number().int().positive().max(2048),
+  }),
   export_pdf: documentSummarySchema.extend({
     exportedRevision: revision,
     outputFilePath: z.string(),

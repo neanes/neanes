@@ -1,94 +1,294 @@
-import type {
-  DropCapElement,
-  NoteElement,
-  RichTextBoxElement,
-  ScoreElement,
-  TextBoxElement,
-} from '@/models/Element';
-import { ElementType } from '@/models/Element';
+import { Parser } from 'htmlparser2';
+
+import { ElementType, type ScoreElement } from '@/models/Element';
 import { TATWEEL } from '@/utils/constants';
+
+export const searchableTextFields = [
+  'lyrics',
+  'content',
+  'contentBottom',
+  'contentLeft',
+  'contentCenter',
+  'contentRight',
+  'text',
+] as const;
+export type SearchableTextField = (typeof searchableTextFields)[number];
+
+// Parse without a DOM so editor, isolated documents and unit tests agree.
+export function searchPlainText(html: string) {
+  let text = '';
+  let suppressed = 0;
+  const blocks = new Set([
+    'p',
+    'div',
+    'br',
+    'li',
+    'tr',
+    'td',
+    'th',
+    'hr',
+    'blockquote',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+  ]);
+  const parser = new Parser(
+    {
+      onopentag(name) {
+        if (name === 'script' || name === 'style') {
+          suppressed++;
+        }
+        if (!suppressed && blocks.has(name)) {
+          text += ' ';
+        }
+      },
+      ontext(value) {
+        if (!suppressed) {
+          text += value;
+        }
+      },
+      onclosetag(name) {
+        if (name === 'script' || name === 'style') {
+          suppressed--;
+        }
+        if (!suppressed && blocks.has(name)) {
+          text += ' ';
+        }
+      },
+    },
+    { decodeEntities: true },
+  );
+  parser.end(html);
+  return text;
+}
+
+export function normalizeSearchText(
+  text: string,
+  caseSensitive = false,
+  lyrics = false,
+) {
+  const normalized = text
+    .normalize('NFC')
+    .replaceAll(TATWEEL, '')
+    .replace(/\s+/gu, lyrics ? '' : ' ');
+  // Final sigma must compare equally even when a lyric word spans elements.
+  return (
+    caseSensitive ? normalized : normalized.toLowerCase().replaceAll('ς', 'σ')
+  ).normalize('NFC');
+}
+
+export function elementSearchTexts(
+  element: ScoreElement,
+): { field: SearchableTextField; text: string; lyric: boolean }[] {
+  let fields: readonly SearchableTextField[];
+  const lyric =
+    element.elementType === ElementType.Note ||
+    element.elementType === ElementType.DropCap;
+  switch (element.elementType) {
+    case ElementType.Note:
+      fields = ['lyrics'];
+      break;
+    case ElementType.DropCap:
+      fields = ['content'];
+      break;
+    case ElementType.Annotation:
+      fields = ['text'];
+      break;
+    case ElementType.TextBox:
+    case ElementType.RichTextBox:
+      fields = searchableTextFields.slice(1, 6);
+      break;
+    default:
+      return [];
+  }
+  return fields.map((field) => {
+    const value = Reflect.get(element, field) as string;
+    return {
+      field,
+      text:
+        element.elementType === ElementType.RichTextBox ||
+        element.elementType === ElementType.Annotation
+          ? searchPlainText(value)
+          : value,
+      lyric,
+    };
+  });
+}
+
+export interface TextSearchPart {
+  element: ScoreElement;
+  index: number;
+  field: SearchableTextField;
+}
+export interface TextSearchMatch {
+  snippet: string;
+  // UTF-16 offsets within the normalized snippet, not stored HTML or lyrics.
+  matchStart: number;
+  matchEnd: number;
+  parts: TextSearchPart[];
+}
+
+type RunPart = TextSearchPart & { text: string };
+const graphemes = new Intl.Segmenter('und', { granularity: 'grapheme' });
+
+function normalizeRun(
+  parts: RunPart[],
+  caseSensitive: boolean,
+  lyrics: boolean,
+) {
+  let sourceOffset = 0;
+  const ranges = parts.map((part) => {
+    const sourceStart = sourceOffset;
+    sourceOffset += part.text.length;
+    return { part, sourceStart, sourceEnd: sourceOffset, start: -1, end: 0 };
+  });
+  const source = parts.map((part) => part.text).join('');
+  const text = normalizeSearchText(source, caseSensitive, lyrics);
+  if (ranges.length === 1) {
+    ranges[0].start = 0;
+    ranges[0].end = text.length;
+  } else {
+    let normalizedOffset = 0;
+    let firstRange = 0;
+    // Grapheme boundaries are normalization-safe. A composed character can
+    // belong to multiple elements when its base and marks were split.
+    for (const { segment, index } of graphemes.segment(source)) {
+      const end =
+        normalizedOffset +
+        normalizeSearchText(segment, caseSensitive, lyrics).length;
+      while (
+        firstRange < ranges.length &&
+        ranges[firstRange].sourceEnd <= index
+      ) {
+        firstRange++;
+      }
+      for (
+        let i = firstRange;
+        i < ranges.length && ranges[i].sourceStart < index + segment.length;
+        i++
+      ) {
+        const range = ranges[i];
+        if (range.start === -1) {
+          range.start = normalizedOffset;
+        }
+        range.end = end;
+      }
+      normalizedOffset = end;
+    }
+  }
+  return { text, ranges };
+}
+
+function* matchRun(
+  parts: RunPart[],
+  query: string,
+  caseSensitive = false,
+  lyrics = false,
+): Generator<TextSearchMatch> {
+  const { text, ranges } = normalizeRun(parts, caseSensitive, lyrics);
+  let firstRange = 0;
+  for (
+    let start = text.indexOf(query);
+    start !== -1;
+    start = text.indexOf(query, start + 1)
+  ) {
+    const end = start + query.length;
+    let left = Math.max(0, start - 60);
+    let right = Math.min(text.length, end + 60);
+    // Do not cut a surrogate pair at a snippet boundary.
+    if (left > 0 && /[\uDC00-\uDFFF]/u.test(text[left])) {
+      left--;
+    }
+    if (right < text.length && /[\uDC00-\uDFFF]/u.test(text[right])) {
+      right++;
+    }
+    while (firstRange < ranges.length && ranges[firstRange].end <= start) {
+      firstRange++;
+    }
+    const matchingParts: TextSearchPart[] = [];
+    for (let i = firstRange; i < ranges.length && ranges[i].start < end; i++) {
+      const { element, index, field } = ranges[i].part;
+      matchingParts.push({ element, index, field });
+    }
+    yield {
+      snippet: text.slice(left, right),
+      matchStart: start - left,
+      matchEnd: end - left,
+      parts: matchingParts,
+    };
+  }
+}
+
+// A run may pass over notation without lyrics, but never over a text box or
+// into a different collection. Each text-box panel is an independent run.
+export function* findTextMatches(
+  elements: ScoreElement[],
+  query: string,
+  options: { caseSensitive?: boolean; fields?: SearchableTextField[] } = {},
+): Generator<TextSearchMatch> {
+  const ordinaryQuery = normalizeSearchText(
+    query,
+    options.caseSensitive,
+  ).trim();
+  const lyricQuery = normalizeSearchText(query, options.caseSensitive, true);
+  if (!ordinaryQuery || !lyricQuery) {
+    return;
+  }
+  let run: (TextSearchPart & { text: string })[] = [];
+  for (const [index, element] of elements.entries()) {
+    const texts = elementSearchTexts(element);
+    if (texts.some((entry) => !entry.lyric)) {
+      yield* matchRun(run, lyricQuery, options.caseSensitive, true);
+      run = [];
+    }
+    for (const { field, text, lyric } of texts) {
+      if (options.fields && !options.fields.includes(field)) {
+        continue;
+      }
+      const part = {
+        element,
+        index,
+        field,
+        // Remove ignored lyric characters before joining, so they cannot
+        // interrupt composition across element boundaries.
+        text: lyric ? text.replaceAll(TATWEEL, '').replace(/\s+/gu, '') : text,
+      };
+      if (lyric) {
+        if (part.text.length > 0) {
+          run.push(part);
+        }
+      } else {
+        yield* matchRun([part], ordinaryQuery, options.caseSensitive);
+      }
+    }
+  }
+  yield* matchRun(run, lyricQuery, options.caseSensitive, true);
+}
 
 export class TextSearchService {
   findTextInElements(
     q: string,
     elements: ScoreElement[],
-    index: number = 0,
-    reverse: boolean = false,
+    index = 0,
+    reverse = false,
   ): ScoreElement | null {
-    q = q.replace(/\s+/g, '').toLowerCase().replaceAll(TATWEEL, '');
-
-    if (q === '') {
-      return null;
-    }
-
-    const start = reverse ? elements.length - index + 1 : index + 1;
-
-    for (let i = start; i < elements.length; i++) {
-      const currentElement = reverse
-        ? elements.at(elements.length - i - 1)
-        : elements.at(i);
-
-      if (currentElement == null) {
-        continue;
+    let first: ScoreElement | null = null;
+    let last: ScoreElement | null = null;
+    let previous: ScoreElement | null = null;
+    for (const match of findTextMatches(elements, q)) {
+      const part = match.parts[0];
+      first ??= part.element;
+      last = part.element;
+      if (!reverse && part.index > index) {
+        return part.element;
       }
-
-      const text = this.getElementText(currentElement);
-
-      if (text != '' && (q.includes(text) || text.includes(q))) {
-        let run = '';
-
-        for (let j = i; j < elements.length; j++) {
-          const nextElement = reverse
-            ? elements.at(elements.length - 1 - j)
-            : elements.at(j);
-
-          if (nextElement == null) {
-            continue;
-          }
-
-          const text = this.getElementText(nextElement);
-
-          if (text != '') {
-            if (reverse) {
-              run = text + run;
-            } else {
-              run += text;
-            }
-
-            if (run.includes(q)) {
-              return reverse ? nextElement : currentElement;
-            }
-
-            if (!q.includes(run)) {
-              break;
-            }
-          }
-        }
+      if (reverse && part.index < index) {
+        previous = part.element;
       }
     }
-
-    if (reverse && index !== elements.length + 1) {
-      return this.findTextInElements(q, elements, elements.length + 1, reverse);
-    } else if (!reverse && index !== -1) {
-      return this.findTextInElements(q, elements, -1, reverse);
-    }
-
-    return null;
-  }
-
-  private getElementText(element: ScoreElement) {
-    let text = '';
-
-    if (element.elementType === ElementType.Note) {
-      text = (element as NoteElement).lyrics;
-    } else if (element.elementType === ElementType.DropCap) {
-      text = (element as DropCapElement).content;
-    } else if (element.elementType === ElementType.TextBox) {
-      text = (element as TextBoxElement).content;
-    } else if (element.elementType === ElementType.RichTextBox) {
-      text = (element as RichTextBoxElement).content;
-    }
-
-    return text.toLowerCase().replaceAll(TATWEEL, '');
+    return reverse ? (previous ?? last) : first;
   }
 }

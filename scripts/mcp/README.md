@@ -158,6 +158,7 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 - `list_documents`: open workspace IDs, revisions, canonical source paths, source format (`byz`, `byzx`, or null), selection, and unsaved state.
 - `get_element_catalog`: defaults to a small inventory of element types, child collections, units, and stored header/footer variants. Request `elementTypes: ["Note"]` and/or `properties: ["lyrics", "isMelisma"]` for focused schemas; `view: "read" | "edit" | "both"` defaults to both. Read schemas are in `properties`, writable validation schemas in `editProperties` (null for `Empty`). A property filter omits types without matching properties. `includeProperties: true` requests all property schemas; `includeNeumes: true` adds the full enum vocabulary. Schemas use self-contained local `$defs`/`$ref`; clients must resolve references within each schema. The shared `tempoBpmDefaults` map exposes all tempo-sign BPM defaults. Dimensions are CSS pixels; line height is a multiplier. Tool input schemas use JSON Schema input semantics, so defaulted fields may be omitted; response schemas describe settled output. Tool schemas advertise compact property maps; the server still validates every supplied property against its complete element-specific schema.
 - `get_elements`: typed, read-only elements from `collection` (default `{ kind: "staff" }`). Ranges are zero-based, `start` inclusive and `end` exclusive; omitted `end` means the collection size. `offset` and `nextOffset` are relative to that range; `limit` defaults to 100, maximum 1000. Empty ranges and an offset at the range end return no elements. Out-of-bounds or reversed ranges return `INVALID_ELEMENT_RANGE`. Pass the first page's `revision` as `expectedRevision` on subsequent pages to reject mixed-revision reads. Each element has an opaque `elementRef`, its collection index, typed live `properties`, and child-collection counts. Discover children with `{ kind: "children", parentRef: elementRef, collection: "annotations" | "alternateLines" | "elements" }`. Unknown/removed/cross-document references return `ELEMENT_NOT_FOUND`; an unsupported child collection returns `INVALID_ELEMENT_COLLECTION`. References survive movement, content changes, and undo restoration of the same live object, but only within one open document; closing/reopening assigns fresh references. They are not saved IDs or layout indexes. Staff reads include the terminal `Empty` sentinel. Read stored templates with `{ kind: "headers" | "footers", variant: "default" | "firstPage" | "odd" | "even" | "chapterOpening" }`, including disabled variants; these are not page-resolved instances. Element properties omit null and undefined values except `lineHeight: null` for text boxes and drop caps, which explicitly resets line height to normal. Omitted `lineHeight` inherits the paragraph style; a numeric value overrides its multiplier. Other missing properties are unset. Values such as `false`, `0`, and `""` remain present. Use `properties: ["quantitativeNeume", "lyrics"]` to select fields, or `properties: []` for identities/indexes/child counts only. Unknown property names are rejected; fields inapplicable to an element type are omitted. `includeContent: false` omits image `data` and all five text-box `content*` fields, even if selected. Annotation `text` and drop-cap `content` are included by default when requested by the field projection. If an annotation or drop cap exceeds the element budget, its content is omitted with an explicit `omittedContent` field listing the property; use `get_element_content` to retrieve it exactly. Note lyrics remain ordinary properties. Properties default to all readable fields, with large content excluded (`includeContent: false`). Pages may end before `limit` to fit a 24,000-character JSON budget; always follow `nextOffset`. In a projected view, missing fields may be unrequested or excluded content; do not infer defaults or use projections as complete replacement definitions. Retrieve content explicitly by selecting its property with `includeContent: true`. The catalog marks unsettable properties optional; published outputs use compact property envelopes while runtime validation remains element-specific. Properties omit layout caches; annotations/alternate lines expose their stored x/y offsets.
+- `find_text`: find literal text across lyrics, drop caps, annotations, and plain/rich text-box panels, with snippets and element references. See the text search contract below.
 - `find_elements`: search stored element fields with `eq`, `in`, `isNull`, and `isNotNull`, nested inside `and`/`or` groups. Optional `elementTypes` restricts types. Defaults to document scope (staff and descendants, then stored header/footer variants, including disabled variants), compact `properties: []`, and `includeContent: false`. Results carry a `collection` and zero-based `index` per match. See the search contract below.
 - `get_element`: retrieve an existing `elementRef` at its current location, with optional `before`/`after` counts (0 to 499 each). Returns the anchor reference, its collection, collection size, half-open `start`/`end`, and elements in collection order, including the anchor. Windows clip at collection boundaries and count actual elements without filtering. Defaults to all readable properties excluding large content. Supports `properties`, `includeContent`, and optional `expectedRevision`. Removed/foreign references return `ELEMENT_NOT_FOUND`.
 - `get_element_content`: read exact original string chunks from text-box/rich-text/drop-cap `content` or panel fields, annotation `text`, or image `data` URLs. Supply `documentId`, `elementRef`, `property`, and optional `offset`/`limit` (default 8000, range 2-8000). Offsets and `totalLength` use UTF-16 code units; chunks never split surrogate pairs. Returns `content`, `offset`, `nextOffset`, `totalLength`, document ID and revision. Concatenate chunks in order, passing the first returned revision as `expectedRevision` on continuations to reject mixed-revision content. Empty strings return an empty final chunk. No HTML, text, or base64 transformation occurs. Inapplicable fields return `INVALID_ELEMENT_CONTENT`; unavailable references return `ELEMENT_NOT_FOUND`; out-of-range offsets or offsets inside surrogate pairs return `INVALID_ELEMENT_RANGE`.
@@ -183,6 +184,71 @@ All three focused readers accept optional `expectedRevision`. Settings writes re
 - `save_document`: save to `filePath`, or to the document's source if omitted. Save-as changes the workspace's source path. Existing unrelated destinations require `overwrite: true`. Saving back to the source checks its last known modification time and size, even when overwrite is true. Writes use a temporary file followed by an atomic commit. Same-source saves preserve the format used to open the score, including extensionless or differently suffixed symlink targets, and preserve the alias itself. Save-as to a different identity uses the destination suffix. Unrelated symlink outputs remain forbidden. The result includes `savedRevision` (the revision written) and `savedContentUnchanged` (whether that saved snapshot is still current). `revision` describes the current workspace, which can include newer interactive edits or the new source path.
 - `preview_page`: return one full-page PNG as an MCP image content block, without writing an output file. Works with unsaved interactive or isolated documents. Supply `documentId`, `expectedRevision`, and one-based physical `pageNumber`; optionally pass `expectedLayoutId` from page discovery. `maxEdge` defaults to 1600 pixels and accepts 256-2048, preserving aspect ratio (up to 192 DPI); the PNG is limited to 4 MiB. Text and structured results contain metadata only: `capturedRevision`, current `revision`, `layoutId`, `pageCount`, `pageNumber`, `mimeType`, `width`, and `height`, plus the document summary. The image is the second content block, with `type: "image"`, `mimeType: "image/png"`, and base64 `data`. Clients must support MCP image content to inspect it. Concurrent source changes reject with `REVISION_CONFLICT`; stale layout IDs reject with `LAYOUT_CONFLICT`. Rendering uses the shared settled pages, opaque white background, export overlays, font/image readiness, cancellation, and disposal. Does not select, edit, save, or create a private copy. Pending input follows the same normal document settlement as other reads.
 - `export_pdf`: render to an explicit absolute PDF path without a save dialog or external PDF viewer. Existing destinations require `overwrite: true`. Does not save the score. Export uses a dedicated hidden renderer and leaves tabs, selection, editor input, and undo history available. The result includes `exportedRevision`, identifying the snapshot written to the PDF; `revision` describes the workspace at completion and may include newer interactive edits. Snapshot metadata and file-name tokens are captured together. No workspace, recovery state, or save is created by the hidden renderer. Rendering failure uses `EXPORT_RENDER_FAILED`; an aborted HTTP request cancels pending rendering and disposes its window. Cancellation uses `EXPORT_CANCELLED` when a response can still be delivered. Existing destination checks and atomic output commits still apply; cancellation racing with a completed commit can have an unknown outcome.
+
+### Text search contract
+
+`find_text` takes `documentId`, optional `sessionId` and `expectedRevision`, and
+`query` (1-256 UTF-16 code units, containing searchable text). It never selects,
+edits, or saves. The editor's next/previous search uses the same text extraction
+and matching service.
+
+```json
+{
+  "documentId": "...",
+  "query": "Κύριε",
+  "fields": ["lyrics", "content"],
+  "limit": 100
+}
+```
+
+- Literal substring matching, case-insensitive by default; `caseSensitive: true`
+  preserves case. Both query and content use NFC Unicode normalization and ignore
+  Arabic tatweel. Case-insensitive matching equates Greek sigma and final sigma.
+  Diacritics remain significant. There is no regex or fuzzy mode.
+- Searches note `lyrics`, drop-cap `content`, annotation `text`, and all five
+  text-box fields (`content`, `contentBottom`, `contentLeft`, `contentCenter`,
+  `contentRight`). Optional `fields` limits these fields. Stored panels are
+  searched even when their display mode is inactive. Rich text boxes and
+  annotations are parsed as HTML, with entities decoded, block/line boundaries
+  separated by whitespace, and script/style content excluded. Plain text stays
+  literal. Document metadata and lyrics-manager source text are excluded.
+- Whitespace collapses to one space in ordinary text. Leading/trailing query
+  whitespace is ignored. Within lyrics, whitespace is ignored entirely: phrases
+  can span successive notes and drop caps, passing over notation without lyrics.
+  Text boxes end lyric runs. Matches never join panels or cross collections into
+  annotations, alternate lines, or header/footer templates. `fields` selects which
+  lyric fields contribute to a run.
+- `scope` follows `find_elements`: document scope includes descendants and all
+  stored header/footer variants, including disabled templates, once per stored
+  location. Collection scope searches only that collection unless
+  `includeDescendants: true` is supplied.
+- Each occurrence (including overlaps) returns an anchor `elementRef`,
+  `collection`, and `elements` with every participating element's reference,
+  type, zero-based index, and matched field. Use `get_element` to retrieve source
+  content or context. Order follows depth-first anchor order, then field order
+  as listed above and occurrence order within a field.
+- `snippet` is normalized searchable text, with up to 60 UTF-16 code units of
+  context on each side (extended when necessary to preserve a surrogate pair).
+  `matchStart` inclusive and `matchEnd` exclusive index into that snippet. They
+  are not offsets into stored HTML or source lyrics; lyric snippets omit spaces.
+- `offset`/`nextOffset` count occurrences. `limit` defaults to 100, maximum 1000;
+  the JSON page budget may end a page early. Follow `nextOffset` with the same
+  query and returned `revision` as `expectedRevision`. No exact total is
+  computed. Offset equal to match count returns an empty page; a larger offset
+  returns `INVALID_ELEMENT_RANGE`. A single span whose references exceed the
+  page budget returns `RESPONSE_TOO_LARGE`; narrow the query or scope.
+
+Build with `npx vite build`, then run the standalone regression outside the agent
+command sandbox on macOS:
+
+```sh
+node scripts/mcp/text-search-smoke.mjs
+```
+
+It starts a disposable Electron profile and checks interactive and isolated
+searches, rich HTML/entities, cross-note lyrics, nested collections, disabled
+headers, field filters, pagination, published schemas, session ownership, stale
+revisions, and unchanged document snapshots.
 
 ### Element search contract
 

@@ -45,11 +45,12 @@ describe('MCP token efficiency contracts', () => {
       ),
     };
     console.info('MCP published inventory sizes (characters)', sizes);
-    expect(tools).toHaveLength(28);
-    expect(sizes.inventory).toBeLessThan(125000);
-    expect(sizes.inputs).toBeLessThan(37000);
-    expect(sizes.outputs).toBeLessThan(69000);
-    expect(sizes.inputView).toBeLessThan(52000);
+    // Includes the find_text input and occurrence output schemas.
+    expect(tools).toHaveLength(29);
+    expect(sizes.inventory).toBeLessThan(133000);
+    expect(sizes.inputs).toBeLessThan(40000);
+    expect(sizes.outputs).toBeLessThan(74000);
+    expect(sizes.inputView).toBeLessThan(56000);
     expect(sizes.elementOutput).toBeLessThan(4500);
   });
 

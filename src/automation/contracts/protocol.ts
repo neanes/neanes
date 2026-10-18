@@ -16,6 +16,7 @@ import { elementLookupShape, elementSearchShape } from './elementSearchSchema';
 import type { AutomationOutcome } from './errors';
 import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
+import { textSearchShape } from './textSearchSchema';
 
 const documentId = z.string().min(1);
 const revision = z.number().int().nonnegative();
@@ -38,6 +39,12 @@ export const automationSchemas = {
     documentId,
     expectedRevision: revision.optional(),
     ...elementQueryShape,
+  }),
+  find_text: z.strictObject({
+    sessionId,
+    documentId,
+    expectedRevision: revision.optional(),
+    ...textSearchShape,
   }),
   find_elements: z.strictObject({
     sessionId,

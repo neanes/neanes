@@ -8,6 +8,10 @@ import {
   type ScoreElement,
 } from '@/models/Element';
 import type { Score } from '@/models/Score';
+import {
+  findTextMatches,
+  type TextSearchMatch,
+} from '@/services/TextSearchService';
 
 import type { ElementContentQuery } from '../contracts/elementContentSchema';
 import { matchesElement } from '../contracts/elementPredicates';
@@ -21,6 +25,7 @@ import {
   elementPageEntrySize,
   MAX_ELEMENT_PAGE_CHARACTERS,
 } from '../contracts/responseBudget';
+import type { TextSearchQuery } from '../contracts/textSearchSchema';
 import { readContentChunk } from './contentRead';
 
 export const headerFooterVariants = [
@@ -184,9 +189,10 @@ export class ElementDiscovery {
     element: ScoreElement;
     collection: ElementCollection;
     index: number;
+    elements: ScoreElement[];
   }> {
     for (const [index, element] of elements.entries()) {
-      yield { element, collection, index };
+      yield { element, collection, index, elements };
       if (descendants) {
         for (const [name, children] of Object.entries(
           childCollections(element),
@@ -331,6 +337,79 @@ export class ElementDiscovery {
       throw new Error('INVALID_ELEMENT_RANGE');
     }
     return { offset: query.offset, nextOffset: null, elements };
+  }
+
+  findText(score: Score, query: TextSearchQuery) {
+    const candidates =
+      query.scope.kind === 'document'
+        ? this.entries(score)
+        : this.walk(
+            this.collection(score, query.scope.collection),
+            query.scope.collection,
+            query.scope.includeDescendants,
+          );
+    const iterators = new Map<
+      ScoreElement[],
+      {
+        iterator: ReturnType<typeof findTextMatches>;
+        next: IteratorResult<TextSearchMatch>;
+      }
+    >();
+    const matches = [];
+    let matched = 0;
+    let characters = 1000;
+    for (const { collection, index, elements } of candidates) {
+      let state = iterators.get(elements);
+      if (!state) {
+        const iterator = findTextMatches(elements, query.query, query);
+        state = { iterator, next: iterator.next() };
+        iterators.set(elements, state);
+      }
+      while (!state.next.done && state.next.value.parts[0].index === index) {
+        const match = state.next.value;
+        if (matched++ >= query.offset) {
+          if (matches.length === query.limit) {
+            return {
+              offset: query.offset,
+              nextOffset: query.offset + matches.length,
+              matches,
+            };
+          }
+          const projected = {
+            elementRef: this.reference(match.parts[0].element),
+            collection,
+            snippet: match.snippet,
+            matchStart: match.matchStart,
+            matchEnd: match.matchEnd,
+            elements: match.parts.map(({ element, index, field }) => ({
+              elementRef: this.reference(element),
+              elementType: element.elementType,
+              index,
+              field,
+            })),
+          };
+          const size = elementPageEntrySize(
+            projected,
+            characters,
+            matches.length,
+          );
+          if (size === null) {
+            return {
+              offset: query.offset,
+              nextOffset: query.offset + matches.length,
+              matches,
+            };
+          }
+          characters += size;
+          matches.push(projected);
+        }
+        state.next = state.iterator.next();
+      }
+    }
+    if (query.offset > matched) {
+      throw new Error('INVALID_ELEMENT_RANGE');
+    }
+    return { offset: query.offset, nextOffset: null, matches };
   }
 
   location(score: Score, target: ScoreElement) {

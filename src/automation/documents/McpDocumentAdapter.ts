@@ -202,6 +202,7 @@ export class McpDocumentAdapter {
       request.tool === 'get_page_setup' ||
       request.tool === 'get_header_footer_settings' ||
       request.tool === 'find_elements' ||
+      request.tool === 'find_text' ||
       request.tool === 'get_element' ||
       request.tool === 'get_element_content' ||
       request.tool === 'get_staff_lyrics' ||
@@ -380,6 +381,15 @@ export class McpDocumentAdapter {
           documentId: summary.documentId,
           revision: summary.revision,
           ...this.discovery(workspace).readContent(
+            workspace.score,
+            request.arguments,
+          ),
+        };
+      }
+      if (request.tool === 'find_text') {
+        return {
+          ...summary,
+          ...this.discovery(workspace).findText(
             workspace.score,
             request.arguments,
           ),

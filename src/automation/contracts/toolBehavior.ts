@@ -9,6 +9,7 @@ const readOnlyTools = new Set<AutomationTool>([
   'get_element_catalog',
   'get_elements',
   'find_elements',
+  'find_text',
   'get_element',
   'get_element_content',
   'get_staff_lyrics',

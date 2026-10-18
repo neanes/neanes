@@ -29,6 +29,7 @@ import { automationErrorSchema } from './errors';
 import { pageElementsResultShape, pageListResultShape } from './pageSchemas';
 import type { AutomationTool } from './protocol';
 import { selectionResultShape } from './selectionSchema';
+import { textSearchResultShape } from './textSearchSchema';
 
 const revision = z.number().int().nonnegative();
 export const documentSummarySchema = z.strictObject({
@@ -95,6 +96,7 @@ export const automationResultSchemas = {
   }),
   get_element_catalog: elementCatalogSchema,
   get_elements: documentSummarySchema.extend(elementPageShape),
+  find_text: documentSummarySchema.extend(textSearchResultShape),
   find_elements: documentSummarySchema.extend(elementSearchResultShape),
   get_element: documentSummarySchema.extend(elementLookupResultShape),
   get_element_content: z.strictObject({

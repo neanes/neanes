@@ -82,7 +82,7 @@ export const elementPageShape = {
 export const elementCatalogQuerySchema = z.strictObject({
   elementTypes: z.array(z.enum(ElementType)).min(1).optional(),
   properties: z.array(z.string().min(1)).min(1).optional(),
-  view: z.enum(['read', 'edit', 'both']).default('both'),
+  view: z.enum(['names', 'read', 'edit', 'both']).default('both'),
   includeProperties: z.boolean().default(false),
   includeNeumes: z.boolean().default(false),
 });
@@ -105,10 +105,11 @@ export function getElementCatalog(
         Object.fromEntries(names.map((key) => [key, schema.shape[key]])),
       );
     return {
-      ...(query.view !== 'edit'
+      ...(query.view === 'names' ? { propertyNames: names } : {}),
+      ...(query.view === 'read' || query.view === 'both'
         ? { properties: compactJsonSchema(pick(read)) }
         : {}),
-      ...(query.view !== 'read'
+      ...(query.view === 'edit' || query.view === 'both'
         ? {
             editProperties:
               type === ElementType.Empty
@@ -136,7 +137,9 @@ export function getElementCatalog(
       )
       .map((elementType) => ({
         elementType,
-        ...(includeProperties ? schemas(elementType) : {}),
+        ...(includeProperties || query.view === 'names'
+          ? schemas(elementType)
+          : {}),
         childCollections:
           elementType === ElementType.Note
             ? ['annotations', 'alternateLines']
@@ -167,6 +170,7 @@ export const elementCatalogSchema = z.strictObject({
   elementTypes: z.array(
     z.strictObject({
       elementType: z.enum(ElementType),
+      propertyNames: z.array(z.string()).optional(),
       properties: z.record(z.string(), z.json()).optional(),
       editProperties: z.record(z.string(), z.json()).nullable().optional(),
       childCollections: z.array(

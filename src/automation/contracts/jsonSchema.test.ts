@@ -138,6 +138,53 @@ describe('compact tool schemas', () => {
     );
   });
 
+  it('discovers property names without loading constraints', () => {
+    const names = getElementCatalog({
+      elementTypes: [ElementType.Note],
+      view: 'names',
+    });
+    const note = names.elementTypes[0];
+    expect(note.propertyNames).toEqual(
+      Object.keys(
+        getElementCatalog({ elementTypes: [ElementType.Note], view: 'read' })
+          .elementTypes[0].properties!.properties as object,
+      ),
+    );
+    expect(note).not.toHaveProperty('properties');
+    expect(note).not.toHaveProperty('editProperties');
+    expect(automationResultSchemas.get_element_catalog.parse(names)).toEqual(
+      names,
+    );
+    const validator = new AjvJsonSchemaValidator();
+    expect(
+      validator.getValidator(
+        compactJsonSchema(automationSchemas.get_element_catalog, 'input'),
+      )({ elementTypes: [ElementType.Note], view: 'names' }),
+    ).toMatchObject({ valid: true });
+    expect(
+      validator.getValidator(
+        compactJsonSchema(automationResultSchemas.get_element_catalog),
+      )(names),
+    ).toMatchObject({ valid: true });
+    expect(JSON.stringify(names).length).toBeLessThan(4000);
+    expect(
+      getElementCatalog({ view: 'names' }).elementTypes.every(
+        (type) => type.propertyNames !== undefined,
+      ),
+    ).toBe(true);
+    const filtered = getElementCatalog({
+      elementTypes: [ElementType.Note],
+      properties: ['lyrics', 'quantitativeNeume'],
+      view: 'names',
+      includeProperties: true,
+    });
+    expect(filtered.elementTypes[0].propertyNames).toEqual([
+      'lyrics',
+      'quantitativeNeume',
+    ]);
+    expect(filtered.elementTypes[0]).not.toHaveProperty('editProperties');
+  });
+
   it('provides small inventory and focused read/edit schemas on demand', () => {
     const inventory = getElementCatalog();
     expect(inventory.elementTypes).toHaveLength(11);

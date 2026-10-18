@@ -19,6 +19,16 @@ const summary = {
   elementCount: workspace.score.staff.elements.length,
 };
 describe('automation result contracts', () => {
+  it.each([0, -1])(
+    'accepts existing first page number %i in header/footer results',
+    (firstPageNumber) => {
+      const result = { ...summary, settings: { firstPageNumber } };
+      expect(
+        automationResultSchemas.get_header_footer_settings.parse(result),
+      ).toEqual(result);
+    },
+  );
+
   it('publishes isolated session bounds and permits closing without a selected tab', () => {
     expect(
       automationResultSchemas.create_session.parse({

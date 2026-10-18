@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { PageSetup } from '@/models/PageSetup';
 import { Workspace } from '@/models/Workspace';
+import { fontService } from '@/services/FontService';
 import { SaveService } from '@/services/SaveService';
+import { NEUME_FONT_FAMILIES } from '@/utils/fontConstants';
 
 import {
   readHeaderFooterSettings,
@@ -78,6 +80,7 @@ describe('focused page and header/footer settings', () => {
       { direction: 'invalid' },
       { topMargin: Number.POSITIVE_INFINITY },
       { leftMargin: 10000 },
+      { neumeDefaultFontFamily: 'Arial', topMargin: 50 },
     ]) {
       const workspace = new Workspace(false);
       const before = { ...workspace.score.pageSetup };
@@ -93,6 +96,34 @@ describe('focused page and header/footer settings', () => {
       updatePageSetup(workspace, { landscape: true }, 'headerFooter'),
     ).toThrow();
   });
+
+  it('accepts every supported notation font with usable metrics', () => {
+    const workspace = new Workspace(false);
+    for (const family of NEUME_FONT_FAMILIES) {
+      updatePageSetup(workspace, { neumeDefaultFontFamily: family }, 'page');
+      expect(workspace.score.pageSetup.neumeDefaultFontFamily).toBe(family);
+      expect(fontService.getMetrics(family).ascent).toBeGreaterThan(0);
+    }
+  });
+
+  it.each([0, -1])(
+    'reads saved first page number %i, including projected reads',
+    (firstPageNumber) => {
+      const workspace = new Workspace(false);
+      workspace.score.pageSetup.firstPageNumber = firstPageNumber;
+      const loaded = SaveService.LoadScoreFromJson(
+        JSON.parse(
+          JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+        ),
+      );
+      const settings = readHeaderFooterSettings(loaded.pageSetup);
+      expect(settings.firstPageNumber).toBe(firstPageNumber);
+      expect(projectSettings(settings, [])).toEqual({});
+      expect(projectSettings(settings, ['showHeader'])).toEqual({
+        showHeader: false,
+      });
+    },
+  );
 
   it('preserves all header/footer template identities and content across settings edits and undo', () => {
     const workspace = new Workspace(false);

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { NEUME_FONT_FAMILIES } from '../../utils/fontConstants';
+
 // Persisted live settings only; derived getters and transient melisma settings are excluded.
 export const pageSetupSchema = z.strictObject({
   pageSize: z.enum([
@@ -88,7 +90,7 @@ export const headerFooterSettingsSchema = z.strictObject({
   showHeader: z.boolean(),
   showFooter: z.boolean(),
   richHeaderFooter: z.boolean(),
-  firstPageNumber: z.number().int().min(1),
+  firstPageNumber: z.number().int(),
   numerals: z.enum(['westernArabic', 'easternArabic']),
   showHeaderHorizontalRule: z.boolean(),
   excludeHeaderHorizontalRuleFirstPage: z.boolean(),
@@ -112,8 +114,11 @@ export const headerFooterSettingsSchema = z.strictObject({
 
 export const pageSetupChangesSchema = pageSetupSchema
   .omit({ pageWidth: true, pageHeight: true })
+  .extend({ neumeDefaultFontFamily: z.enum([...NEUME_FONT_FAMILIES]) })
   .partial();
-export const headerFooterChangesSchema = headerFooterSettingsSchema.partial();
+export const headerFooterChangesSchema = headerFooterSettingsSchema
+  .extend({ firstPageNumber: z.number().int().min(1) })
+  .partial();
 export type PageSetupChanges = z.infer<typeof pageSetupChangesSchema>;
 export type HeaderFooterChanges = z.infer<typeof headerFooterChangesSchema>;
 

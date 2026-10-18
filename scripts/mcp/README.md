@@ -1,12 +1,12 @@
 # Neanes MCP
 
-The Electron app automatically starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export renders a detached snapshot in a dedicated hidden window. Typed element and lyric transactions are available in both document modes. Folder jobs and temporary export transformations remain planned separately.
+When agent access is enabled, the Electron app starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export renders a detached snapshot in a dedicated hidden window. Typed element and lyric transactions are available in both document modes. Folder jobs and temporary export transformations remain planned separately.
 
 ## Normal setup: one connection
 
-Open Edit > Preferences > Agent access (MCP) and copy the
+Open Edit > Preferences > Agent access (MCP), turn on Allow agent access, and copy the
 configuration into your MCP client. Node.js 22+ runs the dependency-free bridge.
-There are no enable switches, user-managed tokens, folder permissions, or connection modes to configure. The copied JSON
+One switch controls editor and background access. There are no user-managed tokens, folder permissions, or connection modes to configure. The copied JSON
 uses the common `mcpServers` shape; clients using another configuration format need
 its command and args values.
 
@@ -48,13 +48,25 @@ and PDF output without mounting the editor, recovery, router, or service worker.
 New worker documents use built-in defaults. This is desktop Electron without
 visible windows; display-server-free Linux operation is not established.
 
-MCP starts automatically; no enable flag or saved consent setting is required.
-Internal credentials are generated once in the normal profile's private
-agent-access.json. Older enabled/root/generation fields are ignored, preserving
-existing credentials. Missing credentials are created automatically, including
-when the bridge starts a worker before the editor. Each worker also has a private
-random bearer token passed through its environment. Tokens never appear in the
-settings response, copied configuration, or settings controls.
+Agent access is off by default. The normal profile's private agent-access.json stores
+`enabled` and a generated token. Missing `enabled` means off; explicit legacy
+booleans are preserved, while obsolete root/generation fields are ignored.
+Only editor startup creates missing credentials, with access disabled. Bridge and
+`--headless-mcp` startup refuse missing, invalid, or disabled policy files. Enabling
+access requires the preference; environment token/port overrides do not bypass it.
+Each worker also has a private random bearer token passed through its environment.
+Tokens never appear in settings responses, copied configuration, or settings controls.
+
+Disabling is persisted atomically before the editor transport closes. Hosts recheck
+policy at request execution and file operations; idle hosts and bridges check once
+per second. Toggling rotates internal credentials, so an off/on cycle cannot revive
+an old worker or connection. Explicit refusal never triggers worker fallback.
+Private drafts are discarded, editor tabs stay intact, and file commits already
+underway finish before worker exit. Preferences asks for confirmation when private
+host records report unsaved drafts or an in-progress request. Records live beside
+the policy in `agent-access.json.hosts`, contain only process/draft/busy state, and
+are removed on shutdown; records from exited processes are ignored and cleaned up.
+After enabling again, reconnect clients to start new sessions.
 
 Editor startup failures are caught, recorded, and leave the editor usable. The
 settings section exposes status, Copy configuration, endpoint details, and Retry
@@ -85,7 +97,7 @@ export NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile
 npm run dev
 ```
 
-The default port is OS-assigned, and the internal token is generated automatically.
+Enable Allow agent access in the disposable development profile first. The default port is OS-assigned, and the internal token is generated automatically.
 The environment overrides above are optional developer controls for existing direct
 HTTP test clients; normal users and bridge clients do not set them. Settings show
 the actual endpoint, but never disclose credentials. Raw HTTP document tools retain

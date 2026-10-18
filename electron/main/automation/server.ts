@@ -25,6 +25,7 @@ export interface McpServerOptions {
   token: string;
   port: number;
   version: string;
+  authorize(): Promise<unknown>;
   execute(request: AutomationRequest, signal: AbortSignal): Promise<unknown>;
 }
 
@@ -63,6 +64,12 @@ export async function startMcpServer(options: McpServerOptions) {
       !timingSafeEqual(expected, supplied)
     ) {
       res.writeHead(401).end();
+      return;
+    }
+    try {
+      await options.authorize();
+    } catch {
+      res.writeHead(403).end();
       return;
     }
     if (req.url !== '/mcp') {

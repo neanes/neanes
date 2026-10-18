@@ -114,6 +114,14 @@ export class IsolatedSessions {
     return { sessionId };
   }
 
+  hasUnsavedDrafts() {
+    return [...this.sessions.values()].some(({ workspaces }) =>
+      workspaces.some(
+        (workspace) => workspace.hasUnsavedChanges || workspace.isRecovered,
+      ),
+    );
+  }
+
   clear() {
     for (const session of this.sessions.values()) {
       for (const workspace of session.workspaces) {

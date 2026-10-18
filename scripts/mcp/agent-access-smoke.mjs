@@ -18,7 +18,7 @@ await mkdir(files);
 await writeFile(
   policyPath,
   JSON.stringify({
-    enabled: false,
+    enabled: true,
     token: randomBytes(32).toString('hex'),
   }),
   { mode: 0o600 },
@@ -68,6 +68,11 @@ async function connect(configuration) {
   );
   return client;
 }
+async function call(client, name, args = {}) {
+  const result = await client.callTool({ name, arguments: args });
+  assert.ok(!result.isError, JSON.stringify(result));
+  return result.structuredContent.result;
+}
 async function debuggerConnection(url) {
   const targets = await eventually(async () => {
     const list = await (await fetch(url)).json();
@@ -104,6 +109,7 @@ async function debuggerConnection(url) {
 try {
   // Worker first, then editor; another worker after editor startup covers the opposite order.
   const first = await connect();
+  await call(first, 'create_document', { title: 'Background draft' });
   editor = spawn(
     executable,
     [
@@ -162,7 +168,7 @@ try {
   const configured = await evaluate(
     "window.ipcRenderer.invoke('AgentAccessGet')",
   );
-  assert.equal('enabled' in configured, false);
+  assert.equal(configured.enabled, true);
   assert.equal('token' in configured, false);
   const originalToken = JSON.parse(await readFile(policyPath, 'utf8')).token;
   assert.ok(!configured.configuration.includes(originalToken));
@@ -236,7 +242,7 @@ try {
     ),
   );
   assert.equal(
-    await evaluate("document.querySelector('#agent-access-enabled') === null"),
+    await evaluate("document.querySelector('#agent-access-enabled') !== null"),
     true,
   );
   assert.equal(
@@ -321,8 +327,109 @@ try {
     (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).status,
     'ready',
   );
+  // Disabling needs confirmation only when private drafts or tasks may be lost.
+  const dirtyClient = await connect(configuration);
+  await call(dirtyClient, 'create_document', { title: 'Unsaved agent draft' });
+  const warning = await evaluate(
+    "window.ipcRenderer.invoke('AgentAccessSetEnabled', false)",
+  );
+  assert.equal(warning.confirmationRequired, true);
+  assert.equal(warning.state.enabled, true);
+  await evaluateMain(
+    `(() => { const { Menu, BrowserWindow } = ${root}; const search = menu => { for (const item of menu.items) { if (item.label.includes('Preferences')) return item; if (item.submenu) { const found = search(item.submenu); if (found) return found; } } }; const item = search(Menu.getApplicationMenu()); item.click(item, BrowserWindow.getAllWindows()[0]); })()`,
+  );
+  await eventually(async () =>
+    assert.ok(await evaluate("document.querySelector('[role=dialog]')")),
+  );
+  await evaluate(
+    "Array.from(document.querySelectorAll('[role=dialog] [role=tab]')).find(e=>e.textContent.includes('Agent access')).dispatchEvent(new MouseEvent('mousedown', {bubbles:true,button:0}))",
+  );
+  await eventually(async () =>
+    assert.equal(
+      await evaluate(
+        "document.querySelector('#agent-access-enabled')?.getAttribute('aria-checked')",
+      ),
+      'true',
+    ),
+  );
+  await evaluate("document.querySelector('#agent-access-enabled').click()");
+  await eventually(async () =>
+    assert.ok(await evaluate("document.querySelector('[role=alertdialog]')")),
+  );
+  await evaluate(
+    "Array.from(document.querySelectorAll('[role=alertdialog] button')).find(e=>e.textContent.trim()==='Cancel').click()",
+  );
+  assert.equal(
+    (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).enabled,
+    true,
+  );
+  await eventually(async () =>
+    assert.equal(
+      await evaluate("document.querySelector('[role=alertdialog]') === null"),
+      true,
+    ),
+  );
+  await evaluate("document.querySelector('#agent-access-enabled').click()");
+  await eventually(async () =>
+    assert.ok(await evaluate("document.querySelector('[role=alertdialog]')")),
+  );
+  await evaluate(
+    "Array.from(document.querySelectorAll('[role=alertdialog] button')).find(e=>e.textContent.trim()==='Turn off').click()",
+  );
+  await eventually(async () =>
+    assert.equal(
+      (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).status,
+      'off',
+    ),
+  );
+  const off = {
+    state: await evaluate("window.ipcRenderer.invoke('AgentAccessGet')"),
+  };
+  assert.equal(off.state.status, 'off');
+  assert.equal(off.state.endpoint, null);
+  assert.equal(JSON.parse(await readFile(policyPath, 'utf8')).enabled, false);
+  await assert.rejects(() => call(dirtyClient, 'get_capabilities'));
+  await assert.rejects(() => connect(configuration));
+  assert.equal(await evaluate('window._editor.workspaces.value.length'), 1);
+  assert.equal(
+    await evaluate(
+      'JSON.stringify(window._editor.workspaces.value.map(w => ({id:w.id,metadata:w.score.documentProperties,pageSetup:w.score.pageSetup,styles:w.score.paragraphStyles,elements:w.score.staff.elements.map(e=>e.elementType === "Empty" ? {elementType:"Empty"} : e.getClipboardProperties(true)),dirty:w.hasUnsavedChanges,history:w.commandService,selection:w.selectedElement?.id})))',
+    ),
+    before,
+  );
+  await evaluate(
+    "Array.from(document.querySelectorAll('[role=dialog] button')).find(e=>e.textContent.trim()==='Close').click()",
+  );
+  await eventually(async () =>
+    assert.equal(
+      await evaluate("document.querySelector('[role=dialog]') === null"),
+      true,
+    ),
+  );
+  const enabledAgain = await evaluate(
+    "window.ipcRenderer.invoke('AgentAccessSetEnabled', true)",
+  );
+  assert.equal(enabledAgain.state.status, 'ready');
+  const clean = await connect(configuration);
+  assert.deepEqual(await call(clean, 'list_documents'), []);
+  await clean.close();
+  await eventually(async () =>
+    assert.equal(
+      (
+        await evaluate(
+          "window.ipcRenderer.invoke('AgentAccessSetEnabled', false)",
+        )
+      ).confirmationRequired,
+      false,
+    ),
+  );
+  const cleanOff = await evaluate(
+    "window.ipcRenderer.invoke('AgentAccessSetEnabled', false)",
+  );
+  assert.equal(cleanOff.confirmationRequired, false);
+  assert.equal(cleanOff.state.status, 'off');
   console.log(
-    'Agent access smoke passed: both launch orders, always-on startup, hidden credentials, automatic reuse/fallback, private defaults, live scope, nonfatal startup failure/retry, unchanged editor documents.',
+    'Agent access smoke passed: both launch orders, private defaults, live scope, failure/retry, draft confirmation, disable/re-enable, and unchanged editor documents.',
   );
 } finally {
   if (occupiedPort) {

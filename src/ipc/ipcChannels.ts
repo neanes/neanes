@@ -12,6 +12,7 @@ export enum IpcMainChannels {
   ExportRendererSnapshot = 'ExportRendererSnapshot',
   // Automation-only bridge; names stay centralized for preload validation.
   AutomationRequest = 'AutomationRequest',
+  AutomationReset = 'AutomationReset',
   UpdateAvailable = 'UpdateAvailable',
   UpdateDownloadStarted = 'UpdateDownloadStarted',
   UpdateDownloadProgress = 'UpdateDownloadProgress',
@@ -84,12 +85,14 @@ export enum IpcMainChannels {
 export enum IpcRendererChannels {
   AgentAccessGet = 'AgentAccessGet',
   AgentAccessRetry = 'AgentAccessRetry',
+  AgentAccessSetEnabled = 'AgentAccessSetEnabled',
   ExportSnapshotAsPng = 'ExportSnapshotAsPng',
   ExportRendererImage = 'ExportRendererImage',
   ExportRendererReady = 'ExportRendererReady',
   ExportRendererResult = 'ExportRendererResult',
   // Automation-only bridge; implemented under src/automation/ and main/automation/.
   AutomationReady = 'AutomationReady',
+  AutomationDraftsChanged = 'AutomationDraftsChanged',
   AutomationAuthorizeRequest = 'AutomationAuthorizeRequest',
   AutomationReply = 'AutomationReply',
   AutomationReadScore = 'AutomationReadScore',

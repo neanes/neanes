@@ -23,7 +23,7 @@ const policyPath = path.join(directory, 'agent-access.json');
 const files = path.join(directory, 'files');
 await mkdir(files);
 const policy = {
-  enabled: false,
+  enabled: true,
   token: randomBytes(32).toString('hex'),
 };
 await writeFile(policyPath, JSON.stringify(policy), { mode: 0o600 });
@@ -141,16 +141,56 @@ try {
     await setTimeout(500);
     await assert.rejects(() => call(doomed, 'get_capabilities'));
   }
-  // Missing credentials are regenerated internally, without an enable flag.
-  await rm(policyPath);
+  // Revocation stops existing workers and does not undo saved files.
+  const saved = await readFile(scorePath, 'utf8');
+  await writeFile(policyPath, JSON.stringify({ ...policy, enabled: false }));
+  await assert.rejects(() => connect());
+  await setTimeout(1500);
+  await assert.rejects(() => call(first, 'get_capabilities'));
+  await assert.rejects(() => call(second, 'get_capabilities'));
+  assert.equal(await readFile(scorePath, 'utf8'), saved);
+  // Re-enabling starts a fresh host without reviving private drafts.
+  await writeFile(
+    policyPath,
+    JSON.stringify({ enabled: true, token: randomBytes(32).toString('hex') }),
+  );
   const fresh = await connect();
-  const credentials = JSON.parse(await readFile(policyPath, 'utf8'));
-  assert.ok(credentials.token.length >= 32);
-  assert.equal('enabled' in credentials, false);
-  assert.equal((await call(fresh, 'get_capabilities')).mode, 'headless');
-  assert.equal((await call(first, 'get_capabilities')).mode, 'headless');
+  assert.deepEqual(await call(fresh, 'list_documents'), []);
+  await fresh.close();
+  // Neither the bridge nor --headless-mcp may bootstrap permission.
+  await rm(policyPath);
+  await assert.rejects(() => connect());
+  await assert.rejects(() => stat(policyPath), { code: 'ENOENT' });
+  for (const content of [
+    JSON.stringify({ token: policy.token }),
+    JSON.stringify({ ...policy, enabled: false }),
+    '{invalid',
+  ]) {
+    await writeFile(policyPath, content);
+    await assert.rejects(() => connect());
+    const workerProfile = path.join(directory, 'refused-worker');
+    await mkdir(workerProfile, { recursive: true });
+    const env = {
+      ...process.env,
+      IS_TEST: '1',
+      NEANES_HEADLESS_PROFILE: workerProfile,
+      NEANES_HEADLESS_POLICY: policyPath,
+    };
+    delete env.ELECTRON_RUN_AS_NODE;
+    await assert.rejects(() =>
+      promisify(execFile)(
+        process.env.NEANES_TEST_EXECUTABLE || electron,
+        [
+          ...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]),
+          '--headless-mcp',
+        ],
+        { env, timeout: 15000 },
+      ),
+    );
+    assert.equal(await readFile(policyPath, 'utf8'), content);
+  }
   console.log(
-    'Headless bridge smoke passed: concurrent private workers, sessions, save/reopen, PDF, failed startup, worker crash, automatic credentials, legacy disabled settings.',
+    'Headless bridge smoke passed: private workers, save/reopen, PDF, revocation, fresh reconnect, and disabled/missing/invalid policy refusal.',
   );
 } finally {
   await Promise.allSettled(clients.map((client) => client.close()));

@@ -331,7 +331,7 @@
       "advanced": "Lanjutan"
     },
     "agentAccess": {
-      "description": "Neanes menyediakan koneksi agen secara otomatis saat berjalan. Agen memiliki akses berkas yang sama seperti Neanes; autentikasi ditangani secara otomatis.",
+      "description": "Izinkan agen yang terhubung membaca, mengedit, menyimpan, dan mengekspor partitur, termasuk tugas latar belakang saat Neanes ditutup. Agen memiliki akses berkas yang sama dengan Neanes. Aktifkan pengaturan ini sebelum menghubungkan agen.",
       "status": "Status koneksi",
       "starting": "Memulai",
       "ready": "Siap",
@@ -346,7 +346,14 @@
       "endpoint": "Alamat editor",
       "failed": "Operasi gagal. Periksa pengaturan akses dan coba lagi.",
       "retry": "Coba ulang koneksi",
-      "unavailable": "Tidak tersedia"
+      "unavailable": "Tidak tersedia",
+      "allow": "Izinkan akses agen",
+      "off": "Nonaktif",
+      "disableNotice": "Menonaktifkan akses akan memutus koneksi agen dan membuang draf sementara agen. Berkas tersimpan dan tab editor tetap dipertahankan.",
+      "disableTitle": "Nonaktifkan akses agen?",
+      "disableWarning": "Agen memiliki pekerjaan sementara yang belum disimpan atau tugas yang sedang berjalan. Menonaktifkan akses akan memutus koneksi agen dan membuang draf sementara. Berkas tersimpan dan tab editor tetap dipertahankan.",
+      "cancel": "Batal",
+      "disable": "Nonaktifkan"
     },
     "close": "Tutup"
   }

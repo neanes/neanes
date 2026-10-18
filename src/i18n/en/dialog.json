@@ -331,7 +331,7 @@
       "advanced": "Advanced"
     },
     "agentAccess": {
-      "description": "Neanes automatically makes agent connections available while running. Agents use the same file access as Neanes; authentication is handled automatically.",
+      "description": "Allow connected agents to read, edit, save, and export scores, including background tasks when Neanes is closed. Agents use the same file access as Neanes. Enable this setting before connecting an agent.",
       "status": "Connection status",
       "starting": "Starting",
       "ready": "Ready",
@@ -346,7 +346,14 @@
       "endpoint": "Editor endpoint",
       "failed": "The operation failed. Check access settings and try again.",
       "retry": "Retry connection",
-      "unavailable": "Unavailable"
+      "unavailable": "Unavailable",
+      "allow": "Allow agent access",
+      "off": "Off",
+      "disableNotice": "Turning this off disconnects agents and discards temporary agent drafts. Saved files and editor tabs are kept.",
+      "disableTitle": "Turn off agent access?",
+      "disableWarning": "An agent has unsaved temporary work or a task in progress. Turning access off disconnects agents and discards temporary drafts. Saved files and editor tabs are kept.",
+      "cancel": "Cancel",
+      "disable": "Turn off"
     },
     "close": "Close"
   }

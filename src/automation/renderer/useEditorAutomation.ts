@@ -44,8 +44,14 @@ export function useEditorAutomation(options: {
     settle: options.settle,
   });
   const isolatedTools = new Map<DocumentService, McpDocumentAdapter>();
+  const publishDrafts = () =>
+    EventBus.$emit(
+      IpcRendererChannels.AutomationDraftsChanged,
+      isolatedSessions.hasUnsavedDrafts(),
+    );
   const isolatedSessionTimer = setInterval(() => {
     isolatedSessions.expire();
+    publishDrafts();
     for (const service of isolatedTools.keys()) {
       if (
         !service.list().some((workspace) => isolatedSessions.owns(workspace))
@@ -127,6 +133,7 @@ export function useEditorAutomation(options: {
         error: automationError(error),
       };
     }
+    publishDrafts();
     EventBus.$emit(IpcRendererChannels.AutomationReply, reply);
   }
 
@@ -154,7 +161,18 @@ export function useEditorAutomation(options: {
       .then(() => onAutomationRequest(message))
       .catch((error) => console.error(error));
   };
-  onMounted(() => EventBus.$on(IpcMainChannels.AutomationRequest, enqueue));
+  const reset = () => {
+    requestQueue = requestQueue.then(() => {
+      isolatedSessions.clear();
+      isolatedTools.clear();
+      publishDrafts();
+    });
+  };
+  onMounted(() => {
+    EventBus.$on(IpcMainChannels.AutomationRequest, enqueue);
+    EventBus.$on(IpcMainChannels.AutomationReset, reset);
+  });
+  onBeforeUnmount(() => EventBus.$off(IpcMainChannels.AutomationReset, reset));
   onBeforeUnmount(() =>
     EventBus.$off(IpcMainChannels.AutomationRequest, enqueue),
   );

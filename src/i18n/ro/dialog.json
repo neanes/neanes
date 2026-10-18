@@ -331,7 +331,7 @@
       "advanced": "Avansat"
     },
     "agentAccess": {
-      "description": "Neanes pune automat la dispoziție conexiuni pentru agenți cât timp rulează. Agenții au același acces la fișiere ca Neanes; autentificarea este gestionată automat.",
+      "description": "Permite agenților conectați să citească, să editeze, să salveze și să exporte partituri, inclusiv în fundal când Neanes este închis. Agenții au același acces la fișiere ca Neanes. Activează această setare înainte de a conecta un agent.",
       "status": "Starea conexiunii",
       "starting": "Pornire",
       "ready": "Pregătită",
@@ -346,7 +346,14 @@
       "endpoint": "Adresa editorului",
       "failed": "Operația a eșuat. Verificați setările de acces și încercați din nou.",
       "retry": "Reîncearcă conexiunea",
-      "unavailable": "Indisponibilă"
+      "unavailable": "Indisponibilă",
+      "allow": "Permite accesul agenților",
+      "off": "Dezactivat",
+      "disableNotice": "Dezactivarea deconectează agenții și elimină ciornele lor temporare. Fișierele salvate și filele editorului sunt păstrate.",
+      "disableTitle": "Dezactivezi accesul agenților?",
+      "disableWarning": "Un agent are modificări temporare nesalvate sau o sarcină în desfășurare. Dezactivarea deconectează agenții și elimină ciornele temporare. Fișierele salvate și filele editorului sunt păstrate.",
+      "cancel": "Anulează",
+      "disable": "Dezactivează"
     },
     "close": "Închide"
   }

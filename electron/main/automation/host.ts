@@ -21,11 +21,15 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '../../../src/services/documents/fileTypes';
+import { registerAgentHost } from './access';
 import { AutomationFiles } from './files';
 import { startMcpServer } from './server';
 
 export async function startAutomationHost(options: {
   getWindow(): BrowserWindow | null;
+  policyFile: string;
+  policyToken: string;
+  authorize(): Promise<unknown>;
   config?: { token: string; port: number };
   initiallyReady?: boolean;
   onStateChange?(): void;
@@ -45,6 +49,29 @@ export async function startAutomationHost(options: {
     resolve(value: unknown): void;
     reject(error: Error): void;
   } | null = null;
+  const record = await registerAgentHost(
+    options.policyFile,
+    options.policyToken,
+  );
+  let dirty = false;
+  const fileOperations = new Set<Promise<unknown>>();
+  async function finishFileOperation<T>(operation: () => Promise<T>) {
+    const pending = operation();
+    fileOperations.add(pending);
+    try {
+      return await pending;
+    } finally {
+      fileOperations.delete(pending);
+    }
+  }
+  await record.update(false, false);
+  const onDraftsChanged = (event: Electron.IpcMainEvent, value: boolean) => {
+    if (isSender(event) && typeof value === 'boolean' && !closed) {
+      dirty = value;
+      void record.update(dirty, pending !== null).catch(console.error);
+    }
+  };
+  ipcMain.on(IpcRendererChannels.AutomationDraftsChanged, onDraftsChanged);
   let exportController: AbortController | null = null;
 
   function isSender(event: { sender: Electron.WebContents }) {
@@ -91,13 +118,15 @@ export async function startAutomationHost(options: {
         if (closed || !isSender(event) || pending?.requestId !== requestId) {
           throw new Error('AUTOMATION_REQUEST_REQUIRED');
         }
+        await options.authorize();
         return null;
       }),
   );
   ipcMain.handle(
     IpcRendererChannels.AutomationReadScore,
     (event, requestId: string, filePath: string, workspaces: WorkspaceFile[]) =>
-      automationOutcome(() => {
+      automationOutcome(async () => {
+        await options.authorize();
         requireRequest(event, 'open_document', requestId);
         return files.open(filePath, workspaces);
       }),
@@ -105,22 +134,32 @@ export async function startAutomationHost(options: {
   ipcMain.handle(
     IpcRendererChannels.AutomationWriteScore,
     (event, requestId: string, args: WriteScoreFileArgs) =>
-      automationOutcome(() => {
+      automationOutcome(async () => {
+        await options.authorize();
         requireRequest(event, 'save_document', requestId);
-        return options.withFileLock(() => files.write(args));
+        return options.withFileLock(async () => {
+          await options.authorize();
+          requireRequest(event, 'save_document', requestId);
+          return finishFileOperation(() => files.write(args));
+        });
       }),
   );
   ipcMain.handle(
     IpcRendererChannels.AutomationExportPdf,
     (event, requestId: string, args: PdfExportOptions) =>
       automationOutcome(async () => {
+        await options.authorize();
         requireRequest(event, 'export_pdf', requestId);
         await options.withFileLock(async () => {
           const filePath = await files.resolve(args.filePath, 'pdf', true);
           const signal = exportController!.signal;
           const data = await options.printPdf(args, signal);
           signal.throwIfAborted();
-          await files.writeOutput(filePath, data, args.overwrite);
+          await options.authorize();
+          requireRequest(event, 'export_pdf', requestId);
+          await finishFileOperation(() =>
+            files.writeOutput(filePath, data, args.overwrite),
+          );
         });
         return null;
       }),
@@ -143,6 +182,10 @@ export async function startAutomationHost(options: {
 
   function removeHandlers() {
     ipcMain.removeListener(IpcRendererChannels.AutomationReady, onReady);
+    ipcMain.removeListener(
+      IpcRendererChannels.AutomationDraftsChanged,
+      onDraftsChanged,
+    );
     ipcMain.removeListener(IpcRendererChannels.AutomationReply, onReply);
     for (const channel of [
       IpcRendererChannels.AutomationAuthorizeRequest,
@@ -157,6 +200,7 @@ export async function startAutomationHost(options: {
     token: options.config?.token ?? process.env.NEANES_MCP_TOKEN ?? '',
     port: options.config?.port ?? Number(process.env.NEANES_MCP_PORT ?? 38765),
     version: options.version,
+    authorize: options.authorize,
     async execute(request, signal) {
       if (closed || !ready) {
         throw new Error('EDITOR_NOT_READY');
@@ -166,6 +210,7 @@ export async function startAutomationHost(options: {
         rejectTimeout = reject;
       });
       const operation = async () => {
+        await options.authorize();
         const win = options.getWindow();
         if (closed || !ready || win == null || win.isDestroyed()) {
           throw new Error('EDITOR_NOT_READY');
@@ -194,6 +239,11 @@ export async function startAutomationHost(options: {
           );
         }, 60_000);
         try {
+          await record.update(dirty, true);
+          await options.authorize();
+          if (closed) {
+            throw new Error('AGENT_ACCESS_DISABLED');
+          }
           return await new Promise((resolve, reject) => {
             pending = { requestId, tool: request.tool, resolve, reject };
             win.webContents.send(IpcMainChannels.AutomationRequest, {
@@ -205,6 +255,9 @@ export async function startAutomationHost(options: {
           clearTimeout(timer);
           signal.removeEventListener('abort', onCancel);
           pending = null;
+          if (!closed) {
+            await record.update(dirty, false);
+          }
           exportController = null;
         }
       };
@@ -219,8 +272,9 @@ export async function startAutomationHost(options: {
           : runOperation();
       return Promise.race([result, timeout]);
     },
-  }).catch((error) => {
+  }).catch(async (error) => {
     removeHandlers();
+    await record.close();
     throw error;
   });
 
@@ -259,6 +313,12 @@ export async function startAutomationHost(options: {
       detach.clear();
       removeHandlers();
       await server.close();
+      await Promise.allSettled([...fileOperations]);
+      const win = options.getWindow();
+      if (win && !win.isDestroyed()) {
+        win.webContents.send(IpcMainChannels.AutomationReset);
+      }
+      await record.close();
     },
   };
 }

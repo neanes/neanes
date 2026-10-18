@@ -73,7 +73,13 @@ import {
 } from '../../src/models/WorkspacePane';
 import type { PdfExportOptions } from '../../src/services/documents/fileTypes';
 import { TestFileType } from '../../src/utils/TestFileType';
-import { initializeAccessPolicy } from './automation/access';
+import {
+  hasAgentDrafts,
+  initializeAccessPolicy,
+  readAccessPolicy,
+  requireAgentAccess,
+  setAccessEnabled,
+} from './automation/access';
 import { startAutomationHost } from './automation/host';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
@@ -3054,7 +3060,9 @@ function publishEditorEndpoint() {
           temporary,
           JSON.stringify({
             pid: process.pid,
-            error: accessError ?? automationHost?.error() ?? null,
+            error: !accessPolicy.enabled
+              ? 'AGENT_ACCESS_DISABLED'
+              : (accessError ?? automationHost?.error() ?? null),
             token: process.env.NEANES_MCP_TOKEN ?? accessPolicy.token,
             endpoint: automationHost?.isReady()
               ? `http://127.0.0.1:${automationHost.port}/mcp`
@@ -3074,8 +3082,14 @@ function publishEditorEndpoint() {
   return endpointPublication;
 }
 
-async function createAutomationHost(config: { token: string; port: number }) {
+async function createAutomationHost(
+  config: { token: string; port: number },
+  policyToken = accessPolicy!.token,
+) {
   return startAutomationHost({
+    policyFile: accessPolicyFile,
+    policyToken,
+    authorize: () => requireAgentAccess(accessPolicyFile, policyToken),
     onStateChange: () => {
       if (!headless) {
         void publishEditorEndpoint();
@@ -3107,6 +3121,10 @@ async function syncAgentAccess() {
     automationHost = null;
   }
   accessError = null;
+  if (!accessPolicy?.enabled) {
+    await publishEditorEndpoint();
+    return;
+  }
   try {
     automationHost = await createAutomationHost({
       token: process.env.NEANES_MCP_TOKEN ?? accessPolicy!.token,
@@ -3146,14 +3164,17 @@ function agentAccessState(): AgentAccessState {
     2,
   );
   return {
+    enabled: accessPolicy?.enabled ?? false,
     status:
       accessError || automationHost?.error()
         ? 'error'
-        : automationHost
-          ? automationHost.isReady()
-            ? 'ready'
-            : 'starting'
-          : 'starting',
+        : !accessPolicy?.enabled
+          ? 'off'
+          : automationHost
+            ? automationHost.isReady()
+              ? 'ready'
+              : 'starting'
+            : 'starting',
     error: accessError ?? automationHost?.error() ?? null,
     endpoint: automationHost
       ? `http://127.0.0.1:${automationHost.port}/mcp`
@@ -3170,6 +3191,75 @@ ipcMain.handle(IpcRendererChannels.AgentAccessGet, (event) => {
   requireEditorSender(event);
   return agentAccessState();
 });
+ipcMain.handle(
+  IpcRendererChannels.AgentAccessSetEnabled,
+  (event, enabled: unknown, discardUnsavedChanges: unknown = false) => {
+    requireEditorSender(event);
+    if (
+      typeof enabled !== 'boolean' ||
+      typeof discardUnsavedChanges !== 'boolean'
+    ) {
+      throw new Error('INVALID_AGENT_ACCESS_SETTING');
+    }
+    const operation = accessQueue.then(async () => {
+      const current = await initializeAccessPolicy(accessPolicyFile);
+      if (
+        current.enabled === enabled &&
+        current.token === accessPolicy?.token
+      ) {
+        return { state: agentAccessState(), confirmationRequired: false };
+      }
+      if (
+        !enabled &&
+        !discardUnsavedChanges &&
+        (await hasAgentDrafts(accessPolicyFile))
+      ) {
+        return { state: agentAccessState(), confirmationRequired: true };
+      }
+      accessPolicy = await setAccessEnabled(accessPolicyFile, enabled);
+      await syncAgentAccess();
+      return { state: agentAccessState(), confirmationRequired: false };
+    });
+    accessQueue = operation.then(
+      () => undefined,
+      () => undefined,
+    );
+    return operation;
+  },
+);
+
+// Catch policy changes made while workers or the editor are already running.
+let policyCheckRunning = false;
+let agentAccessInitialized = false;
+const policyTimer = setInterval(() => {
+  if (headless || policyCheckRunning || !agentAccessInitialized) {
+    return;
+  }
+  policyCheckRunning = true;
+  const operation = accessQueue.then(async () => {
+    try {
+      const next = await readAccessPolicy(accessPolicyFile);
+      if (
+        next.enabled !== accessPolicy?.enabled ||
+        next.token !== accessPolicy?.token
+      ) {
+        accessPolicy = next;
+        await syncAgentAccess();
+      }
+    } catch (error) {
+      accessPolicy = null;
+      await automationHost?.close();
+      automationHost = null;
+      accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+    }
+  });
+  accessQueue = operation.catch(console.error).finally(() => {
+    policyCheckRunning = false;
+  });
+}, 1000);
+policyTimer.unref();
+app.on('will-quit', () => clearInterval(policyTimer));
+
 ipcMain.handle(IpcRendererChannels.AgentAccessRetry, (event) => {
   requireEditorSender(event);
   const operation = accessQueue.then(async () => {
@@ -3192,11 +3282,14 @@ async function launchHeadless() {
   if (isMac) {
     app.dock!.hide();
   }
-  const credentials = await initializeAccessPolicy(accessPolicyFile);
-  automationHost = await createAutomationHost({
-    token: process.env.NEANES_WORKER_TOKEN || credentials.token,
-    port: 0,
-  });
+  const credentials = await requireAgentAccess(accessPolicyFile);
+  automationHost = await createAutomationHost(
+    {
+      token: process.env.NEANES_WORKER_TOKEN || credentials.token,
+      port: 0,
+    },
+    credentials.token,
+  );
   win = new BrowserWindow({
     show: false,
     webPreferences: {
@@ -3232,11 +3325,23 @@ async function launchHeadless() {
       return;
     }
     stopping = true;
-    const force = setTimeout(() => app.exit(0), 2000);
     await automationHost?.close();
-    clearTimeout(force);
     app.exit(0);
   }
+  let checking = false;
+  const policyTimer = setInterval(() => {
+    if (checking || stopping) {
+      return;
+    }
+    checking = true;
+    void requireAgentAccess(accessPolicyFile, credentials.token)
+      .catch(() => stop())
+      .finally(() => {
+        checking = false;
+      });
+  }, 1000);
+  policyTimer.unref();
+  app.on('will-quit', () => clearInterval(policyTimer));
   process.stdin.resume();
   process.stdin.once('end', () => {
     setTimeout(() => void stop(), 60_000).unref();
@@ -3295,11 +3400,13 @@ app.on('ready', async () => {
   } catch (error) {
     accessPolicy ??= {
       token: randomBytes(32).toString('hex'),
+      enabled: false,
     };
     accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
     console.error('Could not load agent access settings', error);
   }
 
+  agentAccessInitialized = true;
   if (!win) {
     createWindow();
   }

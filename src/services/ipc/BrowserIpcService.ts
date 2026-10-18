@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 
-import type { AgentAccessState } from '@/ipc/agentAccess';
+import type { AgentAccessState, AgentAccessUpdate } from '@/ipc/agentAccess';
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
@@ -48,6 +48,9 @@ function getExportDownloadFileName(
 }
 
 export class BrowserIpcService implements IIpcService {
+  async setAgentAccessEnabled(): Promise<AgentAccessUpdate> {
+    throw new Error('Electron only');
+  }
   async getAgentAccess(): Promise<AgentAccessState> {
     throw new Error('Electron only');
   }

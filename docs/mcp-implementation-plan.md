@@ -2,9 +2,22 @@
 
 Implementation handoff, updated 2026-10-17. Stages 1 and 2.5 are complete. Stage 2 includes isolated lifecycle, typed element/range discovery, and validated element/lyric transactions. Folder jobs and temporary export transformations remain unimplemented and paused. The current milestone adds headless launch, a stdio bridge, and persistent UI access settings. Inspect the working tree before continuing.
 
+## Agent access control
+
+Preferences includes an immediate Allow agent access switch, off by default.
+Explicit legacy consent is preserved; policies without an enabled field require
+one-time opt-in. Editor, bridge, and worker startup and request execution honor
+this policy. Disabling closes transports and discards private sessions while
+preserving editor tabs and saved files. Private host records support confirmation
+when drafts or a request may be lost. Workers and bridges observe changes within
+one second, and credential rotation prevents stale hosts surviving an off/on cycle.
+The `--headless-mcp` flag selects worker mode and does not grant access. See
+`scripts/mcp/README.md` and `docs/guide/agent-access.md` for the current contract.
+Older always-on verification below records the preceding implementation.
+
 ## Overview
 
-Neanes automatically starts an authenticated local MCP server while the Electron app is running. The goals are:
+When agent access is enabled, Neanes starts an authenticated local MCP server while the Electron app is running. The goals are:
 
 - Let development agents construct and inspect test scores without UI automation.
 - Process folders of scores: change typography, save, and export PDFs with explicit output paths.
@@ -17,7 +30,7 @@ The standard bridge automatically connects to a running editor or launches a hea
 ## Settled architectural decisions
 
 - **Shared operations, separate adapters.** `src/services/documents/` owns reusable lifecycle, metadata, style validation/replacement, persistence, and change/settlement hooks. `src/automation/` owns reference-based element/lyric transaction planning, API projections/contracts, revisions, sessions, and renderer/IPC dispatch. `electron/main/files/ScoreFiles.ts` owns shared score file I/O. These were extracted from the editor, Electron entry point, and initial automation implementation. Automation folders contain transport, tool contracts, dispatch, revisions, and access policy. Shared services do not depend on MCP contracts. `TheEditor.vue` still supplies rendering, selection, focus, recovery, and layout hooks.
-- **Automatic local access.** Use the official MCP SDK and Streamable HTTP on authenticated IPv4 loopback. Use normal OS file permissions without MCP folder restrictions; preserve canonical file identity, overwrite/source checks, reject browser origins, and validate the Host header. The server starts automatically; authentication and credential exchange stay internal. See the setup and contract guide in `scripts/mcp/README.md` for configuration.
+- **Automatic local access.** Use the official MCP SDK and Streamable HTTP on authenticated IPv4 loopback. Use normal OS file permissions without MCP folder restrictions; preserve canonical file identity, overwrite/source checks, reject browser origins, and validate the Host header. One persisted access switch governs editor and worker startup; authentication and credential exchange stay internal. See the setup and contract guide in `scripts/mcp/README.md` for configuration.
 - **Explicit documents and concurrency.** Tools address document IDs. Mutations, close, save, and export require the latest `expectedRevision`; clients reread after conflicts rather than automatically retrying stale writes. Edits are undoable and saving is explicit. All MCP requests share one serialized queue across clients and sessions; sessions provide ownership/isolation, not parallel execution. Serialized requests do not eliminate concurrent interactive edits.
 - **Isolated session ownership and lifetime.** `create_session` returns a random UUID bearer capability under the existing server authentication; pass `sessionId` to document tools to restrict access to that session. Omitting it preserves interactive behavior. Up to 4 sessions may hold 16 documents each; leases expire after 15 idle minutes and discard private drafts. HTTP disconnects retain leases for inspection after uncertain requests. `close_session` validates every owned document before removal and requires explicit discard if any is dirty. Editor reload/process loss and app exit release private state. Closing the last isolated document creates no replacement; `selected` is false and `selectedDocumentId` is null.
 - **Isolated documents reuse shared operations.** `IsolatedSessions` owns private, non-tab document collections served by `DocumentService` and per-session `McpDocumentAdapter` instances. Editor hooks load referenced fonts and reuse the text-box measurement queue without recovery writes; isolated command histories suppress global undo/redo notifications. PDF export uses the existing detached renderer. Failed initial settlement removes a newly introduced private document. Opening reads disk independently of interactive unsaved edits and other sessions, while canonical reuse stays within the owning session. Explicit saves may change a file open interactively, but never replace its live contents; existing source-conflict and overwrite rules apply.
@@ -85,10 +98,10 @@ folder/job and export-transformation sequence below.
 
 ## Client connection and startup - 2026-10-17
 
-The server now starts automatically with Neanes. Settings provide connection
-status, Copy configuration, endpoint details, and Retry connection on failure.
-There are no enable switches, folder permissions, connection-mode selectors, or
-user-facing credential controls. Tokens remain internal and are absent from
+When enabled, the server starts automatically with Neanes. Settings provide
+the access switch, connection status, Copy configuration, endpoint details, and
+Retry connection on failure. There are no folder permissions, connection-mode
+selectors, or user-facing credential controls. Tokens remain internal and are absent from
 renderer settings responses and copied configurations.
 
 - **Automatic connection:** The dependency-free Node.js 22+ bridge authenticates
@@ -110,8 +123,9 @@ renderer settings responses and copied configurations.
   validation, canonical identity, symlink-output rules, overwrite/source conflicts,
   and atomic commits. Folder job source/output selection remains future work.
 - **Internal authentication:** The normal profile's private agent-access.json
-  stores a generated token. Obsolete enabled/root/generation fields are ignored.
-  Missing credentials are generated even for bridge-first worker startup. Private
+  stores a generated token and explicit enabled state. Obsolete root/generation
+  fields are ignored. Missing credentials are created disabled by editor startup;
+  workers cannot create consent. Private
   workers use their own random bearer tokens. Normal clients require no credential
   setup. Explicit port/token environment overrides remain developer controls.
 - **Nonfatal startup:** Server errors are caught and shown in settings while the
@@ -136,7 +150,7 @@ renderer settings responses and copied configurations.
 Pure tests cover policy persistence/legacy roots, unrestricted file paths with
 preserved file validation, and real tool-schema scope decoration/routing. Real
 headless and editor smoke scripts cover automatic private defaults, both launch
-orders, live editor reuse/discovery, save/reopen/PDF, automatic credentials, startup failure/retry, worker crash, and preserved editor content/history.
+orders, live editor reuse/discovery, save/reopen/PDF, policy refusal/revocation, startup failure/retry, worker crash, and preserved editor content/history.
 Setup and test commands are in scripts/mcp/README.md; the user guide is
 `docs/guide/agent-access.md`. Folder jobs and temporary transformations remain
 paused. macOS is the platform exercised for runtime/packaging; Windows/Linux

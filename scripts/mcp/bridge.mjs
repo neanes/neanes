@@ -28,6 +28,22 @@ const { values } = parseArgs({
 let child, profile, primary, privateSession;
 let tools;
 let stopping = false;
+let policyToken;
+async function requireAccess() {
+  const policy = JSON.parse(await readFile(values.policy, 'utf8'));
+  if (
+    policy.enabled !== true ||
+    typeof policy.token !== 'string' ||
+    policy.token.length < 32 ||
+    (policyToken && policyToken !== policy.token)
+  ) {
+    throw new Error(
+      'Agent access is disabled. Enable it in Neanes Preferences and reconnect.',
+    );
+  }
+  policyToken ??= policy.token;
+}
+
 const requests = new Map();
 function log(message) {
   process.stderr.write(`Neanes MCP: ${message}\n`);
@@ -109,6 +125,11 @@ async function discoverEditor(required = false) {
       }
       throw error;
     }
+    if (state.error === 'AGENT_ACCESS_DISABLED') {
+      throw new Error(
+        'Agent access is disabled. Enable it in Neanes Preferences and reconnect.',
+      );
+    }
     if (state.error === 'EDITOR_DISCONNECTED') {
       return null;
     }
@@ -173,10 +194,9 @@ async function stop(code = 0) {
     }
   }
   if (child && child.exitCode === null && child.signalCode === null) {
+    const exited = new Promise((resolve) => child.once('exit', resolve));
     child.kill('SIGTERM');
-    const forced = setTimeout(() => child.kill('SIGKILL'), 3000);
-    await new Promise((resolve) => child.once('exit', resolve));
-    clearTimeout(forced);
+    await exited;
   }
   if (profile) {
     await rm(profile, { recursive: true, force: true });
@@ -184,6 +204,7 @@ async function stop(code = 0) {
   process.exitCode = code;
 }
 async function launchWorker() {
+  await requireAccess();
   if (!values.executable || !path.isAbsolute(values.executable)) {
     throw new Error('An absolute --executable path is required.');
   }
@@ -272,6 +293,7 @@ function sessionId(signal) {
   return privateSession;
 }
 async function forward(message, signal) {
+  await requireAccess();
   let connection = primary;
   let automaticSession;
   if (message.method === 'tools/call') {
@@ -317,7 +339,16 @@ async function main() {
       'An absolute --policy path is required. Copy configuration from Neanes settings.',
     );
   }
+  await requireAccess();
   primary = (await discoverEditor()) ?? (await launchWorker());
+  const policyTimer = setInterval(() => {
+    void requireAccess().catch(async (error) => {
+      log(error.message);
+      await stop(1);
+      process.stdin.destroy();
+    });
+  }, 1000);
+  policyTimer.unref();
   const inventory = await rpc(primary, {
     jsonrpc: '2.0',
     id: 'bridge-tools',

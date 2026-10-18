@@ -1,4 +1,4 @@
-import type { AgentAccessState } from '@/ipc/agentAccess';
+import type { AgentAccessState, AgentAccessUpdate } from '@/ipc/agentAccess';
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
@@ -22,6 +22,10 @@ import type { Workspace } from '@/models/Workspace';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 
 export interface IIpcService {
+  setAgentAccessEnabled(
+    enabled: boolean,
+    discardUnsavedChanges?: boolean,
+  ): Promise<AgentAccessUpdate>;
   getAgentAccess(): Promise<AgentAccessState>;
   retryAgentAccess(): Promise<AgentAccessState>;
   saveWorkspace(

@@ -64,10 +64,20 @@ const instance = computed(
 // could mask the update. Watching `instance` too applies a change that arrived before
 // the editor finished creating.
 const initialData = props.modelValue;
+let loadedModelValue = initialData;
+
+// Read the owner's current field, not this component's possibly stale prop:
+// a keyed remount can unmount us before Vue delivers the new modelValue.
+function canFlush(modelValue: string) {
+  return modelValue === loadedModelValue;
+}
 
 watch([() => props.modelValue, instance], ([next, editor]) => {
-  if (editor != null && next !== editor.getData()) {
-    editor.data.set(next);
+  if (editor != null) {
+    if (next !== editor.getData()) {
+      editor.data.set(next);
+    }
+    loadedModelValue = next;
   }
 });
 
@@ -181,6 +191,7 @@ function unregisterRichTextEditor() {
 
 defineExpose({
   instance,
+  canFlush,
 });
 </script>
 

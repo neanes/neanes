@@ -128,10 +128,7 @@ import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
-import type {
-  RichTextBoxContentKey,
-  RichTextBoxElement,
-} from '@/models/Element';
+import type { RichTextBoxElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -814,24 +811,33 @@ function getPendingUpdates() {
 
   const height = getHeight();
 
-  updated =
-    addPendingEditorData(updates, 'content', getEditorInstance()) || updated;
-  updated =
-    addPendingEditorData(updates, 'contentBottom', getEditorInstanceBottom()) ||
-    updated;
-  updated =
-    addPendingEditorData(updates, 'contentLeft', getEditorInstanceLeft()) ||
-    updated;
-  updated =
-    addPendingEditorData(updates, 'contentCenter', getEditorInstanceCenter()) ||
-    updated;
-  updated =
-    addPendingEditorData(updates, 'contentRight', getEditorInstanceRight()) ||
-    updated;
+  const contentEditors = [
+    ['content', editorRef.value],
+    ['contentBottom', editorBottom.value],
+    ['contentLeft', editorLeft.value],
+    ['contentCenter', editorCenter.value],
+    ['contentRight', editorRight.value],
+  ] as const;
+  let hasStaleContent = false;
+  for (const [property, component] of contentEditors) {
+    if (!props.editMode || component?.instance == null) {
+      continue;
+    }
+    // Teardown must not flush an editor superseded by an external model edit.
+    if (!component.canFlush(props.element[property])) {
+      hasStaleContent = true;
+      continue;
+    }
+    const content = component.instance.getData();
+    if (props.element[property] !== content) {
+      updates[property] = content;
+      updated = true;
+    }
+  }
 
   const activeEditors = getActiveEditorInstances();
 
-  if (props.editMode && activeEditors.some(Boolean)) {
+  if (props.editMode && !hasStaleContent && activeEditors.some(Boolean)) {
     const hasMeaningfulContent = activeEditors.some(
       (editor) => editor != null && hasMeaningfulRichTextEditorContent(editor),
     );
@@ -857,6 +863,7 @@ function getPendingUpdates() {
   }
 
   if (
+    !hasStaleContent &&
     height != null &&
     !props.element.inline &&
     Math.abs(props.element.height - height) > 0.001
@@ -875,25 +882,6 @@ function getPendingUpdates() {
   }
 
   return null;
-}
-
-function addPendingEditorData(
-  updates: Partial<RichTextBoxElement>,
-  propertyName: RichTextBoxContentKey,
-  editor: Editor | undefined,
-) {
-  if (!props.editMode || editor == null) {
-    return false;
-  }
-
-  const currentContent = editor.getData();
-
-  if (props.element[propertyName] === currentContent) {
-    return false;
-  }
-
-  updates[propertyName] = currentContent;
-  return true;
 }
 
 function getHeight() {

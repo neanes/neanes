@@ -619,6 +619,16 @@ checks one-step UI undo/redo and the unrelated interactive workspace's live stat
 NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node scripts/mcp/element-edit-smoke.mjs /tmp/neanes-mcp/files
 ```
 
+Run the rich-text lifecycle regression after `npx vite build`. It launches its own
+disposable Electron profile and checks that MCP content updates survive remounts,
+including panels, headers/footers and annotations. It also checks history,
+pending user typing, blur, and saved HTML. On macOS, run it outside the agent's
+command sandbox as described in AGENTS.md.
+
+```sh
+node scripts/mcp/rich-text-update-smoke.mjs
+```
+
 With the development app running and ready, run the real MCP client smoke test from another terminal with the same token:
 
 ```sh

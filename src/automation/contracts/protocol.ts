@@ -17,6 +17,7 @@ import type { AutomationOutcome } from './errors';
 import { modeKeyTemplatesQuerySchema } from './modeKeyTemplates';
 import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
+import { richTextFormatQuerySchema } from './richTextFormat';
 import { textSearchShape } from './textSearchSchema';
 
 const documentId = z.string().min(1);
@@ -36,7 +37,7 @@ export const automationSchemas = {
   }),
   get_element_catalog: elementCatalogQuerySchema,
   get_mode_key_templates: modeKeyTemplatesQuerySchema,
-  get_rich_text_format: z.strictObject({}),
+  get_rich_text_format: richTextFormatQuerySchema,
   get_elements: z.strictObject({
     sessionId,
     documentId,

@@ -63,7 +63,17 @@ try {
   const richTextFormat = await call(first, 'get_rich_text_format');
   assert.match(richTextFormat.guide, /neanes-paragraph-style-default-text/);
   assert.match(richTextFormat.guide, /neanes-paragraph-style-annotation/);
-  assert.ok(JSON.stringify(richTextFormat).length < 5000);
+  assert.ok(JSON.stringify(richTextFormat).length < 6500);
+  const inlineFormat = await call(first, 'get_rich_text_format', {
+    topics: ['inline'],
+  });
+  assert.match(inlineFormat.guide, /font-size:18pt/);
+  assert.ok(!inlineFormat.guide.includes('BASICS'));
+  const openTypeFormat = await call(first, 'get_rich_text_format', {
+    topics: ['opentype'],
+  });
+  assert.match(openTypeFormat.guide, /styleset\(ss01, ss05\)/);
+  assert.ok(!openTypeFormat.guide.includes('BASICS'));
   const modeTemplates = await call(first, 'get_mode_key_templates', {
     mode: 6,
   });

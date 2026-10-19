@@ -140,7 +140,7 @@ export class McpDocumentAdapter {
       }
     }
     if (request.tool === 'get_rich_text_format') {
-      return getRichTextFormat();
+      return getRichTextFormat(request.arguments);
     }
     if (request.tool === 'get_mode_key_templates') {
       return getModeKeyTemplates(request.arguments);

@@ -5,7 +5,6 @@
     :editor="InlineEditor"
     :model-value="initialData"
     :config="config"
-    :disable-watchdog="true"
     :disable-two-way-data-binding="true"
     @ready="onReady"
     @destroy="onDestroy"

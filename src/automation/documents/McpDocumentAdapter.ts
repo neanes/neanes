@@ -20,6 +20,7 @@ import {
 import { getModeKeyTemplates } from '../contracts/modeKeyTemplates';
 import type { PreviewImage } from '../contracts/preview';
 import type { AutomationRequest } from '../contracts/protocol';
+import { getRichTextFormat } from '../contracts/richTextFormat';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
 import { readStaffLyrics } from './contentRead';
@@ -137,6 +138,9 @@ export class McpDocumentAdapter {
         this.states.delete(id);
         this.discoveries.delete(id);
       }
+    }
+    if (request.tool === 'get_rich_text_format') {
+      return getRichTextFormat();
     }
     if (request.tool === 'get_mode_key_templates') {
       return getModeKeyTemplates(request.arguments);

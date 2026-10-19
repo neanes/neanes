@@ -97,6 +97,7 @@ export const automationResultSchemas = {
   }),
   get_element_catalog: elementCatalogSchema,
   get_mode_key_templates: modeKeyTemplatesResultSchema,
+  get_rich_text_format: z.strictObject({ guide: z.string() }),
   get_elements: documentSummarySchema.extend(elementPageShape),
   find_text: documentSummarySchema.extend(textSearchResultShape),
   find_elements: documentSummarySchema.extend(elementSearchResultShape),

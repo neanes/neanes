@@ -60,6 +60,10 @@ try {
   // Each bridge owns a worker; sessions never resolve in a different worker.
   const capabilities = await call(first, 'get_capabilities');
   assert.equal(capabilities.mode, 'headless');
+  const richTextFormat = await call(first, 'get_rich_text_format');
+  assert.match(richTextFormat.guide, /neanes-paragraph-style-default-text/);
+  assert.match(richTextFormat.guide, /neanes-paragraph-style-annotation/);
+  assert.ok(JSON.stringify(richTextFormat).length < 5000);
   const modeTemplates = await call(first, 'get_mode_key_templates', {
     mode: 6,
   });

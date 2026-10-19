@@ -14,6 +14,7 @@ describe('editor busy policy', () => {
       'get_capabilities',
       'get_element_catalog',
       'get_mode_key_templates',
+      'get_rich_text_format',
     ]);
   });
 

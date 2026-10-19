@@ -26,6 +26,20 @@ const lineHeightSchema = z
     'Omitted (undefined in the live model) inherits the paragraph style. Null explicitly resets line height to normal. A number overrides line height with a unitless multiplier.',
   );
 
+const richTextContent = z
+  .string()
+  .describe(
+    'CKEditor HTML: <p class="neanes-paragraph-style-default-text">Hello</p>. Every p needs a paragraph-style class; use adjacent p elements for new lines. See get_rich_text_format; styles: get_paragraph_styles.',
+  );
+const annotationContent = z
+  .string()
+  .describe(
+    'CKEditor HTML: <p class="neanes-paragraph-style-annotation">Sing softly</p>. Every p needs a paragraph-style class. See get_rich_text_format.',
+  );
+const plainTextContent = z
+  .string()
+  .describe('Plain text, not HTML or Markdown.');
+
 export const elementPropertySchemas = {
   [ElementType.Note]: z.strictObject({
     ...breaks,
@@ -147,11 +161,11 @@ export const elementPropertySchemas = {
     paragraphStyleId: z.string(),
     alignment: z.enum(TextBoxAlignment).optional(),
     color: z.string().optional(),
-    content: z.string(),
-    contentBottom: z.string(),
-    contentLeft: z.string(),
-    contentCenter: z.string(),
-    contentRight: z.string(),
+    content: plainTextContent,
+    contentBottom: plainTextContent,
+    contentLeft: plainTextContent,
+    contentCenter: plainTextContent,
+    contentRight: plainTextContent,
     fontSize: z.number().optional(),
     fontFamily: z.string().optional(),
     strokeWidth: z.number().optional(),
@@ -176,11 +190,11 @@ export const elementPropertySchemas = {
   }),
   [ElementType.RichTextBox]: z.strictObject({
     ...breaks,
-    content: z.string(),
-    contentBottom: z.string(),
-    contentLeft: z.string(),
-    contentRight: z.string(),
-    contentCenter: z.string(),
+    content: richTextContent,
+    contentBottom: richTextContent,
+    contentLeft: richTextContent,
+    contentRight: richTextContent,
+    contentCenter: richTextContent,
     languageCode: z.string().optional(),
     textDirection: z.enum(['ltr', 'rtl']).optional(),
     multipanel: z.boolean(),
@@ -207,7 +221,7 @@ export const elementPropertySchemas = {
     ...breaks,
     paragraphStyleId: z.string(),
     color: z.string().optional(),
-    content: z.string(),
+    content: plainTextContent,
     fontSize: z.number().optional(),
     fontFamily: z.string().optional(),
     fontStyle: z.string().optional(),
@@ -268,7 +282,7 @@ export const elementPropertySchemas = {
   }),
   [ElementType.Annotation]: z.strictObject({
     ...breaks,
-    text: z.string(),
+    text: annotationContent,
     x: z.number(),
     y: z.number(),
     languageCode: z.string().optional(),

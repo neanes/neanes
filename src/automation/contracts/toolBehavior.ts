@@ -4,7 +4,8 @@ export function canRunWhileEditorBusy(tool: AutomationTool) {
   return (
     tool === 'get_capabilities' ||
     tool === 'get_element_catalog' ||
-    tool === 'get_mode_key_templates'
+    tool === 'get_mode_key_templates' ||
+    tool === 'get_rich_text_format'
   );
 }
 
@@ -16,6 +17,7 @@ const readOnlyTools = new Set<AutomationTool>([
   'get_header_footer_settings',
   'get_element_catalog',
   'get_mode_key_templates',
+  'get_rich_text_format',
   'get_elements',
   'find_elements',
   'find_text',

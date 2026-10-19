@@ -36,6 +36,7 @@ export const automationSchemas = {
   }),
   get_element_catalog: elementCatalogQuerySchema,
   get_mode_key_templates: modeKeyTemplatesQuerySchema,
+  get_rich_text_format: z.strictObject({}),
   get_elements: z.strictObject({
     sessionId,
     documentId,

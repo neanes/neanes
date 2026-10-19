@@ -71,8 +71,8 @@ describe('one bridge connection', () => {
 
   it('budgets the inventory delivered to clients, including bridge arguments', () => {
     const tools = bridgeTools(automationTools());
-    // Includes find_text and its bridge documentScope argument.
-    expect(JSON.stringify({ tools }).length).toBeLessThan(136000);
+    // Includes the rich-text format tool and short inline authoring hints.
+    expect(JSON.stringify({ tools }).length).toBeLessThan(138000);
     expect(
       JSON.stringify(
         tools.map(({ name, description, inputSchema }) => ({
@@ -81,7 +81,7 @@ describe('one bridge connection', () => {
           inputSchema,
         })),
       ).length,
-    ).toBeLessThan(59000);
+    ).toBeLessThan(60000);
   });
 });
 

@@ -45,12 +45,14 @@ describe('MCP token efficiency contracts', () => {
       ),
     };
     console.info('MCP published inventory sizes (characters)', sizes);
-    // Includes text search and mode-key template discovery.
-    expect(tools).toHaveLength(30);
-    expect(sizes.inventory).toBeLessThan(133000);
+    // Includes text search, mode-key templates and rich-text format discovery.
+    expect(tools).toHaveLength(31);
+    // Allow 2000 more characters for the format tool and inline authoring hints;
+    // the detailed guide is fetched separately, never embedded in tools/list.
+    expect(sizes.inventory).toBeLessThan(135000);
     expect(sizes.inputs).toBeLessThan(40000);
-    expect(sizes.outputs).toBeLessThan(74000);
-    expect(sizes.inputView).toBeLessThan(56000);
+    expect(sizes.outputs).toBeLessThan(76000);
+    expect(sizes.inputView).toBeLessThan(57000);
     expect(sizes.elementOutput).toBeLessThan(4500);
   });
 

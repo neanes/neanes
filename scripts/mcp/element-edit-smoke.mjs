@@ -200,7 +200,14 @@ try {
           action: 'insert',
           index: 0,
           elements: [
-            { elementType: 'ModeKey', clientId: 'mode' },
+            {
+              elementType: 'ModeKey',
+              clientId: 'mode',
+              properties: {
+                templateId: 100,
+                useOptionalDiatonicFthoras: false,
+              },
+            },
             {
               elementType: 'Note',
               clientId: 'first',

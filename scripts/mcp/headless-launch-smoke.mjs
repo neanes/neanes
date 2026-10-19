@@ -60,6 +60,21 @@ try {
   // Each bridge owns a worker; sessions never resolve in a different worker.
   const capabilities = await call(first, 'get_capabilities');
   assert.equal(capabilities.mode, 'headless');
+  const modeTemplates = await call(first, 'get_mode_key_templates', {
+    mode: 6,
+  });
+  assert.equal(modeTemplates.templates.length, 5);
+  assert.deepEqual(
+    modeTemplates.templates.find((template) => template.templateId === 604),
+    {
+      templateId: 604,
+      mode: 6,
+      description: 'Heptaphonic (Makam Hicâzkâr)',
+      scale: 'HardChromatic',
+      scaleNote: 'PaHigh',
+      supportsOptionalDiatonicFthora: false,
+    },
+  );
   assert.deepEqual(await call(first, 'list_documents'), []);
   await assert.rejects(
     () => call(first, 'list_documents', { documentScope: 'editor' }),
@@ -69,6 +84,75 @@ try {
     title: 'Automatic private document',
   });
   assert.equal(privateDocument.selected, false);
+  const privateArgs = { documentId: privateDocument.documentId };
+  let modeEdit = await call(first, 'edit_elements', {
+    ...privateArgs,
+    expectedRevision: privateDocument.revision,
+    actions: [
+      {
+        action: 'insert',
+        elements: [
+          {
+            elementType: 'ModeKey',
+            properties: {
+              templateId: 604,
+              useOptionalDiatonicFthoras: false,
+              bpm: 123,
+            },
+          },
+        ],
+      },
+    ],
+  });
+  let modeElements = await call(first, 'get_elements', privateArgs);
+  const modeRef = modeElements.elements[0].elementRef;
+  assert.equal(modeElements.elements[0].properties.scaleNote, 'PaHigh');
+  assert.equal(
+    modeElements.elements[0].properties.fthoraAboveNote,
+    'HardChromaticPa_Top',
+  );
+  modeEdit = await call(first, 'edit_elements', {
+    ...privateArgs,
+    expectedRevision: modeEdit.revision,
+    actions: [
+      {
+        action: 'update',
+        elementRef: modeRef,
+        elementType: 'ModeKey',
+        properties: { templateId: 100, useOptionalDiatonicFthoras: true },
+      },
+    ],
+  });
+  modeElements = await call(first, 'get_elements', privateArgs);
+  assert.equal(
+    modeElements.elements[0].properties.fthoraAboveNote,
+    'DiatonicPa_Top',
+  );
+  assert.equal(
+    modeElements.elements[0].properties.quantitativeNeumeRight,
+    undefined,
+  );
+  assert.equal(modeElements.elements[0].properties.bpm, 123);
+  const invalidModeEdit = await first.callTool({
+    name: 'edit_elements',
+    arguments: {
+      ...privateArgs,
+      expectedRevision: modeEdit.revision,
+      actions: [
+        {
+          action: 'update',
+          elementRef: modeRef,
+          elementType: 'ModeKey',
+          properties: { templateId: 703 },
+        },
+      ],
+    },
+  });
+  assert.equal(
+    invalidModeEdit.structuredContent.error.code,
+    'VALIDATION_ERROR',
+  );
+
   assert.equal((await call(first, 'list_documents')).length, 1);
   assert.deepEqual(await call(second, 'list_documents'), []);
   const definitions = await first.listTools();

@@ -97,12 +97,23 @@ export function getElementCatalog(
     query.properties !== undefined;
   const schemas = (type: ElementType) => {
     const read = elementPropertySchemas[type];
-    const names = Object.keys(read.shape).filter(
+    const names = [
+      ...new Set([
+        ...Object.keys(read.shape),
+        ...(query.view !== 'read'
+          ? Object.keys(elementEditPropertySchemas[type].shape)
+          : []),
+      ]),
+    ].filter(
       (key) => query.properties === undefined || query.properties.includes(key),
     );
     const pick = (schema: z.ZodObject) =>
       z.strictObject(
-        Object.fromEntries(names.map((key) => [key, schema.shape[key]])),
+        Object.fromEntries(
+          names
+            .filter((key) => Object.hasOwn(schema.shape, key))
+            .map((key) => [key, schema.shape[key]]),
+        ),
       );
     return {
       ...(query.view === 'names' ? { propertyNames: names } : {}),
@@ -131,8 +142,11 @@ export function getElementCatalog(
       .filter(
         (type) =>
           query.properties === undefined ||
-          query.properties.some((key) =>
-            Object.hasOwn(elementPropertySchemas[type].shape, key),
+          query.properties.some(
+            (key) =>
+              Object.hasOwn(elementPropertySchemas[type].shape, key) ||
+              (query.view !== 'read' &&
+                Object.hasOwn(elementEditPropertySchemas[type].shape, key)),
           ),
       )
       .map((elementType) => ({

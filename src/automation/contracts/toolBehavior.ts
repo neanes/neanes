@@ -1,7 +1,11 @@
 import type { AutomationTool } from './protocol';
 
 export function canRunWhileEditorBusy(tool: AutomationTool) {
-  return tool === 'get_capabilities' || tool === 'get_element_catalog';
+  return (
+    tool === 'get_capabilities' ||
+    tool === 'get_element_catalog' ||
+    tool === 'get_mode_key_templates'
+  );
 }
 
 const readOnlyTools = new Set<AutomationTool>([
@@ -11,6 +15,7 @@ const readOnlyTools = new Set<AutomationTool>([
   'get_page_setup',
   'get_header_footer_settings',
   'get_element_catalog',
+  'get_mode_key_templates',
   'get_elements',
   'find_elements',
   'find_text',

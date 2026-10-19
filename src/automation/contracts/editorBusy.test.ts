@@ -10,7 +10,11 @@ describe('editor busy policy', () => {
     const allowed = (Object.keys(automationSchemas) as AutomationTool[]).filter(
       canRunWhileEditorBusy,
     );
-    expect(allowed.sort()).toEqual(['get_capabilities', 'get_element_catalog']);
+    expect(allowed.sort()).toEqual([
+      'get_capabilities',
+      'get_element_catalog',
+      'get_mode_key_templates',
+    ]);
   });
 
   it.each<EditorBusyState>([

@@ -14,6 +14,7 @@ import { assertElementPredicateBounds } from './elementPredicates';
 import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
 import { elementLookupShape, elementSearchShape } from './elementSearchSchema';
 import type { AutomationOutcome } from './errors';
+import { modeKeyTemplatesQuerySchema } from './modeKeyTemplates';
 import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
 import { textSearchShape } from './textSearchSchema';
@@ -34,6 +35,7 @@ export const automationSchemas = {
     includeErrorCodes: z.boolean().default(false),
   }),
   get_element_catalog: elementCatalogQuerySchema,
+  get_mode_key_templates: modeKeyTemplatesQuerySchema,
   get_elements: z.strictObject({
     sessionId,
     documentId,

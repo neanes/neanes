@@ -16,6 +16,7 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import type { LyricSetup } from '@/models/LyricSetup';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   getSecondaryNeume,
   getTertiaryNeume,
@@ -38,6 +39,7 @@ import {
   elementEditBatchSchema,
   elementEditPropertySchemas,
 } from '../contracts/elementEditSchema';
+import { modeKeyTemplateFields } from '../contracts/modeKeyTemplates';
 import type { ElementDiscovery } from './elementDiscovery';
 import {
   childCollections,
@@ -262,6 +264,23 @@ export function planElementEdits(
       update[key] = Reflect.get(defaults!, key);
     }
     Object.assign(update, properties);
+    if (
+      element instanceof ModeKeyElement &&
+      Object.hasOwn(properties, 'templateId')
+    ) {
+      const template = modeKeyTemplates.find(
+        (item) => item.id === properties.templateId,
+      )!;
+      const constructed = ModeKeyElement.createFromTemplate(
+        template,
+        properties.useOptionalDiatonicFthoras as boolean,
+      );
+      for (const key of modeKeyTemplateFields) {
+        update[key] = constructed[key];
+      }
+    }
+    // This construction option is not a live or saved element property.
+    delete update.useOptionalDiatonicFthoras;
     // UI selection always chooses a default. A partial API update preserves
     // custom interpretations when the fthora is unchanged, and explicit nulls.
     for (const fthoraKey of Object.keys(

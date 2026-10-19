@@ -45,8 +45,8 @@ describe('MCP token efficiency contracts', () => {
       ),
     };
     console.info('MCP published inventory sizes (characters)', sizes);
-    // Includes the find_text input and occurrence output schemas.
-    expect(tools).toHaveLength(29);
+    // Includes text search and mode-key template discovery.
+    expect(tools).toHaveLength(30);
     expect(sizes.inventory).toBeLessThan(133000);
     expect(sizes.inputs).toBeLessThan(40000);
     expect(sizes.outputs).toBeLessThan(74000);

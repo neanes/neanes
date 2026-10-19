@@ -9,6 +9,7 @@ import {
   literalLyricsDescription,
   lyricParserDescription,
 } from './lyricSyntax';
+import { modeKeyEditIssue } from './modeKeyTemplates';
 
 export const editReferenceSchema = z
   .union([
@@ -124,9 +125,15 @@ function editPropertySchema(type: ElementType) {
         );
     }
     if (key === 'templateId') {
-      value = z.number().int().nonnegative();
+      value = z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          'Apply a catalog template together with useOptionalDiatonicFthoras. Discover IDs with get_mode_key_templates.',
+        );
     }
-    if (optional) {
+    if (optional && key !== 'templateId') {
       value = value.nullable();
     }
     if (
@@ -172,6 +179,14 @@ function editPropertySchema(type: ElementType) {
     }
     shape[key] = value.optional();
   }
+  if (type === ElementType.ModeKey) {
+    shape.useOptionalDiatonicFthoras = z
+      .boolean()
+      .optional()
+      .describe(
+        'Operation input, not persisted. Required with templateId. Adds optional diatonic fthoras when supported; false preserves built-in fthoras. Does not change page setup.',
+      );
+  }
   return z.strictObject(shape);
 }
 export const elementEditPropertySchemas = Object.fromEntries(
@@ -190,7 +205,15 @@ function validateProperties(
   type: ElementType,
   values: Record<string, unknown>,
   ctx: z.RefinementCtx,
+  creating = false,
+  reset: string[] = [],
 ) {
+  if (type === ElementType.ModeKey) {
+    const issue = modeKeyEditIssue(values, creating, reset);
+    if (issue) {
+      ctx.addIssue({ code: 'custom', path: ['properties'], message: issue });
+    }
+  }
   const result = elementEditPropertySchemas[type].safeParse(values);
   if (!result.success) {
     for (const issue of result.error.issues) {
@@ -207,7 +230,7 @@ export const elementDefinitionSchema = z
     clientId: clientId.optional(),
   })
   .superRefine((element, ctx) =>
-    validateProperties(element.elementType, element.properties, ctx),
+    validateProperties(element.elementType, element.properties, ctx, true),
   );
 export const elementEditActionSchema = z.discriminatedUnion('action', [
   z.strictObject({
@@ -225,7 +248,13 @@ export const elementEditActionSchema = z.discriminatedUnion('action', [
       reset: z.array(z.string()).default([]),
     })
     .superRefine((element, ctx) =>
-      validateProperties(element.elementType, element.properties, ctx),
+      validateProperties(
+        element.elementType,
+        element.properties,
+        ctx,
+        false,
+        element.reset,
+      ),
     ),
   z.strictObject({
     action: z.literal('replace'),

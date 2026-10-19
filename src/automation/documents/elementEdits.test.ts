@@ -3,9 +3,11 @@ import { reactive } from 'vue';
 
 import {
   AcceptsLyricsOption,
+  ModeKeyElement,
   NoteElement,
   TextBoxElement,
 } from '@/models/Element';
+import { modeKeyTemplates } from '@/models/ModeKeys';
 import { Fthora, QuantitativeNeume } from '@/models/Neumes';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
@@ -388,7 +390,10 @@ describe('validated element transactions', () => {
     const { workspace, edit } = document();
     edit([
       insert([
-        { elementType: 'ModeKey' },
+        {
+          elementType: 'ModeKey',
+          properties: { templateId: 100, useOptionalDiatonicFthoras: false },
+        },
         { elementType: 'Note' },
         { elementType: 'Martyria' },
         { elementType: 'Tempo' },
@@ -788,7 +793,18 @@ describe('validated element transactions', () => {
     'defaults %s %s BPM on creation/replacement while preserving partial-update omissions',
     (elementType, signKey, sign, bpm) => {
       const { workspace, discovery, edit } = document();
-      edit([insert([{ elementType, properties: { [signKey]: sign } }])]);
+      const templateProperties =
+        elementType === 'ModeKey'
+          ? { templateId: 100, useOptionalDiatonicFthoras: false }
+          : {};
+      edit([
+        insert([
+          {
+            elementType,
+            properties: { ...templateProperties, [signKey]: sign },
+          },
+        ]),
+      ]);
       const element = workspace.score.staff.elements[0];
       expect(Reflect.get(element, 'bpm')).toBe(bpm);
       const loaded = SaveService.LoadScoreFromJson(
@@ -808,7 +824,10 @@ describe('validated element transactions', () => {
         {
           action: 'replace',
           elementRef: discovery.reference(element),
-          element: { elementType, properties: { [signKey]: sign, bpm: 123 } },
+          element: {
+            elementType,
+            properties: { ...templateProperties, [signKey]: sign, bpm: 123 },
+          },
         },
       ]);
       const replacement = workspace.score.staff.elements[0];
@@ -817,7 +836,10 @@ describe('validated element transactions', () => {
         {
           action: 'replace',
           elementRef: discovery.reference(replacement),
-          element: { elementType, properties: { [signKey]: sign } },
+          element: {
+            elementType,
+            properties: { ...templateProperties, [signKey]: sign },
+          },
         },
       ]);
       expect(Reflect.get(workspace.score.staff.elements[0], 'bpm')).toBe(bpm);
@@ -903,5 +925,208 @@ describe('validated element transactions', () => {
         (note) => note.lyrics,
       ),
     ).toEqual(['l', 'le', 'lu']);
+  });
+});
+
+describe('mode-key template transactions', () => {
+  it.each(
+    modeKeyTemplates.flatMap((template) =>
+      [true, false].map((enabled) => ({ template, enabled })),
+    ),
+  )(
+    'constructs template $template.id with optional fthoras $enabled and round-trips it',
+    ({ template, enabled }) => {
+      const { workspace, edit } = document();
+      edit([
+        insert([
+          {
+            elementType: 'ModeKey',
+            properties: {
+              templateId: template.id,
+              useOptionalDiatonicFthoras: enabled,
+            },
+          },
+        ]),
+      ]);
+      const expected = ModeKeyElement.createFromTemplate(template, enabled);
+      expect(
+        (
+          workspace.score.staff.elements[0] as ModeKeyElement
+        ).getClipboardProperties(),
+      ).toEqual(expected.getClipboardProperties());
+      const loaded = SaveService.LoadScoreFromJson(
+        JSON.parse(saved(workspace)),
+      );
+      expect(
+        (loaded.staff.elements[0] as ModeKeyElement).getClipboardProperties(),
+      ).toEqual(expected.getClipboardProperties());
+      expect(
+        Object.hasOwn(
+          workspace.score.staff.elements[0],
+          'useOptionalDiatonicFthoras',
+        ),
+      ).toBe(false);
+      expect(workspace.score.pageSetup.useOptionalDiatonicFthoras).toBe(false);
+    },
+  );
+
+  it('clears old template fields, preserves unrelated settings, and supports undo/redo', () => {
+    const { workspace, discovery, edit } = document();
+    edit([
+      insert([
+        {
+          elementType: 'ModeKey',
+          properties: {
+            templateId: 603,
+            useOptionalDiatonicFthoras: true,
+            alignment: 'left',
+            color: '#123456',
+            tempo: 'Slow',
+            bpm: 123,
+            ignoreAttractions: true,
+          },
+        },
+      ]),
+    ]);
+    const element = workspace.score.staff.elements[0] as ModeKeyElement;
+    const elementRef = discovery.reference(element);
+    const before = saved(workspace);
+    edit([
+      {
+        action: 'update',
+        elementRef,
+        elementType: 'ModeKey',
+        properties: { templateId: 100, useOptionalDiatonicFthoras: true },
+      },
+    ]);
+    expect(element).toMatchObject({
+      templateId: 100,
+      mode: 1,
+      scaleNote: 'Pa',
+      note2: null,
+      quantitativeNeumeAboveNote2: null,
+      fthoraAboveNote: Fthora.DiatonicPa_Top,
+      alignment: 'left',
+      color: '#123456',
+      tempo: 'Slow',
+      bpm: 123,
+      ignoreAttractions: true,
+    });
+    const after = saved(workspace);
+    workspace.commandService.undo();
+    expect(saved(workspace)).toBe(before);
+    workspace.commandService.redo();
+    expect(saved(workspace)).toBe(after);
+    edit([
+      {
+        action: 'update',
+        elementRef,
+        elementType: 'ModeKey',
+        properties: { templateId: 100, useOptionalDiatonicFthoras: false },
+      },
+    ]);
+    expect(element.fthoraAboveNote).toBeNull();
+    edit([
+      {
+        action: 'update',
+        elementRef,
+        elementType: 'ModeKey',
+        properties: { color: '#abcdef' },
+      },
+    ]);
+    expect(element.templateId).toBe(100);
+    expect(element.color).toBe('#abcdef');
+    edit([
+      {
+        action: 'replace',
+        elementRef,
+        element: {
+          elementType: 'ModeKey',
+          properties: { templateId: 604, useOptionalDiatonicFthoras: false },
+        },
+      },
+    ]);
+    expect(workspace.score.staff.elements[0]).toMatchObject({
+      templateId: 604,
+      mode: 6,
+      scale: 'HardChromatic',
+      scaleNote: 'PaHigh',
+      fthoraAboveNote: Fthora.HardChromaticPa_Top,
+    });
+  });
+
+  it.each([
+    {},
+    { templateId: 100 },
+    { useOptionalDiatonicFthoras: true },
+    { templateId: 999, useOptionalDiatonicFthoras: false },
+    { templateId: null, useOptionalDiatonicFthoras: false },
+    { templateId: 100, useOptionalDiatonicFthoras: null },
+    {
+      templateId: 100,
+      useOptionalDiatonicFthoras: false,
+      scale: 'HardChromatic',
+    },
+  ])(
+    'rejects incomplete or conflicting creation and replacement %j atomically',
+    (properties) => {
+      const { workspace, discovery, edit } = document();
+      const before = saved(workspace);
+      expect(() =>
+        edit([
+          insert([
+            { elementType: 'Note' },
+            { elementType: 'ModeKey', properties },
+          ]),
+        ]),
+      ).toThrow();
+      expect(saved(workspace)).toBe(before);
+      edit([insert([{ elementType: 'Note' }])]);
+      const beforeReplace = saved(workspace);
+      expect(() =>
+        edit([
+          {
+            action: 'replace',
+            elementRef: discovery.reference(workspace.score.staff.elements[0]),
+            element: { elementType: 'ModeKey', properties },
+          },
+        ]),
+      ).toThrow();
+      expect(saved(workspace)).toBe(beforeReplace);
+    },
+  );
+
+  it.each([
+    { properties: { templateId: 100 } },
+    { properties: { useOptionalDiatonicFthoras: false } },
+    { properties: { templateId: 999, useOptionalDiatonicFthoras: false } },
+    {
+      properties: { templateId: 100, useOptionalDiatonicFthoras: false },
+      reset: ['note2'],
+    },
+    { properties: {}, reset: ['templateId'] },
+    { properties: {}, reset: ['useOptionalDiatonicFthoras'] },
+  ])('rejects invalid template updates %j without changes', (change) => {
+    const { workspace, discovery, edit } = document();
+    edit([
+      insert([
+        {
+          elementType: 'ModeKey',
+          properties: { templateId: 100, useOptionalDiatonicFthoras: false },
+        },
+      ]),
+    ]);
+    const before = saved(workspace);
+    expect(() =>
+      edit([
+        {
+          action: 'update',
+          elementRef: discovery.reference(workspace.score.staff.elements[0]),
+          elementType: 'ModeKey',
+          ...change,
+        },
+      ]),
+    ).toThrow();
+    expect(saved(workspace)).toBe(before);
   });
 });

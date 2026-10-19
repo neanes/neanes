@@ -17,6 +17,7 @@ import {
   automationError,
   automationErrorCodes,
 } from '../contracts/errors';
+import { getModeKeyTemplates } from '../contracts/modeKeyTemplates';
 import type { PreviewImage } from '../contracts/preview';
 import type { AutomationRequest } from '../contracts/protocol';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
@@ -136,6 +137,9 @@ export class McpDocumentAdapter {
         this.states.delete(id);
         this.discoveries.delete(id);
       }
+    }
+    if (request.tool === 'get_mode_key_templates') {
+      return getModeKeyTemplates(request.arguments);
     }
     if (request.tool === 'get_element_catalog') {
       return getElementCatalog(request.arguments);

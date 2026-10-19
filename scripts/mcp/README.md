@@ -158,6 +158,7 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 - `get_capabilities`: supported style actions, units, formats, and installed/bundled font families. Pass `includeErrorCodes: true` for the stable error-code vocabulary.
 - `list_documents`: open workspace IDs, revisions, canonical source paths, source format (`byz`, `byzx`, or null), selection, and unsaved state.
 - `get_element_catalog`: defaults to a small inventory of element types, child collections, units, and stored header/footer variants. Request `elementTypes: ["Note"]` and/or `properties: ["lyrics", "isMelisma"]` for focused schemas; `view: "read" | "edit" | "both"` defaults to both. Read schemas are in `properties`, writable validation schemas in `editProperties` (null for `Empty`). A property filter omits types without matching properties. `includeProperties: true` requests all property schemas; `includeNeumes: true` adds the full enum vocabulary. Schemas use self-contained local `$defs`/`$ref`; clients must resolve references within each schema. The shared `tempoBpmDefaults` map exposes all tempo-sign BPM defaults. Dimensions are CSS pixels; line height is a multiplier. Tool input schemas use JSON Schema input semantics, so defaulted fields may be omitted; response schemas describe settled output. Tool schemas advertise compact property maps; the server still validates every supplied property against its complete element-specific schema.
+- `get_mode_key_templates`: compact mode-key template summaries with stable English descriptions, internal `scale`/`scaleNote`, and `supportsOptionalDiatonicFthora`. Optional `mode` (1-4 authentic, 5 plagal first, 6 plagal second, 7 grave, 8 plagal fourth) and `templateIds` filters combine with AND; no filters returns all templates. No document/session is required. Musical terminology is interpreted by the agent; there is no text search or alias catalog.
 - `get_elements`: typed, read-only elements from `collection` (default `{ kind: "staff" }`). Ranges are zero-based, `start` inclusive and `end` exclusive; omitted `end` means the collection size. `offset` and `nextOffset` are relative to that range; `limit` defaults to 100, maximum 1000. Empty ranges and an offset at the range end return no elements. Out-of-bounds or reversed ranges return `INVALID_ELEMENT_RANGE`. Pass the first page's `revision` as `expectedRevision` on subsequent pages to reject mixed-revision reads. Each element has an opaque `elementRef`, its collection index, typed live `properties`, and child-collection counts. Discover children with `{ kind: "children", parentRef: elementRef, collection: "annotations" | "alternateLines" | "elements" }`. Unknown/removed/cross-document references return `ELEMENT_NOT_FOUND`; an unsupported child collection returns `INVALID_ELEMENT_COLLECTION`. References survive movement, content changes, and undo restoration of the same live object, but only within one open document; closing/reopening assigns fresh references. They are not saved IDs or layout indexes. Staff reads include the terminal `Empty` sentinel. Read stored templates with `{ kind: "headers" | "footers", variant: "default" | "firstPage" | "odd" | "even" | "chapterOpening" }`, including disabled variants; these are not page-resolved instances. Element properties omit null and undefined values except `lineHeight: null` for text boxes and drop caps, which explicitly resets line height to normal. Omitted `lineHeight` inherits the paragraph style; a numeric value overrides its multiplier. Other missing properties are unset. Values such as `false`, `0`, and `""` remain present. Use `properties: ["quantitativeNeume", "lyrics"]` to select fields, or `properties: []` for identities/indexes/child counts only. Unknown property names are rejected; fields inapplicable to an element type are omitted. `includeContent: false` omits image `data` and all five text-box `content*` fields, even if selected. Annotation `text` and drop-cap `content` are included by default when requested by the field projection. If an annotation or drop cap exceeds the element budget, its content is omitted with an explicit `omittedContent` field listing the property; use `get_element_content` to retrieve it exactly. Note lyrics remain ordinary properties. Properties default to all readable fields, with large content excluded (`includeContent: false`). Pages may end before `limit` to fit a 24,000-character JSON budget; always follow `nextOffset`. In a projected view, missing fields may be unrequested or excluded content; do not infer defaults or use projections as complete replacement definitions. Retrieve content explicitly by selecting its property with `includeContent: true`. The catalog marks unsettable properties optional; published outputs use compact property envelopes while runtime validation remains element-specific. Properties omit layout caches; annotations/alternate lines expose their stored x/y offsets.
 - `find_text`: find literal text across lyrics, drop caps, annotations, and plain/rich text-box panels, with snippets and element references. See the text search contract below.
 - `find_elements`: search stored element fields with `eq`, `in`, `isNull`, and `isNotNull`, nested inside `and`/`or` groups. Optional `elementTypes` restricts types. Defaults to document scope (staff and descendants, then stored header/footer variants, including disabled variants), compact `properties: []`, and `includeContent: false`. Results carry a `collection` and zero-based `index` per match. See the search contract below.
@@ -733,3 +734,45 @@ places in its context.
 and output views, and validates published schemas. Pure discovery/document/style
 regressions cover representative response sizes; the transaction smoke script
 checks focused reads in both interactive and isolated document modes.
+
+## Mode-key templates
+
+Discover templates with `get_mode_key_templates`, usually filtered by mode. For
+example, mode 6 includes template 604, "Heptaphonic (Makam Hicâzkâr)"; mode 7
+includes template 703, "Pentaphonic (Makam Ferâhnâk)". Mode 1 includes both 100,
+"Heirmologic and Sticheraric", and 104, "Heirmologic (from Di)". Inspect the
+returned descriptions and starting notes to choose the requested variant.
+
+ModeKey insertions and replacements require both construction properties:
+
+```json
+{
+  "action": "insert",
+  "elements": [
+    {
+      "elementType": "ModeKey",
+      "properties": {
+        "templateId": 100,
+        "useOptionalDiatonicFthoras": true
+      }
+    }
+  ]
+}
+```
+
+For an existing mode key, use an `update` action with its `elementRef`,
+`elementType: "ModeKey"`, and the same pair of properties. Supplying either
+requires both, even when reapplying the same template. The server applies every
+template-owned musical and notation field and clears fields absent from the new
+template. It preserves unrelated style, alignment, tempo/BPM, break, attraction,
+and ambitus settings on updates. Styling and tempo updates alone need no template
+pair. These actions use the existing revision checks and atomic undo transaction.
+
+`useOptionalDiatonicFthoras` is an operation input, not a stored element property.
+It adds the optional diatonic sign when supported. False never removes built-in
+fthoras; either value is accepted without effect for templates with no optional
+sign. It does not change the page-setup preference. Read resulting notation with
+`get_elements`/`get_element`. Do not combine template application with raw
+notation/scale properties or resets of those fields. Advanced custom notation
+can be applied in a separate update; a stored template ID then identifies its
+origin rather than guaranteeing that all notation still matches the template.

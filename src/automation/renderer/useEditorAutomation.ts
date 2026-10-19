@@ -109,6 +109,7 @@ export function useEditorAutomation(options: {
           options.requireSessions &&
           request.tool !== 'get_capabilities' &&
           request.tool !== 'get_element_catalog' &&
+          request.tool !== 'get_mode_key_templates' &&
           (!('sessionId' in request.arguments) || !request.arguments.sessionId)
         ) {
           throw new AutomationError({

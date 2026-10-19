@@ -26,6 +26,7 @@ import {
   elementSearchResultShape,
 } from './elementSearchSchema';
 import { automationErrorSchema } from './errors';
+import { modeKeyTemplatesResultSchema } from './modeKeyTemplates';
 import { pageElementsResultShape, pageListResultShape } from './pageSchemas';
 import type { AutomationTool } from './protocol';
 import { selectionResultShape } from './selectionSchema';
@@ -95,6 +96,7 @@ export const automationResultSchemas = {
     selectedDocumentId: z.string().min(1).nullable(),
   }),
   get_element_catalog: elementCatalogSchema,
+  get_mode_key_templates: modeKeyTemplatesResultSchema,
   get_elements: documentSummarySchema.extend(elementPageShape),
   find_text: documentSummarySchema.extend(textSearchResultShape),
   find_elements: documentSummarySchema.extend(elementSearchResultShape),

@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 
 import { ElementType } from '@/models/Element';
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
+import { fontCatalog } from '@/services/FontCatalog';
+import { applyLegacyStyle } from '@/utils/fontStyle';
 import {
   normalizeAlternatesStyle,
   normalizeLigatureStyle,
@@ -135,6 +137,31 @@ describe('rich-text authoring discovery', () => {
       'neanes-paragraph-style-default-text',
     );
   });
+
+  it.each([
+    ['700', 'Bold'],
+    ['400', 'Regular'],
+  ])(
+    'resets face aliases before applying weight %s and upright slant',
+    (weight, expected) => {
+      const { guide } = getRichTextFormat({ topics: ['inline'] });
+      expect(guide).toContain(
+        'replace stale face aliases with the base family',
+      );
+      expect(guide).toContain(
+        "'Source Serif Bold Italic' -> font-family:'Source Serif';font-weight:700;font-style:normal",
+      );
+      const stale = fontCatalog.splitFace('Source Serif Bold Italic');
+      const styles = fontCatalog.getStyles(stale.family);
+      expect(
+        applyLegacyStyle(stale.style, { weight, italic: false }, styles),
+      ).toBe('Bold Italic');
+      const base = fontCatalog.splitFace(stale.family);
+      expect(
+        applyLegacyStyle(base.style, { weight, italic: false }, styles),
+      ).toBe(expected);
+    },
+  );
 
   it('documents OpenType examples that survive the real property normalizers', () => {
     const { guide } = getRichTextFormat({ topics: ['opentype'] });

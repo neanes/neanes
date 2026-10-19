@@ -1488,7 +1488,8 @@ defineExpose({
   outline: none !important;
 }
 
-.page.print .neume-box .selected {
+.page.print .neume-box .selected,
+.page.print .neume-box .audio-selected {
   background-color: initial;
 }
 

@@ -4,6 +4,8 @@ import type {
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsLatexArgs,
@@ -147,8 +149,21 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async printWorkspace(workspace: Workspace) {
+  public async exportSnapshotAsPng(
+    args: ExportSnapshotAsPngArgs,
+  ): Promise<ExportSnapshotAsPngReplyArgs> {
+    return window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportSnapshotAsPng,
+      args,
+    );
+  }
+
+  public async printWorkspace(
+    workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
+  ) {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
+      snapshot,
       landscape: workspace.score.pageSetup.landscape,
       pageSize: workspace.score.pageSetup.pageSize,
       pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),

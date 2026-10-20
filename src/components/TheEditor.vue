@@ -10205,6 +10205,13 @@ function renderTabLabel(tab: Tab) {
   transition: opacity 0.3s ease;
   color: white;
 }
+
+.richTextBoxCalculation,
+.textBoxCalculation {
+  position: absolute;
+  left: -99999999px;
+}
+
 .page-container {
   display: flex;
   flex-direction: column;

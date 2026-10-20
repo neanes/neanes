@@ -9,13 +9,9 @@ import {
   PhClipboardText,
   PhCopy,
   PhCrosshair,
-  PhFile,
-  PhLinkSimpleHorizontal,
-  PhParagraph,
   PhScissors,
   PhSelectionAll,
   PhSlidersHorizontal,
-  PhTextAlignCenter,
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
@@ -42,11 +38,9 @@ import type { Tab } from 'vue3-tabs-chrome';
 import Vue3TabsChrome from 'vue3-tabs-chrome';
 
 import AboutDialog from '@/components/AboutDialog.vue';
-import AlternateLine from '@/components/AlternateLine.vue';
-import ContentEditable from '@/components/ContentEditable.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
 import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
-import DropCap from '@/components/DropCap.vue';
+import type DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import type {
   ExportAsLatexSettings,
@@ -56,14 +50,8 @@ import type {
 import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
-import ImageBox from '@/components/ImageBox.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
-import ModeKey from '@/components/ModeKey.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
-import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
-import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
-import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
-import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
@@ -73,9 +61,10 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RecoveryDialog from '@/components/RecoveryDialog.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
+import type { ScorePageHandlers } from '@/components/ScorePageContent.types';
+import ScorePageContent from '@/components/ScorePageContent.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
-import Annotation from '@/components/TextAnnotation.vue';
 import TextBox from '@/components/TextBox.vue';
 import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
@@ -135,8 +124,11 @@ import {
   DEFAULT_PANE_ACCORDION_STATE,
   EditorEnvironment,
 } from '@/models/EditorEnvironment';
-import { EditorPreferences } from '@/models/EditorPreferences';
-import type { EmptyElement, ScoreElement } from '@/models/Element';
+import {
+  EditorPreferences,
+  type ScoreOverlaySettings,
+} from '@/models/EditorPreferences';
+import type { LineBreakType, ScoreElement } from '@/models/Element';
 import {
   AlternateLineElement,
   AnnotationElement,
@@ -144,8 +136,6 @@ import {
   DropCapElement,
   ElementType,
   ImageBoxElement,
-  isKeepWithNextActive,
-  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -155,7 +145,6 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type {
-  BoxOverlayDiagnostics,
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
@@ -188,7 +177,7 @@ import {
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import type { Line, Page } from '@/models/Page';
+import type { Page } from '@/models/Page';
 import type { PageSetup } from '@/models/PageSetup';
 import type {
   ParagraphStyle,
@@ -237,7 +226,6 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
-import { getLyricsBaseline } from '@/services/LyricsLayout';
 import {
   classifyRecoveryCandidates,
   getRecoveryCandidateGroupRecoveryIds,
@@ -256,7 +244,16 @@ import {
   rewriteClipboardTextBoxFormatParagraphStyleId,
 } from '@/utils/clipboardParagraphStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
-import { isDropCapElement } from '@/utils/elementTypeGuards';
+import {
+  isDropCapElement,
+  isImageBoxElement,
+  isMartyriaElement,
+  isModeKeyElement,
+  isRichTextBoxElement,
+  isSyllableElement,
+  isTempoElement,
+  isTextBoxElement,
+} from '@/utils/elementTypeGuards';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
@@ -285,7 +282,7 @@ import {
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { withZoom, withZoomOffset } from '@/utils/withZoom';
+import { withZoom } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
   addTab: (...newTabs: Array<Tab>) => void;
@@ -428,29 +425,31 @@ function scheduleWorkspaceTabLayout() {
   });
 }
 
-const dynamicTemplateRefs = new Map<string, unknown[]>();
-const dynamicTemplateRefSetters = new Map<string, (value: unknown) => void>();
+const scorePageContents =
+  useTemplateRef<InstanceType<typeof ScorePageContent>[]>('scorePageContents');
 
-function getTemplateRef<T>(name: string) {
-  return (dynamicTemplateRefs.get(name) ?? []) as T;
+function getPageContent(pageIndex: number) {
+  return scorePageContents.value?.find(
+    (page) => page.getPageIndex() === pageIndex,
+  );
 }
 
-function setTemplateRef(name: string) {
-  let setter = dynamicTemplateRefSetters.get(name);
-
-  if (setter == null) {
-    setter = (value: unknown) => {
-      if (value == null) {
-        dynamicTemplateRefs.delete(name);
-      } else {
-        dynamicTemplateRefs.set(name, [value]);
-      }
-    };
-
-    dynamicTemplateRefSetters.set(name, setter);
+function getElementComponent<T>(index: number): T | undefined {
+  for (const page of scorePageContents.value ?? []) {
+    const component = page.getElementRef<T>(index);
+    if (component != null) {
+      return component;
+    }
   }
+}
 
-  return setter;
+function getLyricsComponent(index: number) {
+  for (const page of scorePageContents.value ?? []) {
+    const component = page.getLyricsRef(index);
+    if (component != null) {
+      return component;
+    }
+  }
 }
 
 type RichTextBoxComponent = {
@@ -458,15 +457,10 @@ type RichTextBoxComponent = {
   getPendingUpdates: () => Partial<RichTextBoxElement> | null;
 };
 
-type AnnotationComponent = {
-  focus: () => void;
-  getCurrentText: () => string;
-  getPendingUpdates: () => Partial<AnnotationElement>;
-};
-
 const preferredRichTextBoxFocusTarget = ref<{
   element: RichTextBoxElement;
-  refName: string;
+  pageIndex: number;
+  region: 'header' | 'footer';
 } | null>(null);
 
 const searchTextQuery = ref('');
@@ -955,12 +949,24 @@ const showCollisionRegions = computed(
   () => editorPreferences.value.showCollisionRegions,
 );
 
+const pageOverlaySettings = computed<ScoreOverlaySettings>(() => ({
+  showDeveloperPanels: showDeveloperPanels.value,
+  overlaysEnabled: overlaysEnabled.value,
+  printOverlays: printOverlays.value,
+  showGuides: showGuides.value,
+  showAdjustmentRatios: showAdjustmentRatios.value,
+  showAnonymousBoxes: showAnonymousBoxes.value,
+  showElementBoxes: showElementBoxes.value,
+  showInkBoundingBoxes: showInkBoundingBoxes.value,
+  showGlueWidths: showGlueWidths.value,
+  showLyricBaselines: showLyricBaselines.value,
+  showLyricBoundingBoxes: showLyricBoundingBoxes.value,
+  showNeumeBoundingBoxes: showNeumeBoundingBoxes.value,
+  showCollisionRegions: showCollisionRegions.value,
+}));
+
 const shouldCollectLayoutDiagnostics = computed(
   () => showDeveloperPanels.value,
-);
-
-const shouldRenderDeveloperOverlaysInPrint = computed(
-  () => showDeveloperPanels.value && printOverlays.value,
 );
 
 const selectedLyrics = computed({
@@ -1066,169 +1072,6 @@ const developerPaneHasMissingDiagnostics = computed(() => {
 
 function reloadDeveloperPaneDiagnostics() {
   save(false);
-}
-
-function getDeveloperGlueOverlays(
-  page: Page,
-  line: Line,
-  lineIndex: number,
-  pageIndex: number,
-) {
-  const diagnostics = line.diagnostics;
-
-  if (
-    !showDeveloperPanels.value ||
-    !overlaysEnabled.value ||
-    !showGlueWidths.value ||
-    diagnostics == null ||
-    line.elements.length === 0
-  ) {
-    return [];
-  }
-
-  const barHeight = Math.max(3, score.value.pageSetup.lineHeight * 0.06);
-  const barGap = Math.max(2, score.value.pageSetup.lineHeight * 0.03);
-  const stackHeight = barHeight * 2 + barGap;
-  const stackTop =
-    line.elements[0].y +
-    score.value.pageSetup.lineHeight * 0.45 -
-    stackHeight / 2;
-  const preferredTop = stackTop + barHeight + barGap;
-  const resolvedMargins = getResolvedMarginsForPage(page);
-
-  return diagnostics.glueOverlays.map((overlay, overlayIndex) => {
-    const delta = overlay.actualWidth - overlay.preferredWidth;
-    const actualFrame = getDeveloperGlueOverlayFrame(
-      resolvedMargins,
-      line,
-      overlay.left,
-      stackTop,
-      overlay.actualWidth,
-      barHeight,
-    );
-    const preferredFrame = getDeveloperGlueOverlayFrame(
-      resolvedMargins,
-      line,
-      overlay.left,
-      preferredTop,
-      overlay.preferredWidth,
-      barHeight,
-    );
-    const wrapperLeft = Math.min(actualFrame.left, preferredFrame.left);
-    const wrapperTop = Math.min(actualFrame.top, preferredFrame.top);
-    const wrapperRight = Math.max(
-      actualFrame.left + actualFrame.width,
-      preferredFrame.left + preferredFrame.width,
-    );
-    const wrapperBottom = Math.max(
-      actualFrame.top + actualFrame.height,
-      preferredFrame.top + preferredFrame.height,
-    );
-
-    return {
-      actualNegative: overlay.actualWidth < 0,
-      actualStyle: getDeveloperGlueOverlayStyle(
-        actualFrame,
-        wrapperLeft,
-        wrapperTop,
-      ),
-      delta,
-      key: `${pageIndex}-${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlayIndex}`,
-      preferredNegative: overlay.preferredWidth < 0,
-      preferredStyle: getDeveloperGlueOverlayStyle(
-        preferredFrame,
-        wrapperLeft,
-        wrapperTop,
-      ),
-      wrapperStyle: getDeveloperGlueOverlayWrapperStyle({
-        height: wrapperBottom - wrapperTop,
-        left: wrapperLeft,
-        top: wrapperTop,
-        width: wrapperRight - wrapperLeft,
-      }),
-    };
-  });
-}
-
-function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
-  const diagnostics = line.diagnostics;
-
-  if (
-    !showDeveloperPanels.value ||
-    !overlaysEnabled.value ||
-    (!showAnonymousBoxes.value && !showElementBoxes.value) ||
-    diagnostics == null ||
-    line.elements.length === 0
-  ) {
-    return [];
-  }
-
-  const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
-  const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
-  const resolvedMargins = getResolvedMarginsForPage(page);
-
-  const overlays: BoxOverlayDiagnostics[] = [];
-
-  if (showAnonymousBoxes.value) {
-    overlays.push(...diagnostics.anonymousBoxOverlays);
-  }
-
-  if (showElementBoxes.value) {
-    overlays.push(...diagnostics.nonAnonymousBoxOverlays);
-  }
-
-  return overlays.map((overlay, overlayIndex) => ({
-    key: `${lineIndex}-${overlay.anonymous ? 'anon' : 'owned'}-${overlay.ownerElementId ?? 'none'}-${overlay.label ?? 'box'}-${overlayIndex}`,
-    kind: getDeveloperBoxOverlayKind(overlay),
-    label: overlay.label,
-    style: getDeveloperOverlayStyle(
-      getDeveloperGlueOverlayFrame(
-        resolvedMargins,
-        line,
-        overlay.left,
-        top,
-        overlay.width,
-        height,
-      ),
-    ),
-  }));
-}
-
-function getDeveloperLyricBaselines(page: Page) {
-  const resolvedMargins = getResolvedMarginsForPage(page);
-  const context = displayedLyricMetricsContext.value;
-  // Every lyric on the page sits on the same baseline, measured from the top
-  // of its line.
-  const lyricsBaseline = getLyricsBaseline(
-    overlayDiagnosticsContext.value.neumeFontHeight,
-    score.value.pageSetup.lyricsVerticalOffset,
-    context.defaultCanonicalAscent,
-  );
-
-  return page.lines.flatMap((line, lineIndex) => {
-    const note = line.elements.find(
-      (element): element is NoteElement =>
-        element.elementType === ElementType.Note,
-    );
-
-    if (note == null) {
-      return [];
-    }
-
-    return [
-      {
-        key: lineIndex,
-        style: {
-          left: withZoom(resolvedMargins.left),
-          top: withZoomOffset(
-            note.y + lyricsBaseline,
-            context.defaultAscentShift,
-          ),
-          width: withZoom(resolvedMargins.contentWidth),
-        } as StyleValue,
-      },
-    ];
-  });
 }
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
@@ -1497,20 +1340,6 @@ const pageStyle = computed(() => {
     height: withZoom(score.value.pageSetup.pageHeight),
     minHeight: withZoom(score.value.pageSetup.pageHeight),
     maxHeight: withZoom(score.value.pageSetup.pageHeight),
-  } as StyleValue;
-});
-
-const guideStyleTop = computed(() => {
-  return {
-    top: withZoom(score.value.pageSetup.topMargin),
-    width: withZoom(score.value.pageSetup.pageWidth),
-  } as StyleValue;
-});
-
-const guideStyleBottom = computed(() => {
-  return {
-    bottom: withZoom(score.value.pageSetup.bottomMargin),
-    width: withZoom(score.value.pageSetup.pageWidth),
   } as StyleValue;
 });
 
@@ -2075,42 +1904,56 @@ async function initialize() {
   }
 }
 
-const {
-  resolvedDefaultLyricsStyle,
-  displayedLyricMetricsContext,
-  getResolvedMarginsForPage,
-  getHeaderStyle,
-  getFooterStyle,
-  getHeaderHorizontalRuleStyle,
-  getFooterHorizontalRuleStyle,
-  getLyricStyle,
-  getLeadingLyricHyphenStyle,
-  getEmptyBoxStyle,
-  getElementStyle,
-  getMelismaStyle,
-  getMelismaUnderscoreStyleInner,
-  getMelismaHyphenStyle,
-} = useScoreRendering(score, zoom);
+const { resolvedDefaultLyricsStyle, getResolvedMarginsForPage } =
+  useScoreRendering(score, zoom);
+
+const pageInteraction = computed(() => ({
+  isSelected,
+  isAudioSelected,
+  selectedLyrics: selectedLyrics.value,
+  selectedHeaderFooterElement: selectedHeaderFooterElement.value,
+  selectedAnnotationElement: selectedWorkspace.value.selectedAnnotationElement,
+  selectedAlternateLineElement:
+    selectedWorkspace.value.selectedAlternateLineElement,
+  lyricsLocked: lyricsLocked.value,
+}));
+const pageHandlers: ScorePageHandlers = {
+  selectElement: (element) => {
+    selectedElement.value = element;
+  },
+  selectLyrics: (element) => {
+    selectedLyrics.value = element;
+  },
+  selectHeaderFooter: (element) => {
+    selectedHeaderFooterElement.value = element;
+  },
+  selectHeaderRichTextBox,
+  selectFooterRichTextBox,
+  showPropertiesPaneForRichTextNeume,
+  onScoreElementContextMenu,
+  setSelectionRange,
+  openSyllablePositioningDialog,
+  openModeKeyDialog,
+  focusLyrics,
+  updateLyrics,
+  updateDropCapContent,
+  updateTextBox,
+  updateTextBoxHeight,
+  updateRichTextBox,
+  updateRichTextBoxHeight,
+  updateAnnotation,
+  removeAnnotation,
+  setSelectedAnnotation,
+  updateAlternateLine,
+  setSelectedAlternateLine,
+  resizeImage: (size) =>
+    updateImageBox(selectedElement.value as ImageBoxElement, {
+      imageWidth: size.width,
+      imageHeight: size.height,
+    }),
+};
 
 void initialize();
-
-function getGuideStyleLeft(page: Page) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    left: withZoom(margins.left),
-    height: withZoom(score.value.pageSetup.pageHeight),
-  } as StyleValue;
-}
-
-function getGuideStyleRight(page: Page) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    right: withZoom(margins.right),
-    height: withZoom(score.value.pageSetup.pageHeight),
-  } as StyleValue;
-}
 
 function formatDeveloperBox(box: ElementOverlayBox) {
   const lines = [
@@ -2160,172 +2003,6 @@ function getDeveloperPageBox(element: ScoreElement, box: ElementOverlayBox) {
 
 function formatDeveloperNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(2) : String(value);
-}
-
-function getDeveloperBoxOverlayKind(overlay: BoxOverlayDiagnostics) {
-  switch (overlay.label) {
-    case 'line-start-reservation':
-      return 'line-start-reservation';
-    case 'martyria-shift':
-      return 'martyria-shift';
-    case 'lyric-collision':
-      return 'lyric-collision';
-    default:
-      return overlay.anonymous ? 'anonymous' : 'owned';
-  }
-}
-
-function getDeveloperOverlayBoxes(element: ScoreElement) {
-  if (!showDeveloperPanels.value || !overlaysEnabled.value) {
-    return [];
-  }
-
-  if (
-    !showInkBoundingBoxes.value &&
-    !showLyricBoundingBoxes.value &&
-    !showNeumeBoundingBoxes.value &&
-    !showCollisionRegions.value
-  ) {
-    return [];
-  }
-
-  const diagnostics = LayoutService.getElementOverlayDiagnostics(
-    element,
-    getNextElementOnSameLine(element),
-    score.value.pageSetup,
-    overlayDiagnosticsContext.value,
-  );
-  const boxes: Array<{
-    height: number;
-    kind: string;
-    left: number;
-    top: number;
-    width: number;
-  }> = [];
-
-  if (showNeumeBoundingBoxes.value && diagnostics.advanceBox != null) {
-    boxes.push({ ...diagnostics.advanceBox, kind: 'neume' });
-  }
-
-  if (showInkBoundingBoxes.value && diagnostics.inkBox != null) {
-    boxes.push({ ...diagnostics.inkBox, kind: 'ink' });
-  }
-
-  if (showLyricBoundingBoxes.value && diagnostics.lyricBox != null) {
-    boxes.push({ ...diagnostics.lyricBox, kind: 'lyric' });
-  }
-
-  if (showCollisionRegions.value) {
-    boxes.push(
-      ...diagnostics.collisionBoxes.map((box) => ({
-        ...box,
-        kind: 'collision',
-      })),
-    );
-  }
-
-  return boxes;
-}
-
-function getDeveloperOverlayStyle(box: {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}) {
-  return {
-    left: withZoom(box.left),
-    top: withZoom(box.top),
-    width: withZoom(box.width),
-    height: withZoom(box.height),
-  } as StyleValue;
-}
-
-function getDeveloperGlueOverlayFrame(
-  resolvedMargins: ReturnType<typeof resolvePageMargins>,
-  line: Line,
-  logicalLeft: number,
-  top: number,
-  width: number,
-  height: number,
-) {
-  const logicalRight = logicalLeft + width;
-  const normalizedLogicalLeft = Math.min(logicalLeft, logicalRight);
-  const normalizedLogicalRight = Math.max(logicalLeft, logicalRight);
-  const normalizedWidth = normalizedLogicalRight - normalizedLogicalLeft;
-  const physicalLeft = rtl.value
-    ? resolvedMargins.contentRight - line.indentation - normalizedLogicalRight
-    : resolvedMargins.contentLeft + line.indentation + normalizedLogicalLeft;
-
-  return {
-    height,
-    left: physicalLeft,
-    top,
-    width: normalizedWidth,
-  };
-}
-
-function getDeveloperGlueOverlayWrapperStyle(frame: {
-  height: number;
-  left: number;
-  top: number;
-  width: number;
-}) {
-  return {
-    left: withZoom(frame.left),
-    top: withZoom(frame.top),
-    width: withZoom(frame.width),
-    height: withZoom(frame.height),
-  } as StyleValue;
-}
-
-function getDeveloperGlueOverlayStyle(
-  frame: { height: number; left: number; top: number; width: number },
-  wrapperLeft: number,
-  wrapperTop: number,
-) {
-  return {
-    left: withZoom(frame.left - wrapperLeft),
-    top: withZoom(frame.top - wrapperTop),
-    width: withZoom(frame.width),
-    height: withZoom(frame.height),
-  } as StyleValue;
-}
-
-function getNextElementOnSameLine(element: ScoreElement) {
-  const index = elements.value.indexOf(element);
-
-  if (index < 0 || index + 1 >= elements.value.length) {
-    return null;
-  }
-
-  return elements.value[index + 1].line === element.line
-    ? elements.value[index + 1]
-    : null;
-}
-
-function getAdjustmentRatioStyle(line: Line, page: Page) {
-  const resolvedLyricsStyle = resolvedDefaultLyricsStyle.value;
-  const fontSize = resolvedLyricsStyle.fontSize * 0.8;
-  const gap = fontSize * 0.5;
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    position: 'absolute',
-    left: withZoom(
-      rtl.value
-        ? margins.left - gap - fontSize * 3
-        : score.value.pageSetup.pageWidth - margins.right + gap,
-    ),
-    width: withZoom(fontSize * 3),
-    textAlign: 'right',
-    top: withZoom(
-      line.elements[0].y + score.value.pageSetup.lineHeight / 3 - fontSize / 2,
-    ),
-    fontSize: withZoom(fontSize),
-    fontFamily: resolvedLyricsStyle.fontFamily,
-    color: score.value.pageSetup.gorgonDefaultColor,
-  } as StyleValue;
 }
 
 function getTempFilename() {
@@ -2509,25 +2186,6 @@ function getHeaderFooterBadgeStyle(
   return style;
 }
 
-function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
-  const isChapterOpening =
-    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
-
-  return score.value.shouldShowHeaderRuleForPageIndex(
-    pageNumber,
-    isChapterOpening,
-  );
-}
-
-function shouldShowFooterRuleForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
-  const isChapterOpening =
-    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
-
-  return score.value.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening);
-}
-
 function getTokenMetadata(pageIndex: number): TokenMetadata {
   const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
   const lastPhysicalPageNumber =
@@ -2565,9 +2223,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function getLyricHtmlElement(index: number) {
-  const htmlElement = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${index}`,
-  )[0]?.htmlElement;
+  const htmlElement = getLyricsComponent(index)?.htmlElement;
 
   return htmlElement instanceof HTMLElement ? htmlElement : null;
 }
@@ -2915,10 +2571,6 @@ function setSelectedAlternateLine(
 
 function isAudioSelected(element: ScoreElement) {
   return audioElement.value === element;
-}
-
-function isMelisma(element: NoteElement) {
-  return element.melismaWidth > 0;
 }
 
 function openModeKeyDialog() {
@@ -3464,7 +3116,7 @@ function addDropCap(after: boolean) {
   nextTick(() => {
     const index = elements.value.indexOf(element);
 
-    getTemplateRef<any[]>(`element-${index}`)[0].focus();
+    getElementComponent<any>(index)!.focus();
   });
 }
 
@@ -3569,52 +3221,18 @@ function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
 }
 
 function focusLyrics(index: number, selectAll: boolean = false) {
-  getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${index}`,
-  )[0].focus(selectAll);
+  getLyricsComponent(index)!.focus(selectAll);
 }
 
 function setLyrics(index: number, lyrics: string) {
-  const elements = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${index}`,
-  );
-
-  if (elements?.length > 0) {
-    elements[0].setInnerText(lyrics);
-  }
-}
-
-function isSyllableElement(element: ScoreElement): element is NoteElement {
-  return element.elementType == ElementType.Note;
-}
-
-function isMartyriaElement(element: ScoreElement): element is MartyriaElement {
-  return element.elementType == ElementType.Martyria;
-}
-
-function isTempoElement(element: ScoreElement): element is TempoElement {
-  return element.elementType == ElementType.Tempo;
-}
-
-function isEmptyElement(element: ScoreElement): element is EmptyElement {
-  return element.elementType == ElementType.Empty;
-}
-
-function isTextBoxElement(element: ScoreElement): element is TextBoxElement {
-  return element.elementType == ElementType.TextBox;
-}
-
-function isRichTextBoxElement(
-  element: ScoreElement,
-): element is RichTextBoxElement {
-  return element.elementType == ElementType.RichTextBox;
+  getLyricsComponent(index)?.setInnerText(lyrics);
 }
 
 function selectHeaderRichTextBox(pageIndex: number) {
   const element = getHeaderForPageIndex(pageIndex);
 
   if (isRichTextBoxElement(element)) {
-    selectHeaderFooterRichTextBox(element, `header-${pageIndex}`);
+    selectHeaderFooterRichTextBox(element, pageIndex, 'header');
   }
 }
 
@@ -3622,17 +3240,18 @@ function selectFooterRichTextBox(pageIndex: number) {
   const element = getFooterForPageIndex(pageIndex);
 
   if (isRichTextBoxElement(element)) {
-    selectHeaderFooterRichTextBox(element, `footer-${pageIndex}`);
+    selectHeaderFooterRichTextBox(element, pageIndex, 'footer');
   }
 }
 
 function selectHeaderFooterRichTextBox(
   element: RichTextBoxElement,
-  refName: string,
+  pageIndex: number,
+  region: 'header' | 'footer',
 ) {
   const alreadySelected = selectedRichTextBoxElement.value === element;
 
-  preferredRichTextBoxFocusTarget.value = { element, refName };
+  preferredRichTextBoxFocusTarget.value = { element, pageIndex, region };
   selectedHeaderFooterElement.value = element;
 
   if (alreadySelected) {
@@ -3668,37 +3287,39 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
   const scoreElementIndex = getElementIndex(element);
 
   if (elements.value[scoreElementIndex] === element) {
-    components.push(
-      ...getTemplateRef<RichTextBoxComponent[]>(`element-${scoreElementIndex}`),
-    );
+    const component =
+      getElementComponent<RichTextBoxComponent>(scoreElementIndex);
+    if (component != null) {
+      components.push(component);
+    }
   }
 
   for (let pageIndex = 0; pageIndex < filteredPages.value.length; pageIndex++) {
-    const page = filteredPages.value[pageIndex];
-
-    if (!page.isVisible && !printMode.value) {
+    const pageContent = getPageContent(pageIndex);
+    if (pageContent == null) {
       continue;
     }
-
     if (
       score.value.pageSetup.showHeader &&
       getHeaderForPageIndex(pageIndex) === element
     ) {
-      components.push(
-        ...getTemplateRef<RichTextBoxComponent[]>(`header-${pageIndex}`),
-      );
+      const component =
+        pageContent.getHeaderFooterRef<RichTextBoxComponent>('header');
+      if (component != null) {
+        components.push(component);
+      }
     }
-
     if (
       score.value.pageSetup.showFooter &&
       getFooterForPageIndex(pageIndex) === element
     ) {
-      components.push(
-        ...getTemplateRef<RichTextBoxComponent[]>(`footer-${pageIndex}`),
-      );
+      const component =
+        pageContent.getHeaderFooterRef<RichTextBoxComponent>('footer');
+      if (component != null) {
+        components.push(component);
+      }
     }
   }
-
   return components;
 }
 
@@ -3709,7 +3330,9 @@ function getPreferredRichTextBoxComponentRef(element: RichTextBoxElement) {
     return undefined;
   }
 
-  return getTemplateRef<RichTextBoxComponent[]>(target.refName)[0];
+  return getPageContent(
+    target.pageIndex,
+  )?.getHeaderFooterRef<RichTextBoxComponent>(target.region);
 }
 
 function clearPreferredRichTextBoxFocusTarget(element?: RichTextBoxElement) {
@@ -3733,23 +3356,17 @@ function getAnnotationContext(annotation: AnnotationElement) {
     const annotationIndex = element.annotations.indexOf(annotation);
 
     if (annotationIndex >= 0) {
-      const component = getTemplateRef<AnnotationComponent[]>(
-        `annotation-${getElementIndex(element)}-${annotationIndex}`,
-      )[0];
+      const component = scorePageContents.value
+        ?.map((page) =>
+          page.getAnnotationRef(getElementIndex(element), annotationIndex),
+        )
+        .find((component) => component != null);
 
       return { component, parent: element };
     }
   }
 
   return undefined;
-}
-
-function isModeKeyElement(element: ScoreElement): element is ModeKeyElement {
-  return element.elementType == ElementType.ModeKey;
-}
-
-function isImageBoxElement(element: ScoreElement): element is ImageBoxElement {
-  return element.elementType == ElementType.ImageBox;
 }
 
 function isTextInputFocused() {
@@ -4573,9 +4190,7 @@ function onKeydownLyrics(event: KeyboardEvent) {
           // the user doesn't accidentally type more
           // characters into box
           const index = elements.value.indexOf(selectedLyrics.value!);
-          getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-            `lyrics-${index}`,
-          )[0].blur();
+          getLyricsComponent(index)!.blur();
         }
       }
 
@@ -4609,9 +4224,7 @@ function onKeydownLyrics(event: KeyboardEvent) {
           // the user doesn't accidentally type more
           // characters into box
           const index = elements.value.indexOf(selectedLyrics.value!);
-          getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-            `lyrics-${index}`,
-          )[0].blur();
+          getLyricsComponent(index)!.blur();
         }
       }
 
@@ -4629,9 +4242,7 @@ function onKeydownDropCap(event: KeyboardEvent) {
   let handled = false;
 
   const index = elements.value.indexOf(selectedElement.value!);
-  const htmlElement = getTemplateRef<InstanceType<typeof DropCap>[]>(
-    `element-${index}`,
-  )[0];
+  const htmlElement = getElementComponent<InstanceType<typeof DropCap>>(index)!;
 
   switch (event.code) {
     case 'Enter':
@@ -4677,9 +4288,7 @@ function onKeydownTextBox(event: KeyboardEvent) {
   let handled = false;
 
   const index = elements.value.indexOf(selectedElement.value!);
-  const htmlElement = getTemplateRef<InstanceType<typeof TextBox>[]>(
-    `element-${index}`,
-  )[0];
+  const htmlElement = getElementComponent<InstanceType<typeof TextBox>>(index)!;
 
   switch (event.code) {
     case 'Tab':
@@ -5218,17 +4827,12 @@ function onPasteScoreElementsAuto(includeLyrics: boolean) {
 }
 
 function getLyricLength(element: NoteElement) {
-  return getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${elements.value.indexOf(element)}`,
-  )[0].getInnerText().length;
+  return getLyricsComponent(elements.value.indexOf(element))!.getInnerText()
+    .length;
 }
 
 function getNextScoreElement(element: ScoreElement) {
   return elements.value[element.index + 1] ?? null;
-}
-
-function hasActiveKeepWithNext(element: ScoreElement) {
-  return isKeepWithNextActive(element, getNextScoreElement(element));
 }
 
 function moveLeft() {
@@ -5246,26 +4850,18 @@ function moveLeft() {
   ) {
     // If the currently selected element is a drop cap or text box, blur it first
     if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
     } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
     }
 
     selectedElement.value = elements.value[index - 1];
 
     // If the newly selected element is a drop cap or text box, focus it
     if (selectedElement.value.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index - 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof DropCap>>(index - 1)!.focus();
     } else if (selectedElement.value.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index - 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof TextBox>>(index - 1)!.focus();
     }
 
     return true;
@@ -5290,26 +4886,18 @@ function moveRight() {
   ) {
     // If the currently selected element is a drop cap, blur it first
     if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
     } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
     }
 
     selectedElement.value = elements.value[index + 1];
 
     // If the newly selected element is a drop cap, focus it
     if (selectedElement.value.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index + 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof DropCap>>(index + 1)!.focus();
     } else if (selectedElement.value.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index + 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof TextBox>>(index + 1)!.focus();
     }
 
     return true;
@@ -5392,9 +4980,9 @@ function moveToNextLyricBox(clearMelisma: boolean = false) {
 
     const noteElement = selectedLyrics.value!;
 
-    const text = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-      `lyrics-${elements.value.indexOf(noteElement)}`,
-    )[0].getInnerText();
+    const text = getLyricsComponent(
+      elements.value.indexOf(noteElement),
+    )!.getInnerText();
 
     updateLyrics(noteElement, text, clearMelisma);
 
@@ -8074,11 +7662,9 @@ function onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     audioElement.value = elements.value[event.elementIndex];
 
     // Scroll the currently playing element into view
-    const lyrics = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-      `lyrics-${event.elementIndex}`,
-    )[0];
+    const lyrics = getLyricsComponent(event.elementIndex)!;
 
-    const neumeBox = getTemplateRef<any[]>(`element-${event.elementIndex}`)[0];
+    const neumeBox = getElementComponent<any>(event.elementIndex)!;
 
     if ((lyrics?.htmlElement as any)?.scrollIntoViewIfNeeded) {
       (lyrics?.htmlElement as any).scrollIntoViewIfNeeded(false);
@@ -8659,7 +8245,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   nextTick(() => {
     const index = elements.value.indexOf(element);
 
-    getTemplateRef<any[]>(`element-${index}`)[0].focus();
+    getElementComponent<any>(index)!.focus();
   });
 }
 
@@ -9266,17 +8852,17 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
 
     nextTick(() => {
       if (selectedElement.value?.elementType === ElementType.Note) {
-        getTemplateRef<HTMLElement[]>(
-          `element-${selectedElementIndex.value}`,
-        )[0].scrollIntoView();
+        getElementComponent<HTMLElement>(
+          selectedElementIndex.value,
+        )!.scrollIntoView();
       } else if (selectedElement.value?.elementType === ElementType.DropCap) {
-        getTemplateRef<InstanceType<typeof DropCap>[]>(
-          `element-${selectedElementIndex.value}`,
-        )[0].htmlElement.scrollIntoView();
+        getElementComponent<InstanceType<typeof DropCap>>(
+          selectedElementIndex.value,
+        )!.htmlElement.scrollIntoView();
       } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-        getTemplateRef<InstanceType<typeof TextBox>[]>(
-          `element-${selectedElementIndex.value}`,
-        )[0].htmlElement.scrollIntoView();
+        getElementComponent<InstanceType<typeof TextBox>>(
+          selectedElementIndex.value,
+        )!.htmlElement.scrollIntoView();
       }
     });
   }
@@ -10090,112 +9676,27 @@ function renderTabLabel(tab: Tab) {
                     :style="pageStyle"
                     :class="{ print: printMode }"
                   >
-                    <template v-if="page.isVisible || printMode">
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          showGuides &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <span
-                          class="guide-line-vl"
-                          :style="getGuideStyleLeft(page)"
-                        />
-                        <span
-                          class="guide-line-vr"
-                          :style="getGuideStyleRight(page)"
-                        />
-                        <span class="guide-line-ht" :style="guideStyleTop" />
-                        <span class="guide-line-hb" :style="guideStyleBottom" />
-                      </template>
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          showLyricBaselines &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <span
-                          v-for="baseline in getDeveloperLyricBaselines(page)"
-                          :key="`developer-lyric-baseline-${pageIndex}-${baseline.key}`"
-                          class="developer-lyric-baseline"
-                          :style="baseline.style"
-                        />
-                      </template>
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          showGlueWidths &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <div
-                          v-for="(line, lineIndex) in page.lines"
-                          :key="`developer-glue-line-${pageIndex}-${lineIndex}`"
-                        >
-                          <div
-                            v-for="overlay in getDeveloperGlueOverlays(
-                              page,
-                              line,
-                              lineIndex,
-                              pageIndex,
-                            )"
-                            :key="`developer-glue-${overlay.key}`"
-                            class="developer-glue-overlay"
-                            :class="{
-                              shrink: overlay.delta < 0,
-                              stretch: overlay.delta > 0,
-                            }"
-                            :style="overlay.wrapperStyle"
-                          >
-                            <div
-                              class="developer-glue-preferred"
-                              :class="{
-                                negative: overlay.preferredNegative,
-                              }"
-                              :style="overlay.preferredStyle"
-                            ></div>
-                            <div
-                              class="developer-glue-actual"
-                              :class="{
-                                negative: overlay.actualNegative,
-                              }"
-                              :style="overlay.actualStyle"
-                            ></div>
-                          </div>
-                        </div>
-                      </template>
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          (showAnonymousBoxes || showElementBoxes) &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <div
-                          v-for="(line, lineIndex) in page.lines"
-                          :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
-                        >
-                          <div
-                            v-for="overlay in getDeveloperBoxOverlays(
-                              page,
-                              line,
-                              lineIndex,
-                            )"
-                            :key="`developer-anonymous-${pageIndex}-${overlay.key}`"
-                            class="developer-box-overlay"
-                            :class="overlay.kind"
-                            :style="overlay.style"
-                            :title="overlay.label"
-                          ></div>
-                        </div>
-                      </template>
-                      <template v-if="score.pageSetup.showHeader">
+                    <ScorePageContent
+                      v-if="page.isVisible || printMode"
+                      ref="scorePageContents"
+                      :score="score"
+                      :page="page"
+                      :page-index="pageIndex"
+                      :workspace-id="selectedWorkspace.id"
+                      :metadata="getTokenMetadata(pageIndex)"
+                      :is-chapter-opening="
+                        runningMarkerPageMetadata[pageIndex]
+                          ?.isChapterOpening ?? false
+                      "
+                      :fonts="fonts"
+                      :editor-language="ckeditorLanguage"
+                      :zoom="zoom"
+                      :print-mode="printMode"
+                      :interaction="pageInteraction"
+                      :overlays="pageOverlaySettings"
+                      v-on="pageHandlers"
+                    >
+                      <template #header-badge>
                         <Badge
                           v-if="
                             !printMode &&
@@ -10210,660 +9711,9 @@ function renderTabLabel(tab: Tab) {
                         >
                           {{ getHeaderFooterBadgeLabel(pageIndex, 'header') }}
                         </Badge>
-                        <template
-                          v-if="
-                            isRichTextBoxElement(
-                              getHeaderForPageIndex(pageIndex),
-                            )
-                          "
-                        >
-                          <TextBoxRich
-                            :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                              getHeaderForPageIndex(pageIndex).keyHelper
-                            }`"
-                            :ref="setTemplateRef(`header-${pageIndex}`)"
-                            class="element-box"
-                            :element="
-                              getHeaderForPageIndex(
-                                pageIndex,
-                              ) as RichTextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getHeaderForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="header"
-                            :page-setup="score.pageSetup"
-                            :fonts="fonts"
-                            :paragraph-styles="score.paragraphStyles"
-                            :editor-language="ckeditorLanguage"
-                            :selected="
-                              getHeaderForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :style="getHeaderStyle(page)"
-                            @click="selectHeaderRichTextBox(pageIndex)"
-                            @select-neume="
-                              selectHeaderRichTextBox(pageIndex);
-                              showPropertiesPaneForRichTextNeume();
-                            "
-                            @update="
-                              updateRichTextBox(
-                                getHeaderForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                            @update:height="
-                              updateRichTextBoxHeight(
-                                getHeaderForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                          />
-                        </template>
-                        <template
-                          v-else-if="
-                            isTextBoxElement(getHeaderForPageIndex(pageIndex))
-                          "
-                        >
-                          <TextBox
-                            :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                              getHeaderForPageIndex(pageIndex).keyHelper
-                            }`"
-                            :ref="setTemplateRef(`header-${pageIndex}`)"
-                            class="element-box"
-                            :element="
-                              getHeaderForPageIndex(pageIndex) as TextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getHeaderForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="header"
-                            :page-setup="score.pageSetup"
-                            :selected="
-                              getHeaderForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :class="[
-                              {
-                                selectedTextbox:
-                                  getHeaderForPageIndex(pageIndex) ==
-                                  selectedHeaderFooterElement,
-                              },
-                            ]"
-                            :style="getHeaderStyle(page)"
-                            @click="
-                              selectedHeaderFooterElement =
-                                getHeaderForPageIndex(pageIndex)
-                            "
-                            @update="
-                              updateTextBox(
-                                getHeaderForPageIndex(
-                                  pageIndex,
-                                )! as TextBoxElement,
-                                $event,
-                              )
-                            "
-                          />
-                        </template>
-                        <div
-                          v-if="shouldShowHeaderRuleForPageIndex(pageIndex)"
-                          class="header-footer-hr"
-                          :style="
-                            getHeaderHorizontalRuleStyle(
-                              page,
-                              getHeaderForPageIndex(pageIndex).height,
-                            )
-                          "
-                        ></div>
                       </template>
-                      <div
-                        v-for="(line, lineIndex) in page.lines"
-                        :key="`line-${pageIndex}-${lineIndex}`"
-                        :ref="`line-${lineIndex}`"
-                        class="line"
-                      >
-                        <div
-                          v-for="element in line.elements"
-                          :id="`element-${element.id}`"
-                          :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
-                          class="element-box"
-                          :style="getElementStyle(element)"
-                          @contextmenu="onScoreElementContextMenu(element)"
-                        >
-                          <template v-if="isSyllableElement(element)">
-                            <div
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              class="neume-box"
-                            >
-                              <span v-if="element.pageBreak" class="page-break"
-                                ><PhFile
-                              /></span>
-                              <span
-                                v-if="hasActiveKeepWithNext(element)"
-                                class="keep-with-next"
-                                :title="
-                                  $t(($) => $.toolbar.common.keepWithNext, {
-                                    ns: 'toolbar',
-                                  })
-                                "
-                                ><PhLinkSimpleHorizontal weight="bold"
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><svg
-                                  v-if="
-                                    element.lineBreakType ===
-                                    LineBreakType.Center
-                                  "
-                                  viewBox="0 0 24 24"
-                                >
-                                  <PhParagraph
-                                    size="24"
-                                    weight="fill"
-                                    transform="matrix(0.75 0 0 1 -2 0)"
-                                  />
-                                  <PhTextAlignCenter
-                                    size="12"
-                                    x="12"
-                                    y="12"
-                                  /></svg
-                                ><PhParagraph v-else weight="fill"
-                              /></span>
-                              <AlternateLine
-                                v-for="(alternateLine, index) in (
-                                  element as NoteElement
-                                ).alternateLines"
-                                :key="index"
-                                :element="alternateLine"
-                                :page-setup="score.pageSetup"
-                                :class="{
-                                  selectedAlternateLine:
-                                    selectedWorkspace.selectedAlternateLineElement ===
-                                    alternateLine,
-                                }"
-                                @update="
-                                  updateAlternateLine(alternateLine, $event)
-                                "
-                                @mousedown="
-                                  setSelectedAlternateLine(
-                                    element,
-                                    alternateLine,
-                                  )
-                                "
-                              />
-                              <Annotation
-                                v-for="(annotation, index) in (
-                                  element as NoteElement
-                                ).annotations"
-                                :key="index"
-                                :ref="
-                                  setTemplateRef(
-                                    `annotation-${getElementIndex(element)}-${index}`,
-                                  )
-                                "
-                                :element="annotation"
-                                :page-setup="score.pageSetup"
-                                :fonts="fonts"
-                                :paragraph-styles="score.paragraphStyles"
-                                :editor-language="ckeditorLanguage"
-                                :selected="
-                                  selectedWorkspace.selectedAnnotationElement ===
-                                  annotation
-                                "
-                                @update="updateAnnotation(annotation, $event)"
-                                @delete="
-                                  removeAnnotation(
-                                    element as NoteElement,
-                                    annotation,
-                                    true,
-                                  )
-                                "
-                                @select-neume="
-                                  setSelectedAnnotation(element, annotation);
-                                  showPropertiesPaneForRichTextNeume();
-                                "
-                                @mousedown="
-                                  setSelectedAnnotation(element, annotation)
-                                "
-                              />
-                              <SyllableNeumeBox
-                                class="syllable-box"
-                                :note="element as NoteElement"
-                                :page-setup="score.pageSetup"
-                                :class="[
-                                  {
-                                    selected: isSelected(element),
-                                    'audio-selected': isAudioSelected(element),
-                                  },
-                                ]"
-                                @select-single="selectedElement = element"
-                                @select-range="setSelectionRange(element)"
-                                @dblclick="openSyllablePositioningDialog"
-                              />
-                              <span
-                                v-if="
-                                  (element as NoteElement)
-                                    .showLeadingLyricHyphen
-                                "
-                                class="leading-lyric-hyphen"
-                                contenteditable="false"
-                                aria-hidden="true"
-                                :style="
-                                  getLeadingLyricHyphenStyle(
-                                    element as NoteElement,
-                                  )
-                                "
-                                >-</span
-                              >
-                              <div
-                                class="lyrics-container"
-                                dir="auto"
-                                :style="getLyricStyle(element as NoteElement)"
-                              >
-                                <ContentEditable
-                                  :ref="
-                                    setTemplateRef(
-                                      `lyrics-${getElementIndex(element)}`,
-                                    )
-                                  "
-                                  class="lyrics"
-                                  :class="{
-                                    selectedLyrics: element === selectedLyrics,
-                                  }"
-                                  :style="{ minWidth: withZoom(element.width) }"
-                                  :content="(element as NoteElement).lyrics"
-                                  :editable="!lyricsLocked"
-                                  white-space="nowrap"
-                                  @click="focusLyrics(element.index)"
-                                  @focus="
-                                    selectedLyrics = element as NoteElement
-                                  "
-                                  @blur="
-                                    updateLyrics(element as NoteElement, $event)
-                                  "
-                                />
-                                <template
-                                  v-if="
-                                    isMelisma(element as NoteElement) &&
-                                    (element as NoteElement).isHyphen &&
-                                    (element as NoteElement).melismaText === ''
-                                  "
-                                >
-                                  <div
-                                    class="melisma"
-                                    :class="{
-                                      full: (element as NoteElement)
-                                        .isFullMelisma,
-                                    }"
-                                    :style="
-                                      getMelismaStyle(element as NoteElement)
-                                    "
-                                  >
-                                    <span
-                                      v-for="(offset, index) in (
-                                        element as NoteElement
-                                      ).hyphenOffsets"
-                                      :key="index"
-                                      class="melisma-hyphen"
-                                      :style="
-                                        getMelismaHyphenStyle(
-                                          element as NoteElement,
-                                          index,
-                                        )
-                                      "
-                                      >-</span
-                                    >
-                                  </div>
-                                </template>
-                                <template
-                                  v-else-if="
-                                    isMelisma(element as NoteElement) &&
-                                    !(element as NoteElement).isHyphen &&
-                                    !rtl &&
-                                    (element as NoteElement).melismaText === ''
-                                  "
-                                >
-                                  <span
-                                    class="melisma-underscore"
-                                    aria-hidden="true"
-                                  >
-                                    <span
-                                      class="melisma-inner"
-                                      :style="
-                                        getMelismaUnderscoreStyleInner(
-                                          element as NoteElement,
-                                        )
-                                      "
-                                    ></span>
-                                  </span>
-                                </template>
-                                <template
-                                  v-else-if="
-                                    isMelisma(element as NoteElement) &&
-                                    !(element as NoteElement).isHyphen &&
-                                    rtl
-                                  "
-                                >
-                                  <div
-                                    class="melisma"
-                                    :class="{
-                                      fullRtl: (element as NoteElement)
-                                        .isFullMelisma,
-                                    }"
-                                    :style="
-                                      getMelismaStyle(element as NoteElement)
-                                    "
-                                    v-text="
-                                      (element as NoteElement).melismaText
-                                    "
-                                  ></div>
-                                </template>
-                                <template
-                                  v-else-if="
-                                    (element as NoteElement).isMelisma &&
-                                    (element as NoteElement).melismaText !==
-                                      '' &&
-                                    !rtl
-                                  "
-                                >
-                                  <span
-                                    class="melisma-text"
-                                    :class="{
-                                      selectedMelisma:
-                                        element === selectedLyrics,
-                                    }"
-                                    @click="focusLyrics(element.index)"
-                                    @focus="
-                                      selectedLyrics = element as NoteElement
-                                    "
-                                    v-text="
-                                      (element as NoteElement).melismaText
-                                    "
-                                  ></span>
-                                </template>
-                              </div>
-                            </div>
-                          </template>
-                          <template v-else-if="isMartyriaElement(element)">
-                            <div class="neume-box">
-                              <span v-if="element.pageBreak" class="page-break">
-                                <PhFile
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><PhParagraph weight="fill"
-                              /></span>
-                              <MartyriaNeumeBox
-                                :ref="
-                                  setTemplateRef(
-                                    `element-${getElementIndex(element)}`,
-                                  )
-                                "
-                                class="marytria-neume-box"
-                                :neume="element as MartyriaElement"
-                                :page-setup="score.pageSetup"
-                                :class="[
-                                  {
-                                    selected: isSelected(element),
-                                  },
-                                ]"
-                                @select-single="selectedElement = element"
-                                @select-range="setSelectionRange(element)"
-                              />
-                              <div class="lyrics"></div>
-                            </div>
-                          </template>
-                          <template v-else-if="isTempoElement(element)">
-                            <div
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              class="neume-box"
-                            >
-                              <span v-if="element.pageBreak" class="page-break">
-                                <PhFile
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><PhParagraph weight="fill"
-                              /></span>
-                              <TempoNeumeBox
-                                class="tempo-neume-box"
-                                :neume="element as TempoElement"
-                                :page-setup="score.pageSetup"
-                                :class="[{ selected: isSelected(element) }]"
-                                @select-single="selectedElement = element"
-                                @select-range="setSelectionRange(element)"
-                              />
-                              <div class="lyrics"></div>
-                            </div>
-                          </template>
-                          <template v-else-if="isEmptyElement(element)">
-                            <div
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              class="neume-box"
-                            >
-                              <span v-if="element.pageBreak" class="page-break">
-                                <PhFile
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><PhParagraph weight="fill"
-                              /></span>
-                              <EmptyNeumeBox
-                                class="empty-neume-box"
-                                :class="[{ selected: isSelected(element) }]"
-                                :style="
-                                  getEmptyBoxStyle(element as EmptyElement)
-                                "
-                                @select-single="selectedElement = element"
-                              ></EmptyNeumeBox>
-                              <div class="lyrics"></div>
-                            </div>
-                          </template>
-                          <template v-else-if="isTextBoxElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <TextBox
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as TextBoxElement"
-                              :edit-mode="true"
-                              :metadata="getTokenMetadata(pageIndex)"
-                              :page-setup="score.pageSetup"
-                              :selected="isSelected(element)"
-                              @select-single="selectedElement = element"
-                              @update="
-                                updateTextBox(element as TextBoxElement, $event)
-                              "
-                              @update:height="
-                                updateTextBoxHeight(
-                                  element as TextBoxElement,
-                                  $event,
-                                )
-                              "
-                            />
-                          </template>
-                          <template v-else-if="isRichTextBoxElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <TextBoxRich
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as RichTextBoxElement"
-                              :page-setup="score.pageSetup"
-                              :fonts="fonts"
-                              :paragraph-styles="score.paragraphStyles"
-                              :editor-language="ckeditorLanguage"
-                              :selected="isSelected(element)"
-                              @select-single="selectedElement = element"
-                              @select-neume="
-                                selectedElement = element;
-                                showPropertiesPaneForRichTextNeume();
-                              "
-                              @update="
-                                updateRichTextBox(
-                                  element as RichTextBoxElement,
-                                  $event,
-                                )
-                              "
-                              @update:height="
-                                updateRichTextBoxHeight(
-                                  element as RichTextBoxElement,
-                                  $event,
-                                )
-                              "
-                            />
-                          </template>
-                          <template v-else-if="isModeKeyElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <ModeKey
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as ModeKeyElement"
-                              :page-setup="score.pageSetup"
-                              :class="[
-                                {
-                                  selectedTextbox: isSelected(element),
-                                },
-                              ]"
-                              @select-single="selectedElement = element"
-                              @dblclick="openModeKeyDialog"
-                            />
-                          </template>
-                          <template v-else-if="isDropCapElement(element)">
-                            <span v-if="element.pageBreak" class="page-break"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <DropCap
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as DropCapElement"
-                              :page-setup="score.pageSetup"
-                              :editable="!lyricsLocked"
-                              :class="[
-                                {
-                                  selectedTextbox: isSelected(element),
-                                },
-                              ]"
-                              @select-single="selectedElement = element"
-                              @update:content="
-                                updateDropCapContent(
-                                  element as DropCapElement,
-                                  $event,
-                                )
-                              "
-                            />
-                          </template>
-                          <template v-else-if="isImageBoxElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <ImageBox
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as ImageBoxElement"
-                              :zoom="zoom"
-                              :print-mode="printMode"
-                              :class="[
-                                { selectedImagebox: isSelected(element) },
-                              ]"
-                              @select-single="selectedElement = element"
-                              @update:size="
-                                updateImageBox(
-                                  selectedElement as ImageBoxElement,
-                                  {
-                                    imageWidth: $event.width,
-                                    imageHeight: $event.height,
-                                  },
-                                )
-                              "
-                            />
-                          </template>
-                          <div
-                            v-for="(box, boxIndex) in getDeveloperOverlayBoxes(
-                              element,
-                            )"
-                            v-show="
-                              !printMode || shouldRenderDeveloperOverlaysInPrint
-                            "
-                            :key="`developer-overlay-${element.id}-${boxIndex}`"
-                            class="developer-overlay-box"
-                            :class="{
-                              collision: box.kind === 'collision',
-                              ink: box.kind === 'ink',
-                              lyric: box.kind === 'lyric',
-                              neume: box.kind === 'neume',
-                            }"
-                            :style="getDeveloperOverlayStyle(box)"
-                          ></div>
-                        </div>
-                        <span
-                          v-if="
-                            showDeveloperPanels &&
-                            overlaysEnabled &&
-                            showAdjustmentRatios &&
-                            (!printMode ||
-                              shouldRenderDeveloperOverlaysInPrint) &&
-                            line.adjustmentRatio != null &&
-                            line.elements.length > 0
-                          "
-                          class="adjustment-ratio"
-                          :style="getAdjustmentRatioStyle(line, page)"
-                          >{{ line.adjustmentRatio.toFixed(2) }}</span
-                        >
-                      </div>
-                      <template v-if="score.pageSetup.showFooter">
+
+                      <template #footer-badge>
                         <Badge
                           v-if="
                             !printMode &&
@@ -10878,122 +9728,8 @@ function renderTabLabel(tab: Tab) {
                         >
                           {{ getHeaderFooterBadgeLabel(pageIndex, 'footer') }}
                         </Badge>
-                        <div
-                          v-if="shouldShowFooterRuleForPageIndex(pageIndex)"
-                          class="header-footer-hr"
-                          :style="
-                            getFooterHorizontalRuleStyle(
-                              page,
-                              getFooterForPageIndex(pageIndex).height,
-                            )
-                          "
-                        ></div>
-                        <template
-                          v-if="
-                            isRichTextBoxElement(
-                              getFooterForPageIndex(pageIndex),
-                            )
-                          "
-                        >
-                          <TextBoxRich
-                            :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                              getFooterForPageIndex(pageIndex).keyHelper
-                            }`"
-                            :ref="setTemplateRef(`footer-${pageIndex}`)"
-                            class="element-box"
-                            :element="
-                              getFooterForPageIndex(
-                                pageIndex,
-                              ) as RichTextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getFooterForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="footer"
-                            :page-setup="score.pageSetup"
-                            :fonts="fonts"
-                            :paragraph-styles="score.paragraphStyles"
-                            :editor-language="ckeditorLanguage"
-                            :selected="
-                              getFooterForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :style="getFooterStyle(page)"
-                            @click="selectFooterRichTextBox(pageIndex)"
-                            @select-neume="
-                              selectFooterRichTextBox(pageIndex);
-                              showPropertiesPaneForRichTextNeume();
-                            "
-                            @update="
-                              updateRichTextBox(
-                                getFooterForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                            @update:height="
-                              updateRichTextBoxHeight(
-                                getFooterForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                          />
-                        </template>
-                        <template
-                          v-else-if="
-                            isTextBoxElement(getFooterForPageIndex(pageIndex))
-                          "
-                        >
-                          <TextBox
-                            :ref="setTemplateRef(`footer-${pageIndex}`)"
-                            :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                              getFooterForPageIndex(pageIndex).keyHelper
-                            }`"
-                            class="element-box"
-                            :element="
-                              getFooterForPageIndex(pageIndex) as TextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getFooterForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="footer"
-                            :page-setup="score.pageSetup"
-                            :selected="
-                              getFooterForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :class="[
-                              {
-                                selectedTextbox:
-                                  getFooterForPageIndex(pageIndex) ==
-                                  selectedHeaderFooterElement,
-                              },
-                            ]"
-                            :style="getFooterStyle(page)"
-                            @click="
-                              selectedHeaderFooterElement =
-                                getFooterForPageIndex(pageIndex)
-                            "
-                            @update="
-                              updateTextBox(
-                                getFooterForPageIndex(
-                                  pageIndex,
-                                )! as TextBoxElement,
-                                $event,
-                              )
-                            "
-                        /></template>
                       </template>
-                    </template>
+                    </ScorePageContent>
                   </div>
                 </div>
               </ContextMenuTrigger>
@@ -11469,226 +10205,6 @@ function renderTabLabel(tab: Tab) {
   transition: opacity 0.3s ease;
   color: white;
 }
-
-.lyrics {
-  min-height: 1.6rem;
-  text-align: center;
-  position: relative;
-}
-
-.lyrics:focus {
-  outline: none;
-}
-.guide-line-vl {
-  border-left: 1px solid black;
-  position: absolute;
-}
-
-.guide-line-vr {
-  border-right: 1px solid black;
-  position: absolute;
-}
-
-.guide-line-ht {
-  border-top: 1px solid black;
-  position: absolute;
-}
-
-.guide-line-hb {
-  border-bottom: 1px solid black;
-  position: absolute;
-}
-
-.header-footer-hr {
-  position: absolute;
-  border-top-style: solid;
-}
-
-.neume-box .selected {
-  background-color: rgb(238, 232, 170, 0.7);
-}
-
-.neume-box .audio-selected {
-  background-color: rgba(152, 251, 152, 0.5);
-}
-
-.selectedTextbox {
-  outline: 1px solid goldenrod;
-}
-
-.selectedTextbox:deep(.handle) {
-  display: inline;
-}
-
-.selectedImagebox {
-  border: 1px solid goldenrod;
-}
-
-.selectedAlternateLine {
-  outline: 1px solid goldenrod;
-}
-
-.selectedLyrics {
-  border: 1px solid goldenrod;
-}
-
-.selectedMelisma {
-  display: none;
-}
-
-.richTextBoxCalculation,
-.textBoxCalculation {
-  position: absolute;
-  left: -99999999px;
-}
-
-.line {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.element-box {
-  position: absolute;
-}
-
-.keep-with-next {
-  position: absolute;
-  top: calc(-10px * var(--zoom, 1));
-}
-
-.keep-with-next > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.developer-overlay-box {
-  position: absolute;
-  pointer-events: none;
-  border: 1px dashed #2563eb;
-}
-
-.developer-lyric-baseline {
-  position: absolute;
-  z-index: 30;
-  pointer-events: none;
-  border-top: 1px solid #d946ef;
-  transform: translateY(-100%);
-}
-
-.developer-glue-overlay {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.75;
-}
-
-.developer-glue-preferred {
-  --developer-glue-preferred-border: rgb(14 116 144 / 80%);
-  position: absolute;
-  box-sizing: border-box;
-  border: 1px solid var(--developer-glue-preferred-border);
-  background-size: 100% 100%;
-}
-
-.developer-glue-actual {
-  --developer-glue-actual-fill: rgb(14 116 144 / 35%);
-  position: absolute;
-  border: 1px solid rgb(14 116 144 / 55%);
-  background: var(--developer-glue-actual-fill);
-}
-
-.developer-glue-overlay.stretch .developer-glue-preferred {
-  --developer-glue-preferred-border: rgb(3 105 161 / 85%);
-}
-
-.developer-glue-overlay.stretch .developer-glue-actual {
-  --developer-glue-actual-fill: rgb(3 105 161 / 28%);
-}
-
-.developer-glue-overlay.shrink .developer-glue-preferred {
-  --developer-glue-preferred-border: rgb(180 83 9 / 85%);
-}
-
-.developer-glue-overlay.shrink .developer-glue-actual {
-  --developer-glue-actual-fill: rgb(217 119 6 / 24%);
-}
-
-.developer-glue-preferred.negative {
-  background-image: repeating-linear-gradient(
-    135deg,
-    transparent 0 4px,
-    var(--developer-glue-preferred-border) 4px 7px
-  );
-}
-
-.developer-glue-actual.negative {
-  background-image:
-    repeating-linear-gradient(
-      135deg,
-      transparent 0 4px,
-      rgb(255 255 255 / 45%) 4px 7px
-    ),
-    linear-gradient(
-      var(--developer-glue-actual-fill),
-      var(--developer-glue-actual-fill)
-    );
-}
-
-.developer-box-overlay {
-  position: absolute;
-  pointer-events: none;
-  border: 1px solid rgb(190 24 93 / 75%);
-  background: rgb(244 114 182 / 16%);
-}
-
-.developer-box-overlay.owned {
-  border-color: rgb(37 99 235 / 75%);
-  background: rgb(96 165 250 / 16%);
-}
-
-.developer-box-overlay.line-start-reservation {
-  border-color: rgb(147 51 234 / 75%);
-  background: rgb(192 132 252 / 16%);
-}
-
-.developer-box-overlay.martyria-shift {
-  border-color: rgb(217 119 6 / 80%);
-  background: rgb(251 191 36 / 16%);
-}
-
-.developer-box-overlay.lyric-collision {
-  border-color: rgb(22 163 74 / 80%);
-  background: rgb(74 222 128 / 16%);
-}
-
-.developer-overlay-box.ink {
-  border-color: #ef4444;
-}
-
-.developer-overlay-box.lyric {
-  border-color: #16a34a;
-}
-
-.developer-overlay-box.collision {
-  border-color: #f59e0b;
-}
-
-.adjustment-ratio {
-  pointer-events: none;
-  white-space: nowrap;
-  font-variant-numeric: lining-nums tabular-nums;
-}
-
-.neume-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  position: relative;
-}
-
 .page-container {
   display: flex;
   flex-direction: column;
@@ -11883,145 +10399,8 @@ function renderTabLabel(tab: Tab) {
   text-align: center;
 }
 
-.lyrics-container {
-  min-height: 1.6rem;
-  min-width: 100%;
-  text-align: center;
-  position: absolute;
-  white-space: nowrap;
-}
-
-.leading-lyric-hyphen {
-  position: absolute;
-  pointer-events: none;
-}
-
-.melisma {
-  position: absolute;
-  display: inline;
-  overflow: hidden !important;
-  white-space: pre;
-}
-
-.melisma-underscore {
-  /* Anchor to the rendered baseline without changing lyric alignment. */
-  display: inline-block;
-  width: 0;
-  height: 0;
-}
-
-.melisma.full {
-  left: 0;
-}
-
-.melisma.fullRtl {
-  right: 0;
-}
-
-.melisma-hyphen {
-  position: absolute;
-}
-
-.melisma-inner {
-  /* The static position follows the baseline anchor. Keep the containing
-     block at lyrics-container so full melismas can start at its left edge. */
-  position: absolute;
-  height: 0;
-  transform: translateY(-100%);
-}
-
-.melisma-text {
-  opacity: 0.5;
-}
-
-.page-break {
-  position: absolute;
-  top: calc(-10px * var(--zoom, 1));
-}
-
-.page-break > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.line-break {
-  position: absolute;
-  top: calc(-10px * var(--zoom, 1));
-}
-
-.line-break > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.page-break-2 {
-  position: absolute;
-  top: calc(-16px * var(--zoom, 1));
-}
-
-.page-break-2 > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.line-break-2 {
-  position: absolute;
-  top: calc(-18px * var(--zoom, 1));
-}
-
-.line-break-2 > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
 .print-only {
   display: none;
-}
-
-.page.print .empty-neume-box {
-  visibility: hidden;
-}
-
-.page.print .text-box-container,
-.page.print .rich-text-box-container,
-.page.print .drop-cap-container,
-.page.print .mode-key-container,
-.page.print .image-box-container,
-.page.print .selectedAnnotation,
-.page.print .selectedAlternateLine,
-.page.print :deep(.text-box),
-.page.print :deep(.rich-text-editor),
-.page.print :deep(.inline-container),
-.page.print :deep(.text-box.multipanel) {
-  border: none;
-  outline: none;
-}
-
-.page.print .page-break,
-.page.print .line-break,
-.page.print .page-break-2,
-.page.print .line-break-2,
-.page.print .keep-with-next,
-.page.print :deep(.handle),
-.page.print :deep(.ck-widget__type-around) {
-  display: none !important;
-}
-
-.page.print :deep(.ck-widget) {
-  outline: none !important;
-}
-
-.page.print .neume-box .selected,
-.page.print .neume-box .audio-selected {
-  background-color: initial;
-}
-
-.page.print .melisma-text {
-  opacity: 1;
-}
-
-.page.print :deep(.rich-text-editor) {
-  overflow: visible !important;
 }
 
 @media print {
@@ -12032,7 +10411,7 @@ function renderTabLabel(tab: Tab) {
   }
 
   .page,
-  .page * {
+  .page :deep(*) {
     visibility: visible;
   }
 
@@ -12057,39 +10436,6 @@ function renderTabLabel(tab: Tab) {
     margin-bottom: 0;
     padding: 0;
     break-after: page;
-  }
-
-  .empty-neume-box {
-    visibility: hidden;
-  }
-
-  .text-box-container {
-    border: none;
-    outline: none;
-  }
-
-  .drop-cap-container {
-    border: none;
-    outline: none;
-  }
-
-  .mode-key-container {
-    border: none;
-    outline: none;
-  }
-
-  .image-box-container {
-    border: none;
-    outline: none;
-  }
-
-  .selectedLyrics {
-    border: none;
-    outline: none;
-  }
-
-  .melisma-text {
-    opacity: 1;
   }
 
   .workspace-tab-container,

@@ -29,6 +29,8 @@ import type {
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsImageReplyArgs,
@@ -68,6 +70,7 @@ import {
 } from '../../src/models/WorkspacePane';
 import { TestFileType } from '../../src/utils/TestFileType';
 import { renderPdf } from './export/renderPdf';
+import { renderSnapshot } from './export/renderSnapshot';
 import { RecoveryStore } from './recovery';
 
 // The built directory structure
@@ -231,7 +234,7 @@ enum OnConflictChoice {
 let saving = false;
 let loaded = false;
 
-let exportAsImageOnConflict: OnConflictChoice | null = null;
+const imageExportConflict = { choice: null as OnConflictChoice | null };
 
 let darwinPath: string | null = null;
 let autoUpdaterInitialized = false;
@@ -1317,7 +1320,7 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
       result.filePath = filePath;
       result.success = true;
-      exportAsImageOnConflict = null;
+      imageExportConflict.choice = null;
 
       store.lastDirectory = path.dirname(filePath);
       await saveStore();
@@ -1338,6 +1341,8 @@ async function exportWorkspaceAsImage(args: ExportWorkspaceAsImageArgs) {
 
 async function exportPageAsImage(
   args: ExportPageAsImageArgs,
+  conflict = imageExportConflict,
+  signal?: AbortSignal,
 ): Promise<ExportPageAsImageReplyArgs> {
   const result: ExportPageAsImageReplyArgs = { success: false };
 
@@ -1346,7 +1351,7 @@ async function exportPageAsImage(
     return result;
   }
 
-  if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
+  if (conflict.choice === OnConflictChoice.SkipAll) {
     result.canceled = true;
     return result;
   }
@@ -1354,26 +1359,25 @@ async function exportPageAsImage(
   try {
     saving = true;
 
-    if (exportAsImageOnConflict !== OnConflictChoice.ReplaceAll) {
-      exportAsImageOnConflict = await showReplaceOrSkipFileDialog(
-        args.filePath,
-      );
+    if (conflict.choice !== OnConflictChoice.ReplaceAll) {
+      conflict.choice = await showReplaceOrSkipFileDialog(args.filePath);
 
-      if (exportAsImageOnConflict === OnConflictChoice.SkipAll) {
+      if (conflict.choice === OnConflictChoice.SkipAll) {
         result.canceled = true;
         return result;
       }
 
-      if (exportAsImageOnConflict === OnConflictChoice.Skip) {
+      if (conflict.choice === OnConflictChoice.Skip) {
         result.skipped = true;
         return result;
       }
     }
 
     if (
-      exportAsImageOnConflict === OnConflictChoice.ReplaceAll ||
-      exportAsImageOnConflict === OnConflictChoice.Replace
+      conflict.choice === OnConflictChoice.ReplaceAll ||
+      conflict.choice === OnConflictChoice.Replace
     ) {
+      signal?.throwIfAborted();
       await fs.writeFile(args.filePath, args.data, 'base64');
     }
 
@@ -1434,6 +1438,44 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
       resolve({ success: false });
     }
   });
+}
+
+async function exportSnapshotAsPng(
+  args: ExportSnapshotAsPngArgs,
+): Promise<ExportSnapshotAsPngReplyArgs> {
+  const result = { exportedPageCount: 0, firstExportedPagePath: '' };
+  const conflict = { choice: null as OnConflictChoice | null };
+  await renderSnapshot({
+    snapshot: args.snapshot,
+    png: args.options,
+    parent: win ?? undefined,
+    signal: new AbortController().signal,
+    preload,
+    entry: path.join(process.env.DIST!, 'export.html'),
+    devServerUrl: url,
+    writeImage: async (pageNumber, data, signal) => {
+      const filePath = args.filePath.replace(/\.png$/i, `-${pageNumber}.png`);
+      const reply = await exportPageAsImage(
+        { filePath, data },
+        conflict,
+        signal,
+      );
+      if (reply.skipped) {
+        return true;
+      }
+      if (reply.canceled) {
+        return false;
+      }
+      if (!reply.success) {
+        throw new Error(reply.errorMessage);
+      }
+      result.exportedPageCount++;
+      result.firstExportedPagePath ||= filePath;
+      return true;
+    },
+    complete: async () => result,
+  });
+  return result;
 }
 
 async function openWorkspaces() {
@@ -2787,6 +2829,11 @@ ipcMain.handle(
   async (event, args: ExportWorkspaceAsImageArgs) => {
     return await exportWorkspaceAsImage(args);
   },
+);
+
+ipcMain.handle(
+  IpcRendererChannels.ExportSnapshotAsPng,
+  async (_event, args: ExportSnapshotAsPngArgs) => exportSnapshotAsPng(args),
 );
 
 ipcMain.handle(

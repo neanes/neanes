@@ -7879,14 +7879,13 @@ async function onFileMenuExportAsImage() {
 
 async function exportAsPng(args: ExportAsPngSettings) {
   let reply: ExportWorkspaceAsImageReplyArgs;
-
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
+  const workspace = selectedWorkspace.value;
+  let snapshot: ScoreRenderSnapshot;
 
   try {
-    reply = await ipcService.exportWorkspaceAsImage(
-      selectedWorkspace.value,
-      'png',
-    );
+    prepareWorkspaceForSerialization(workspace);
+    snapshot = createScoreRenderSnapshot(workspace);
+    reply = await ipcService.exportWorkspaceAsImage(workspace, 'png');
 
     if (!reply.success) {
       if (!reply.canceled) {
@@ -7914,7 +7913,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
     return;
   }
 
-  printMode.value = true;
+  printMode.value = isBrowser.value;
   exportInProgress.value = true;
   const toastId = toast.loading(
     t(($) => $.toast.export.pngLoading, { ns: 'toast' }),
@@ -7927,71 +7926,79 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
+  const activeElement = isBrowser.value ? blurActiveElement() : null;
 
   try {
-    await nextTick();
-
-    const pageElements = pagesRef.value as HTMLElement[];
-    const selectedPages = pageElements
-      .map((page, index) => ({ page, pageNumber: index + 1 }))
-      .filter(
-        ({ pageNumber }) =>
-          args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
-      );
     let exportedPageCount = 0;
     let firstExportedPagePath = '';
+    if (!isBrowser.value) {
+      ({ exportedPageCount, firstExportedPagePath } =
+        await ipcService.exportSnapshotAsPng({
+          snapshot,
+          filePath: reply.filePath,
+          options: args,
+        }));
+    } else {
+      await nextTick();
 
-    if (selectedPages.length > 0) {
-      const fontEmbedCSS =
-        (await getFontEmbedCSS(selectedPages[0].page)) +
-        fontCatalog.getExportFontFeatureValuesCss();
-
-      for (const { page, pageNumber } of selectedPages) {
-        const options = {
-          fontEmbedCSS,
-          pixelRatio: args.dpi / 96,
-          style: { margin: '0' },
-        } as any;
-
-        if (args.transparentBackground) {
-          options.style.backgroundColor = 'transparent';
-        }
-
-        const fileName = reply.filePath.replace(
-          /\.png$/i,
-          `-${pageNumber}.png`,
+      const pageElements = pagesRef.value as HTMLElement[];
+      const selectedPages = pageElements
+        .map((page, index) => ({ page, pageNumber: index + 1 }))
+        .filter(
+          ({ pageNumber }) =>
+            args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
         );
+      if (selectedPages.length > 0) {
+        const fontEmbedCSS =
+          (await getFontEmbedCSS(selectedPages[0].page)) +
+          fontCatalog.getExportFontFeatureValuesCss();
 
-        const data = (await toPng(page, options)).replace(
-          /^data:image\/png;base64,/,
-          '',
-        );
+        for (const { page, pageNumber } of selectedPages) {
+          const options = {
+            fontEmbedCSS,
+            pixelRatio: args.dpi / 96,
+            style: { margin: '0' },
+          } as any;
 
-        const pageReply = await ipcService.exportPageAsImage(fileName, data);
-
-        if (!pageReply.success) {
-          if (pageReply.skipped) {
-            continue;
+          if (args.transparentBackground) {
+            options.style.backgroundColor = 'transparent';
           }
 
-          if (pageReply.canceled) {
-            break;
-          }
-
-          throw new Error(
-            pageReply.errorMessage ??
-              t(($) => $.toast.export.pngFileFailedDescription, {
-                ns: 'toast',
-              }),
+          const fileName = reply.filePath.replace(
+            /\.png$/i,
+            `-${pageNumber}.png`,
           );
-        }
 
-        if (!firstExportedPagePath) {
-          firstExportedPagePath = fileName;
-        }
+          const data = (await toPng(page, options)).replace(
+            /^data:image\/png;base64,/,
+            '',
+          );
 
-        exportedPageCount++;
+          const pageReply = await ipcService.exportPageAsImage(fileName, data);
+
+          if (!pageReply.success) {
+            if (pageReply.skipped) {
+              continue;
+            }
+
+            if (pageReply.canceled) {
+              break;
+            }
+
+            throw new Error(
+              pageReply.errorMessage ??
+                t(($) => $.toast.export.pngFileFailedDescription, {
+                  ns: 'toast',
+                }),
+            );
+          }
+
+          if (!firstExportedPagePath) {
+            firstExportedPagePath = fileName;
+          }
+
+          exportedPageCount++;
+        }
       }
     }
 
@@ -8040,7 +8047,9 @@ async function exportAsPng(args: ExportAsPngSettings) {
     exportInProgress.value = false;
     closeExportDialog();
     // Re-focus the active element
-    focusElement(activeElement);
+    if (activeElement) {
+      focusElement(activeElement);
+    }
   }
 }
 

@@ -12,3 +12,14 @@ export interface ScoreRenderSnapshot {
   systemFonts: SystemFontMetadata[];
   overlays: ScoreOverlaySettings;
 }
+
+export interface PngRenderOptions {
+  dpi: number;
+  pageNumbers: number[] | null;
+  transparentBackground: boolean;
+}
+
+export interface SnapshotRenderRequest {
+  snapshot: ScoreRenderSnapshot;
+  png?: PngRenderOptions;
+}

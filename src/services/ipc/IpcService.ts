@@ -4,6 +4,8 @@ import type {
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsLatexArgs,
@@ -144,6 +146,15 @@ export class IpcService implements IIpcService {
         tempFileName: workspace.tempFileName,
         data,
       } as ExportWorkspaceAsLatexArgs,
+    );
+  }
+
+  public async exportSnapshotAsPng(
+    args: ExportSnapshotAsPngArgs,
+  ): Promise<ExportSnapshotAsPngReplyArgs> {
+    return window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportSnapshotAsPng,
+      args,
     );
   }
 

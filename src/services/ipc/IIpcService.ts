@@ -3,6 +3,8 @@ import type {
   DiscardRecoverySnapshotReplyArgs,
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
@@ -53,6 +55,10 @@ export interface IIpcService {
     fileName: string,
     data: string,
   ): Promise<ExportPageAsImageReplyArgs>;
+
+  exportSnapshotAsPng(
+    args: ExportSnapshotAsPngArgs,
+  ): Promise<ExportSnapshotAsPngReplyArgs>;
 
   printWorkspace(workspace: Workspace): Promise<void>;
 

@@ -19,5 +19,10 @@ heights through the PDF exporter and compares their native PDF drawing commands.
 The three `settling-*.pdf` files and `settling-geometry.json` are retained. This
 check uses readiness signals rather than fixed delays and needs no PDF utilities.
 
+The same run exports PNGs from real hidden renderers, checking page selection,
+empty ranges, 96/192 DPI dimensions, transparent and opaque backgrounds, visible
+rich-text/RTL content, partial cancellation, file-write failure and recovery, and
+snapshot immutability. PNG artifacts are retained beside the PDFs.
+
 On macOS, agents must run this command outside their command sandbox, as described
 in AGENTS.md. It does not disable Electron's security sandbox.

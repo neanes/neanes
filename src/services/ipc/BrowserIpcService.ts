@@ -5,6 +5,7 @@ import type {
   DiscardRecoverySnapshotReplyArgs,
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
@@ -165,6 +166,10 @@ export class BrowserIpcService implements IIpcService {
     this.downloadFile(fileName, file);
 
     return Promise.resolve({ success: true });
+  }
+
+  public async exportSnapshotAsPng(): Promise<ExportSnapshotAsPngReplyArgs> {
+    throw new Error('Detached PNG export requires Electron');
   }
 
   public async printWorkspace(): Promise<void> {

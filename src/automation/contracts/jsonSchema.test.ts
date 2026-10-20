@@ -66,24 +66,43 @@ function expanded(schema: Record<string, unknown>, root = schema): unknown {
 }
 
 describe('compact tool schemas', () => {
-  it('deduplicates equivalent constraints without rewriting default data', () => {
-    const field = () =>
-      z.enum([
-        'a very long first choice'.repeat(8),
-        'a very long second choice'.repeat(8),
-      ]);
-    const type = z.object({
-      first: field(),
-      second: field(),
-      data: z
-        .record(z.string(), z.string())
-        .default({ description: 'literal', $ref: 'literal' }),
-    });
-    const compact = compactJsonSchema(type);
-    expect(compact.$defs).toBeDefined();
-    expect(expanded(compact)).toEqual(expanded(z.toJSONSchema(type)));
-    expect(JSON.stringify(compact)).toContain('"$ref":"literal"');
-  });
+  it.each(['input', 'output'] as const)(
+    'deduplicates equivalent %s constraints without rewriting default data',
+    (io) => {
+      const field = () =>
+        z.enum([
+          'a very long first choice'.repeat(8),
+          'a very long second choice'.repeat(8),
+        ]);
+      const type = z.object({
+        first: field(),
+        second: field(),
+        data: z
+          .record(z.string(), z.string())
+          .default({ description: 'literal', $ref: 'literal' }),
+      });
+      const compact = compactJsonSchema(type, io);
+      expect(compact.$defs).toBeDefined();
+      expect(expanded(compact)).toEqual(expanded(z.toJSONSchema(type, { io })));
+      expect(JSON.stringify(compact)).toContain('"$ref":"literal"');
+    },
+  );
+
+  it.each(['input', 'output'] as const)(
+    'keeps more than 32 reused %s scalars visible without expanding references',
+    (io) => {
+      const id = z.string().min(1);
+      const type = z.object(
+        Object.fromEntries(
+          Array.from({ length: 33 }, (_, index) => [`id${index}`, id]),
+        ),
+      );
+      const input = compactJsonSchema(type, io);
+      expect(input).not.toHaveProperty('$defs');
+      expect(JSON.stringify(input)).not.toContain('"$ref"');
+      expect(input).toEqual(z.toJSONSchema(type, { io }));
+    },
+  );
 
   it('keeps advertised transaction and discovery constraints equivalent with local references', () => {
     for (const schema of [

@@ -28,6 +28,27 @@ session on the bridge's worker.
 Combining editor scope and sessionId is rejected. The bridge advertises `documentScope` in
 tool input schemas and supplies initialization guidance.
 
+Complete published schemas are available as read-only MCP resources, independently
+of documents and sessions. `resources/list` lists input and output resources for
+every tool; `resources/templates/list` advertises
+`neanes://schemas/{tool}/{view}`, where `view` is `input` or `output`.
+For example, read `neanes://schemas/edit_elements/input` or
+`neanes://schemas/get_paragraph_styles/output` with `resources/read`.
+Each JSON resource contains `tool`, `description`, and `schema`. Local `$ref`
+values resolve within `schema`. The bridge includes `documentScope` in document
+input resources, matching its `tools/list` publication.
+
+Clients may shorten generated tool declarations: Codex 0.163.0-alpha.10.2 removes
+some validation keywords and field descriptions, and limits recursive type
+expansion. Read the corresponding schema resource for complete bounds, patterns,
+defaults, dictionary keys, field guidance, and recursive definitions. Resources
+preserve the published schemas without client schema conversion; runtime
+validation still enforces additional rules described by each tool, including
+cross-field and document-state checks. Small reused types are inline in both
+input and output schemas to avoid exhausting client reference budgets; larger
+repeated structures remain shared. Tool-level descriptions retain critical
+authoring guidance, including lyric parser versus literal-text behavior.
+
 On graceful bridge shutdown, its worker stops and all its private sessions are
 discarded. HTTP timeouts/disconnects while the
 bridge remains alive preserve its session for inspection. A crashed bridge leaves

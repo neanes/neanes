@@ -27,6 +27,31 @@ export function bridgeTools(tools) {
   );
 }
 
+export function bridgeResourceContents(contents) {
+  return contents.map((resource) => {
+    if (!/^neanes:\/\/schemas\/[a-z_]+\/input$/.test(resource.uri)) {
+      return resource;
+    }
+    const definition = JSON.parse(resource.text);
+    const [tool] = bridgeTools([
+      { name: definition.tool, inputSchema: definition.schema },
+    ]);
+    return {
+      ...resource,
+      text: JSON.stringify({ ...definition, schema: tool.inputSchema }),
+    };
+  });
+}
+
+export function bridgeInstructions(instructions) {
+  return [
+    'Document tools default to private documents, regardless of launch order. Set documentScope:"editor" on list_documents to discover open editor tabs, and on subsequent tools to work with them. Explicit sessionId addresses an existing private session. Save explicitly. Connection loss never retries edits automatically.',
+    instructions,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
 export function documentScope(args) {
   const { documentScope: scope = 'private', ...argumentsWithoutScope } = args;
   if (!['private', 'editor'].includes(scope)) {

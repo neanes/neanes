@@ -54,7 +54,12 @@ export function compactJsonSchema(
   type: z.ZodType,
   io: 'input' | 'output' = 'output',
 ): Schema {
-  const root = z.toJSONSchema(type, { reused: 'ref', io }) as Schema;
+  // Keep small schemas inline so repeated scalars do not exhaust client
+  // reference expansion limits. Larger repeated shapes are shared below.
+  const root = z.toJSONSchema(type, {
+    reused: 'inline',
+    io,
+  }) as Schema;
   const counts = new Map<string, number>();
   const keys = new WeakMap<Schema, string>();
   const count = (schema: Schema): Schema => {

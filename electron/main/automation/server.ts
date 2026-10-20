@@ -6,7 +6,10 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   CallToolRequestSchema,
+  ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
   ListToolsRequestSchema,
+  ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
 
 import {
@@ -21,6 +24,12 @@ import {
 } from '../../../src/automation/contracts/protocol';
 import { assertResultBudget } from '../../../src/automation/contracts/responseBudget';
 import { automationResultSchemas } from '../../../src/automation/contracts/results';
+import {
+  readToolSchemaResource,
+  schemaResourceInstructions,
+  toolSchemaResources,
+  toolSchemaResourceTemplate,
+} from './schemaResources';
 import { automationTools } from './tools';
 
 export interface McpServerOptions {
@@ -85,7 +94,10 @@ export async function startMcpServer(options: McpServerOptions) {
     const connection = new AbortController();
     const server = new McpServer(
       { name: 'neanes', version: options.version },
-      { capabilities: { tools: {} } },
+      {
+        capabilities: { tools: {}, resources: {} },
+        instructions: schemaResourceInstructions,
+      },
     );
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -95,6 +107,19 @@ export async function startMcpServer(options: McpServerOptions) {
     server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: automationTools(),
     }));
+    server.server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+      resources: toolSchemaResources(),
+    }));
+    server.server.setRequestHandler(
+      ListResourceTemplatesRequestSchema,
+      async () => ({
+        resourceTemplates: [toolSchemaResourceTemplate],
+      }),
+    );
+    server.server.setRequestHandler(
+      ReadResourceRequestSchema,
+      async ({ params }) => readToolSchemaResource(params.uri),
+    );
     // Validate tool arguments here so application failures always have our structured
     // error contract, including invalid arguments. JSON-RPC framing errors remain protocol errors.
     server.server.setRequestHandler(

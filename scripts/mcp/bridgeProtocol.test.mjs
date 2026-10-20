@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  readToolSchemaResource,
+  schemaResourceInstructions,
+} from '../../electron/main/automation/schemaResources';
 import { automationTools } from '../../electron/main/automation/tools';
 import {
+  bridgeInstructions,
+  bridgeResourceContents,
   bridgeTools,
   documentScope,
   handleAutomaticSessionReply,
@@ -9,6 +15,31 @@ import {
 } from './bridgeProtocol.mjs';
 
 describe('one bridge connection', () => {
+  it('preserves complete schema resources while adding document scope only to inputs', () => {
+    for (const tool of automationTools()) {
+      for (const view of ['input', 'output']) {
+        const { contents } = readToolSchemaResource(
+          `neanes://schemas/${tool.name}/${view}`,
+        );
+        const before = JSON.stringify(contents);
+        const decorated = bridgeResourceContents(contents);
+        const definition = JSON.parse(decorated[0].text);
+        const expected = bridgeTools([tool])[0];
+        expect(definition.schema).toEqual(
+          view === 'input' ? expected.inputSchema : expected.outputSchema,
+        );
+        expect(JSON.stringify(contents)).toBe(before);
+      }
+    }
+  });
+
+  it('retains server schema guidance alongside bridge routing instructions', () => {
+    const instructions = bridgeInstructions(schemaResourceInstructions);
+    expect(instructions).toContain('documentScope:"editor"');
+    expect(instructions).toContain(schemaResourceInstructions);
+    expect(bridgeInstructions(undefined)).not.toContain('undefined');
+  });
+
   it('exposes explicit editor scope on real document tools without changing upstream definitions', () => {
     const originals = automationTools();
     const before = JSON.stringify(originals);

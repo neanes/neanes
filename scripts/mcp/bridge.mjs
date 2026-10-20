@@ -10,6 +10,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
 import {
+  bridgeInstructions,
+  bridgeResourceContents,
   bridgeTools,
   documentScope,
   handleAutomaticSessionReply,
@@ -294,9 +296,11 @@ async function forward(message, signal) {
   if (message.method === 'tools/list' && reply?.result?.tools) {
     reply.result.tools = bridgeTools(reply.result.tools);
   }
+  if (message.method === 'resources/read' && reply?.result?.contents) {
+    reply.result.contents = bridgeResourceContents(reply.result.contents);
+  }
   if (message.method === 'initialize' && reply?.result) {
-    reply.result.instructions =
-      'Document tools default to private documents, regardless of launch order. Set documentScope:"editor" on list_documents to discover open editor tabs, and on subsequent tools to work with them. Explicit sessionId addresses an existing private session. Save explicitly. Connection loss never retries edits automatically.';
+    reply.result.instructions = bridgeInstructions(reply.result.instructions);
   }
   return reply;
 }

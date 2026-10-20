@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { BrowserWindow, IpcMainInvokeEvent } from 'electron';
 import { ipcMain } from 'electron';
 
+import { batchQuerySchema } from '../../../src/automation/contracts/batch';
 import {
   AutomationError,
   automationOutcome,
@@ -91,10 +92,22 @@ export async function startAutomationHost(options: {
     if (
       closed ||
       !isSender(event) ||
-      pending?.tool !== tool ||
+      (pending?.tool !== tool &&
+        !(
+          pending?.tool === 'batch_update_files' &&
+          [
+            'open_document',
+            'save_document',
+            'export_pdf',
+            'batch_update_files',
+          ].includes(tool)
+        )) ||
       pending.requestId !== requestId
     ) {
       throw new Error('AUTOMATION_REQUEST_REQUIRED');
+    }
+    if (pending.tool === 'batch_update_files') {
+      exportController?.signal.throwIfAborted();
     }
   }
 
@@ -125,6 +138,19 @@ export async function startAutomationHost(options: {
           throw new Error('AUTOMATION_REQUEST_REQUIRED');
         }
         await options.authorize();
+        if (pending?.tool === 'batch_update_files') {
+          exportController?.signal.throwIfAborted();
+        }
+        return null;
+      }),
+  );
+  ipcMain.handle(
+    IpcRendererChannels.AutomationPlanBatch,
+    (event, requestId: string, query: unknown) =>
+      automationOutcome(async () => {
+        await options.authorize();
+        requireRequest(event, 'batch_update_files', requestId);
+        await files.planBatch(batchQuerySchema.parse(query));
         return null;
       }),
   );
@@ -224,6 +250,7 @@ export async function startAutomationHost(options: {
     ipcMain.removeListener(IpcRendererChannels.AutomationReply, onReply);
     for (const channel of [
       IpcRendererChannels.AutomationAuthorizeRequest,
+      IpcRendererChannels.AutomationPlanBatch,
       IpcRendererChannels.AutomationReadScore,
       IpcRendererChannels.AutomationWriteScore,
       IpcRendererChannels.AutomationExportPdf,
@@ -253,13 +280,17 @@ export async function startAutomationHost(options: {
         }
         const requestId = randomUUID();
         if (
-          (request.tool === 'export_pdf' || request.tool === 'preview_page') &&
+          (request.tool === 'export_pdf' ||
+            request.tool === 'preview_page' ||
+            request.tool === 'batch_update_files') &&
           signal.aborted
         ) {
           throw new Error('EXPORT_CANCELLED');
         }
         exportController =
-          request.tool === 'export_pdf' || request.tool === 'preview_page'
+          request.tool === 'export_pdf' ||
+          request.tool === 'preview_page' ||
+          request.tool === 'batch_update_files'
             ? new AbortController()
             : null;
         const onCancel = () =>

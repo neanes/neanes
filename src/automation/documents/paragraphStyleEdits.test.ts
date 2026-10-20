@@ -81,6 +81,304 @@ describe('atomic paragraph style batches', () => {
     ).toBe(Unit.fromPt(12.5));
   });
 
+  it('merges sparse overrides, preserving names, parents, null resets and unrelated values through undo and save', () => {
+    const workspace = new Workspace(false);
+    workspace.score.paragraphStyles = planParagraphStyleEdits(
+      workspace.score.paragraphStyles,
+      [
+        {
+          action: 'create',
+          style: {
+            id: 'custom',
+            displayName: 'Custom',
+            parentStyleId: 'lyrics',
+            overrides: {
+              fontFamily: 'Old Font',
+              fontSize: 23,
+              color: '#123456',
+              lineHeight: 1.5,
+              strokeWidth: 0.5,
+            },
+          },
+        },
+      ],
+    );
+    const before = getParagraphStyles(workspace.score.paragraphStyles);
+    const planned = planParagraphStyleEdits(workspace.score.paragraphStyles, [
+      {
+        action: 'update',
+        id: 'custom',
+        changes: {
+          overrides: {
+            fontFamily: 'Source Serif',
+            lineHeight: null,
+            strokeWidth: 0,
+          },
+        },
+      },
+      {
+        action: 'update',
+        id: 'default-text',
+        changes: {
+          overrides: { fontFamily: 'Source Serif' },
+        },
+      },
+    ]);
+    expect(getParagraphStyles(workspace.score.paragraphStyles)).toEqual(before);
+    replaceParagraphStyles(workspace, planned);
+    const expected = {
+      id: 'custom',
+      displayName: 'Custom',
+      parentStyleId: 'lyrics',
+      overrides: {
+        fontFamily: 'Source Serif',
+        fontSize: 23,
+        color: '#123456',
+        lineHeight: null,
+        strokeWidth: 0,
+      },
+    };
+    expect(
+      paragraphStyleDefinition(
+        workspace.score.paragraphStyles.find((style) => style.id === 'custom')!,
+      ),
+    ).toEqual(expected);
+    expect(
+      resolveParagraphStyle(workspace.score.paragraphStyles, 'default-text')
+        .fontFamily,
+    ).toBe('Source Serif');
+    const roundTrip = SaveService.LoadScoreFromJson(
+      SaveService.SaveScoreToJson(workspace.score),
+    );
+    expect(
+      paragraphStyleDefinition(
+        roundTrip.paragraphStyles.find((style) => style.id === 'custom')!,
+      ),
+    ).toEqual(expected);
+    workspace.commandService.undo();
+    expect(getParagraphStyles(workspace.score.paragraphStyles)).toEqual(before);
+    workspace.commandService.redo();
+    expect(
+      paragraphStyleDefinition(
+        workspace.score.paragraphStyles.find((style) => style.id === 'custom')!,
+      ),
+    ).toEqual(expected);
+  });
+
+  it('removes named overrides to restore inheritance, preserving other edits through undo and save', () => {
+    const workspace = new Workspace(false);
+    workspace.score.paragraphStyles = planParagraphStyleEdits(
+      workspace.score.paragraphStyles,
+      [
+        {
+          action: 'create',
+          style: {
+            id: 'parent',
+            displayName: 'Parent',
+            parentStyleId: 'default-text',
+            overrides: { fontFamily: 'Inherited Font', lineHeight: 1.6 },
+          },
+        },
+        {
+          action: 'create',
+          style: {
+            id: 'child',
+            displayName: 'Child',
+            parentStyleId: 'parent',
+            overrides: {
+              fontFamily: 'Local Font',
+              lineHeight: null,
+              fontSize: 23,
+            },
+          },
+        },
+      ],
+    );
+    const before = getParagraphStyles(workspace.score.paragraphStyles);
+    const plan = planParagraphStyleEdits(workspace.score.paragraphStyles, [
+      {
+        action: 'update',
+        id: 'child',
+        resetOverrides: ['fontFamily', 'lineHeight'],
+        changes: { overrides: { strokeWidth: 0 } },
+      },
+    ]);
+    expect(getParagraphStyles(workspace.score.paragraphStyles)).toEqual(before);
+    replaceParagraphStyles(workspace, plan);
+    const child = workspace.score.paragraphStyles.find(
+      (style) => style.id === 'child',
+    )!;
+    expect(child.overrides).toEqual({ fontSize: 23, strokeWidth: 0 });
+    expect(child.displayName).toBe('Child');
+    expect(child.parentStyleId).toBe('parent');
+    expect(
+      resolveParagraphStyle(workspace.score.paragraphStyles, 'child'),
+    ).toMatchObject({
+      fontFamily: 'Inherited Font',
+      lineHeight: 1.6,
+      fontSize: 23,
+      strokeWidth: 0,
+    });
+    const roundTrip = SaveService.LoadScoreFromJson(
+      SaveService.SaveScoreToJson(workspace.score),
+    );
+    expect(
+      roundTrip.paragraphStyles.find((style) => style.id === 'child')!
+        .overrides,
+    ).toEqual({ fontSize: 23, strokeWidth: 0 });
+    expect(
+      resolveParagraphStyle(roundTrip.paragraphStyles, 'child'),
+    ).toMatchObject({ fontFamily: 'Inherited Font', lineHeight: 1.6 });
+    workspace.commandService.undo();
+    expect(getParagraphStyles(workspace.score.paragraphStyles)).toEqual(before);
+    workspace.commandService.redo();
+    expect(getParagraphStyles(workspace.score.paragraphStyles)).toEqual(
+      getParagraphStyles(roundTrip.paragraphStyles),
+    );
+    const resetOnly = planParagraphStyleEdits(roundTrip.paragraphStyles, [
+      { action: 'update', id: 'child', resetOverrides: ['fontSize', 'color'] },
+    ]);
+    expect(resetOnly.find((style) => style.id === 'child')!.overrides).toEqual({
+      strokeWidth: 0,
+    });
+  });
+
+  it('rejects setting and resetting the same override before any batch edits are committed', () => {
+    const workspace = new Workspace(false);
+    const before = getParagraphStyles(workspace.score.paragraphStyles);
+    expect(() =>
+      planParagraphStyleEdits(workspace.score.paragraphStyles, [
+        {
+          action: 'update',
+          id: 'default-text',
+          changes: { overrides: { fontSize: 23 } },
+        },
+        {
+          action: 'update',
+          id: 'lyrics',
+          changes: { overrides: { lineHeight: null } },
+          resetOverrides: ['lineHeight'],
+        },
+      ]),
+    ).toThrow('An override cannot be both set and reset.');
+    expect(getParagraphStyles(workspace.score.paragraphStyles)).toEqual(before);
+    expect(workspace.hasUnsavedChanges).toBe(false);
+  });
+
+  it('updates custom metadata and parents while preserving overrides and accepting parents created later', () => {
+    const previous = planParagraphStyleEdits(
+      new Workspace(false).score.paragraphStyles,
+      [
+        {
+          action: 'create',
+          style: {
+            id: 'child',
+            displayName: 'Child',
+            parentStyleId: 'lyrics',
+            overrides: { fontSize: 23 },
+          },
+        },
+      ],
+    );
+    const updated = planParagraphStyleEdits(previous, [
+      {
+        action: 'update',
+        id: 'child',
+        changes: { displayName: ' Renamed ', parentStyleId: 'parent' },
+      },
+      {
+        action: 'create',
+        style: {
+          id: 'parent',
+          displayName: 'Parent',
+          parentStyleId: 'default-text',
+          overrides: { fontFamily: 'Source Serif' },
+        },
+      },
+    ]);
+    expect(
+      paragraphStyleDefinition(updated.find((style) => style.id === 'child')!),
+    ).toEqual({
+      id: 'child',
+      displayName: 'Renamed',
+      parentStyleId: 'parent',
+      overrides: { fontSize: 23 },
+    });
+    expect(resolveParagraphStyle(updated, 'child').fontFamily).toBe(
+      'Source Serif',
+    );
+    const detached = planParagraphStyleEdits(updated, [
+      {
+        action: 'update',
+        id: 'child',
+        changes: { parentStyleId: null, overrides: {} },
+      },
+    ]);
+    expect(
+      paragraphStyleDefinition(detached.find((style) => style.id === 'child')!),
+    ).toEqual({
+      id: 'child',
+      displayName: 'Renamed',
+      parentStyleId: 'default-text',
+      overrides: { fontSize: 23 },
+    });
+  });
+
+  it('reparents an updated child when its omitted parent is deleted, but rejects explicitly assigning the deleted parent', () => {
+    const previous = planParagraphStyleEdits(
+      new Workspace(false).score.paragraphStyles,
+      [
+        {
+          action: 'create',
+          style: {
+            id: 'parent',
+            displayName: 'Parent',
+            parentStyleId: 'lyrics',
+            overrides: {},
+          },
+        },
+        {
+          action: 'create',
+          style: {
+            id: 'child',
+            displayName: 'Child',
+            parentStyleId: 'parent',
+            overrides: {},
+          },
+        },
+      ],
+    );
+    for (const changes of [
+      [
+        { action: 'delete', id: 'parent' },
+        {
+          action: 'update',
+          id: 'child',
+          changes: { overrides: { fontSize: 23 } },
+        },
+      ],
+      [
+        {
+          action: 'update',
+          id: 'child',
+          changes: { overrides: { fontSize: 23 } },
+        },
+        { action: 'delete', id: 'parent' },
+      ],
+    ] as ParagraphStyleChange[][]) {
+      const updated = planParagraphStyleEdits(previous, changes);
+      const child = updated.find((style) => style.id === 'child')!;
+      expect(child.parentStyleId).toBe('lyrics');
+      expect(child.overrides.fontSize).toBe(23);
+    }
+    expect(() =>
+      planParagraphStyleEdits(previous, [
+        { action: 'delete', id: 'parent' },
+        { action: 'update', id: 'child', changes: { parentStyleId: 'parent' } },
+      ]),
+    ).toThrow('STYLE_PARENT_DELETED');
+  });
+
   it('preserves custom names matching a built-in stored label', () => {
     const workspace = new Workspace();
     const styles = planParagraphStyleEdits(workspace.score.paragraphStyles, [
@@ -121,6 +419,26 @@ describe('atomic paragraph style batches', () => {
       'STYLE_NOT_FOUND',
     );
     expect(JSON.stringify(focused).length).toBeLessThan(600);
+  });
+
+  it('lists IDs without definitions or resolved values, preserving filtering and errors', () => {
+    const styles = new Workspace().score.paragraphStyles;
+    expect(getParagraphStyles(styles, { view: 'ids' })).toEqual({
+      styleIds: styles.map((style) => style.id),
+    });
+    expect(
+      getParagraphStyles(styles, {
+        view: 'ids',
+        ids: ['lyrics'],
+        includeResolved: true,
+      }),
+    ).toEqual({ styleIds: ['lyrics'] });
+    expect(getParagraphStyles(styles, { view: 'ids', ids: [] })).toEqual({
+      styleIds: [],
+    });
+    expect(() =>
+      getParagraphStyles(styles, { view: 'ids', ids: ['missing'] }),
+    ).toThrow('STYLE_NOT_FOUND');
   });
 
   it('returns definitions that round-trip without making built-in names writable', () => {
@@ -270,6 +588,46 @@ describe('atomic paragraph style batches', () => {
 
   it.each(
     [
+      [
+        {
+          action: 'update',
+          id: 'missing',
+          changes: { overrides: { fontSize: 23 } },
+        },
+      ],
+      [{ action: 'update', id: 'lyrics', changes: { displayName: 'Renamed' } }],
+      [
+        {
+          action: 'update',
+          id: 'lyrics',
+          changes: { parentStyleId: 'lyrics' },
+        },
+      ],
+      [
+        {
+          action: 'update',
+          id: 'lyrics',
+          changes: { parentStyleId: 'missing' },
+        },
+      ],
+      [
+        {
+          action: 'update',
+          id: 'lyrics',
+          changes: { overrides: { fontSize: -1 } },
+        },
+      ],
+      [
+        { action: 'update', id: 'lyrics', changes: {} },
+        { action: 'delete', id: 'lyrics' },
+      ],
+      [
+        { action: 'update', id: 'lyrics', changes: {} },
+        {
+          action: 'replace',
+          style: { id: 'lyrics', parentStyleId: 'default-text', overrides: {} },
+        },
+      ],
       [{ action: 'delete', id: 'lyrics' }],
       [{ action: 'delete', id: 'missing' }],
       [

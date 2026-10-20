@@ -1,6 +1,6 @@
 # Neanes MCP
 
-When agent access is enabled, the Electron app starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export and page previews render detached snapshots in dedicated hidden windows. Typed element and lyric transactions are available in both document modes. Folder jobs and temporary export transformations remain planned separately.
+When agent access is enabled, the Electron app starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Document tools operate on interactive workspaces by default, or private documents when passed an isolated session ID. MCP PDF export and page previews render detached snapshots in dedicated hidden windows. Typed element and lyric transactions are available in both document modes. Bounded batch transformations support saved scores and temporary PDF edits. Folder discovery and persistent background jobs remain deferred.
 
 ## Normal setup: one connection
 
@@ -155,7 +155,7 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 
 ## Tools
 
-- `get_capabilities`: supported style actions, units, formats, and installed/bundled font families. Pass `includeErrorCodes: true` for the stable error-code vocabulary.
+- `get_capabilities`: supported style actions, units, and formats. Pass `includeFonts: true` to add this host's installed/bundled font families (omitted by default). Pass `includeErrorCodes: true` for the stable error-code vocabulary.
 - `list_documents`: open workspace IDs, revisions, canonical source paths, source format (`byz`, `byzx`, or null), selection, and unsaved state.
 - `get_element_catalog`: defaults to a small inventory of element types, child collections, units, and stored header/footer variants. Request `elementTypes: ["Note"]` and/or `properties: ["lyrics", "isMelisma"]` for focused schemas; `view: "read" | "edit" | "both"` defaults to both. Read schemas are in `properties`, writable validation schemas in `editProperties` (null for `Empty`). A property filter omits types without matching properties. `includeProperties: true` requests all property schemas; `includeNeumes: true` adds the full enum vocabulary. Schemas use self-contained local `$defs`/`$ref`; clients must resolve references within each schema. The shared `tempoBpmDefaults` map exposes all tempo-sign BPM defaults. Dimensions are CSS pixels; line height is a multiplier. Tool input schemas use JSON Schema input semantics, so defaulted fields may be omitted; response schemas describe settled output. Tool schemas advertise compact property maps; the server still validates every supplied property against its complete element-specific schema.
 - `get_rich_text_format`: document-independent CKEditor HTML authoring guide for RichTextBox content/panel fields and Annotation.text. Optional `topics` selects `basics`, `inline`, and/or `opentype` (default: `basics` + `inline`). Covers paragraph classes, escaping, panels, word/selection span overrides (color, size, family, weight/slant), and complete edit calls; `opentype` gives supported font-variant values and inheritance/reset rules. Use spans for local overrides; create paragraph styles for reusable paragraph formatting. Read before the first rich-text edit. TextBox content remains plain text.
@@ -181,8 +181,8 @@ All three focused readers accept optional `expectedRevision`. Settings writes re
 - `create_document`: create and select a document using the user's current defaults. Optional `title` sets its metadata title.
 - `open_document`: open an absolute `.byzx` or `.byz` path. An already-open file is selected by canonical identity without replacing unsaved changes, including when its interactive path uses a directory alias. The requested suffix selects decoding; canonical identity does not change that format. Returns `created: true` only when a workspace was added; reused workspaces return false.
 - `close_document`: closes one workspace without saving or deleting score files. Requires `documentId` and `expectedRevision`. Unsaved or recovered workspaces return `UNSAVED_CHANGES` unless `discardUnsavedChanges: true` is explicit. Stale revisions are rejected even when discarding. Recovered drafts require saving or explicit discard even if their dirty flag is clear; error details include `hasUnsavedChanges` and `isRecovered`. Recovery snapshots and pending recovery timers are removed. Closing a background workspace preserves the selection; closing the selected one selects a neighbor. Closing the last workspace creates a blank workspace and keeps MCP running. Returns `{ documentId, selectedDocumentId }`. Cleanup failure after removal reports `RECOVERY_CLEANUP_FAILED` with `details.closed: true`; inspect the document list instead of retrying that close. A pending native save or interactive close returns `EDITOR_BUSY`; close waits for exports and native file opens.
-- `get_paragraph_styles`: complete writable style definitions, optionally filtered by `ids` (unknown IDs return `STYLE_NOT_FOUND`; `[]` selects none). `includeResolved: false` omits resolved metadata. By default returns all definitions in `styles`, and separate read-only `resolvedStyles` with effective values, built-in flags, and display labels. These definitions use the live model shape (`overrides` and `fontStyle`). Dimensions are CSS pixels; `lineHeight` is a unitless multiplier.
-- `edit_paragraph_styles`: an atomic batch of `create`, `replace`, and `delete` actions. Each create/replace supplies a complete definition (`id`, `parentStyleId`, `overrides`, and `displayName` for custom styles). Built-in names are read-only metadata and must be omitted. Missing overrides inherit; supported null values explicitly reset. Each ID can appear once per batch. Action order does not matter: a child may refer to a parent created later in the payload. Validation checks the final graph for missing parents, cycles, duplicate IDs/names, and protected built-ins before applying anything. Built-in styles cannot be created, deleted, or renamed. Custom null parents normalize to `default-text`. Deleted styles' untouched children inherit from their nearest surviving ancestor or `default-text`; content references use their nearest surviving ancestor or surface default. Explicit references to a parent deleted in the same batch are rejected. Newly assigned font families must exist; unchanged unavailable families are preserved. The response defaults to a document summary and `affectedStyleIds`: definitions actually changed, created, deleted, or reparented (not every descendant whose resolved values changed). Pass `includeStyles: true` to also return the complete `styles`, `resolvedStyles`, and `units`. The entire edit is one undo step and preserves per-element overrides. Before returning, it measures the target workspace's resizable body text boxes and enabled headers/footers with the updated styles, even when that workspace is in the background. Measurement preserves the selected workspace. Saves and recovery snapshots wait for pending measurements; failed measurement reports `TEXT_BOX_MEASUREMENT_FAILED` rather than saving stale heights. Does not save.
+- `get_paragraph_styles`: `view: "ids"` returns only `styleIds` and the document summary; `ids` filters either view and unknown IDs fail with `STYLE_NOT_FOUND`. The default `view: "definitions"` returns complete writable style definitions, optionally filtered by `ids` (unknown IDs return `STYLE_NOT_FOUND`; `[]` selects none). `includeResolved: false` omits resolved metadata. By default returns all definitions in `styles`, and separate read-only `resolvedStyles` with effective values, built-in flags, and display labels. These definitions use the live model shape (`overrides` and `fontStyle`). Dimensions are CSS pixels; `lineHeight` is a unitless multiplier.
+- `edit_paragraph_styles`: an atomic batch of `create`, `replace`, `update`, and `delete` actions. `update` takes an `id` and sparse `changes` (`displayName`, `parentStyleId`, and/or `overrides`); supplied overrides merge into existing overrides, and omitted fields stay unchanged. An empty overrides object preserves existing overrides. Supported null values explicitly reset. `resetOverrides` removes named override keys to resume inheritance; it can be used alone, without `changes`, or alongside changes to other overrides. Setting and resetting the same override is rejected. Resetting an already absent override leaves it absent. Each create/replace supplies a complete definition (`id`, `parentStyleId`, `overrides`, and `displayName` for custom styles). Built-in names are read-only metadata and must be omitted. For create/replace, missing overrides inherit; supported null values explicitly reset. Each ID can appear once per batch. Action order does not matter: a child may refer to a parent created later in the payload. Validation checks the final graph for missing parents, cycles, duplicate IDs/names, and protected built-ins before applying anything. Built-in styles cannot be created, deleted, or renamed. Custom null parents normalize to `default-text`. Deleted styles' untouched children inherit from their nearest surviving ancestor or `default-text`; content references use their nearest surviving ancestor or surface default. Explicit references to a parent deleted in the same batch are rejected. Text font families do not need to be available on this computer; their names are preserved for rendering elsewhere. Local previews/PDFs use locally available fonts and may fall back. Notation fonts remain restricted to supported chant fonts. The response defaults to a document summary and `affectedStyleIds`: definitions actually changed, created, deleted, or reparented (not every descendant whose resolved values changed). Pass `includeStyles: true` to also return the complete `styles`, `resolvedStyles`, and `units`. The entire edit is one undo step and preserves per-element overrides. Before returning, it measures the target workspace's resizable body text boxes and enabled headers/footers with the updated styles, even when that workspace is in the background. Measurement preserves the selected workspace. Saves and recovery snapshots wait for pending measurements; failed measurement reports `TEXT_BOX_MEASUREMENT_FAILED` rather than saving stale heights. Does not save.
 - `replace_document_properties`: replaces the complete metadata object, requiring both `title` and `author`. One undo step; does not save.
 - `save_document`: save to `filePath`, or to the document's source if omitted. Save-as changes the workspace's source path. Existing unrelated destinations require `overwrite: true`. Saving back to the source checks its last known modification time and size, even when overwrite is true. Writes use a temporary file followed by an atomic commit. Same-source saves preserve the format used to open the score, including extensionless or differently suffixed symlink targets, and preserve the alias itself. Save-as to a different identity uses the destination suffix. Unrelated symlink outputs remain forbidden. The result includes `savedRevision` (the revision written) and `savedContentUnchanged` (whether that saved snapshot is still current). `revision` describes the current workspace, which can include newer interactive edits or the new source path.
 - `preview_page`: return one full-page PNG as an MCP image content block, without writing an output file. Works with unsaved interactive or isolated documents. Supply `documentId`, `expectedRevision`, and one-based physical `pageNumber`; optionally pass `expectedLayoutId` from page discovery. `maxEdge` defaults to 1600 pixels and accepts 256-2048, preserving aspect ratio (up to 192 DPI); the PNG is limited to 4 MiB. Text and structured results contain metadata only: `capturedRevision`, current `revision`, `layoutId`, `pageCount`, `pageNumber`, `mimeType`, `width`, and `height`, plus the document summary. The image is the second content block, with `type: "image"`, `mimeType: "image/png"`, and base64 `data`. Clients must support MCP image content to inspect it. Concurrent source changes reject with `REVISION_CONFLICT`; stale layout IDs reject with `LAYOUT_CONFLICT`. Rendering uses the shared settled pages, opaque white background, export overlays, font/image readiness, cancellation, and disposal. Does not select, edit, save, or create a private copy. Pending input follows the same normal document settlement as other reads.
@@ -536,25 +536,34 @@ All document-targeting tools require `documentId`. Close, edit, replace, save, a
 
 For batch cleanup, record the initial document IDs and close only workspaces introduced by the run. `open_document.created` distinguishes newly opened workspaces from reused ones. A reused workspace may contain the user's unsaved edits; opening it does not authorize closing or discarding it.
 
-For a font change, read `get_paragraph_styles`, take the complete `lyrics` definition from `styles`, and submit it to `edit_paragraph_styles` with an updated `overrides` object. Preserve its other overrides. For example, the client can construct:
+For a font change, use a sparse update with the revision returned by opening the
+score or the latest successful operation. No style read is needed. For example:
 
 ```js
 {
-  documentId: result.documentId,
-  expectedRevision: result.revision,
+  documentId: opened.documentId,
+  expectedRevision: opened.revision,
   changes: [{
-    action: 'replace',
-    style: {
-      ...result.styles.find(style => style.id === 'lyrics'),
-      overrides: {
-        ...result.styles.find(style => style.id === 'lyrics').overrides,
-        fontFamily: 'Source Serif',
-        fontSize: 12.5 * 96 / 72 // 12.5 points in CSS pixels
-      }
+    action: 'update',
+    id: 'default-text',
+    changes: {
+      overrides: { fontFamily: 'Source Serif' }
     }
   }]
 }
 ```
+
+The update preserves the style's name, parent, and every other override. To remove
+one override and resume inheritance, use a reset-only update:
+
+```js
+{ action: 'update', id: 'lyrics', resetOverrides: ['fontFamily'] }
+```
+
+`null` remains an explicit reset value for nullable fields; `resetOverrides`
+removes the override itself. `replace` still removes every omitted override.
+Page setup and header/footer settings already support sparse `changes`, such as
+`update_page_setup` with `changes: { topMargin: 48 }`.
 
 Use the returned revision for subsequent edits, saves, or exports. Read definitions through `get_paragraph_styles`, or request `includeStyles: true` on the edit to include full state. `styles` is writable; `resolvedStyles` and `units` are read-only metadata. Omitting a style from a batch leaves it unchanged; deletion always requires an explicit action.
 
@@ -722,7 +731,92 @@ The shared paragraph-style service owns graph validation, replacement, and delet
 
 The editor and hidden export renderer both use `ScorePageContent.vue` for headers, footers, notation, lyrics, and element rendering. The editor retains its page DOM wrappers, visibility tracking, focus handling, and mutation handlers. Each page owns its child refs and exposes methods for element, lyric, annotation, and page-specific header/footer lookup; the editor holds only page-component refs. Page content forwards typed interaction events; editor-only badges and developer overlays are supplied through slots. Print pages use local component refs to await rich-text readiness. Overlay markup, geometry, and styles also live in the shared page component. Snapshots capture overlay preferences, and the detached renderer regenerates layout diagnostics so enabled Print Overlays settings apply to every PDF route.
 
+## Batch transformations
+
+`batch_update_files` processes an explicit manifest of up to 100 saved scores in
+request-owned private documents. It never reuses interactive tabs or caller-owned
+session documents and accepts neither `sessionId` nor `documentScope`. It holds
+one score at a time, so the 16-open-document session limit does not constrain the
+manifest. The normal bridge routes it to its private worker.
+
+```js
+const query = {
+  files: [
+    { filePath: '/scores/first.byzx' },
+    {
+      filePath: '/scores/second.byz',
+      edits: { pageSetup: { bottomMargin: 60 } },
+    },
+  ],
+  edits: {
+    paragraphStyles: [
+      {
+        action: 'update',
+        id: 'default-text',
+        changes: { overrides: { fontFamily: 'Source Serif' } },
+      },
+    ],
+    pageSetup: { topMargin: 50 },
+  },
+  save: 'inPlace',
+  verifySaved: true,
+};
+```
+
+Each `edits` object optionally contains `paragraphStyles` (the existing style
+create/replace/update/delete actions), `pageSetup`, `headerFooter`, and sparse
+`documentProperties` (title/author). Shared edits run first, then that file's edits;
+per-file edits can override shared values while preserving unrelated fields.
+Each layer's style graph must be valid. Settings use the same fields and units as
+the corresponding single-document update tools. Published batch settings dictionaries
+list all writable field names; detailed value constraints remain in those tools.
+Shared and per-file edits reference one definition in the published schema.
+Element-reference transactions,
+folder discovery, scripts, and conditional selection are outside this tool.
+
+`save` defaults to `inPlace`; unchanged scores skip the disk write. With `copy`,
+every file requires a distinct `outputFilePath` (.byz or .byzx), and even unchanged
+scores are copied. `none` discards temporary edits after any PDF export. An optional
+per-file `pdfFilePath` exports the transformed score. For export-only batches,
+omit `edits`, set `save: "none"`, and supply each `pdfFilePath`. To save edits and
+export PDFs, use `save: "inPlace"` or `"copy"`; the score is saved before PDF export. Existing unrelated outputs
+require `overwrite: true`; same-source saves retain normal source-conflict checks.
+Directories must exist. Inputs and outputs are checked for canonical identity
+collisions across the entire manifest before any writes, including when resuming.
+Copies cannot overwrite any input. Separate files commit independently; saving a
+score and exporting its PDF are also separate commits.
+
+`dryRun: true` loads, validates, applies edits, and settles text measurements without
+saving or rendering PDFs. It reports whether the score would change, but does not
+guarantee destination permissions/availability or successful PDF rendering.
+`verifySaved: true` rereads the saved score and compares normalized serialized
+content; it also verifies unchanged in-place inputs. It requires a saving mode,
+and is skipped during dry runs. This checks persisted score data, not PDF font
+embedding or actual installed-font availability.
+
+Results contain `index`, input `filePath`, `status` (completed/unchanged/dryRun/failed),
+`changed` when known, committed `savedFilePath`/`pdfFilePath`, optional `verified`,
+and a compact error code/message. A later verification/PDF failure retains already
+committed output paths. No document definitions or transient IDs/revisions are
+returned. `onError` defaults to `stop`; `continue` attempts later files. Cancellation
+and access revocation stop further work at authorization/render checkpoints.
+
+The tool yields between files after a soft 20-second work budget or a 16,000-character
+result threshold. A single slow file can still hit the existing 60-second request
+timeout. The response has `stopReason` (complete/error/timeBudget/responseBudget/cancelled)
+and `nextIndex` (the first unattempted file, or null). `complete` means every remaining
+file was attempted, not that every file succeeded. To continue, send the identical
+manifest/options with `startIndex: nextIndex`; failed files require separate inspection
+and an explicit retry. Never restart at zero merely because the batch yielded.
+There is no stored job, cross-file rollback, or automatic replay. If the connection
+is lost before the report arrives, inspect outputs before retrying.
+
 ## Response size guidance
+
+Capabilities omit fonts by default; opt in with `includeFonts: true` only when
+checking this host's available fonts. Text font assignments do not require local
+installation. Use `get_paragraph_styles` with `view: "ids"` for IDs alone.
+Replacing a style still needs its complete definition to preserve other overrides.
 
 Prefer focused catalog queries with `view: "edit"` when preparing edits, projected
 `get_elements` reads, and `get_paragraph_styles` with `ids` and

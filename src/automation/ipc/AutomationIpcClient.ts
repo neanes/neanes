@@ -8,6 +8,7 @@ import type {
 } from '@/services/documents/fileTypes';
 import type { ScoreRenderSnapshot } from '@/services/documents/scoreRenderSnapshot';
 
+import type { BatchQuery } from '../contracts/batch';
 import { unwrapAutomationOutcome } from '../contracts/errors';
 import type { PreviewImage } from '../contracts/preview';
 
@@ -24,6 +25,15 @@ export class AutomationIpcClient {
         IpcRendererChannels.AutomationPreviewPage,
         this.requestId,
         { snapshot, pageNumber, maxEdge, expectedGeometry },
+      ),
+    );
+  }
+  async planBatch(query: BatchQuery) {
+    unwrapAutomationOutcome(
+      await window.ipcRenderer.invoke(
+        IpcRendererChannels.AutomationPlanBatch,
+        this.requestId,
+        query,
       ),
     );
   }

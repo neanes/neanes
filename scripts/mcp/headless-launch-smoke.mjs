@@ -18,6 +18,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import electron from 'electron';
 
+import { checkBatch } from './batchChecks.mjs';
 import { checkSettings } from './settingsChecks.mjs';
 
 const directory = await mkdtemp(path.join(tmpdir(), 'neanes-headless-smoke-'));
@@ -60,6 +61,16 @@ try {
   // Each bridge owns a worker; sessions never resolve in a different worker.
   const capabilities = await call(first, 'get_capabilities');
   assert.equal(capabilities.mode, 'headless');
+  assert.equal('fonts' in capabilities, false);
+  const withFonts = await call(first, 'get_capabilities', {
+    includeFonts: true,
+  });
+  assert.ok(withFonts.fonts.includes('Source Serif'));
+  console.info('Capabilities JSON characters', {
+    default: JSON.stringify(capabilities).length,
+    withFonts: JSON.stringify(withFonts).length,
+    fontCount: withFonts.fonts.length,
+  });
   const richTextFormat = await call(first, 'get_rich_text_format');
   assert.match(richTextFormat.guide, /neanes-paragraph-style-default-text/);
   assert.match(richTextFormat.guide, /neanes-paragraph-style-annotation/);
@@ -187,6 +198,59 @@ try {
     sessionId,
     title: 'Headless smoke',
   });
+  const styleIds = await call(first, 'get_paragraph_styles', {
+    sessionId,
+    documentId: document.documentId,
+    view: 'ids',
+  });
+  assert.ok(styleIds.styleIds.includes('lyrics'));
+  assert.equal('styles' in styleIds, false);
+  assert.equal('resolvedStyles' in styleIds, false);
+  document = await call(first, 'edit_paragraph_styles', {
+    sessionId,
+    documentId: document.documentId,
+    expectedRevision: document.revision,
+    changes: [
+      {
+        action: 'update',
+        id: 'lyrics',
+        changes: {
+          overrides: { fontFamily: '__unavailable_text_font__' },
+        },
+      },
+      {
+        action: 'update',
+        id: 'default-text',
+        changes: {
+          overrides: { fontFamily: 'Source Serif' },
+        },
+      },
+    ],
+  });
+  document = await call(first, 'edit_paragraph_styles', {
+    sessionId,
+    documentId: document.documentId,
+    expectedRevision: document.revision,
+    changes: [
+      {
+        action: 'create',
+        style: {
+          id: 'reset-child',
+          displayName: 'Reset Child',
+          parentStyleId: 'default-text',
+          overrides: { fontFamily: '__local_override__', fontSize: 19 },
+        },
+      },
+    ],
+  });
+  document = await call(first, 'edit_paragraph_styles', {
+    sessionId,
+    documentId: document.documentId,
+    expectedRevision: document.revision,
+    changes: [
+      { action: 'update', id: 'reset-child', resetOverrides: ['fontFamily'] },
+    ],
+  });
   document = await call(first, 'edit_elements', {
     sessionId,
     documentId: document.documentId,
@@ -198,11 +262,18 @@ try {
         elements: [
           {
             elementType: 'RichTextBox',
-            properties: { content: '<p>Headless rich text</p>' },
+            properties: {
+              content:
+                '<p class="neanes-paragraph-style-reset-child">Headless rich text</p>',
+            },
           },
           {
             elementType: 'Note',
-            properties: { quantitativeNeume: 'Ison', lyrics: 'Test' },
+            properties: {
+              quantitativeNeume: 'Ison',
+              lyrics: 'Test',
+              lyricsFontFamily: '__unavailable_element_font__',
+            },
           },
         ],
       },
@@ -240,6 +311,16 @@ try {
     filePath: scorePath,
   });
   assert.ok((await readFile(scorePath, 'utf8')).includes('Headless smoke'));
+  const persisted = JSON.parse(await readFile(scorePath, 'utf8'));
+  assert.equal(
+    persisted.paragraphStyles.find((style) => style.id === 'lyrics').fontFamily,
+    '__unavailable_text_font__',
+  );
+  assert.equal(
+    persisted.staff.elements.find((element) => element.elementType === 'Note')
+      .lyricsFontFamily,
+    '__unavailable_element_font__',
+  );
   await call(first, 'export_pdf', {
     sessionId,
     documentId: document.documentId,
@@ -248,10 +329,30 @@ try {
   });
   assert.ok((await stat(path.join(files, 'headless.pdf'))).size > 1000);
   const reopened = await call(second, 'create_session');
-  await call(second, 'open_document', {
+  const openedScore = await call(second, 'open_document', {
     sessionId: reopened.sessionId,
     filePath: scorePath,
   });
+  const reopenedStyle = await call(second, 'get_paragraph_styles', {
+    sessionId: reopened.sessionId,
+    documentId: openedScore.documentId,
+    ids: ['default-text', 'reset-child'],
+  });
+  // Root overrides equal to built-in fallbacks are omitted when normalized.
+  assert.equal(
+    reopenedStyle.resolvedStyles[0].values.fontFamily,
+    'Source Serif',
+  );
+  const resetDefinition = reopenedStyle.styles.find(
+    (style) => style.id === 'reset-child',
+  );
+  assert.deepEqual(resetDefinition.overrides, { fontSize: 19 });
+  assert.equal(
+    reopenedStyle.resolvedStyles.find((style) => style.id === 'reset-child')
+      .values.fontFamily,
+    'Source Serif',
+  );
+  await checkBatch(first, files, scorePath);
   await assert.rejects(() =>
     connect(path.join(directory, 'missing-executable')),
   );

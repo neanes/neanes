@@ -100,7 +100,46 @@ try {
     });
   }
   const capabilities = await call('get_capabilities');
-  assert.ok(capabilities.fonts.includes('Source Serif'));
+  assert.equal('fonts' in capabilities, false);
+  const withFonts = await call('get_capabilities', { includeFonts: true });
+  assert.ok(withFonts.fonts.includes('Source Serif'));
+  const fontDraft = await call('create_document');
+  const fontDefinitions = await call('get_paragraph_styles', {
+    documentId: fontDraft.documentId,
+    ids: ['lyrics'],
+    includeResolved: false,
+  });
+  const unavailableFont = await call('edit_paragraph_styles', {
+    documentId: fontDraft.documentId,
+    expectedRevision: fontDefinitions.revision,
+    changes: [
+      {
+        action: 'replace',
+        style: {
+          ...fontDefinitions.styles[0],
+          overrides: { fontFamily: '__missing_font__' },
+        },
+      },
+    ],
+  });
+  const fontPath = path.join(directory, `unavailable-font-${Date.now()}.byzx`);
+  await call('save_document', {
+    documentId: fontDraft.documentId,
+    expectedRevision: unavailableFont.revision,
+    filePath: fontPath,
+  });
+  const fontScore = JSON.parse(await fs.readFile(fontPath, 'utf8'));
+  assert.equal(
+    fontScore.paragraphStyles.find((style) => style.id === 'lyrics').fontFamily,
+    '__missing_font__',
+  );
+  const fontState = await call('get_paragraph_styles', {
+    documentId: fontDraft.documentId,
+  });
+  await call('close_document', {
+    documentId: fontDraft.documentId,
+    expectedRevision: fontState.revision,
+  });
   const initial = await call('list_documents');
   const created = await call('create_document', { title: 'MCP smoke' });
   let document = await call('get_elements', {
@@ -296,26 +335,6 @@ try {
       changes: [
         {
           action: 'replace',
-          style: {
-            ...currentLyrics,
-            overrides: {
-              ...currentLyrics.overrides,
-              fontFamily: '__missing_font__',
-            },
-          },
-        },
-      ],
-    },
-    'FONT_NOT_FOUND',
-  );
-  await fails(
-    'edit_paragraph_styles',
-    {
-      documentId: opened.documentId,
-      expectedRevision: currentStyles.revision,
-      changes: [
-        {
-          action: 'replace',
           style: { ...currentLyrics, parentStyleId: 'smoke-child' },
         },
         {
@@ -329,6 +348,16 @@ try {
     },
     'STYLE_INHERITANCE_CYCLE',
   );
+  const styleIds = await call('get_paragraph_styles', {
+    documentId: opened.documentId,
+    view: 'ids',
+  });
+  assert.deepEqual(
+    styleIds.styleIds,
+    currentStyles.styles.map((style) => style.id),
+  );
+  assert.equal('styles' in styleIds, false);
+  assert.equal('resolvedStyles' in styleIds, false);
   const deleted = await call('edit_paragraph_styles', {
     includeStyles: true,
     documentId: opened.documentId,

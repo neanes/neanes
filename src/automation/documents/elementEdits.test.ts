@@ -324,6 +324,32 @@ describe('validated element transactions', () => {
     expect(box.fontSize).toBeNull();
   });
 
+  it('preserves unavailable text fonts through edits, serialization and undo', () => {
+    const { workspace, edit } = document();
+    const before = saved(workspace);
+    const plan = edit([
+      insert([
+        { elementType: 'DropCap', properties: { fontFamily: 'Missing Font' } },
+        {
+          elementType: 'Note',
+          properties: { lyricsFontFamily: 'Missing Font' },
+        },
+      ]),
+    ]);
+    expect(plan.fontFamilies).toEqual([]);
+    const roundTrip = SaveService.LoadScoreFromJson(
+      SaveService.SaveScoreToJson(workspace.score),
+    );
+    expect(Reflect.get(roundTrip.staff.elements[0], 'fontFamily')).toBe(
+      'Missing Font',
+    );
+    expect(Reflect.get(roundTrip.staff.elements[1], 'lyricsFontFamily')).toBe(
+      'Missing Font',
+    );
+    workspace.commandService.undo();
+    expect(saved(workspace)).toBe(before);
+  });
+
   it.each([
     [insert([{ elementType: 'Empty' }])],
     [insert([{ elementType: 'Annotation' }])],
@@ -346,11 +372,6 @@ describe('validated element transactions', () => {
     [
       insert([
         { elementType: 'DropCap', properties: { paragraphStyleId: 'missing' } },
-      ]),
-    ],
-    [
-      insert([
-        { elementType: 'DropCap', properties: { fontFamily: 'Missing Font' } },
       ]),
     ],
     [

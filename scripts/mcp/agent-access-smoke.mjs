@@ -207,6 +207,85 @@ try {
     });
     assert.ok(!liveFromWorker.isError, JSON.stringify(liveFromWorker));
     assert.equal(liveFromWorker.structuredContent.result.length, 1);
+    const batchSeed = await call(second, 'edit_elements', {
+      documentId: created.structuredContent.result.documentId,
+      expectedRevision: created.structuredContent.result.revision,
+      actions: [
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              properties: {
+                content: `<p class="neanes-paragraph-style-default-text">${'LONG WRAPPING TEXT FOR BATCH FONT SIZE MEASUREMENT. '.repeat(12)}</p>`,
+              },
+            },
+          ],
+        },
+      ],
+    });
+    const batchPath = path.join(files, 'interactive-batch.byzx');
+    await call(second, 'save_document', {
+      documentId: batchSeed.documentId,
+      expectedRevision: batchSeed.revision,
+      filePath: batchPath,
+    });
+    const beforeBatch = JSON.parse(await readFile(batchPath, 'utf8'));
+    const beforeBatchHeight = beforeBatch.staff.elements.find(
+      (element) => element.elementType === 'RichTextBox',
+    ).height;
+    assert.ok(Number.isFinite(beforeBatchHeight) && beforeBatchHeight > 0);
+    const batchResponse = await fetch(configured.endpoint, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${originalToken}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 'interactive-batch',
+        method: 'tools/call',
+        params: {
+          name: 'batch_update_files',
+          arguments: {
+            files: [{ filePath: batchPath }],
+            edits: {
+              paragraphStyles: [
+                {
+                  action: 'update',
+                  id: 'default-text',
+                  changes: { overrides: { fontSize: 40 } },
+                },
+              ],
+            },
+            verifySaved: true,
+          },
+        },
+      }),
+    });
+    const batchReply = await batchResponse.json();
+    assert.equal(
+      batchReply.result.structuredContent.success,
+      true,
+      JSON.stringify(batchReply),
+    );
+    assert.equal(
+      batchReply.result.structuredContent.result.results[0].status,
+      'completed',
+    );
+    assert.equal(
+      batchReply.result.structuredContent.result.results[0].verified,
+      true,
+    );
+    const afterBatch = JSON.parse(await readFile(batchPath, 'utf8'));
+    const afterBatchHeight = afterBatch.staff.elements.find(
+      (element) => element.elementType === 'RichTextBox',
+    ).height;
+    assert.ok(
+      afterBatchHeight > beforeBatchHeight,
+      `Batch font-size edits must persist remeasured height: ${beforeBatchHeight} -> ${afterBatchHeight}`,
+    );
   }
   assert.equal(
     (await first.callTool({ name: 'get_capabilities', arguments: {} }))

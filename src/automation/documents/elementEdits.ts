@@ -201,10 +201,7 @@ export function planElementEdits(
     }
     throw new Error('ELEMENT_NOT_FOUND');
   };
-  const validateProperties = (
-    element: ScoreElement,
-    properties: Record<string, unknown>,
-  ) => {
+  const validateProperties = (properties: Record<string, unknown>) => {
     for (const [key, value] of Object.entries(properties)) {
       if (
         key.toLowerCase().endsWith('fontfamily') &&
@@ -218,14 +215,6 @@ export function planElementEdits(
         !workspace.score.paragraphStyles.some((style) => style.id === value)
       ) {
         throw new Error('STYLE_NOT_FOUND');
-      }
-      if (
-        key.toLowerCase().endsWith('fontfamily') &&
-        typeof value === 'string' &&
-        value !== Reflect.get(element, key) &&
-        !fonts.includes(value)
-      ) {
-        throw new Error(`FONT_NOT_FOUND: ${value}`);
       }
     }
   };
@@ -251,7 +240,7 @@ export function planElementEdits(
       throw new Error('LYRICS_LOCKED');
     }
     const properties = schema.parse(values);
-    validateProperties(element, properties);
+    validateProperties(properties);
     const defaults =
       element.elementType === ElementType.Empty
         ? undefined

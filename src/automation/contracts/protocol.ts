@@ -7,6 +7,7 @@ import {
   pageSetupChangesSchema,
   pageSetupSchema,
 } from '../../services/documents/pageSetupSchema';
+import { batchQuerySchema } from './batch';
 import { contentChunkQueryShape } from './contentChunkSchema';
 import { elementContentQueryShape } from './elementContentSchema';
 import { elementEditBatchSchema } from './elementEditSchema';
@@ -26,6 +27,7 @@ const sessionId = z.string().uuid().optional();
 const filePath = z.string().min(1);
 
 export const automationSchemas = {
+  batch_update_files: batchQuerySchema,
   create_session: z.strictObject({}),
   close_session: z.strictObject({
     sessionId: z.string().uuid(),
@@ -34,6 +36,7 @@ export const automationSchemas = {
   list_documents: z.strictObject({ sessionId }),
   get_capabilities: z.strictObject({
     includeErrorCodes: z.boolean().default(false),
+    includeFonts: z.boolean().default(false),
   }),
   get_element_catalog: elementCatalogQuerySchema,
   get_mode_key_templates: modeKeyTemplatesQuerySchema,
@@ -139,6 +142,7 @@ export const automationSchemas = {
     sessionId,
     documentId,
     ids: z.array(z.string().min(1)).optional(),
+    view: z.enum(['definitions', 'ids']).default('definitions'),
     includeResolved: z.boolean().default(true),
   }),
   edit_paragraph_styles: z.strictObject({

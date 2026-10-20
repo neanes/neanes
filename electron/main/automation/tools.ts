@@ -1,5 +1,6 @@
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
 
+import { publishedBatchQuerySchema } from '../../../src/automation/contracts/batch';
 import { compactJsonSchema } from '../../../src/automation/contracts/jsonSchema';
 import {
   automationSchemas,
@@ -9,12 +10,15 @@ import { publishedAutomationOutputSchema } from '../../../src/automation/contrac
 import { isReadOnlyAutomationTool } from '../../../src/automation/contracts/toolBehavior';
 
 const descriptions: Record<AutomationTool, string> = {
+  batch_update_files:
+    'Process saved scores in request-owned private documents; shared edits precede per-file edits. Per-file commits may precede errors. Inspect results and stopReason before resuming the identical manifest with startIndex:nextIndex. nextIndex skips attempted files, including failures. Retry failures explicitly; complete means all files were attempted.',
+
   create_session:
     'Create an isolated session. Its ID is a bearer capability; pass sessionId to document tools. Sessions expire after 15 idle minutes and discard unsaved drafts. At most 4 sessions and 16 documents per session. HTTP disconnect does not close a session.',
   close_session:
     'Close an isolated session atomically. Unsaved documents require explicit discardUnsavedChanges. Does not save or delete files.',
   get_capabilities:
-    'Describe supported operations, font families, file formats, and style units. includeErrorCodes:true retrieves the stable error vocabulary. Requires the editor to be ready.',
+    'Formats, style units, session limits. includeFonts:true adds local fonts; includeErrorCodes:true adds errors.',
   list_documents:
     'List interactive workspaces, or only documents owned by the supplied sessionId, with IDs and revisions. Does not open files.',
   get_rich_text_format:
@@ -60,9 +64,9 @@ const descriptions: Record<AutomationTool, string> = {
   close_document:
     'With sessionId, close only that session document; selectedDocumentId is null, no replacement document or recovery entry is created. Without sessionId, close a workspace without saving or deleting score files. Requires the last read revision, even when discarding. Unsaved or recovered documents require explicit discardUnsavedChanges: true; otherwise UNSAVED_CHANGES is returned. Removes recovery data. Closing the last workspace creates a blank workspace and keeps the server running. Return includes the closed ID and resulting selected ID. Close only workspaces you introduced unless the user requests otherwise; open_document.created distinguishes new workspaces from reused ones.',
   get_paragraph_styles:
-    'Read complete writable style definitions, optionally filtered by ids. includeResolved:false omits read-only resolved values; default includes them. Missing IDs return STYLE_NOT_FOUND. Dimensions are CSS pixels; lineHeight is a multiplier. Built-in labels are read-only metadata.',
+    'Read definitions, or view:ids for styleIds only. Filter ids; missing IDs: STYLE_NOT_FOUND. includeResolved:false omits resolved values. CSS px; lineHeight multiplier.',
   edit_paragraph_styles:
-    'Atomically create, replace, or delete reusable paragraph styles in one undo step. Word overrides: inline spans (get_rich_text_format). Each create/replace supplies a complete definition; omitted overrides inherit, supported null values explicitly reset. IDs are immutable. Built-in styles cannot be created, deleted, or renamed. Custom null parents normalize to default-text. Action order is irrelevant: parents may be created in the same batch. One action per ID; the final graph must have existing parents and no cycles. Deleting styles reparents untouched children and content references to surviving ancestors or surface defaults. Explicitly referencing a deleted parent is rejected. Returns a document summary and affectedStyleIds (including deleted/reparented definitions); includeStyles:true adds the complete style state. Requires the last read revision. Does not save.',
+    'Atomically create, replace, update, or delete paragraph styles in one undo step. Update uses id and sparse changes; overrides merge, omitted fields stay unchanged. resetOverrides removes named overrides to restore inheritance; cannot also set them. changes is optional. Word overrides: inline spans (get_rich_text_format). Each create/replace supplies a complete definition; omitted overrides inherit, supported null values explicitly reset. IDs are immutable. Built-in styles cannot be created, deleted, or renamed. Custom null parents normalize to default-text. Action order is irrelevant: parents may be created in the same batch. One action per ID; the final graph must have existing parents and no cycles. Deleting styles reparents untouched children and content references to surviving ancestors or surface defaults. Explicitly referencing a deleted parent is rejected. Returns a document summary and affectedStyleIds (including deleted/reparented definitions); includeStyles:true adds the complete style state. Requires the last read revision. Does not save.',
   replace_document_properties:
     'Replace the complete document properties (title and author) in one undo step. Requires the last read revision. Does not save.',
   save_document:
@@ -80,7 +84,12 @@ export function automationTools(): Tool[] {
       name: tool,
       description: descriptions[tool],
       inputSchema: {
-        ...compactJsonSchema(automationSchemas[tool], 'input'),
+        ...compactJsonSchema(
+          tool === 'batch_update_files'
+            ? publishedBatchQuerySchema
+            : automationSchemas[tool],
+          'input',
+        ),
         type: 'object',
       } as Tool['inputSchema'],
       outputSchema: {

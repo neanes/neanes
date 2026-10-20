@@ -3,7 +3,10 @@ import {
   isBuiltInParagraphStyleId,
   ParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { normalizeParagraphStyles } from '@/services/documents/paragraphStyles';
+import {
+  normalizeParagraphStyles,
+  paragraphStyleDefinition,
+} from '@/services/documents/paragraphStyles';
 
 import {
   type ParagraphStyleChange,
@@ -28,7 +31,7 @@ export function planParagraphStyleEdits(
       .map((change) => change.id),
   );
   for (const change of changes) {
-    const id = change.action === 'delete' ? change.id : change.style.id;
+    const id = 'style' in change ? change.style.id : change.id;
     if (ids.has(id)) {
       throw new Error('DUPLICATE_STYLE_ACTION');
     }
@@ -48,19 +51,25 @@ export function planParagraphStyleEdits(
       styles.delete(id);
       continue;
     }
-    const definition = change.style;
+    const supplied =
+      change.action === 'update' ? (change.changes ?? {}) : change.style;
+    if (supplied.parentStyleId != null && deleted.has(supplied.parentStyleId)) {
+      throw new Error('STYLE_PARENT_DELETED');
+    }
+    const definition =
+      change.action === 'update'
+        ? {
+            ...paragraphStyleDefinition(existing!),
+            ...supplied,
+            overrides: { ...existing!.overrides, ...supplied.overrides },
+          }
+        : change.style;
     if (isBuiltInParagraphStyleId(id)) {
       if (definition.displayName !== undefined) {
         throw new Error('BUILT_IN_STYLE_IMMUTABLE');
       }
     } else if (definition.displayName === undefined) {
       throw new Error('STYLE_NAME_REQUIRED');
-    }
-    if (
-      definition.parentStyleId != null &&
-      deleted.has(definition.parentStyleId)
-    ) {
-      throw new Error('STYLE_PARENT_DELETED');
     }
     const style = existing?.clone() ?? new ParagraphStyle();
     style.id = id;
@@ -69,6 +78,11 @@ export function planParagraphStyleEdits(
     }
     style.parentStyleId = definition.parentStyleId;
     style.overrides = { ...definition.overrides } as ParagraphStyleOverrides;
+    if (change.action === 'update') {
+      for (const key of change.resetOverrides ?? []) {
+        delete style.overrides[key];
+      }
+    }
     styles.set(id, style);
   }
   return normalizeParagraphStyles(previous, [...styles.values()]);

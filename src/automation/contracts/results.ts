@@ -11,6 +11,7 @@ import {
   paragraphStyleDefinitionSchema,
   paragraphStyleOverridesSchema,
 } from '../../services/documents/paragraphStyleSchema';
+import { batchResultSchema, publishedBatchResultSchema } from './batch';
 import { contentChunkPageShape } from './contentChunkSchema';
 import {
   elementContentPropertySchema,
@@ -62,6 +63,7 @@ const styleResultSchema = documentSummarySchema.extend({
 });
 
 export const automationResultSchemas = {
+  batch_update_files: batchResultSchema,
   create_session: z.strictObject({
     sessionId: z.string().uuid(),
     idleTimeoutMs: z.number(),
@@ -77,11 +79,11 @@ export const automationResultSchemas = {
     mode: z.enum(['interactive', 'headless']),
     errorCodes: z.array(z.string()).optional(),
     paragraphStyles: z.strictObject({
-      actions: z.array(z.enum(['create', 'replace', 'delete'])),
+      actions: z.array(z.enum(['create', 'replace', 'update', 'delete'])),
       dimensions: z.literal('css-px'),
       lineHeight: z.literal('multiplier'),
     }),
-    fonts: z.array(z.string()),
+    fonts: z.array(z.string()).optional(),
     formats: z.strictObject({
       open: z.array(z.enum(['byz', 'byzx'])),
       save: z.array(z.enum(['byz', 'byzx'])),
@@ -141,7 +143,10 @@ export const automationResultSchemas = {
     settings: headerFooterSettingsSchema.partial(),
   }),
   update_header_footer_settings: documentSummarySchema,
-  get_paragraph_styles: styleResultSchema,
+  get_paragraph_styles: z.union([
+    styleResultSchema,
+    documentSummarySchema.extend({ styleIds: z.array(z.string()) }),
+  ]),
   edit_paragraph_styles: styleResultSchema
     .partial({ styles: true, resolvedStyles: true, units: true })
     .extend({
@@ -222,21 +227,29 @@ const publishedSettingsResult = documentSummarySchema.extend({
     ),
 });
 
+const publishedStyleResult = styleResultSchema
+  .partial({ styles: true, units: true })
+  .extend({ styleIds: z.array(z.string()).optional() });
+
 export function publishedAutomationOutputSchema(tool: AutomationTool) {
   return z.discriminatedUnion('success', [
     z.strictObject({
       success: z.literal(true),
       result:
-        tool === 'get_elements'
-          ? publishedElementResult
-          : tool === 'find_elements'
-            ? publishedSearchResult
-            : tool === 'get_element'
-              ? publishedLookupResult
-              : tool === 'get_page_setup' ||
-                  tool === 'get_header_footer_settings'
-                ? publishedSettingsResult
-                : automationResultSchemas[tool],
+        tool === 'batch_update_files'
+          ? publishedBatchResultSchema
+          : tool === 'get_paragraph_styles'
+            ? publishedStyleResult
+            : tool === 'get_elements'
+              ? publishedElementResult
+              : tool === 'find_elements'
+                ? publishedSearchResult
+                : tool === 'get_element'
+                  ? publishedLookupResult
+                  : tool === 'get_page_setup' ||
+                      tool === 'get_header_footer_settings'
+                    ? publishedSettingsResult
+                    : automationResultSchemas[tool],
     }),
     z.strictObject({
       success: z.literal(false),

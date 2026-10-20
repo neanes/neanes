@@ -6,6 +6,7 @@ import { Score } from '@/models/Score';
 
 import { automationTools } from '../../../electron/main/automation/tools';
 import { ElementDiscovery } from '../documents/elementDiscovery';
+import { getParagraphStyles } from '../documents/paragraphStyleRead';
 import { automationErrorCodes } from './errors';
 import { parseAutomationRequest } from './protocol';
 import { automationOutputSchema, automationResultSchemas } from './results';
@@ -46,14 +47,81 @@ describe('MCP token efficiency contracts', () => {
     };
     console.info('MCP published inventory sizes (characters)', sizes);
     // Includes text search, mode-key templates and rich-text format discovery.
-    expect(tools).toHaveLength(31);
-    // Allow 2000 more characters for the format tool and inline authoring hints;
-    // the detailed guide is fetched separately, never embedded in tools/list.
-    expect(sizes.inventory).toBeLessThan(135000);
-    expect(sizes.inputs).toBeLessThan(40000);
-    expect(sizes.outputs).toBeLessThan(76000);
-    expect(sizes.inputView).toBeLessThan(57000);
+    expect(tools).toHaveLength(32);
+    // Batch settings publish writable names while reusing existing value constraints.
+    // Detailed authoring guides remain opt-in, outside tools/list.
+    expect(sizes.inventory).toBeLessThan(147000);
+    expect(sizes.inputs).toBeLessThan(48000);
+    expect(sizes.outputs).toBeLessThan(78000);
+    expect(sizes.inputView).toBeLessThan(67000);
     expect(sizes.elementOutput).toBeLessThan(4500);
+  });
+
+  it('measures style discovery and existing mutation acknowledgments', () => {
+    const styles = new Score().paragraphStyles;
+    const size = (result: unknown) =>
+      JSON.stringify({ success: true, result }).length;
+    const complete = { ...summary, ...getParagraphStyles(styles) };
+    const definitions = {
+      ...summary,
+      ...getParagraphStyles(styles, { includeResolved: false }),
+    };
+    const ids = { ...summary, ...getParagraphStyles(styles, { view: 'ids' }) };
+    const tools = automationTools();
+    const validator = new AjvJsonSchemaValidator();
+    for (const result of [complete, definitions, ids]) {
+      expect(
+        automationResultSchemas.get_paragraph_styles.parse(result),
+      ).toEqual(result);
+      expect(
+        validator.getValidator(
+          tools.find((tool) => tool.name === 'get_paragraph_styles')!
+            .outputSchema!,
+        )({ success: true, result }),
+      ).toMatchObject({ valid: true });
+    }
+    expect(size(ids)).toBeLessThan(size(complete) * 0.2);
+    expect(size(ids)).toBeLessThan(size(definitions) * 0.6);
+    const writes = {
+      update_page_setup: summary,
+      update_header_footer_settings: summary,
+      edit_paragraph_styles: { ...summary, affectedStyleIds: ['lyrics'] },
+      edit_elements: { ...summary, applied: true, createdCount: 0 },
+      replace_document_properties: {
+        ...summary,
+        properties: { title: '', author: '' },
+      },
+      save_document: {
+        ...summary,
+        savedRevision: 0,
+        savedContentUnchanged: true,
+      },
+      export_pdf: {
+        ...summary,
+        exportedRevision: 0,
+        outputFilePath: '/scores/result.pdf',
+        format: 'pdf',
+      },
+    };
+    for (const [name, result] of Object.entries(writes)) {
+      expect(
+        automationResultSchemas[name as keyof typeof writes].parse(result),
+      ).toEqual(result);
+    }
+    console.info(
+      'MCP representative response sizes (JSON characters, one envelope)',
+      {
+        styles: {
+          complete: size(complete),
+          definitions: size(definitions),
+          ids: size(ids),
+        },
+        idsSavingsAcross37Reads: 37 * (size(complete) - size(ids)),
+        writes: Object.fromEntries(
+          Object.entries(writes).map(([name, result]) => [name, size(result)]),
+        ),
+      },
+    );
   });
 
   it('publishes valid projected outcomes while keeping type-specific runtime validation', () => {
@@ -115,7 +183,32 @@ describe('MCP token efficiency contracts', () => {
     const tools = automationTools();
     const validator = new AjvJsonSchemaValidator();
     for (const [name, args] of [
-      ['get_capabilities', { includeErrorCodes: true }],
+      ['get_capabilities', { includeErrorCodes: true, includeFonts: true }],
+      [
+        'edit_paragraph_styles',
+        {
+          documentId: 'test',
+          expectedRevision: 0,
+          changes: [
+            {
+              action: 'update',
+              id: 'default-text',
+              changes: { overrides: { fontFamily: 'Source Serif' } },
+            },
+          ],
+        },
+      ],
+      [
+        'edit_paragraph_styles',
+        {
+          documentId: 'test',
+          expectedRevision: 0,
+          changes: [
+            { action: 'update', id: 'lyrics', resetOverrides: ['fontFamily'] },
+          ],
+        },
+      ],
+      ['get_paragraph_styles', { documentId: 'test', view: 'ids' }],
       [
         'edit_elements',
         {

@@ -160,19 +160,6 @@ export class DocumentService {
 
   replaceParagraphStyles(workspace: Workspace, styles: ParagraphStyle[]) {
     this.prepare(workspace);
-    for (const style of styles) {
-      const family = style.overrides.fontFamily;
-      const previous = workspace.score.paragraphStyles.find(
-        (item) => item.id === style.id,
-      );
-      if (
-        family !== undefined &&
-        family !== previous?.overrides.fontFamily &&
-        !this.fonts().includes(family)
-      ) {
-        throw new Error(`FONT_NOT_FOUND: ${family}`);
-      }
-    }
     this.editor.changeStyles(workspace, () =>
       replaceParagraphStyles(workspace, styles),
     );

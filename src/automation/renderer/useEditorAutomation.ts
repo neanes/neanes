@@ -17,6 +17,7 @@ import {
   parseAutomationRequest,
 } from '../contracts/protocol';
 import { canRunWhileEditorBusy } from '../contracts/toolBehavior';
+import { batchUpdateFiles } from '../documents/batchFiles';
 import { McpDocumentAdapter } from '../documents/McpDocumentAdapter';
 import { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { IsolatedSessions } from '../sessions/isolatedSessions';
@@ -37,14 +38,16 @@ export function useEditorAutomation(options: {
     return { ready() {}, ownsPrivateWorkspace: () => false };
   }
   const ipc = new AutomationIpcClient();
-  const isolatedSessions = new IsolatedSessions({
+  const sessionHooks: ConstructorParameters<typeof IsolatedSessions>[0] = {
     createScore: options.createScore,
     prepare: options.prepare,
     dispose: options.dispose,
     fonts: () => options.documents.fonts(),
     ensureFonts: (families) => options.documents.ensureFonts(families),
     settle: options.settle,
-  });
+  };
+  const isolatedSessions = new IsolatedSessions(sessionHooks);
+  let activeBatchSessions: IsolatedSessions | undefined;
   const isolatedTools = new Map<DocumentService, McpDocumentAdapter>();
   const publishDrafts = () =>
     EventBus.$emit(
@@ -65,6 +68,7 @@ export function useEditorAutomation(options: {
   onBeforeUnmount(() => {
     clearInterval(isolatedSessionTimer);
     isolatedSessions.clear();
+    activeBatchSessions?.clear();
     isolatedTools.clear();
   });
   const documentTools = new McpDocumentAdapter(
@@ -95,7 +99,22 @@ export function useEditorAutomation(options: {
         }
       }
       let result: unknown;
-      if (request.tool === 'create_session') {
+      if (request.tool === 'batch_update_files') {
+        const batchSessions = new IsolatedSessions(sessionHooks);
+        activeBatchSessions = batchSessions;
+        const session = batchSessions.create();
+        try {
+          result = await batchUpdateFiles(
+            request.arguments,
+            batchSessions.get(session.sessionId),
+            ipc,
+            exportAutomationPdf,
+          );
+        } finally {
+          batchSessions.clear();
+          activeBatchSessions = undefined;
+        }
+      } else if (request.tool === 'create_session') {
         result = isolatedSessions.create();
       } else if (request.tool === 'close_session') {
         const service = isolatedSessions.get(request.arguments.sessionId);
@@ -200,6 +219,7 @@ export function useEditorAutomation(options: {
   return {
     ready: () => EventBus.$emit(IpcRendererChannels.AutomationReady),
     ownsPrivateWorkspace: (workspace: Workspace) =>
-      isolatedSessions.owns(workspace),
+      isolatedSessions.owns(workspace) ||
+      (activeBatchSessions?.owns(workspace) ?? false),
   };
 }

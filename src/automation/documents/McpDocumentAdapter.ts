@@ -127,7 +127,7 @@ export class McpDocumentAdapter {
   async execute(
     request: Exclude<
       AutomationRequest,
-      { tool: 'create_session' | 'close_session' }
+      { tool: 'create_session' | 'close_session' | 'batch_update_files' }
     >,
   ): Promise<unknown> {
     const openIds = new Set(
@@ -156,11 +156,13 @@ export class McpDocumentAdapter {
           : {}),
         isolatedSessions: ISOLATED_SESSION_LIMITS,
         paragraphStyles: {
-          actions: ['create', 'replace', 'delete'],
+          actions: ['create', 'replace', 'update', 'delete'],
           dimensions: 'css-px',
           lineHeight: 'multiplier',
         },
-        fonts: this.documents.fonts(),
+        ...(request.arguments.includeFonts
+          ? { fonts: this.documents.fonts() }
+          : {}),
         formats: {
           open: ['byzx', 'byz'],
           save: ['byzx', 'byz'],
@@ -455,9 +457,6 @@ export class McpDocumentAdapter {
         request.arguments.changes.neumeDefaultFontFamily !== undefined
       ) {
         const family = request.arguments.changes.neumeDefaultFontFamily;
-        if (!this.documents.fonts().includes(family)) {
-          throw new Error(`FONT_NOT_FOUND: ${family}`);
-        }
         await this.documents.ensureFonts([family]);
         if (this.revision(workspace) !== request.arguments.expectedRevision) {
           throw new Error(

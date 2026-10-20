@@ -95,6 +95,7 @@ export enum IpcRendererChannels {
   AutomationDraftsChanged = 'AutomationDraftsChanged',
   AutomationAuthorizeRequest = 'AutomationAuthorizeRequest',
   AutomationReply = 'AutomationReply',
+  AutomationPlanBatch = 'AutomationPlanBatch',
   AutomationReadScore = 'AutomationReadScore',
   AutomationWriteScore = 'AutomationWriteScore',
   AutomationExportPdf = 'AutomationExportPdf',

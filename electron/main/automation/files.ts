@@ -1,6 +1,8 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
+import type { BatchQuery } from '../../../src/automation/contracts/batch';
+import { AutomationError } from '../../../src/automation/contracts/errors';
 import type {
   ScoreFileFormat,
   WorkspaceFile,
@@ -57,6 +59,62 @@ export class AutomationFiles {
       canonical = await fs.realpath(filePath);
     }
     return canonical;
+  }
+
+  async planBatch(query: BatchQuery) {
+    const identity = async (filePath: string, extensions: string[]) => {
+      if (!path.isAbsolute(filePath)) {
+        throw new Error('ABSOLUTE_PATH_REQUIRED');
+      }
+      if (!extensions.includes(path.extname(filePath))) {
+        throw new Error('UNSUPPORTED_FILE_TYPE');
+      }
+      return canonicalFileIdentity(filePath);
+    };
+    const inputs = await Promise.all(
+      query.files.map((file) => identity(file.filePath, ['.byz', '.byzx'])),
+    );
+    const collision = (filePath: string) => {
+      throw new AutomationError({
+        code: 'VALIDATION_ERROR',
+        message:
+          'Batch paths must have distinct identities; outputs cannot overwrite another input.',
+        details: { filePath },
+      });
+    };
+    const seenInputs = new Set<string>();
+    for (const [index, input] of inputs.entries()) {
+      if (seenInputs.has(input)) {
+        collision(query.files[index].filePath);
+      }
+      seenInputs.add(input);
+    }
+    const outputs = new Set<string>();
+    for (const [index, file] of query.files.entries()) {
+      for (const [requested, extensions, ownSource] of [
+        [
+          query.save === 'inPlace' ? file.filePath : file.outputFilePath,
+          ['.byz', '.byzx'],
+          query.save === 'inPlace',
+        ],
+        [file.pdfFilePath, ['.pdf'], false],
+      ] as const) {
+        if (requested === undefined) {
+          continue;
+        }
+        const output = await identity(requested, [...extensions]);
+        if (
+          outputs.has(output) ||
+          inputs.some(
+            (input, other) =>
+              input === output && !(ownSource && other === index),
+          )
+        ) {
+          collision(requested);
+        }
+        outputs.add(output);
+      }
+    }
   }
 
   async open(filePath: string, workspaces: WorkspaceFile[]) {

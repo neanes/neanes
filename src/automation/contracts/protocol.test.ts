@@ -150,6 +150,66 @@ describe('automation protocol validation', () => {
     });
   });
 
+  it('accepts sparse style updates while rejecting unsupported fields and nulls', () => {
+    const update = (changes: unknown) => ({
+      tool: 'edit_paragraph_styles',
+      arguments: {
+        documentId: 'id',
+        expectedRevision: 0,
+        changes: [{ action: 'update', id: 'default-text', changes }],
+      },
+    });
+    const changes = {
+      overrides: { fontFamily: 'Source Serif', lineHeight: null },
+    };
+    expect(parseAutomationRequest(update(changes)).arguments).toMatchObject({
+      changes: [{ action: 'update', id: 'default-text', changes }],
+    });
+    for (const changes of [
+      { id: 'renamed' },
+      { arbitrary: 1 },
+      { overrides: { fontFamily: null } },
+      { overrides: { arbitrary: 1 } },
+      { overrides: null },
+    ]) {
+      expect(() => parseAutomationRequest(update(changes))).toThrow();
+    }
+  });
+
+  it('accepts reset-only style updates and rejects invalid override resets', () => {
+    const request = (action: unknown) => ({
+      tool: 'edit_paragraph_styles',
+      arguments: {
+        documentId: 'id',
+        expectedRevision: 0,
+        changes: [action],
+      },
+    });
+    const reset = {
+      action: 'update',
+      id: 'lyrics',
+      resetOverrides: ['fontFamily', 'lineHeight'],
+    };
+    expect(parseAutomationRequest(request(reset)).arguments).toMatchObject({
+      changes: [reset],
+    });
+    for (const action of [
+      { ...reset, resetOverrides: ['parentStyleId'] },
+      { ...reset, resetOverrides: ['unknown'] },
+      { ...reset, resetOverrides: ['__proto__'] },
+      { ...reset, resetOverrides: null },
+      { ...reset, changes: { overrides: { fontFamily: 'Source Serif' } } },
+      { ...reset, changes: { overrides: { lineHeight: null } } },
+      {
+        action: 'replace',
+        style: { id: 'lyrics', parentStyleId: 'default-text', overrides: {} },
+        resetOverrides: ['fontFamily'],
+      },
+    ]) {
+      expect(() => parseAutomationRequest(request(action))).toThrow();
+    }
+  });
+
   it('rejects unknown fields, empty batches, legacy shortcuts, and incomplete properties', () => {
     expect(() =>
       parseAutomationRequest(edit({ fontSize: 16, arbitrary: 1 })),

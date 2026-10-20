@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { batchQuerySchema } from '../../../src/automation/contracts/batch';
 import { Score } from '../../../src/models/Score';
 import { SaveService } from '../../../src/services/SaveService';
 import { writeScoreFile } from '../files/ScoreFiles';
@@ -26,6 +27,60 @@ describe('automation file access', () => {
   });
   afterEach(async () => {
     await fs.rm(directory, { recursive: true, force: true });
+  });
+
+  it('preflights batch paths including aliases and outputs that would clobber later inputs', async () => {
+    const first = path.join(root, 'a.byzx');
+    const second = path.join(root, 'b.byzx');
+    await fs.writeFile(first, '{}');
+    await fs.writeFile(second, '{}');
+    const alias = path.join(root, 'alias.byzx');
+    await fs.symlink(first, alias);
+    await files.planBatch(
+      batchQuerySchema.parse({
+        files: [{ filePath: first }, { filePath: second }],
+      }),
+    );
+    for (const query of [
+      { files: [{ filePath: first }, { filePath: alias }] },
+      {
+        files: [
+          { filePath: first, outputFilePath: second },
+          { filePath: second, outputFilePath: path.join(root, 'c.byzx') },
+        ],
+        save: 'copy',
+      },
+      { files: [{ filePath: first, outputFilePath: alias }], save: 'copy' },
+      {
+        files: [
+          { filePath: first, pdfFilePath: path.join(root, 'same.pdf') },
+          { filePath: second, pdfFilePath: path.join(root, 'same.pdf') },
+        ],
+      },
+    ]) {
+      await expect(
+        files.planBatch(batchQuerySchema.parse(query)),
+      ).rejects.toMatchObject({ error: { code: 'VALIDATION_ERROR' } });
+    }
+    const outputAlias = path.join(root, 'alias.pdf');
+    await fs.symlink(second, outputAlias);
+    await expect(
+      files.planBatch(
+        batchQuerySchema.parse({
+          files: [
+            { filePath: first, pdfFilePath: outputAlias },
+            { filePath: second },
+          ],
+        }),
+      ),
+    ).rejects.toMatchObject({ error: { code: 'VALIDATION_ERROR' } });
+    await expect(
+      files.planBatch(
+        batchQuerySchema.parse({ files: [{ filePath: 'relative.byzx' }] }),
+      ),
+    ).rejects.toThrow('ABSOLUTE_PATH_REQUIRED');
+    expect(await fs.readFile(first, 'utf8')).toBe('{}');
+    expect(await fs.readFile(second, 'utf8')).toBe('{}');
   });
 
   it('decodes an allowed symlink using its requested extension', async () => {

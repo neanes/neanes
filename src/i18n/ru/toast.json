@@ -28,6 +28,7 @@
     "clipboardReadFailed": "Не удалось прочитать данные из буфера обмена. Проверьте разрешения на доступ к нему."
   },
   "export": {
+    "pdfLoading": "Экспорт PDF...",
     "pdfSuccess": "PDF экспортирован",
     "pdfFailed": "Не удалось экспортировать PDF",
     "pdfFailedDescription": "Не удалось экспортировать PDF.",

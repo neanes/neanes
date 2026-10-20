@@ -231,6 +231,8 @@ import {
   getRecoveryCandidateGroupRecoveryIds,
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
+import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
+import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -254,7 +256,7 @@ import {
   isTempoElement,
   isTextBoxElement,
 } from '@/utils/elementTypeGuards';
-import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import { resolveFontCss } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { isElectron } from '@/utils/isElectron';
@@ -330,37 +332,6 @@ const pageSetupCommandFactory: CommandFactory<PageSetup> =
 
 const documentPropertiesCommandFactory: CommandFactory<DocumentProperties> =
   new CommandFactory<DocumentProperties>();
-
-function createFontLoadDescriptor(
-  fontFamily: string,
-  fontStyle: string | null = null,
-) {
-  const resolved = resolveFontStyle(fontFamily, fontStyle);
-  const cssFontFamily = `"${resolved.cssFontFamily.replace(/["\\]/g, '\\$&')}"`;
-
-  return [
-    resolved.cssFontStyle,
-    'normal',
-    resolved.cssFontWeight,
-    '1rem',
-    cssFontFamily,
-  ].join(' ');
-}
-
-function getBundledFontLoadDescriptors() {
-  const descriptors = new Set<string>();
-
-  for (const family of fontCatalog.bundledFamilies()) {
-    for (const style of fontCatalog.getStyles(family)) {
-      descriptors.add(createFontLoadDescriptor(family, style));
-    }
-  }
-
-  descriptors.add(createFontLoadDescriptor('NeanesRTL'));
-  descriptors.add(createFontLoadDescriptor('NeanesRTLLegacy'));
-
-  return [...descriptors];
-}
 
 let untitledIndex = 1;
 
@@ -594,6 +565,7 @@ const audioOptions = reactive<PlaybackOptions>({
 });
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
+let pdfExportInProgress = false;
 
 const ckeditorLanguage = computed(() => {
   return (
@@ -2051,8 +2023,10 @@ function showReplyErrorToast(
   message: string,
   reply: { errorMessage?: string },
   fallback: string,
+  id?: string | number,
 ) {
   toast.error(message, {
+    id,
     description: reply.errorMessage ?? fallback,
   });
 }
@@ -2062,16 +2036,20 @@ function showExportReplyToast(
   successMessage: string,
   errorMessage: string,
   fallbackErrorDescription: string,
+  toastId?: string | number,
 ) {
   if (reply.success) {
     toast.success(successMessage, {
+      id: toastId,
       description: reply.filePath,
     });
     return true;
   }
 
   if (!reply.canceled) {
-    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription);
+    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription, toastId);
+  } else if (toastId != null) {
+    toast.dismiss(toastId);
   }
 
   return false;
@@ -7843,29 +7821,39 @@ async function onFileMenuPrint() {
   }
 }
 
+function createScoreRenderSnapshot(workspace: Workspace): ScoreRenderSnapshot {
+  return {
+    score: SaveService.SaveScoreToJson(workspace.score),
+    filePath: workspace.filePath,
+    fileName: workspace.tempFileName,
+    title: getFileName(workspace, false),
+    editorLanguage: ckeditorLanguage.value,
+    systemFonts: fontCatalog.snapshotSystemFonts(),
+    overlays: { ...pageOverlaySettings.value },
+  };
+}
+
 async function onFileMenuExportAsPdf() {
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
-
-  printMode.value = true;
-
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
-
-  const previousTitle = window.document.title;
-  window.document.title = getFileName(selectedWorkspace.value, false);
+  if (pdfExportInProgress) {
+    return;
+  }
+  pdfExportInProgress = true;
+  const toastId = toast.loading(
+    t(($) => $.toast.export.pdfLoading, { ns: 'toast' }),
+  );
 
   try {
-    await nextTick();
-    const reply = await ipcService.exportWorkspaceAsPdf(
-      selectedWorkspace.value,
-    );
+    const workspace = selectedWorkspace.value;
+    prepareWorkspaceForSerialization(workspace);
+    const snapshot = createScoreRenderSnapshot(workspace);
+    const reply = await ipcService.exportWorkspaceAsPdf(workspace, snapshot);
 
     showExportReplyToast(
       reply,
       t(($) => $.toast.export.pdfSuccess, { ns: 'toast' }),
       t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
       t(($) => $.toast.export.pdfFailedDescription, { ns: 'toast' }),
+      toastId,
     );
   } catch (error) {
     console.error(error);
@@ -7873,17 +7861,14 @@ async function onFileMenuExportAsPdf() {
       t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
       error,
       {
+        id: toastId,
         fallback: t(($) => $.toast.export.pdfFailedDescription, {
           ns: 'toast',
         }),
       },
     );
   } finally {
-    printMode.value = false;
-    window.document.title = previousTitle;
-
-    // Re-focus the active element
-    focusElement(activeElement);
+    pdfExportInProgress = false;
   }
 }
 

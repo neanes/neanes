@@ -565,6 +565,37 @@ function getEditorInstanceRight() {
   return editorRight.value?.instance;
 }
 
+// Snapshot consumers wait for all editors, independently of height measurement.
+const editorsReady = Promise.withResolvers<void>();
+const readyEditors = new WeakSet<InlineEditor>();
+function markEditorReady(editor: InlineEditor) {
+  readyEditors.add(editor);
+  if (
+    getActiveEditorInstances().every(
+      (instance) => instance != null && readyEditors.has(instance),
+    )
+  ) {
+    editorsReady.resolve();
+  }
+}
+
+async function whenReady() {
+  await editorsReady.promise;
+  await nextTick();
+}
+
+async function measureHeight() {
+  await whenReady();
+  await document.fonts.ready;
+  refreshCkContentFontSize();
+  await nextTick();
+  const height = getHeight();
+  if (height == null || !Number.isFinite(height)) {
+    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+  }
+  return height;
+}
+
 function getActiveEditorInstances() {
   if (props.element.multipanel) {
     return [
@@ -640,6 +671,7 @@ function observeCkContentFontSize(editor: InlineEditor) {
 async function onEditorReady(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
 
   emitRecalculatedHeightIfNeeded();
 
@@ -648,12 +680,13 @@ async function onEditorReady(editor: InlineEditor) {
     focusOnReady.value = false;
   }
 
-  const element = editor.sourceElement;
-
   observeCkContentFontSize(editor);
+  observeBlockHeight();
+}
 
+function observeBlockHeight() {
   observeResize(
-    element!,
+    [...container.value!.querySelectorAll<HTMLElement>('.ck-content')],
     debounce(100, () => {
       const resizedHeight = getHeight();
 
@@ -685,8 +718,10 @@ async function onEditorReady(editor: InlineEditor) {
 async function onEditorReadyMultipanelSide(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
   emitRecalculatedHeightIfNeeded();
   observeCkContentFontSize(editor);
+  observeBlockHeight();
 }
 
 function onEditorReadyInline(editor: InlineEditor) {
@@ -704,6 +739,7 @@ function onEditorReadyInline(editor: InlineEditor) {
   );
 
   setPadding(editor);
+  markEditorReady(editor);
 }
 
 function onEditorReadyInlineBottom(editor: InlineEditor) {
@@ -726,6 +762,7 @@ function onEditorReadyInlineBottom(editor: InlineEditor) {
   );
 
   setPadding(editor);
+  markEditorReady(editor);
 }
 
 function applyInitialLanguage(editor: InlineEditor) {
@@ -862,15 +899,21 @@ function addPendingEditorData(
 }
 
 function getHeight() {
-  const element = container.value?.querySelector('.ck-content');
+  const elements = [
+    ...(container.value?.querySelectorAll<HTMLElement>('.ck-content') ?? []),
+  ];
 
-  if (element == null) {
+  if (elements.length === 0) {
     return null;
   }
 
-  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+  const zoom = Number(getComputedStyle(elements[0]).getPropertyValue('--zoom'));
 
-  return element.getBoundingClientRect().height / zoom;
+  return (
+    Math.max(
+      ...elements.map((element) => element.getBoundingClientRect().height),
+    ) / zoom
+  );
 }
 
 function getHeightBottom() {
@@ -939,6 +982,8 @@ function focus() {
 }
 
 defineExpose({
+  whenReady,
+  measureHeight,
   focus,
   getPendingUpdates,
   htmlElement,

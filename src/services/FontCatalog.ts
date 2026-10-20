@@ -62,6 +62,13 @@ export interface FontFaceValue {
   style: string;
 }
 
+export interface SystemFontMetadata {
+  family: string;
+  style: string;
+  fullName: string;
+  postscriptName: string;
+}
+
 interface LocalFontSource {
   fullName: string;
   postscriptName: string;
@@ -576,7 +583,7 @@ export function createSystemFontFaceRule(
 class FontCatalog {
   private loaded = false;
   private loadingPromise: Promise<void> | null = null;
-  private systemFaces = new Map<string, FontData[]>();
+  private systemFaces = new Map<string, (SystemFontMetadata | FontData)[]>();
   private registeredFaceRules = new Map<string, string>();
   // Memoized (family, requested style) -> CSS family: the exact-face alias, or
   // the base family when no alias is needed. resolveFace runs once per note
@@ -669,6 +676,31 @@ class FontCatalog {
 
     // Even a failed system query leaves the bundled families needing their
     // styleset ident mapping.
+    this.refreshFontFeatureValuesStyle();
+  }
+
+  // Hidden renderers reuse the visible renderer's catalog without requesting
+  // Local Font Access or depending on document visibility.
+  snapshotSystemFonts(): SystemFontMetadata[] {
+    return [...this.systemFaces.values()]
+      .flat()
+      .map(({ family, style, fullName, postscriptName }) => ({
+        family,
+        style,
+        fullName,
+        postscriptName,
+      }));
+  }
+
+  restoreSystemFonts(fonts: SystemFontMetadata[]) {
+    this.systemFaces.clear();
+    this.resolvedSystemFaces.clear();
+    for (const font of fonts) {
+      const faces = this.systemFaces.get(font.family) ?? [];
+      faces.push(font);
+      this.systemFaces.set(font.family, faces);
+    }
+    this.loaded = true;
     this.refreshFontFeatureValuesStyle();
   }
 
@@ -808,10 +840,11 @@ class FontCatalog {
       return null;
     }
 
-    return (
-      resolveSystemFontFace(faces, normalizeDocumentFontStyle(fontStyle))
-        .face ?? null
-    );
+    const face = resolveSystemFontFace(
+      faces,
+      normalizeDocumentFontStyle(fontStyle),
+    ).face;
+    return face != null && 'blob' in face ? face : null;
   }
 
   // Split a face name ("Minion Pro Semibold") into its family and style, using

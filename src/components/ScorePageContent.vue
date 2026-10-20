@@ -607,7 +607,7 @@ import {
   PhTextAlignCenter,
 } from '@phosphor-icons/vue';
 import i18next from 'i18next';
-import { computed, type StyleValue, toRef } from 'vue';
+import { computed, nextTick, type StyleValue, toRef } from 'vue';
 
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
@@ -643,6 +643,10 @@ import type { Line, Page } from '@/models/Page';
 import type { Score } from '@/models/Score';
 import { LayoutService } from '@/services/LayoutService';
 import { getLyricsBaseline } from '@/services/LyricsLayout';
+import {
+  getResizableTextBoxes,
+  type TextBoxHeightMeasurement,
+} from '@/services/rendering/textBoxMeasurement';
 import {
   isDropCapElement,
   isEmptyElement,
@@ -1162,12 +1166,64 @@ function getPageIndex() {
   return props.pageIndex;
 }
 
+async function whenReady() {
+  await nextTick();
+  await Promise.all(
+    [...localRefs.values()].map((instance) => {
+      if (
+        instance != null &&
+        typeof instance === 'object' &&
+        'whenReady' in instance &&
+        typeof instance.whenReady === 'function'
+      ) {
+        return instance.whenReady();
+      }
+    }),
+  );
+  await nextTick();
+}
+async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
+  const resizable = new Set(getResizableTextBoxes(props.score));
+  const boxes = [
+    ...(props.score.pageSetup.showHeader
+      ? [{ element: header.value, name: `header-${props.pageIndex}` }]
+      : []),
+    ...props.page.lines.flatMap((line) =>
+      line.elements.map((element) => ({
+        element,
+        name: `element-${getElementIndex(element)}`,
+      })),
+    ),
+    ...(props.score.pageSetup.showFooter
+      ? [{ element: footer.value, name: `footer-${props.pageIndex}` }]
+      : []),
+  ];
+  return Promise.all(
+    boxes
+      .filter(({ element }) =>
+        resizable.has(element as TextBoxElement | RichTextBoxElement),
+      )
+      .map(async ({ element, name }) => {
+        const component = localRefs.get(name) as
+          InstanceType<typeof TextBox | typeof TextBoxRich> | undefined;
+        if (component == null) {
+          throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+        }
+        return {
+          element: element as TextBoxElement | RichTextBoxElement,
+          height: await component.measureHeight(),
+        };
+      }),
+  );
+}
 defineExpose({
   getElementRef,
   getLyricsRef,
   getAnnotationRef,
   getHeaderFooterRef,
   getPageIndex,
+  whenReady,
+  measureTextBoxes,
 });
 </script>
 <style scoped>

@@ -195,6 +195,16 @@ export default defineConfig(({ command, mode }) => {
           ])
         : undefined,
     ],
+    build: isElectron
+      ? {
+          rolldownOptions: {
+            input: {
+              main: path.resolve(import.meta.dirname, 'index.html'),
+              export: path.resolve(import.meta.dirname, 'export.html'),
+            },
+          },
+        }
+      : undefined,
     server:
       process.env.VSCODE_DEBUG &&
       (() => {

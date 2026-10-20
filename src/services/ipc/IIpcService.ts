@@ -15,13 +15,17 @@ import type {
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import type { Workspace } from '@/models/Workspace';
+import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 
 export interface IIpcService {
   saveWorkspace(workspace: Workspace): Promise<SaveWorkspaceReplyArgs>;
 
   saveWorkspaceAs(workspace: Workspace): Promise<SaveWorkspaceAsReplyArgs>;
 
-  exportWorkspaceAsPdf(workspace: Workspace): Promise<ExportWorkspaceReplyArgs>;
+  exportWorkspaceAsPdf(
+    workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
+  ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsHtml(
     workspace: Workspace,

@@ -67,6 +67,7 @@ import {
   type WorkspacePaneVisibility,
 } from '../../src/models/WorkspacePane';
 import { TestFileType } from '../../src/utils/TestFileType';
+import { renderPdf } from './export/renderPdf';
 import { RecoveryStore } from './recovery';
 
 // The built directory structure
@@ -873,6 +874,25 @@ function getPageSize(pageSize: PageSize, width: number, height: number) {
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
+function renderWorkspacePdfSnapshot(
+  args: ExportWorkspaceAsPdfArgs,
+  owner: BrowserWindow,
+) {
+  return renderPdf({
+    args,
+    parent: owner,
+    signal: new AbortController().signal,
+    preload,
+    entry: path.join(process.env.DIST!, 'export.html'),
+    devServerUrl: url,
+    pageSize: getPageSize(
+      args.pageSize,
+      args.pageWidthInches,
+      args.pageHeightInches,
+    ),
+  });
+}
+
 async function exportWorkspaceAsPdf(
   args: ExportWorkspaceAsPdfArgs,
 ): Promise<ExportWorkspaceReplyArgs> {
@@ -887,22 +907,14 @@ async function exportWorkspaceAsPdf(
     return result;
   }
 
+  const owner = win;
+
   try {
     saving = true;
 
     if (silentPdf) {
       try {
-        const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(
-            args.pageSize,
-            args.pageWidthInches,
-            args.pageHeightInches,
-          ),
-          landscape: args.landscape,
-          // Keep app chrome backgrounds out of the PDF. Score color fidelity
-          // is controlled by print-color-adjust: exact in the print stylesheet.
-          printBackground: false,
-        });
+        const data = await renderWorkspacePdfSnapshot(args, owner);
         const newPath = replaceExtension(args.filePath!, 'pdf');
 
         await fs.writeFile(newPath, data);
@@ -945,17 +957,7 @@ async function exportWorkspaceAsPdf(
       }
 
       if (doWrite) {
-        const data = await win.webContents.printToPDF({
-          pageSize: getPageSize(
-            args.pageSize,
-            args.pageWidthInches,
-            args.pageHeightInches,
-          ),
-          landscape: args.landscape,
-          // Keep app chrome backgrounds out of the PDF. Score color fidelity
-          // is controlled by print-color-adjust: exact in the print stylesheet.
-          printBackground: false,
-        });
+        const data = await renderWorkspacePdfSnapshot(args, owner);
         await fs.writeFile(filePath, data);
 
         // On Linux, shell.openPath() may not resolve until the external viewer

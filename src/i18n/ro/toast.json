@@ -28,6 +28,7 @@
     "clipboardReadFailed": "Nu s-a putut citi din clipboard. Verificați permisiunile clipboardului."
   },
   "export": {
+    "pdfLoading": "Se exportă PDF...",
     "pdfSuccess": "PDF exportat",
     "pdfFailed": "Exportul PDF a eșuat",
     "pdfFailedDescription": "Nu s-a putut exporta PDF.",

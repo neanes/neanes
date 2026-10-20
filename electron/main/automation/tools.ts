@@ -1,4 +1,5 @@
 import type { Tool } from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
 
 import { publishedBatchQuerySchema } from '../../../src/automation/contracts/batch';
 import { compactJsonSchema } from '../../../src/automation/contracts/jsonSchema';
@@ -11,9 +12,9 @@ import { isReadOnlyAutomationTool } from '../../../src/automation/contracts/tool
 
 const descriptions: Record<AutomationTool, string> = {
   discover_score_files:
-    'List saved .byz/.byzx paths without opening or validating scores. Optional recursion; symlink entries are skipped. Deterministic depth-first order, files before child folders. Page with nextOffset until null; keep folder/options unchanged and the tree stable. Stops with an error above 10000 scanned entries; narrow the folder. Pass chosen paths to batch_update_files.',
+    'List saved .byz/.byzx paths without opening or validating scores. Optional recursion; symlink entries are skipped. Deterministic depth-first order, files before child folders. Page with nextOffset until null; keep folder/options unchanged and the tree stable. Stops with an error above 10000 scanned entries; narrow the folder. For batch_update_files, convert chosen paths to files:paths.map(filePath=>({filePath})); entries must be objects, not strings.',
   batch_update_files:
-    'Process saved scores in request-owned private documents; shared edits precede per-file edits. Per-file commits may precede errors. Inspect results and stopReason before resuming the identical manifest with startIndex:nextIndex. nextIndex skips attempted files, including failures. Retry failures explicitly; complete means all files were attempted.',
+    'Process saved scores privately; files:[{filePath:"/scores/example.byzx"}]. Shared edits precede per-file edits. Constraints: paragraphStyles uses edit_paragraph_styles.changes; pageSetup uses update_page_setup.changes; headerFooter uses update_header_footer_settings.changes; documentProperties is sparse {title?,author?}. Default text font: edits:{paragraphStyles:[{action:"update",id:"default-text",changes:{overrides:{fontFamily:"Arial"}}}]}. Per-file commits may precede errors. Inspect results and stopReason before resuming the identical manifest with startIndex:nextIndex. nextIndex skips attempted files, including failures. Retry failures explicitly; complete means all files were attempted.',
 
   create_session:
     'Create an isolated session. Its ID is a bearer capability; pass sessionId to document tools. Sessions expire after 15 idle minutes and discard unsaved drafts. At most 4 sessions and 16 documents per session. HTTP disconnect does not close a session.',
@@ -86,12 +87,11 @@ export function automationTools(): Tool[] {
       name: tool,
       description: descriptions[tool],
       inputSchema: {
-        ...compactJsonSchema(
-          tool === 'batch_update_files'
-            ? publishedBatchQuerySchema
-            : automationSchemas[tool],
-          'input',
-        ),
+        // Some clients expose referenced input shapes as unknown. The compact
+        // batch publication keeps its complete envelope inline for those clients.
+        ...(tool === 'batch_update_files'
+          ? z.toJSONSchema(publishedBatchQuerySchema, { io: 'input' })
+          : compactJsonSchema(automationSchemas[tool], 'input')),
         type: 'object',
       } as Tool['inputSchema'],
       outputSchema: {

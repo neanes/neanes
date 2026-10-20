@@ -48,12 +48,13 @@ describe('MCP token efficiency contracts', () => {
     console.info('MCP published inventory sizes (characters)', sizes);
     // Includes text search, mode-key templates and rich-text format discovery.
     expect(tools).toHaveLength(33);
-    // Includes host file discovery and compact batch settings publication.
+    // Includes host file discovery and inline batch publication for clients that
+    // lose local input references. Detailed style/settings constraints stay shared.
     // Detailed authoring guides remain opt-in, outside tools/list.
-    expect(sizes.inventory).toBeLessThan(149000);
-    expect(sizes.inputs).toBeLessThan(48000);
+    expect(sizes.inventory).toBeLessThan(153000);
+    expect(sizes.inputs).toBeLessThan(52000);
     expect(sizes.outputs).toBeLessThan(79000);
-    expect(sizes.inputView).toBeLessThan(67000);
+    expect(sizes.inputView).toBeLessThan(71500);
     expect(sizes.elementOutput).toBeLessThan(4500);
   });
 

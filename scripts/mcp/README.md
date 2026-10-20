@@ -808,9 +808,14 @@ create/replace/update/delete actions), `pageSetup`, `headerFooter`, and sparse
 `documentProperties` (title/author). Shared edits run first, then that file's edits;
 per-file edits can override shared values while preserving unrelated fields.
 Each layer's style graph must be valid. Settings use the same fields and units as
-the corresponding single-document update tools. Published batch settings dictionaries
-list all writable field names; detailed value constraints remain in those tools.
-Shared and per-file edits reference one definition in the published schema.
+the corresponding single-document update tools. The published batch input is inline:
+some clients expose local schema references as `unknown`, hiding required fields.
+Compact settings and style-override dictionaries list writable field names without
+repeating detailed value constraints. The style-action envelope lists all action
+fields; `id` is required for update/delete, and `style` for create/replace.
+Use `edit_paragraph_styles.changes`, `update_page_setup.changes`, and
+`update_header_footer_settings.changes` for detailed constraints. Runtime validation
+still enforces the complete contracts, including action-specific requirements.
 Element-reference transactions,
 folder discovery, scripts, and conditional selection are outside this tool.
 

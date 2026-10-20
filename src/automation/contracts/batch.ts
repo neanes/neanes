@@ -5,6 +5,10 @@ import {
   headerFooterChangesSchema,
   pageSetupChangesSchema,
 } from '@/services/documents/pageSetupSchema';
+import {
+  paragraphStyleDefinitionSchema,
+  paragraphStyleOverridesSchema,
+} from '@/services/documents/paragraphStyleSchema';
 
 import { automationErrorSchema } from './errors';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
@@ -108,7 +112,34 @@ export type BatchResult = z.output<typeof batchResultSchema>;
 // The single-document settings tools already publish every field constraint.
 // Publish writable names here; reuse the existing tools for value constraints.
 const publishedSettingValue = z.union([z.string(), z.number(), z.boolean()]);
+// Keep the batch envelope inline without repeating detailed style constraints.
+// The runtime still validates every action with paragraphStyleChangeSchema.
+const publishedStyleDefinition = paragraphStyleDefinitionSchema.extend({
+  overrides: z.partialRecord(
+    paragraphStyleOverridesSchema.keyof(),
+    z.union([z.string(), z.number(), z.null()]),
+  ),
+});
+const updateStyle = paragraphStyleChangeSchema.options[2];
+const publishedStyleChange = z.strictObject({
+  action: z.enum(
+    paragraphStyleChangeSchema.options.map(
+      (option) => option.shape.action.value,
+    ),
+  ),
+  id: updateStyle.shape.id.describe('Required for update/delete.').optional(),
+  style: publishedStyleDefinition
+    .describe('Required for create/replace; complete style definition.')
+    .optional(),
+  changes: publishedStyleDefinition.omit({ id: true }).partial().optional(),
+  resetOverrides: updateStyle.shape.resetOverrides,
+});
 const publishedEdits = batchEditsSchema.extend({
+  paragraphStyles: z
+    .array(publishedStyleChange)
+    .min(1)
+    .describe('Actions and value constraints: edit_paragraph_styles.changes.')
+    .optional(),
   pageSetup: z
     .partialRecord(pageSetupChangesSchema.keyof(), publishedSettingValue)
     .describe(

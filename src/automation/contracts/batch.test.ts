@@ -5,6 +5,7 @@ import {
   headerFooterChangesSchema,
   pageSetupChangesSchema,
 } from '@/services/documents/pageSetupSchema';
+import { paragraphStyleOverridesSchema } from '@/services/documents/paragraphStyleSchema';
 
 import { automationTools } from '../../../electron/main/automation/tools';
 import { batchQuerySchema, batchResultSchema } from './batch';
@@ -78,33 +79,52 @@ describe('batch file contracts', () => {
     }
   });
 
-  it('deduplicates shared/per-file edits and exposes exactly the writable setting names', () => {
+  it('publishes inline batch shapes and exactly the writable setting names', () => {
     const tool = automationTools().find(
       (tool) => tool.name === 'batch_update_files',
     )!;
     type Schema = {
-      $ref?: string;
-      $defs?: Record<string, Schema>;
       properties?: Record<string, Schema>;
       items?: Schema;
       propertyNames?: Schema;
       enum?: string[];
     };
     const root = tool.inputSchema as Schema;
-    const resolve = (schema: Schema): Schema =>
-      schema.$ref
-        ? resolve(root.$defs![schema.$ref.slice('#/$defs/'.length)])
-        : schema;
     const shared = root.properties!.edits;
-    const perFile = resolve(root.properties!.files.items!).properties!.edits;
-    expect(shared.$ref).toMatch(/^#\/\$defs\//);
-    expect(perFile.$ref).toBe(shared.$ref);
-    const editProperties = resolve(shared).properties!;
+    const file = root.properties!.files.items!;
+    const perFile = file.properties!.edits;
+    expect(JSON.stringify(root)).not.toContain('"$ref"');
+    expect(root).not.toHaveProperty('$defs');
+    expect(Object.keys(file.properties!)).toEqual([
+      'filePath',
+      'outputFilePath',
+      'pdfFilePath',
+      'edits',
+    ]);
+    expect(perFile).toEqual(shared);
+    const editProperties = shared.properties!;
+    expect(Object.keys(editProperties)).toEqual([
+      'paragraphStyles',
+      'pageSetup',
+      'headerFooter',
+      'documentProperties',
+    ]);
+    const update = editProperties.paragraphStyles.items!.properties!;
+    expect(Object.keys(update)).toEqual([
+      'action',
+      'id',
+      'style',
+      'changes',
+      'resetOverrides',
+    ]);
+    expect(update.changes.properties!.overrides.propertyNames!.enum).toEqual(
+      Object.keys(paragraphStyleOverridesSchema.shape),
+    );
     for (const [field, schema] of [
       ['pageSetup', pageSetupChangesSchema],
       ['headerFooter', headerFooterChangesSchema],
     ] as const) {
-      const keys = resolve(resolve(editProperties[field]).propertyNames!).enum;
+      const keys = editProperties[field].propertyNames!.enum;
       expect(keys).toEqual(Object.keys(schema.shape));
       expect(keys).not.toContain('pageWidth');
       expect(keys).not.toContain('pageHeight');
@@ -133,7 +153,13 @@ describe('batch file contracts', () => {
         valid: false,
       });
     }
-    expect(tool.description!.length).toBeLessThan(350);
+    expect(tool.description!.length).toBeLessThan(800);
+    expect(tool.description).toContain('edit_paragraph_styles.changes');
+    expect(tool.description).toContain('update_page_setup.changes');
+    expect(tool.description).toContain('update_header_footer_settings.changes');
+    expect(tool.description).toContain(
+      'edits:{paragraphStyles:[{action:"update",id:"default-text",changes:{overrides:{fontFamily:"Arial"}}}]}',
+    );
     expect(tool.description).toContain('Inspect results and stopReason');
     expect(tool.description).toContain(
       'nextIndex skips attempted files, including failures',
@@ -147,7 +173,56 @@ describe('batch file contracts', () => {
       description: tool.description!.length,
       input: inputCharacters,
     });
-    expect(inputCharacters).toBeLessThan(8000);
+    expect(inputCharacters).toBeLessThan(11500);
+  });
+
+  it('accepts every style action in the compact publication and runtime contract', () => {
+    const tool = automationTools().find(
+      (tool) => tool.name === 'batch_update_files',
+    )!;
+    const validate = new AjvJsonSchemaValidator().getValidator(
+      tool.inputSchema,
+    );
+    const style = {
+      id: 'custom',
+      parentStyleId: 'default-text',
+      overrides: { fontFamily: 'Arial', lineHeight: null },
+    };
+    for (const action of [
+      { action: 'create', style },
+      { action: 'replace', style },
+      ...edits.paragraphStyles,
+      { action: 'update', id: 'custom', resetOverrides: ['fontFamily'] },
+      { action: 'delete', id: 'custom' },
+    ]) {
+      for (const query of [
+        { files, edits: { paragraphStyles: [action] } },
+        { files: [{ ...files[0], edits: { paragraphStyles: [action] } }] },
+      ]) {
+        expect(validate(query)).toMatchObject({ valid: true });
+        expect(() => batchQuerySchema.parse(query)).not.toThrow();
+      }
+    }
+    // The compact publication delegates action-specific constraints to runtime.
+    for (const action of [
+      { action: 'create' },
+      { action: 'delete' },
+      {
+        action: 'update',
+        id: 'custom',
+        changes: { overrides: { fontSize: -1 } },
+      },
+      {
+        action: 'update',
+        id: 'custom',
+        changes: { overrides: { fontFamily: 'Arial' } },
+        resetOverrides: ['fontFamily'],
+      },
+    ]) {
+      expect(() =>
+        batchQuerySchema.parse({ files, edits: { paragraphStyles: [action] } }),
+      ).toThrow();
+    }
   });
 
   it('validates copying, temporary exports, dry runs and continuations', () => {

@@ -10,6 +10,8 @@ import { publishedAutomationOutputSchema } from '../../../src/automation/contrac
 import { isReadOnlyAutomationTool } from '../../../src/automation/contracts/toolBehavior';
 
 const descriptions: Record<AutomationTool, string> = {
+  discover_score_files:
+    'List saved .byz/.byzx paths without opening or validating scores. Optional recursion; symlink entries are skipped. Deterministic depth-first order, files before child folders. Page with nextOffset until null; keep folder/options unchanged and the tree stable. Stops with an error above 10000 scanned entries; narrow the folder. Pass chosen paths to batch_update_files.',
   batch_update_files:
     'Process saved scores in request-owned private documents; shared edits precede per-file edits. Per-file commits may precede errors. Inspect results and stopReason before resuming the identical manifest with startIndex:nextIndex. nextIndex skips attempted files, including failures. Retry failures explicitly; complete means all files were attempted.',
 

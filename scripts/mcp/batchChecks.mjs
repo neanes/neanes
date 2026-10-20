@@ -28,6 +28,21 @@ export async function checkBatch(client, directory, seedPath) {
     await fs.writeFile(filePath, originals[index]);
     files.push({ filePath });
   }
+  const discovered = [];
+  let discoveryOffset = 0;
+  do {
+    const page = await call('discover_score_files', {
+      folderPath: directory,
+      limit: 7,
+      offset: discoveryOffset,
+    });
+    discovered.push(...page.files);
+    discoveryOffset = page.nextOffset;
+  } while (discoveryOffset !== null);
+  assert.equal(new Set(discovered).size, discovered.length);
+  for (const file of files) {
+    assert.ok(discovered.includes(await fs.realpath(file.filePath)));
+  }
   files[0].edits = {
     paragraphStyles: [
       {

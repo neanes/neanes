@@ -47,12 +47,12 @@ describe('MCP token efficiency contracts', () => {
     };
     console.info('MCP published inventory sizes (characters)', sizes);
     // Includes text search, mode-key templates and rich-text format discovery.
-    expect(tools).toHaveLength(32);
-    // Batch settings publish writable names while reusing existing value constraints.
+    expect(tools).toHaveLength(33);
+    // Includes host file discovery and compact batch settings publication.
     // Detailed authoring guides remain opt-in, outside tools/list.
-    expect(sizes.inventory).toBeLessThan(147000);
+    expect(sizes.inventory).toBeLessThan(149000);
     expect(sizes.inputs).toBeLessThan(48000);
-    expect(sizes.outputs).toBeLessThan(78000);
+    expect(sizes.outputs).toBeLessThan(79000);
     expect(sizes.inputView).toBeLessThan(67000);
     expect(sizes.elementOutput).toBeLessThan(4500);
   });

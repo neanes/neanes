@@ -27,6 +27,7 @@ import {
   elementSearchResultShape,
 } from './elementSearchSchema';
 import { automationErrorSchema } from './errors';
+import { fileDiscoveryResultSchema } from './fileDiscovery';
 import { modeKeyTemplatesResultSchema } from './modeKeyTemplates';
 import { pageElementsResultShape, pageListResultShape } from './pageSchemas';
 import type { AutomationTool } from './protocol';
@@ -63,6 +64,7 @@ const styleResultSchema = documentSummarySchema.extend({
 });
 
 export const automationResultSchemas = {
+  discover_score_files: fileDiscoveryResultSchema,
   batch_update_files: batchResultSchema,
   create_session: z.strictObject({
     sessionId: z.string().uuid(),

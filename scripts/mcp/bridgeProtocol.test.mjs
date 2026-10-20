@@ -71,8 +71,8 @@ describe('one bridge connection', () => {
 
   it('budgets the inventory delivered to clients, including bridge arguments', () => {
     const tools = bridgeTools(automationTools());
-    // Batch settings include writable names but omit repeated value constraints.
-    expect(JSON.stringify({ tools }).length).toBeLessThan(150000);
+    // Includes host file discovery; batch settings omit repeated value constraints.
+    expect(JSON.stringify({ tools }).length).toBeLessThan(152000);
     expect(
       JSON.stringify(
         tools.map(({ name, description, inputSchema }) => ({

@@ -15,6 +15,7 @@ import { assertElementPredicateBounds } from './elementPredicates';
 import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
 import { elementLookupShape, elementSearchShape } from './elementSearchSchema';
 import type { AutomationOutcome } from './errors';
+import { fileDiscoveryQuerySchema } from './fileDiscovery';
 import { modeKeyTemplatesQuerySchema } from './modeKeyTemplates';
 import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
@@ -27,6 +28,7 @@ const sessionId = z.string().uuid().optional();
 const filePath = z.string().min(1);
 
 export const automationSchemas = {
+  discover_score_files: fileDiscoveryQuerySchema,
   batch_update_files: batchQuerySchema,
   create_session: z.strictObject({}),
   close_session: z.strictObject({

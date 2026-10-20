@@ -23,7 +23,9 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '../../../src/services/documents/fileTypes';
+import { withAbortDeadline } from './abortDeadline';
 import { registerAgentHost } from './access';
+import { discoverScoreFiles } from './fileDiscovery';
 import { AutomationFiles } from './files';
 import type { PreviewPageOptions } from './preview';
 import { startMcpServer } from './server';
@@ -265,6 +267,25 @@ export async function startAutomationHost(options: {
     version: options.version,
     authorize: options.authorize,
     async execute(request, signal) {
+      if (request.tool === 'discover_score_files') {
+        return withAbortDeadline(async (discoverySignal) => {
+          const checkpoint = async () => {
+            if (closed) {
+              throw new Error('AGENT_ACCESS_DISABLED');
+            }
+            discoverySignal.throwIfAborted();
+            await options.authorize();
+            discoverySignal.throwIfAborted();
+          };
+          await checkpoint();
+          const result = await discoverScoreFiles(
+            request.arguments,
+            discoverySignal,
+          );
+          await checkpoint();
+          return result;
+        }, signal);
+      }
       if (closed || !ready) {
         throw new Error('EDITOR_NOT_READY');
       }

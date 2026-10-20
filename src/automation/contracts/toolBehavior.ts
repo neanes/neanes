@@ -10,6 +10,7 @@ export function canRunWhileEditorBusy(tool: AutomationTool) {
 }
 
 const readOnlyTools = new Set<AutomationTool>([
+  'discover_score_files',
   'get_capabilities',
   'list_documents',
   'get_document_properties',

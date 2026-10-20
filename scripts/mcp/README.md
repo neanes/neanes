@@ -731,6 +731,46 @@ The shared paragraph-style service owns graph validation, replacement, and delet
 
 The editor and hidden export renderer both use `ScorePageContent.vue` for headers, footers, notation, lyrics, and element rendering. The editor retains its page DOM wrappers, visibility tracking, focus handling, and mutation handlers. Each page owns its child refs and exposes methods for element, lyric, annotation, and page-specific header/footer lookup; the editor holds only page-component refs. Page content forwards typed interaction events; editor-only badges and developer overlays are supplied through slots. Print pages use local component refs to await rich-text readiness. Overlay markup, geometry, and styles also live in the shared page component. Snapshots capture overlay preferences, and the detached renderer regenerates layout diagnostics so enabled Print Overlays settings apply to every PDF route.
 
+## Score file discovery
+
+`discover_score_files` lists regular `.byz` and `.byzx` files on the Neanes host
+without opening or validating their contents. Pass an absolute `folderPath` and
+optionally `recursive: true` (default false). Symlink entries are skipped, including
+directory symlinks; the explicitly supplied root is resolved to its canonical path.
+No document session or editor scope is required. Cancellation or a 60-second
+request deadline releases the API queue immediately. An in-flight OS filesystem
+call may finish later; discovery stops before processing its result or traversing
+another folder. Discovery timeout returns `AUTOMATION_TIMEOUT` without requiring
+an editor reload.
+
+Results contain `files` (absolute paths) and `nextOffset`. Request the next page
+with `offset: nextOffset` until it is null; `limit` defaults to 100 and accepts 1-100.
+Order is deterministic: sorted files in each folder, followed by child folders in
+sorted depth-first order. Pagination rescans the tree, so keep folder/options and
+the tree unchanged while collecting pages. Collect the manifest before batch writes.
+The tool caps each traversal at 10,000 directory entries and each page at about
+16,000 JSON path characters; a traversal that exceeds the entry cap returns
+`RESPONSE_TOO_LARGE` and requires a narrower folder. Unreadable subfolders fail the
+request rather than returning an apparently complete list.
+
+```js
+const paths = [];
+let offset = 0;
+do {
+  const page = await call('discover_score_files', {
+    folderPath: '/scores',
+    recursive: true,
+    offset,
+  });
+  paths.push(...page.files);
+  offset = page.nextOffset;
+} while (offset !== null);
+// Use paths.map(filePath => ({ filePath })) in explicit batch manifests.
+```
+
+Batch manifests are limited to 100 files; split larger discoveries into explicit
+manifests and inspect each batch's results before continuing.
+
 ## Batch transformations
 
 `batch_update_files` processes an explicit manifest of up to 100 saved scores in

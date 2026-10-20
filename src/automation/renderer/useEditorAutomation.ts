@@ -99,7 +99,11 @@ export function useEditorAutomation(options: {
         }
       }
       let result: unknown;
-      if (request.tool === 'batch_update_files') {
+      if (request.tool === 'discover_score_files') {
+        throw new Error(
+          'AUTOMATION_REQUEST_REQUIRED: Discovery runs in the main process.',
+        );
+      } else if (request.tool === 'batch_update_files') {
         const batchSessions = new IsolatedSessions(sessionHooks);
         activeBatchSessions = batchSessions;
         const session = batchSessions.create();

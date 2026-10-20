@@ -127,7 +127,13 @@ export class McpDocumentAdapter {
   async execute(
     request: Exclude<
       AutomationRequest,
-      { tool: 'create_session' | 'close_session' | 'batch_update_files' }
+      {
+        tool:
+          | 'create_session'
+          | 'close_session'
+          | 'batch_update_files'
+          | 'discover_score_files';
+      }
     >,
   ): Promise<unknown> {
     const openIds = new Set(

@@ -79,6 +79,7 @@ import { debounce, throttle } from 'throttle-debounce';
 import type { PropType, StyleValue } from 'vue';
 import {
   computed,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -453,7 +454,19 @@ function onBlur() {
   }
 }
 
+async function measureHeight() {
+  await nextTick();
+  await document.fonts.ready;
+  await nextTick();
+  const height = getHeight();
+  if (height == null || !Number.isFinite(height)) {
+    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+  }
+  return height;
+}
+
 defineExpose({
+  measureHeight,
   blur,
   focus,
   getTextElement,

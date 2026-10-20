@@ -2,8 +2,10 @@ import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
 import type { ZoomFitMode } from '@/models/Workspace';
 import type { WorkspacePaneId } from '@/models/WorkspacePane';
+import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 
 export enum IpcMainChannels {
+  ExportRendererSnapshot = 'ExportRendererSnapshot',
   UpdateAvailable = 'UpdateAvailable',
   UpdateDownloadStarted = 'UpdateDownloadStarted',
   UpdateDownloadProgress = 'UpdateDownloadProgress',
@@ -74,6 +76,8 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
+  ExportRendererReady = 'ExportRendererReady',
+  ExportRendererResult = 'ExportRendererResult',
   DownloadUpdate = 'DownloadUpdate',
   RestartToInstallUpdate = 'RestartToInstallUpdate',
 
@@ -241,6 +245,7 @@ export interface ExportWorkspaceReplyArgs {
 }
 
 export interface ExportWorkspaceAsPdfArgs {
+  snapshot: ScoreRenderSnapshot;
   filePath: string | null;
   tempFileName: string;
   pageSize: PageSize;

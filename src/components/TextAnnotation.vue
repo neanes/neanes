@@ -227,7 +227,10 @@ function getEditorInstance() {
   return editorRef.value?.instance;
 }
 
+const ready = Promise.withResolvers<void>();
+
 function onEditorReady(editor: InlineEditor) {
+  ready.resolve();
   applyInitialLanguage(editor);
 
   if (focusOnReady.value || !hasStoredContent.value) {
@@ -475,6 +478,7 @@ function getCurrentText() {
 }
 
 defineExpose({
+  whenReady: () => ready.promise,
   focus,
   getCurrentText,
   getPendingUpdates,

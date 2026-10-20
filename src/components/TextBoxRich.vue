@@ -565,6 +565,47 @@ function getEditorInstanceRight() {
   return editorRight.value?.instance;
 }
 
+// Snapshot consumers wait for all editors, independently of height measurement.
+const editorsReady = Promise.withResolvers<void>();
+const readyEditors = new WeakSet<InlineEditor>();
+function markEditorReady(editor: InlineEditor) {
+  readyEditors.add(editor);
+  if (
+    getActiveEditorInstances().every(
+      (instance) => instance != null && readyEditors.has(instance),
+    )
+  ) {
+    editorsReady.resolve();
+  }
+}
+
+async function whenReady() {
+  await editorsReady.promise;
+  await nextTick();
+}
+
+async function measureHeight() {
+  await whenReady();
+  await document.fonts.ready;
+  refreshCkContentFontSize();
+  await nextTick();
+  const elements = [
+    ...(container.value?.querySelectorAll<HTMLElement>('.ck-content') ?? []),
+  ];
+  if (elements.length === 0) {
+    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+  }
+  const zoom = Number(getComputedStyle(elements[0]).getPropertyValue('--zoom'));
+  const height =
+    Math.max(
+      ...elements.map((element) => element.getBoundingClientRect().height),
+    ) / zoom;
+  if (!Number.isFinite(height)) {
+    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+  }
+  return height;
+}
+
 function getActiveEditorInstances() {
   if (props.element.multipanel) {
     return [
@@ -640,6 +681,7 @@ function observeCkContentFontSize(editor: InlineEditor) {
 async function onEditorReady(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
 
   emitRecalculatedHeightIfNeeded();
 
@@ -685,6 +727,7 @@ async function onEditorReady(editor: InlineEditor) {
 async function onEditorReadyMultipanelSide(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
   emitRecalculatedHeightIfNeeded();
   observeCkContentFontSize(editor);
 }
@@ -704,6 +747,7 @@ function onEditorReadyInline(editor: InlineEditor) {
   );
 
   setPadding(editor);
+  markEditorReady(editor);
 }
 
 function onEditorReadyInlineBottom(editor: InlineEditor) {
@@ -726,6 +770,7 @@ function onEditorReadyInlineBottom(editor: InlineEditor) {
   );
 
   setPadding(editor);
+  markEditorReady(editor);
 }
 
 function applyInitialLanguage(editor: InlineEditor) {
@@ -939,6 +984,8 @@ function focus() {
 }
 
 defineExpose({
+  whenReady,
+  measureHeight,
   focus,
   getPendingUpdates,
   htmlElement,

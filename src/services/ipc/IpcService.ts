@@ -24,6 +24,7 @@ import type {
 } from '@/ipc/ipcChannels';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
 import type { Workspace } from '@/models/Workspace';
+import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
@@ -55,10 +56,12 @@ export class IpcService implements IIpcService {
 
   public async exportWorkspaceAsPdf(
     workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
   ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsPdf,
       {
+        snapshot,
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
         landscape: workspace.score.pageSetup.landscape,

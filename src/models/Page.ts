@@ -22,6 +22,7 @@ export class Line {
   public indentation = 0;
   public adjustmentRatio: number | null = null;
   public diagnostics: LineLayoutDiagnostics | null = null;
+  public halfLeadingBounds: [number, number] | null = null;
 
   // A line is empty if it contains only the empty element
   public get isEmpty() {

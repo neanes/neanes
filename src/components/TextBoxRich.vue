@@ -589,18 +589,8 @@ async function measureHeight() {
   await document.fonts.ready;
   refreshCkContentFontSize();
   await nextTick();
-  const elements = [
-    ...(container.value?.querySelectorAll<HTMLElement>('.ck-content') ?? []),
-  ];
-  if (elements.length === 0) {
-    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
-  }
-  const zoom = Number(getComputedStyle(elements[0]).getPropertyValue('--zoom'));
-  const height =
-    Math.max(
-      ...elements.map((element) => element.getBoundingClientRect().height),
-    ) / zoom;
-  if (!Number.isFinite(height)) {
+  const height = getHeight();
+  if (height == null || !Number.isFinite(height)) {
     throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
   }
   return height;
@@ -690,12 +680,13 @@ async function onEditorReady(editor: InlineEditor) {
     focusOnReady.value = false;
   }
 
-  const element = editor.sourceElement;
-
   observeCkContentFontSize(editor);
+  observeBlockHeight();
+}
 
+function observeBlockHeight() {
   observeResize(
-    element!,
+    [...container.value!.querySelectorAll<HTMLElement>('.ck-content')],
     debounce(100, () => {
       const resizedHeight = getHeight();
 
@@ -730,6 +721,7 @@ async function onEditorReadyMultipanelSide(editor: InlineEditor) {
   markEditorReady(editor);
   emitRecalculatedHeightIfNeeded();
   observeCkContentFontSize(editor);
+  observeBlockHeight();
 }
 
 function onEditorReadyInline(editor: InlineEditor) {
@@ -907,15 +899,21 @@ function addPendingEditorData(
 }
 
 function getHeight() {
-  const element = container.value?.querySelector('.ck-content');
+  const elements = [
+    ...(container.value?.querySelectorAll<HTMLElement>('.ck-content') ?? []),
+  ];
 
-  if (element == null) {
+  if (elements.length === 0) {
     return null;
   }
 
-  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+  const zoom = Number(getComputedStyle(elements[0]).getPropertyValue('--zoom'));
 
-  return element.getBoundingClientRect().height / zoom;
+  return (
+    Math.max(
+      ...elements.map((element) => element.getBoundingClientRect().height),
+    ) / zoom
+  );
 }
 
 function getHeightBottom() {

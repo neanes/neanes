@@ -70,7 +70,8 @@ export async function checkPdfSettling(options: {
   footer.contentLeft = '<p>Page $p / $n</p>';
   footer.contentCenter =
     '<p>Footer center</p><p>Second line</p><p>Third line</p>';
-  footer.contentRight = '<p>Footer right</p>';
+  footer.contentRight =
+    '<p>Footer right</p><p>Second line</p><p>Third line</p><p>Fourth line</p>';
   footer.height = 1;
   snapshot.score.staff.elements = [plain, rich, new EmptyElement()];
   Object.assign(snapshot.score.pageSetup, {
@@ -138,6 +139,7 @@ export async function checkPdfSettling(options: {
         assert(footer.text.includes(`Page ${i + 1} / 2`));
         assert.equal(footer.panelHeights.length, 3);
         assert(footer.panelHeights[1] > footer.panelHeights[0]);
+        assert(footer.panelHeights[2] > footer.panelHeights[1]);
         assert.equal(footer.height, Math.max(...footer.panelHeights));
         assert(footer.top >= body.bottom, 'Footer must not overlap body text.');
         return body;

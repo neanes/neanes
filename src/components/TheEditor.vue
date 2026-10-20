@@ -565,6 +565,7 @@ const audioOptions = reactive<PlaybackOptions>({
 });
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
+let pdfExportInProgress = false;
 
 const ckeditorLanguage = computed(() => {
   return (
@@ -2022,8 +2023,10 @@ function showReplyErrorToast(
   message: string,
   reply: { errorMessage?: string },
   fallback: string,
+  id?: string | number,
 ) {
   toast.error(message, {
+    id,
     description: reply.errorMessage ?? fallback,
   });
 }
@@ -2033,16 +2036,20 @@ function showExportReplyToast(
   successMessage: string,
   errorMessage: string,
   fallbackErrorDescription: string,
+  toastId?: string | number,
 ) {
   if (reply.success) {
     toast.success(successMessage, {
+      id: toastId,
       description: reply.filePath,
     });
     return true;
   }
 
   if (!reply.canceled) {
-    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription);
+    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription, toastId);
+  } else if (toastId != null) {
+    toast.dismiss(toastId);
   }
 
   return false;
@@ -7827,11 +7834,18 @@ function createScoreRenderSnapshot(workspace: Workspace): ScoreRenderSnapshot {
 }
 
 async function onFileMenuExportAsPdf() {
-  const workspace = selectedWorkspace.value;
-  prepareWorkspaceForSerialization(workspace);
-  const snapshot = createScoreRenderSnapshot(workspace);
+  if (pdfExportInProgress) {
+    return;
+  }
+  pdfExportInProgress = true;
+  const toastId = toast.loading(
+    t(($) => $.toast.export.pdfLoading, { ns: 'toast' }),
+  );
 
   try {
+    const workspace = selectedWorkspace.value;
+    prepareWorkspaceForSerialization(workspace);
+    const snapshot = createScoreRenderSnapshot(workspace);
     const reply = await ipcService.exportWorkspaceAsPdf(workspace, snapshot);
 
     showExportReplyToast(
@@ -7839,6 +7853,7 @@ async function onFileMenuExportAsPdf() {
       t(($) => $.toast.export.pdfSuccess, { ns: 'toast' }),
       t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
       t(($) => $.toast.export.pdfFailedDescription, { ns: 'toast' }),
+      toastId,
     );
   } catch (error) {
     console.error(error);
@@ -7846,11 +7861,14 @@ async function onFileMenuExportAsPdf() {
       t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
       error,
       {
+        id: toastId,
         fallback: t(($) => $.toast.export.pdfFailedDescription, {
           ns: 'toast',
         }),
       },
     );
+  } finally {
+    pdfExportInProgress = false;
   }
 }
 

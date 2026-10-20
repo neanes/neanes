@@ -28,6 +28,7 @@
     "clipboardReadFailed": "Tidak dapat membaca dari papan klip. Periksa izin papan klip."
   },
   "export": {
+    "pdfLoading": "Mengekspor PDF...",
     "pdfSuccess": "PDF diekspor",
     "pdfFailed": "Gagal mengekspor PDF",
     "pdfFailedDescription": "Tidak dapat mengekspor PDF.",

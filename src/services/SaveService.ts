@@ -2447,22 +2447,22 @@ export class SaveService {
     ),
   ) {
     element.paragraphStyleId = e.paragraphStyleId ?? defaultParagraphStyleId;
-    element.content = e.content ?? element.content;
+    element.content = e.content;
 
     if (e.multipanel) {
-      element.contentLeft = e.contentLeft ?? element.contentLeft;
-      element.contentCenter = e.contentCenter ?? element.contentCenter;
-      element.contentRight = e.contentRight ?? element.contentRight;
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
     }
 
     if (e.inline) {
-      element.contentBottom = e.contentBottom ?? element.contentBottom;
+      element.contentBottom = e.contentBottom;
     }
 
     element.multipanel = e.multipanel === true;
     element.inline = e.inline === true;
     element.underline = e.underline ?? null;
-    element.height = e.height ?? element.height;
+    element.height = e.height;
     element.customWidth = e.customWidth ?? null;
     element.fillWidth = e.fillWidth === true;
     element.customHeight = e.customHeight ?? null;
@@ -2488,19 +2488,19 @@ export class SaveService {
     element: RichTextBoxElement,
     e: RichTextBoxElement_v1,
   ) {
-    element.content = e.content ?? element.content;
-    element.height = e.height ?? element.height;
+    element.content = e.content;
+    element.height = e.height;
     element.marginTop = e.marginTop ?? 0;
     element.marginBottom = e.marginBottom ?? 0;
 
     if (e.multipanel) {
-      element.contentLeft = e.contentLeft ?? element.contentLeft;
-      element.contentCenter = e.contentCenter ?? element.contentCenter;
-      element.contentRight = e.contentRight ?? element.contentRight;
+      element.contentLeft = e.contentLeft;
+      element.contentCenter = e.contentCenter;
+      element.contentRight = e.contentRight;
     }
 
     if (e.inline) {
-      element.contentBottom = e.contentBottom ?? element.contentBottom;
+      element.contentBottom = e.contentBottom;
       element.centerOnPage = e.centerOnPage === true;
       element.offsetYBottom = e.offsetYBottom ?? 0;
       element.offsetYTop = e.offsetYTop ?? 0;

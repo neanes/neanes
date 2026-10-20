@@ -566,6 +566,7 @@ const audioOptions = reactive<PlaybackOptions>({
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
 let pdfExportInProgress = false;
+let nativePrintInProgress = false;
 
 const ckeditorLanguage = computed(() => {
   return (
@@ -7796,6 +7797,25 @@ function onFileMenuDocumentProperties() {
 }
 
 async function onFileMenuPrint() {
+  if (!isBrowser.value) {
+    if (nativePrintInProgress) {
+      return;
+    }
+    nativePrintInProgress = true;
+    try {
+      const workspace = selectedWorkspace.value;
+      prepareWorkspaceForSerialization(workspace);
+      await ipcService.printWorkspace(
+        workspace,
+        createScoreRenderSnapshot(workspace),
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      nativePrintInProgress = false;
+    }
+    return;
+  }
   prepareWorkspaceForSerialization(selectedWorkspace.value);
 
   printMode.value = true;
@@ -7809,7 +7829,10 @@ async function onFileMenuPrint() {
 
   try {
     await nextTick();
-    await ipcService.printWorkspace(selectedWorkspace.value);
+    await ipcService.printWorkspace(
+      selectedWorkspace.value,
+      createScoreRenderSnapshot(selectedWorkspace.value),
+    );
   } catch (error) {
     console.error(error);
   } finally {

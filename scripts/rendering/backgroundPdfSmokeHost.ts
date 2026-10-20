@@ -9,6 +9,7 @@ import { renderPdf } from '../../electron/main/export/renderPdf';
 import type { ScoreRenderSnapshot } from '../../src/services/rendering/scoreRenderSnapshot';
 import { checkPdfSettling } from './backgroundPdfSettlingChecks';
 import { checkBackgroundPng } from './backgroundPngChecks';
+import { checkPrintPreparation } from './backgroundPrintChecks';
 
 const root = process.env.NEANES_PDF_SMOKE_ROOT!;
 const output = process.env.NEANES_PDF_SMOKE_OUTPUT!;
@@ -90,6 +91,9 @@ async function run() {
   assert.equal(BrowserWindow.getAllWindows().length, startCount);
 
   await checkBackgroundPng({ rich, arabic, root, output, owner });
+  assert.equal(BrowserWindow.getAllWindows().length, startCount);
+
+  await checkPrintPreparation({ snapshot: rich, root, output, owner });
   assert.equal(BrowserWindow.getAllWindows().length, startCount);
 
   const canceled = new AbortController();

@@ -367,6 +367,7 @@ export interface ListRecoveryCandidatesReplyArgs {
 }
 
 export interface PrintWorkspaceArgs {
+  snapshot: ScoreRenderSnapshot;
   pageSize: PageSize;
   pageWidthInches: number;
   pageHeightInches: number;

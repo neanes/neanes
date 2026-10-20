@@ -20,8 +20,6 @@ import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
 
-import type { PageSize } from '@/models/PageSetup';
-
 import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
 import type {
   ClipboardReplyArgs,
@@ -69,6 +67,7 @@ import {
   type WorkspacePaneVisibility,
 } from '../../src/models/WorkspacePane';
 import { TestFileType } from '../../src/utils/TestFileType';
+import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
 import { RecoveryStore } from './recovery';
@@ -852,28 +851,6 @@ async function openOcrFile() {
   return result;
 }
 
-function getPageSize(pageSize: PageSize, width: number, height: number) {
-  switch (pageSize) {
-    case 'Half-Legal':
-      return {
-        width: 7,
-        height: 8.5,
-      };
-    case 'Half-Letter':
-      return {
-        width: 5.5,
-        height: 8.5,
-      };
-    case 'Custom':
-      return {
-        width,
-        height,
-      };
-    default:
-      return pageSize;
-  }
-}
-
 let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
@@ -1393,51 +1370,53 @@ async function exportPageAsImage(
 }
 
 async function printWorkspace(args: PrintWorkspaceArgs) {
-  return new Promise((resolve) => {
-    try {
-      if (!win) {
-        resolve({ success: false });
-        return;
-      }
-
-      win.webContents.print(
-        {
-          pageSize: getPageSize(
-            args.pageSize,
-            args.pageWidthInches,
-            args.pageHeightInches,
-          ),
-          landscape: args.landscape,
-        },
-        (success, failureReason) => {
-          if (
-            !success &&
-            failureReason !== 'cancelled' &&
-            failureReason !== 'Print job canceled'
-          ) {
-            dialog.showMessageBox(win!, {
-              type: 'error',
-              title: 'Print failed',
-              message: failureReason,
-            });
-          }
-          resolve({ success, failureReason });
-        },
-      );
-    } catch (error) {
-      console.error(error);
-
-      if (error instanceof Error) {
-        dialog.showMessageBox(win!, {
-          type: 'error',
-          title: 'Print failed',
-          message: error.message,
-        });
-      }
-
-      resolve({ success: false });
+  try {
+    if (!win) {
+      return { success: false };
     }
-  });
+    const owner = win;
+    const result = await renderSnapshot({
+      snapshot: args.snapshot,
+      parent: owner,
+      completeHasDialog: true,
+      signal: new AbortController().signal,
+      preload,
+      entry: path.join(process.env.DIST!, 'export.html'),
+      devServerUrl: url,
+      complete: (window) =>
+        new Promise<{ success: boolean; failureReason: string }>((resolve) => {
+          window.webContents.print(
+            {
+              pageSize: getNativePrintPageSize(args),
+              landscape: args.landscape,
+            },
+            (success, failureReason) => resolve({ success, failureReason }),
+          );
+        }),
+    });
+    if (
+      !result.success &&
+      result.failureReason !== 'cancelled' &&
+      result.failureReason !== 'Print job canceled'
+    ) {
+      void dialog.showMessageBox(owner, {
+        type: 'error',
+        title: 'Print failed',
+        message: result.failureReason,
+      });
+    }
+    return result;
+  } catch (error) {
+    console.error(error);
+    if (win && error instanceof Error) {
+      void dialog.showMessageBox(win, {
+        type: 'error',
+        title: 'Print failed',
+        message: error.message,
+      });
+    }
+    return { success: false };
+  }
 }
 
 async function exportSnapshotAsPng(

@@ -60,7 +60,10 @@ export interface IIpcService {
     args: ExportSnapshotAsPngArgs,
   ): Promise<ExportSnapshotAsPngReplyArgs>;
 
-  printWorkspace(workspace: Workspace): Promise<void>;
+  printWorkspace(
+    workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
+  ): Promise<void>;
 
   openWorkspaceFromArgv(): Promise<OpenWorkspaceFromArgvArgs>;
 

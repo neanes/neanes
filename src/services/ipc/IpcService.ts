@@ -158,8 +158,12 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async printWorkspace(workspace: Workspace) {
+  public async printWorkspace(
+    workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
+  ) {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
+      snapshot,
       landscape: workspace.score.pageSetup.landscape,
       pageSize: workspace.score.pageSetup.pageSize,
       pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),

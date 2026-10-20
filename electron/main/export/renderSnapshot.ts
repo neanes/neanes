@@ -14,6 +14,7 @@ export async function renderSnapshot<T>(options: {
   snapshot: ScoreRenderSnapshot;
   png?: PngRenderOptions;
   parent?: BrowserWindow;
+  completeHasDialog?: boolean;
   writeImage?: (
     pageNumber: number,
     data: string,
@@ -68,6 +69,10 @@ export async function renderSnapshot<T>(options: {
     if (!result.success) {
       fail(result.message ?? 'Renderer failed');
       return;
+    }
+    // Rendering is ready; a native dialog can remain open without a deadline.
+    if (options.completeHasDialog) {
+      clearTimeout(timer);
     }
     void Promise.resolve()
       .then(() => options.complete(window))

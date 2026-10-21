@@ -12,6 +12,9 @@ export class AddToCollectionCommand<T> implements Command {
   constructor(private args: AddToCollectionCommandArgs<T>) {}
 
   public execute() {
+    if (this.args.elements.length === 0) {
+      return false;
+    }
     if (this.args.insertAtIndex !== undefined) {
       this.args.collection.splice(
         this.args.insertAtIndex,
@@ -23,6 +26,7 @@ export class AddToCollectionCommand<T> implements Command {
     }
 
     this.added = true;
+    return true;
   }
 
   public undo() {
@@ -30,12 +34,15 @@ export class AddToCollectionCommand<T> implements Command {
       const index = this.args.collection.indexOf(this.args.elements[0]);
       this.args.collection.splice(index, this.args.elements.length);
       this.added = false;
+      return true;
     }
+    return false;
   }
 
   public redo() {
     if (!this.added) {
-      this.execute();
+      return this.execute();
     }
+    return false;
   }
 }

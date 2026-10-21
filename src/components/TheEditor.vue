@@ -178,7 +178,7 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
-import type { PageSetup } from '@/models/PageSetup';
+import { PageSetup } from '@/models/PageSetup';
 import type {
   ParagraphStyle,
   ResolvedParagraphStyle,
@@ -214,6 +214,16 @@ import type {
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
 import {
+  applyDocumentSave,
+  captureDocumentSaveState,
+  type DocumentSaveResult,
+  isDocumentSaveContextCurrent,
+  isDocumentSaveStateCurrent,
+  queueDocumentSave,
+} from '@/services/documentPersistence';
+import {
+  createMartyriaUpdateCommand,
+  createNoteUpdateCommand,
   getFthoraChange,
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
@@ -293,10 +303,10 @@ interface Vue3TabsChromeComponent {
 }
 
 const noteElementCommandFactory: CommandFactory<NoteElement> =
-  new CommandFactory<NoteElement>();
+  new CommandFactory<NoteElement>(createNoteUpdateCommand);
 
 const martyriaCommandFactory: CommandFactory<MartyriaElement> =
-  new CommandFactory<MartyriaElement>();
+  new CommandFactory<MartyriaElement>(createMartyriaUpdateCommand);
 
 const tempoCommandFactory: CommandFactory<TempoElement> =
   new CommandFactory<TempoElement>();
@@ -699,7 +709,7 @@ const selectedWorkspace = computed({
 
     selectedWorkspaceValue.value = value;
     selectedWorkspace.value.commandService.notify();
-    save(false);
+    save();
 
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
@@ -739,23 +749,9 @@ const resizableTextBoxElements = computed(() => {
   );
 });
 
-const lyrics = computed({
-  get: () => {
-    return score.value?.staff.lyrics.text ?? '';
-  },
-  set: (value: string) => {
-    score.value.staff.lyrics.text = value;
-  },
-});
+const lyrics = computed(() => score.value.staff.lyrics.text);
 
-const lyricsLocked = computed({
-  get: () => {
-    return score.value?.staff.lyrics.locked ?? false;
-  },
-  set: (value: boolean) => {
-    score.value.staff.lyrics.locked = value;
-  },
-});
+const lyricsLocked = computed(() => score.value.staff.lyrics.locked);
 
 const isLyricsManagerOpen = computed(() => {
   return paneVisibility.value.lyrics;
@@ -1044,7 +1040,7 @@ const developerPaneHasMissingDiagnostics = computed(() => {
 });
 
 function reloadDeveloperPaneDiagnostics() {
-  save(false);
+  save();
 }
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
@@ -1296,14 +1292,9 @@ const currentFilePath = computed({
   },
 });
 
-const hasUnsavedChanges = computed({
-  get: () => {
-    return selectedWorkspace.value.hasUnsavedChanges;
-  },
-  set: (hasUnsavedChanges: boolean) => {
-    selectedWorkspace.value.hasUnsavedChanges = hasUnsavedChanges;
-  },
-});
+const hasUnsavedChanges = computed(
+  () => selectedWorkspace.value.hasUnsavedChanges,
+);
 
 const pageStyle = computed(() => {
   return {
@@ -5028,11 +5019,7 @@ function calculatePageNumber() {
   }
 }
 
-function save(markUnsavedChanges: boolean = true) {
-  if (markUnsavedChanges) {
-    hasUnsavedChanges.value = true;
-  }
-
+function save() {
   const lyricSelection = captureSelectedLyricSelection();
 
   // Save the indexes of the visible pages
@@ -5343,33 +5330,58 @@ async function discardRecoverySnapshot(workspaceId: string) {
   }
 }
 
-async function saveWorkspace(workspace: Workspace) {
-  prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspace(workspace);
-
-  if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
-  }
-
-  return result;
+function saveWorkspace(workspace: Workspace) {
+  return saveWorkspaceWithRevision(workspace, () =>
+    ipcService.saveWorkspace(workspace),
+  );
 }
 
-async function saveWorkspaceAs(workspace: Workspace) {
-  prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspaceAs(workspace);
+function saveWorkspaceAs(workspace: Workspace) {
+  return saveWorkspaceWithRevision(workspace, () =>
+    ipcService.saveWorkspaceAs(workspace),
+  );
+}
 
-  if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
-  }
+function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
+  workspace: Workspace,
+  persist: () => Promise<T>,
+) {
+  return queueDocumentSave(workspace, async () => {
+    prepareWorkspaceForSerialization(workspace);
+    // Both IPC implementations serialize immediately, before their first await.
+    const state = captureDocumentSaveState(workspace);
+    const result = await persist();
+    let savedContentUnchanged = false;
 
-  return result;
+    if (result.success) {
+      // Include pending editor text that has not reached the score model yet.
+      prepareWorkspaceForSerialization(workspace);
+      savedContentUnchanged = applyDocumentSave(workspace, result, state);
+      if (savedContentUnchanged) {
+        const savedState = captureDocumentSaveState(workspace);
+        await discardRecoverySnapshot(workspace.id);
+        prepareWorkspaceForSerialization(workspace);
+        savedContentUnchanged = isDocumentSaveStateCurrent(
+          workspace,
+          savedState,
+        );
+        if (!isDocumentSaveContextCurrent(workspace, savedState)) {
+          workspace.hasUnsavedChanges = true;
+        }
+      }
+      if (!savedContentUnchanged) {
+        await persistRecoverySnapshot(workspace);
+      }
+    }
+
+    return { ...result, savedContentUnchanged };
+  });
 }
 
 async function closeWorkspace(workspace: Workspace) {
   let shouldClose = true;
   let shouldDiscardRecoverySnapshot = false;
+  let savedDuringClose = false;
 
   flushPendingRichTextEditors(workspace);
 
@@ -5413,9 +5425,9 @@ async function closeWorkspace(workspace: Workspace) {
             ? await saveWorkspace(workspace)
             : await saveWorkspaceAs(workspace);
 
-        // If they successfully saved, then we can close the workspace
-        shouldClose = saveResult.success;
-        shouldDiscardRecoverySnapshot = saveResult.success;
+        // A completed write must not close over edits made while saving.
+        shouldClose = saveResult.success && saveResult.savedContentUnchanged;
+        savedDuringClose = shouldClose;
 
         if (!saveResult.success && !saveResult.canceled) {
           showReplyErrorToast(
@@ -5447,7 +5459,11 @@ async function closeWorkspace(workspace: Workspace) {
   }
 
   if (shouldClose) {
-    if (shouldDiscardRecoverySnapshot || !workspace.isRecovered) {
+    // Successful saves already cleaned up recovery and checked for newer edits.
+    if (
+      !savedDuringClose &&
+      (shouldDiscardRecoverySnapshot || !workspace.isRecovered)
+    ) {
       await discardRecoverySnapshot(workspace.id);
     }
 
@@ -5985,16 +6001,14 @@ function updateNoteExpression(
 }
 
 function updateLyricsLocked(locked: boolean) {
-  lyricsLocked.value = locked;
-  hasUnsavedChanges.value = true;
+  selectedWorkspace.value.updateLyricsLocked(locked);
 }
 
 function updateStaffLyrics(staffLyrics: string) {
   const workspace = selectedWorkspace.value;
 
-  workspace.score.staff.lyrics.text = staffLyrics;
+  workspace.updateStaffLyrics(staffLyrics);
   scheduleLyricsAssignment(workspace);
-  hasUnsavedChanges.value = true;
 }
 
 function scheduleLyricsAssignment(workspace: Workspace) {
@@ -6084,7 +6098,6 @@ function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
   if (workspaceIsSelected) {
     save();
   } else {
-    workspace.hasUnsavedChanges = true;
     selectedWorkspace.value.commandService.notify();
   }
 }
@@ -6259,17 +6272,18 @@ function updateRichTextBox(
     ...newValues,
   };
 
-  const heightProp: keyof RichTextBoxElement = 'height';
-
-  const noHistory =
-    Object.keys(newValues).length === 1 && heightProp in newValues;
+  // Measured height is a cache, not a content edit or undo step.
+  if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
+    element.height = newValues.height;
+    save();
+    return;
+  }
 
   commandService.value.execute(
     richTextBoxCommandFactory.create('update-properties', {
       target: element,
       newValues: newValues,
     }),
-    noHistory,
   );
 
   const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
@@ -6278,7 +6292,7 @@ function updateRichTextBox(
     refreshStaffLyrics();
   }
 
-  save(!noHistory);
+  save();
 }
 
 function getPendingRichTextBoxUpdates(element: RichTextBoxElement) {
@@ -6352,25 +6366,28 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
   richTextBoxCalculationCount.value++;
-  saveDebounced(false);
+  saveDebounced();
 }
 
 function updateTextBox(
   element: TextBoxElement,
   newValues: Partial<TextBoxElement>,
 ) {
-  const noHistory =
-    Object.keys(newValues).length === 1 && 'height' in newValues;
+  // Measured height is a cache, not a content edit or undo step.
+  if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
+    element.height = newValues.height;
+    save();
+    return;
+  }
 
   commandService.value.execute(
     textBoxCommandFactory.create('update-properties', {
       target: element,
       newValues: newValues,
     }),
-    noHistory,
   );
 
-  save(!noHistory);
+  save();
 }
 
 function updateTextBoxHeight(element: TextBoxElement, height: number) {
@@ -6378,7 +6395,7 @@ function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
   textBoxCalculationCount.value++;
-  saveDebounced(false);
+  saveDebounced();
 }
 
 function updateModeKey(
@@ -7532,7 +7549,7 @@ function recalculateRichTextBoxHeights() {
     await new Promise(poll);
 
     richTextBoxCalculation.value = false;
-    saveDebounced(false);
+    saveDebounced();
   });
 }
 
@@ -7568,7 +7585,7 @@ function recalculateTextBoxHeights() {
     await new Promise(poll);
 
     textBoxCalculation.value = false;
-    saveDebounced(false);
+    saveDebounced();
   });
 }
 
@@ -7583,7 +7600,7 @@ function onFileMenuNewScore() {
 
   selectedElement.value =
     score.value.staff.elements[score.value.staff.elements.length - 1];
-  save(false);
+  save();
 }
 
 async function onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
@@ -7600,13 +7617,14 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
       const workspace = new Workspace();
       workspace.tempFileName = getTempFilename();
       workspace.score = new Score();
+      workspace.score.staff.elements.unshift(...elements);
+      workspace.hasUnsavedChanges = true;
 
       addWorkspace(workspace);
 
       selectedWorkspace.value = workspace;
 
       currentFilePath.value = null;
-      score.value.staff.elements.unshift(...elements);
 
       save();
     } catch (error) {
@@ -8067,7 +8085,13 @@ function onFileMenuInsertAnnotation() {
     );
     el.x = 0;
     el.y = -fontHeight;
-    (selectedElement.value as NoteElement).annotations.push(el);
+    commandService.value.execute(
+      annotationCommandFactory.create('add-to-collection', {
+        collection: (selectedElement.value as NoteElement).annotations,
+        elements: [el],
+      }),
+      true,
+    );
     selectedWorkspace.value.selectedAnnotationElement = el;
     save();
   }
@@ -8081,7 +8105,13 @@ function onFileMenuInsertAlternateLine() {
     );
     el.x = 0;
     el.y = -fontHeight;
-    (selectedElement.value as NoteElement).alternateLines.push(el);
+    commandService.value.execute(
+      alternateLineCommandFactory.create('add-to-collection', {
+        collection: (selectedElement.value as NoteElement).alternateLines,
+        elements: [el],
+      }),
+      true,
+    );
     selectedWorkspace.value.selectedAlternateLineElement = el;
     save();
   }
@@ -8161,9 +8191,9 @@ function onFileMenuInsertHeader() {
     return;
   }
 
-  score.value.pageSetup.showHeader = true;
-
-  updatePageSetup(score.value.pageSetup);
+  updatePageSetup(
+    Object.assign(new PageSetup(), score.value.pageSetup, { showHeader: true }),
+  );
 }
 
 function onFileMenuInsertFooter() {
@@ -8171,9 +8201,9 @@ function onFileMenuInsertFooter() {
     return;
   }
 
-  score.value.pageSetup.showFooter = true;
-
-  updatePageSetup(score.value.pageSetup);
+  updatePageSetup(
+    Object.assign(new PageSetup(), score.value.pageSetup, { showFooter: true }),
+  );
 }
 
 async function onFileMenuEditCopyElementLink() {
@@ -8207,9 +8237,6 @@ async function onFileMenuSave() {
     if (workspace.filePath != null) {
       const result = await saveWorkspace(workspace);
       if (result.success) {
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -8226,10 +8253,6 @@ async function onFileMenuSave() {
     } else {
       const result = await saveWorkspaceAs(workspace);
       if (result.success) {
-        workspace.filePath = result.filePath;
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -8264,10 +8287,6 @@ async function onFileMenuSaveAs() {
   try {
     const result = await saveWorkspaceAs(workspace);
     if (result.success) {
-      workspace.filePath = result.filePath;
-      workspace.hasUnsavedChanges = false;
-      workspace.isRecovered = false;
-      await discardRecoverySnapshot(workspace.id);
       toast.success(
         t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
         {
@@ -8678,14 +8697,16 @@ function onFileMenuGenerateTestFile(testFileType: TestFileType) {
     workspace.score.pageSetup.alignIsonIndicators = false;
   }
 
+  workspace.score.staff.elements.unshift(
+    ...(TestFileGenerator.generateTestFile(testFileType, fonts.value) || []),
+  );
+  workspace.hasUnsavedChanges = true;
+
   addWorkspace(workspace);
 
   selectedWorkspace.value = workspace;
 
   currentFilePath.value = null;
-  score.value.staff.elements.unshift(
-    ...(TestFileGenerator.generateTestFile(testFileType, fonts.value) || []),
-  );
   save();
 }
 
@@ -8821,7 +8842,7 @@ function openScore(args: FileMenuOpenScoreArgs) {
 
     selectedElement.value = null;
 
-    save(false);
+    save();
   } catch (error) {
     args.success = false;
     console.error(error);
@@ -8858,7 +8879,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
       );
       selectedWorkspace.value = existingWorkspace;
       selectedElement.value = null;
-      save(false);
+      save();
       return existingWorkspace;
     }
 
@@ -8880,7 +8901,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
 
     selectedWorkspace.value = workspace;
     selectedElement.value = null;
-    save(false);
+    save();
     return workspace;
   } catch (error) {
     console.error(error);

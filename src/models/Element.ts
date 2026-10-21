@@ -126,6 +126,31 @@ export enum AcceptsLyricsOption {
   MelismaOnly = 'MelismaOnly',
 }
 
+// Musical input and the state layout can move or overwrite during an edit.
+export type NoteNotationState = Pick<
+  NoteElement,
+  | 'quantitativeNeume'
+  | 'timeNeume'
+  | 'gorgonNeume'
+  | 'secondaryGorgonNeume'
+  | 'vocalExpressionNeume'
+  | 'vareia'
+  | 'accidental'
+  | 'secondaryAccidental'
+  | 'tertiaryAccidental'
+  | 'fthora'
+  | 'secondaryFthora'
+  | 'tertiaryFthora'
+  | 'measureBarLeft'
+  | 'measureBarRight'
+  | 'chromaticFthoraNote'
+  | 'secondaryChromaticFthoraNote'
+  | 'tertiaryChromaticFthoraNote'
+  | 'fthoraCarry'
+  | 'secondaryFthoraCarry'
+  | 'tertiaryFthoraCarry'
+>;
+
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
   public keepWithNext: boolean = false;
@@ -551,6 +576,55 @@ export class NoteElement extends ScoreElement {
   private _measureBarLeft: MeasureBar | null = null;
   private _measureBarRight: MeasureBar | null = null;
 
+  public captureNotationState(): NoteNotationState {
+    return {
+      quantitativeNeume: this._quantitativeNeume,
+      timeNeume: this._timeNeume,
+      gorgonNeume: this._gorgonNeume,
+      secondaryGorgonNeume: this._secondaryGorgonNeume,
+      vocalExpressionNeume: this._vocalExpressionNeume,
+      vareia: this._vareia,
+      accidental: this._accidental,
+      secondaryAccidental: this._secondaryAccidental,
+      tertiaryAccidental: this._tertiaryAccidental,
+      fthora: this._fthora,
+      secondaryFthora: this._secondaryFthora,
+      tertiaryFthora: this._tertiaryFthora,
+      measureBarLeft: this._measureBarLeft,
+      measureBarRight: this._measureBarRight,
+      chromaticFthoraNote: this.chromaticFthoraNote,
+      secondaryChromaticFthoraNote: this.secondaryChromaticFthoraNote,
+      tertiaryChromaticFthoraNote: this.tertiaryChromaticFthoraNote,
+      fthoraCarry: this.fthoraCarry,
+      secondaryFthoraCarry: this.secondaryFthoraCarry,
+      tertiaryFthoraCarry: this.tertiaryFthoraCarry,
+    };
+  }
+
+  // Restore together without re-running setters that normalize one another.
+  public restoreNotationState(state: NoteNotationState) {
+    this._quantitativeNeume = state.quantitativeNeume;
+    this._timeNeume = state.timeNeume;
+    this._gorgonNeume = state.gorgonNeume;
+    this._secondaryGorgonNeume = state.secondaryGorgonNeume;
+    this._vocalExpressionNeume = state.vocalExpressionNeume;
+    this._vareia = state.vareia;
+    this._accidental = state.accidental;
+    this._secondaryAccidental = state.secondaryAccidental;
+    this._tertiaryAccidental = state.tertiaryAccidental;
+    this._fthora = state.fthora;
+    this._secondaryFthora = state.secondaryFthora;
+    this._tertiaryFthora = state.tertiaryFthora;
+    this._measureBarLeft = state.measureBarLeft;
+    this._measureBarRight = state.measureBarRight;
+    this.chromaticFthoraNote = state.chromaticFthoraNote;
+    this.secondaryChromaticFthoraNote = state.secondaryChromaticFthoraNote;
+    this.tertiaryChromaticFthoraNote = state.tertiaryChromaticFthoraNote;
+    this.fthoraCarry = state.fthoraCarry;
+    this.secondaryFthoraCarry = state.secondaryFthoraCarry;
+    this.tertiaryFthoraCarry = state.tertiaryFthoraCarry;
+  }
+
   private replaceNeumes() {
     this.replaceQuantitativeNeumes();
     this.replaceGorgons();
@@ -727,6 +801,24 @@ export class NoteElement extends ScoreElement {
   }
 }
 
+// Musical input and the state layout can move or overwrite during an edit.
+export type MartyriaNotationState = Pick<
+  MartyriaElement,
+  | 'auto'
+  | 'note'
+  | 'scale'
+  | 'alignRight'
+  | 'quantitativeNeume'
+  | 'fthora'
+  | 'chromaticFthoraNote'
+  | 'fthoraCarry'
+  | 'quantitativeNeumeFthora'
+  | 'quantitativeNeumeChromaticFthoraNote'
+  | 'quantitativeNeumeFthoraCarry'
+  | 'measureBarLeft'
+  | 'measureBarRight'
+>;
+
 export class MartyriaElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Martyria;
   public auto: boolean = true;
@@ -783,6 +875,43 @@ export class MartyriaElement extends ScoreElement {
 
   private _measureBarLeft: MeasureBar | null = null;
   private _measureBarRight: MeasureBar | null = null;
+
+  public captureNotationState(): MartyriaNotationState {
+    return {
+      auto: this.auto,
+      note: this.note,
+      scale: this.scale,
+      alignRight: this.alignRight,
+      quantitativeNeume: this.quantitativeNeume,
+      fthora: this.fthora,
+      chromaticFthoraNote: this.chromaticFthoraNote,
+      fthoraCarry: this.fthoraCarry,
+      quantitativeNeumeFthora: this.quantitativeNeumeFthora,
+      quantitativeNeumeChromaticFthoraNote:
+        this.quantitativeNeumeChromaticFthoraNote,
+      quantitativeNeumeFthoraCarry: this.quantitativeNeumeFthoraCarry,
+      measureBarLeft: this._measureBarLeft,
+      measureBarRight: this._measureBarRight,
+    };
+  }
+
+  // Restore together without re-running setters that normalize one another.
+  public restoreNotationState(state: MartyriaNotationState) {
+    this.auto = state.auto;
+    this.note = state.note;
+    this.scale = state.scale;
+    this.alignRight = state.alignRight;
+    this.quantitativeNeume = state.quantitativeNeume;
+    this.fthora = state.fthora;
+    this.chromaticFthoraNote = state.chromaticFthoraNote;
+    this.fthoraCarry = state.fthoraCarry;
+    this.quantitativeNeumeFthora = state.quantitativeNeumeFthora;
+    this.quantitativeNeumeChromaticFthoraNote =
+      state.quantitativeNeumeChromaticFthoraNote;
+    this.quantitativeNeumeFthoraCarry = state.quantitativeNeumeFthoraCarry;
+    this._measureBarLeft = state.measureBarLeft;
+    this._measureBarRight = state.measureBarRight;
+  }
 
   private replaceMeasureBars() {
     if (

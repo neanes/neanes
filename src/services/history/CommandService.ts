@@ -1,5 +1,6 @@
 import { EventBus } from '@/eventBus';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import { ContentChangeTracker } from '@/services/ContentChangeTracker';
 
 import type { AddToCollectionCommandArgs } from './commands/AddToCollectionCommand';
 import { AddToCollectionCommand } from './commands/AddToCollectionCommand';
@@ -11,11 +12,16 @@ import type { UpdatePropertiesCommandArgs } from './commands/UpdatePropertiesCom
 import { UpdatePropertiesCommand } from './commands/UpdatePropertiesCommand';
 
 export interface Command {
-  execute(): void;
-  undo(): void;
-  redo(): void;
+  // Report actual content changes so empty operations do not advance revisions.
+  execute(): boolean;
+  undo(): boolean;
+  redo(): boolean;
+}
 
-  batchId?: number;
+interface HistoryEntry {
+  commands: Command[];
+  beforeStateId: number;
+  afterStateId: number;
 }
 
 interface CommandMap<T> {
@@ -26,13 +32,19 @@ interface CommandMap<T> {
 }
 
 export class CommandFactory<T> {
+  constructor(
+    private readonly createPropertyCommand: (
+      args: UpdatePropertiesCommandArgs<T>,
+    ) => Command = (args) => new UpdatePropertiesCommand(args),
+  ) {}
+
   public create<K extends keyof CommandMap<T>>(
     key: K,
     args: CommandMap<T>[K],
   ): Command {
     switch (key) {
       case 'update-properties':
-        return new UpdatePropertiesCommand(
+        return this.createPropertyCommand(
           args as UpdatePropertiesCommandArgs<T>,
         );
       case 'add-to-collection':
@@ -54,11 +66,10 @@ export class CommandFactory<T> {
 }
 
 export class CommandService {
-  private commandHistory: Command[] = [];
+  private commandHistory: HistoryEntry[] = [];
   private index: number = -1;
-  private nextBatchId: number = 1;
 
-  constructor() {
+  constructor(private contentChanges = new ContentChangeTracker()) {
     this.notify();
   }
 
@@ -76,66 +87,55 @@ export class CommandService {
   }
 
   public execute(command: Command, noHistory: boolean = false) {
-    command.execute();
-
-    // Remove everything after the current index
-    // and push the new command
-    if (!noHistory) {
-      this.commandHistory = this.commandHistory.slice(0, this.index + 1);
-      this.commandHistory.push(command);
-      this.index++;
-      this.notify();
-    }
+    this.executeAsBatch([command], noHistory);
   }
 
   public executeAsBatch(batch: Command[], noHistory: boolean = false) {
-    for (const command of batch) {
-      command.batchId = this.nextBatchId;
-      this.execute(command, true);
+    const beforeStateId = this.contentChanges.stateId;
+    const applied: Command[] = [];
+    try {
+      for (const command of batch) {
+        if (command.execute()) {
+          applied.push(command);
+        }
+      }
+    } catch (error) {
+      // The failing command or earlier commands may already have changed data.
+      this.contentChanges.markChanged();
+      throw error;
     }
+
+    if (applied.length === 0) {
+      return;
+    }
+    this.contentChanges.markChanged();
 
     // Remove everything after the current index
     // and push the new commands
     if (!noHistory) {
       this.commandHistory = this.commandHistory.slice(0, this.index + 1);
-      batch.forEach((x) => this.commandHistory.push(x));
-      this.index += batch.length;
+      this.commandHistory.push({
+        commands: applied,
+        beforeStateId,
+        afterStateId: this.contentChanges.stateId,
+      });
+      this.index++;
       this.notify();
     }
-
-    this.nextBatchId++;
   }
 
   public undo() {
-    if (this.index >= 0) {
-      const batchId = this.commandHistory[this.index].batchId;
-
-      do {
-        this.commandHistory[this.index].undo();
-        this.index--;
-      } while (
-        this.index >= 0 &&
-        batchId != null &&
-        this.commandHistory[this.index].batchId === batchId
-      );
-
+    if (this.canUndo) {
+      this.replay(this.commandHistory[this.index], 'undo');
+      this.index--;
       this.notify();
     }
   }
 
   public redo() {
-    if (this.index < this.commandHistory.length - 1) {
-      const batchId = this.commandHistory[this.index + 1].batchId;
-
-      do {
-        this.index++;
-        this.commandHistory[this.index].redo();
-      } while (
-        this.index < this.commandHistory.length - 1 &&
-        batchId != null &&
-        this.commandHistory[this.index + 1].batchId === batchId
-      );
-
+    if (this.canRedo) {
+      this.replay(this.commandHistory[this.index + 1], 'redo');
+      this.index++;
       this.notify();
     }
   }
@@ -145,5 +145,25 @@ export class CommandService {
     this.index = -1;
 
     this.notify();
+  }
+
+  private replay(entry: HistoryEntry, direction: 'undo' | 'redo') {
+    const commands =
+      direction === 'undo' ? entry.commands.toReversed() : entry.commands;
+    let changed = false;
+    try {
+      for (const command of commands) {
+        changed = command[direction]() || changed;
+      }
+    } catch (error) {
+      this.contentChanges.markChanged();
+      throw error;
+    }
+    if (changed) {
+      this.contentChanges.restoreState(
+        direction === 'undo' ? entry.afterStateId : entry.beforeStateId,
+        direction === 'undo' ? entry.beforeStateId : entry.afterStateId,
+      );
+    }
   }
 }

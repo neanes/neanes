@@ -14,17 +14,21 @@ The state identity can return to an earlier value through undo or redo.
 - Route content edits through commands even when they do not need undo history.
   The lyrics-manager operations on `Workspace` are examples. Do not increment
   revisions manually at UI call sites.
-- Property updates retain the actual changed data fields on their target,
-  including cascading changes made by model setters. Undo/redo restore those
-  fields directly so setter ordering cannot discard saved notation. This is a
-  shallow capture of one target, never a document snapshot. Nested objects and
-  collections still need their own commands when they are edited.
-  Fthora updates also retain the associated visible and carry fields, even when
-  unchanged during the command: layout can move fthoras between those fields
-  afterward. Keep these dependencies in `getLayoutDependentProperties` in sync
-  with the note and martyria carry logic in `LayoutService.calculateMartyriae`.
-  Changing a martyria's Auto setting also retains its note and scale, which
-  automatic layout overwrites even though the toggle itself leaves them intact.
+- Ordinary property updates record only the requested fields that change.
+  They do not discover other fields or inspect model backing storage.
+- Musical property updates use `createNoteUpdateCommand` and
+  `createMartyriaUpdateCommand` from `elementEditing`. Inject these into the
+  corresponding `CommandFactory` so the existing `update-properties` interface
+  uses the editing layer's explicit notation-state contract.
+- `NoteElement` and `MartyriaElement` own typed capture/restore methods for their
+  notation, including setter normalization, visible fthoras and carries, and
+  manual martyria pitch. Restore these together before layout runs again.
+  Rendering caches, lyrics, formatting, and child collections remain outside
+  that state. Extend the typed contract when notation gains new dependencies.
+- `StateEditCommand` records and replays an editing layer's capture/apply/restore
+  contract. A composite combines notation and ordinary property changes into
+  one undo step, omitting empty operations. History has no musical model imports
+  or knowledge of layout dependencies.
 - Derived measurements, rendering invalidations, selection, and other UI state
   do not advance the content revision. Write measured heights directly rather
   than passing them through content commands. Heights included alongside a

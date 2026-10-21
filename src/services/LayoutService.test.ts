@@ -31,6 +31,51 @@ import { LayoutService } from './LayoutService';
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
 describe('LayoutService.calculateMartyriae', () => {
+  it('normalizes all fthora slots in one layout pass', () => {
+    const note = new NoteElement();
+    note.quantitativeNeume =
+      QuantitativeNeume.OligonPlusRunningElaphronPlusKentemata;
+    note.fthora = Fthora.Zygos_Bottom;
+    note.secondaryFthora = Fthora.Kliton_TopSecondary;
+    note.tertiaryFthora = Fthora.GeneralFlat_TopTertiary;
+    const pageSetup = new PageSetup();
+
+    LayoutService.calculateMartyriae([note], pageSetup);
+
+    expect(note.fthora).toBeNull();
+    expect(note.secondaryFthora).toBeNull();
+    expect(note.tertiaryFthora).toBeNull();
+    expect(note.fthoraCarry).toBe(Fthora.Zygos_Bottom);
+    expect(note.secondaryFthoraCarry).toBe(Fthora.Kliton_TopSecondary);
+    expect(note.tertiaryFthoraCarry).toBe(Fthora.GeneralFlat_TopTertiary);
+    const normalized = note.captureNotationState();
+
+    LayoutService.calculateMartyriae([note], pageSetup);
+    expect(note.captureNotationState()).toEqual(normalized);
+  });
+
+  it('applies a valid secondary fthora when the primary fthora is invalid', () => {
+    const note = new NoteElement();
+    note.quantitativeNeume = QuantitativeNeume.OligonPlusKentemata;
+    note.fthora = Fthora.Kliton_Bottom;
+    note.secondaryFthora = Fthora.Enharmonic_TopSecondary;
+    const martyria = new MartyriaElement();
+    const pageSetup = new PageSetup();
+
+    LayoutService.calculateMartyriae([note, martyria], pageSetup);
+
+    expect(note.fthora).toBeNull();
+    expect(note.fthoraCarry).toBe(Fthora.Kliton_Bottom);
+    expect(note.secondaryFthora).toBe(Fthora.Enharmonic_TopSecondary);
+    expect(martyria.scale).toBe(Scale.EnharmonicVou);
+    const normalized = note.captureNotationState();
+    const scale = martyria.scale;
+
+    LayoutService.calculateMartyriae([note, martyria], pageSetup);
+    expect(note.captureNotationState()).toEqual(normalized);
+    expect(martyria.scale).toBe(scale);
+  });
+
   it('applies an attached quantitative-neume fthora after its interval', () => {
     const martyria = new MartyriaElement();
     martyria.auto = false;

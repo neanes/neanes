@@ -32,13 +32,19 @@ interface CommandMap<T> {
 }
 
 export class CommandFactory<T> {
+  constructor(
+    private readonly createPropertyCommand: (
+      args: UpdatePropertiesCommandArgs<T>,
+    ) => Command = (args) => new UpdatePropertiesCommand(args),
+  ) {}
+
   public create<K extends keyof CommandMap<T>>(
     key: K,
     args: CommandMap<T>[K],
   ): Command {
     switch (key) {
       case 'update-properties':
-        return new UpdatePropertiesCommand(
+        return this.createPropertyCommand(
           args as UpdatePropertiesCommandArgs<T>,
         );
       case 'add-to-collection':

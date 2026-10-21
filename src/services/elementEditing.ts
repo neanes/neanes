@@ -1,6 +1,76 @@
 import type { MartyriaElement, NoteElement } from '@/models/Element';
 import { getDefaultChromaticFthoraNote } from '@/models/NeumeReplacements';
 import type { Fthora } from '@/models/Neumes';
+import { CompositeCommand } from '@/services/history/commands/CompositeCommand';
+import type { StateEdit } from '@/services/history/commands/StateEditCommand';
+import { StateEditCommand } from '@/services/history/commands/StateEditCommand';
+import type { UpdatePropertiesCommandArgs } from '@/services/history/commands/UpdatePropertiesCommand';
+import { UpdatePropertiesCommand } from '@/services/history/commands/UpdatePropertiesCommand';
+import type { Command } from '@/services/history/CommandService';
+
+// Only notation edits capture notation. Lyrics, formatting, and collections keep
+// their ordinary property commands so undo does not overwrite unrelated edits.
+function createNotationUpdateCommand<
+  T extends object,
+  State extends Partial<T>,
+>(
+  { target, newValues }: UpdatePropertiesCommandArgs<T>,
+  notation: Pick<StateEdit<State>, 'capture' | 'restore'>,
+): Command {
+  const notationState = notation.capture();
+  const notationValues: Partial<T> = {};
+  const ordinaryValues: Partial<T> = {};
+  for (const key of Object.keys(newValues) as (keyof T)[]) {
+    const values = Object.hasOwn(notationState, key)
+      ? notationValues
+      : ordinaryValues;
+    values[key] = newValues[key];
+  }
+
+  const commands: Command[] = [];
+  if (Object.keys(notationValues).length > 0) {
+    commands.push(
+      new StateEditCommand({
+        ...notation,
+        apply: () => {
+          for (const key of Object.keys(notationValues) as (keyof T)[]) {
+            if (!Object.is(target[key], notationValues[key])) {
+              target[key] = notationValues[key]!;
+            }
+          }
+        },
+        equals: (left, right) =>
+          (Object.keys(left) as (keyof State)[]).every((key) =>
+            Object.is(left[key], right[key]),
+          ),
+      }),
+    );
+  }
+  if (Object.keys(ordinaryValues).length > 0) {
+    commands.push(
+      new UpdatePropertiesCommand({ target, newValues: ordinaryValues }),
+    );
+  }
+  return new CompositeCommand(commands);
+}
+
+export function createNoteUpdateCommand(
+  args: UpdatePropertiesCommandArgs<NoteElement>,
+): Command {
+  return createNotationUpdateCommand(args, {
+    capture: () => args.target.captureNotationState(),
+    restore: (state) => args.target.restoreNotationState(state),
+  });
+}
+
+export function createMartyriaUpdateCommand(
+  args: UpdatePropertiesCommandArgs<MartyriaElement>,
+): Command {
+  return createNotationUpdateCommand(args, {
+    capture: () => args.target.captureNotationState(),
+    restore: (state) => args.target.restoreNotationState(state),
+  });
+}
 
 export const fthoraInterpretationKeys = {
   fthora: 'chromaticFthoraNote',

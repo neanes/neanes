@@ -8,7 +8,12 @@ import {
   CommandService,
 } from '@/services/history/CommandService';
 
-import { getFthoraChange, getMartyriaAlignmentChange } from './elementEditing';
+import {
+  createMartyriaUpdateCommand,
+  createNoteUpdateCommand,
+  getFthoraChange,
+  getMartyriaAlignmentChange,
+} from './elementEditing';
 
 const families = [
   {
@@ -115,7 +120,7 @@ describe('musical editing rules', () => {
     note.secondaryFthora = Fthora.SoftChromaticThi_TopSecondary;
     note.secondaryChromaticFthoraNote = ScaleNote.Ke;
     const commands = new CommandService();
-    const factory = new CommandFactory<NoteElement>();
+    const factory = new CommandFactory<NoteElement>(createNoteUpdateCommand);
     commands.execute(
       factory.create('update-properties', {
         target: note,
@@ -144,13 +149,16 @@ describe('musical editing rules', () => {
       martyria.quantitativeNeume = QuantitativeNeume.Oligon;
       const commands = new CommandService();
       commands.execute(
-        new CommandFactory<MartyriaElement>().create('update-properties', {
-          target: martyria,
-          newValues: getMartyriaAlignmentChange(
-            martyria.alignRight,
-            alignRight,
-          ),
-        }),
+        new CommandFactory<MartyriaElement>(createMartyriaUpdateCommand).create(
+          'update-properties',
+          {
+            target: martyria,
+            newValues: getMartyriaAlignmentChange(
+              martyria.alignRight,
+              alignRight,
+            ),
+          },
+        ),
       );
       expect(martyria.alignRight).toBe(alignRight);
       expect(martyria.quantitativeNeume).toBeNull();

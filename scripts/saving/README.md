@@ -21,6 +21,8 @@ mocks, spies, or DOM emulation. The checks cover:
 - Undoing a written edit before completion, then returning to clean through redo.
 - Undoing newer rich text after save completion, recognizing the written state.
 - Branching history without confusing a reused undo position with saved content.
+- Upstream pitch edits and undo restoring downstream fthoras, with stable
+  serialized notation across repeated layout passes and redo.
 - Overlapping saves, with the later save writing the latest editor content.
 - Derived height changes during saving without a content revision or dirty flag.
 - Typing after the score write while recovery cleanup is pending, recreating

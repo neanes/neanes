@@ -573,6 +573,69 @@ async function run() {
     'PASS: Edit-mode paste/undo restores saved notation and layout-generated fthora carries; redo is stable',
   );
 
+  const downstreamPath = path.join(output, 'downstream-fthora-undo.byzx');
+  await evaluate(`
+    (async () => {
+      const editor = window.__saveSmoke;
+      editor.onFileMenuNewScore();
+      const {NoteElement} = await import('/src/models/Element.ts');
+      const {QuantitativeNeume, Fthora} = await import('/src/models/Neumes.ts');
+      const upstream = new NoteElement();
+      upstream.quantitativeNeume = QuantitativeNeume.Apostrophos;
+      const downstream = new NoteElement();
+      downstream.quantitativeNeume = QuantitativeNeume.OligonPlusKentemata;
+      downstream.fthora = Fthora.Kliton_Bottom;
+      downstream.secondaryFthora = Fthora.GeneralFlat_TopSecondary;
+      editor.addScoreElement(upstream, 0);
+      editor.addScoreElement(downstream, 1);
+      editor.selectedElement = upstream;
+      editor.save();
+      editor.save();
+      return true;
+    })()
+  `);
+  await setPath(downstreamPath);
+  assert.equal((await save()).savedContentUnchanged, true);
+  const downstreamOnDisk = JSON.parse(await readFile(downstreamPath, 'utf8'));
+  const savedDownstreamNotes = downstreamOnDisk.staff.elements.filter(
+    (element) => element.elementType === 'Note',
+  );
+  assert.equal(savedDownstreamNotes[1].secondaryFthora, undefined);
+  await evaluate(`
+    (async () => {
+      const {QuantitativeNeume} = await import('/src/models/Neumes.ts');
+      window.__saveSmoke.updateNoteAndSave(window.__saveSmoke.selectedElement, {
+        quantitativeNeume: QuantitativeNeume.OligonPlusKentemata,
+      });
+      return true;
+    })()
+  `);
+  const editedDownstreamScore = await serializeCurrentScore();
+  const editedDownstreamNotes = editedDownstreamScore.staff.elements.filter(
+    (element) => element.elementType === 'Note',
+  );
+  assert.equal(editedDownstreamNotes[1].fthora, 'Kliton_Bottom');
+  assert.equal(
+    editedDownstreamNotes[1].secondaryFthora,
+    'GeneralFlat_TopSecondary',
+  );
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), downstreamOnDisk);
+  assert.equal(await dirty(), false);
+  await evaluate(`window.__saveSmoke.save(); true`);
+  assert.deepEqual(await serializeCurrentScore(), downstreamOnDisk);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), editedDownstreamScore);
+  assert.equal(await dirty(), true);
+  await evaluate(`window.__saveSmoke.save(); true`);
+  assert.deepEqual(await serializeCurrentScore(), editedDownstreamScore);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), downstreamOnDisk);
+  assert.equal(await dirty(), false);
+  console.log(
+    'PASS: undoing an upstream pitch edit restores saved downstream fthoras; repeated layout and redo are stable',
+  );
+
   const martyriaPath = path.join(output, 'martyria-auto-undo.byzx');
   await evaluate(`
     (async () => {

@@ -222,6 +222,8 @@ import {
   queueDocumentSave,
 } from '@/services/documentPersistence';
 import {
+  createMartyriaUpdateCommand,
+  createNoteUpdateCommand,
   getFthoraChange,
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
@@ -301,10 +303,10 @@ interface Vue3TabsChromeComponent {
 }
 
 const noteElementCommandFactory: CommandFactory<NoteElement> =
-  new CommandFactory<NoteElement>();
+  new CommandFactory<NoteElement>(createNoteUpdateCommand);
 
 const martyriaCommandFactory: CommandFactory<MartyriaElement> =
-  new CommandFactory<MartyriaElement>();
+  new CommandFactory<MartyriaElement>(createMartyriaUpdateCommand);
 
 const tempoCommandFactory: CommandFactory<TempoElement> =
   new CommandFactory<TempoElement>();

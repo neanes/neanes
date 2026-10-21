@@ -7473,7 +7473,9 @@ export class LayoutService {
           getScaleNoteFromValue(currentNoteVirtual + x),
         );
 
-        // Handle fthora carries
+        // Normalize every slot against the incoming pitch before choosing the
+        // active fthora. Otherwise an invalid higher-priority slot can leave a
+        // lower-priority mark visible until the next layout pass.
         for (const slot of noteFthoraSlots) {
           const carry = slot.getCarry(note);
 
@@ -7482,53 +7484,54 @@ export class LayoutService {
             this.fthoraIsValid(carry, currentNotesVirtual, pageSetup)
           ) {
             slot.setFthora(note, carry);
-            slot.setCarry(note, null);
+          }
+
+          const fthora = slot.getFthora(note);
+          if (fthora) {
+            if (this.fthoraIsValid(fthora, currentNotesVirtual, pageSetup)) {
+              slot.setCarry(note, null);
+            } else {
+              slot.setCarry(note, fthora);
+              slot.setFthora(note, null);
+            }
           }
         }
 
-        // Apply the first present fthora (primary, then secondary, then
-        // tertiary), demoting it back to a carry when it is invalid here.
+        // Apply the first valid fthora (primary, then secondary, then tertiary).
         const activeSlot = noteFthoraSlots.find((slot) => slot.getFthora(note));
 
         if (activeSlot) {
           const fthora = activeSlot.getFthora(note)!;
 
-          if (this.fthoraIsValid(fthora, currentNotesVirtual, pageSetup)) {
-            const spreadIndex = getSpreadIndex(
-              fthora,
-              note.quantitativeNeume,
-              activeSlot.selection,
-            );
-            const fthoraNote =
-              spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
+          const spreadIndex = getSpreadIndex(
+            fthora,
+            note.quantitativeNeume,
+            activeSlot.selection,
+          );
+          const fthoraNote =
+            spreadIndex != -1 ? currentNotes[spreadIndex] : currentNote;
 
-            const fthoraNoteVirtual =
-              spreadIndex != -1
-                ? currentNotesVirtual[spreadIndex]
-                : currentNoteVirtual;
+          const fthoraNoteVirtual =
+            spreadIndex != -1
+              ? currentNotesVirtual[spreadIndex]
+              : currentNoteVirtual;
 
-            // Scale is based off the virtual note
-            currentScale =
-              this.getScaleFromFthora(fthora, fthoraNoteVirtual) ||
-              currentScale;
+          // Scale is based off the virtual note
+          currentScale =
+            this.getScaleFromFthora(fthora, fthoraNoteVirtual) || currentScale;
 
-            // Shift is based off the true note
-            currentShift = this.getShift(
-              fthoraNote,
-              fthoraNoteVirtual,
-              currentScale,
-              fthora,
-              activeSlot.getChromaticFthoraNote(note),
-            );
+          // Shift is based off the true note
+          currentShift = this.getShift(
+            fthoraNote,
+            fthoraNoteVirtual,
+            currentScale,
+            fthora,
+            activeSlot.getChromaticFthoraNote(note),
+          );
 
-            note.noteIndicatorNeume = noteIndicatorMap.get(
-              (((fthoraNote + currentShift) % 7) + 7) % 7,
-            )!;
-            activeSlot.setCarry(note, null);
-          } else {
-            activeSlot.setCarry(note, fthora);
-            activeSlot.setFthora(note, null);
-          }
+          note.noteIndicatorNeume = noteIndicatorMap.get(
+            (((fthoraNote + currentShift) % 7) + 7) % 7,
+          )!;
         }
 
         for (const noteValue of currentNotes) {

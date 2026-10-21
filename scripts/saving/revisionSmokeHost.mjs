@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { constants, lstatSync, mkdirSync, openSync } from 'node:fs';
+import {
+  closeSync,
+  constants,
+  lstatSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+} from 'node:fs';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -11,6 +18,7 @@ const root = process.env.NEANES_SAVE_SMOKE_ROOT;
 const output = process.env.NEANES_SAVE_SMOKE_OUTPUT;
 const profile = process.env.NEANES_DEV_USER_DATA_DIR;
 const fifoPaths = new Set();
+const releaseFileIo = new Set();
 function createFifo(filePath) {
   execFileSync('mkfifo', [filePath]);
   fifoPaths.add(filePath);
@@ -135,6 +143,42 @@ async function run() {
     JSON.parse(JSON.parse(await readFile(recoveryPath, 'utf8')).envelope.score);
   const assertScoreContains = (score, text) =>
     assert.ok(JSON.stringify(score.staff.elements).includes(text));
+  const scoreWriteReleases = new Map();
+  const holdScoreWrite = async (filePath) => {
+    // Keep score destinations regular. Four pending FIFO opens occupy the
+    // real main-process filesystem workers before the save starts. IPC and
+    // renderer input remain live; no application methods are replaced.
+    await writeFile(filePath, await readFile(scorePath));
+    const blockers = Array.from(
+      { length: 4 },
+      (_, index) => `${filePath}.gate-${index}`,
+    );
+    blockers.forEach(createFifo);
+    const reads = blockers.map((blocker) => readFile(blocker));
+    let released = false;
+    const release = () => {
+      if (released) {
+        return;
+      }
+      released = true;
+      for (const blocker of blockers) {
+        closeSync(openSync(blocker, constants.O_WRONLY));
+      }
+      releaseFileIo.delete(release);
+    };
+    releaseFileIo.add(release);
+    scoreWriteReleases.set(filePath, async () => {
+      release();
+      await Promise.all(reads);
+      await Promise.all(blockers.map((blocker) => rm(blocker)));
+    });
+  };
+  const releaseScoreWrite = async (filePath) => {
+    await scoreWriteReleases.get(filePath)();
+    scoreWriteReleases.delete(filePath);
+    await endSave();
+    return readFile(filePath, 'utf8');
+  };
   const holdRecoveryCleanup = async () => {
     await evaluate(`
       window.__saveSmoke.prepareWorkspaceForSerialization(window.__saveSmoke.selectedWorkspace);
@@ -180,11 +224,11 @@ async function run() {
     'PASS: buffered CKEditor text is saved; repeated unchanged saves stay clean',
   );
 
-  // A real FIFO holds the application's file write until a reader is attached.
-  // Its payload is captured before the user types; no IPC or filesystem method
-  // is replaced to control the timing.
+  // Block real filesystem workers while the renderer continues accepting input.
+  // The score payload is captured before typing, and the destination remains a
+  // regular file for the atomic writer.
   const writeGate = path.join(output, 'pending-write.byzx');
-  createFifo(writeGate);
+  await holdScoreWrite(writeGate);
   await setPath(writeGate);
   await beginSave();
   await typeText(' EDIT DURING WRITE');
@@ -195,7 +239,7 @@ async function run() {
     ),
     false,
   );
-  const written = JSON.parse(await readFile(writeGate, 'utf8'));
+  const written = JSON.parse(await releaseScoreWrite(writeGate));
   assert.equal(JSON.stringify(written).includes('EDIT DURING WRITE'), false);
   result = await endSave();
   assert.equal(result.success, true);
@@ -214,7 +258,7 @@ async function run() {
   );
 
   const undoGate = path.join(output, 'undo-during-save.byzx');
-  createFifo(undoGate);
+  await holdScoreWrite(undoGate);
   await setPath(undoGate);
   const beforeUndoSave = await revision();
   await beginSave();
@@ -225,7 +269,7 @@ async function run() {
   `);
   assert.equal(await revision(), beforeUndoSave + 2);
   assert.equal(await dirty(), false);
-  await readFile(undoGate);
+  await releaseScoreWrite(undoGate);
   result = await endSave();
   assert.equal(result.success, true);
   assert.equal(result.savedContentUnchanged, true);
@@ -239,11 +283,11 @@ async function run() {
   await evaluate(
     `window.__saveSmoke.updateDocumentProperties({title: 'Written but undone', author: ''}); true`,
   );
-  createFifo(undoGate);
+  await holdScoreWrite(undoGate);
   await setPath(undoGate);
   await beginSave();
   await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
-  const undoneWrite = JSON.parse(await readFile(undoGate, 'utf8'));
+  const undoneWrite = JSON.parse(await releaseScoreWrite(undoGate));
   assert.equal(undoneWrite.documentProperties.title, 'Written but undone');
   result = await endSave();
   assert.equal(result.success, true);
@@ -259,7 +303,7 @@ async function run() {
   );
 
   const queueGate = path.join(output, 'queued-save.byzx');
-  createFifo(queueGate);
+  await holdScoreWrite(queueGate);
   await setPath(queueGate);
   await beginSave();
   await typeText(' QUEUED EDIT');
@@ -269,12 +313,12 @@ async function run() {
     true;
   `);
   assert.equal(
-    JSON.stringify(JSON.parse(await readFile(scorePath, 'utf8'))).includes(
+    JSON.stringify(JSON.parse(readFileSync(scorePath, 'utf8'))).includes(
       'QUEUED EDIT',
     ),
     false,
   );
-  await readFile(queueGate);
+  await releaseScoreWrite(queueGate);
   const queuedResults = await evaluate(
     `Promise.all([window.__saveSmokePending, window.__saveSmokeSecond])`,
   );
@@ -293,7 +337,7 @@ async function run() {
   );
 
   const heightGate = path.join(output, 'height-update.byzx');
-  createFifo(heightGate);
+  await holdScoreWrite(heightGate);
   await setPath(heightGate);
   const beforeHeight = await revision();
   await beginSave();
@@ -301,7 +345,7 @@ async function run() {
     window.__saveSmoke.updateRichTextBoxHeight(window.__saveSmoke.selectedRichTextBoxElement, window.__saveSmoke.selectedRichTextBoxElement.height + 1);
     true;
   `);
-  await readFile(heightGate);
+  await releaseScoreWrite(heightGate);
   result = await endSave();
   assert.equal(result.success, true);
   assert.equal(result.savedContentUnchanged, true);
@@ -407,9 +451,7 @@ async function run() {
   await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
   assert.equal(await revision(), afterEdit + 2);
   await setPath(output);
-  console.log(
-    'Checking intentional directory write failure (EISDIR is expected):',
-  );
+  console.log('Checking intentional directory destination failure:');
   result = await save();
   assert.equal(result.success, false);
   assert.equal(await dirty(), true);
@@ -710,13 +752,13 @@ async function run() {
     true,
   );
   const recoveredGate = path.join(output, 'recovered-write.byzx');
-  createFifo(recoveredGate);
+  await holdScoreWrite(recoveredGate);
   await setPath(recoveredGate);
   await beginSave();
   await evaluate(
     `window.__saveSmoke.updateDocumentProperties({title: 'Undone title must not be recovered', author: ''}); true`,
   );
-  const recoveredWritten = JSON.parse(await readFile(recoveredGate, 'utf8'));
+  const recoveredWritten = JSON.parse(await releaseScoreWrite(recoveredGate));
   assert.equal(
     recoveredWritten.documentProperties.title,
     'Recovered content that reaches disk',
@@ -783,6 +825,9 @@ void run().then(
   () => app.exit(0),
   (error) => {
     console.error(error);
+    for (const release of releaseFileIo) {
+      release();
+    }
     // Release blocked filesystem workers before Electron tears down libuv.
     // These descriptors are closed by process exit after the workers unblock.
     for (const filePath of fifoPaths) {

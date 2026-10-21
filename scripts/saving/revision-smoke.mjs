@@ -44,6 +44,7 @@ try {
       cwd: root,
       env: {
         ...process.env,
+        UV_THREADPOOL_SIZE: '4',
         VITE_DEV_SERVER_URL: server.resolvedUrls.local[0],
         NEANES_DEV_USER_DATA_DIR: path.join(temporary, 'profile'),
         NEANES_SAVE_SMOKE_ROOT: root,

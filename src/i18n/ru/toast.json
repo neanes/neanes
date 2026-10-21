@@ -18,6 +18,8 @@
     "saveSuccess": "Сохранено",
     "saveFailed": "Не удалось сохранить",
     "saveFailedDescription": "Не удалось сохранить партитуру.",
+    "scoreFileNotRegular": "Место сохранения должно быть обычным файлом.",
+    "scoreArchiveMissingContent": "Архив партитуры не содержит файла .byzx.",
     "recoveryDiscardFailed": "Не удалось удалить данные восстановления",
     "recoveryDiscardFailedDescription": "Не удалось удалить выбранный снимок восстановления.",
     "copyFailed": "Не удалось скопировать",

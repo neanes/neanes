@@ -322,6 +322,13 @@
     "menuInteractionClick": "Κλικ για Άνοιγμα Μενού",
     "enableDeveloperPanel": "Ενεργοποίηση Πίνακα Προγραμματιστή",
     "tempoDefaults": "Προεπιλογές Χρονικής Αγωγής",
-    "bpm": "BPM"
+    "bpm": "BPM",
+    "sections": {
+      "general": "Γενικά",
+      "appearance": "Εμφάνιση",
+      "editing": "Επεξεργασία",
+      "advanced": "Για προχωρημένους"
+    },
+    "close": "Κλείσιμο"
   }
 }

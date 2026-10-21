@@ -322,6 +322,13 @@
     "menuInteractionClick": "Click pentru a deschide meniul",
     "enableDeveloperPanel": "Activează panoul pentru dezvoltatori",
     "tempoDefaults": "Tempouri implicite",
-    "bpm": "BPM"
+    "bpm": "BPM",
+    "sections": {
+      "general": "General",
+      "appearance": "Aspect",
+      "editing": "Editare",
+      "advanced": "Avansat"
+    },
+    "close": "Închide"
   }
 }

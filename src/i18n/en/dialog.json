@@ -322,6 +322,13 @@
     "menuInteractionClick": "Click to open menu",
     "enableDeveloperPanel": "Enable Developer Panel",
     "tempoDefaults": "Tempo Defaults",
-    "bpm": "BPM"
+    "bpm": "BPM",
+    "sections": {
+      "general": "General",
+      "appearance": "Appearance",
+      "editing": "Editing",
+      "advanced": "Advanced"
+    },
+    "close": "Close"
   }
 }

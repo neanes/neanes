@@ -322,6 +322,13 @@
     "menuInteractionClick": "Нажать, чтобы открыть меню",
     "enableDeveloperPanel": "Включить панель разработчика",
     "tempoDefaults": "Темпы по умолчанию",
-    "bpm": "уд/мин"
+    "bpm": "уд/мин",
+    "sections": {
+      "general": "Общие",
+      "appearance": "Оформление",
+      "editing": "Редактирование",
+      "advanced": "Дополнительно"
+    },
+    "close": "Закрыть"
   }
 }

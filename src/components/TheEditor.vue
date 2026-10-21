@@ -214,6 +214,11 @@ import type {
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
 import {
+  applyDocumentSave,
+  type DocumentSaveResult,
+  snapshotDocument,
+} from '@/services/documentPersistence';
+import {
   getFthoraChange,
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
@@ -5343,33 +5348,51 @@ async function discardRecoverySnapshot(workspaceId: string) {
   }
 }
 
-async function saveWorkspace(workspace: Workspace) {
-  prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspace(workspace);
-
-  if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
-  }
-
-  return result;
+function saveWorkspace(workspace: Workspace) {
+  return saveWorkspaceSnapshot(workspace, () =>
+    ipcService.saveWorkspace(workspace),
+  );
 }
 
-async function saveWorkspaceAs(workspace: Workspace) {
+function saveWorkspaceAs(workspace: Workspace) {
+  return saveWorkspaceSnapshot(workspace, () =>
+    ipcService.saveWorkspaceAs(workspace),
+  );
+}
+
+async function saveWorkspaceSnapshot<T extends DocumentSaveResult>(
+  workspace: Workspace,
+  persist: () => Promise<T>,
+) {
   prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspaceAs(workspace);
+  // Both IPC implementations serialize immediately, before their first await.
+  const snapshot = snapshotDocument(workspace);
+  const result = await persist();
+  let savedContentUnchanged = false;
 
   if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
+    // Include pending editor text that has not reached the score model yet.
+    prepareWorkspaceForSerialization(workspace);
+    savedContentUnchanged = applyDocumentSave(workspace, result, snapshot);
+    if (savedContentUnchanged) {
+      const savedSnapshot = snapshotDocument(workspace);
+      await discardRecoverySnapshot(workspace.id);
+      prepareWorkspaceForSerialization(workspace);
+      savedContentUnchanged = snapshotDocument(workspace) === savedSnapshot;
+    }
+    if (!savedContentUnchanged) {
+      workspace.hasUnsavedChanges = true;
+      await persistRecoverySnapshot(workspace);
+    }
   }
 
-  return result;
+  return { ...result, savedContentUnchanged };
 }
 
 async function closeWorkspace(workspace: Workspace) {
   let shouldClose = true;
   let shouldDiscardRecoverySnapshot = false;
+  let savedDuringClose = false;
 
   flushPendingRichTextEditors(workspace);
 
@@ -5413,9 +5436,9 @@ async function closeWorkspace(workspace: Workspace) {
             ? await saveWorkspace(workspace)
             : await saveWorkspaceAs(workspace);
 
-        // If they successfully saved, then we can close the workspace
-        shouldClose = saveResult.success;
-        shouldDiscardRecoverySnapshot = saveResult.success;
+        // A completed write must not close over edits made while saving.
+        shouldClose = saveResult.success && saveResult.savedContentUnchanged;
+        savedDuringClose = shouldClose;
 
         if (!saveResult.success && !saveResult.canceled) {
           showReplyErrorToast(
@@ -5447,7 +5470,11 @@ async function closeWorkspace(workspace: Workspace) {
   }
 
   if (shouldClose) {
-    if (shouldDiscardRecoverySnapshot || !workspace.isRecovered) {
+    // Successful saves already cleaned up recovery and checked for newer edits.
+    if (
+      !savedDuringClose &&
+      (shouldDiscardRecoverySnapshot || !workspace.isRecovered)
+    ) {
       await discardRecoverySnapshot(workspace.id);
     }
 
@@ -8207,9 +8234,6 @@ async function onFileMenuSave() {
     if (workspace.filePath != null) {
       const result = await saveWorkspace(workspace);
       if (result.success) {
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -8226,10 +8250,6 @@ async function onFileMenuSave() {
     } else {
       const result = await saveWorkspaceAs(workspace);
       if (result.success) {
-        workspace.filePath = result.filePath;
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -8264,10 +8284,6 @@ async function onFileMenuSaveAs() {
   try {
     const result = await saveWorkspaceAs(workspace);
     if (result.success) {
-      workspace.filePath = result.filePath;
-      workspace.hasUnsavedChanges = false;
-      workspace.isRecovered = false;
-      await discardRecoverySnapshot(workspace.id);
       toast.success(
         t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
         {

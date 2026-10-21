@@ -15,7 +15,6 @@ import { autoUpdater } from 'electron-updater';
 import { promises as fs } from 'fs';
 import i18next from 'i18next';
 import { imageSizeFromFile } from 'image-size/fromFile';
-import JSZip from 'jszip';
 import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
@@ -59,7 +58,6 @@ import {
   IpcMainChannels,
   IpcRendererChannels,
 } from '../../src/ipc/ipcChannels';
-import type { Score } from '../../src/models/save/v1/Score';
 import type { ZoomFitMode } from '../../src/models/Workspace';
 import {
   createDefaultPaneVisibility,
@@ -70,6 +68,7 @@ import { TestFileType } from '../../src/utils/TestFileType';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
+import { readScoreFile, writeScoreFile } from './files/scoreFiles';
 import { RecoveryStore } from './recovery';
 
 // The built directory structure
@@ -519,48 +518,6 @@ async function addToRecentFiles(filePath: string) {
   store.recentFiles = store.recentFiles.slice(0, maxRecentFiles);
 
   await saveStore();
-}
-
-async function writeScoreFile(filePath: string, score: Score) {
-  // If using the compressed file format, zip first
-  if (path.extname(filePath) === '.byz') {
-    const zip = new JSZip();
-
-    const unzippedFileName = `${path.basename(filePath, '.byz')}.byzx`;
-
-    const data = JSON.stringify(score);
-
-    zip.file(unzippedFileName, data);
-
-    const file = await zip.generateAsync({
-      type: 'nodebuffer',
-      compression: 'DEFLATE',
-    });
-
-    await fs.writeFile(filePath, file);
-  } else {
-    // For uncompressed files, and white space and indentation
-    // to make the file easier to read
-    const data = JSON.stringify(score, null, 2);
-    await fs.writeFile(filePath, data);
-  }
-}
-
-async function readScoreFile(filePath: string) {
-  let data: string;
-
-  // If using the compressed file format, zip first
-  if (path.extname(filePath) === '.byz') {
-    const file = await fs.readFile(filePath);
-    const zip = await JSZip.loadAsync(file);
-    data = await zip.file(/\.(byzx)$/)[0].async('text');
-  } else if (path.extname(filePath) === '.byzx') {
-    data = await fs.readFile(filePath, 'utf8');
-  } else {
-    throw `Unsupported file type: ${path.extname(filePath)}`;
-  }
-
-  return data;
 }
 
 async function openFile(filePath: string) {

@@ -68,11 +68,7 @@ import { TestFileType } from '../../src/utils/TestFileType';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
-import {
-  readScoreFile,
-  ScoreFileError,
-  writeScoreFile,
-} from './files/scoreFiles';
+import { readScoreFile, writeScoreFile } from './files/scoreFiles';
 import { RecoveryStore } from './recovery';
 
 // The built directory structure
@@ -131,12 +127,6 @@ const silentLatexIncludeTextBoxes = process.argv.includes(
 );
 
 function getErrorMessage(error: unknown) {
-  if (error instanceof ScoreFileError) {
-    return error.code === 'NOT_REGULAR_FILE'
-      ? i18next.t(($) => $.toast.editor.scoreFileNotRegular)
-      : i18next.t(($) => $.toast.editor.scoreArchiveMissingContent);
-  }
-
   if (error instanceof Error) {
     return error.message;
   }

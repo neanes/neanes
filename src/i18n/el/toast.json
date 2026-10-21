@@ -18,8 +18,6 @@
     "saveSuccess": "Αποθηκεύτηκε",
     "saveFailed": "Η αποθήκευση απέτυχε",
     "saveFailedDescription": "Δεν ήταν δυνατή η αποθήκευση του μουσικού κειμένου.",
-    "scoreFileNotRegular": "Ο προορισμός αποθήκευσης πρέπει να είναι κανονικό αρχείο.",
-    "scoreArchiveMissingContent": "Το συμπιεσμένο αρχείο παρτιτούρας δεν περιέχει αρχείο .byzx.",
     "recoveryDiscardFailed": "Η απόρριψη της ανάκτησης απέτυχε",
     "recoveryDiscardFailedDescription": "Δεν ήταν δυνατή η απόρριψη του επιλεγμένου στιγμιότυπου ανάκτησης.",
     "copyFailed": "Η αντιγραφή απέτυχε",

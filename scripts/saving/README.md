@@ -11,10 +11,7 @@ an isolated temporary profile. It accesses the development Vue component state
 to invoke actual editor operations, and enters rich text through Chromium's
 `webContents.insertText` input API into a real CKEditor instance.
 
-POSIX FIFOs hold real filesystem worker operations open at deterministic boundaries.
-Score destinations remain regular files so the atomic writer can replace them;
-the harness pins the main-process worker pool to four threads and occupies those
-threads with FIFO opens until input has been entered.
+POSIX FIFOs hold actual filesystem operations open at deterministic boundaries.
 No app methods, IPC handlers, or filesystem functions are replaced; there are no
 mocks, spies, or DOM emulation. The checks cover:
 
@@ -42,7 +39,7 @@ mocks, spies, or DOM emulation. The checks cover:
   without leaving stale current, previous, or temporary recovery candidates.
 - An intentional directory write failure, retaining changes and allowing retry.
 
-The intentional failure rejects a directory destination; the harness must then report that retry
+The intentional failure logs `EISDIR`; the harness must then report that retry
 passed and exit successfully. Score files and an editor screenshot remain in the
 output directory for inspection. The ordinary user profile is never used.
 

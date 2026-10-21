@@ -18,8 +18,6 @@
     "saveSuccess": "Saved",
     "saveFailed": "Save failed",
     "saveFailedDescription": "Unable to save the score.",
-    "scoreFileNotRegular": "The save destination must be a regular file.",
-    "scoreArchiveMissingContent": "The score archive does not contain a .byzx file.",
     "recoveryDiscardFailed": "Discard recovery failed",
     "recoveryDiscardFailedDescription": "Unable to discard the selected recovery snapshot.",
     "copyFailed": "Copy failed",

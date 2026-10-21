@@ -18,8 +18,6 @@
     "saveSuccess": "Tersimpan",
     "saveFailed": "Gagal menyimpan",
     "saveFailedDescription": "Tidak dapat menyimpan partitur.",
-    "scoreFileNotRegular": "Tujuan penyimpanan harus berupa berkas biasa.",
-    "scoreArchiveMissingContent": "Arsip partitur tidak berisi berkas .byzx.",
     "recoveryDiscardFailed": "Gagal membuang pemulihan",
     "recoveryDiscardFailedDescription": "Tidak dapat membuang snapshot pemulihan yang dipilih.",
     "copyFailed": "Gagal menyalin",

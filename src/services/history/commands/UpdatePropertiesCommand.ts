@@ -12,25 +12,32 @@ export class UpdatePropertiesCommand<T> implements Command {
 
   public execute() {
     this.previousValues = this.updateProperties(this.args.newValues);
+    return Object.keys(this.previousValues).length > 0;
   }
 
   public undo() {
     if (this.previousValues) {
-      this.updateProperties(this.previousValues);
+      const changed = this.updateProperties(this.previousValues);
       this.previousValues = undefined;
+      return Object.keys(changed).length > 0;
     }
+    return false;
   }
 
   public redo() {
     if (!this.previousValues) {
-      this.execute();
+      return this.execute();
     }
+    return false;
   }
 
   private updateProperties(newValues: Partial<T>) {
     const previousValues: Partial<T> = {};
 
     for (const key of Object.keys(newValues)) {
+      if (Object.is((this.args.target as any)[key], (newValues as any)[key])) {
+        continue;
+      }
       // Save the previous values for undo
       (previousValues as any)[key] = (this.args.target as any)[key];
 

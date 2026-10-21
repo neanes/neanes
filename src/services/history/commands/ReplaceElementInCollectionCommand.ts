@@ -14,7 +14,13 @@ export class ReplaceElementInCollectionCommand<T> implements Command {
   public execute() {
     this.replacedElement = this.args.collection[this.args.replaceAtIndex];
 
+    if (this.replacedElement === this.args.element) {
+      this.replacedElement = undefined;
+      return false;
+    }
+
     this.args.collection.splice(this.args.replaceAtIndex, 1, this.args.element);
+    return true;
   }
 
   public undo() {
@@ -26,12 +32,15 @@ export class ReplaceElementInCollectionCommand<T> implements Command {
       );
 
       this.replacedElement = undefined;
+      return true;
     }
+    return false;
   }
 
   public redo() {
     if (!this.replacedElement) {
-      this.execute();
+      return this.execute();
     }
+    return false;
   }
 }

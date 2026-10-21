@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { reactive, toRaw } from 'vue';
 
 import { RichTextBoxElement } from '@/models/Element';
+import type { DocumentProperties } from '@/models/Score';
+import { Score } from '@/models/Score';
 import { Workspace } from '@/models/Workspace';
+import { CommandFactory } from '@/services/history/CommandService';
 
-import { applyDocumentSave, snapshotDocument } from './documentPersistence';
-
-(globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+import {
+  applyDocumentSave,
+  captureDocumentSaveState,
+  isDocumentSaveStateCurrent,
+} from './documentPersistence';
 
 const saved = { success: true, sourceMtimeMs: 10, sourceSize: 20 };
 
@@ -15,7 +21,7 @@ describe('save completion', () => {
     workspace.filePath = '/scores/original.byz';
     workspace.hasUnsavedChanges = true;
     workspace.isRecovered = true;
-    const snapshot = snapshotDocument(workspace);
+    const snapshot = captureDocumentSaveState(workspace);
     expect(applyDocumentSave(workspace, saved, snapshot)).toBe(true);
     expect(workspace.hasUnsavedChanges).toBe(false);
     expect(workspace.isRecovered).toBe(false);
@@ -30,8 +36,13 @@ describe('save completion', () => {
       const workspace = new Workspace();
       workspace.hasUnsavedChanges = true;
       workspace.isRecovered = recovered;
-      const snapshot = snapshotDocument(workspace);
-      workspace.score.documentProperties.title = 'Changed during save';
+      const snapshot = captureDocumentSaveState(workspace);
+      workspace.commandService.execute(
+        new CommandFactory<DocumentProperties>().create('update-properties', {
+          target: workspace.score.documentProperties,
+          newValues: { title: 'Changed during save' },
+        }),
+      );
       expect(
         applyDocumentSave(
           workspace,
@@ -50,20 +61,20 @@ describe('save completion', () => {
     },
   );
 
-  it('updates the save-as path before subsequent snapshots are compared', () => {
+  it('updates the save-as path before subsequent save states are compared', () => {
     const workspace = new Workspace();
     workspace.hasUnsavedChanges = true;
     expect(
       applyDocumentSave(
         workspace,
         { ...saved, filePath: '/scores/new.byzx' },
-        snapshotDocument(workspace),
+        captureDocumentSaveState(workspace),
       ),
     ).toBe(true);
     expect(workspace.filePath).toBe('/scores/new.byzx');
     expect(workspace.hasUnsavedChanges).toBe(false);
-    const afterSave = snapshotDocument(workspace);
-    expect(afterSave).not.toBe(snapshotDocument(new Workspace()));
+    const afterSave = captureDocumentSaveState(workspace);
+    expect(isDocumentSaveStateCurrent(workspace, afterSave)).toBe(true);
     expect(applyDocumentSave(workspace, saved, afterSave)).toBe(true);
   });
 
@@ -72,34 +83,44 @@ describe('save completion', () => {
     const box = new RichTextBoxElement();
     box.content = '<p>Saved version</p>';
     workspace.score.staff.elements = [box];
-    const snapshot = snapshotDocument(workspace);
-    box.content = '<p>Newer rich text</p>';
+    const snapshot = captureDocumentSaveState(workspace);
+    workspace.commandService.execute(
+      new CommandFactory<RichTextBoxElement>().create('update-properties', {
+        target: box,
+        newValues: { content: '<p>Newer rich text</p>' },
+      }),
+    );
     expect(applyDocumentSave(workspace, saved, snapshot)).toBe(false);
     expect(workspace.hasUnsavedChanges).toBe(true);
   });
 
   it('ignores selection, zoom, and other non-file workspace state', () => {
     const workspace = new Workspace();
-    const snapshot = snapshotDocument(workspace);
+    const snapshot = captureDocumentSaveState(workspace);
     workspace.zoom = 2;
     workspace.hasUnsavedChanges = true;
     workspace.isRecovered = true;
     expect(applyDocumentSave(workspace, saved, snapshot)).toBe(true);
   });
 
-  it('treats content restored to the saved snapshot as clean', () => {
+  it('keeps a save stale after an intervening edit and undo', () => {
     const workspace = new Workspace();
-    const snapshot = snapshotDocument(workspace);
-    const title = workspace.score.documentProperties.title;
-    workspace.score.documentProperties.title = 'Temporary edit';
-    workspace.score.documentProperties.title = title;
-    expect(applyDocumentSave(workspace, saved, snapshot)).toBe(true);
+    const snapshot = captureDocumentSaveState(workspace);
+    workspace.commandService.execute(
+      new CommandFactory<DocumentProperties>().create('update-properties', {
+        target: workspace.score.documentProperties,
+        newValues: { title: 'Temporary edit' },
+      }),
+    );
+    workspace.commandService.undo();
+    expect(applyDocumentSave(workspace, saved, snapshot)).toBe(false);
+    expect(workspace.hasUnsavedChanges).toBe(true);
   });
 
   it('does not clear changes when the source path changed during the save', () => {
     const workspace = new Workspace();
     workspace.filePath = '/scores/first.byz';
-    const snapshot = snapshotDocument(workspace);
+    const snapshot = captureDocumentSaveState(workspace);
     workspace.filePath = '/scores/second.byz';
     expect(applyDocumentSave(workspace, saved, snapshot)).toBe(false);
     expect(workspace.filePath).toBe('/scores/second.byz');
@@ -115,7 +136,7 @@ describe('save completion', () => {
       workspace.isRecovered = true;
       workspace.sourceMtimeMs = 30;
       workspace.sourceSize = 40;
-      const snapshot = snapshotDocument(workspace);
+      const snapshot = captureDocumentSaveState(workspace);
       expect(
         applyDocumentSave(
           workspace,
@@ -128,11 +149,57 @@ describe('save completion', () => {
           snapshot,
         ),
       ).toBe(false);
-      expect(snapshotDocument(workspace)).toBe(snapshot);
+      expect(captureDocumentSaveState(workspace)).toEqual(snapshot);
       expect(workspace.hasUnsavedChanges).toBe(true);
       expect(workspace.isRecovered).toBe(true);
       expect(workspace.sourceMtimeMs).toBe(30);
       expect(workspace.sourceSize).toBe(40);
     },
   );
+});
+
+describe('save state identity', () => {
+  it('detects whole-score replacement even without a command', () => {
+    const workspace = new Workspace();
+    const state = captureDocumentSaveState(workspace);
+    workspace.score = new Score();
+    expect(applyDocumentSave(workspace, saved, state)).toBe(false);
+  });
+
+  it('ignores recalculated measurements, including on raw layout objects', () => {
+    const workspace = reactive(new Workspace()) as Workspace;
+    const box = new RichTextBoxElement();
+    workspace.score.staff.elements.push(box);
+    const state = captureDocumentSaveState(workspace);
+    const rawBox = toRaw(
+      workspace.score.staff.elements[1],
+    ) as RichTextBoxElement;
+    rawBox.height = 100;
+    expect(workspace.contentRevision).toBe(state.contentRevision);
+    expect(applyDocumentSave(workspace, saved, state)).toBe(true);
+  });
+
+  it('uses the same identity through raw and reactive workspaces', () => {
+    const workspace = reactive(new Workspace()) as Workspace;
+    const state = captureDocumentSaveState(workspace);
+    expect(isDocumentSaveStateCurrent(toRaw(workspace), state)).toBe(true);
+    workspace.updateStaffLyrics('An edit');
+    expect(isDocumentSaveStateCurrent(toRaw(workspace), state)).toBe(false);
+  });
+
+  it('detects edits during recovery cleanup after applying save-as metadata', () => {
+    const workspace = new Workspace();
+    const written = captureDocumentSaveState(workspace);
+    expect(
+      applyDocumentSave(
+        workspace,
+        { ...saved, filePath: '/scores/new.byz' },
+        written,
+      ),
+    ).toBe(true);
+    const afterWrite = captureDocumentSaveState(workspace);
+    workspace.updateStaffLyrics('Typed during cleanup');
+    expect(isDocumentSaveStateCurrent(workspace, afterWrite)).toBe(false);
+    expect(workspace.hasUnsavedChanges).toBe(true);
+  });
 });

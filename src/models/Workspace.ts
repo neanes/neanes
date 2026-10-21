@@ -1,7 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
+import { toRaw } from 'vue';
 
 import { EntryMode } from '@/models/EntryMode';
-import { CommandService } from '@/services/history/CommandService';
+import { ContentChangeTracker } from '@/services/ContentChangeTracker';
+import {
+  CommandFactory,
+  CommandService,
+} from '@/services/history/CommandService';
 
 import type {
   AlternateLineElement,
@@ -9,6 +14,7 @@ import type {
   NoteElement,
   ScoreElement,
 } from './Element';
+import type { LyricSetup } from './LyricSetup';
 import { Score } from './Score';
 import type { ScoreElementSelectionRange } from './ScoreElementSelectionRange';
 
@@ -16,6 +22,7 @@ export type ZoomFitMode = 'page-width' | 'text-width' | 'whole-page';
 
 const ZOOM_MIN_BOUNDARY = 0.05;
 const ZOOM_MAX_BOUNDARY = 40;
+const lyricSetupCommandFactory = new CommandFactory<LyricSetup>();
 
 function integerRange(start: number, end: number) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
@@ -55,15 +62,18 @@ export function formatZoomPercent(zoom: number) {
 }
 
 export class Workspace {
+  private contentChanges = new ContentChangeTracker();
+
   public id: string = uuidv4();
-  public score: Score = new Score();
+  private _score: Score = new Score();
   public filePath: string | null = null;
   public tempFileName: string = '';
-  public hasUnsavedChanges: boolean = false;
   public isRecovered: boolean = false;
   public sourceMtimeMs: number | null = null;
   public sourceSize: number | null = null;
-  public commandService: CommandService = new CommandService();
+  public commandService: CommandService = new CommandService(
+    this.contentChanges,
+  );
   public selectedElement: ScoreElement | null = null;
   public selectedAnnotationElement: AnnotationElement | null = null;
   public selectedAlternateLineElement: AlternateLineElement | null = null;
@@ -78,6 +88,49 @@ export class Workspace {
   public playbackTime: number = 0;
   public playbackBpm: number = 0;
   public exportPageRange: string = '';
+
+  public get score() {
+    return this._score;
+  }
+
+  public set score(score: Score) {
+    if (toRaw(this._score) !== toRaw(score)) {
+      this._score = score;
+      this.contentChanges.invalidate();
+    }
+  }
+
+  public get contentRevision() {
+    return this.contentChanges.revision;
+  }
+
+  public get hasUnsavedChanges() {
+    return this.contentChanges.hasUnsavedChanges;
+  }
+
+  public set hasUnsavedChanges(value: boolean) {
+    this.contentChanges.hasUnsavedChanges = value;
+  }
+
+  public updateStaffLyrics(text: string) {
+    this.commandService.execute(
+      lyricSetupCommandFactory.create('update-properties', {
+        target: this.score.staff.lyrics,
+        newValues: { text },
+      }),
+      true,
+    );
+  }
+
+  public updateLyricsLocked(locked: boolean) {
+    this.commandService.execute(
+      lyricSetupCommandFactory.create('update-properties', {
+        target: this.score.staff.lyrics,
+        newValues: { locked },
+      }),
+      true,
+    );
+  }
 
   private _nextId: number | null = null;
 

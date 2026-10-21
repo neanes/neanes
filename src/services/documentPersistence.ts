@@ -1,5 +1,7 @@
+import { toRaw } from 'vue';
+
+import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
-import { SaveService } from '@/services/SaveService';
 
 export interface DocumentSaveResult {
   success: boolean;
@@ -8,23 +10,64 @@ export interface DocumentSaveResult {
   sourceSize?: number | null;
 }
 
-export function snapshotDocument(workspace: Workspace) {
-  return JSON.stringify({
+const pendingSaves = new WeakMap<Workspace, Promise<unknown>>();
+
+// Keep writes and their metadata/recovery completion in request order.
+export function queueDocumentSave<T>(
+  workspace: Workspace,
+  save: () => Promise<T>,
+): Promise<T> {
+  const key = toRaw(workspace);
+  const pending = pendingSaves.get(key);
+  const result = pending == null ? save() : pending.catch(() => {}).then(save);
+  pendingSaves.set(key, result);
+  const finished = () => {
+    if (pendingSaves.get(key) === result) {
+      pendingSaves.delete(key);
+    }
+  };
+  void result.then(finished, finished);
+  return result;
+}
+
+export interface DocumentSaveState {
+  contentRevision: number;
+  filePath: string | null;
+  score: Score;
+}
+
+// Capture alongside the serialized payload, before yielding to file I/O.
+export function captureDocumentSaveState(
+  workspace: Workspace,
+): DocumentSaveState {
+  return {
+    contentRevision: workspace.contentRevision,
     filePath: workspace.filePath,
-    score: SaveService.SaveScoreToJson(workspace.score),
-  });
+    score: toRaw(workspace.score),
+  };
+}
+
+export function isDocumentSaveStateCurrent(
+  workspace: Workspace,
+  state: DocumentSaveState,
+) {
+  return (
+    workspace.contentRevision === state.contentRevision &&
+    workspace.filePath === state.filePath &&
+    toRaw(workspace.score) === state.score
+  );
 }
 
 // File metadata describes the completed write, but newer edits stay unsaved.
 export function applyDocumentSave(
   workspace: Workspace,
   result: DocumentSaveResult,
-  snapshot: string,
+  state: DocumentSaveState,
 ) {
   if (!result.success) {
     return false;
   }
-  const unchanged = snapshotDocument(workspace) === snapshot;
+  const unchanged = isDocumentSaveStateCurrent(workspace, state);
   workspace.filePath = result.filePath ?? workspace.filePath;
   workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
   workspace.sourceSize = result.sourceSize ?? null;

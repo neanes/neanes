@@ -1,5 +1,6 @@
 import { EventBus } from '@/eventBus';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import { ContentChangeTracker } from '@/services/ContentChangeTracker';
 
 import type { AddToCollectionCommandArgs } from './commands/AddToCollectionCommand';
 import { AddToCollectionCommand } from './commands/AddToCollectionCommand';
@@ -11,9 +12,10 @@ import type { UpdatePropertiesCommandArgs } from './commands/UpdatePropertiesCom
 import { UpdatePropertiesCommand } from './commands/UpdatePropertiesCommand';
 
 export interface Command {
-  execute(): void;
-  undo(): void;
-  redo(): void;
+  // Report actual content changes so empty operations do not advance revisions.
+  execute(): boolean;
+  undo(): boolean;
+  redo(): boolean;
 
   batchId?: number;
 }
@@ -58,7 +60,7 @@ export class CommandService {
   private index: number = -1;
   private nextBatchId: number = 1;
 
-  constructor() {
+  constructor(private contentChanges = new ContentChangeTracker()) {
     this.notify();
   }
 
@@ -76,7 +78,9 @@ export class CommandService {
   }
 
   public execute(command: Command, noHistory: boolean = false) {
-    command.execute();
+    if (!this.applyChange(() => command.execute())) {
+      return;
+    }
 
     // Remove everything after the current index
     // and push the new command
@@ -89,17 +93,23 @@ export class CommandService {
   }
 
   public executeAsBatch(batch: Command[], noHistory: boolean = false) {
-    for (const command of batch) {
-      command.batchId = this.nextBatchId;
-      this.execute(command, true);
-    }
+    const applied: Command[] = [];
+    this.applyChange(() => {
+      for (const command of batch) {
+        command.batchId = this.nextBatchId;
+        if (command.execute()) {
+          applied.push(command);
+        }
+      }
+      return applied.length > 0;
+    });
 
     // Remove everything after the current index
     // and push the new commands
-    if (!noHistory) {
+    if (!noHistory && applied.length > 0) {
       this.commandHistory = this.commandHistory.slice(0, this.index + 1);
-      batch.forEach((x) => this.commandHistory.push(x));
-      this.index += batch.length;
+      applied.forEach((x) => this.commandHistory.push(x));
+      this.index += applied.length;
       this.notify();
     }
 
@@ -110,14 +120,18 @@ export class CommandService {
     if (this.index >= 0) {
       const batchId = this.commandHistory[this.index].batchId;
 
-      do {
-        this.commandHistory[this.index].undo();
-        this.index--;
-      } while (
-        this.index >= 0 &&
-        batchId != null &&
-        this.commandHistory[this.index].batchId === batchId
-      );
+      this.applyChange(() => {
+        let changed = false;
+        do {
+          changed = this.commandHistory[this.index].undo() || changed;
+          this.index--;
+        } while (
+          this.index >= 0 &&
+          batchId != null &&
+          this.commandHistory[this.index].batchId === batchId
+        );
+        return changed;
+      });
 
       this.notify();
     }
@@ -127,14 +141,18 @@ export class CommandService {
     if (this.index < this.commandHistory.length - 1) {
       const batchId = this.commandHistory[this.index + 1].batchId;
 
-      do {
-        this.index++;
-        this.commandHistory[this.index].redo();
-      } while (
-        this.index < this.commandHistory.length - 1 &&
-        batchId != null &&
-        this.commandHistory[this.index + 1].batchId === batchId
-      );
+      this.applyChange(() => {
+        let changed = false;
+        do {
+          this.index++;
+          changed = this.commandHistory[this.index].redo() || changed;
+        } while (
+          this.index < this.commandHistory.length - 1 &&
+          batchId != null &&
+          this.commandHistory[this.index + 1].batchId === batchId
+        );
+        return changed;
+      });
 
       this.notify();
     }
@@ -145,5 +163,18 @@ export class CommandService {
     this.index = -1;
 
     this.notify();
+  }
+
+  private applyChange(operation: () => boolean) {
+    // A throwing operation may already have applied part of a change.
+    let changed = true;
+    try {
+      changed = operation();
+      return changed;
+    } finally {
+      if (changed) {
+        this.contentChanges.markChanged();
+      }
+    }
   }
 }

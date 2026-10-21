@@ -87,11 +87,11 @@ export function applyDocumentSave(
     // Remember what reached disk even when newer edits are present. Undoing
     // those edits later can return to this saved state without another write.
     workspace.markContentSaved(state.contentStateId);
+    // The recovered draft reached disk. Newer edits still need recovery, but
+    // undoing them must allow normal clean-workspace cleanup and closing.
+    workspace.isRecovered = false;
   } else {
     workspace.hasUnsavedChanges = true;
-  }
-  if (unchanged) {
-    workspace.isRecovered = false;
   }
   return unchanged;
 }

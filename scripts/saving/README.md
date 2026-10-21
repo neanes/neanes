@@ -26,6 +26,15 @@ mocks, spies, or DOM emulation. The checks cover:
 - Typing after the score write while recovery cleanup is pending, recreating
   recovery with the newer content.
 - Lyrics-manager edits, undo/redo, and noHistory annotation/alternate-line insertion.
+- Full persisted notation restoration after a quantitative-neume setter clears
+  secondary fthora, comparing the undone note against the score written to disk.
+- Edit-mode copy/paste followed by undo/redo when layout generates a fthora carry,
+  comparing the entire undone score against disk before accepting clean status.
+- Toggling a manual martyria to Auto and undoing, comparing the entire score
+  against disk to verify restoration of its manual note and scale; redo is checked
+  against the automatic notation as well.
+- Saving recovered content with newer edits, then undoing and immediately closing
+  without leaving stale current, previous, or temporary recovery candidates.
 - An intentional directory write failure, retaining changes and allowing retry.
 
 The intentional failure logs `EISDIR`; the harness must then report that retry

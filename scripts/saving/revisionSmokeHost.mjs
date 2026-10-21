@@ -450,6 +450,266 @@ async function run() {
   console.log(
     'PASS: annotation and alternate-line insertion advance revisions through noHistory commands',
   );
+
+  const notationPath = path.join(output, 'notation-undo.byzx');
+  await evaluate(`
+    (async () => {
+      const editor = window.__saveSmoke;
+      editor.onFileMenuNewScore();
+      const {NoteElement} = await import('/src/models/Element.ts');
+      const {QuantitativeNeume, Fthora} = await import('/src/models/Neumes.ts');
+      const note = new NoteElement();
+      note.quantitativeNeume = QuantitativeNeume.OligonPlusKentemata;
+      note.secondaryFthora = Fthora.SoftChromaticPa_TopSecondary;
+      note.secondaryFthoraOffsetX = 3;
+      editor.addScoreElement(note, 0);
+      editor.selectedElement = note;
+      editor.save();
+      return true;
+    })()
+  `);
+  await setPath(notationPath);
+  assert.equal((await save()).savedContentUnchanged, true);
+  const notationOnDisk = JSON.parse(
+    await readFile(notationPath, 'utf8'),
+  ).staff.elements.find((element) => element.elementType === 'Note');
+  assert.equal(notationOnDisk.secondaryFthora, 'SoftChromaticPa_TopSecondary');
+  await evaluate(`
+    (async () => {
+      const {QuantitativeNeume} = await import('/src/models/Neumes.ts');
+      window.__saveSmoke.updateNoteAndSave(window.__saveSmoke.selectedElement, {quantitativeNeume: QuantitativeNeume.Ison});
+      return true;
+    })()
+  `);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedElement.secondaryFthora`),
+    null,
+  );
+  assert.equal(await dirty(), true);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  const restoredNotation = await evaluate(`
+    (async () => {
+      const {SaveService} = await import('/src/services/SaveService.ts');
+      return JSON.parse(JSON.stringify(SaveService.SaveScoreToJson(window.__saveSmoke.selectedWorkspace.score))).staff.elements.find(element => element.elementType === 'Note');
+    })()
+  `);
+  assert.deepEqual(restoredNotation, notationOnDisk);
+  assert.equal(await dirty(), false);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedElement.secondaryFthora`),
+    null,
+  );
+  assert.equal(await dirty(), true);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedElement.secondaryFthora`),
+    'SoftChromaticPa_TopSecondary',
+  );
+  assert.equal(await dirty(), false);
+  console.log(
+    'PASS: undo restores the complete persisted note, including setter-cleared secondary fthora, before reporting clean',
+  );
+
+  const carryPath = path.join(output, 'fthora-carry-undo.byzx');
+  await evaluate(`
+    (async () => {
+      const editor = window.__saveSmoke;
+      editor.onFileMenuNewScore();
+      const {NoteElement} = await import('/src/models/Element.ts');
+      const {QuantitativeNeume, Fthora} = await import('/src/models/Neumes.ts');
+      const target = new NoteElement();
+      target.quantitativeNeume = QuantitativeNeume.OligonPlusKentimaBelow;
+      target.fthora = Fthora.DiatonicGa_Top;
+      const source = new NoteElement();
+      source.quantitativeNeume = QuantitativeNeume.Ison;
+      source.fthora = Fthora.Enharmonic_Top;
+      editor.addScoreElement(target, 0);
+      editor.addScoreElement(source, 1);
+      editor.save();
+      if (source.fthora !== Fthora.Enharmonic_Top) throw new Error('Copy source fthora must be valid');
+      editor.selectedElement = source;
+      editor.onCopyScoreElements();
+      editor.selectedElement = target;
+      editor.updateEntryMode('Edit');
+      return true;
+    })()
+  `);
+  await setPath(carryPath);
+  assert.equal((await save()).savedContentUnchanged, true);
+  const carryOnDisk = JSON.parse(await readFile(carryPath, 'utf8'));
+  const serializeCurrentScore = () =>
+    evaluate(`
+    (async () => {
+      const {SaveService} = await import('/src/services/SaveService.ts');
+      return JSON.parse(JSON.stringify(SaveService.SaveScoreToJson(window.__saveSmoke.selectedWorkspace.score)));
+    })()
+  `);
+  await evaluate(`window.__saveSmoke.onPasteScoreElements(true); true`);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedElement.fthoraCarry`),
+    'Enharmonic_Top',
+  );
+  assert.equal(await dirty(), true);
+  const pastedCarryScore = await serializeCurrentScore();
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), carryOnDisk);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedElement.fthoraCarry`),
+    null,
+  );
+  assert.equal(await dirty(), false);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), pastedCarryScore);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedElement.fthoraCarry`),
+    'Enharmonic_Top',
+  );
+  assert.equal(await dirty(), true);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), carryOnDisk);
+  assert.equal(await dirty(), false);
+  console.log(
+    'PASS: Edit-mode paste/undo restores saved notation and layout-generated fthora carries; redo is stable',
+  );
+
+  const martyriaPath = path.join(output, 'martyria-auto-undo.byzx');
+  await evaluate(`
+    (async () => {
+      const editor = window.__saveSmoke;
+      editor.onFileMenuNewScore();
+      const {MartyriaElement} = await import('/src/models/Element.ts');
+      const {Note} = await import('/src/models/Neumes.ts');
+      const {Scale} = await import('/src/models/Scales.ts');
+      const martyria = new MartyriaElement();
+      martyria.auto = false;
+      martyria.note = Note.Ga;
+      martyria.scale = Scale.HardChromatic;
+      editor.addScoreElement(martyria, 0);
+      editor.selectedElement = martyria;
+      editor.save();
+      return true;
+    })()
+  `);
+  await setPath(martyriaPath);
+  assert.equal((await save()).savedContentUnchanged, true);
+  const martyriaOnDisk = JSON.parse(await readFile(martyriaPath, 'utf8'));
+  const savedMartyria = martyriaOnDisk.staff.elements.find(
+    (element) => element.elementType === 'Martyria',
+  );
+  assert.equal(savedMartyria.auto, undefined);
+  assert.equal(savedMartyria.note, 'Ga');
+  assert.equal(savedMartyria.scale, 'HardChromatic');
+  await evaluate(
+    `window.__saveSmoke.updateMartyria(window.__saveSmoke.selectedElement, {auto: true}); true`,
+  );
+  assert.deepEqual(
+    await evaluate(`(() => {
+    const {auto, note, scale} = window.__saveSmoke.selectedElement;
+    return {auto, note, scale};
+  })()`),
+    { auto: true, note: 'Pa', scale: 'Diatonic' },
+  );
+  assert.equal(await dirty(), true);
+  const autoMartyriaScore = await serializeCurrentScore();
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), martyriaOnDisk);
+  assert.equal(await dirty(), false);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), autoMartyriaScore);
+  assert.equal(await dirty(), true);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.deepEqual(await serializeCurrentScore(), martyriaOnDisk);
+  assert.equal(await dirty(), false);
+  console.log(
+    'PASS: undoing martyria Auto restores saved manual note and scale; redo restores automatic notation',
+  );
+
+  // Recover through the real recovery discovery/open paths, then save while
+  // another title edit is pending. Undo and close in the same renderer turn.
+  const recoveredId = await evaluate(`window.__saveSmoke.selectedWorkspace.id`);
+  const recoveredPath = path.join(profile, 'recovery', `${recoveredId}.json`);
+  await evaluate(`
+    window.__saveSmoke.updateDocumentProperties({title: 'Recovered content that reaches disk', author: ''});
+    window.__saveSmoke.persistRecoverySnapshot(window.__saveSmoke.selectedWorkspace);
+  `);
+  await evaluate(`
+    (async () => {
+      const {candidates} = await window.ipcRenderer.invoke('ListRecoveryCandidates');
+      const candidate = candidates.find(candidate => candidate.workspaceId === ${JSON.stringify(recoveredId)});
+      if (!candidate) { throw new Error('Recovery candidate was not written'); }
+      window.__saveSmoke.openRecoveryCandidate(candidate);
+      return true;
+    })()
+  `);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedWorkspace.isRecovered`),
+    true,
+  );
+  const recoveredGate = path.join(output, 'recovered-write.byzx');
+  createFifo(recoveredGate);
+  await setPath(recoveredGate);
+  await beginSave();
+  await evaluate(
+    `window.__saveSmoke.updateDocumentProperties({title: 'Undone title must not be recovered', author: ''}); true`,
+  );
+  const recoveredWritten = JSON.parse(await readFile(recoveredGate, 'utf8'));
+  assert.equal(
+    recoveredWritten.documentProperties.title,
+    'Recovered content that reaches disk',
+  );
+  result = await endSave();
+  assert.equal(result.success, true);
+  assert.equal(result.savedContentUnchanged, false);
+  assert.equal(
+    await evaluate(`window.__saveSmoke.selectedWorkspace.isRecovered`),
+    false,
+  );
+  assert.equal(await dirty(), true);
+  const newerRecovery = JSON.parse(
+    await readFile(recoveredPath, 'utf8'),
+  ).envelope;
+  assert.equal(newerRecovery.hasUnsavedChanges, true);
+  assert.equal(
+    JSON.parse(newerRecovery.score).documentProperties.title,
+    'Undone title must not be recovered',
+  );
+  const closedRecovery = await evaluate(`
+    (async () => {
+      const editor = window.__saveSmoke;
+      const workspace = editor.selectedWorkspace;
+      editor.onFileMenuUndo();
+      const clean = !workspace.hasUnsavedChanges;
+      const title = workspace.score.documentProperties.title;
+      editor.onFileMenuNewScore();
+      const closed = await editor.closeWorkspace(workspace);
+      return {clean, title, closed};
+    })()
+  `);
+  assert.deepEqual(closedRecovery, {
+    clean: true,
+    title: 'Recovered content that reaches disk',
+    closed: true,
+  });
+  for (const suffix of ['.json', '.prev.json', '.tmp.json']) {
+    await assert.rejects(
+      readFile(path.join(profile, 'recovery', `${recoveredId}${suffix}`)),
+      { code: 'ENOENT' },
+    );
+  }
+  const remainingRecovery = await evaluate(
+    `window.ipcRenderer.invoke('ListRecoveryCandidates')`,
+  );
+  assert.equal(
+    remainingRecovery.candidates.some(
+      (candidate) => candidate.workspaceId === recoveredId,
+    ),
+    false,
+  );
+  await rm(recoveredGate);
+  console.log(
+    'PASS: a recovered document saved with newer edits becomes normally clean after undo; immediate close removes all recovery candidates',
+  );
   await writeFile(
     path.join(output, 'editor.png'),
     (await window.webContents.capturePage()).toPNG(),

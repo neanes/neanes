@@ -14,6 +14,17 @@ The state identity can return to an earlier value through undo or redo.
 - Route content edits through commands even when they do not need undo history.
   The lyrics-manager operations on `Workspace` are examples. Do not increment
   revisions manually at UI call sites.
+- Property updates retain the actual changed data fields on their target,
+  including cascading changes made by model setters. Undo/redo restore those
+  fields directly so setter ordering cannot discard saved notation. This is a
+  shallow capture of one target, never a document snapshot. Nested objects and
+  collections still need their own commands when they are edited.
+  Fthora updates also retain the associated visible and carry fields, even when
+  unchanged during the command: layout can move fthoras between those fields
+  afterward. Keep these dependencies in `getLayoutDependentProperties` in sync
+  with the note and martyria carry logic in `LayoutService.calculateMartyriae`.
+  Changing a martyria's Auto setting also retains its note and scale, which
+  automatic layout overwrites even though the toggle itself leaves them intact.
 - Derived measurements, rendering invalidations, selection, and other UI state
   do not advance the content revision. Write measured heights directly rather
   than passing them through content commands. Heights included alongside a
@@ -30,6 +41,9 @@ after recovery cleanup, flushing buffered editors before each check. On success,
 the written state becomes the saved state even if newer edits are present. Undo
 can then return to it without another write. The revision still records all
 intervening edits for operations that require strict concurrency checks.
+Successful persistence also clears recovered status for that same document;
+newer unsaved edits retain recovery until saved or undone, while closing a clean
+workspace removes its recovery files normally.
 
 Each history entry records unique before/after state identities. Undo/redo can
 restore an identity only when starting from the corresponding known endpoint.

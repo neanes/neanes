@@ -31,7 +31,7 @@ describe('save completion', () => {
   });
 
   it.each([false, true])(
-    'preserves newer edits and recovered=%s while applying save-as metadata',
+    'preserves newer edits and clears recovered=%s after applying save-as metadata',
     (recovered) => {
       const workspace = new Workspace();
       workspace.hasUnsavedChanges = true;
@@ -52,7 +52,7 @@ describe('save completion', () => {
       ).toBe(false);
       expect(workspace.filePath).toBe('/scores/new.byz');
       expect(workspace.hasUnsavedChanges).toBe(true);
-      expect(workspace.isRecovered).toBe(recovered);
+      expect(workspace.isRecovered).toBe(false);
       expect(workspace.sourceMtimeMs).toBe(10);
       expect(workspace.sourceSize).toBe(20);
       expect(workspace.score.documentProperties.title).toBe(
@@ -131,6 +131,25 @@ describe('save completion', () => {
     expect(workspace.hasUnsavedChanges).toBe(true);
     workspace.commandService.undo();
     expect(workspace.hasUnsavedChanges).toBe(false);
+  });
+
+  it('finishes recovery once recovered content is written, even when later edits are undone after completion', () => {
+    const workspace = new Workspace();
+    workspace.isRecovered = true;
+    workspace.hasUnsavedChanges = true;
+    const state = captureDocumentSaveState(workspace);
+    workspace.commandService.execute(
+      new CommandFactory<DocumentProperties>().create('update-properties', {
+        target: workspace.score.documentProperties,
+        newValues: { title: 'Edit during recovered save' },
+      }),
+    );
+    expect(applyDocumentSave(workspace, saved, state)).toBe(false);
+    expect(workspace.isRecovered).toBe(false);
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.undo();
+    expect(workspace.hasUnsavedChanges).toBe(false);
+    expect(workspace.isRecovered).toBe(false);
   });
 
   it('marks an undone in-flight state saved so redo can return to it', () => {
@@ -212,6 +231,15 @@ describe('save completion', () => {
 });
 
 describe('save state identity', () => {
+  it('preserves recovered status for a replacement document while an older score finishes saving', () => {
+    const workspace = new Workspace();
+    const written = captureDocumentSaveState(workspace);
+    workspace.score = new Score();
+    workspace.isRecovered = true;
+    expect(applyDocumentSave(workspace, saved, written)).toBe(false);
+    expect(workspace.isRecovered).toBe(true);
+    expect(workspace.hasUnsavedChanges).toBe(true);
+  });
   it('recognizes edit and undo during recovery cleanup after a save-as', () => {
     const workspace = new Workspace();
     expect(

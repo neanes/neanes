@@ -8880,6 +8880,12 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
         getElementComponent<InstanceType<typeof TextBox>>(
           selectedElementIndex.value,
         )!.htmlElement.scrollIntoView();
+      } else if (
+        selectedElement.value?.elementType === ElementType.RichTextBox
+      ) {
+        getElementComponent<InstanceType<typeof TextBoxRich>>(
+          selectedElementIndex.value,
+        )!.htmlElement.scrollIntoView();
       }
     });
   }

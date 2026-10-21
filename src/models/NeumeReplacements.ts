@@ -8,6 +8,8 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 
+import { ScaleNote } from './Scales';
+
 export interface NeumeReplacement<T> {
   isPairedWith?: Neume[];
   isNotPairedWith?: Neume[];
@@ -809,3 +811,22 @@ export const getTertiaryNeume = (neume: QuantitativeNeume) =>
 
 export const isMeasureBarAbove = (neume: QuantitativeNeume) =>
   measureBarAboveNeumes.includes(neume);
+
+// The editor's default chromatic interpretation when a fthora is selected.
+export function getDefaultChromaticFthoraNote(
+  fthora: Fthora | null,
+): ScaleNote | null {
+  if (fthora?.startsWith('SoftChromaticPa')) {
+    return ScaleNote.Ga;
+  }
+  if (fthora?.startsWith('HardChromaticPa')) {
+    return ScaleNote.Pa;
+  }
+  if (
+    fthora?.startsWith('SoftChromaticThi') ||
+    fthora?.startsWith('HardChromaticThi')
+  ) {
+    return ScaleNote.Thi;
+  }
+  return null;
+}

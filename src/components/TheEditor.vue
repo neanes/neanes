@@ -161,6 +161,7 @@ import {
   onlyTakesTopKlasma,
 } from '@/models/NeumeReplacements';
 import type {
+  Fthora,
   Ison,
   MeasureBar,
   MeasureNumber,
@@ -170,7 +171,6 @@ import type {
 } from '@/models/Neumes';
 import {
   Accidental,
-  Fthora,
   GorgonNeume,
   NeumeSelection,
   QuantitativeNeume,
@@ -189,7 +189,6 @@ import {
   getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { ScaleNote } from '@/models/Scales';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
@@ -214,6 +213,10 @@ import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
+import {
+  getFthoraChange,
+  getMartyriaAlignmentChange,
+} from '@/services/elementEditing';
 import { fontCatalog } from '@/services/FontCatalog';
 import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
@@ -5935,31 +5938,7 @@ function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
 }
 
 function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, { fthora, chromaticFthoraNote });
+  updateNote(element, getFthoraChange('fthora', fthora));
   save();
 }
 
@@ -5967,22 +5946,7 @@ function updateNoteFthoraSecondary(
   element: NoteElement,
   secondaryFthora: Fthora | null,
 ) {
-  let secondaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (secondaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (secondaryFthora === Fthora.HardChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.HardChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, {
-    secondaryFthora,
-    secondaryChromaticFthoraNote,
-  });
+  updateNote(element, getFthoraChange('secondaryFthora', secondaryFthora));
   save();
 }
 
@@ -5990,19 +5954,7 @@ function updateNoteFthoraTertiary(
   element: NoteElement,
   tertiaryFthora: Fthora | null,
 ) {
-  let tertiaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (tertiaryFthora === Fthora.HardChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.HardChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
+  updateNote(element, getFthoraChange('tertiaryFthora', tertiaryFthora));
   save();
 }
 
@@ -6506,10 +6458,15 @@ function updateMartyria(
   newValues: Partial<MartyriaElement>,
 ) {
   const values =
-    newValues.alignRight !== undefined &&
-    newValues.alignRight !== element.alignRight
-      ? { ...newValues, quantitativeNeume: null }
-      : newValues;
+    newValues.alignRight === undefined
+      ? newValues
+      : {
+          ...newValues,
+          ...getMartyriaAlignmentChange(
+            element.alignRight,
+            newValues.alignRight,
+          ),
+        };
 
   commandService.value.execute(
     martyriaCommandFactory.create('update-properties', {
@@ -6522,53 +6479,17 @@ function updateMartyria(
 }
 
 function updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateMartyria(element, { fthora, chromaticFthoraNote });
+  updateMartyria(element, getFthoraChange('fthora', fthora));
 }
 
 function updateMartyriaQuantitativeNeumeFthora(
   element: MartyriaElement,
   quantitativeNeumeFthora: Fthora | null,
 ) {
-  let quantitativeNeumeChromaticFthoraNote: ScaleNote | null = null;
-
-  if (quantitativeNeumeFthora?.startsWith('SoftChromaticThi')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
-  } else if (quantitativeNeumeFthora?.startsWith('SoftChromaticPa')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Ga;
-  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticThi')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
-  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticPa')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateMartyria(element, {
-    quantitativeNeumeFthora,
-    quantitativeNeumeChromaticFthoraNote,
-  });
+  updateMartyria(
+    element,
+    getFthoraChange('quantitativeNeumeFthora', quantitativeNeumeFthora),
+  );
 }
 
 function updateMartyriaTempoLeft(

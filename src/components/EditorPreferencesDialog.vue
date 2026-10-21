@@ -1,5 +1,5 @@
 <template>
-  <Dialog v-model:open="open">
+  <Dialog :open="open" @update:open="onOpenChanged">
     <DialogContent
       class="h-[42rem] max-h-[calc(100dvh-2rem)] flex flex-col sm:max-w-3xl"
     >
@@ -14,6 +14,7 @@
 
       <form
         id="editor-preferences-form"
+        ref="preferencesForm"
         class="min-h-0 flex-1 overflow-hidden"
         @submit.prevent
       >
@@ -39,7 +40,10 @@
               >
             </TabsList></ScrollArea
           >
-          <TabsContent :value="section" class="min-h-0 overflow-hidden"
+          <TabsContent
+            :key="section"
+            :value="section"
+            class="min-h-0 overflow-hidden"
             ><ScrollArea class="h-full border"
               ><FieldGroup class="p-4">
                 <Field v-if="section === 'general'">
@@ -331,7 +335,7 @@ import type { BasicColorSchema } from '@vueuse/core';
 import { useColorMode } from '@vueuse/core';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { Button } from '@/components/ui/button';
@@ -390,6 +394,7 @@ const props = defineProps({
 });
 const open = defineModel<boolean>('open', { required: true });
 
+const preferencesForm = useTemplateRef<HTMLFormElement>('preferencesForm');
 const form = ref(cloneEditorPreferences(props.options));
 const LANGUAGE_SYSTEM_DEFAULT_VALUE = '__system_default__';
 const { t } = useTranslation();
@@ -436,6 +441,22 @@ const tempoSigns = [
   TempoSign.Quicker,
   TempoSign.VeryQuick,
 ];
+
+async function onOpenChanged(isOpen: boolean) {
+  if (!isOpen) {
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLInputElement &&
+      preferencesForm.value?.contains(activeElement)
+    ) {
+      // Number fields commit typed text on blur. Persist it before unmounting.
+      activeElement.blur();
+      await nextTick();
+    }
+  }
+
+  open.value = isOpen;
+}
 
 function onTempoChanged(neume: TempoSign, bpm: number) {
   form.value.tempoDefaults[neume] = bpm;

@@ -20,6 +20,117 @@ function changeTitle(workspace: Workspace, title: string) {
 }
 
 describe('workspace content revisions', () => {
+  it('restores clean state through undo without rolling back the revision', () => {
+    const workspace = new Workspace();
+    const initialState = workspace.contentStateId;
+    workspace.commandService.execute(changeTitle(workspace, 'Edit'));
+    const editedState = workspace.contentStateId;
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.undo();
+    expect(workspace.contentStateId).toBe(initialState);
+    expect(workspace.hasUnsavedChanges).toBe(false);
+    expect(workspace.contentRevision).toBe(2);
+    workspace.commandService.redo();
+    expect(workspace.contentStateId).toBe(editedState);
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    expect(workspace.contentRevision).toBe(3);
+  });
+
+  it('returns to a saved state through redo', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(changeTitle(workspace, 'Saved'));
+    workspace.markContentSaved(workspace.contentStateId);
+    workspace.commandService.undo();
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.redo();
+    expect(workspace.hasUnsavedChanges).toBe(false);
+  });
+
+  it('never reuses a saved identity on a new history branch', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(changeTitle(workspace, 'Saved branch'));
+    const savedState = workspace.contentStateId;
+    workspace.markContentSaved(savedState);
+    workspace.commandService.undo();
+    workspace.commandService.execute(changeTitle(workspace, 'New branch'));
+    expect(workspace.contentStateId).not.toBe(savedState);
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.undo();
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.redo();
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    expect(workspace.score.documentProperties.title).toBe('New branch');
+  });
+
+  it('does not restore an old saved identity across a noHistory content edit', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(changeTitle(workspace, 'Saved'));
+    workspace.markContentSaved(workspace.contentStateId);
+    workspace.updateStaffLyrics('A change outside history');
+    workspace.commandService.undo();
+    workspace.commandService.redo();
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    expect(workspace.score.staff.lyrics.text).toBe('A change outside history');
+  });
+
+  it('does not claim redo restores a saved noHistory value overwritten by an old command', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(changeTitle(workspace, 'Old command'));
+    workspace.commandService.execute(
+      changeTitle(workspace, 'Saved automatic edit'),
+      true,
+    );
+    workspace.markContentSaved(workspace.contentStateId);
+    workspace.commandService.undo();
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.redo();
+    expect(workspace.score.documentProperties.title).toBe('Old command');
+    expect(workspace.hasUnsavedChanges).toBe(true);
+  });
+
+  it('recognizes saved states for new commands following a noHistory edit', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(changeTitle(workspace, 'Old command'));
+    workspace.commandService.execute(
+      changeTitle(workspace, 'Saved automatic edit'),
+      true,
+    );
+    const savedState = workspace.contentStateId;
+    workspace.markContentSaved(savedState);
+    workspace.commandService.execute(changeTitle(workspace, 'New command'));
+    workspace.commandService.undo();
+    expect(workspace.score.documentProperties.title).toBe(
+      'Saved automatic edit',
+    );
+    expect(workspace.contentStateId).toBe(savedState);
+    expect(workspace.hasUnsavedChanges).toBe(false);
+  });
+
+  it('preserves clean state when an old undo command makes no content change', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(changeTitle(workspace, 'Old command'));
+    workspace.commandService.execute(changeTitle(workspace, ''), true);
+    workspace.markContentSaved(workspace.contentStateId);
+    const revision = workspace.contentRevision;
+    workspace.commandService.undo();
+    expect(workspace.contentRevision).toBe(revision);
+    expect(workspace.hasUnsavedChanges).toBe(false);
+    workspace.commandService.redo();
+    expect(workspace.hasUnsavedChanges).toBe(true);
+  });
+
+  it('clears commands targeting a replaced score', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(changeTitle(workspace, 'Old score'));
+    workspace.score = new Score();
+    workspace.hasUnsavedChanges = false;
+    const revision = workspace.contentRevision;
+    workspace.commandService.undo();
+    expect(workspace.contentRevision).toBe(revision);
+    expect(workspace.hasUnsavedChanges).toBe(false);
+    expect(workspace.score.documentProperties.title).toBe('');
+  });
+
   it('invalidates a replaced score while preserving its loaded dirty-state baseline', () => {
     const workspace = reactive(new Workspace()) as Workspace;
     const replacement = new Score();
@@ -105,6 +216,7 @@ describe('workspace content revisions', () => {
         noHistory ? 'Second' : '',
       );
       expect(workspace.contentRevision).toBe(noHistory ? 1 : 2);
+      expect(workspace.hasUnsavedChanges).toBe(noHistory);
       workspace.commandService.redo();
       expect(workspace.score.documentProperties.title).toBe('Second');
       expect(workspace.contentRevision).toBe(noHistory ? 1 : 3);
@@ -202,11 +314,62 @@ describe('workspace content revisions', () => {
     expect(revision.value).toBe(1);
     expect(second.contentRevision).toBe(0);
     expect(second.hasUnsavedChanges).toBe(false);
+    first.commandService.undo();
+    expect(dirty.value).toBe(false);
+    expect(revision.value).toBe(2);
+    first.commandService.redo();
+    expect(dirty.value).toBe(true);
+    expect(revision.value).toBe(3);
     first.hasUnsavedChanges = false;
     expect(dirty.value).toBe(false);
     first.updateStaffLyrics('Lyrics');
     expect(dirty.value).toBe(true);
-    expect(revision.value).toBe(2);
+    expect(revision.value).toBe(4);
+  });
+
+  it('never reports changed content as clean across mixed history operations', () => {
+    const workspace = new Workspace();
+    let savedProperties = { ...workspace.score.documentProperties };
+    let seed = 37;
+    for (let step = 0; step < 2000; step++) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const title = `Title ${seed % 5}`;
+      switch ((seed >>> 8) % 7) {
+        case 0:
+          workspace.commandService.execute(changeTitle(workspace, title));
+          break;
+        case 1:
+          workspace.commandService.execute(changeTitle(workspace, title), true);
+          break;
+        case 2:
+          workspace.commandService.undo();
+          break;
+        case 3:
+          workspace.commandService.redo();
+          break;
+        case 4:
+          workspace.markContentSaved(workspace.contentStateId);
+          savedProperties = { ...workspace.score.documentProperties };
+          break;
+        case 5:
+          workspace.commandService.executeAsBatch([
+            changeTitle(workspace, title),
+            properties.create('update-properties', {
+              target: workspace.score.documentProperties,
+              newValues: { author: `Author ${seed % 3}` },
+            }),
+          ]);
+          break;
+        case 6:
+          workspace.commandService.clearHistory();
+          break;
+      }
+      if (!workspace.hasUnsavedChanges) {
+        expect(workspace.score.documentProperties, `step ${step}`).toEqual(
+          savedProperties,
+        );
+      }
+    }
   });
 
   it('invalidates captured content when a batch fails after applying an edit', () => {

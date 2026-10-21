@@ -17,6 +17,10 @@ mocks, spies, or DOM emulation. The checks cover:
 
 - Buffered rich text flushed before saving and repeated unchanged saves.
 - Typing while the score write is pending, retaining dirty state and recovery.
+- Editing and undoing during a write or recovery cleanup, returning to clean.
+- Undoing a written edit before completion, then returning to clean through redo.
+- Undoing newer rich text after save completion, recognizing the written state.
+- Branching history without confusing a reused undo position with saved content.
 - Overlapping saves, with the later save writing the latest editor content.
 - Derived height changes during saving without a content revision or dirty flag.
 - Typing after the score write while recovery cleanup is pending, recreating

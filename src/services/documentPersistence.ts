@@ -32,6 +32,7 @@ export function queueDocumentSave<T>(
 
 export interface DocumentSaveState {
   contentRevision: number;
+  contentStateId: number;
   filePath: string | null;
   score: Score;
 }
@@ -42,6 +43,7 @@ export function captureDocumentSaveState(
 ): DocumentSaveState {
   return {
     contentRevision: workspace.contentRevision,
+    contentStateId: workspace.contentStateId,
     filePath: workspace.filePath,
     score: toRaw(workspace.score),
   };
@@ -52,7 +54,16 @@ export function isDocumentSaveStateCurrent(
   state: DocumentSaveState,
 ) {
   return (
-    workspace.contentRevision === state.contentRevision &&
+    workspace.contentStateId === state.contentStateId &&
+    isDocumentSaveContextCurrent(workspace, state)
+  );
+}
+
+export function isDocumentSaveContextCurrent(
+  workspace: Workspace,
+  state: DocumentSaveState,
+) {
+  return (
     workspace.filePath === state.filePath &&
     toRaw(workspace.score) === state.score
   );
@@ -68,10 +79,17 @@ export function applyDocumentSave(
     return false;
   }
   const unchanged = isDocumentSaveStateCurrent(workspace, state);
+  const sameContext = isDocumentSaveContextCurrent(workspace, state);
   workspace.filePath = result.filePath ?? workspace.filePath;
   workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
   workspace.sourceSize = result.sourceSize ?? null;
-  workspace.hasUnsavedChanges = !unchanged;
+  if (sameContext) {
+    // Remember what reached disk even when newer edits are present. Undoing
+    // those edits later can return to this saved state without another write.
+    workspace.markContentSaved(state.contentStateId);
+  } else {
+    workspace.hasUnsavedChanges = true;
+  }
   if (unchanged) {
     workspace.isRecovered = false;
   }

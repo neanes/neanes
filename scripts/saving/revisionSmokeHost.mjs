@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { constants, lstatSync, mkdirSync, openSync } from 'node:fs';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -10,6 +10,11 @@ import { app, BrowserWindow } from 'electron';
 const root = process.env.NEANES_SAVE_SMOKE_ROOT;
 const output = process.env.NEANES_SAVE_SMOKE_OUTPUT;
 const profile = process.env.NEANES_DEV_USER_DATA_DIR;
+const fifoPaths = new Set();
+function createFifo(filePath) {
+  execFileSync('mkfifo', [filePath]);
+  fifoPaths.add(filePath);
+}
 mkdirSync(profile, { recursive: true });
 app.setPath('userData', profile);
 app.setPath('sessionData', profile);
@@ -35,8 +40,22 @@ async function run() {
     'editor window',
     () => BrowserWindow.getAllWindows()[0],
   );
-  const evaluate = (source) =>
-    window.webContents.executeJavaScript(source, true);
+  const evaluate = async (source) => {
+    const result = await window.webContents.executeJavaScript(
+      `
+      (async () => {
+        try {
+          return { value: await eval(${JSON.stringify(source)}) };
+        } catch (error) {
+          return { error: error.stack ?? String(error) };
+        }
+      })()
+    `,
+      true,
+    );
+    assert.ok(!result.error, `${result.error}\nRenderer operation:\n${source}`);
+    return result.value;
+  };
   await waitFor('interactive editor initialization', async () => {
     if (window.webContents.isLoading()) {
       return false;
@@ -61,16 +80,20 @@ async function run() {
     window.__saveSmoke.onFileMenuInsertRichTextBox();
     true;
   `);
-  await waitFor('live CKEditor', () =>
-    evaluate(`
+  const findRichEditor = () =>
+    waitFor('live CKEditor', () =>
+      evaluate(`
     (() => {
       const element = document.querySelector('.rich-text-box-container.selected');
       window.__saveSmokeCk = element?.__vueParentComponent.setupState.getEditorInstance();
-      return Boolean(window.__saveSmokeCk);
+      return window.__saveSmokeCk?.state === 'ready';
     })()
   `),
-  );
+    );
+  await findRichEditor();
   const typeText = async (text) => {
+    // Undo/redo can remount the rendered box and replace its CKEditor instance.
+    await findRichEditor();
     await evaluate(`
       (() => {
         const editor = window.__saveSmokeCk;
@@ -112,6 +135,32 @@ async function run() {
     JSON.parse(JSON.parse(await readFile(recoveryPath, 'utf8')).envelope.score);
   const assertScoreContains = (score, text) =>
     assert.ok(JSON.stringify(score.staff.elements).includes(text));
+  const holdRecoveryCleanup = async () => {
+    await evaluate(`
+      window.__saveSmoke.prepareWorkspaceForSerialization(window.__saveSmoke.selectedWorkspace);
+      window.__saveSmoke.clearRecoverySnapshotTimer(window.__saveSmoke.selectedWorkspace.id);
+      window.__saveSmoke.persistRecoverySnapshot(window.__saveSmoke.selectedWorkspace);
+    `);
+    const envelope = await readFile(recoveryPath, 'utf8');
+    await rm(recoveryPath);
+    createFifo(recoveryPath);
+    await evaluate(`
+      window.__saveSmoke.clearRecoverySnapshotTimer(window.__saveSmoke.selectedWorkspace.id);
+      window.__saveSmokeRecovery = window.__saveSmoke.persistRecoverySnapshot(window.__saveSmoke.selectedWorkspace);
+      true;
+    `);
+    await beginSave();
+    await waitFor(
+      'score written while recovery cleanup is pending',
+      async () => !(await dirty()),
+    );
+    assert.equal(await evaluate(`window.__saveSmokeSettled`), false);
+    return async () => {
+      await writeFile(recoveryPath, envelope);
+      await evaluate(`window.__saveSmokeRecovery`);
+      return endSave();
+    };
+  };
 
   await typeText('Saved content');
   let result = await save();
@@ -135,7 +184,7 @@ async function run() {
   // Its payload is captured before the user types; no IPC or filesystem method
   // is replaced to control the timing.
   const writeGate = path.join(output, 'pending-write.byzx');
-  execFileSync('mkfifo', [writeGate]);
+  createFifo(writeGate);
   await setPath(writeGate);
   await beginSave();
   await typeText(' EDIT DURING WRITE');
@@ -153,15 +202,64 @@ async function run() {
   assert.equal(result.savedContentUnchanged, false);
   assert.equal(await dirty(), true);
   assertScoreContains(await readRecoveryScore(), 'EDIT DURING WRITE');
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  assert.equal(await dirty(), false);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  assert.equal(await dirty(), true);
   await rm(writeGate);
   await setPath(scorePath);
   assert.equal((await save()).savedContentUnchanged, true);
   console.log(
-    'PASS: real CKEditor input during file I/O remains dirty and survives in recovery',
+    'PASS: real CKEditor input during file I/O remains recoverable; undo after completion returns to clean',
+  );
+
+  const undoGate = path.join(output, 'undo-during-save.byzx');
+  createFifo(undoGate);
+  await setPath(undoGate);
+  const beforeUndoSave = await revision();
+  await beginSave();
+  await evaluate(`
+    window.__saveSmoke.updateDocumentProperties({title: 'Temporary edit during saving', author: ''});
+    window.__saveSmoke.onFileMenuUndo();
+    true;
+  `);
+  assert.equal(await revision(), beforeUndoSave + 2);
+  assert.equal(await dirty(), false);
+  await readFile(undoGate);
+  result = await endSave();
+  assert.equal(result.success, true);
+  assert.equal(result.savedContentUnchanged, true);
+  assert.equal(await dirty(), false);
+  await rm(undoGate);
+  await setPath(scorePath);
+  console.log(
+    'PASS: editing and undoing during file I/O finishes clean while revisions keep increasing',
+  );
+
+  await evaluate(
+    `window.__saveSmoke.updateDocumentProperties({title: 'Written but undone', author: ''}); true`,
+  );
+  createFifo(undoGate);
+  await setPath(undoGate);
+  await beginSave();
+  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  const undoneWrite = JSON.parse(await readFile(undoGate, 'utf8'));
+  assert.equal(undoneWrite.documentProperties.title, 'Written but undone');
+  result = await endSave();
+  assert.equal(result.success, true);
+  assert.equal(result.savedContentUnchanged, false);
+  assert.equal(await dirty(), true);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  assert.equal(await dirty(), false);
+  await rm(undoGate);
+  await setPath(scorePath);
+  assert.equal((await save()).savedContentUnchanged, true);
+  console.log(
+    'PASS: undo during saving leaves the older editor content dirty; redo restores the written state as clean',
   );
 
   const queueGate = path.join(output, 'queued-save.byzx');
-  execFileSync('mkfifo', [queueGate]);
+  createFifo(queueGate);
   await setPath(queueGate);
   await beginSave();
   await typeText(' QUEUED EDIT');
@@ -195,7 +293,7 @@ async function run() {
   );
 
   const heightGate = path.join(output, 'height-update.byzx');
-  execFileSync('mkfifo', [heightGate]);
+  createFifo(heightGate);
   await setPath(heightGate);
   const beforeHeight = await revision();
   await beginSave();
@@ -218,25 +316,7 @@ async function run() {
   // Queue actual recovery work on a FIFO read of an existing recovery envelope.
   // The subsequent save can write its score, but its recovery cleanup must wait.
   await typeText(' Before cleanup');
-  await evaluate(`
-    window.__saveSmoke.prepareWorkspaceForSerialization(window.__saveSmoke.selectedWorkspace);
-    window.__saveSmoke.clearRecoverySnapshotTimer(window.__saveSmoke.selectedWorkspace.id);
-    window.__saveSmoke.persistRecoverySnapshot(window.__saveSmoke.selectedWorkspace);
-  `);
-  const envelope = await readFile(recoveryPath, 'utf8');
-  await rm(recoveryPath);
-  execFileSync('mkfifo', [recoveryPath]);
-  await evaluate(`
-    window.__saveSmoke.clearRecoverySnapshotTimer(window.__saveSmoke.selectedWorkspace.id);
-    window.__saveSmokeRecovery = window.__saveSmoke.persistRecoverySnapshot(window.__saveSmoke.selectedWorkspace);
-    true;
-  `);
-  await beginSave();
-  await waitFor(
-    'score written while recovery cleanup is pending',
-    async () => !(await dirty()),
-  );
-  assert.equal(await evaluate(`window.__saveSmokeSettled`), false);
+  const releaseRecovery = await holdRecoveryCleanup();
   await typeText(' EDIT DURING CLEANUP');
   assert.equal(
     await evaluate(
@@ -250,9 +330,7 @@ async function run() {
     ),
     false,
   );
-  await writeFile(recoveryPath, envelope);
-  await evaluate(`window.__saveSmokeRecovery`);
-  result = await endSave();
+  result = await releaseRecovery();
   assert.equal(result.success, true);
   assert.equal(result.savedContentUnchanged, false);
   assert.equal(await dirty(), true);
@@ -260,6 +338,44 @@ async function run() {
   assert.equal((await save()).savedContentUnchanged, true);
   console.log(
     'PASS: real CKEditor input during recovery cleanup remains dirty and recovery is recreated',
+  );
+
+  await evaluate(
+    `window.__saveSmoke.updateDocumentProperties({title: 'Saved during cleanup', author: ''}); true`,
+  );
+  const releaseUndoCleanup = await holdRecoveryCleanup();
+  const beforeCleanupUndo = await revision();
+  await evaluate(`
+    window.__saveSmoke.updateDocumentProperties({title: 'Temporary cleanup edit', author: ''});
+    window.__saveSmoke.onFileMenuUndo();
+    true;
+  `);
+  assert.equal(await revision(), beforeCleanupUndo + 2);
+  assert.equal(await dirty(), false);
+  result = await releaseUndoCleanup();
+  assert.equal(result.success, true);
+  assert.equal(result.savedContentUnchanged, true);
+  assert.equal(await dirty(), false);
+  await assert.rejects(readFile(recoveryPath), { code: 'ENOENT' });
+  console.log(
+    'PASS: edit and undo during recovery cleanup returns to the saved state and stays clean',
+  );
+
+  await evaluate(
+    `window.__saveSmoke.updateDocumentProperties({title: 'Saved history branch', author: ''}); true`,
+  );
+  assert.equal((await save()).savedContentUnchanged, true);
+  await evaluate(`
+    window.__saveSmoke.onFileMenuUndo();
+    window.__saveSmoke.updateDocumentProperties({title: 'Replacement branch', author: ''});
+    window.__saveSmoke.onFileMenuUndo();
+    window.__saveSmoke.onFileMenuRedo();
+    true;
+  `);
+  assert.equal(await dirty(), true);
+  assert.equal((await save()).savedContentUnchanged, true);
+  console.log(
+    'PASS: a new history branch cannot reuse the saved state identity at the same undo position',
   );
 
   const beforeLyrics = await revision();
@@ -287,6 +403,7 @@ async function run() {
   const afterEdit = await revision();
   await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
   assert.equal(await revision(), afterEdit + 1);
+  assert.equal(await dirty(), false);
   await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
   assert.equal(await revision(), afterEdit + 2);
   await setPath(output);
@@ -343,6 +460,19 @@ void run().then(
   () => app.exit(0),
   (error) => {
     console.error(error);
+    // Release blocked filesystem workers before Electron tears down libuv.
+    // These descriptors are closed by process exit after the workers unblock.
+    for (const filePath of fifoPaths) {
+      try {
+        if (lstatSync(filePath).isFIFO()) {
+          openSync(filePath, constants.O_RDWR | constants.O_NONBLOCK);
+        }
+      } catch (cleanupError) {
+        if (cleanupError.code !== 'ENOENT') {
+          console.error(cleanupError);
+        }
+      }
+    }
     app.exit(1);
   },
 );

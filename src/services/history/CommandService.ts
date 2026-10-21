@@ -16,8 +16,12 @@ export interface Command {
   execute(): boolean;
   undo(): boolean;
   redo(): boolean;
+}
 
-  batchId?: number;
+interface HistoryEntry {
+  commands: Command[];
+  beforeStateId: number;
+  afterStateId: number;
 }
 
 interface CommandMap<T> {
@@ -56,9 +60,8 @@ export class CommandFactory<T> {
 }
 
 export class CommandService {
-  private commandHistory: Command[] = [];
+  private commandHistory: HistoryEntry[] = [];
   private index: number = -1;
-  private nextBatchId: number = 1;
 
   constructor(private contentChanges = new ContentChangeTracker()) {
     this.notify();
@@ -78,82 +81,55 @@ export class CommandService {
   }
 
   public execute(command: Command, noHistory: boolean = false) {
-    if (!this.applyChange(() => command.execute())) {
-      return;
+    this.executeAsBatch([command], noHistory);
+  }
+
+  public executeAsBatch(batch: Command[], noHistory: boolean = false) {
+    const beforeStateId = this.contentChanges.stateId;
+    const applied: Command[] = [];
+    try {
+      for (const command of batch) {
+        if (command.execute()) {
+          applied.push(command);
+        }
+      }
+    } catch (error) {
+      // The failing command or earlier commands may already have changed data.
+      this.contentChanges.markChanged();
+      throw error;
     }
 
+    if (applied.length === 0) {
+      return;
+    }
+    this.contentChanges.markChanged();
+
     // Remove everything after the current index
-    // and push the new command
+    // and push the new commands
     if (!noHistory) {
       this.commandHistory = this.commandHistory.slice(0, this.index + 1);
-      this.commandHistory.push(command);
+      this.commandHistory.push({
+        commands: applied,
+        beforeStateId,
+        afterStateId: this.contentChanges.stateId,
+      });
       this.index++;
       this.notify();
     }
   }
 
-  public executeAsBatch(batch: Command[], noHistory: boolean = false) {
-    const applied: Command[] = [];
-    this.applyChange(() => {
-      for (const command of batch) {
-        command.batchId = this.nextBatchId;
-        if (command.execute()) {
-          applied.push(command);
-        }
-      }
-      return applied.length > 0;
-    });
-
-    // Remove everything after the current index
-    // and push the new commands
-    if (!noHistory && applied.length > 0) {
-      this.commandHistory = this.commandHistory.slice(0, this.index + 1);
-      applied.forEach((x) => this.commandHistory.push(x));
-      this.index += applied.length;
-      this.notify();
-    }
-
-    this.nextBatchId++;
-  }
-
   public undo() {
-    if (this.index >= 0) {
-      const batchId = this.commandHistory[this.index].batchId;
-
-      this.applyChange(() => {
-        let changed = false;
-        do {
-          changed = this.commandHistory[this.index].undo() || changed;
-          this.index--;
-        } while (
-          this.index >= 0 &&
-          batchId != null &&
-          this.commandHistory[this.index].batchId === batchId
-        );
-        return changed;
-      });
-
+    if (this.canUndo) {
+      this.replay(this.commandHistory[this.index], 'undo');
+      this.index--;
       this.notify();
     }
   }
 
   public redo() {
-    if (this.index < this.commandHistory.length - 1) {
-      const batchId = this.commandHistory[this.index + 1].batchId;
-
-      this.applyChange(() => {
-        let changed = false;
-        do {
-          this.index++;
-          changed = this.commandHistory[this.index].redo() || changed;
-        } while (
-          this.index < this.commandHistory.length - 1 &&
-          batchId != null &&
-          this.commandHistory[this.index + 1].batchId === batchId
-        );
-        return changed;
-      });
-
+    if (this.canRedo) {
+      this.replay(this.commandHistory[this.index + 1], 'redo');
+      this.index++;
       this.notify();
     }
   }
@@ -165,16 +141,23 @@ export class CommandService {
     this.notify();
   }
 
-  private applyChange(operation: () => boolean) {
-    // A throwing operation may already have applied part of a change.
-    let changed = true;
+  private replay(entry: HistoryEntry, direction: 'undo' | 'redo') {
+    const commands =
+      direction === 'undo' ? entry.commands.toReversed() : entry.commands;
+    let changed = false;
     try {
-      changed = operation();
-      return changed;
-    } finally {
-      if (changed) {
-        this.contentChanges.markChanged();
+      for (const command of commands) {
+        changed = command[direction]() || changed;
       }
+    } catch (error) {
+      this.contentChanges.markChanged();
+      throw error;
+    }
+    if (changed) {
+      this.contentChanges.restoreState(
+        direction === 'undo' ? entry.afterStateId : entry.beforeStateId,
+        direction === 'undo' ? entry.beforeStateId : entry.afterStateId,
+      );
     }
   }
 }

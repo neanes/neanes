@@ -103,7 +103,7 @@ describe('save completion', () => {
     expect(applyDocumentSave(workspace, saved, snapshot)).toBe(true);
   });
 
-  it('keeps a save stale after an intervening edit and undo', () => {
+  it('recognizes saved content after an intervening edit and undo', () => {
     const workspace = new Workspace();
     const snapshot = captureDocumentSaveState(workspace);
     workspace.commandService.execute(
@@ -113,7 +113,60 @@ describe('save completion', () => {
       }),
     );
     workspace.commandService.undo();
-    expect(applyDocumentSave(workspace, saved, snapshot)).toBe(false);
+    expect(workspace.contentRevision).toBe(snapshot.contentRevision + 2);
+    expect(applyDocumentSave(workspace, saved, snapshot)).toBe(true);
+    expect(workspace.hasUnsavedChanges).toBe(false);
+  });
+
+  it('remembers the written state when edits remain at save completion', () => {
+    const workspace = new Workspace();
+    const state = captureDocumentSaveState(workspace);
+    workspace.commandService.execute(
+      new CommandFactory<DocumentProperties>().create('update-properties', {
+        target: workspace.score.documentProperties,
+        newValues: { title: 'Newer edit' },
+      }),
+    );
+    expect(applyDocumentSave(workspace, saved, state)).toBe(false);
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.undo();
+    expect(workspace.hasUnsavedChanges).toBe(false);
+  });
+
+  it('marks an undone in-flight state saved so redo can return to it', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(
+      new CommandFactory<DocumentProperties>().create('update-properties', {
+        target: workspace.score.documentProperties,
+        newValues: { title: 'Written state' },
+      }),
+    );
+    const state = captureDocumentSaveState(workspace);
+    workspace.commandService.undo();
+    expect(applyDocumentSave(workspace, saved, state)).toBe(false);
+    expect(workspace.hasUnsavedChanges).toBe(true);
+    workspace.commandService.redo();
+    expect(workspace.hasUnsavedChanges).toBe(false);
+  });
+
+  it('does not change the saved undo state after a failed write', () => {
+    const workspace = new Workspace();
+    workspace.commandService.execute(
+      new CommandFactory<DocumentProperties>().create('update-properties', {
+        target: workspace.score.documentProperties,
+        newValues: { title: 'Failed save' },
+      }),
+    );
+    expect(
+      applyDocumentSave(
+        workspace,
+        { success: false },
+        captureDocumentSaveState(workspace),
+      ),
+    ).toBe(false);
+    workspace.commandService.undo();
+    expect(workspace.hasUnsavedChanges).toBe(false);
+    workspace.commandService.redo();
     expect(workspace.hasUnsavedChanges).toBe(true);
   });
 
@@ -159,6 +212,26 @@ describe('save completion', () => {
 });
 
 describe('save state identity', () => {
+  it('recognizes edit and undo during recovery cleanup after a save-as', () => {
+    const workspace = new Workspace();
+    expect(
+      applyDocumentSave(
+        workspace,
+        { ...saved, filePath: '/scores/new.byz' },
+        captureDocumentSaveState(workspace),
+      ),
+    ).toBe(true);
+    const afterWrite = captureDocumentSaveState(workspace);
+    workspace.commandService.execute(
+      new CommandFactory<DocumentProperties>().create('update-properties', {
+        target: workspace.score.documentProperties,
+        newValues: { title: 'Temporary cleanup edit' },
+      }),
+    );
+    workspace.commandService.undo();
+    expect(isDocumentSaveStateCurrent(workspace, afterWrite)).toBe(true);
+    expect(workspace.hasUnsavedChanges).toBe(false);
+  });
   it('detects whole-score replacement even without a command', () => {
     const workspace = new Workspace();
     const state = captureDocumentSaveState(workspace);

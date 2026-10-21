@@ -217,6 +217,7 @@ import {
   applyDocumentSave,
   captureDocumentSaveState,
   type DocumentSaveResult,
+  isDocumentSaveContextCurrent,
   isDocumentSaveStateCurrent,
   queueDocumentSave,
 } from '@/services/documentPersistence';
@@ -706,7 +707,7 @@ const selectedWorkspace = computed({
 
     selectedWorkspaceValue.value = value;
     selectedWorkspace.value.commandService.notify();
-    save(false);
+    save();
 
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
@@ -1037,7 +1038,7 @@ const developerPaneHasMissingDiagnostics = computed(() => {
 });
 
 function reloadDeveloperPaneDiagnostics() {
-  save(false);
+  save();
 }
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
@@ -1289,14 +1290,9 @@ const currentFilePath = computed({
   },
 });
 
-const hasUnsavedChanges = computed({
-  get: () => {
-    return selectedWorkspace.value.hasUnsavedChanges;
-  },
-  set: (hasUnsavedChanges: boolean) => {
-    selectedWorkspace.value.hasUnsavedChanges = hasUnsavedChanges;
-  },
-});
+const hasUnsavedChanges = computed(
+  () => selectedWorkspace.value.hasUnsavedChanges,
+);
 
 const pageStyle = computed(() => {
   return {
@@ -5021,11 +5017,7 @@ function calculatePageNumber() {
   }
 }
 
-function save(markUnsavedChanges: boolean = true) {
-  if (markUnsavedChanges) {
-    hasUnsavedChanges.value = true;
-  }
-
+function save() {
   const lyricSelection = captureSelectedLyricSelection();
 
   // Save the indexes of the visible pages
@@ -5371,9 +5363,11 @@ function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
           workspace,
           savedState,
         );
+        if (!isDocumentSaveContextCurrent(workspace, savedState)) {
+          workspace.hasUnsavedChanges = true;
+        }
       }
       if (!savedContentUnchanged) {
-        workspace.hasUnsavedChanges = true;
         await persistRecoverySnapshot(workspace);
       }
     }
@@ -6102,7 +6096,6 @@ function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
   if (workspaceIsSelected) {
     save();
   } else {
-    workspace.hasUnsavedChanges = true;
     selectedWorkspace.value.commandService.notify();
   }
 }
@@ -6280,7 +6273,7 @@ function updateRichTextBox(
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
     element.height = newValues.height;
-    save(false);
+    save();
     return;
   }
 
@@ -6371,7 +6364,7 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
   richTextBoxCalculationCount.value++;
-  saveDebounced(false);
+  saveDebounced();
 }
 
 function updateTextBox(
@@ -6381,7 +6374,7 @@ function updateTextBox(
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
     element.height = newValues.height;
-    save(false);
+    save();
     return;
   }
 
@@ -6400,7 +6393,7 @@ function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
   textBoxCalculationCount.value++;
-  saveDebounced(false);
+  saveDebounced();
 }
 
 function updateModeKey(
@@ -7554,7 +7547,7 @@ function recalculateRichTextBoxHeights() {
     await new Promise(poll);
 
     richTextBoxCalculation.value = false;
-    saveDebounced(false);
+    saveDebounced();
   });
 }
 
@@ -7590,7 +7583,7 @@ function recalculateTextBoxHeights() {
     await new Promise(poll);
 
     textBoxCalculation.value = false;
-    saveDebounced(false);
+    saveDebounced();
   });
 }
 
@@ -7605,7 +7598,7 @@ function onFileMenuNewScore() {
 
   selectedElement.value =
     score.value.staff.elements[score.value.staff.elements.length - 1];
-  save(false);
+  save();
 }
 
 async function onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
@@ -7623,6 +7616,7 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
       workspace.tempFileName = getTempFilename();
       workspace.score = new Score();
       workspace.score.staff.elements.unshift(...elements);
+      workspace.hasUnsavedChanges = true;
 
       addWorkspace(workspace);
 
@@ -8704,6 +8698,7 @@ function onFileMenuGenerateTestFile(testFileType: TestFileType) {
   workspace.score.staff.elements.unshift(
     ...(TestFileGenerator.generateTestFile(testFileType, fonts.value) || []),
   );
+  workspace.hasUnsavedChanges = true;
 
   addWorkspace(workspace);
 
@@ -8845,7 +8840,7 @@ function openScore(args: FileMenuOpenScoreArgs) {
 
     selectedElement.value = null;
 
-    save(false);
+    save();
   } catch (error) {
     args.success = false;
     console.error(error);
@@ -8882,7 +8877,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
       );
       selectedWorkspace.value = existingWorkspace;
       selectedElement.value = null;
-      save(false);
+      save();
       return existingWorkspace;
     }
 
@@ -8904,7 +8899,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
 
     selectedWorkspace.value = workspace;
     selectedElement.value = null;
-    save(false);
+    save();
     return workspace;
   } catch (error) {
     console.error(error);

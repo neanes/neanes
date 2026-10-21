@@ -97,11 +97,20 @@ export class Workspace {
     if (toRaw(this._score) !== toRaw(score)) {
       this._score = score;
       this.contentChanges.invalidate();
+      this.commandService.clearHistory();
     }
   }
 
   public get contentRevision() {
     return this.contentChanges.revision;
+  }
+
+  public get contentStateId() {
+    return this.contentChanges.stateId;
+  }
+
+  public markContentSaved(stateId: number) {
+    this.contentChanges.markSaved(stateId);
   }
 
   public get hasUnsavedChanges() {

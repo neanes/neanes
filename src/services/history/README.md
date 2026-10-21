@@ -1,11 +1,14 @@
 # Content changes and undo history
 
 Each workspace shares a `ContentChangeTracker` with its `CommandService`.
-The revision is runtime state; it is never written to score files.
+The revision and content-state identities are runtime state; they are never
+written to score files. The revision always increases when content changes.
+The state identity can return to an earlier value through undo or redo.
 
 - Execute content edits through the workspace's command service. Execute, undo,
-  and redo advance the revision and mark the workspace dirty. A batch advances
-  it once. Empty operations do neither.
+  and redo advance the revision. The workspace is dirty when its current state
+  differs from its saved state. A batch advances the revision once and records
+  one undo step. Empty operations do neither.
 - `noHistory` only suppresses the undo entry. It does not suppress content
   tracking. Use it for meaningful edits that should not be independently undone.
 - Route content edits through commands even when they do not need undo history.
@@ -21,11 +24,25 @@ The revision is runtime state; it is never written to score files.
   score advances the revision without changing its dirty-state baseline, so a
   loaded file can be clean while a recovered draft keeps its restored flag.
 
-Saving captures the content revision, score identity, and source path beside the
-payload. It compares those values after file I/O and again after recovery cleanup,
-flushing buffered editors before each check. Saves for one workspace are queued
-through recovery completion; different workspaces can save independently.
+Saving captures the revision, state identity, score identity, and source path
+beside the payload. It compares the state and context after file I/O and again
+after recovery cleanup, flushing buffered editors before each check. On success,
+the written state becomes the saved state even if newer edits are present. Undo
+can then return to it without another write. The revision still records all
+intervening edits for operations that require strict concurrency checks.
 
-Revisions always increase, including on undo. Editing and undoing during a save
-therefore conservatively leaves the workspace dirty. This tracker does not
-implement an undo-stack clean marker.
+Each history entry records unique before/after state identities. Undo/redo can
+restore an identity only when starting from the corresponding known endpoint.
+A noHistory edit or partial failure creates a fresh state. Replaying older
+commands from that unknown endpoint also creates a fresh state: those commands
+may overwrite content changed outside history, so returning to an old stack
+position cannot establish cleanliness. New commands recorded after that edit
+can recognize their saved states normally. Branches never reuse state identities.
+
+Layout and recovery scheduling must not set the dirty flag. Explicit dirty-flag
+assignments establish loaded/recovered/imported document baselines or invalidate
+a saved marker after a save context change. Derived rendering changes remain
+outside this tracking. Replacing a score clears commands for the previous score.
+
+Saves for one workspace are queued through recovery completion; different
+workspaces can save independently.

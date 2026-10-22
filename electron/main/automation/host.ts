@@ -31,6 +31,7 @@ import type { PreviewPageOptions } from './preview';
 import { startMcpServer } from './server';
 
 export async function startAutomationHost(options: {
+  mode?: 'interactive' | 'headless';
   getWindow(): BrowserWindow | null;
   policyFile: string;
   policyToken: string;
@@ -249,6 +250,7 @@ export async function startAutomationHost(options: {
     }
   }
   const server = await startMcpServer({
+    mode: options.mode,
     token: options.config?.token ?? process.env.NEANES_MCP_TOKEN ?? '',
     port: options.config?.port ?? Number(process.env.NEANES_MCP_PORT ?? 38765),
     version: options.version,

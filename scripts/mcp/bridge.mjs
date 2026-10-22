@@ -14,7 +14,6 @@ import {
   bridgeResourceContents,
   bridgeTools,
   documentScope,
-  handleAutomaticSessionReply,
   isDocumentTool,
 } from './bridgeProtocol.mjs';
 
@@ -27,7 +26,7 @@ const { values } = parseArgs({
     target: { type: 'string' },
   },
 });
-let child, profile, primary, privateSession;
+let child, profile, primary;
 let tools;
 let stopping = false;
 let policyToken;
@@ -233,38 +232,9 @@ async function launchWorker() {
   });
   return { endpoint, token };
 }
-function sessionId(signal) {
-  if (!privateSession) {
-    privateSession = rpc(
-      primary,
-      {
-        jsonrpc: '2.0',
-        id: 'bridge-session',
-        method: 'tools/call',
-        params: { name: 'create_session', arguments: {} },
-      },
-      signal,
-    )
-      .then((reply) => {
-        const outcome = reply?.result?.structuredContent;
-        if (!outcome?.success) {
-          throw new Error(
-            outcome?.error?.message ?? 'Could not create private documents.',
-          );
-        }
-        return outcome.result.sessionId;
-      })
-      .catch((error) => {
-        privateSession = undefined;
-        throw error;
-      });
-  }
-  return privateSession;
-}
 async function forward(message, signal) {
   await requireAccess();
   let connection = primary;
-  let automaticSession;
   if (message.method === 'tools/call') {
     const tool = tools.find((tool) => tool.name === message.params?.name);
     if (tool && isDocumentTool(tool)) {
@@ -276,9 +246,6 @@ async function forward(message, signal) {
             'No editor is open. Open Neanes to work with editor tabs.',
           );
         }
-      } else if (!routed.arguments.sessionId) {
-        automaticSession = sessionId(signal);
-        routed.arguments.sessionId = await automaticSession;
       }
       message = {
         ...message,
@@ -286,13 +253,7 @@ async function forward(message, signal) {
       };
     }
   }
-  const handled = handleAutomaticSessionReply(
-    await rpc(connection, message, signal),
-    privateSession,
-    automaticSession,
-  );
-  privateSession = handled.session;
-  const reply = handled.reply;
+  const reply = await rpc(connection, message, signal);
   if (message.method === 'tools/list' && reply?.result?.tools) {
     reply.result.tools = bridgeTools(reply.result.tools);
   }

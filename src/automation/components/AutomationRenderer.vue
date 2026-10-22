@@ -23,11 +23,11 @@ import { nextTick, onMounted, shallowRef } from 'vue';
 import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorAutomation } from '@/automation/renderer/useEditorAutomation';
+import { PrivateDocumentStore } from '@/automation/sessions/privateDocumentStore';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import type { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
-import { DocumentService } from '@/services/documents/DocumentService';
 import { fontCatalog } from '@/services/FontCatalog';
 import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
@@ -99,37 +99,23 @@ function pagesFailed(error: Error) {
   pageMeasurement.value = null;
   request.reject(error);
 }
-// Headless document requests must address an explicitly owned session.
-const documents = new DocumentService({
-  workspaces: () => [],
-  selectedWorkspace: () => null,
+// One private store lives until the worker shuts down or access is revoked.
+const privateStore = new PrivateDocumentStore({
   createScore: () => new Score(),
-  addWorkspace() {
-    throw new Error('SESSION_REQUIRED');
-  },
-  selectWorkspace() {},
   prepare,
-  changed() {},
-  elementsChanged() {},
-  changeStyles(_workspace, operation) {
-    operation();
-  },
+  dispose() {},
+  fonts: () => fonts.value,
   async ensureFonts(families) {
     await Promise.all(
       getFontFamilyLoadDescriptors(families).map((d) => document.fonts.load(d)),
     );
   },
   settle,
-  fonts: () => fonts.value,
-  async saved() {},
-  async close() {
-    return false;
-  },
 });
 const automation = useEditorAutomation({
   enabled: true,
-  requireSessions: true,
-  documents,
+  documents: privateStore.documents,
+  privateStore,
   busyState: () => null,
   createScore: () => new Score(),
   prepare,

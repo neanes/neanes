@@ -10,16 +10,16 @@ import {
   bridgeResourceContents,
   bridgeTools,
   documentScope,
-  handleAutomaticSessionReply,
   isDocumentTool,
 } from './bridgeProtocol.mjs';
 
 describe('one bridge connection', () => {
   it('preserves complete schema resources while adding document scope only to inputs', () => {
-    for (const tool of automationTools()) {
+    for (const tool of automationTools('headless')) {
       for (const view of ['input', 'output']) {
         const { contents } = readToolSchemaResource(
           `neanes://schemas/${tool.name}/${view}`,
+          'headless',
         );
         const before = JSON.stringify(contents);
         const decorated = bridgeResourceContents(contents);
@@ -41,7 +41,7 @@ describe('one bridge connection', () => {
   });
 
   it('exposes explicit editor scope on real document tools without changing upstream definitions', () => {
-    const originals = automationTools();
+    const originals = automationTools('headless');
     const before = JSON.stringify(originals);
     const decorated = bridgeTools(originals);
     for (const tool of decorated) {
@@ -62,15 +62,14 @@ describe('one bridge connection', () => {
       originals.map((tool) => tool.name),
     );
   });
-  it('defaults to private documents and preserves explicit session ownership', () => {
+  it('defaults to private documents and rejects session IDs', () => {
     expect(documentScope({ documentId: 'score' })).toEqual({
       scope: 'private',
       arguments: { documentId: 'score' },
     });
-    expect(documentScope({ sessionId: 'session' })).toEqual({
-      scope: 'private',
-      arguments: { sessionId: 'session' },
-    });
+    expect(() => documentScope({ sessionId: 'session' })).toThrow(
+      'do not accept sessionId',
+    );
     expect(
       documentScope({ documentScope: 'editor', documentId: 'score' }),
     ).toEqual({
@@ -79,12 +78,12 @@ describe('one bridge connection', () => {
     });
     expect(() =>
       documentScope({ documentScope: 'editor', sessionId: 'session' }),
-    ).toThrow('either');
+    ).toThrow('do not accept sessionId');
     expect(() => documentScope({ documentScope: 'other' })).toThrow('Invalid');
   });
 
   it('preserves search scope through publication and editor/private routing', () => {
-    const tool = automationTools().find(
+    const tool = automationTools('headless').find(
       (tool) => tool.name === 'find_elements',
     );
     const published = bridgeTools([tool])[0];
@@ -101,7 +100,7 @@ describe('one bridge connection', () => {
   });
 
   it('budgets the inventory delivered to clients, including bridge arguments', () => {
-    const tools = bridgeTools(automationTools());
+    const tools = bridgeTools(automationTools('headless'));
     // Includes host file discovery and an inline batch envelope; detailed
     // settings/style constraints remain in the single-document tools.
     expect(JSON.stringify({ tools }).length).toBeLessThan(156000);
@@ -114,91 +113,5 @@ describe('one bridge connection', () => {
         })),
       ).length,
     ).toBeLessThan(74500);
-  });
-});
-
-describe('automatic private session expiry', () => {
-  const expired = {
-    jsonrpc: '2.0',
-    id: 7,
-    result: {
-      isError: true,
-      structuredContent: {
-        success: false,
-        error: {
-          code: 'SESSION_NOT_FOUND',
-          message: 'Session missing',
-          details: {},
-        },
-      },
-      content: [],
-    },
-  };
-
-  it('releases the expired cache and reports failure without replaying the request', () => {
-    const session = Promise.resolve('expired-session');
-    const handled = handleAutomaticSessionReply(expired, session, session);
-    expect(handled.session).toBeUndefined();
-    expect(handled.reply.id).toBe(expired.id);
-    expect(handled.reply.result.isError).toBe(true);
-    expect(handled.reply.result.structuredContent).toMatchObject({
-      success: false,
-      error: { code: 'SESSION_NOT_FOUND' },
-    });
-    expect(handled.reply.result.structuredContent.error.message).toContain(
-      'not replayed',
-    );
-    expect(handled.reply.result.structuredContent.error.message).toContain(
-      'reopen saved documents',
-    );
-    expect(JSON.parse(handled.reply.result.content[0].text)).toEqual(
-      handled.reply.result.structuredContent,
-    );
-    expect(expired.result.structuredContent.error.message).toBe(
-      'Session missing',
-    );
-  });
-
-  it('keeps a fresh cached session when an older in-flight request reports expiry', () => {
-    const oldSession = Promise.resolve('expired-session');
-    const freshSession = Promise.resolve('fresh-session');
-    expect(
-      handleAutomaticSessionReply(expired, freshSession, oldSession).session,
-    ).toBe(freshSession);
-  });
-
-  it('does not reset the automatic cache for explicit sessions or unrelated errors', () => {
-    const session = Promise.resolve('automatic-session');
-    expect(handleAutomaticSessionReply(expired, session, undefined)).toEqual({
-      reply: expired,
-      session,
-    });
-    const conflict = {
-      ...expired,
-      result: {
-        ...expired.result,
-        structuredContent: {
-          success: false,
-          error: {
-            code: 'REVISION_CONFLICT',
-            message: 'Conflict',
-            details: {},
-          },
-        },
-      },
-    };
-    expect(handleAutomaticSessionReply(conflict, session, session)).toEqual({
-      reply: conflict,
-      session,
-    });
-    const success = {
-      jsonrpc: '2.0',
-      id: 8,
-      result: { structuredContent: { success: true, result: [] } },
-    };
-    expect(handleAutomaticSessionReply(success, session, session)).toEqual({
-      reply: success,
-      session,
-    });
   });
 });

@@ -58,9 +58,14 @@ async function call(client, name, args = {}) {
 }
 try {
   const [first, second] = await Promise.all([connect(), connect()]);
-  // Each bridge owns a worker; sessions never resolve in a different worker.
+  // Each bridge owns a worker; documents never resolve in a different worker.
   const capabilities = await call(first, 'get_capabilities');
   assert.equal(capabilities.mode, 'headless');
+  assert.deepEqual(capabilities.privateDocuments, {
+    maxDocuments: 16,
+    lifetime: 'worker',
+  });
+  assert.equal('isolatedSessions' in capabilities, false);
   assert.equal('fonts' in capabilities, false);
   const withFonts = await call(first, 'get_capabilities', {
     includeFonts: true,
@@ -186,20 +191,30 @@ try {
       .properties.documentScope.enum,
     ['private', 'editor'],
   );
-  const { sessionId } = await call(first, 'create_session');
+  assert.equal(
+    definitions.tools.some(
+      (tool) => tool.name === 'create_session' || tool.name === 'close_session',
+    ),
+    false,
+  );
+  assert.equal(
+    Object.hasOwn(
+      definitions.tools.find((tool) => tool.name === 'list_documents')
+        .inputSchema.properties,
+      'sessionId',
+    ),
+    false,
+  );
   await checkSettings(first);
-  await checkSettings(first, { sessionId });
   const foreign = await second.callTool({
-    name: 'list_documents',
-    arguments: { sessionId },
+    name: 'get_document_properties',
+    arguments: { documentId: modeEdit.documentId },
   });
-  assert.equal(foreign.structuredContent.error.code, 'SESSION_NOT_FOUND');
+  assert.equal(foreign.structuredContent.error.code, 'DOCUMENT_NOT_FOUND');
   let document = await call(first, 'create_document', {
-    sessionId,
     title: 'Headless smoke',
   });
   const styleIds = await call(first, 'get_paragraph_styles', {
-    sessionId,
     documentId: document.documentId,
     view: 'ids',
   });
@@ -207,7 +222,6 @@ try {
   assert.equal('styles' in styleIds, false);
   assert.equal('resolvedStyles' in styleIds, false);
   document = await call(first, 'edit_paragraph_styles', {
-    sessionId,
     documentId: document.documentId,
     expectedRevision: document.revision,
     changes: [
@@ -228,7 +242,6 @@ try {
     ],
   });
   document = await call(first, 'edit_paragraph_styles', {
-    sessionId,
     documentId: document.documentId,
     expectedRevision: document.revision,
     changes: [
@@ -244,7 +257,6 @@ try {
     ],
   });
   document = await call(first, 'edit_paragraph_styles', {
-    sessionId,
     documentId: document.documentId,
     expectedRevision: document.revision,
     changes: [
@@ -252,7 +264,6 @@ try {
     ],
   });
   document = await call(first, 'edit_elements', {
-    sessionId,
     documentId: document.documentId,
     expectedRevision: document.revision,
     actions: [
@@ -280,13 +291,11 @@ try {
     ],
   });
   const layout = await call(first, 'get_pages', {
-    sessionId,
     documentId: document.documentId,
   });
   const preview = await first.callTool({
     name: 'preview_page',
     arguments: {
-      sessionId,
       documentId: document.documentId,
       expectedRevision: layout.revision,
       expectedLayoutId: layout.layoutId,
@@ -305,7 +314,6 @@ try {
   );
   const scorePath = path.join(files, 'headless.byzx');
   document = await call(first, 'save_document', {
-    sessionId,
     documentId: document.documentId,
     expectedRevision: document.revision,
     filePath: scorePath,
@@ -322,19 +330,15 @@ try {
     '__unavailable_element_font__',
   );
   await call(first, 'export_pdf', {
-    sessionId,
     documentId: document.documentId,
     expectedRevision: document.revision,
     filePath: path.join(files, 'headless.pdf'),
   });
   assert.ok((await stat(path.join(files, 'headless.pdf'))).size > 1000);
-  const reopened = await call(second, 'create_session');
   const openedScore = await call(second, 'open_document', {
-    sessionId: reopened.sessionId,
     filePath: scorePath,
   });
   const reopenedStyle = await call(second, 'get_paragraph_styles', {
-    sessionId: reopened.sessionId,
     documentId: openedScore.documentId,
     ids: ['default-text', 'reset-child'],
   });
@@ -352,7 +356,40 @@ try {
       .values.fontFamily,
     'Source Serif',
   );
+  // Batch scratch documents never join the worker's long-lived store.
+  const beforeBatch = await call(first, 'list_documents');
   await checkBatch(first, files, scorePath);
+  assert.deepEqual(await call(first, 'list_documents'), beforeBatch);
+  // Capacity is per worker and closing a draft requires explicit consent.
+  while (
+    (await call(first, 'list_documents')).length <
+    capabilities.privateDocuments.maxDocuments
+  ) {
+    await call(first, 'create_document', { title: 'Capacity draft' });
+  }
+  const full = await first.callTool({ name: 'create_document', arguments: {} });
+  assert.equal(full.structuredContent.error.code, 'DOCUMENT_LIMIT_REACHED');
+  const drafts = await call(first, 'list_documents');
+  for (const draft of drafts) {
+    if (draft.hasUnsavedChanges) {
+      const refused = await first.callTool({
+        name: 'close_document',
+        arguments: {
+          documentId: draft.documentId,
+          expectedRevision: draft.revision,
+        },
+      });
+      assert.equal(refused.structuredContent.error.code, 'UNSAVED_CHANGES');
+    }
+    const closed = await call(first, 'close_document', {
+      documentId: draft.documentId,
+      expectedRevision: draft.revision,
+      discardUnsavedChanges: true,
+    });
+    assert.equal(closed.selectedDocumentId, null);
+  }
+  assert.deepEqual(await call(first, 'list_documents'), []);
+  await call(first, 'create_document', { title: 'Capacity reclaimed' });
   await assert.rejects(() =>
     connect(path.join(directory, 'missing-executable')),
   );

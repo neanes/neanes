@@ -62,6 +62,41 @@ const styleResultSchema = documentSummarySchema.extend({
   }),
 });
 
+const capabilityFields = {
+  errorCodes: z.array(z.string()).optional(),
+  paragraphStyles: z.strictObject({
+    actions: z.array(z.enum(['create', 'replace', 'update', 'delete'])),
+    dimensions: z.literal('css-px'),
+    lineHeight: z.literal('multiplier'),
+  }),
+  fonts: z.array(z.string()).optional(),
+  formats: z.strictObject({
+    open: z.array(z.enum(['byz', 'byzx'])),
+    save: z.array(z.enum(['byz', 'byzx'])),
+    export: z.array(z.literal('pdf')),
+  }),
+};
+
+export const capabilitiesSchemas = {
+  interactive: z.strictObject({
+    ...capabilityFields,
+    mode: z.literal('interactive'),
+    isolatedSessions: z.strictObject({
+      maxSessions: z.number(),
+      maxDocuments: z.number(),
+      idleTimeoutMs: z.number(),
+    }),
+  }),
+  headless: z.strictObject({
+    ...capabilityFields,
+    mode: z.literal('headless'),
+    privateDocuments: z.strictObject({
+      maxDocuments: z.number(),
+      lifetime: z.literal('worker'),
+    }),
+  }),
+};
+
 export const automationResultSchemas = {
   discover_score_files: fileDiscoveryResultSchema,
   batch_update_files: batchResultSchema,
@@ -71,26 +106,10 @@ export const automationResultSchemas = {
     maxDocuments: z.number(),
   }),
   close_session: z.strictObject({ sessionId: z.string().uuid() }),
-  get_capabilities: z.strictObject({
-    isolatedSessions: z.strictObject({
-      maxSessions: z.number(),
-      maxDocuments: z.number(),
-      idleTimeoutMs: z.number(),
-    }),
-    mode: z.enum(['interactive', 'headless']),
-    errorCodes: z.array(z.string()).optional(),
-    paragraphStyles: z.strictObject({
-      actions: z.array(z.enum(['create', 'replace', 'update', 'delete'])),
-      dimensions: z.literal('css-px'),
-      lineHeight: z.literal('multiplier'),
-    }),
-    fonts: z.array(z.string()).optional(),
-    formats: z.strictObject({
-      open: z.array(z.enum(['byz', 'byzx'])),
-      save: z.array(z.enum(['byz', 'byzx'])),
-      export: z.array(z.literal('pdf')),
-    }),
-  }),
+  get_capabilities: z.discriminatedUnion('mode', [
+    capabilitiesSchemas.interactive,
+    capabilitiesSchemas.headless,
+  ]),
   list_documents: z.array(documentSummarySchema),
   create_document: documentSummarySchema,
   open_document: documentSummarySchema.extend({ created: z.boolean() }),
@@ -232,25 +251,30 @@ const publishedStyleResult = styleResultSchema
   .partial({ styles: true, units: true })
   .extend({ styleIds: z.array(z.string()).optional() });
 
-export function publishedAutomationOutputSchema(tool: AutomationTool) {
+export function publishedAutomationOutputSchema(
+  tool: AutomationTool,
+  mode: 'interactive' | 'headless' = 'interactive',
+) {
   return z.discriminatedUnion('success', [
     z.strictObject({
       success: z.literal(true),
       result:
-        tool === 'batch_update_files'
-          ? publishedBatchResultSchema
-          : tool === 'get_paragraph_styles'
-            ? publishedStyleResult
-            : tool === 'get_elements'
-              ? publishedElementResult
-              : tool === 'find_elements'
-                ? publishedSearchResult
-                : tool === 'get_element'
-                  ? publishedLookupResult
-                  : tool === 'get_page_setup' ||
-                      tool === 'get_header_footer_settings'
-                    ? publishedSettingsResult
-                    : automationResultSchemas[tool],
+        tool === 'get_capabilities'
+          ? capabilitiesSchemas[mode]
+          : tool === 'batch_update_files'
+            ? publishedBatchResultSchema
+            : tool === 'get_paragraph_styles'
+              ? publishedStyleResult
+              : tool === 'get_elements'
+                ? publishedElementResult
+                : tool === 'find_elements'
+                  ? publishedSearchResult
+                  : tool === 'get_element'
+                    ? publishedLookupResult
+                    : tool === 'get_page_setup' ||
+                        tool === 'get_header_footer_settings'
+                      ? publishedSettingsResult
+                      : automationResultSchemas[tool],
     }),
     z.strictObject({
       success: z.literal(false),

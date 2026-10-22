@@ -1,6 +1,6 @@
 # Neanes MCP
 
-When agent access is enabled, the Electron app starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Through the bridge, document tools use private documents by default. Pass `documentScope: "editor"` to work with open editor tabs, or an explicit session ID to address a private session. MCP PDF export and page previews render detached snapshots in dedicated hidden windows. Typed element and lyric transactions are available in both document modes. Bounded batch transformations support saved scores and temporary PDF edits. Persistent background jobs remain deferred.
+When agent access is enabled, the Electron app starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Through the bridge, document tools use private documents by default. Pass `documentScope: "editor"` to work with open editor tabs. MCP PDF export and page previews render detached snapshots in dedicated hidden windows. Typed element and lyric transactions are available in both document modes. Bounded batch transformations support saved scores and temporary PDF edits. Persistent background jobs remain deferred.
 
 ## Normal setup: one connection
 
@@ -11,21 +11,23 @@ uses the common `mcpServers` shape; clients using another configuration format n
 its command and args values.
 
 Each bridge launches its own private headless Electron worker, profile, and random
-loopback port, even when the editor is running. Private operations, capability
-queries, and session creation use that worker without connecting to the editor;
+loopback port, even when the editor is running. Private operations and capability
+queries use that worker without connecting to the editor;
 editor dialogs and loading state do not block them. An in-progress connection
 never retries edits automatically or migrates drafts after a disconnect.
 Disconnecting stops the bridge's worker and never closes an existing editor.
 
-Document tools through the bridge default to an automatically owned private
-session, regardless of launch order. Agents need not call `create_session` first.
+Document tools through the bridge default to one private document store per
+worker, regardless of launch order. No session ID or session creation is needed.
+Private documents have no idle expiry and last until explicitly closed, the
+worker stops, or agent access is revoked. Each worker allows 16 open documents;
+`get_capabilities.privateDocuments` reports this limit and `lifetime: "worker"`.
 To discover live tabs use `list_documents` with `documentScope: "editor"`, then pass
 `documentScope: "editor"` to document tools operating on those IDs. No editor is launched
 for that explicit scope; an editor must be open. The bridge discovers the editor
 only for explicit editor requests, including after the user opens it later,
-while keeping private tasks in the worker. Explicit `sessionId` addresses a
-session on the bridge's worker.
-Combining editor scope and sessionId is rejected. The bridge advertises `documentScope` in
+while keeping private tasks in the worker. The bridge rejects `sessionId`;
+`create_session` and `close_session` are not published by workers. The bridge advertises `documentScope` in
 tool input schemas and supplies initialization guidance.
 
 Complete published schemas are available as read-only MCP resources, independently
@@ -49,9 +51,9 @@ input and output schemas to avoid exhausting client reference budgets; larger
 repeated structures remain shared. Tool-level descriptions retain critical
 authoring guidance, including lyric parser versus literal-text behavior.
 
-On graceful bridge shutdown, its worker stops and all its private sessions are
+On graceful bridge shutdown, its worker stops and all its private documents are
 discarded. HTTP timeouts/disconnects while the
-bridge remains alive preserve its session for inspection. A crashed bridge leaves
+bridge remains alive preserve its documents for inspection. A crashed bridge leaves
 its worker a 60-second orphan grace period; private drafts are not recovered.
 
 The bridge ships at `resources/mcp/bridge.mjs` with `bridgeProtocol.mjs`; packaged
@@ -64,7 +66,8 @@ private pipe. Diagnostics go to stderr, stdout carries only MCP JSON-RPC, and
 credentials stay out of command arguments.
 
 Headless capabilities report `mode: "headless"`. Raw HTTP headless document calls
-still require explicit sessions; the bridge supplies the convenient default.
+use the worker's private store directly and reject session IDs. HTTP requests do
+not own that store; the bridge's process lifetime controls worker cleanup.
 The hidden host shares document operations, fonts, rich-text measurement, layout,
 and PDF output without mounting the editor, recovery, router, or service worker.
 New worker documents use built-in defaults. This is desktop Electron without
@@ -123,8 +126,9 @@ Enable Allow agent access in the disposable development profile first. The defau
 The environment overrides above are optional developer controls for existing direct
 HTTP test clients; normal users and bridge clients do not set them. Settings show
 the actual endpoint, but never disclose credentials. Raw HTTP document tools retain
-their original interactive default; only the bridge supplies automatic private
-sessions and scope. NEANES_DEV_USER_DATA_DIR applies to development builds, or
+their original interactive default; the bridge defaults to its private worker and supplies explicit editor
+scope. Explicit sessions remain supported for direct HTTP clients sharing the
+interactive server; they are not part of the bridge workflow. NEANES_DEV_USER_DATA_DIR applies to development builds, or
 production smoke runs explicitly marked IS_TEST=1.
 
 Authentication uses a bearer token of at least 32 characters. HTTP binds to IPv4
@@ -134,7 +138,7 @@ paths. Existing suffix validation, overwrite protection, source-conflict checks,
 in-place score writes that preserve existing file metadata, and symlink-output rules remain. MCP client roots do not restrict
 file access.
 
-## Isolated sessions
+## Direct HTTP isolated sessions
 
 Call `create_session` and pass the returned `sessionId` to document tools (including
 `list_documents`, `create_document`, and `open_document`). Omitting it retains the
@@ -156,7 +160,7 @@ documents each. `get_capabilities.isolatedSessions` advertises these bounds.
 if any owned document is dirty. It checks all documents before removing any.
 Session expiry, editor reload/disconnect, and app exit release all private drafts.
 No tabs, selection, recovery drafts, recent-file entries, or interactive undo
-history are created or changed. Sessions can run in the editor or a dedicated headless worker.
+history are created or changed. Sessions are available on the interactive server for direct HTTP clients that need independent private copies. Headless workers use one store without session leases.
 
 Opening a file in a session reads its saved contents, independently of interactive
 unsaved edits or other sessions. Repeated opens within one session reuse its own
@@ -175,6 +179,11 @@ NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile n
 ```
 
 ## Tools
+
+The contracts below describe direct HTTP access to the interactive server. Through
+the bridge, document tools default to private worker documents; use `documentScope`
+to choose editor tabs. Session IDs are available only on the direct interactive
+HTTP endpoint.
 
 - `get_capabilities`: supported style actions, units, and formats. Pass `includeFonts: true` to add this host's installed/bundled font families (omitted by default). Pass `includeErrorCodes: true` for the stable error-code vocabulary.
 - `list_documents`: open workspace IDs, revisions, canonical source paths, source format (`byz`, `byzx`, or null), selection, and unsaved state.
@@ -796,7 +805,7 @@ manifests and inspect each batch's results before continuing.
 
 `batch_update_files` processes an explicit manifest of up to 100 saved scores in
 request-owned private documents. It never reuses interactive tabs or caller-owned
-session documents and accepts neither `sessionId` nor `documentScope`. It holds
+private documents and accepts neither `sessionId` nor `documentScope`. It holds
 one score at a time, so the 16-open-document session limit does not constrain the
 manifest. The normal bridge routes it to its private worker.
 

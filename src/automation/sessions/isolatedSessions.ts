@@ -1,13 +1,17 @@
 import { v4 as uuid } from 'uuid';
 
-import type { Score } from '@/models/Score';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 import { assertDocumentCanClose } from '@/services/documents/documentLifecycle';
-import { DocumentService } from '@/services/documents/DocumentService';
+
+import {
+  PRIVATE_DOCUMENT_LIMIT,
+  type PrivateDocumentHooks,
+  PrivateDocumentStore,
+} from './privateDocumentStore';
 
 export const ISOLATED_SESSION_LIMITS = {
   maxSessions: 4,
-  maxDocuments: 16,
+  maxDocuments: PRIVATE_DOCUMENT_LIMIT,
   idleTimeoutMs: 15 * 60_000,
 };
 
@@ -16,26 +20,15 @@ export const ISOLATED_SESSION_LIMITS = {
 export class IsolatedSessions {
   private sessions = new Map<
     string,
-    { documents: DocumentService; workspaces: Workspace[]; touched: number }
+    { store: PrivateDocumentStore; touched: number }
   >();
 
-  constructor(
-    private hooks: {
-      createScore(): Score;
-      prepare(workspace: Workspace): void;
-      dispose(workspace: Workspace): void;
-      fonts(): string[];
-      ensureFonts(families: string[]): Promise<void>;
-      settle(workspace: Workspace): Promise<void>;
-    },
-  ) {}
+  constructor(private hooks: PrivateDocumentHooks) {}
 
   expire(now = Date.now()) {
     for (const [id, session] of this.sessions) {
       if (now - session.touched >= ISOLATED_SESSION_LIMITS.idleTimeoutMs) {
-        for (const workspace of session.workspaces) {
-          this.hooks.dispose(workspace);
-        }
+        session.store.clear();
         this.sessions.delete(id);
       }
     }
@@ -43,7 +36,7 @@ export class IsolatedSessions {
 
   owns(workspace: Workspace) {
     return [...this.sessions.values()].some((session) =>
-      session.workspaces.includes(workspace),
+      session.store.owns(workspace),
     );
   }
 
@@ -52,38 +45,9 @@ export class IsolatedSessions {
     if (this.sessions.size >= ISOLATED_SESSION_LIMITS.maxSessions) {
       throw new Error('SESSION_LIMIT_REACHED');
     }
-    const workspaces: Workspace[] = [];
-    const documents = new DocumentService({
-      workspaces: () => workspaces,
-      selectedWorkspace: () => null,
-      createScore: () => this.hooks.createScore(),
-      createWorkspace: () => new Workspace(false),
-      fonts: () => this.hooks.fonts(),
-      addWorkspace(workspace) {
-        if (workspaces.length >= ISOLATED_SESSION_LIMITS.maxDocuments) {
-          throw new Error('DOCUMENT_LIMIT_REACHED');
-        }
-        workspace.tempFileName = workspace.id;
-        workspaces.push(workspace);
-      },
-      selectWorkspace() {},
-      prepare: (workspace) => this.hooks.prepare(workspace),
-      changed() {},
-      elementsChanged() {},
-      ensureFonts: (families) => this.hooks.ensureFonts(families),
-      changeStyles(_workspace, operation) {
-        operation();
-      },
-      settle: (workspace) => this.hooks.settle(workspace),
-      async saved() {},
-      close: async (workspace) => {
-        this.hooks.dispose(workspace);
-        workspaces.splice(workspaces.indexOf(workspace), 1);
-        return true;
-      },
-    });
+    const store = new PrivateDocumentStore(this.hooks);
     const sessionId = uuid();
-    this.sessions.set(sessionId, { documents, workspaces, touched: now });
+    this.sessions.set(sessionId, { store, touched: now });
     return {
       sessionId,
       idleTimeoutMs: ISOLATED_SESSION_LIMITS.idleTimeoutMs,
@@ -98,7 +62,7 @@ export class IsolatedSessions {
       throw new Error('SESSION_NOT_FOUND');
     }
     session.touched = now;
-    return session.documents;
+    return session.store.documents;
   }
 
   close(sessionId: string, discardUnsavedChanges: boolean) {
@@ -107,26 +71,20 @@ export class IsolatedSessions {
     for (const workspace of documents.list()) {
       assertDocumentCanClose(workspace, { discardUnsavedChanges });
     }
-    for (const workspace of documents.list()) {
-      this.hooks.dispose(workspace);
-    }
+    this.sessions.get(sessionId)!.store.clear();
     this.sessions.delete(sessionId);
     return { sessionId };
   }
 
   hasUnsavedDrafts() {
-    return [...this.sessions.values()].some(({ workspaces }) =>
-      workspaces.some(
-        (workspace) => workspace.hasUnsavedChanges || workspace.isRecovered,
-      ),
+    return [...this.sessions.values()].some(({ store }) =>
+      store.hasUnsavedDrafts(),
     );
   }
 
   clear() {
     for (const session of this.sessions.values()) {
-      for (const workspace of session.workspaces) {
-        this.hooks.dispose(workspace);
-      }
+      session.store.clear();
     }
     this.sessions.clear();
   }

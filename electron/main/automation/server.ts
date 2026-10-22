@@ -30,9 +30,10 @@ import {
   toolSchemaResources,
   toolSchemaResourceTemplate,
 } from './schemaResources';
-import { automationTools } from './tools';
+import { type AutomationMode, automationTools } from './tools';
 
 export interface McpServerOptions {
+  mode?: AutomationMode;
   token: string;
   port: number;
   version: string;
@@ -105,10 +106,10 @@ export async function startMcpServer(options: McpServerOptions) {
       maxRequestBodySize: 1024 * 1024,
     });
     server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: automationTools(),
+      tools: automationTools(options.mode),
     }));
     server.server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-      resources: toolSchemaResources(),
+      resources: toolSchemaResources(options.mode),
     }));
     server.server.setRequestHandler(
       ListResourceTemplatesRequestSchema,
@@ -118,7 +119,7 @@ export async function startMcpServer(options: McpServerOptions) {
     );
     server.server.setRequestHandler(
       ReadResourceRequestSchema,
-      async ({ params }) => readToolSchemaResource(params.uri),
+      async ({ params }) => readToolSchemaResource(params.uri, options.mode),
     );
     // Validate tool arguments here so application failures always have our structured
     // error contract, including invalid arguments. JSON-RPC framing errors remain protocol errors.
@@ -128,7 +129,11 @@ export async function startMcpServer(options: McpServerOptions) {
         let outcome;
         let imageData: string | undefined;
         try {
-          if (!Object.hasOwn(automationSchemas, params.name)) {
+          if (
+            !Object.hasOwn(automationSchemas, params.name) ||
+            (options.mode === 'headless' &&
+              ['create_session', 'close_session'].includes(params.name))
+          ) {
             throw new AutomationError({
               code: 'TOOL_NOT_FOUND',
               message: 'Unknown tool.',
@@ -139,6 +144,16 @@ export async function startMcpServer(options: McpServerOptions) {
             tool: params.name,
             arguments: params.arguments ?? {},
           });
+          if (
+            options.mode === 'headless' &&
+            Object.hasOwn(params.arguments ?? {}, 'sessionId')
+          ) {
+            throw new AutomationError({
+              code: 'VALIDATION_ERROR',
+              message: 'Private worker documents do not accept sessionId.',
+              details: {},
+            });
+          }
           const pending = queue.then(() => {
             connection.signal.throwIfAborted();
             extra.signal.throwIfAborted();

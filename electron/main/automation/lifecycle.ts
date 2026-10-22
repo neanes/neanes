@@ -99,6 +99,7 @@ export function installAgentAccess(options: {
     policyToken = accessPolicy!.token,
   ) {
     return startAutomationHost({
+      mode: headless ? 'headless' : 'interactive',
       policyFile: accessPolicyFile,
       policyToken,
       authorize: () => requireAgentAccess(accessPolicyFile, policyToken),

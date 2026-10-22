@@ -81,14 +81,23 @@ const descriptions: Record<AutomationTool, string> = {
 };
 
 // The server and inventory budgets use this exact wire definition.
-export function automationTools(): Tool[] {
-  return (Object.keys(automationSchemas) as AutomationTool[]).map(
-    automationTool,
-  );
+export type AutomationMode = 'interactive' | 'headless';
+
+export function automationTools(mode: AutomationMode = 'interactive'): Tool[] {
+  return (Object.keys(automationSchemas) as AutomationTool[])
+    .filter(
+      (tool) =>
+        mode !== 'headless' ||
+        !['create_session', 'close_session'].includes(tool),
+    )
+    .map((tool) => automationTool(tool, mode));
 }
 
-export function automationTool(tool: AutomationTool): Tool {
-  return {
+export function automationTool(
+  tool: AutomationTool,
+  mode: AutomationMode = 'interactive',
+): Tool {
+  const definition: Tool = {
     name: tool,
     description: descriptions[tool],
     inputSchema: {
@@ -100,7 +109,7 @@ export function automationTool(tool: AutomationTool): Tool {
       type: 'object',
     } as Tool['inputSchema'],
     outputSchema: {
-      ...compactJsonSchema(publishedAutomationOutputSchema(tool)),
+      ...compactJsonSchema(publishedAutomationOutputSchema(tool, mode)),
       type: 'object',
     } as Tool['outputSchema'],
     annotations: {
@@ -111,4 +120,29 @@ export function automationTool(tool: AutomationTool): Tool {
       openWorldHint: false,
     },
   };
+  if (mode === 'headless') {
+    const properties = definition.inputSchema.properties;
+    if (properties) {
+      delete properties.sessionId;
+    }
+    const privateDescriptions: Partial<Record<AutomationTool, string>> = {
+      get_capabilities:
+        'Formats, style units, and private document limits. Worker documents last until disconnect, shutdown, or access revocation; no idle expiry. includeFonts:true adds local fonts; includeErrorCodes:true adds errors.',
+      list_documents:
+        "List this worker's private documents with IDs and revisions. Does not open files.",
+      create_document:
+        'Create an unsaved private document using built-in defaults. No editor tab, selection, or recovery entry is created.',
+      open_document:
+        "Open saved .byzx or .byz contents privately, independently of editor tabs. Reuses this worker's existing copy by canonical identity and preserves its edits. Returns created:true only for a newly added document.",
+      close_document:
+        'Close a private document without saving or deleting files. Requires the last read revision. Unsaved or recovered documents require discardUnsavedChanges:true. selectedDocumentId is null; no replacement document is created.',
+    };
+    definition.description =
+      privateDescriptions[tool] ??
+      definition.description?.replaceAll(
+        'Supports isolated sessions',
+        'Supports private documents',
+      );
+  }
+  return definition;
 }

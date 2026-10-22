@@ -205,10 +205,7 @@ export async function checkBatch(client, directory, seedPath) {
     save: 'copy',
   });
   assert.equal(partial.results[0].status, 'failed');
-  assert.equal(
-    partial.results[0].savedFilePath,
-    await fs.realpath(partialPath),
-  );
+  assert.equal(partial.results[0].savedFilePath, partialPath);
   assert.equal(partial.results[0].error.code, 'FILE_EXISTS');
   const invalid = await call('batch_update_files', {
     files: [{ filePath: noOpPath }],

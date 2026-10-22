@@ -22,6 +22,7 @@ import type { AutomationRequest } from '../contracts/protocol';
 import { getRichTextFormat } from '../contracts/richTextFormat';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
+import { PRIVATE_DOCUMENT_LIMIT } from '../sessions/privateDocumentStore';
 import { readStaffLyrics } from './contentRead';
 import { DocumentRevisions } from './documentRevisions';
 import {
@@ -137,7 +138,14 @@ export class McpDocumentAdapter {
         ...(request.arguments.includeErrorCodes
           ? { errorCodes: [...automationErrorCodes] }
           : {}),
-        isolatedSessions: ISOLATED_SESSION_LIMITS,
+        ...(this.mode === 'headless'
+          ? {
+              privateDocuments: {
+                maxDocuments: PRIVATE_DOCUMENT_LIMIT,
+                lifetime: 'worker',
+              },
+            }
+          : { isolatedSessions: ISOLATED_SESSION_LIMITS }),
         paragraphStyles: {
           actions: ['create', 'replace', 'update', 'delete'],
           dimensions: 'css-px',

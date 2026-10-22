@@ -44,6 +44,61 @@ describe('complete tool schema resources', () => {
     expect(JSON.stringify(tools)).toBe(before);
   });
 
+  it('publishes worker storage without exposing session leases', () => {
+    const tools = automationTools('headless');
+    expect(
+      tools.some(({ name }) =>
+        ['create_session', 'close_session'].includes(name),
+      ),
+    ).toBe(false);
+    expect(toolSchemaResources('headless')).toHaveLength(tools.length * 2);
+    for (const tool of tools) {
+      expect(tool.inputSchema.properties).not.toHaveProperty('sessionId');
+      for (const view of ['input', 'output']) {
+        const resource = readToolSchemaResource(
+          `neanes://schemas/${tool.name}/${view}`,
+          'headless',
+        );
+        expect(JSON.parse(resource.contents[0].text).schema).toEqual(
+          view === 'input' ? tool.inputSchema : tool.outputSchema,
+        );
+      }
+    }
+    for (const name of ['create_session', 'close_session']) {
+      expect(() =>
+        readToolSchemaResource(`neanes://schemas/${name}/input`, 'headless'),
+      ).toThrow(McpError);
+    }
+    const tool = tools.find(({ name }) => name === 'get_capabilities')!;
+    const validate = new AjvJsonSchemaValidator().getValidator(
+      tool.outputSchema!,
+    );
+    const result = {
+      mode: 'headless',
+      privateDocuments: { maxDocuments: 16, lifetime: 'worker' },
+      paragraphStyles: {
+        actions: ['create'],
+        dimensions: 'css-px',
+        lineHeight: 'multiplier',
+      },
+      formats: { open: ['byzx'], save: ['byzx'], export: ['pdf'] },
+    };
+    expect(validate({ success: true, result })).toMatchObject({ valid: true });
+    expect(
+      validate({
+        success: true,
+        result: {
+          ...result,
+          isolatedSessions: {
+            maxSessions: 4,
+            maxDocuments: 16,
+            idleTimeoutMs: 900000,
+          },
+        },
+      }),
+    ).toMatchObject({ valid: false });
+  });
+
   it('retains validation and field guidance that client declarations can omit', () => {
     const read = (name: string) =>
       JSON.parse(

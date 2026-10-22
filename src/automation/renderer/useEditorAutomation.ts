@@ -10,7 +10,7 @@ import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapsh
 import { Unit } from '@/utils/Unit';
 
 import { editorBusyError, type EditorBusyState } from '../contracts/editorBusy';
-import { AutomationError, automationError } from '../contracts/errors';
+import { automationError } from '../contracts/errors';
 import {
   type AutomationMessage,
   type AutomationReply,
@@ -21,11 +21,15 @@ import { batchUpdateFiles } from '../documents/batchFiles';
 import { McpDocumentAdapter } from '../documents/McpDocumentAdapter';
 import { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { IsolatedSessions } from '../sessions/isolatedSessions';
+import {
+  type PrivateDocumentHooks,
+  PrivateDocumentStore,
+} from '../sessions/privateDocumentStore';
 
 export function useEditorAutomation(options: {
   enabled: boolean;
-  requireSessions?: boolean;
   documents: DocumentService;
+  privateStore?: PrivateDocumentStore;
   busyState(): EditorBusyState | null;
   createScore(): Score;
   prepare(workspace: Workspace): void;
@@ -38,7 +42,7 @@ export function useEditorAutomation(options: {
     return { ready() {}, ownsPrivateWorkspace: () => false };
   }
   const ipc = new AutomationIpcClient();
-  const sessionHooks: ConstructorParameters<typeof IsolatedSessions>[0] = {
+  const sessionHooks: PrivateDocumentHooks = {
     createScore: options.createScore,
     prepare: options.prepare,
     dispose: options.dispose,
@@ -46,39 +50,50 @@ export function useEditorAutomation(options: {
     ensureFonts: (families) => options.documents.ensureFonts(families),
     settle: options.settle,
   };
-  const isolatedSessions = new IsolatedSessions(sessionHooks);
-  let activeBatchSessions: IsolatedSessions | undefined;
+  const privateStore = options.privateStore;
+  const mode = privateStore ? 'headless' : 'interactive';
+  const isolatedSessions = privateStore
+    ? undefined
+    : new IsolatedSessions(sessionHooks);
+  let activeBatchStore: PrivateDocumentStore | undefined;
   const isolatedTools = new Map<DocumentService, McpDocumentAdapter>();
   const publishDrafts = () =>
     EventBus.$emit(
       IpcRendererChannels.AutomationDraftsChanged,
-      isolatedSessions.hasUnsavedDrafts(),
+      privateStore
+        ? privateStore.hasUnsavedDrafts()
+        : isolatedSessions!.hasUnsavedDrafts(),
     );
-  const isolatedSessionTimer = setInterval(() => {
-    isolatedSessions.expire();
-    publishDrafts();
-    for (const service of isolatedTools.keys()) {
-      if (
-        !service.list().some((workspace) => isolatedSessions.owns(workspace))
-      ) {
-        isolatedTools.delete(service);
+  const isolatedSessionTimer =
+    isolatedSessions &&
+    setInterval(() => {
+      isolatedSessions.expire();
+      publishDrafts();
+      for (const service of isolatedTools.keys()) {
+        if (
+          !service.list().some((workspace) => isolatedSessions.owns(workspace))
+        ) {
+          isolatedTools.delete(service);
+        }
       }
-    }
-  }, 30_000);
+    }, 30_000);
   onBeforeUnmount(() => {
-    clearInterval(isolatedSessionTimer);
-    isolatedSessions.clear();
-    activeBatchSessions?.clear();
+    if (isolatedSessionTimer) {
+      clearInterval(isolatedSessionTimer);
+    }
+    isolatedSessions?.clear();
+    privateStore?.clear();
+    activeBatchStore?.clear();
     isolatedTools.clear();
   });
   const documentTools = new McpDocumentAdapter(
-    options.documents,
+    privateStore?.documents ?? options.documents,
     ipc,
     exportAutomationPdf,
     options.renderPages,
     (workspace, pageNumber, maxEdge) =>
       ipc.previewPage(options.snapshot(workspace), pageNumber, maxEdge),
-    options.requireSessions ? 'headless' : 'interactive',
+    mode,
   );
 
   async function onAutomationRequest(message: AutomationMessage) {
@@ -99,23 +114,28 @@ export function useEditorAutomation(options: {
           'AUTOMATION_REQUEST_REQUIRED: Discovery runs in the main process.',
         );
       } else if (request.tool === 'batch_update_files') {
-        const batchSessions = new IsolatedSessions(sessionHooks);
-        activeBatchSessions = batchSessions;
-        const session = batchSessions.create();
+        const batchStore = new PrivateDocumentStore(sessionHooks);
+        activeBatchStore = batchStore;
         try {
           result = await batchUpdateFiles(
             request.arguments,
-            batchSessions.get(session.sessionId),
+            batchStore.documents,
             ipc,
             exportAutomationPdf,
           );
         } finally {
-          batchSessions.clear();
-          activeBatchSessions = undefined;
+          batchStore.clear();
+          activeBatchStore = undefined;
         }
       } else if (request.tool === 'create_session') {
+        if (!isolatedSessions) {
+          throw new Error('TOOL_NOT_FOUND');
+        }
         result = isolatedSessions.create();
       } else if (request.tool === 'close_session') {
+        if (!isolatedSessions) {
+          throw new Error('TOOL_NOT_FOUND');
+        }
         const service = isolatedSessions.get(request.arguments.sessionId);
         result = isolatedSessions.close(
           request.arguments.sessionId,
@@ -123,23 +143,11 @@ export function useEditorAutomation(options: {
         );
         isolatedTools.delete(service);
       } else {
-        if (
-          options.requireSessions &&
-          request.tool !== 'get_capabilities' &&
-          request.tool !== 'get_element_catalog' &&
-          request.tool !== 'get_mode_key_templates' &&
-          request.tool !== 'get_rich_text_format' &&
-          (!('sessionId' in request.arguments) || !request.arguments.sessionId)
-        ) {
-          throw new AutomationError({
-            code: 'SESSION_REQUIRED',
-            message:
-              'Headless documents require a session. Call create_session and pass sessionId to document tools.',
-            details: {},
-          });
-        }
         let adapter = documentTools;
         if ('sessionId' in request.arguments && request.arguments.sessionId) {
+          if (!isolatedSessions) {
+            throw new Error('VALIDATION_ERROR');
+          }
           const service = isolatedSessions.get(request.arguments.sessionId);
           const existing = isolatedTools.get(service);
           if (existing) {
@@ -156,7 +164,7 @@ export function useEditorAutomation(options: {
                   pageNumber,
                   maxEdge,
                 ),
-              options.requireSessions ? 'headless' : 'interactive',
+              mode,
             );
             isolatedTools.set(service, adapter);
           }
@@ -201,7 +209,8 @@ export function useEditorAutomation(options: {
   };
   const reset = () => {
     requestQueue = requestQueue.then(() => {
-      isolatedSessions.clear();
+      isolatedSessions?.clear();
+      privateStore?.clear();
       isolatedTools.clear();
       publishDrafts();
     });
@@ -217,7 +226,7 @@ export function useEditorAutomation(options: {
   return {
     ready: () => EventBus.$emit(IpcRendererChannels.AutomationReady),
     ownsPrivateWorkspace: (workspace: Workspace) =>
-      isolatedSessions.owns(workspace) ||
-      (activeBatchSessions?.owns(workspace) ?? false),
+      (privateStore?.owns(workspace) ?? isolatedSessions!.owns(workspace)) ||
+      (activeBatchStore?.owns(workspace) ?? false),
   };
 }

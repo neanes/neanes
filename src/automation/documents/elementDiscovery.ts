@@ -127,6 +127,12 @@ export class ElementDiscovery {
         if (value === undefined || (value === null && key !== 'lineHeight')) {
           return [];
         }
+        if (
+          element.elementType === ElementType.Note &&
+          (key === 'scaleNotes' || key === 'scaleNotesVirtual')
+        ) {
+          value = (element as NoteElement)[key].map((pitch) => pitch ?? null);
+        }
         return [[key, value]];
       }),
     );

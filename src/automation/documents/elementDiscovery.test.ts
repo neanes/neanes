@@ -7,6 +7,7 @@ import {
   AlternateLineElement,
   AnnotationElement,
   DropCapElement,
+  ElementType,
   EmptyElement,
   ImageBoxElement,
   MartyriaElement,
@@ -18,13 +19,16 @@ import {
 } from '@/models/Element';
 import { QuantitativeNeume } from '@/models/Neumes';
 import { resolveParagraphStyle } from '@/models/ParagraphStyle';
+import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import {
   CommandFactory,
   CommandService,
 } from '@/services/history/CommandService';
+import { LayoutService } from '@/services/LayoutService';
 import { SaveService } from '@/services/SaveService';
 
+import { elementEditPropertySchemas } from '../contracts/elementEditSchema';
 import {
   elementCatalogSchema,
   elementPageShape,
@@ -43,6 +47,75 @@ const query = (collection: ElementCollection = { kind: 'staff' }) => ({
 });
 
 describe('typed element discovery', () => {
+  it('exposes calculated pitches by default and projection, but never for editing', () => {
+    const score = new Score();
+    const note = new NoteElement();
+    note.scaleNotes = [ScaleNote.Ga, ScaleNote.PaHigh];
+    note.scaleNotesVirtual = [ScaleNote.Thi, ScaleNote.VouHigh];
+    score.staff.elements.unshift(note);
+    const reader = new ElementDiscovery();
+    expect(reader.read(score, query()).elements[0].properties).toMatchObject({
+      scaleNotes: note.scaleNotes,
+      scaleNotesVirtual: note.scaleNotesVirtual,
+    });
+    expect(
+      reader.read(score, {
+        ...query(),
+        properties: ['scaleNotes', 'scaleNotesVirtual'],
+      }).elements[0].properties,
+    ).toEqual({
+      scaleNotes: note.scaleNotes,
+      scaleNotesVirtual: note.scaleNotesVirtual,
+    });
+    expect(
+      reader.read(score, { ...query(), properties: ['lyrics'] }).elements[0]
+        .properties,
+    ).not.toHaveProperty('scaleNotes');
+    for (const property of ['scaleNotes', 'scaleNotesVirtual']) {
+      expect(
+        elementEditPropertySchemas[ElementType.Note].safeParse({
+          [property]: [ScaleNote.Ga],
+        }).success,
+      ).toBe(false);
+    }
+  });
+  it.each([QuantitativeNeume.Oligon, QuantitativeNeume.Apostrophos])(
+    'exposes out-of-range pitches as null after calculating %s notes',
+    (neume) => {
+      const score = new Score();
+      score.staff.elements = Array.from({ length: 12 }, () => {
+        const note = new NoteElement();
+        note.quantitativeNeume = neume;
+        return note;
+      });
+      LayoutService.calculateMartyriae(score.staff.elements, score.pageSetup);
+      const reader = new ElementDiscovery();
+      const note = score.staff.elements[11] as NoteElement;
+      expect(note.scaleNotes).toEqual([undefined]);
+      expect(note.scaleNotesVirtual).toEqual([undefined]);
+      for (const options of [
+        query(),
+        { ...query(), includeContent: false },
+        { ...query(), properties: ['scaleNotes', 'scaleNotesVirtual'] },
+      ]) {
+        const page = reader.read(score, options);
+        expect(page.elements[11].properties).toMatchObject({
+          scaleNotes: [null],
+          scaleNotesVirtual: [null],
+        });
+        expect(page.elements[0].properties).toMatchObject({
+          scaleNotes: [
+            neume === QuantitativeNeume.Oligon ? ScaleNote.Vou : ScaleNote.Ni,
+          ],
+        });
+        expect(z.strictObject(elementPageShape).safeParse(page).success).toBe(
+          true,
+        );
+      }
+      expect(note.scaleNotes).toEqual([undefined]);
+      expect(note.scaleNotesVirtual).toEqual([undefined]);
+    },
+  );
   it('excludes embedded content by default while supporting explicit small content reads', () => {
     const score = new Score();
     const image = new ImageBoxElement();

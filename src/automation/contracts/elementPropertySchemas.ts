@@ -10,7 +10,8 @@ import { TextBoxAlignment } from '@/models/ParagraphStyle';
 import { Scale, ScaleNote } from '@/models/Scales';
 
 // Read-only live content projections. These are not edit validation schemas.
-// Layout caches, rendering state, saved IDs and nested objects are excluded.
+// Layout caches are excluded except the explicitly exposed calculated pitches.
+// Rendering state, saved IDs and nested objects are excluded.
 // Unset values are omitted, except lineHeight: null explicitly resets to normal.
 // False, zero and empty strings remain.
 const breaks = {
@@ -59,6 +60,16 @@ export const elementPropertySchemas = {
     lyricsFontVariantNumeric: z.string().optional(),
     lyricsFontVariantLigatures: z.string().optional(),
     lyricsFontVariantAlternates: z.string().optional(),
+    scaleNotes: z
+      .array(z.enum(ScaleNote).nullable())
+      .describe(
+        'Read-only calculated physical pitches in neume order, including octave. A multi-note neume has multiple entries. Null entries indicate pitches outside the supported range.',
+      ),
+    scaleNotesVirtual: z
+      .array(z.enum(ScaleNote).nullable())
+      .describe(
+        'Read-only calculated virtual pitches in neume order, including octave, using the active fthora shift. Null entries indicate pitches outside the supported range.',
+      ),
     quantitativeNeume: z.enum(Neumes.QuantitativeNeume),
     acceptsLyrics: z.enum(AcceptsLyricsOption),
     measureBarLeft: z.enum(Neumes.MeasureBar).optional(),

@@ -45,6 +45,12 @@ function editPropertySchema(type: ElementType) {
   for (const [key, inspected] of Object.entries(
     elementPropertySchemas[type].shape,
   )) {
+    if (
+      type === ElementType.Note &&
+      ['scaleNotes', 'scaleNotesVirtual'].includes(key)
+    ) {
+      continue;
+    }
     let value: z.ZodType = inspected;
     const optional = inspected.isOptional();
     if (optional) {

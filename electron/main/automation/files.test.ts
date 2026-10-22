@@ -218,7 +218,7 @@ describe('source format and file validation', () => {
       ).rejects.toThrow('UNSUPPORTED_FILE_TYPE');
       await expect(
         files.write({
-          filePath: path.relative(process.cwd(), source),
+          filePath: 'source.byzx',
           data: score,
           overwrite: true,
           expectedSource,

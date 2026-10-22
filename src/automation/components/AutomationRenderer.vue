@@ -18,11 +18,12 @@
   />
 </template>
 <script setup lang="ts">
-import { nextTick, onMounted, shallowRef } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, shallowRef, watch } from 'vue';
 
 import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorAutomation } from '@/automation/renderer/useEditorAutomation';
+import { WorkerSettlement } from '@/automation/renderer/workerSettlement';
 import { PrivateDocumentStore } from '@/automation/sessions/privateDocumentStore';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import type { Page } from '@/models/Page';
@@ -43,6 +44,20 @@ const language = 'en';
 const fonts = shallowRef<string[]>([]);
 const overlays = new EditorPreferences();
 const lyrics = new LyricService();
+const settlements = new WorkerSettlement();
+// Language and measurement CSS are fixed for this worker's lifetime. Font
+// availability can change even without content edits (including a late load).
+const invalidateSettlement = () => settlements.invalidate();
+watch(fonts, invalidateSettlement, { flush: 'sync' });
+document.fonts.addEventListener('loading', invalidateSettlement);
+document.fonts.addEventListener('loadingdone', invalidateSettlement);
+document.fonts.addEventListener('loadingerror', invalidateSettlement);
+onBeforeUnmount(() => {
+  document.fonts.removeEventListener('loading', invalidateSettlement);
+  document.fonts.removeEventListener('loadingdone', invalidateSettlement);
+  document.fonts.removeEventListener('loadingerror', invalidateSettlement);
+  settlements.invalidate();
+});
 let sequence = 0;
 const measurement = shallowRef<{
   id: number;
@@ -64,6 +79,10 @@ function prepare(workspace: Workspace) {
   }
 }
 async function settle(workspace: Workspace) {
+  if (document.fonts.status === 'loaded' && settlements.has(workspace)) {
+    return;
+  }
+  const complete = settlements.begin(workspace);
   await Promise.all(
     getScoreFontLoadDescriptors(
       SaveService.SaveScoreToJson(workspace.score),
@@ -75,6 +94,7 @@ async function settle(workspace: Workspace) {
   });
   await nextTick();
   LayoutService.processPages(workspace);
+  complete();
 }
 function measured(heights: TextBoxHeightMeasurement[]) {
   for (const { element, height } of heights) {
@@ -103,7 +123,7 @@ function pagesFailed(error: Error) {
 const privateStore = new PrivateDocumentStore({
   createScore: () => new Score(),
   prepare,
-  dispose() {},
+  dispose: (workspace) => settlements.dispose(workspace),
   fonts: () => fonts.value,
   async ensureFonts(families) {
     await Promise.all(
@@ -119,7 +139,7 @@ const automation = useEditorAutomation({
   busyState: () => null,
   createScore: () => new Score(),
   prepare,
-  dispose() {},
+  dispose: (workspace) => settlements.dispose(workspace),
   settle,
   snapshot: (workspace) => ({
     score: SaveService.SaveScoreToJson(workspace.score),

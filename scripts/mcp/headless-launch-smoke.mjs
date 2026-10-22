@@ -293,12 +293,17 @@ try {
   const layout = await call(first, 'get_pages', {
     documentId: document.documentId,
   });
+  const repeatedLayout = await call(first, 'get_pages', {
+    documentId: document.documentId,
+    expectedRevision: layout.revision,
+    expectedLayoutId: layout.layoutId,
+  });
+  assert.deepEqual(repeatedLayout, layout);
   const preview = await first.callTool({
     name: 'preview_page',
     arguments: {
       documentId: document.documentId,
       expectedRevision: layout.revision,
-      expectedLayoutId: layout.layoutId,
       pageNumber: 1,
       maxEdge: 512,
     },

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import { Score } from '@/models/Score';
 
 import { parseAutomationRequest } from '../contracts/protocol';
 import { assertResultBudget } from '../contracts/responseBudget';
-import { automationOutputSchema } from '../contracts/results';
 import { readStaffLyrics } from './contentRead';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';

@@ -1,6 +1,7 @@
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import { describe, expect, it } from 'vitest';
 
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import { ElementType, NoteElement } from '@/models/Element';
 import { Score } from '@/models/Score';
 
@@ -9,7 +10,7 @@ import { ElementDiscovery } from '../documents/elementDiscovery';
 import { getParagraphStyles } from '../documents/paragraphStyleRead';
 import { automationErrorCodes } from './errors';
 import { parseAutomationRequest } from './protocol';
-import { automationOutputSchema, automationResultSchemas } from './results';
+import { automationResultSchemas } from './results';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 const summary = {

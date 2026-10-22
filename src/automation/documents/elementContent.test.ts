@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { snapshotElements } from '@/automation/__tests__/helpers';
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import {
   AnnotationElement,
   DropCapElement,
@@ -13,7 +15,6 @@ import { Score } from '@/models/Score';
 import { elementContentQueryShape } from '../contracts/elementContentSchema';
 import { parseAutomationRequest } from '../contracts/protocol';
 import { assertResultBudget } from '../contracts/responseBudget';
-import { automationOutputSchema } from '../contracts/results';
 import { ElementDiscovery } from './elementDiscovery';
 
 const readQuery = {
@@ -178,10 +179,10 @@ describe('exact element content retrieval', () => {
       discovery.read(score, { ...readQuery, properties: [] }).elements[0]
         .properties,
     ).toEqual({});
-    const before = discovery.snapshot(score);
+    const before = snapshotElements(discovery, score);
     annotation.text = 'a'.repeat(70000);
     drop.content = 'b'.repeat(70000);
-    expect(discovery.snapshot(score)).not.toBe(before);
+    expect(snapshotElements(discovery, score)).not.toBe(before);
     page = discovery.read(score, readQuery);
     expect(page.elements[0]).toMatchObject({ omittedContent: ['text'] });
     expect(page.elements[1]).toMatchObject({ omittedContent: ['content'] });

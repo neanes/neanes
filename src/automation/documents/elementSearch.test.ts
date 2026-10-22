@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { reactive } from 'vue';
 import { z } from 'zod';
 
+import { snapshotElements } from '@/automation/__tests__/helpers';
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import {
   AlternateLineElement,
   AnnotationElement,
@@ -24,7 +26,6 @@ import {
   automationSchemas,
   parseAutomationRequest,
 } from '../contracts/protocol';
-import { automationOutputSchema } from '../contracts/results';
 import { ElementDiscovery } from './elementDiscovery';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
@@ -197,13 +198,13 @@ describe('element search and reference lookup', () => {
       0, 1,
     ]);
     expect(find('lyrics', 'eq', { value: '' })).toHaveLength(1);
-    const before = reader.snapshot(score);
+    const before = snapshotElements(reader, score);
     drop.fontSize = null;
-    expect(reader.snapshot(score)).not.toBe(before);
-    const nullSnapshot = reader.snapshot(score);
+    expect(snapshotElements(reader, score)).not.toBe(before);
+    const nullSnapshot = snapshotElements(reader, score);
     // Some imported optional fields can be undefined instead of constructor null.
     Reflect.set(drop, 'fontSize', undefined);
-    expect(reader.snapshot(score)).not.toBe(nullSnapshot);
+    expect(snapshotElements(reader, score)).not.toBe(nullSnapshot);
     expect(find('fontSize', 'eq', { value: null })).toHaveLength(1);
     expect(find('fontSize', 'isNull')).toHaveLength(2);
   });

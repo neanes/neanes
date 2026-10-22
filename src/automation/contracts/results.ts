@@ -194,19 +194,6 @@ export const automationResultSchemas = {
   }),
 } satisfies Record<AutomationTool, z.ZodType>;
 
-export type AutomationResults = {
-  [K in AutomationTool]: z.output<(typeof automationResultSchemas)[K]>;
-};
-export function automationOutputSchema(tool: AutomationTool) {
-  return z.discriminatedUnion('success', [
-    z.strictObject({
-      success: z.literal(true),
-      result: automationResultSchemas[tool],
-    }),
-    z.strictObject({ success: z.literal(false), error: automationErrorSchema }),
-  ]);
-}
-
 // Publication stays compact; runtime results above retain typed property validation.
 const publishedElement = z.strictObject({
   elementRef: z.string().uuid(),

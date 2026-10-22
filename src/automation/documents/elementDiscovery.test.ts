@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { reactive } from 'vue';
 import { z } from 'zod';
 
+import { snapshotElements } from '@/automation/__tests__/helpers';
 import {
   AlternateLineElement,
   AnnotationElement,
@@ -224,9 +225,9 @@ describe('typed element discovery', () => {
           reset.getParagraphStyleOverrides(),
         ).lineHeight,
       ).toBeNull();
-      const before = reader.snapshot(score);
+      const before = snapshotElements(reader, score);
       inherited.lineHeight = null;
-      expect(reader.snapshot(score)).not.toBe(before);
+      expect(snapshotElements(reader, score)).not.toBe(before);
       const catalog = getElementCatalog({
         includeProperties: true,
         includeNeumes: true,
@@ -294,7 +295,7 @@ describe('typed element discovery', () => {
     box.lineHeight = null;
     score.staff.elements.unshift(note, box);
     const reader = new ElementDiscovery();
-    const before = reader.snapshot(score);
+    const before = snapshotElements(reader, score);
     const full = reader.read(score, query());
     const selected = reader.read(score, {
       ...query(),
@@ -322,9 +323,9 @@ describe('typed element discovery', () => {
         .read(score, { ...query(), properties: [] })
         .elements.every((e) => Object.keys(e.properties).length === 0),
     ).toBe(true);
-    expect(reader.snapshot(score)).toBe(before);
+    expect(snapshotElements(reader, score)).toBe(before);
     box.content = 'changed outside the projection';
-    expect(reader.snapshot(score)).not.toBe(before);
+    expect(snapshotElements(reader, score)).not.toBe(before);
   });
 
   it('bounds image and rich-text discovery when content is excluded and retains full retrieval', () => {
@@ -490,19 +491,19 @@ describe('typed element discovery', () => {
     const reader = new ElementDiscovery();
     const saved = () => JSON.stringify(SaveService.SaveScoreToJson(score));
     const originalSaved = saved();
-    const original = reader.snapshot(score);
-    expect(reader.snapshot(reactive(score))).toBe(original);
+    const original = snapshotElements(reader, score);
+    expect(snapshotElements(reader, reactive(score))).toBe(original);
     note.annotations.reverse();
     expect(saved()).toBe(originalSaved);
-    const reordered = reader.snapshot(score);
+    const reordered = snapshotElements(reader, score);
     expect(reordered).not.toBe(original);
     note.annotations.pop();
     expect(saved()).toBe(originalSaved);
-    const removed = reader.snapshot(score);
+    const removed = snapshotElements(reader, score);
     expect(removed).not.toBe(reordered);
     note.annotations[0] = new AnnotationElement();
     expect(saved()).toBe(originalSaved);
-    expect(reader.snapshot(score)).not.toBe(removed);
+    expect(snapshotElements(reader, score)).not.toBe(removed);
   });
 
   it('tracks projected properties and nested or disabled collections omitted by serialization', () => {
@@ -518,23 +519,23 @@ describe('typed element discovery', () => {
     const reader = new ElementDiscovery();
     const saved = () => JSON.stringify(SaveService.SaveScoreToJson(score));
     let beforeSaved = saved();
-    let before = reader.snapshot(score);
+    let before = snapshotElements(reader, score);
     annotation.x = 10;
     expect(saved()).toBe(beforeSaved);
-    expect(reader.snapshot(score)).not.toBe(before);
-    before = reader.snapshot(score);
+    expect(snapshotElements(reader, score)).not.toBe(before);
+    before = snapshotElements(reader, score);
     note.alternateLines.pop();
     expect(saved()).toBe(beforeSaved);
-    expect(reader.snapshot(score)).not.toBe(before);
+    expect(snapshotElements(reader, score)).not.toBe(before);
     beforeSaved = saved();
-    before = reader.snapshot(score);
+    before = snapshotElements(reader, score);
     score.headers.odd.elements[0] = score.headers.odd.elements[0].clone();
     expect(saved()).toBe(beforeSaved);
-    expect(reader.snapshot(score)).not.toBe(before);
-    before = reader.snapshot(score);
+    expect(snapshotElements(reader, score)).not.toBe(before);
+    before = snapshotElements(reader, score);
     note.x += 20;
     note.keyHelper++;
-    expect(reader.snapshot(score)).toBe(before);
+    expect(snapshotElements(reader, score)).toBe(before);
   });
 
   it('uses half-open collection ranges and relative pagination, including empty ranges', () => {

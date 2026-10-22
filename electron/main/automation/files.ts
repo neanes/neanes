@@ -123,11 +123,6 @@ export class AutomationFiles {
     return this.files.open(filePath, workspaces);
   }
 
-  async read(filePath: string) {
-    await this.resolve(filePath, 'score');
-    return this.files.read(filePath);
-  }
-
   async write(args: WriteScoreFileArgs) {
     return this.files.write(args);
   }

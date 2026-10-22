@@ -1,6 +1,5 @@
-import { nextTick, onBeforeUnmount, shallowRef, toRaw } from 'vue';
+import { nextTick, onBeforeUnmount, toRaw } from 'vue';
 
-import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
 import {
   type DocumentEditor,
@@ -12,14 +11,12 @@ import {
   getScoreFontLoadDescriptors,
 } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
-import {
-  getResizableTextBoxes,
-  type TextBoxHeightMeasurement,
-} from '@/services/rendering/textBoxMeasurement';
+import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
 import { SaveService } from '@/services/SaveService';
 
 import type { EditorBusyState } from '../contracts/editorBusy';
 import { useEditorAutomation } from './useEditorAutomation';
+import { useWorkspaceMeasurements } from './useWorkspaceMeasurements';
 
 // Owns the automation document adapter and its offscreen measurements. The editor
 // supplies application operations and retains normal editing/persistence flows.
@@ -37,28 +34,7 @@ export function useEditorDocumentAutomation(
   const pendingTextBoxMeasurements = new Map<string, Promise<void>>();
   let textBoxMeasurementQueue = Promise.resolve();
   let editorUnmounted = false;
-  const workspaceTextBoxMeasurement = shallowRef<{
-    workspace: Workspace;
-    resolve(): void;
-    reject(error: Error): void;
-  } | null>(null);
-  const workspacePageMeasurement = shallowRef<{
-    workspace: Workspace;
-    resolve(pages: Page[]): void;
-    reject(error: Error): void;
-  } | null>(null);
-  function completePageMeasurement(pages: Page[]) {
-    const request = workspacePageMeasurement.value!;
-    workspacePageMeasurement.value = null;
-    request.resolve(pages);
-  }
-  function failPageMeasurement(error: Error) {
-    const request = workspacePageMeasurement.value;
-    if (request !== null) {
-      workspacePageMeasurement.value = null;
-      request.reject(error);
-    }
-  }
+  const { textBoxes, pages } = useWorkspaceMeasurements();
 
   function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
     dirtyTextBoxWorkspaces.add(workspace.id);
@@ -75,9 +51,7 @@ export function useEditorDocumentAutomation(
       // Compute target widths and inherited legacy text styles before mounting measurements.
       LayoutService.processPages(toRaw(workspace));
       if (getResizableTextBoxes(workspace.score).length > 0) {
-        await new Promise<void>((resolve, reject) => {
-          workspaceTextBoxMeasurement.value = { workspace, resolve, reject };
-        });
+        await textBoxes.start(workspace);
         await nextTick();
         LayoutService.processPages(toRaw(workspace));
       }
@@ -124,30 +98,6 @@ export function useEditorDocumentAutomation(
     }
   }
 
-  function completeWorkspaceTextBoxMeasurement(
-    heights: TextBoxHeightMeasurement[],
-  ) {
-    const request = workspaceTextBoxMeasurement.value;
-    // A removed workspace can cancel the request before its component unmounts.
-    if (request == null) {
-      return;
-    }
-    for (const { element, height } of heights) {
-      element.height = height;
-    }
-    workspaceTextBoxMeasurement.value = null;
-    request.resolve();
-  }
-
-  function failWorkspaceTextBoxMeasurement(error: Error) {
-    const request = workspaceTextBoxMeasurement.value;
-    if (request == null) {
-      return;
-    }
-    workspaceTextBoxMeasurement.value = null;
-    request.reject(error);
-  }
-
   const documents = new DocumentService({
     ...options,
     async settle(workspace) {
@@ -177,12 +127,8 @@ export function useEditorDocumentAutomation(
   function disposeWorkspace(workspace: Workspace) {
     dirtyTextBoxWorkspaces.delete(workspace.id);
     pendingTextBoxMeasurements.delete(workspace.id);
-    if (workspaceTextBoxMeasurement.value?.workspace.id === workspace.id) {
-      failWorkspaceTextBoxMeasurement(new Error('DOCUMENT_NOT_FOUND'));
-    }
-    if (workspacePageMeasurement.value?.workspace.id === workspace.id) {
-      failPageMeasurement(new Error('DOCUMENT_NOT_FOUND'));
-    }
+    textBoxes.cancel(workspace);
+    pages.cancel(workspace);
   }
   const automation = useEditorAutomation({
     documents,
@@ -193,10 +139,7 @@ export function useEditorDocumentAutomation(
     dispose: disposeWorkspace,
     settle: queueWorkspaceTextBoxMeasurement,
     snapshot: options.snapshot,
-    renderPages: (workspace) =>
-      new Promise<Page[]>((resolve, reject) => {
-        workspacePageMeasurement.value = { workspace, resolve, reject };
-      }),
+    renderPages: pages.start,
   });
   function isActive(workspace: Workspace) {
     return (
@@ -206,21 +149,15 @@ export function useEditorDocumentAutomation(
   }
   onBeforeUnmount(() => {
     editorUnmounted = true;
-    if (workspaceTextBoxMeasurement.value) {
-      failWorkspaceTextBoxMeasurement(new Error('DOCUMENT_NOT_FOUND'));
-    }
-    if (workspacePageMeasurement.value) {
-      failPageMeasurement(new Error('DOCUMENT_NOT_FOUND'));
-    }
   });
   return {
     automation,
     disposeWorkspace,
-    workspaceTextBoxMeasurement,
-    workspacePageMeasurement,
-    completePageMeasurement,
-    failPageMeasurement,
-    completeWorkspaceTextBoxMeasurement,
-    failWorkspaceTextBoxMeasurement,
+    workspaceTextBoxMeasurement: textBoxes.pending,
+    workspacePageMeasurement: pages.pending,
+    completePageMeasurement: pages.complete,
+    failPageMeasurement: pages.fail,
+    completeWorkspaceTextBoxMeasurement: textBoxes.complete,
+    failWorkspaceTextBoxMeasurement: textBoxes.fail,
   };
 }

@@ -5,16 +5,16 @@
     :workspace="measurement.workspace"
     :fonts="fonts"
     :editor-language="language"
-    @complete="measured"
-    @failed="failed"
+    @complete="textBoxes.complete"
+    @failed="textBoxes.fail"
   />
   <WorkspacePageMeasurement
     v-if="pageMeasurement"
     :workspace="pageMeasurement.workspace"
     :fonts="fonts"
     :editor-language="language"
-    @ready="pagesReady"
-    @failed="pagesFailed"
+    @ready="pages.complete"
+    @failed="pages.fail"
   />
 </template>
 <script setup lang="ts">
@@ -23,10 +23,10 @@ import { nextTick, onBeforeUnmount, onMounted, shallowRef, watch } from 'vue';
 import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorAutomation } from '@/automation/renderer/useEditorAutomation';
+import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
 import { WorkerSettlement } from '@/automation/renderer/workerSettlement';
 import { PrivateDocumentStore } from '@/automation/sessions/privateDocumentStore';
 import { EditorPreferences } from '@/models/EditorPreferences';
-import type { Page } from '@/models/Page';
 import { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { fontCatalog } from '@/services/FontCatalog';
@@ -37,7 +37,6 @@ import {
   getFontFamilyLoadDescriptors,
   getScoreFontLoadDescriptors,
 } from '@/services/rendering/fontReadiness';
-import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
 import { SaveService } from '@/services/SaveService';
 
 const language = 'en';
@@ -58,18 +57,9 @@ onBeforeUnmount(() => {
   document.fonts.removeEventListener('loadingerror', invalidateSettlement);
   settlements.invalidate();
 });
-let sequence = 0;
-const measurement = shallowRef<{
-  id: number;
-  workspace: Workspace;
-  resolve(): void;
-  reject(error: Error): void;
-} | null>(null);
-const pageMeasurement = shallowRef<{
-  workspace: Workspace;
-  resolve(pages: Page[]): void;
-  reject(error: Error): void;
-} | null>(null);
+const { textBoxes, pages } = useWorkspaceMeasurements();
+const measurement = textBoxes.pending;
+const pageMeasurement = pages.pending;
 function prepare(workspace: Workspace) {
   if (!workspace.score.staff.lyrics.locked) {
     workspace.score.staff.lyrics.text = lyrics.extractLyrics(
@@ -89,35 +79,10 @@ async function settle(workspace: Workspace) {
     ).map((d) => document.fonts.load(d)),
   );
   LayoutService.processPages(workspace);
-  await new Promise<void>((resolve, reject) => {
-    measurement.value = { id: ++sequence, workspace, resolve, reject };
-  });
+  await textBoxes.start(workspace);
   await nextTick();
   LayoutService.processPages(workspace);
   complete();
-}
-function measured(heights: TextBoxHeightMeasurement[]) {
-  for (const { element, height } of heights) {
-    element.height = height;
-  }
-  const request = measurement.value!;
-  measurement.value = null;
-  request.resolve();
-}
-function failed(error: Error) {
-  const request = measurement.value!;
-  measurement.value = null;
-  request.reject(error);
-}
-function pagesReady(pages: Page[]) {
-  const request = pageMeasurement.value!;
-  pageMeasurement.value = null;
-  request.resolve(pages);
-}
-function pagesFailed(error: Error) {
-  const request = pageMeasurement.value!;
-  pageMeasurement.value = null;
-  request.reject(error);
 }
 // One private store lives until the worker shuts down or access is revoked.
 const privateStore = new PrivateDocumentStore({
@@ -150,10 +115,7 @@ const automation = useEditorAutomation({
     systemFonts: fontCatalog.snapshotSystemFonts(),
     overlays,
   }),
-  renderPages: (workspace) =>
-    new Promise<Page[]>((resolve, reject) => {
-      pageMeasurement.value = { workspace, resolve, reject };
-    }),
+  renderPages: pages.start,
 });
 onMounted(async () => {
   await fontCatalog.init();

@@ -12,11 +12,11 @@ import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 
 import { matchesElement } from '../contracts/elementPredicates';
 import type { PageElementQuery } from '../contracts/pageSchemas';
-import { MAX_ELEMENT_PAGE_CHARACTERS } from '../contracts/responseBudget';
 import {
   type ElementCollection,
   type ElementDiscovery,
 } from './elementDiscovery';
+import { collectPage } from './pagination';
 
 type Occurrence = {
   elementRef: string;
@@ -125,7 +125,7 @@ export function readPages(
   layout: DiscoveredPages,
   query: { offset: number; limit: number },
 ) {
-  const selected = pageSlice(layout.pages, query, pageSummary);
+  const selected = collectPage(layout.pages, query, pageSummary);
   return {
     offset: selected.offset,
     nextOffset: selected.nextOffset,
@@ -151,7 +151,7 @@ export function readPageElements(
           query.where,
         )),
   );
-  const selected = pageSlice(matches, query, (occurrence) => occurrence);
+  const selected = collectPage(matches, query, (occurrence) => occurrence);
   return {
     offset: selected.offset,
     nextOffset: selected.nextOffset,
@@ -165,35 +165,6 @@ function pageSummary(page: DiscoveredPages['pages'][number]) {
     displayedPageNumber: page.displayedPageNumber,
     lineCount: page.lineCount,
     occurrenceCount: page.occurrenceCount,
-  };
-}
-function pageSlice<T, R>(
-  values: T[],
-  query: { offset: number; limit: number },
-  project: (value: T) => R,
-) {
-  if (query.offset > values.length) {
-    throw new Error('INVALID_ELEMENT_RANGE');
-  }
-  const stop = Math.min(query.offset + query.limit, values.length);
-  const selected: R[] = [];
-  // Reserve space for document/layout metadata and pagination fields. Entries
-  // have bounded identifiers and numeric fields, so each fits on an empty page.
-  let characters = 1000;
-  for (let index = query.offset; index < stop; index++) {
-    const value = project(values[index]);
-    const size = JSON.stringify(value).length + 1;
-    if (characters + size > MAX_ELEMENT_PAGE_CHARACTERS) {
-      break;
-    }
-    characters += size;
-    selected.push(value);
-  }
-  const end = query.offset + selected.length;
-  return {
-    offset: query.offset,
-    nextOffset: end < values.length ? end : null,
-    values: selected,
   };
 }
 export async function fingerprintLayout(layout: DiscoveredPages) {

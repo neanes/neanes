@@ -13,6 +13,14 @@ import { writeScoreFile } from '../files/scoreFiles';
 
 import { AutomationFiles } from './files';
 
+async function readScore(files: AutomationFiles, filePath: string) {
+  const result = await files.open(filePath, []);
+  if ('documentId' in result) {
+    throw new Error('An empty workspace list must read the saved file.');
+  }
+  return result;
+}
+
 describe('automation file access', () => {
   let directory: string;
   let root: string;
@@ -90,8 +98,8 @@ describe('automation file access', () => {
     await fs.symlink(target, requested);
 
     for (const result of [
-      await files.read(requested),
-      await files.open(requested, []),
+      await readScore(files, requested),
+      await readScore(files, requested),
     ]) {
       expect(result).toMatchObject({
         filePath: requested,
@@ -110,7 +118,7 @@ describe('automation file access', () => {
       path.join(root, '..', 'outside.byzx'),
       path.join(root, 'link.byzx'),
     ]) {
-      expect((await files.read(requested)).filePath).toBe(requested);
+      expect((await readScore(files, requested)).filePath).toBe(requested);
     }
     expect(
       await files.resolve(path.join(root, 'escape', 'new.pdf'), 'pdf', true),
@@ -118,7 +126,7 @@ describe('automation file access', () => {
     await expect(
       files.resolve(path.join(root, 'link.byzx'), 'score', true),
     ).rejects.toThrow('SYMLINK_OUTPUT_NOT_ALLOWED');
-    await expect(files.read('relative.byzx')).rejects.toThrow(
+    await expect(readScore(files, 'relative.byzx')).rejects.toThrow(
       'ABSOLUTE_PATH_REQUIRED',
     );
   });
@@ -140,7 +148,7 @@ describe('requested paths and file validation', () => {
           await writeScoreFile(alias, score);
           await fs.rename(alias, target);
           await fs.symlink(target, alias);
-          const opened = await files.read(alias);
+          const opened = await readScore(files, alias);
           expect(opened.filePath).toBe(alias);
           const expectedSource = {
             filePath: opened.filePath,
@@ -157,7 +165,8 @@ describe('requested paths and file validation', () => {
           expect(saved.filePath).toBe(alias);
           expect((await fs.lstat(alias)).isSymbolicLink()).toBe(true);
           expect(
-            JSON.parse((await files.read(alias)).data).documentProperties.title,
+            JSON.parse((await readScore(files, alias)).data).documentProperties
+              .title,
           ).toBe('Changed');
           // Identity aliases do not weaken source conflict protection.
           await fs.appendFile(target, 'external modification');
@@ -180,7 +189,9 @@ describe('requested paths and file validation', () => {
             expectedSource,
           });
           expect(copied.filePath).toBe(copy);
-          expect(JSON.parse((await files.read(copy)).data)).toEqual(score);
+          expect(JSON.parse((await readScore(files, copy)).data)).toEqual(
+            score,
+          );
         }
       } finally {
         await fs.rm(directory, { recursive: true, force: true });
@@ -199,7 +210,7 @@ describe('requested paths and file validation', () => {
       const score = SaveService.SaveScoreToJson(new Score());
       const source = path.join(root, 'source.byzx');
       await writeScoreFile(source, score);
-      const opened = await files.read(source);
+      const opened = await readScore(files, source);
       const expectedSource = {
         filePath: source,
         mtimeMs: opened.sourceMtimeMs,
@@ -228,7 +239,7 @@ describe('requested paths and file validation', () => {
         overwrite: false,
         expectedSource,
       });
-      expect(JSON.parse((await files.read(outside)).data)).toEqual(score);
+      expect(JSON.parse((await readScore(files, outside)).data)).toEqual(score);
       const link = path.join(root, 'other.byzx');
       await fs.symlink(outside, link);
       await expect(

@@ -2,6 +2,7 @@ import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv
 import { DomUtils, parseDocument } from 'htmlparser2';
 import { describe, expect, it } from 'vitest';
 
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import { ElementType } from '@/models/Element';
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 import { fontCatalog } from '@/services/FontCatalog';
@@ -17,7 +18,6 @@ import { richTextParagraphStyleIdFromClassName } from '@/utils/richTextParagraph
 import { automationTools } from '../../../electron/main/automation/tools';
 import { getElementCatalog } from './elementSchemas';
 import { parseAutomationRequest } from './protocol';
-import { automationOutputSchema } from './results';
 import { getRichTextFormat } from './richTextFormat';
 import { canRunWhileEditorBusy } from './toolBehavior';
 

@@ -1,6 +1,7 @@
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import { describe, expect, it } from 'vitest';
 
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import {
   AlternateLineElement,
   AnnotationElement,
@@ -19,7 +20,6 @@ import {
   assertResultBudget,
   MAX_ELEMENT_PAGE_CHARACTERS,
 } from '../contracts/responseBudget';
-import { automationOutputSchema } from '../contracts/results';
 import { ElementDiscovery } from './elementDiscovery';
 import {
   discoverPages,

@@ -6,6 +6,7 @@ import {
   type AgentAccessPolicy,
   agentAccessPolicySchema,
 } from '../../../src/ipc/agentAccess';
+import { atomicWrite } from './atomicWrite';
 
 export async function readAccessPolicy(
   file: string,
@@ -54,16 +55,7 @@ export async function setAccessEnabled(file: string, enabled: boolean) {
     return policy;
   }
   const next = { enabled, token: randomBytes(32).toString('hex') };
-  const temporary = `${file}.${randomUUID()}.tmp`;
-  try {
-    await fs.writeFile(temporary, JSON.stringify(next), {
-      mode: 0o600,
-      flag: 'wx',
-    });
-    await fs.rename(temporary, file);
-  } finally {
-    await fs.rm(temporary, { force: true });
-  }
+  await atomicWrite(file, JSON.stringify(next));
   return next;
 }
 
@@ -132,17 +124,10 @@ export async function registerAgentHost(file: string, token: string) {
   return {
     update(dirty: boolean, busy: boolean) {
       const operation = queue.then(async () => {
-        const temporary = `${record}.tmp`;
-        try {
-          await fs.writeFile(
-            temporary,
-            JSON.stringify({ pid: process.pid, dirty, busy, generation }),
-            { mode: 0o600 },
-          );
-          await fs.rename(temporary, record);
-        } finally {
-          await fs.rm(temporary, { force: true });
-        }
+        await atomicWrite(
+          record,
+          JSON.stringify({ pid: process.pid, dirty, busy, generation }),
+        );
       });
       queue = operation.catch(() => {});
       return operation;

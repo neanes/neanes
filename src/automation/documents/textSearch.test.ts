@@ -1,6 +1,7 @@
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import { describe, expect, it } from 'vitest';
 
+import { snapshotElements } from '@/automation/__tests__/helpers';
 import {
   AlternateLineElement,
   AnnotationElement,
@@ -58,7 +59,7 @@ function fixture() {
 describe('MCP text discovery', () => {
   it('returns depth-first matches and all references in a lyric span without mutation', () => {
     const { score, reader, first, second, annotation } = fixture();
-    const before = reader.snapshot(score);
+    const before = snapshotElements(reader, score);
     const result = reader.findText(score, query());
     expect(result.matches).toHaveLength(5);
     expect(result.matches.map((match) => match.snippet.trim())).toEqual([
@@ -77,7 +78,7 @@ describe('MCP text discovery', () => {
       kind: 'headers',
       variant: 'odd',
     });
-    expect(reader.snapshot(score)).toBe(before);
+    expect(snapshotElements(reader, score)).toBe(before);
     for (const match of result.matches) {
       for (const element of match.elements) {
         expect(

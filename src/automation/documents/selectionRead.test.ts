@@ -2,6 +2,8 @@ import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv
 import { describe, expect, it } from 'vitest';
 import { reactive } from 'vue';
 
+import { snapshotElements } from '@/automation/__tests__/helpers';
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import {
   AlternateLineElement,
   AnnotationElement,
@@ -13,7 +15,6 @@ import { snapshotDocument } from '@/services/documents/documentPersistence';
 
 import { automationTools } from '../../../electron/main/automation/tools';
 import { parseAutomationRequest } from '../contracts/protocol';
-import { automationOutputSchema } from '../contracts/results';
 import { ElementDiscovery } from './elementDiscovery';
 import { readSelection } from './selectionRead';
 
@@ -144,14 +145,14 @@ describe('selection discovery', () => {
   it('does not change content snapshots, dirty state or selection', () => {
     const { workspace, note, discovery, read } = fixture();
     const saved = snapshotDocument(workspace);
-    const live = discovery.snapshot(workspace.score);
+    const live = snapshotElements(discovery, workspace.score);
     workspace.selectedElement = note;
     read();
     workspace.selectedElement = null;
     workspace.selectedLyrics = note;
     read();
     expect(snapshotDocument(workspace)).toBe(saved);
-    expect(discovery.snapshot(workspace.score)).toBe(live);
+    expect(snapshotElements(discovery, workspace.score)).toBe(live);
     expect(workspace.hasUnsavedChanges).toBe(false);
     expect(workspace.selectedLyrics).toBe(note);
   });

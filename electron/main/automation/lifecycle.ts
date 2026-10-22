@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { promises as fs, writeSync } from 'node:fs';
 import path from 'node:path';
 
@@ -17,6 +17,7 @@ import {
   requireAgentAccess,
   setAccessEnabled,
 } from './access';
+import { atomicWrite } from './atomicWrite';
 import { startAutomationHost } from './host';
 import { renderPagePreview } from './preview';
 
@@ -66,26 +67,19 @@ export function installAgentAccess(options: {
           return;
         }
         const file = `${accessPolicyFile}.endpoint`;
-        const temporary = `${file}.${randomUUID()}.tmp`;
-        try {
-          await fs.writeFile(
-            temporary,
-            JSON.stringify({
-              pid: process.pid,
-              error: !accessPolicy.enabled
-                ? 'AGENT_ACCESS_DISABLED'
-                : (accessError ?? automationHost?.error() ?? null),
-              token: process.env.NEANES_MCP_TOKEN ?? accessPolicy.token,
-              endpoint: automationHost?.isReady()
-                ? `http://127.0.0.1:${automationHost.port}/mcp`
-                : null,
-            }),
-            { mode: 0o600, flag: 'wx' },
-          );
-          await fs.rename(temporary, file);
-        } finally {
-          await fs.rm(temporary, { force: true });
-        }
+        await atomicWrite(
+          file,
+          JSON.stringify({
+            pid: process.pid,
+            error: !accessPolicy.enabled
+              ? 'AGENT_ACCESS_DISABLED'
+              : (accessError ?? automationHost?.error() ?? null),
+            token: process.env.NEANES_MCP_TOKEN ?? accessPolicy.token,
+            endpoint: automationHost?.isReady()
+              ? `http://127.0.0.1:${automationHost.port}/mcp`
+              : null,
+          }),
+        );
       })
       .catch((error) => {
         accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
@@ -406,19 +400,10 @@ export function installAgentAccess(options: {
           await fs.mkdir(path.dirname(installedBridge), { recursive: true });
           for (const name of ['bridgeProtocol.mjs', 'bridge.mjs']) {
             const destination = path.join(path.dirname(installedBridge), name);
-            const temporary = `${destination}.${randomUUID()}.tmp`;
-            try {
-              await fs.writeFile(
-                temporary,
-                await fs.readFile(
-                  path.join(process.resourcesPath, 'mcp', name),
-                ),
-                { mode: 0o600, flag: 'wx' },
-              );
-              await fs.rename(temporary, destination);
-            } finally {
-              await fs.rm(temporary, { force: true });
-            }
+            await atomicWrite(
+              destination,
+              await fs.readFile(path.join(process.resourcesPath, 'mcp', name)),
+            );
           }
         }
         await syncAgentAccess();

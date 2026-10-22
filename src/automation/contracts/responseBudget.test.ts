@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import { Workspace } from '@/models/Workspace';
 
 import { automationTools } from '../../../electron/main/automation/tools';
@@ -11,7 +12,6 @@ import {
 } from '../documents/elementEdits';
 import { getElementCatalog } from './elementSchemas';
 import { assertResultBudget, MAX_RESULT_CHARACTERS } from './responseBudget';
-import { automationOutputSchema } from './results';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 

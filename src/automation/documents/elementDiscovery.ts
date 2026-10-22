@@ -28,6 +28,7 @@ import {
 } from '../contracts/responseBudget';
 import type { TextSearchQuery } from '../contracts/textSearchSchema';
 import { readContentChunk } from './contentRead';
+import { collectPage } from './pagination';
 
 export const headerFooterVariants = [
   'default',
@@ -132,37 +133,6 @@ export class ElementDiscovery {
     return query.properties === undefined && query.includeContent === true
       ? schema.parse(properties)
       : schema.partial().parse(properties);
-  }
-
-  // Save serialization can omit blank children and does not retain object
-  // identity. Revisions must also cover everything exposed by discovery.
-  snapshot(score: Score) {
-    const collectionSnapshot = (elements: ScoreElement[]): unknown[] =>
-      elements.map((element) => ({
-        elementRef: this.reference(element),
-        elementType: element.elementType,
-        properties: this.properties(element, { includeContent: true }),
-        // Exact null predicates distinguish null from undefined even when read
-        // projections omit both. Include that distinction in revision identity.
-        nullProperties: Object.keys(
-          elementPropertySchemas[element.elementType].shape,
-        ).filter((key) => Reflect.get(element, key) === null),
-        children: Object.fromEntries(
-          Object.entries(childCollections(element)).map(([name, children]) => [
-            name,
-            collectionSnapshot(children),
-          ]),
-        ),
-      }));
-    return JSON.stringify({
-      staff: collectionSnapshot(score.staff.elements),
-      headers: headerFooterVariants.map((variant) =>
-        collectionSnapshot(score.headers[variant].elements),
-      ),
-      footers: headerFooterVariants.map((variant) =>
-        collectionSnapshot(score.footers[variant].elements),
-      ),
-    });
   }
 
   private collection(
@@ -299,127 +269,84 @@ export class ElementDiscovery {
     throw new Error('ELEMENT_NOT_FOUND');
   }
 
+  private candidates(score: Score, scope: ElementSearchQuery['scope']) {
+    return scope.kind === 'document'
+      ? this.entries(score)
+      : this.walk(
+          this.collection(score, scope.collection),
+          scope.collection,
+          scope.includeDescendants,
+        );
+  }
+
   find(score: Score, query: ElementSearchQuery) {
-    const candidates =
-      query.scope.kind === 'document'
-        ? this.entries(score)
-        : this.walk(
-            this.collection(score, query.scope.collection),
-            query.scope.collection,
-            query.scope.includeDescendants,
-          );
-    const elements = [];
-    let characters = 1000;
-    let matched = 0;
-    for (const { element, collection, index } of candidates) {
-      if (
-        query.elementTypes !== undefined &&
-        !query.elementTypes.includes(element.elementType)
-      ) {
-        continue;
+    const candidates = this.candidates(score, query.scope);
+    function* matches() {
+      for (const entry of candidates) {
+        if (
+          (query.elementTypes === undefined ||
+            query.elementTypes.includes(entry.element.elementType)) &&
+          (query.where === undefined ||
+            matchesElement(entry.element, query.where))
+        ) {
+          yield entry;
+        }
       }
-      if (query.where !== undefined && !matchesElement(element, query.where)) {
-        continue;
-      }
-      if (matched++ < query.offset) {
-        continue;
-      }
-      if (elements.length === query.limit) {
-        return {
-          offset: query.offset,
-          nextOffset: query.offset + elements.length,
-          elements,
-        };
-      }
-      const projected = { ...this.project(element, index, query), collection };
-      const size = elementPageEntrySize(projected, characters, elements.length);
-      if (size === null) {
-        return {
-          offset: query.offset,
-          nextOffset: query.offset + elements.length,
-          elements,
-        };
-      }
-      characters += size;
-      elements.push(projected);
     }
-    if (query.offset > matched) {
-      throw new Error('INVALID_ELEMENT_RANGE');
-    }
-    return { offset: query.offset, nextOffset: null, elements };
+    const { values: elements, ...page } = collectPage(
+      matches(),
+      query,
+      ({ element, collection, index }) => ({
+        ...this.project(element, index, query),
+        collection,
+      }),
+      elementPageEntrySize,
+    );
+    return { ...page, elements };
   }
 
   findText(score: Score, query: TextSearchQuery) {
-    const candidates =
-      query.scope.kind === 'document'
-        ? this.entries(score)
-        : this.walk(
-            this.collection(score, query.scope.collection),
-            query.scope.collection,
-            query.scope.includeDescendants,
-          );
-    const iterators = new Map<
-      ScoreElement[],
-      {
-        iterator: ReturnType<typeof findTextMatches>;
-        next: IteratorResult<TextSearchMatch>;
-      }
-    >();
-    const matches = [];
-    let matched = 0;
-    let characters = 1000;
-    for (const { collection, index, elements } of candidates) {
-      let state = iterators.get(elements);
-      if (!state) {
-        const iterator = findTextMatches(elements, query.query, query);
-        state = { iterator, next: iterator.next() };
-        iterators.set(elements, state);
-      }
-      while (!state.next.done && state.next.value.parts[0].index === index) {
-        const match = state.next.value;
-        if (matched++ >= query.offset) {
-          if (matches.length === query.limit) {
-            return {
-              offset: query.offset,
-              nextOffset: query.offset + matches.length,
-              matches,
-            };
-          }
-          const projected = {
-            elementRef: this.reference(match.parts[0].element),
-            collection,
-            snippet: match.snippet,
-            matchStart: match.matchStart,
-            matchEnd: match.matchEnd,
-            elements: match.parts.map(({ element, index, field }) => ({
-              elementRef: this.reference(element),
-              elementType: element.elementType,
-              index,
-              field,
-            })),
-          };
-          const size = elementPageEntrySize(
-            projected,
-            characters,
-            matches.length,
-          );
-          if (size === null) {
-            return {
-              offset: query.offset,
-              nextOffset: query.offset + matches.length,
-              matches,
-            };
-          }
-          characters += size;
-          matches.push(projected);
+    const candidates = this.candidates(score, query.scope);
+    function* occurrences() {
+      const iterators = new Map<
+        ScoreElement[],
+        {
+          iterator: ReturnType<typeof findTextMatches>;
+          next: IteratorResult<TextSearchMatch>;
         }
-        state.next = state.iterator.next();
+      >();
+      for (const { collection, index, elements } of candidates) {
+        let state = iterators.get(elements);
+        if (!state) {
+          const iterator = findTextMatches(elements, query.query, query);
+          state = { iterator, next: iterator.next() };
+          iterators.set(elements, state);
+        }
+        while (!state.next.done && state.next.value.parts[0].index === index) {
+          yield { collection, match: state.next.value };
+          state.next = state.iterator.next();
+        }
       }
     }
-    if (query.offset > matched) {
-      throw new Error('INVALID_ELEMENT_RANGE');
-    }
-    return { offset: query.offset, nextOffset: null, matches };
+    const { values: matches, ...page } = collectPage(
+      occurrences(),
+      query,
+      ({ collection, match }) => ({
+        elementRef: this.reference(match.parts[0].element),
+        collection,
+        snippet: match.snippet,
+        matchStart: match.matchStart,
+        matchEnd: match.matchEnd,
+        elements: match.parts.map(({ element, index, field }) => ({
+          elementRef: this.reference(element),
+          elementType: element.elementType,
+          index,
+          field,
+        })),
+      }),
+      elementPageEntrySize,
+    );
+    return { ...page, matches };
   }
 
   location(score: Score, target: ScoreElement) {
@@ -482,27 +409,25 @@ export class ElementDiscovery {
     if (query.offset > count) {
       throw new Error('INVALID_ELEMENT_RANGE');
     }
-    const start = query.start + query.offset;
-    const stop = Math.min(start + query.limit, end);
-    const elements = [];
-    let characters = 1000;
-    for (let index = start; index < stop; index++) {
-      const projected = this.project(collection[index], index, query);
-      const size = elementPageEntrySize(projected, characters, elements.length);
-      if (size === null) {
-        break;
+    function* indices() {
+      for (let index = query.start + query.offset; index < end; index++) {
+        yield index;
       }
-      characters += size;
-      elements.push(projected);
     }
-    const next = start + elements.length;
+    const { values: elements, ...page } = collectPage(
+      indices(),
+      { offset: 0, limit: query.limit },
+      (index) => this.project(collection[index], index, query),
+      elementPageEntrySize,
+    );
     return {
       collection: query.collection,
       collectionSize: collection.length,
       start: query.start,
       end,
       offset: query.offset,
-      nextOffset: next < end ? query.offset + elements.length : null,
+      nextOffset:
+        page.nextOffset === null ? null : query.offset + page.nextOffset,
       elements,
     };
   }

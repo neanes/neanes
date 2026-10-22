@@ -1,6 +1,7 @@
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import { describe, expect, it } from 'vitest';
 
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import { ElementType } from '@/models/Element';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 
@@ -8,7 +9,6 @@ import { automationTools } from '../../../electron/main/automation/tools';
 import { getElementCatalog } from './elementSchemas';
 import { getModeKeyTemplates } from './modeKeyTemplates';
 import { parseAutomationRequest } from './protocol';
-import { automationOutputSchema } from './results';
 
 describe('mode-key catalog', () => {
   it('publishes every template with descriptions in a bounded summary response', () => {

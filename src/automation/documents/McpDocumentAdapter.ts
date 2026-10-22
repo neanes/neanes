@@ -73,6 +73,35 @@ export class McpDocumentAdapter {
     }
   }
 
+  private async mutateAndSettle(
+    workspace: Workspace,
+    mutate: () => boolean | void,
+    { includeSettlementChanges = false } = {},
+  ) {
+    const revision = this.revision(workspace);
+    let applied: boolean | undefined;
+    try {
+      applied = mutate() ?? this.revision(workspace) !== revision;
+      await this.documents.settle(workspace);
+    } catch (error) {
+      const failure = automationError(error);
+      const currentRevision = this.revision(workspace);
+      throw new AutomationError({
+        ...failure,
+        details: {
+          ...failure.details,
+          documentId: workspace.id,
+          // Preserve the operation's commit result across settlement failures.
+          editsApplied: includeSettlementChanges
+            ? applied === true || currentRevision !== revision
+            : (applied ?? currentRevision !== revision),
+          revision: currentRevision,
+        },
+      });
+    }
+    return applied;
+  }
+
   private discovery(workspace: Workspace) {
     let discovery = this.discoveries.get(workspace.id);
     if (discovery === undefined) {
@@ -99,6 +128,29 @@ export class McpDocumentAdapter {
       selected: workspace.id === this.documents.selected()?.id,
       elementCount: workspace.score.staff.elements.length,
     };
+  }
+
+  private checkedSummary(
+    workspace: Workspace,
+    expectedRevision: number | undefined,
+    message: string,
+  ) {
+    const summary = this.summary(workspace);
+    if (
+      expectedRevision !== undefined &&
+      expectedRevision !== summary.revision
+    ) {
+      throw new AutomationError({
+        code: 'REVISION_CONFLICT',
+        message,
+        details: {
+          documentId: workspace.id,
+          expectedRevision,
+          actualRevision: summary.revision,
+        },
+      });
+    }
+    return summary;
   }
 
   async execute(
@@ -212,21 +264,11 @@ export class McpDocumentAdapter {
       request.tool === 'get_page_elements' ||
       request.tool === 'preview_page'
     ) {
-      const summary = this.summary(workspace);
-      if (
-        request.arguments.expectedRevision !== undefined &&
-        request.arguments.expectedRevision !== summary.revision
-      ) {
-        throw new AutomationError({
-          code: 'REVISION_CONFLICT',
-          message: 'Read the document again before continuing discovery.',
-          details: {
-            documentId: workspace.id,
-            expectedRevision: request.arguments.expectedRevision,
-            actualRevision: summary.revision,
-          },
-        });
-      }
+      const summary = this.checkedSummary(
+        workspace,
+        request.arguments.expectedRevision,
+        'Read the document again before continuing discovery.',
+      );
       if (request.tool === 'preview_page') {
         const image = await this.previewPage(
           workspace,
@@ -237,18 +279,11 @@ export class McpDocumentAdapter {
           throw new Error('DOCUMENT_NOT_FOUND');
         }
         this.documents.prepare(workspace);
-        const completed = this.summary(workspace);
-        if (completed.revision !== summary.revision) {
-          throw new AutomationError({
-            code: 'REVISION_CONFLICT',
-            message:
-              'The document changed while rendering the preview. Read it again.',
-            details: {
-              expectedRevision: summary.revision,
-              actualRevision: completed.revision,
-            },
-          });
-        }
+        const completed = this.checkedSummary(
+          workspace,
+          summary.revision,
+          'The document changed while rendering the preview. Read it again.',
+        );
         return {
           ...completed,
           capturedRevision: summary.revision,
@@ -283,19 +318,11 @@ export class McpDocumentAdapter {
           throw new Error('DOCUMENT_NOT_FOUND');
         }
         this.documents.prepare(workspace);
-        const measuredRevision = this.revision(workspace);
-        if (measuredRevision !== summary.revision) {
-          throw new AutomationError({
-            code: 'REVISION_CONFLICT',
-            message:
-              'The document changed while measuring pages. Read it again.',
-            details: {
-              documentId: workspace.id,
-              expectedRevision: summary.revision,
-              actualRevision: measuredRevision,
-            },
-          });
-        }
+        this.checkedSummary(
+          workspace,
+          summary.revision,
+          'The document changed while measuring pages. Read it again.',
+        );
         const layout = discoverPages(
           workspace.score,
           score,
@@ -308,19 +335,11 @@ export class McpDocumentAdapter {
           throw new Error('DOCUMENT_NOT_FOUND');
         }
         this.documents.prepare(workspace);
-        const current = this.summary(workspace);
-        if (current.revision !== summary.revision) {
-          throw new AutomationError({
-            code: 'REVISION_CONFLICT',
-            message:
-              'The document changed while measuring pages. Read it again.',
-            details: {
-              documentId: workspace.id,
-              expectedRevision: summary.revision,
-              actualRevision: current.revision,
-            },
-          });
-        }
+        const current = this.checkedSummary(
+          workspace,
+          summary.revision,
+          'The document changed while measuring pages. Read it again.',
+        );
         if (
           request.arguments.expectedLayoutId !== undefined &&
           request.arguments.expectedLayoutId !== layoutId
@@ -420,18 +439,11 @@ export class McpDocumentAdapter {
         ),
       };
     }
-    if (this.revision(workspace) !== request.arguments.expectedRevision) {
-      throw new AutomationError({
-        code: 'REVISION_CONFLICT',
-        message:
-          'Read the document again before changing, saving, or exporting it.',
-        details: {
-          documentId: workspace.id,
-          expectedRevision: request.arguments.expectedRevision,
-          actualRevision: this.revision(workspace),
-        },
-      });
-    }
+    this.checkedSummary(
+      workspace,
+      request.arguments.expectedRevision,
+      'Read the document again before changing, saving, or exporting it.',
+    );
     if (
       request.tool === 'update_page_setup' ||
       request.tool === 'update_header_footer_settings'
@@ -448,27 +460,16 @@ export class McpDocumentAdapter {
           );
         }
       }
-      const revision = request.arguments.expectedRevision;
-      let applied = false;
-      try {
-        applied = this.documents.updatePageSetup(
-          workspace,
-          request.arguments.changes,
-          request.tool === 'update_page_setup' ? 'page' : 'headerFooter',
-        );
-        await this.documents.settle(workspace);
-      } catch (error) {
-        const failure = automationError(error);
-        throw new AutomationError({
-          ...failure,
-          details: {
-            ...failure.details,
-            documentId: workspace.id,
-            editsApplied: applied || this.revision(workspace) !== revision,
-            revision: this.revision(workspace),
-          },
-        });
-      }
+      await this.mutateAndSettle(
+        workspace,
+        () =>
+          this.documents.updatePageSetup(
+            workspace,
+            request.arguments.changes,
+            request.tool === 'update_page_setup' ? 'page' : 'headerFooter',
+          ),
+        { includeSettlementChanges: true },
+      );
       return this.summary(workspace);
     }
     if (request.tool === 'edit_elements') {
@@ -481,46 +482,21 @@ export class McpDocumentAdapter {
         this.documents.fonts(),
       );
       await this.documents.ensureFonts(plan.fontFamilies);
-      const revision = this.revision(workspace);
-      if (revision !== request.arguments.expectedRevision) {
-        throw new AutomationError({
-          code: 'REVISION_CONFLICT',
-          message:
-            'The document changed while preparing fonts. Read it again before editing.',
-          details: {
-            documentId: workspace.id,
-            expectedRevision: request.arguments.expectedRevision,
-            actualRevision: revision,
-          },
-        });
-      }
-      let edit;
-      try {
-        edit = {
-          applied: this.documents.changeElements(workspace, () =>
-            applyElementEdits(workspace, plan),
-          ),
-          created: plan.created,
-        };
-        await this.documents.settle(workspace);
-      } catch (error) {
-        const failure = automationError(error);
-        throw new AutomationError({
-          ...failure,
-          details: {
-            ...failure.details,
-            documentId: workspace.id,
-            editsApplied:
-              edit?.applied ?? this.revision(workspace) !== revision,
-            revision: this.revision(workspace),
-          },
-        });
-      }
+      this.checkedSummary(
+        workspace,
+        request.arguments.expectedRevision,
+        'The document changed while preparing fonts. Read it again before editing.',
+      );
+      const applied = await this.mutateAndSettle(workspace, () =>
+        this.documents.changeElements(workspace, () =>
+          applyElementEdits(workspace, plan),
+        ),
+      );
       return {
         ...this.summary(workspace),
-        applied: edit.applied,
+        applied,
         ...createdElementResult(
-          edit.created,
+          plan.created,
           discovery,
           request.arguments.includeCreated,
         ),
@@ -583,30 +559,15 @@ export class McpDocumentAdapter {
           JSON.stringify(paragraphStyleDefinition(style)),
         ]),
       );
-      const revision = this.revision(workspace);
-      let applied: boolean | undefined;
-      try {
+      await this.mutateAndSettle(workspace, () =>
         this.documents.replaceParagraphStyles(
           workspace,
           planParagraphStyleEdits(
             workspace.score.paragraphStyles,
             request.arguments.changes,
           ),
-        );
-        applied = this.revision(workspace) !== revision;
-        await this.documents.settle(workspace);
-      } catch (error) {
-        const failure = automationError(error);
-        throw new AutomationError({
-          ...failure,
-          details: {
-            ...failure.details,
-            documentId: workspace.id,
-            editsApplied: applied ?? this.revision(workspace) !== revision,
-            revision: this.revision(workspace),
-          },
-        });
-      }
+        ),
+      );
       const after = new Map(
         workspace.score.paragraphStyles.map((style) => [
           style.id,
@@ -624,27 +585,12 @@ export class McpDocumentAdapter {
       };
     }
     if (request.tool === 'replace_document_properties') {
-      const revision = this.revision(workspace);
-      let applied: boolean | undefined;
-      try {
+      await this.mutateAndSettle(workspace, () =>
         this.documents.replaceDocumentProperties(
           workspace,
           request.arguments.properties,
-        );
-        applied = this.revision(workspace) !== revision;
-        await this.documents.settle(workspace);
-      } catch (error) {
-        const failure = automationError(error);
-        throw new AutomationError({
-          ...failure,
-          details: {
-            ...failure.details,
-            documentId: workspace.id,
-            editsApplied: applied ?? this.revision(workspace) !== revision,
-            revision: this.revision(workspace),
-          },
-        });
-      }
+        ),
+      );
       return {
         ...this.summary(workspace),
         properties: { ...workspace.score.documentProperties },

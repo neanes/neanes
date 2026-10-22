@@ -14,67 +14,47 @@ import type { PreviewPageResult } from '../contracts/preview';
 
 export class AutomationIpcClient {
   requestId = '';
-  async previewPage(
+  private async invoke<T>(
+    channel: IpcRendererChannels,
+    ...args: unknown[]
+  ): Promise<T> {
+    return unwrapAutomationOutcome(
+      await window.ipcRenderer.invoke(channel, this.requestId, ...args),
+    );
+  }
+  previewPage(
     snapshot: ScoreRenderSnapshot,
     pageNumber: number,
     maxEdge: number,
   ): Promise<PreviewPageResult> {
-    return unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationPreviewPage,
-        this.requestId,
-        { snapshot, pageNumber, maxEdge },
-      ),
-    );
+    return this.invoke(IpcRendererChannels.AutomationPreviewPage, {
+      snapshot,
+      pageNumber,
+      maxEdge,
+    });
   }
-  async planBatch(query: BatchQuery) {
-    unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationPlanBatch,
-        this.requestId,
-        query,
-      ),
-    );
+  async planBatch(query: BatchQuery): Promise<void> {
+    await this.invoke(IpcRendererChannels.AutomationPlanBatch, query);
   }
-  async authorizeRequest() {
-    unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationAuthorizeRequest,
-        this.requestId,
-      ),
-    );
+  async authorizeRequest(): Promise<void> {
+    await this.invoke(IpcRendererChannels.AutomationAuthorizeRequest);
   }
-  public async automationReadScore(
+  automationReadScore(
     filePath: string,
     workspaces: WorkspaceFile[],
   ): Promise<OpenScoreFileResult> {
-    return unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationReadScore,
-        this.requestId,
-        filePath,
-        workspaces,
-      ),
+    return this.invoke(
+      IpcRendererChannels.AutomationReadScore,
+      filePath,
+      workspaces,
     );
   }
-  public async automationWriteScore(
+  automationWriteScore(
     args: WriteScoreFileArgs,
   ): Promise<Omit<ReadScoreFileResult, 'data'>> {
-    return unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationWriteScore,
-        this.requestId,
-        args,
-      ),
-    );
+    return this.invoke(IpcRendererChannels.AutomationWriteScore, args);
   }
-  public async automationExportPdf(args: PdfExportOptions): Promise<void> {
-    unwrapAutomationOutcome(
-      await window.ipcRenderer.invoke(
-        IpcRendererChannels.AutomationExportPdf,
-        this.requestId,
-        args,
-      ),
-    );
+  async automationExportPdf(args: PdfExportOptions): Promise<void> {
+    await this.invoke(IpcRendererChannels.AutomationExportPdf, args);
   }
 }

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import { Workspace } from '@/models/Workspace';
 
 import { getParagraphStyles } from '../documents/paragraphStyleRead';
-import { automationOutputSchema, automationResultSchemas } from './results';
+import { automationResultSchemas } from './results';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 

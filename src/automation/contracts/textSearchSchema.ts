@@ -1,10 +1,8 @@
 import { z } from 'zod';
 
-import {
-  normalizeSearchText,
-  searchableTextFields,
-} from '@/automation/documents/textSearch';
+import { searchableTextFields } from '@/automation/documents/textSearch';
 import { ElementType } from '@/models/Element';
+import { normalizeSearchText } from '@/utils/searchNormalization';
 
 import { elementCollectionSchema } from './elementSchemas';
 import { elementSearchShape } from './elementSearchSchema';
@@ -15,7 +13,7 @@ export const textSearchShape = {
     .min(1)
     .max(256)
     .refine(
-      (value) => normalizeSearchText(value, false, true).length > 0,
+      (value) => normalizeSearchText(value, { lyrics: true }).length > 0,
       'Query must contain searchable text.',
     ),
   caseSensitive: z.boolean().default(false),

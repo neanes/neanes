@@ -1,6 +1,10 @@
 import { ElementType, type ScoreElement } from '@/models/Element';
 import { searchPlainText } from '@/services/TextSearchService';
 import { TATWEEL } from '@/utils/constants';
+import {
+  normalizeSearchRun,
+  normalizeSearchText,
+} from '@/utils/searchNormalization';
 
 export const searchableTextFields = [
   'lyrics',
@@ -12,21 +16,6 @@ export const searchableTextFields = [
   'text',
 ] as const;
 export type SearchableTextField = (typeof searchableTextFields)[number];
-
-export function normalizeSearchText(
-  text: string,
-  caseSensitive = false,
-  lyrics = false,
-) {
-  const normalized = text
-    .normalize('NFC')
-    .replaceAll(TATWEEL, '')
-    .replace(/\s+/gu, lyrics ? '' : ' ');
-  // Final sigma must compare equally even when a lyric word spans elements.
-  return (
-    caseSensitive ? normalized : normalized.toLowerCase().replaceAll('ς', 'σ')
-  ).normalize('NFC');
-}
 
 export function elementSearchTexts(
   element: ScoreElement,
@@ -84,63 +73,13 @@ export interface TextSearchMatch {
 }
 
 type RunPart = TextSearchPart & { text: string };
-const graphemes = new Intl.Segmenter('und', { granularity: 'grapheme' });
-
-function normalizeRun(
-  parts: RunPart[],
-  caseSensitive: boolean,
-  lyrics: boolean,
-) {
-  let sourceOffset = 0;
-  const ranges = parts.map((part) => {
-    const sourceStart = sourceOffset;
-    sourceOffset += part.text.length;
-    return { part, sourceStart, sourceEnd: sourceOffset, start: -1, end: 0 };
-  });
-  const source = parts.map((part) => part.text).join('');
-  const text = normalizeSearchText(source, caseSensitive, lyrics);
-  if (ranges.length === 1) {
-    ranges[0].start = 0;
-    ranges[0].end = text.length;
-  } else {
-    let normalizedOffset = 0;
-    let firstRange = 0;
-    // Grapheme boundaries are normalization-safe. A composed character can
-    // belong to multiple elements when its base and marks were split.
-    for (const { segment, index } of graphemes.segment(source)) {
-      const end =
-        normalizedOffset +
-        normalizeSearchText(segment, caseSensitive, lyrics).length;
-      while (
-        firstRange < ranges.length &&
-        ranges[firstRange].sourceEnd <= index
-      ) {
-        firstRange++;
-      }
-      for (
-        let i = firstRange;
-        i < ranges.length && ranges[i].sourceStart < index + segment.length;
-        i++
-      ) {
-        const range = ranges[i];
-        if (range.start === -1) {
-          range.start = normalizedOffset;
-        }
-        range.end = end;
-      }
-      normalizedOffset = end;
-    }
-  }
-  return { text, ranges };
-}
-
 function* matchRun(
   parts: RunPart[],
   query: string,
   caseSensitive = false,
   lyrics = false,
 ): Generator<TextSearchMatch> {
-  const { text, ranges } = normalizeRun(parts, caseSensitive, lyrics);
+  const { text, ranges } = normalizeSearchRun(parts, { caseSensitive, lyrics });
   let firstRange = 0;
   for (
     let start = text.indexOf(query);
@@ -181,11 +120,13 @@ export function* findTextMatches(
   query: string,
   options: { caseSensitive?: boolean; fields?: SearchableTextField[] } = {},
 ): Generator<TextSearchMatch> {
-  const ordinaryQuery = normalizeSearchText(
-    query,
-    options.caseSensitive,
-  ).trim();
-  const lyricQuery = normalizeSearchText(query, options.caseSensitive, true);
+  const ordinaryQuery = normalizeSearchText(query, {
+    caseSensitive: options.caseSensitive,
+  }).trim();
+  const lyricQuery = normalizeSearchText(query, {
+    caseSensitive: options.caseSensitive,
+    lyrics: true,
+  });
   if (!ordinaryQuery || !lyricQuery) {
     return;
   }

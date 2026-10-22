@@ -1,6 +1,10 @@
 import { McpError } from '@modelcontextprotocol/sdk/types.js';
 
-import { automationTools } from './tools';
+import {
+  automationSchemas,
+  type AutomationTool,
+} from '../../../src/automation/contracts/protocol';
+import { automationTool } from './tools';
 
 export const schemaResourceInstructions =
   'Complete tool schemas: neanes://schemas/{tool}/{view}, view=input|output (MCP resources). Read these for omitted constraints, defaults, field guidance or recursive shapes; resolve local $refs within schema. JSON values recursively contain scalars, null, arrays or objects.';
@@ -14,10 +18,10 @@ export const toolSchemaResourceTemplate = {
 };
 
 export function toolSchemaResources() {
-  return automationTools().flatMap((tool) =>
+  return Object.keys(automationSchemas).flatMap((name) =>
     (['input', 'output'] as const).map((view) => ({
-      uri: `neanes://schemas/${tool.name}/${view}`,
-      name: `${tool.name} ${view} schema`,
+      uri: `neanes://schemas/${name}/${view}`,
+      name: `${name} ${view} schema`,
       mimeType: 'application/json',
     })),
   );
@@ -28,10 +32,10 @@ export function readToolSchemaResource(uri: string) {
   if (!match) {
     throw new McpError(-32002, 'Unknown tool schema resource.');
   }
-  const tool = automationTools().find((tool) => tool.name === match[1]);
-  if (!tool) {
+  if (!Object.hasOwn(automationSchemas, match[1])) {
     throw new McpError(-32002, 'Unknown tool schema resource.');
   }
+  const tool = automationTool(match[1] as AutomationTool);
   return {
     contents: [
       {

@@ -83,30 +83,32 @@ const descriptions: Record<AutomationTool, string> = {
 // The server and inventory budgets use this exact wire definition.
 export function automationTools(): Tool[] {
   return (Object.keys(automationSchemas) as AutomationTool[]).map(
-    (tool): Tool => ({
-      name: tool,
-      description: descriptions[tool],
-      inputSchema: {
-        // Some clients expose referenced input shapes as unknown. The compact
-        // batch publication keeps its complete envelope inline for those clients.
-        ...(tool === 'batch_update_files'
-          ? z.toJSONSchema(publishedBatchQuerySchema, { io: 'input' })
-          : compactJsonSchema(automationSchemas[tool], 'input')),
-        type: 'object',
-      } as Tool['inputSchema'],
-      outputSchema: {
-        ...compactJsonSchema(publishedAutomationOutputSchema(tool)),
-        type: 'object',
-      } as Tool['outputSchema'],
-      annotations: {
-        readOnlyHint: isReadOnlyAutomationTool(tool),
-        destructiveHint:
-          !isReadOnlyAutomationTool(tool) &&
-          !['create_session', 'create_document', 'open_document'].includes(
-            tool,
-          ),
-        openWorldHint: false,
-      },
-    }),
+    automationTool,
   );
+}
+
+export function automationTool(tool: AutomationTool): Tool {
+  return {
+    name: tool,
+    description: descriptions[tool],
+    inputSchema: {
+      // Some clients expose referenced input shapes as unknown. The compact
+      // batch publication keeps its complete envelope inline for those clients.
+      ...(tool === 'batch_update_files'
+        ? z.toJSONSchema(publishedBatchQuerySchema, { io: 'input' })
+        : compactJsonSchema(automationSchemas[tool], 'input')),
+      type: 'object',
+    } as Tool['inputSchema'],
+    outputSchema: {
+      ...compactJsonSchema(publishedAutomationOutputSchema(tool)),
+      type: 'object',
+    } as Tool['outputSchema'],
+    annotations: {
+      readOnlyHint: isReadOnlyAutomationTool(tool),
+      destructiveHint:
+        !isReadOnlyAutomationTool(tool) &&
+        !['create_session', 'create_document', 'open_document'].includes(tool),
+      openWorldHint: false,
+    },
+  };
 }

@@ -80,6 +80,8 @@ describe('complete tool schema resources', () => {
 
   it.each([
     'neanes://schemas/no_such_tool/input',
+    'neanes://schemas/constructor/input',
+    'neanes://schemas/__proto__/output',
     'neanes://schemas/preview_page/other',
     'neanes://schemas/preview_page/input?other=true',
     'file:///tmp/score.byzx',

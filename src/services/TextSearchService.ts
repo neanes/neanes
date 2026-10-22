@@ -11,7 +11,7 @@ import { ElementType } from '@/models/Element';
 import { TATWEEL } from '@/utils/constants';
 
 // Extract rich text without creating DOM nodes or consulting rendered pages.
-function searchPlainText(html: string) {
+export function searchPlainText(html: string) {
   let text = '';
   let suppressed = 0;
   const blocks = new Set([

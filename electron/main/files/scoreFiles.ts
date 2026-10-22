@@ -5,44 +5,48 @@ import JSZip from 'jszip';
 
 import type { Score } from '../../../src/models/save/v1/Score';
 
-export async function writeScoreFile(filePath: string, score: Score) {
-  // If using the compressed file format, zip first
-  if (path.extname(filePath) === '.byz') {
+export async function encodeScore(
+  filePath: string,
+  score: Score,
+  format = path.extname(filePath) === '.byz' ? 'byz' : 'byzx',
+) {
+  if (format === 'byz') {
     const zip = new JSZip();
-
-    const unzippedFileName = `${path.basename(filePath, '.byz')}.byzx`;
-
-    const data = JSON.stringify(score);
-
-    zip.file(unzippedFileName, data);
-
-    const file = await zip.generateAsync({
-      type: 'nodebuffer',
-      compression: 'DEFLATE',
-    });
-
-    await fs.writeFile(filePath, file);
-  } else {
-    // For uncompressed files, and white space and indentation
-    // to make the file easier to read
-    const data = JSON.stringify(score, null, 2);
-    await fs.writeFile(filePath, data);
+    zip.file(`${path.basename(filePath, '.byz')}.byzx`, JSON.stringify(score));
+    return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   }
+  return Buffer.from(JSON.stringify(score, null, 2));
 }
 
-export async function readScoreFile(filePath: string) {
+export async function writeScoreFile(
+  filePath: string,
+  score: Score,
+  format?: 'byz' | 'byzx',
+) {
+  await fs.writeFile(filePath, await encodeScore(filePath, score, format));
+}
+
+export async function readScoreFile(filePath: string, formatPath = filePath) {
   let data: string;
 
   // If using the compressed file format, zip first
-  if (path.extname(filePath) === '.byz') {
+  if (path.extname(formatPath) === '.byz') {
     const file = await fs.readFile(filePath);
     const zip = await JSZip.loadAsync(file);
     data = await zip.file(/\.(byzx)$/)[0].async('text');
-  } else if (path.extname(filePath) === '.byzx') {
+  } else if (path.extname(formatPath) === '.byzx') {
     data = await fs.readFile(filePath, 'utf8');
   } else {
     throw `Unsupported file type: ${path.extname(filePath)}`;
   }
 
   return data;
+}
+
+export function scoreFileFormat(filePath: string): 'byz' | 'byzx' {
+  const extension = path.extname(filePath);
+  if (extension !== '.byz' && extension !== '.byzx') {
+    throw new Error('UNSUPPORTED_FILE_TYPE');
+  }
+  return extension === '.byz' ? 'byz' : 'byzx';
 }

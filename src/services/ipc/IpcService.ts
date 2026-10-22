@@ -1,3 +1,4 @@
+import type { AgentAccessState, AgentAccessUpdate } from '@/ipc/agentAccess';
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
@@ -25,6 +26,7 @@ import type {
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
@@ -33,25 +35,45 @@ import { SaveService } from '../SaveService';
 import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
+  setAgentAccessEnabled(
+    enabled: boolean,
+    discardUnsavedChanges = false,
+  ): Promise<AgentAccessUpdate> {
+    return window.ipcRenderer.invoke(
+      IpcRendererChannels.AgentAccessSetEnabled,
+      enabled,
+      discardUnsavedChanges,
+    );
+  }
+  getAgentAccess(): Promise<AgentAccessState> {
+    return window.ipcRenderer.invoke(IpcRendererChannels.AgentAccessGet);
+  }
+  retryAgentAccess(): Promise<AgentAccessState> {
+    return window.ipcRenderer.invoke(IpcRendererChannels.AgentAccessRetry);
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.SaveWorkspace, {
       filePath: workspace.filePath,
+      sourceFormat: workspace.sourceFormat,
       tempFileName: workspace.tempFileName,
-      data: SaveService.SaveScoreToJson(workspace.score),
+      data: data ?? SaveService.SaveScoreToJson(workspace.score),
     } as SaveWorkspaceArgs);
   }
 
   public async saveWorkspaceAs(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceAsReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.SaveWorkspaceAs,
       {
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
-        data: SaveService.SaveScoreToJson(workspace.score),
+        data: data ?? SaveService.SaveScoreToJson(workspace.score),
       } as SaveWorkspaceAsArgs,
     );
   }

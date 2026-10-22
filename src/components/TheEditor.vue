@@ -37,6 +37,9 @@ import { toast } from 'vue-sonner';
 import type { Tab } from 'vue3-tabs-chrome';
 import Vue3TabsChrome from 'vue3-tabs-chrome';
 
+import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
+import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
+import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
 import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
@@ -214,12 +217,8 @@ import type {
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
 import {
-  applyDocumentSave,
-  captureDocumentSaveState,
   type DocumentSaveResult,
-  isDocumentSaveContextCurrent,
-  isDocumentSaveStateCurrent,
-  queueDocumentSave,
+  saveDocument,
 } from '@/services/documentPersistence';
 import {
   createMartyriaUpdateCommand,
@@ -1317,6 +1316,26 @@ const pageVisibilityIntersection = computed(() => {
   } as IntersectionObserver;
 });
 
+const activeDialog = computed(
+  () =>
+    [
+      { name: 'mode_key', open: modeKeyDialogIsOpen.value },
+      { name: 'page_setup', open: pageSetupDialogIsOpen.value },
+      { name: 'paragraph_styles', open: paragraphStylesDialogIsOpen.value },
+      {
+        name: 'document_properties',
+        open: documentPropertiesDialogIsOpen.value,
+      },
+      { name: 'playback_settings', open: playbackSettingsDialogIsOpen.value },
+      {
+        name: 'syllable_positioning',
+        open: syllablePositioningDialogIsOpen.value,
+      },
+      { name: 'export', open: exportDialogIsOpen.value },
+      { name: 'preferences', open: editorPreferencesDialogIsOpen.value },
+      { name: 'about', open: aboutDialogIsOpen.value },
+    ].find((dialog) => dialog.open)?.name ?? null,
+);
 const dialogOpen = computed(() => {
   return (
     modeKeyDialogIsOpen.value ||
@@ -1865,6 +1884,7 @@ async function initialize() {
     console.error(error);
   } finally {
     isLoading.value = false;
+    editorAutomation.ready();
   }
 }
 
@@ -1916,6 +1936,76 @@ const pageHandlers: ScorePageHandlers = {
       imageHeight: size.height,
     }),
 };
+
+const {
+  automation: editorAutomation,
+  disposeWorkspace: disposeAutomationWorkspace,
+  workspaceTextBoxMeasurement,
+  workspacePageMeasurement,
+  completePageMeasurement,
+  failPageMeasurement,
+  completeWorkspaceTextBoxMeasurement,
+  failWorkspaceTextBoxMeasurement,
+} = useEditorDocumentAutomation({
+  enabled: !isBrowser.value,
+  workspaces: () => workspaces.value as Workspace[],
+  selectedWorkspace: () => selectedWorkspace.value,
+  createScore: createDefaultScore,
+  addWorkspace(workspace) {
+    workspace.tempFileName = getTempFilename();
+    addWorkspace(workspace);
+  },
+  selectWorkspace(workspace) {
+    selectedWorkspace.value = workspace;
+  },
+  prepare: prepareWorkspaceForSerialization,
+  changed(workspace) {
+    if (workspace.id === selectedWorkspace.value.id) {
+      save();
+    } else {
+      scheduleRecoverySnapshot(workspace);
+      selectedWorkspace.value.commandService.notify();
+    }
+  },
+  fonts: () => [
+    ...fontCatalog.bundledFamilies(),
+    ...fontCatalog.systemFamilies(),
+  ],
+  async saved(workspace) {
+    await discardRecoverySnapshot(workspace.id);
+  },
+  recover: persistRecoverySnapshot,
+  close: async (workspace) => {
+    removeWorkspace(workspace);
+    if (workspaces.value.length === 0) {
+      onFileMenuNewScore();
+    }
+    return await discardRecoverySnapshot(workspace.id);
+  },
+  snapshot: createScoreRenderSnapshot,
+  busyState() {
+    if (isLoading.value) {
+      return { reason: 'loading' };
+    }
+
+    if (closingWorkspaceIds.size > 0) {
+      return {
+        reason: 'workspace_closing',
+        documentIds: [...closingWorkspaceIds],
+      };
+    }
+    if (activeDialog.value) {
+      return { reason: 'dialog_open', dialog: activeDialog.value };
+    }
+    if (recoveryDialogIsOpen.value) {
+      return { reason: 'dialog_open', dialog: 'recovery' };
+    }
+    if (printMode.value) {
+      return { reason: 'printing' };
+    }
+    return null;
+  },
+});
 
 void initialize();
 
@@ -5265,13 +5355,18 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
     hasUnsavedChanges: workspace.hasUnsavedChanges,
     preserveCurrentSnapshot: workspace.isRecovered,
     score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+    sourceFormat: workspace.sourceFormat,
     sourceMtimeMs: workspace.sourceMtimeMs,
     sourceSize: workspace.sourceSize,
   };
 }
 
 function scheduleRecoverySnapshot(workspace: Workspace) {
-  if (isBrowser.value || workspace == null) {
+  if (
+    isBrowser.value ||
+    workspace == null ||
+    editorAutomation.ownsPrivateWorkspace(workspace)
+  ) {
     return;
   }
 
@@ -5296,6 +5391,9 @@ function clearRecoverySnapshotTimer(workspaceId: string) {
 }
 
 async function persistRecoverySnapshot(workspace: Workspace) {
+  if (editorAutomation.ownsPrivateWorkspace(workspace)) {
+    return;
+  }
   if (isBrowser.value) {
     return;
   }
@@ -5316,7 +5414,7 @@ async function persistRecoverySnapshot(workspace: Workspace) {
 
 async function discardRecoverySnapshot(workspaceId: string) {
   if (isBrowser.value) {
-    return;
+    return true;
   }
 
   clearRecoverySnapshotTimer(workspaceId);
@@ -5328,6 +5426,7 @@ async function discardRecoverySnapshot(workspaceId: string) {
       result.errorMessage ?? 'Unable to discard recovery snapshot.',
     );
   }
+  return result.success;
 }
 
 function saveWorkspace(workspace: Workspace) {
@@ -5346,39 +5445,29 @@ function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
   workspace: Workspace,
   persist: () => Promise<T>,
 ) {
-  return queueDocumentSave(workspace, async () => {
-    prepareWorkspaceForSerialization(workspace);
-    // Both IPC implementations serialize immediately, before their first await.
-    const state = captureDocumentSaveState(workspace);
-    const result = await persist();
-    let savedContentUnchanged = false;
-
-    if (result.success) {
-      // Include pending editor text that has not reached the score model yet.
-      prepareWorkspaceForSerialization(workspace);
-      savedContentUnchanged = applyDocumentSave(workspace, result, state);
-      if (savedContentUnchanged) {
-        const savedState = captureDocumentSaveState(workspace);
-        await discardRecoverySnapshot(workspace.id);
-        prepareWorkspaceForSerialization(workspace);
-        savedContentUnchanged = isDocumentSaveStateCurrent(
-          workspace,
-          savedState,
-        );
-        if (!isDocumentSaveContextCurrent(workspace, savedState)) {
-          workspace.hasUnsavedChanges = true;
-        }
-      }
-      if (!savedContentUnchanged) {
-        await persistRecoverySnapshot(workspace);
-      }
-    }
-
-    return { ...result, savedContentUnchanged };
+  return saveDocument(workspace, persist, {
+    prepare: prepareWorkspaceForSerialization,
+    saved: async (workspace) => {
+      await discardRecoverySnapshot(workspace.id);
+    },
+    recover: persistRecoverySnapshot,
   });
 }
 
+const closingWorkspaceIds = new Set<string>();
 async function closeWorkspace(workspace: Workspace) {
+  if (closingWorkspaceIds.has(workspace.id)) {
+    return false;
+  }
+  closingWorkspaceIds.add(workspace.id);
+  try {
+    return await closeWorkspaceImpl(workspace);
+  } finally {
+    closingWorkspaceIds.delete(workspace.id);
+  }
+}
+
+async function closeWorkspaceImpl(workspace: Workspace) {
   let shouldClose = true;
   let shouldDiscardRecoverySnapshot = false;
   let savedDuringClose = false;
@@ -8832,6 +8921,7 @@ function openScore(args: FileMenuOpenScoreArgs) {
     const workspace = new Workspace();
     workspace.filePath = args.filePath;
     workspace.tempFileName = getTempFilename();
+    workspace.sourceFormat = args.sourceFormat ?? null;
     workspace.sourceMtimeMs = args.sourceMtimeMs ?? null;
     workspace.sourceSize = args.sourceSize ?? null;
     workspace.score = score;
@@ -8872,6 +8962,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
     if (existingWorkspace != null) {
       existingWorkspace.isRecovered = true;
       existingWorkspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
+      existingWorkspace.sourceFormat = candidate.sourceFormat ?? null;
       existingWorkspace.sourceMtimeMs = candidate.sourceMtimeMs;
       existingWorkspace.sourceSize = candidate.sourceSize;
       existingWorkspace.score = SaveService.LoadScoreFromJson(
@@ -8893,6 +8984,7 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
     workspace.tempFileName = candidate.tempFileName;
     workspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
     workspace.isRecovered = true;
+    workspace.sourceFormat = candidate.sourceFormat ?? null;
     workspace.sourceMtimeMs = candidate.sourceMtimeMs;
     workspace.sourceSize = candidate.sourceSize;
     workspace.score = score;
@@ -9012,6 +9104,7 @@ function addWorkspace(workspace: Workspace) {
 }
 
 function removeWorkspace(workspace: Workspace) {
+  disposeAutomationWorkspace(workspace);
   cancelLyricsAssignment(workspace);
   clearRecoverySnapshotTimer(workspace.id);
 
@@ -10061,6 +10154,22 @@ function renderTabLabel(tab: Tab) {
         @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
       />
     </template>
+    <WorkspacePageMeasurement
+      v-if="workspacePageMeasurement"
+      :workspace="workspacePageMeasurement.workspace"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @ready="completePageMeasurement"
+      @failed="failPageMeasurement"
+    />
+    <WorkspaceTextBoxMeasurement
+      v-if="workspaceTextBoxMeasurement"
+      :workspace="workspaceTextBoxMeasurement.workspace"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="completeWorkspaceTextBoxMeasurement"
+      @failed="failWorkspaceTextBoxMeasurement"
+    />
   </div>
 </template>
 

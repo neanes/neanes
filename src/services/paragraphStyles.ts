@@ -8,7 +8,7 @@ import {
   planParagraphStyleReferenceRemap,
 } from '@/utils/paragraphStyleReferences';
 
-function getDeletedStyleFallbacks(
+export function getDeletedStyleFallbacks(
   previousStylesById: Map<string, ParagraphStyle>,
   nextStyleIds: Set<string>,
 ) {

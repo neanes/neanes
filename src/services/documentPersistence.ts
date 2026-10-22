@@ -4,6 +4,7 @@ import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 
 export interface DocumentSaveResult {
+  sourceFormat?: Workspace['sourceFormat'];
   success: boolean;
   filePath?: string;
   sourceMtimeMs?: number | null;
@@ -33,6 +34,7 @@ export function queueDocumentSave<T>(
 export interface DocumentSaveState {
   contentRevision: number;
   contentStateId: number;
+  sourceFormat: Workspace['sourceFormat'];
   filePath: string | null;
   score: Score;
 }
@@ -44,6 +46,7 @@ export function captureDocumentSaveState(
   return {
     contentRevision: workspace.contentRevision,
     contentStateId: workspace.contentStateId,
+    sourceFormat: workspace.sourceFormat,
     filePath: workspace.filePath,
     score: toRaw(workspace.score),
   };
@@ -64,6 +67,7 @@ export function isDocumentSaveContextCurrent(
   state: DocumentSaveState,
 ) {
   return (
+    workspace.sourceFormat === state.sourceFormat &&
     workspace.filePath === state.filePath &&
     toRaw(workspace.score) === state.score
   );
@@ -81,6 +85,7 @@ export function applyDocumentSave(
   const unchanged = isDocumentSaveStateCurrent(workspace, state);
   const sameContext = isDocumentSaveContextCurrent(workspace, state);
   workspace.filePath = result.filePath ?? workspace.filePath;
+  workspace.sourceFormat = result.sourceFormat ?? workspace.sourceFormat;
   workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
   workspace.sourceSize = result.sourceSize ?? null;
   if (sameContext) {
@@ -94,4 +99,41 @@ export function applyDocumentSave(
     workspace.hasUnsavedChanges = true;
   }
   return unchanged;
+}
+
+export function saveDocument<T extends DocumentSaveResult>(
+  workspace: Workspace,
+  persist: () => Promise<T>,
+  hooks: {
+    prepare(workspace: Workspace): void;
+    saved(workspace: Workspace): Promise<void>;
+    recover(workspace: Workspace): Promise<void>;
+  },
+) {
+  return queueDocumentSave(workspace, async () => {
+    hooks.prepare(workspace);
+    const state = captureDocumentSaveState(workspace);
+    const result = await persist();
+    let savedContentUnchanged = false;
+    if (result.success) {
+      hooks.prepare(workspace);
+      savedContentUnchanged = applyDocumentSave(workspace, result, state);
+      if (savedContentUnchanged) {
+        const savedState = captureDocumentSaveState(workspace);
+        await hooks.saved(workspace);
+        hooks.prepare(workspace);
+        savedContentUnchanged = isDocumentSaveStateCurrent(
+          workspace,
+          savedState,
+        );
+        if (!isDocumentSaveContextCurrent(workspace, savedState)) {
+          workspace.hasUnsavedChanges = true;
+        }
+      }
+      if (!savedContentUnchanged) {
+        await hooks.recover(workspace);
+      }
+    }
+    return { ...result, savedContentUnchanged };
+  });
 }

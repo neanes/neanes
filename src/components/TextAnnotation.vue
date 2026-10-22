@@ -8,7 +8,7 @@
     @dblclick="handleDoubleClick"
   >
     <RichTextEditor
-      :key="`${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
+      :key="editorKey"
       ref="editor"
       class="rich-text-editor"
       :owner="element"
@@ -134,6 +134,25 @@ const annotationStyle = computed(() =>
 const { paragraphStyleDefinitions, paragraphStyleDefinitionKey } =
   useRichTextParagraphStyleDefinitions(() => props.paragraphStyles);
 
+const editorKey = computed(
+  () =>
+    `${props.editorLanguage}-${contentLanguage.value}-${paragraphStyleDefinitionKey.value}`,
+);
+
+watch(editorKey, () => {
+  const component = editorRef.value;
+  if (component?.instance == null || !component.canFlush(props.element.text)) {
+    return;
+  }
+
+  // Flush before rendering the replacement editor, while this ref still points
+  // to the old instance. Only text is pending here; keep the new configuration.
+  const text = component.instance.getData();
+  if (text !== props.element.text) {
+    emit('update', { text });
+  }
+});
+
 const style = computed(() => {
   return {
     left: withZoom(elementX.value),
@@ -244,6 +263,9 @@ function onEditorReady(editor: InlineEditor) {
 
 function handleEditorBlur(editor: InlineEditor) {
   editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
+  if (!editorRef.value?.canFlush(props.element.text)) {
+    return;
+  }
   const updates = getPendingUpdates();
   const text = updates.text ?? props.element.text;
 
@@ -258,7 +280,7 @@ function getPendingUpdates() {
   const editor = getEditorInstance();
   const updates: Partial<AnnotationElement> = {};
 
-  if (editor == null) {
+  if (editor == null || !editorRef.value?.canFlush(props.element.text)) {
     return updates;
   }
 
@@ -474,7 +496,10 @@ function handleMouseUp() {
 }
 
 function getCurrentText() {
-  return getEditorInstance()?.getData() ?? props.element.text;
+  const component = editorRef.value;
+  return component?.canFlush(props.element.text)
+    ? (component.instance?.getData() ?? props.element.text)
+    : props.element.text;
 }
 
 defineExpose({

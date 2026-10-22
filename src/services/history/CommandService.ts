@@ -69,7 +69,10 @@ export class CommandService {
   private commandHistory: HistoryEntry[] = [];
   private index: number = -1;
 
-  constructor(private contentChanges = new ContentChangeTracker()) {
+  constructor(
+    private contentChanges = new ContentChangeTracker(),
+    private notificationsEnabled = true,
+  ) {
     this.notify();
   }
 
@@ -82,6 +85,9 @@ export class CommandService {
   }
 
   public notify() {
+    if (!this.notificationsEnabled) {
+      return;
+    }
     EventBus.$emit(IpcRendererChannels.SetCanUndo, this.canUndo);
     EventBus.$emit(IpcRendererChannels.SetCanRedo, this.canRedo);
   }

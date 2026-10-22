@@ -19,6 +19,7 @@ import mimetypes from 'mime-types';
 import path from 'path';
 import { debounce } from 'throttle-debounce';
 
+import { editorBusyError } from '../../src/automation/contracts/editorBusy';
 import { initializeI18n, resolveLanguagePreference } from '../../src/i18n';
 import type {
   ClipboardReplyArgs,
@@ -64,11 +65,18 @@ import {
   type WorkspacePaneId,
   type WorkspacePaneVisibility,
 } from '../../src/models/WorkspacePane';
+import type { PdfExportOptions } from '../../src/services/documents/fileTypes';
 import { TestFileType } from '../../src/utils/TestFileType';
+import { installAgentAccess } from './automation/lifecycle';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
-import { readScoreFile, writeScoreFile } from './files/scoreFiles';
+import {
+  readScoreFile,
+  scoreFileFormat,
+  writeScoreFile,
+} from './files/scoreFiles';
+import { OperationQueue } from './OperationQueue';
 import { RecoveryStore } from './recovery';
 
 // The built directory structure
@@ -97,8 +105,25 @@ const indexHtml = path.join(process.env.DIST, 'index.html');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 const isDevelopment = import.meta.env.DEV;
+const headless = process.argv.includes('--headless-mcp');
+const normalUserData =
+  ((isDevelopment || process.env.IS_TEST === '1') &&
+    process.env.NEANES_DEV_USER_DATA_DIR) ||
+  app.getPath('userData');
+const installedBridge = path.join(normalUserData, 'mcp', 'bridge.mjs');
+const accessPolicyFile =
+  process.env.NEANES_HEADLESS_POLICY ||
+  path.join(normalUserData, 'agent-access.json');
+if (headless) {
+  const profile = process.env.NEANES_HEADLESS_PROFILE;
+  if (!profile || !path.isAbsolute(profile)) {
+    throw new Error('HEADLESS_PROFILE_REQUIRED');
+  }
+  app.setPath('userData', profile);
+  app.setPath('sessionData', profile);
+}
 
-if (isDevelopment) {
+if ((isDevelopment || process.env.IS_TEST === '1') && !headless) {
   const devUserDataDir = process.env.NEANES_DEV_USER_DATA_DIR;
 
   if (devUserDataDir) {
@@ -141,6 +166,8 @@ const silent = silentPdf || silentLatex || silentHtml;
 
 const disableUpdates = process.argv.includes('--no-update');
 const fakeUpdateMode = process.env.FAKE_UPDATE_AVAILABLE === '1';
+
+const editorOperationQueue = new OperationQueue();
 
 let win: BrowserWindow | null = null;
 let readyToExit = false;
@@ -532,6 +559,7 @@ async function openFile(filePath: string) {
 
   return {
     data,
+    sourceFormat: scoreFileFormat(filePath),
     sourceMtimeMs: stats.mtimeMs,
     sourceSize: stats.size,
   };
@@ -563,6 +591,7 @@ async function openFileFromArgs(argv: string[]) {
       result.push({
         data: openedFile.data,
         filePath: parameter,
+        sourceFormat: openedFile.sourceFormat,
         sourceMtimeMs: openedFile.sourceMtimeMs,
         sourceSize: openedFile.sourceSize,
         success: true,
@@ -601,7 +630,9 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
   try {
     saving = true;
 
-    await writeScoreFile(args.filePath, args.data);
+    const format = args.sourceFormat ?? scoreFileFormat(args.filePath);
+    await writeScoreFile(args.filePath, args.data, format);
+    result.sourceFormat = format;
     const stats = await fs.stat(args.filePath);
 
     result.sourceMtimeMs = stats.mtimeMs;
@@ -669,6 +700,7 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
         createMenu();
 
         result.success = true;
+        result.sourceFormat = scoreFileFormat(result.filePath);
         result.sourceMtimeMs = stats.mtimeMs;
         result.sourceSize = stats.size;
 
@@ -763,6 +795,16 @@ async function openImage() {
   return result;
 }
 
+async function insertImageFromDialog() {
+  await editorOperationQueue.run(async () => {
+    const data = await openImage();
+
+    if (data.success) {
+      win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
+    }
+  });
+}
+
 async function openOcrFile() {
   const result: FileMenuImportOcrArgs = {
     filePath: '',
@@ -812,13 +854,14 @@ let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
 function renderWorkspacePdfSnapshot(
-  args: ExportWorkspaceAsPdfArgs,
-  owner: BrowserWindow,
+  args: ExportWorkspaceAsPdfArgs | PdfExportOptions,
+  owner: BrowserWindow = win!,
+  signal = new AbortController().signal,
 ) {
   return renderPdf({
     args,
     parent: owner,
-    signal: new AbortController().signal,
+    signal,
     preload,
     entry: path.join(process.env.DIST!, 'export.html'),
     devServerUrl: url,
@@ -1442,6 +1485,7 @@ async function openWorkspaces() {
         workspaces.push({
           data: openedFile.data,
           filePath: filePath,
+          sourceFormat: openedFile.sourceFormat,
           sourceMtimeMs: openedFile.sourceMtimeMs,
           sourceSize: openedFile.sourceSize,
           success: true,
@@ -1461,6 +1505,24 @@ async function openWorkspaces() {
   }
 
   return workspaces;
+}
+
+async function openScoresFromDialog() {
+  // Keep the dialog and result delivery together so an export cannot overtake them.
+  await editorOperationQueue.run(async () => {
+    const workspaces = await openWorkspaces();
+    for (const workspace of workspaces) {
+      if (!workspace.success) {
+        continue;
+      }
+      if (!win) {
+        darwinPath = workspace.filePath;
+        createWindow();
+      } else {
+        win.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
+      }
+    }
+  });
 }
 
 const getCurrentPosition = () => {
@@ -1809,19 +1871,7 @@ function createMenu() {
           label: i18next.t(($) => $.menu.file.open),
           accelerator: 'CmdOrCtrl+O',
           async click() {
-            const workspaces: FileMenuOpenScoreArgs[] = await openWorkspaces();
-
-            for (const workspace of workspaces) {
-              if (!win && workspace.success) {
-                darwinPath = workspace.filePath;
-                createWindow();
-              } else {
-                win?.webContents.send(
-                  IpcMainChannels.FileMenuOpenScore,
-                  workspace,
-                );
-              }
-            }
+            await openScoresFromDialog();
           },
         },
         {
@@ -1830,32 +1880,35 @@ function createMenu() {
           submenu: store.recentFiles.map((x, index) => ({
             label: `${index + 1}: ${x}`,
             async click() {
-              try {
-                const openedFile = await openFile(x);
+              await editorOperationQueue.run(async () => {
+                try {
+                  const openedFile = await openFile(x);
 
-                if (!win) {
-                  darwinPath = x;
-                  createWindow();
-                } else {
-                  win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
-                    filePath: x,
-                    data: openedFile.data,
-                    sourceMtimeMs: openedFile.sourceMtimeMs,
-                    sourceSize: openedFile.sourceSize,
-                    success: true,
-                  } as FileMenuOpenScoreArgs);
-                }
-              } catch (error) {
-                console.error(error);
+                  if (!win) {
+                    darwinPath = x;
+                    createWindow();
+                  } else {
+                    win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
+                      filePath: x,
+                      data: openedFile.data,
+                      sourceFormat: openedFile.sourceFormat,
+                      sourceMtimeMs: openedFile.sourceMtimeMs,
+                      sourceSize: openedFile.sourceSize,
+                      success: true,
+                    } as FileMenuOpenScoreArgs);
+                  }
+                } catch (error) {
+                  console.error(error);
 
-                if (error instanceof Error) {
-                  dialog.showMessageBox(win!, {
-                    type: 'error',
-                    title: 'Open failed',
-                    message: error.message,
-                  });
+                  if (error instanceof Error) {
+                    dialog.showMessageBox(win!, {
+                      type: 'error',
+                      title: 'Open failed',
+                      message: error.message,
+                    });
+                  }
                 }
-              }
+              });
             },
           })),
         },
@@ -1865,14 +1918,16 @@ function createMenu() {
             {
               label: i18next.t(($) => $.menu.file.importFromOcr),
               async click() {
-                const data = await openOcrFile();
+                await editorOperationQueue.run(async () => {
+                  const data = await openOcrFile();
 
-                if (data.success) {
-                  win?.webContents.send(
-                    IpcMainChannels.FileMenuImportOcr,
-                    data,
-                  );
-                }
+                  if (data.success) {
+                    win?.webContents.send(
+                      IpcMainChannels.FileMenuImportOcr,
+                      data,
+                    );
+                  }
+                });
               },
             },
           ],
@@ -2181,11 +2236,7 @@ function createMenu() {
         {
           label: i18next.t(($) => $.menu.insert.image),
           async click() {
-            const data = await openImage();
-
-            if (data.success) {
-              win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
-            }
+            await insertImageFromDialog();
           },
         },
         { type: 'separator' },
@@ -2454,6 +2505,8 @@ async function createWindow() {
     win.maximize();
   }
 
+  agentAccess.attach(win);
+
   win.on('resize', debouncedSaveWindowState);
   win.on('move', debouncedSaveWindowState);
   win.webContents.setWindowOpenHandler((details) => {
@@ -2490,6 +2543,8 @@ async function createWindow() {
   });
 
   win.on('closed', () => {
+    agentAccess.detach();
+
     win = null;
     loaded = false;
     darwinPath = null;
@@ -2576,21 +2631,11 @@ ipcMain.on(
 );
 
 ipcMain.on(IpcRendererChannels.OpenImageDialog, async () => {
-  const data = await openImage();
-
-  if (data.success) {
-    win?.webContents.send(IpcMainChannels.FileMenuInsertImage, data);
-  }
+  await insertImageFromDialog();
 });
 
 ipcMain.on(IpcRendererChannels.OpenScoreDialog, async () => {
-  const workspaces = await openWorkspaces();
-
-  for (const workspace of workspaces) {
-    if (workspace.success) {
-      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
-    }
-  }
+  await openScoresFromDialog();
 });
 
 ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
@@ -2792,6 +2837,7 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
     const result = {
       data: openedFile.data,
       filePath: darwinPath,
+      sourceFormat: openedFile.sourceFormat,
       sourceMtimeMs: openedFile.sourceMtimeMs,
       sourceSize: openedFile.sourceSize,
       success: true,
@@ -2863,66 +2909,78 @@ ipcMain.handle(
 // If the app isn't loaded yet, then save the path and wait for the web app
 // to tell us it's ready to load the file via the OpenWorkspaceFromArgv channel
 app.on('open-file', async (event, path) => {
-  darwinPath = path;
+  if (headless) {
+    event.preventDefault();
+    return;
+  }
+  await editorOperationQueue.run(async () => {
+    darwinPath = path;
 
-  try {
-    if (!win) {
-      createWindow();
-    } else if (loaded) {
-      const openedFile = await openFile(path);
-      const result = {
-        data: openedFile.data,
-        filePath: path,
-        sourceMtimeMs: openedFile.sourceMtimeMs,
-        sourceSize: openedFile.sourceSize,
-        success: true,
-      };
-
+    try {
       if (!win) {
         createWindow();
+      } else if (loaded) {
+        const openedFile = await openFile(path);
+        const result = {
+          data: openedFile.data,
+          filePath: path,
+          sourceFormat: openedFile.sourceFormat,
+          sourceMtimeMs: openedFile.sourceMtimeMs,
+          sourceSize: openedFile.sourceSize,
+          success: true,
+        };
+
+        if (!win) {
+          createWindow();
+        }
+
+        win?.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
+
+        win?.show();
       }
+    } catch (error) {
+      console.error(error);
 
-      win?.webContents.send(IpcMainChannels.FileMenuOpenScore, result);
-
-      win?.show();
+      if (error instanceof Error) {
+        dialog.showMessageBox(win!, {
+          type: 'error',
+          title: 'Open failed',
+          message: error.message,
+        });
+      }
     }
-  } catch (error) {
-    console.error(error);
-
-    if (error instanceof Error) {
-      dialog.showMessageBox(win!, {
-        type: 'error',
-        title: 'Open failed',
-        message: error.message,
-      });
-    }
-  }
+  });
 });
 
 app.on(
   'second-instance',
   async (event, argv, workingDirectory, additionalData: any) => {
-    const results = await openFileFromArgs(
-      (additionalData as SecondInstanceData).argv,
-    );
+    if (headless) {
+      return;
+    }
+    await editorOperationQueue.run(async () => {
+      const results = await openFileFromArgs(
+        (additionalData as SecondInstanceData).argv,
+      );
 
-    if (loaded) {
-      results.files
-        .filter((x) => x.success)
-        .forEach((x) =>
-          win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
-        );
-
-      win?.show();
-    } else {
-      win?.webContents.once('did-finish-load', () => {
+      if (loaded) {
         results.files
           .filter((x) => x.success)
           .forEach((x) =>
             win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
           );
-      });
-    }
+
+        win?.show();
+      } else {
+        win?.webContents.once('did-finish-load', () => {
+          results.files
+            .filter((x) => x.success)
+            .forEach((x) =>
+              win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
+            );
+        });
+      }
+    });
   },
 );
 
@@ -2939,12 +2997,46 @@ app.on('before-quit', () => {
   quitting = true;
 });
 
+app.on('will-quit', () => {
+  void agentAccess.close();
+});
+
 app.on('activate', () => {
+  if (headless) {
+    return;
+  }
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+const agentAccess = installAgentAccess({
+  headless,
+  isMac,
+  accessPolicyFile,
+  installedBridge,
+  preload,
+  url,
+  setWindow(window) {
+    win = window;
+  },
+  getErrorMessage,
+  runExclusive: (operation) => editorOperationQueue.run(operation),
+  async withFileLock(operation) {
+    if (saving) {
+      throw editorBusyError({ reason: 'native_save' });
+    }
+    saving = true;
+    try {
+      return await operation();
+    } finally {
+      saving = false;
+    }
+  },
+  printPdf: (args, signal) =>
+    renderWorkspacePdfSnapshot(args, undefined, signal),
 });
 
 // This method will be called when Electron has finished
@@ -2959,8 +3051,12 @@ app.on('ready', async () => {
     lng: resolveLanguagePreference(store.language, app.getLocale()),
   });
 
+  if (headless) {
+    await agentAccess.start();
+    return;
+  }
   setupAutoUpdater();
-
+  await agentAccess.start();
   if (!win) {
     createWindow();
   }

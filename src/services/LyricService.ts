@@ -234,12 +234,16 @@ export class LyricService {
 
   /**
    * Assigns lyrics to score elements. This method does not directly alter the elements. Instead, the caller should provide callbacks to handle the updates.
-   * @param lyrics The lyrics
+   * Hyphens and underscores are parser syntax for syllables and melismas.
+   * Direct note.lyrics updates are literal text and do not invoke this parser
+   * or infer melisma flags. Callers manage lyric locks and history separately.
+   * @param lyrics The lyrics in parser syntax
    * @param elements The elements to assign lyrics to
    * @param rtl Whether the score is in RTL mode
    * @param setLyrics A callback that is invoked whenever lyrics should be immediately changed
    * @param updateNote A callback that is called when lyrics should be updated
    * @param updateDropCap A callback that is called when drop caps should be updated
+   * @returns Text that the available elements did not consume, excluding surrounding whitespace.
    */
   assignLyrics(
     lyrics: string,
@@ -453,6 +457,8 @@ export class LyricService {
       previousToken = token;
       previousNote = note;
     }
+
+    return { unassignedText: tokenizer.getRemainingText() };
   }
 
   /**
@@ -501,7 +507,7 @@ export class LyricService {
   /**
    * Returns all the values that should be updated if the `element` were assigned the `lyrics`.
    * @param element The note element that would be updated.
-   * @param lyrics The lyrics
+   * @param lyrics The lyric token, including any melisma suffix syntax.
    * @param elements All the elements in the score. Needed for RTL calculations.
    * @param rtl Whether the score is RTL
    * @param setLyrics A callback that is invoked whenever lyrics should be immediately changed.
@@ -705,6 +711,10 @@ export class LyricTokenizer {
 
   constructor(lyrics: string) {
     this.lyrics = lyrics;
+  }
+
+  getRemainingText() {
+    return this.lyrics.slice(this.index).trim();
   }
 
   /**

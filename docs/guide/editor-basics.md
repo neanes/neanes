@@ -56,6 +56,8 @@ Choose `Edit > Preferences` to change settings that apply throughout Neanes, the
 
 Preferences are remembered between sessions. Choose **Use System Default** in the dialog to restore the application defaults, including the system language and appearance.
 
+Desktop users can [connect an agent through MCP](./agent-access.md) from Preferences.
+
 ## Understand the current selection
 
 Most commands apply to the selected element. Click a neume, martyria, tempo sign, text box, or other element to select it. The Properties pane and bottom toolbar then change to show the controls for that kind of element.

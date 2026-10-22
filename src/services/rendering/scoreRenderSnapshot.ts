@@ -14,6 +14,8 @@ export interface ScoreRenderSnapshot {
 }
 
 export interface PngRenderOptions {
+  maxEdge?: number;
+  expectedGeometry?: string;
   dpi: number;
   pageNumbers: number[] | null;
   transparentBackground: boolean;

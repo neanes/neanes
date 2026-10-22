@@ -464,6 +464,153 @@ describe('validated element transactions', () => {
     expect(staff[0]).toBe(note);
   });
 
+  it.each([
+    { start: 0, removed: 0, inserted: 1 },
+    { start: 2, removed: 0, inserted: 1 },
+    { start: 4, removed: 0, inserted: 1 },
+    { start: 0, removed: 1, inserted: 0 },
+    { start: 2, removed: 1, inserted: 0 },
+    { start: 3, removed: 1, inserted: 0 },
+    { start: 1, removed: 2, inserted: 1 },
+    { start: 1, removed: 1, inserted: 2 },
+    { start: 0, removed: 4, inserted: 0 },
+  ])(
+    'limits structural commands to the changed region: %j',
+    ({ start, removed, inserted }) => {
+      const { workspace, edit } = document();
+      edit([
+        insert(Array.from({ length: 4 }, () => ({ elementType: 'Note' }))),
+      ]);
+      const staff = workspace.score.staff.elements;
+      const original = [...staff];
+      const before = saved(workspace);
+      const plan = planElementEdits(
+        workspace,
+        new ElementDiscovery(),
+        [
+          { action: 'remove_range', start, end: start + removed },
+          ...(inserted > 0
+            ? [
+                {
+                  action: 'insert',
+                  index: start,
+                  elements: Array.from({ length: inserted }, () => ({
+                    elementType: 'Note',
+                  })),
+                },
+              ]
+            : []),
+        ],
+        [],
+      );
+      expect(plan.commands).toHaveLength(removed + (inserted > 0 ? 1 : 0));
+      expect(saved(workspace)).toBe(before);
+      applyElementEdits(workspace, plan);
+      const final = [...staff];
+      const after = saved(workspace);
+      const expectElements = (expected: typeof original) => {
+        expect(workspace.score.staff.elements).toBe(staff);
+        expect(staff).toHaveLength(expected.length);
+        expected.forEach((element, index) =>
+          expect(staff[index]).toBe(element),
+        );
+      };
+      original
+        .slice(0, start)
+        .forEach((element, index) => expect(staff[index]).toBe(element));
+      original
+        .slice(start + removed)
+        .forEach((element, index) =>
+          expect(staff[start + inserted + index]).toBe(element),
+        );
+      for (let cycle = 0; cycle < 2; cycle++) {
+        workspace.commandService.undo();
+        expectElements(original);
+        expect(saved(workspace)).toBe(before);
+        workspace.commandService.undo();
+        expectElements([original.at(-1)!]);
+        workspace.commandService.redo();
+        expectElements(original);
+        workspace.commandService.redo();
+        expectElements(final);
+        expect(saved(workspace)).toBe(after);
+      }
+    },
+  );
+
+  it('preserves nested arrays and older property history across structural edits', () => {
+    const { workspace, discovery, edit } = document();
+    edit([
+      insert([{ elementType: 'Note', clientId: 'main' }]),
+      {
+        action: 'insert',
+        collection: {
+          kind: 'children',
+          parentRef: '@main',
+          collection: 'alternateLines',
+        },
+        elements: [{ elementType: 'AlternateLine', clientId: 'line' }],
+      },
+      {
+        action: 'insert',
+        collection: {
+          kind: 'children',
+          parentRef: '@line',
+          collection: 'elements',
+        },
+        elements: Array.from({ length: 3 }, () => ({ elementType: 'Note' })),
+      },
+    ]);
+    const staff = workspace.score.staff.elements;
+    const main = staff[0] as NoteElement;
+    const line = main.alternateLines[0];
+    const children = line.elements;
+    const original = [...children];
+    const beforeProperty = saved(workspace);
+    edit([update(discovery.reference(children[0]), { lyrics: 'old history' })]);
+    const beforeStructure = saved(workspace);
+    const collection = {
+      kind: 'children',
+      parentRef: discovery.reference(line),
+      collection: 'elements',
+    };
+    const plan = edit([
+      { action: 'remove_range', collection, start: 1, end: 2 },
+      {
+        action: 'insert',
+        collection,
+        index: 1,
+        elements: [{ elementType: 'Note' }, { elementType: 'Note' }],
+      },
+      update(discovery.reference(children[0]), { lyrics: 'new history' }),
+      { action: 'insert', index: 0, elements: [{ elementType: 'Tempo' }] },
+    ]);
+    expect(plan.commands).toHaveLength(4);
+    const after = saved(workspace);
+    const replacement = children[1];
+    for (let cycle = 0; cycle < 2; cycle++) {
+      expect(main.alternateLines[0].elements).toBe(children);
+      expect(children[0]).toBe(original[0]);
+      expect(children[3]).toBe(original[2]);
+      workspace.commandService.undo();
+      expect(saved(workspace)).toBe(beforeStructure);
+      original.forEach((element, index) =>
+        expect(children[index]).toBe(element),
+      );
+      workspace.commandService.undo();
+      expect(saved(workspace)).toBe(beforeProperty);
+      workspace.commandService.undo();
+      expect(staff).toHaveLength(1);
+      workspace.commandService.redo();
+      expect(staff[0]).toBe(main);
+      workspace.commandService.redo();
+      workspace.commandService.redo();
+      expect(workspace.score.staff.elements).toBe(staff);
+      expect(children[1]).toBe(replacement);
+      expect(saved(workspace)).toBe(after);
+    }
+  });
+
   it('handles sequential range edits, removed references and no-op batches', () => {
     const { workspace, discovery, edit } = document();
     edit([

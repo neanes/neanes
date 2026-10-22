@@ -633,29 +633,45 @@ export function planElementEdits(
   }
   for (const [original, draft] of collections) {
     const next = draft.map(live);
-    if (
-      next.length === original.length &&
-      next.every((element, index) => toRaw(element) === toRaw(original[index]))
+    let start = 0;
+    while (
+      start < original.length &&
+      start < next.length &&
+      toRaw(original[start]) === toRaw(next[start])
     ) {
-      continue;
+      start++;
     }
-    for (const element of original) {
+    let originalEnd = original.length;
+    let nextEnd = next.length;
+    while (
+      originalEnd > start &&
+      nextEnd > start &&
+      toRaw(original[originalEnd - 1]) === toRaw(next[nextEnd - 1])
+    ) {
+      originalEnd--;
+      nextEnd--;
+    }
+    // Keep the live array and unchanged boundaries for existing history.
+    // Removing backwards avoids repeatedly shifting the changed region.
+    for (let index = originalEnd - 1; index >= start; index--) {
       commands.push(
         factory.create('remove-from-collection', {
           collection: original,
-          element,
+          element: original[index],
         }),
       );
     }
-    if (next.length > 0) {
+    if (nextEnd > start) {
       commands.push(
         factory.create('add-to-collection', {
           collection: original,
-          elements: next,
+          elements: next.slice(start, nextEnd),
+          insertAtIndex: start,
         }),
       );
     }
   }
+
   const finalElements = reachable();
   return {
     commands,

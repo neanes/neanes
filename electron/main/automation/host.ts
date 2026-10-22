@@ -366,6 +366,7 @@ export async function startAutomationHost(options: {
     isReady: () => ready,
     error: () => failure,
     attach(win: BrowserWindow) {
+      const { webContents } = win;
       ready = options.initiallyReady ?? false;
       const onNavigation = (
         _event: Electron.Event,
@@ -377,14 +378,25 @@ export async function startAutomationHost(options: {
           invalidate();
         }
       };
-      win.webContents.on('did-start-navigation', onNavigation);
-      detach.add(() => {
-        win.webContents.removeListener('did-start-navigation', onNavigation);
-        win.webContents.removeListener('render-process-gone', invalidate);
-        win.webContents.removeListener('destroyed', invalidate);
-      });
-      win.webContents.on('render-process-gone', invalidate);
-      win.webContents.on('destroyed', invalidate);
+      const cleanup = () => {
+        if (!detach.delete(cleanup)) {
+          return;
+        }
+        webContents.removeListener('did-start-navigation', onNavigation);
+        webContents.removeListener('render-process-gone', invalidate);
+        webContents.removeListener('destroyed', onDestroyed);
+      };
+      const onDestroyed = () => {
+        try {
+          invalidate();
+        } finally {
+          cleanup();
+        }
+      };
+      detach.add(cleanup);
+      webContents.on('did-start-navigation', onNavigation);
+      webContents.on('render-process-gone', invalidate);
+      webContents.on('destroyed', onDestroyed);
     },
     async close() {
       closed = true;

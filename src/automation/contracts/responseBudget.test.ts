@@ -48,7 +48,7 @@ describe('JSON result budgets', () => {
   });
 
   it('preserves the complete acknowledgment for a real 1000-note insert', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const discovery = new ElementDiscovery();
     const plan = planElementEdits(
       workspace,

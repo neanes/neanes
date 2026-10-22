@@ -227,7 +227,7 @@ import {
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
 import { fontCatalog } from '@/services/FontCatalog';
-import type { Command } from '@/services/history/CommandService';
+import type { Command, HistoryState } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import {
@@ -466,6 +466,7 @@ const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
+let unsubscribeHistory: (() => void) | undefined;
 const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
   set: (value: string[]) => setAccordionState('developer', value),
@@ -707,7 +708,7 @@ const selectedWorkspace = computed({
     }
 
     selectedWorkspaceValue.value = value;
-    selectedWorkspace.value.commandService.notify();
+    observeSelectedHistory();
     save();
 
     // Scroll to the new workspace's saved scroll position
@@ -1629,8 +1630,6 @@ onMounted(() => {
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
-  EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
-  EventBus.$on(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$on(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$on(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1726,10 +1725,12 @@ onMounted(() => {
   EventBus.$on(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 
   EventBus.$on(AudioServiceEventNames.Stop, onAudioServiceStop);
-  selectedWorkspace.value.commandService.notify();
+  observeSelectedHistory();
 });
 
 onBeforeUnmount(() => {
+  unsubscribeHistory?.();
+
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
 
@@ -1749,8 +1750,6 @@ onBeforeUnmount(() => {
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
-  EventBus.$off(IpcRendererChannels.SetCanUndo, onSetCanUndo);
-  EventBus.$off(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$off(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$off(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1964,7 +1963,6 @@ const {
       save();
     } else {
       scheduleRecoverySnapshot(workspace);
-      selectedWorkspace.value.commandService.notify();
     }
   },
   fonts: () => [
@@ -3198,12 +3196,17 @@ function onClickPrintScore() {
   }
 }
 
-function onSetCanUndo(value: boolean) {
-  canUndo.value = value;
+function observeSelectedHistory() {
+  unsubscribeHistory?.();
+  unsubscribeHistory =
+    selectedWorkspace.value.commandService.subscribe(publishHistoryState);
 }
 
-function onSetCanRedo(value: boolean) {
-  canRedo.value = value;
+function publishHistoryState(state: HistoryState) {
+  canUndo.value = state.canUndo;
+  canRedo.value = state.canRedo;
+  EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
+  EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
 }
 
 function togglePageBreak() {
@@ -6185,8 +6188,6 @@ function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
 
   if (workspaceIsSelected) {
     save();
-  } else {
-    selectedWorkspace.value.commandService.notify();
   }
 }
 

@@ -8,7 +8,7 @@ import { DocumentRevisions } from './documentRevisions';
 
 describe('MCP document revisions', () => {
   it('detects an edit and undo between reads even when the document returns clean', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const revisions = new DocumentRevisions();
     const before = revisions.read(workspace);
     workspace.commandService.execute(
@@ -23,7 +23,7 @@ describe('MCP document revisions', () => {
     expect(revisions.read(workspace)).toBe(before + 2);
   });
   it('invalidates earlier API reads after save-as without dirtying saved content', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const revisions = new DocumentRevisions();
     const before = revisions.read(workspace);
     workspace.filePath = '/scores/new.byz';
@@ -32,7 +32,7 @@ describe('MCP document revisions', () => {
     expect(workspace.contentRevision).toBe(0);
   });
   it('ignores selection, zoom and completed writes to the same source', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const revisions = new DocumentRevisions();
     const before = revisions.read(workspace);
     workspace.zoom = 2;

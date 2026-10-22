@@ -25,7 +25,7 @@ export class PrivateDocumentStore {
       workspaces: () => workspaces,
       selectedWorkspace: () => null,
       createScore: () => hooks.createScore(),
-      createWorkspace: () => new Workspace(false),
+      createWorkspace: () => new Workspace(),
       fonts: () => hooks.fonts(),
       addWorkspace(workspace) {
         if (workspaces.length >= PRIVATE_DOCUMENT_LIMIT) {

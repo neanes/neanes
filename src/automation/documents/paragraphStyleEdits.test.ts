@@ -82,7 +82,7 @@ describe('atomic paragraph style batches', () => {
   });
 
   it('merges sparse overrides, preserving names, parents, null resets and unrelated values through undo and save', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     workspace.score.paragraphStyles = planParagraphStyleEdits(
       workspace.score.paragraphStyles,
       [
@@ -166,7 +166,7 @@ describe('atomic paragraph style batches', () => {
   });
 
   it('removes named overrides to restore inheritance, preserving other edits through undo and save', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     workspace.score.paragraphStyles = planParagraphStyleEdits(
       workspace.score.paragraphStyles,
       [
@@ -244,7 +244,7 @@ describe('atomic paragraph style batches', () => {
   });
 
   it('rejects setting and resetting the same override before any batch edits are committed', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const before = getParagraphStyles(workspace.score.paragraphStyles);
     expect(() =>
       planParagraphStyleEdits(workspace.score.paragraphStyles, [
@@ -267,7 +267,7 @@ describe('atomic paragraph style batches', () => {
 
   it('updates custom metadata and parents while preserving overrides and accepting parents created later', () => {
     const previous = planParagraphStyleEdits(
-      new Workspace(false).score.paragraphStyles,
+      new Workspace().score.paragraphStyles,
       [
         {
           action: 'create',
@@ -326,7 +326,7 @@ describe('atomic paragraph style batches', () => {
 
   it('reparents an updated child when its omitted parent is deleted, but rejects explicitly assigning the deleted parent', () => {
     const previous = planParagraphStyleEdits(
-      new Workspace(false).score.paragraphStyles,
+      new Workspace().score.paragraphStyles,
       [
         {
           action: 'create',

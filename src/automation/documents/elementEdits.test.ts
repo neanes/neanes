@@ -19,7 +19,7 @@ import { applyElementEdits, planElementEdits } from './elementEdits';
 const image =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
 function document() {
-  const workspace = reactive(new Workspace(false)) as Workspace;
+  const workspace = reactive(new Workspace()) as Workspace;
   const discovery = new ElementDiscovery();
   const edit = (input: unknown) => {
     const plan = planElementEdits(workspace, discovery, input, [

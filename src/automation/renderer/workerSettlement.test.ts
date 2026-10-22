@@ -9,7 +9,7 @@ import { WorkerSettlement } from './workerSettlement';
 
 describe('worker settlement reuse', () => {
   it('reuses successful settlement across reads, derived measurements and saves', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const box = new TextBoxElement();
     workspace.score.staff.elements.unshift(box);
     const settlements = new WorkerSettlement();
@@ -25,7 +25,7 @@ describe('worker settlement reuse', () => {
   });
 
   it('invalidates on tracked settings edits and undo even when content returns', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const settlements = new WorkerSettlement();
     settlements.begin(workspace)();
     updatePageSetup(workspace, { leftMargin: 80 }, 'page');
@@ -39,10 +39,10 @@ describe('worker settlement reuse', () => {
   });
 
   it('does not reuse another workspace or a replaced score', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const settlements = new WorkerSettlement();
     settlements.begin(workspace)();
-    const other = new Workspace(false);
+    const other = new Workspace();
     other.id = workspace.id;
     expect(settlements.has(other)).toBe(false);
     workspace.score = new Score();
@@ -50,7 +50,7 @@ describe('worker settlement reuse', () => {
   });
 
   it('does not cache incomplete or failed attempts and allows retry', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const settlements = new WorkerSettlement();
     settlements.begin(workspace)();
     // A new attempt removes the previous success before any fallible work.
@@ -61,7 +61,7 @@ describe('worker settlement reuse', () => {
   });
 
   it('rejects completion after an intervening edit or a newer attempt', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const settlements = new WorkerSettlement();
     const edited = settlements.begin(workspace);
     workspace.updateStaffLyrics('Changed');
@@ -76,8 +76,8 @@ describe('worker settlement reuse', () => {
   });
 
   it('invalidates every document on font changes, including pending settlement', () => {
-    const first = new Workspace(false);
-    const second = new Workspace(false);
+    const first = new Workspace();
+    const second = new Workspace();
     const settlements = new WorkerSettlement();
     settlements.begin(first)();
     const complete = settlements.begin(second);
@@ -90,8 +90,8 @@ describe('worker settlement reuse', () => {
   });
 
   it('disposes only the closed document and ignores its late completion', () => {
-    const first = new Workspace(false);
-    const second = new Workspace(false);
+    const first = new Workspace();
+    const second = new Workspace();
     const settlements = new WorkerSettlement();
     const complete = settlements.begin(first);
     settlements.begin(second)();

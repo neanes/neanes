@@ -271,14 +271,19 @@ describe('workspace content revisions', () => {
     expect(workspace.contentRevision).toBe(3);
   });
 
-  it('does not advance the revision when clearing or notifying history', () => {
+  it('does not advance the revision when clearing or observing history', () => {
     const workspace = new Workspace();
     workspace.commandService.execute(changeTitle(workspace, 'Title'));
     workspace.hasUnsavedChanges = false;
-    workspace.commandService.notify();
+    const undoAvailability: boolean[] = [];
+    const unsubscribe = workspace.commandService.subscribe((state) => {
+      undoAvailability.push(state.canUndo);
+    });
     workspace.commandService.clearHistory();
     workspace.commandService.undo();
     workspace.commandService.redo();
+    unsubscribe();
+    expect(undoAvailability).toEqual([true, false]);
     expect(workspace.contentRevision).toBe(1);
     expect(workspace.hasUnsavedChanges).toBe(false);
   });

@@ -41,7 +41,7 @@ describe('focused page and header/footer settings', () => {
   });
 
   it('applies partial updates with derived custom geometry in a single undo step', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const setup = workspace.score.pageSetup;
     const original = { ...setup };
     updatePageSetup(
@@ -82,13 +82,13 @@ describe('focused page and header/footer settings', () => {
       { leftMargin: 10000 },
       { neumeDefaultFontFamily: 'Arial', topMargin: 50 },
     ]) {
-      const workspace = new Workspace(false);
+      const workspace = new Workspace();
       const before = { ...workspace.score.pageSetup };
       expect(() => updatePageSetup(workspace, changes, 'page')).toThrow();
       expect({ ...workspace.score.pageSetup }).toEqual(before);
       expect(workspace.hasUnsavedChanges).toBe(false);
     }
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     expect(() =>
       updatePageSetup(workspace, { firstPageNumber: 0 }, 'headerFooter'),
     ).toThrow();
@@ -98,7 +98,7 @@ describe('focused page and header/footer settings', () => {
   });
 
   it('accepts every supported notation font with usable metrics', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     for (const family of NEUME_FONT_FAMILIES) {
       updatePageSetup(workspace, { neumeDefaultFontFamily: family }, 'page');
       expect(workspace.score.pageSetup.neumeDefaultFontFamily).toBe(family);
@@ -109,7 +109,7 @@ describe('focused page and header/footer settings', () => {
   it.each([0, -1])(
     'reads saved first page number %i, including projected reads',
     (firstPageNumber) => {
-      const workspace = new Workspace(false);
+      const workspace = new Workspace();
       workspace.score.pageSetup.firstPageNumber = firstPageNumber;
       const loaded = SaveService.LoadScoreFromJson(
         JSON.parse(
@@ -126,7 +126,7 @@ describe('focused page and header/footer settings', () => {
   );
 
   it('preserves all header/footer template identities and content across settings edits and undo', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     const elements = [...workspace.score.headersAndFooters];
     const original = readHeaderFooterSettings(workspace.score.pageSetup);
     updatePageSetup(
@@ -155,7 +155,7 @@ describe('focused page and header/footer settings', () => {
   });
 
   it('does not record no-op updates and persists both kinds of settings through save/load', () => {
-    const workspace = new Workspace(false);
+    const workspace = new Workspace();
     expect(updatePageSetup(workspace, {}, 'page')).toBe(false);
     expect(
       updatePageSetup(workspace, { showHeader: false }, 'headerFooter'),

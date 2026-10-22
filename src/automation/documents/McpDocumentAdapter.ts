@@ -262,7 +262,7 @@ export class McpDocumentAdapter {
         request.tool === 'get_page_elements'
       ) {
         const { score, sources } = cloneScoreForLayout(workspace.score);
-        const copy = new Workspace(false);
+        const copy = new Workspace();
         copy.score = score;
         copy.filePath = workspace.filePath;
         copy.tempFileName = workspace.tempFileName;

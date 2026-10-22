@@ -19,7 +19,7 @@ import { readSelection } from './selectionRead';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 function fixture() {
-  const workspace = new Workspace(false);
+  const workspace = new Workspace();
   const note = new NoteElement();
   const annotation = new AnnotationElement();
   const alternate = new AlternateLineElement();

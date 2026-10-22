@@ -403,7 +403,7 @@ describe('typed element discovery', () => {
     expect(reader.read(reactive(score), query()).elements[1].elementRef).toBe(
       ref,
     );
-    const history = new CommandService(undefined, false);
+    const history = new CommandService();
     history.execute(
       new CommandFactory().create('remove-from-collection', {
         collection: score.staff.elements,

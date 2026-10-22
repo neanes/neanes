@@ -1,5 +1,3 @@
-import { EventBus } from '@/eventBus';
-import { IpcRendererChannels } from '@/ipc/ipcChannels';
 import { ContentChangeTracker } from '@/services/ContentChangeTracker';
 
 import type { AddToCollectionCommandArgs } from './commands/AddToCollectionCommand';
@@ -65,16 +63,20 @@ export class CommandFactory<T> {
   }
 }
 
+export interface HistoryState {
+  readonly canUndo: boolean;
+  readonly canRedo: boolean;
+}
+
+type HistoryListener = (state: HistoryState) => void;
+
 export class CommandService {
   private commandHistory: HistoryEntry[] = [];
   private index: number = -1;
 
-  constructor(
-    private contentChanges = new ContentChangeTracker(),
-    private notificationsEnabled = true,
-  ) {
-    this.notify();
-  }
+  private listeners = new Set<HistoryListener>();
+
+  constructor(private contentChanges = new ContentChangeTracker()) {}
 
   private get canUndo() {
     return this.index > -1;
@@ -84,12 +86,23 @@ export class CommandService {
     return this.index < this.commandHistory.length - 1;
   }
 
-  public notify() {
-    if (!this.notificationsEnabled) {
-      return;
+  public subscribe(listener: HistoryListener): () => void {
+    this.listeners.add(listener);
+    listener(this.state);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private get state(): HistoryState {
+    return { canUndo: this.canUndo, canRedo: this.canRedo };
+  }
+
+  private notify() {
+    const state = this.state;
+    for (const listener of this.listeners) {
+      listener(state);
     }
-    EventBus.$emit(IpcRendererChannels.SetCanUndo, this.canUndo);
-    EventBus.$emit(IpcRendererChannels.SetCanRedo, this.canRedo);
   }
 
   public execute(command: Command, noHistory: boolean = false) {

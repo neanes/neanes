@@ -71,14 +71,9 @@ export class Workspace {
   public isRecovered: boolean = false;
   public sourceMtimeMs: number | null = null;
   public sourceSize: number | null = null;
-  public commandService: CommandService;
-
-  constructor(notificationsEnabled = true) {
-    this.commandService = new CommandService(
-      this.contentChanges,
-      notificationsEnabled,
-    );
-  }
+  public commandService: CommandService = new CommandService(
+    this.contentChanges,
+  );
   public selectedElement: ScoreElement | null = null;
   public selectedAnnotationElement: AnnotationElement | null = null;
   public selectedAlternateLineElement: AlternateLineElement | null = null;

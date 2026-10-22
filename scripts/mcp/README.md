@@ -285,10 +285,37 @@ revisions, and unchanged document snapshots.
 
 ### Element search contract
 
+Use `find_elements` first to locate mode keys, martyriae, or elements matching
+properties, instead of scanning `get_elements`. Use `get_elements` to read a known
+contiguous range. For example, find Third Mode in an open editor document:
+
+```json
+{
+  "documentId": "...",
+  "documentScope": "editor",
+  "elementTypes": ["ModeKey"],
+  "where": { "field": "mode", "op": "eq", "value": 3 },
+  "properties": ["mode"],
+  "scope": { "kind": "collection", "collection": { "kind": "staff" } }
+}
+```
+
+Mode values are 1-4 for the authentic modes, 5 for plagal first, 6 for plagal
+second, 7 for grave, and 8 for plagal fourth. To locate a whole section, omit
+`where` from this query: all mode keys give both the Third Mode start and the next
+mode-key boundary in one compact response (follow `nextOffset` if present).
+Pass the start match's `index` as `get_elements.start` and the next match's
+`index` as exclusive `end`, using their staff `collection` and the returned
+`revision` as `expectedRevision`. If there is no next mode key, omit `end`.
+
 `find_elements` accepts the same `documentId`, optional `sessionId`, and optional
 `expectedRevision` as element discovery. It never edits or saves. Predicates use
-stored live fields listed by `get_element_catalog`; inherited typography,
-computed layout, IDs, and arbitrary object paths are outside this contract.
+live fields listed by `get_element_catalog`. Use bare property names such as
+`"mode"`, not `"properties.mode"`. Inherited typography, uncatalogued layout caches,
+IDs, and arbitrary object paths are outside this contract. The calculated
+`scaleNotes` and `scaleNotesVirtual` arrays are readable via `properties`, but
+predicates accept only scalar values: these arrays support `isNull`/`isNotNull`,
+not array equality or pitch membership.
 Dimensions, including font sizes, use CSS pixels.
 
 ```json
@@ -308,11 +335,12 @@ Dimensions, including font sizes, use CSS pixels.
 
 - `eq` takes `value`; `in` takes a nonempty `values` array. Equality is exact and case-sensitive. Values must be valid for the catalog field on at least one applicable type; values are not coerced. Use `elementTypes: ["TextBox"]` with `paragraphStyleId` equality to find a style assignment, or `["DropCap"]` with `fontSize` equality/membership to find explicit font-size overrides. Inherited font sizes do not match a numeric override predicate.
 - `isNull` matches null or undefined; `isNotNull` matches any non-nullish value, including `false`, `0`, and `""`. A field inapplicable to the element type never matches any operator. Exact `eq`/`in` with null matches explicit null, not undefined. For example, `lineHeight` equality to null selects explicit normal resets, while `isNull` also selects inherited line heights.
-- `and` and `or` take nonempty predicate arrays and can nest. The entire tree allows at most 100 nodes and 8 levels, including the root. Each `in` list allows at most 100 values. Unknown fields, invalid values, malformed operators, and excessive predicates return `VALIDATION_ERROR`.
+- `and` and `or` take nonempty predicate arrays and can nest. The recursive shape is `Predicate = { and: Predicate[] } | { or: Predicate[] } | { field, op, value? , values? }`, with leaf operands determined by `op`. Complete schemas preserve recursive `$ref` definitions even if a client renders children as `Array<unknown>`. The entire tree allows at most 100 nodes and 8 levels, including the root. Each `in` list allows at most 100 values. Unknown fields, invalid values, malformed operators, and excessive predicates return `VALIDATION_ERROR`.
 - `scope` defaults to `{ "kind": "document" }`. To restrict it, use `{ "kind": "collection", "collection": { "kind": "staff" }, "includeDescendants": false }`, or another existing collection selector. Document scope traverses descendants automatically. Collection scope includes descendants only when requested.
 - Order is depth-first: each element precedes its annotations and alternate lines (including their elements), in collection order. Staff comes first, then headers and footers, each in `default`, `firstPage`, `odd`, `even`, `chapterOpening` order. Stored templates are returned once per stored location, not once per rendered page. The staff `Empty` sentinel is included unless filtered out.
 - `offset` and `nextOffset` count matching elements, not scanned elements. `limit` defaults to 100, maximum 1000. Follow `nextOffset` with the same query and the returned `revision` as `expectedRevision`. An offset equal to the match count returns an empty page; a larger offset returns `INVALID_ELEMENT_RANGE`. No exact total is computed for each page.
-- `properties` projects results only; it does not restrict predicate evaluation. `includeContent: false` omits image/text-box content even when selected; annotation/drop-cap content remains included when projected unless over budget. To retrieve matching content, explicitly select its field and set `includeContent: true`. Search and element reads exclude large content by default.
+- Each match's zero-based `index` is relative to its returned `collection`, not the match list or page; pass that collection and index to `get_elements` to read a range.
+- `properties` defaults to `[]`; matching fields are not automatically returned. Request them explicitly. Projection does not restrict predicate evaluation. `includeContent: false` omits image/text-box content even when selected; annotation/drop-cap content remains included when projected unless over budget. To retrieve matching content, explicitly select its field and set `includeContent: true`. Search and element reads exclude large content by default.
 
 Use `get_element` with a returned reference to retrieve details or nearby context
 without another collection scan by the client. Neighbors stay in the anchor's

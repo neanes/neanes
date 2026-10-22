@@ -25,7 +25,7 @@ describe('score file discovery', () => {
   });
   afterEach(async () => {
     await fs.rm(root, { recursive: true, force: true });
-  });
+  }, 30_000);
 
   it('lists only regular scores and skips child folders by default', async () => {
     expect(
@@ -117,6 +117,7 @@ describe('score file discovery', () => {
     ).rejects.toThrow('EXPORT_CANCELLED');
   });
 
+  // Creating 10001 real directories can exceed the default timeout on Windows.
   it('fails explicitly when traversal exceeds its entry budget', async () => {
     const wide = path.join(root, 'wide');
     await fs.mkdir(wide);
@@ -133,5 +134,5 @@ describe('score file discovery', () => {
         signal,
       ),
     ).rejects.toMatchObject({ error: { code: 'RESPONSE_TOO_LARGE' } });
-  });
+  }, 30_000);
 });

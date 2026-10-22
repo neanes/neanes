@@ -30,6 +30,7 @@ let child, profile, primary;
 let tools;
 let stopping = false;
 let policyToken;
+let validatedEditor;
 async function requireAccess() {
   const policy = JSON.parse(await readFile(values.policy, 'utf8'));
   if (
@@ -110,10 +111,19 @@ async function discoverEditor() {
     try {
       state = JSON.parse(await readFile(`${values.policy}.endpoint`, 'utf8'));
     } catch (error) {
+      validatedEditor = undefined;
       if (error.code === 'ENOENT') {
         return null;
       }
       throw error;
+    }
+    if (
+      state.error ||
+      state.pid !== validatedEditor?.pid ||
+      state.endpoint !== validatedEditor?.endpoint ||
+      state.token !== validatedEditor?.token
+    ) {
+      validatedEditor = undefined;
     }
     if (!Number.isInteger(state.pid) || state.pid <= 0) {
       return null;
@@ -122,6 +132,7 @@ async function discoverEditor() {
       process.kill(state.pid, 0);
     } catch (error) {
       if (error.code === 'ESRCH') {
+        validatedEditor = undefined;
         return null;
       }
       throw error;
@@ -139,9 +150,12 @@ async function discoverEditor() {
     }
     if (state.endpoint) {
       const connection = validateConnection(state);
-      const reply = await initialize(connection);
-      if (reply?.result?.serverInfo?.name !== 'neanes') {
-        throw new Error('The editor endpoint is not Neanes.');
+      if (!validatedEditor) {
+        const reply = await initialize(connection);
+        if (reply?.result?.serverInfo?.name !== 'neanes') {
+          throw new Error('The editor endpoint is not Neanes.');
+        }
+        validatedEditor = connection;
       }
       return connection;
     }
@@ -253,7 +267,14 @@ async function forward(message, signal) {
       };
     }
   }
-  const reply = await rpc(connection, message, signal);
+  let reply;
+  try {
+    reply = await rpc(connection, message, signal);
+  } catch (error) {
+    // Revalidate on the next call; an edit may already have committed.
+    validatedEditor = undefined;
+    throw error;
+  }
   if (message.method === 'tools/list' && reply?.result?.tools) {
     reply.result.tools = bridgeTools(reply.result.tools);
   }

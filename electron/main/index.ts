@@ -71,11 +71,7 @@ import { installAgentAccess } from './automation/lifecycle';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
-import {
-  readScoreFile,
-  scoreFileFormat,
-  writeScoreFile,
-} from './files/scoreFiles';
+import { readScoreFile, writeScoreFile } from './files/scoreFiles';
 import { OperationQueue } from './OperationQueue';
 import { RecoveryStore } from './recovery';
 
@@ -559,7 +555,6 @@ async function openFile(filePath: string) {
 
   return {
     data,
-    sourceFormat: scoreFileFormat(filePath),
     sourceMtimeMs: stats.mtimeMs,
     sourceSize: stats.size,
   };
@@ -591,7 +586,6 @@ async function openFileFromArgs(argv: string[]) {
       result.push({
         data: openedFile.data,
         filePath: parameter,
-        sourceFormat: openedFile.sourceFormat,
         sourceMtimeMs: openedFile.sourceMtimeMs,
         sourceSize: openedFile.sourceSize,
         success: true,
@@ -630,9 +624,7 @@ async function saveWorkspace(args: SaveWorkspaceArgs) {
   try {
     saving = true;
 
-    const format = args.sourceFormat ?? scoreFileFormat(args.filePath);
-    await writeScoreFile(args.filePath, args.data, format);
-    result.sourceFormat = format;
+    await writeScoreFile(args.filePath, args.data);
     const stats = await fs.stat(args.filePath);
 
     result.sourceMtimeMs = stats.mtimeMs;
@@ -700,7 +692,6 @@ async function saveWorkspaceAs(args: SaveWorkspaceAsArgs) {
         createMenu();
 
         result.success = true;
-        result.sourceFormat = scoreFileFormat(result.filePath);
         result.sourceMtimeMs = stats.mtimeMs;
         result.sourceSize = stats.size;
 
@@ -1485,7 +1476,6 @@ async function openWorkspaces() {
         workspaces.push({
           data: openedFile.data,
           filePath: filePath,
-          sourceFormat: openedFile.sourceFormat,
           sourceMtimeMs: openedFile.sourceMtimeMs,
           sourceSize: openedFile.sourceSize,
           success: true,
@@ -1891,7 +1881,6 @@ function createMenu() {
                     win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
                       filePath: x,
                       data: openedFile.data,
-                      sourceFormat: openedFile.sourceFormat,
                       sourceMtimeMs: openedFile.sourceMtimeMs,
                       sourceSize: openedFile.sourceSize,
                       success: true,
@@ -2837,7 +2826,6 @@ ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
     const result = {
       data: openedFile.data,
       filePath: darwinPath,
-      sourceFormat: openedFile.sourceFormat,
       sourceMtimeMs: openedFile.sourceMtimeMs,
       sourceSize: openedFile.sourceSize,
       success: true,
@@ -2924,7 +2912,6 @@ app.on('open-file', async (event, path) => {
         const result = {
           data: openedFile.data,
           filePath: path,
-          sourceFormat: openedFile.sourceFormat,
           sourceMtimeMs: openedFile.sourceMtimeMs,
           sourceSize: openedFile.sourceSize,
           success: true,

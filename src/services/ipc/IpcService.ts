@@ -58,7 +58,6 @@ export class IpcService implements IIpcService {
   ): Promise<SaveWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.SaveWorkspace, {
       filePath: workspace.filePath,
-      sourceFormat: workspace.sourceFormat,
       tempFileName: workspace.tempFileName,
       data: data ?? SaveService.SaveScoreToJson(workspace.score),
     } as SaveWorkspaceArgs);

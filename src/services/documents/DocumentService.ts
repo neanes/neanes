@@ -11,7 +11,6 @@ import {
 } from './documentLifecycle';
 import { snapshotDocument } from './documentPersistence';
 import { replaceDocumentProperties } from './documentProperties';
-import type { ScoreFileFormat } from './fileTypes';
 import { updatePageSetup } from './pageSetup';
 import type { HeaderFooterChanges, PageSetupChanges } from './pageSetupSchema';
 import { replaceParagraphStyles } from './paragraphStyles';
@@ -38,7 +37,6 @@ export interface DocumentEditor {
 export interface DocumentFileData {
   data: string;
   filePath: string;
-  sourceFormat?: ScoreFileFormat | null;
   sourceMtimeMs?: number | null;
   sourceSize?: number | null;
 }
@@ -113,7 +111,6 @@ export class DocumentService {
           throw new Error('INVALID_SCORE', { cause: error });
         }
         workspace.filePath = file.filePath;
-        workspace.sourceFormat = file.sourceFormat ?? null;
         workspace.sourceMtimeMs = file.sourceMtimeMs ?? null;
         workspace.sourceSize = file.sourceSize ?? null;
         this.editor.addWorkspace(workspace);

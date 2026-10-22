@@ -71,7 +71,6 @@ describe('page preview contract', () => {
       revision: 0,
       capturedRevision: 0,
       filePath: null,
-      sourceFormat: null,
       title: '',
       hasUnsavedChanges: true,
       selected: false,

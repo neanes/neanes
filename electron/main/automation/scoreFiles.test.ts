@@ -2,6 +2,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import JSZip from 'jszip';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Score } from '../../../src/models/Score';
@@ -75,7 +76,7 @@ describe('score files', () => {
   );
 
   it.each(['byzx', 'byz'] as const)(
-    'decodes a .%s symlink by its requested extension and retains the target identity',
+    'decodes a .%s symlink by its requested extension and retains the requested path',
     async (extension) => {
       const requested = path.join(root, `score.${extension}`);
       const target = path.join(root, 'extensionless');
@@ -87,18 +88,36 @@ describe('score files', () => {
         await files.read(requested),
         await files.open(requested, []),
       ]) {
-        expect(result).toMatchObject({ filePath: target });
+        expect(result).toMatchObject({ filePath: requested });
         expect('data' in result && JSON.parse(result.data)).toEqual(score);
       }
-      // Native Save uses the recorded source format even when its path has no suffix.
+      // Native Save derives its format from the retained alias path.
       const changed = {
         ...score,
         documentProperties: { title: 'Native save', author: '' },
       };
-      await writeScoreFile(target, changed, extension);
+      await writeScoreFile(requested, changed);
       expect(
         JSON.parse((await files.read(requested)).data).documentProperties.title,
       ).toBe('Native save');
+      const opened = await files.read(requested);
+      const saved = await files.write({
+        filePath: opened.filePath,
+        data: score,
+        overwrite: false,
+        expectedSource: {
+          filePath: opened.filePath,
+          mtimeMs: opened.sourceMtimeMs,
+          size: opened.sourceSize,
+        },
+      });
+      expect(saved.filePath).toBe(requested);
+      if (extension === 'byz') {
+        const archive = await JSZip.loadAsync(await fs.readFile(target));
+        expect(Object.keys(archive.files)).toEqual(['score.byzx']);
+      }
+      expect(JSON.parse((await files.read(requested)).data)).toEqual(score);
+      expect((await fs.lstat(requested)).isSymbolicLink()).toBe(true);
       await expect(
         files.open(requested, [{ documentId: 'existing', filePath: target }]),
       ).resolves.toEqual({ documentId: 'existing' });

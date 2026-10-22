@@ -27,7 +27,6 @@ describe('MCP document revisions', () => {
     const revisions = new DocumentRevisions();
     const before = revisions.read(workspace);
     workspace.filePath = '/scores/new.byz';
-    workspace.sourceFormat = 'byz';
     expect(revisions.read(workspace)).toBe(before + 1);
     expect(workspace.hasUnsavedChanges).toBe(false);
     expect(workspace.contentRevision).toBe(0);

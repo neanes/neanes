@@ -11,7 +11,6 @@ import type {
   RecoverySnapshotArgs,
   SaveRecoverySnapshotReplyArgs,
 } from '../../ipc/ipcChannels';
-import type { ScoreFileFormat } from '../documents/fileTypes';
 
 const recoverySchemaVersion = 1;
 const abandonedTempCleanupAgeMs = 24 * 60 * 60 * 1000;
@@ -26,7 +25,6 @@ interface RecoverySnapshotEnvelope {
   tempFileName: string;
   hasUnsavedChanges: boolean;
   score: string;
-  sourceFormat?: ScoreFileFormat | null;
   sourceMtimeMs: number | null;
   sourceSize: number | null;
   appVersion: string;
@@ -156,7 +154,6 @@ export class RecoveryStore {
           tempFileName: snapshot.tempFileName,
           hasUnsavedChanges: snapshot.hasUnsavedChanges,
           score,
-          sourceFormat: snapshot.sourceFormat,
           sourceMtimeMs: snapshot.sourceMtimeMs,
           sourceSize: snapshot.sourceSize,
           appVersion: this.getAppVersion(),
@@ -324,9 +321,6 @@ export class RecoveryStore {
         envelope.schemaVersion !== recoverySchemaVersion ||
         typeof envelope.snapshotId !== 'string' ||
         envelope.workspaceId == null ||
-        (envelope.sourceFormat != null &&
-          envelope.sourceFormat !== 'byz' &&
-          envelope.sourceFormat !== 'byzx') ||
         typeof envelope.score !== 'string' ||
         envelope.contentLength !== Buffer.byteLength(envelope.score, 'utf8') ||
         envelope.contentSha256 !==
@@ -368,7 +362,6 @@ export class RecoveryStore {
       hasUnsavedChanges: envelope.hasUnsavedChanges,
       score: envelope.score,
       updatedAt: envelope.updatedAt,
-      sourceFormat: envelope.sourceFormat,
       sourceMtimeMs: envelope.sourceMtimeMs,
       sourceSize: envelope.sourceSize,
       sourceExists,

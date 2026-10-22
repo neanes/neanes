@@ -3,7 +3,6 @@ import { toRaw } from 'vue';
 
 import { EntryMode } from '@/models/EntryMode';
 import { ContentChangeTracker } from '@/services/ContentChangeTracker';
-import type { ScoreFileFormat } from '@/services/documents/fileTypes';
 import {
   CommandFactory,
   CommandService,
@@ -70,7 +69,6 @@ export class Workspace {
   public filePath: string | null = null;
   public tempFileName: string = '';
   public isRecovered: boolean = false;
-  public sourceFormat: ScoreFileFormat | null = null;
   public sourceMtimeMs: number | null = null;
   public sourceSize: number | null = null;
   public commandService: CommandService;

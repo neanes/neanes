@@ -39,7 +39,6 @@ export const documentSummarySchema = z.strictObject({
   documentId: z.string().min(1),
   revision,
   filePath: z.string().nullable(),
-  sourceFormat: z.enum(['byz', 'byzx']).nullable(),
   title: z.string(),
   hasUnsavedChanges: z.boolean(),
   selected: z.boolean(),

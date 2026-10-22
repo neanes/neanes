@@ -94,7 +94,7 @@ describe('automation file access', () => {
       await files.open(requested, []),
     ]) {
       expect(result).toMatchObject({
-        filePath: target,
+        filePath: requested,
         data: '{"version":"1.0"}',
       });
     }
@@ -110,7 +110,7 @@ describe('automation file access', () => {
       path.join(root, '..', 'outside.byzx'),
       path.join(root, 'link.byzx'),
     ]) {
-      expect((await files.read(requested)).filePath).toBe(outside);
+      expect((await files.read(requested)).filePath).toBe(requested);
     }
     expect(
       await files.resolve(path.join(root, 'escape', 'new.pdf'), 'pdf', true),
@@ -124,12 +124,12 @@ describe('automation file access', () => {
   });
 });
 
-describe('source format and file validation', () => {
+describe('requested paths and file validation', () => {
   it.each(['byzx', 'byz'] as const)(
-    'preserves %s sources through extensionless and differently named targets',
+    'round-trips %s aliases through extensionless and differently named targets',
     async (format) => {
       const directory = await fs.realpath(
-        await fs.mkdtemp(path.join(os.tmpdir(), 'neanes-source-format-')),
+        await fs.mkdtemp(path.join(os.tmpdir(), 'neanes-requested-path-')),
       );
       try {
         const files = await AutomationFiles.create();
@@ -141,22 +141,20 @@ describe('source format and file validation', () => {
           await fs.rename(alias, target);
           await fs.symlink(target, alias);
           const opened = await files.read(alias);
-          expect(opened.filePath).toBe(target);
-          expect(opened.sourceFormat).toBe(format);
+          expect(opened.filePath).toBe(alias);
           const expectedSource = {
             filePath: opened.filePath,
             mtimeMs: opened.sourceMtimeMs,
             size: opened.sourceSize,
-            format: opened.sourceFormat,
           };
           score.documentProperties = { title: 'Changed', author: '' };
           const saved = await files.write({
-            filePath: target,
+            filePath: opened.filePath,
             data: score,
             overwrite: false,
             expectedSource,
           });
-          expect(saved.sourceFormat).toBe(format);
+          expect(saved.filePath).toBe(alias);
           expect((await fs.lstat(alias)).isSymbolicLink()).toBe(true);
           expect(
             JSON.parse((await files.read(alias)).data).documentProperties.title,
@@ -181,7 +179,7 @@ describe('source format and file validation', () => {
             overwrite: false,
             expectedSource,
           });
-          expect(copied.sourceFormat).toBe(format === 'byz' ? 'byzx' : 'byz');
+          expect(copied.filePath).toBe(copy);
           expect(JSON.parse((await files.read(copy)).data)).toEqual(score);
         }
       } finally {
@@ -206,7 +204,6 @@ describe('source format and file validation', () => {
         filePath: source,
         mtimeMs: opened.sourceMtimeMs,
         size: opened.sourceSize,
-        format: opened.sourceFormat,
       };
       await expect(
         files.write({

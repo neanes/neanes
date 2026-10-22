@@ -5355,7 +5355,6 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
     hasUnsavedChanges: workspace.hasUnsavedChanges,
     preserveCurrentSnapshot: workspace.isRecovered,
     score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
-    sourceFormat: workspace.sourceFormat,
     sourceMtimeMs: workspace.sourceMtimeMs,
     sourceSize: workspace.sourceSize,
   };
@@ -8921,7 +8920,6 @@ function openScore(args: FileMenuOpenScoreArgs) {
     const workspace = new Workspace();
     workspace.filePath = args.filePath;
     workspace.tempFileName = getTempFilename();
-    workspace.sourceFormat = args.sourceFormat ?? null;
     workspace.sourceMtimeMs = args.sourceMtimeMs ?? null;
     workspace.sourceSize = args.sourceSize ?? null;
     workspace.score = score;
@@ -8962,7 +8960,6 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
     if (existingWorkspace != null) {
       existingWorkspace.isRecovered = true;
       existingWorkspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
-      existingWorkspace.sourceFormat = candidate.sourceFormat ?? null;
       existingWorkspace.sourceMtimeMs = candidate.sourceMtimeMs;
       existingWorkspace.sourceSize = candidate.sourceSize;
       existingWorkspace.score = SaveService.LoadScoreFromJson(
@@ -8984,7 +8981,6 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
     workspace.tempFileName = candidate.tempFileName;
     workspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
     workspace.isRecovered = true;
-    workspace.sourceFormat = candidate.sourceFormat ?? null;
     workspace.sourceMtimeMs = candidate.sourceMtimeMs;
     workspace.sourceSize = candidate.sourceSize;
     workspace.score = score;

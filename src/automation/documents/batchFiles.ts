@@ -123,7 +123,6 @@ export async function batchUpdateFiles(
                 overwrite: query.overwrite,
                 expectedSource: {
                   filePath: opened.filePath,
-                  format: opened.sourceFormat,
                   mtimeMs: opened.sourceMtimeMs,
                   size: opened.sourceSize,
                 },

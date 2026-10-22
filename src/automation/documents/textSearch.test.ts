@@ -223,7 +223,6 @@ describe('MCP text discovery', () => {
       documentId: 'test',
       revision: 0,
       filePath: null,
-      sourceFormat: null,
       title: '',
       hasUnsavedChanges: false,
       selected: false,

@@ -8,7 +8,6 @@ export class DocumentRevisions {
     {
       contentRevision: number;
       filePath: string | null;
-      sourceFormat: Workspace['sourceFormat'];
       revision: number;
     }
   >();
@@ -18,22 +17,17 @@ export class DocumentRevisions {
       state = {
         contentRevision: workspace.contentRevision,
         filePath: workspace.filePath,
-        sourceFormat: workspace.sourceFormat,
         revision: workspace.contentRevision,
       };
       this.states.set(workspace.id, state);
     } else {
       const edits = workspace.contentRevision - state.contentRevision;
       state.revision += edits < 0 ? 1 : edits;
-      if (
-        workspace.filePath !== state.filePath ||
-        workspace.sourceFormat !== state.sourceFormat
-      ) {
+      if (workspace.filePath !== state.filePath) {
         state.revision++;
       }
       state.contentRevision = workspace.contentRevision;
       state.filePath = workspace.filePath;
-      state.sourceFormat = workspace.sourceFormat;
     }
     return state.revision;
   }

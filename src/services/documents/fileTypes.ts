@@ -3,10 +3,7 @@ import type { Score } from '@/models/save/v1/Score';
 
 import type { ScoreRenderSnapshot } from '../rendering/scoreRenderSnapshot';
 
-export type ScoreFileFormat = 'byz' | 'byzx';
-
 export interface ReadScoreFileResult {
-  sourceFormat: ScoreFileFormat;
   data: string;
   filePath: string;
   sourceMtimeMs: number;
@@ -29,7 +26,6 @@ export interface WriteScoreFileArgs {
     filePath: string;
     mtimeMs: number;
     size: number;
-    format?: ScoreFileFormat;
   } | null;
 }
 

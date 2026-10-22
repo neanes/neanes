@@ -4,7 +4,6 @@ import path from 'node:path';
 import type { BatchQuery } from '../../../src/automation/contracts/batch';
 import { AutomationError } from '../../../src/automation/contracts/errors';
 import type {
-  ScoreFileFormat,
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '../../../src/services/documents/fileTypes';
@@ -17,7 +16,7 @@ export class AutomationFiles {
       filePath,
       path.extname(filePath) === '.pdf' ? 'pdf' : 'score',
       true,
-      source?.format,
+      source != null,
     ),
   );
   static async create() {
@@ -28,20 +27,22 @@ export class AutomationFiles {
     filePath: string,
     extension: 'score' | 'pdf',
     writing = false,
-    sourceFormat?: ScoreFileFormat,
+    sourceSave = false,
   ) {
     if (!path.isAbsolute(filePath)) {
       throw new Error('ABSOLUTE_PATH_REQUIRED');
     }
     const extensions = extension === 'score' ? ['.byzx', '.byz'] : ['.pdf'];
-    if (
-      sourceFormat === undefined &&
-      !extensions.includes(path.extname(filePath))
-    ) {
+    if (!extensions.includes(path.extname(filePath))) {
       throw new Error('UNSUPPORTED_FILE_TYPE');
     }
     let canonical: string;
     if (writing) {
+      // In-place saves may follow the opened source's symlink. Other outputs
+      // retain the no-symlink policy.
+      if (sourceSave) {
+        return fs.realpath(filePath);
+      }
       canonical = path.join(
         await fs.realpath(path.dirname(filePath)),
         path.basename(filePath),
@@ -118,33 +119,17 @@ export class AutomationFiles {
   }
 
   async open(filePath: string, workspaces: WorkspaceFile[]) {
-    return this.files.open(
-      await this.resolve(filePath, 'score'),
-      workspaces,
-      filePath,
-    );
+    await this.resolve(filePath, 'score');
+    return this.files.open(filePath, workspaces);
   }
 
   async read(filePath: string) {
-    return this.files.read(await this.resolve(filePath, 'score'), filePath);
+    await this.resolve(filePath, 'score');
+    return this.files.read(filePath);
   }
 
   async write(args: WriteScoreFileArgs) {
-    if (!path.isAbsolute(args.filePath)) {
-      throw new Error('ABSOLUTE_PATH_REQUIRED');
-    }
-    const source = args.expectedSource;
-    const canonical = await canonicalFileIdentity(args.filePath);
-    const sameSource =
-      source != null &&
-      path.relative(await canonicalFileIdentity(source.filePath), canonical) ===
-        '';
-    // Only a save to the known source may use its decoding format instead of a suffix.
-    const filePath =
-      sameSource && source.format !== undefined
-        ? await this.resolve(canonical, 'score', true, source.format)
-        : await this.resolve(args.filePath, 'score', true);
-    return this.files.write({ ...args, filePath });
+    return this.files.write(args);
   }
 
   async writeOutput(filePath: string, data: Buffer, overwrite: boolean) {

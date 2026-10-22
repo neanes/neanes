@@ -47,7 +47,6 @@ export class ScoreFiles {
   async open(
     filePath: string,
     workspaces: WorkspaceFile[],
-    formatPath = filePath,
   ): Promise<OpenScoreFileResult> {
     const canonical = await canonicalFileIdentity(filePath);
     for (const workspace of workspaces) {
@@ -60,18 +59,17 @@ export class ScoreFiles {
         return { documentId: workspace.documentId };
       }
     }
-    return this.read(canonical, formatPath);
+    return this.read(filePath);
   }
 
-  async read(filePath: string, formatPath = filePath) {
-    filePath = await canonicalFileIdentity(filePath);
+  async read(filePath: string) {
     const before = await fs.stat(filePath);
     // The requested extension selects the format even when a symlink target differs.
     let data: string;
     try {
-      data = await readScoreFile(filePath, formatPath);
+      data = await readScoreFile(filePath);
     } catch (error) {
-      if (scoreFileFormat(formatPath) === 'byz' && !('code' in Object(error))) {
+      if (scoreFileFormat(filePath) === 'byz' && !('code' in Object(error))) {
         throw new Error('INVALID_SCORE_ARCHIVE', { cause: error });
       }
       throw error;
@@ -83,14 +81,14 @@ export class ScoreFiles {
     return {
       filePath,
       data,
-      sourceFormat: scoreFileFormat(formatPath),
       sourceMtimeMs: stats.mtimeMs,
       sourceSize: stats.size,
     };
   }
 
   async write(args: WriteScoreFileArgs) {
-    const filePath = await canonicalFileIdentity(args.filePath);
+    const filePath = args.filePath;
+    scoreFileFormat(filePath);
     const source = args.expectedSource;
     const expectedSource =
       source != null &&
@@ -100,9 +98,7 @@ export class ScoreFiles {
       ) === ''
         ? source
         : null;
-    const sourceFormat =
-      expectedSource?.format ?? scoreFileFormat(args.filePath);
-    const data = await encodeScore(filePath, args.data, sourceFormat);
+    const data = await encodeScore(filePath, args.data);
     await this.writeOutput(
       filePath,
       data,
@@ -112,7 +108,6 @@ export class ScoreFiles {
     const stats = await fs.stat(filePath);
     return {
       filePath,
-      sourceFormat,
       sourceMtimeMs: stats.mtimeMs,
       sourceSize: stats.size,
     };

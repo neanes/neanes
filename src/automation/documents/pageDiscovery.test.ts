@@ -257,7 +257,6 @@ describe('settled page discovery', () => {
       documentId: 'id',
       revision: 0,
       filePath: null,
-      sourceFormat: null,
       title: '',
       hasUnsavedChanges: false,
       selected: false,

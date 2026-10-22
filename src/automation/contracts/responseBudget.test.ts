@@ -70,7 +70,6 @@ describe('JSON result budgets', () => {
       documentId: workspace.id,
       revision: 1,
       filePath: null,
-      sourceFormat: null,
       title: '',
       hasUnsavedChanges: true,
       selected: false,

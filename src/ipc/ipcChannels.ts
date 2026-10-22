@@ -2,7 +2,6 @@ import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
 import type { ZoomFitMode } from '@/models/Workspace';
 import type { WorkspacePaneId } from '@/models/WorkspacePane';
-import type { ScoreFileFormat } from '@/services/documents/fileTypes';
 import type {
   PngRenderOptions,
   ScoreRenderSnapshot,
@@ -143,7 +142,6 @@ export enum IpcRendererChannels {
 export interface FileMenuOpenScoreArgs {
   data: string;
   filePath: string;
-  sourceFormat?: ScoreFileFormat | null;
   sourceMtimeMs?: number | null;
   sourceSize?: number | null;
   success: boolean;
@@ -233,7 +231,6 @@ export interface WorkspaceZoomState {
 }
 
 export interface SaveWorkspaceArgs {
-  sourceFormat?: ScoreFileFormat | null;
   filePath: string;
   data: Score;
 }
@@ -246,7 +243,6 @@ export interface SaveWorkspaceAsArgs {
 
 export interface SaveWorkspaceAsReplyArgs {
   filePath: string;
-  sourceFormat?: ScoreFileFormat | null;
   sourceMtimeMs?: number | null;
   sourceSize?: number | null;
   success: boolean;
@@ -255,7 +251,6 @@ export interface SaveWorkspaceAsReplyArgs {
 }
 
 export interface SaveWorkspaceReplyArgs {
-  sourceFormat?: ScoreFileFormat | null;
   sourceMtimeMs?: number | null;
   sourceSize?: number | null;
   success: boolean;
@@ -348,7 +343,6 @@ export interface RecoverySnapshotArgs {
   hasUnsavedChanges: boolean;
   preserveCurrentSnapshot?: boolean;
   score: string;
-  sourceFormat?: ScoreFileFormat | null;
   sourceMtimeMs: number | null;
   sourceSize: number | null;
 }
@@ -361,7 +355,6 @@ export interface RecoveryCandidateArgs {
   hasUnsavedChanges: boolean;
   score: string;
   updatedAt: number;
-  sourceFormat?: ScoreFileFormat | null;
   sourceMtimeMs: number | null;
   sourceSize: number | null;
   sourceExists: boolean;

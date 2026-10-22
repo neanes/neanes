@@ -93,7 +93,6 @@ export class McpDocumentAdapter {
       documentId: workspace.id,
       revision: this.revision(workspace),
       filePath: workspace.filePath,
-      sourceFormat: workspace.sourceFormat,
       title: workspace.score.documentProperties.title,
       hasUnsavedChanges: workspace.hasUnsavedChanges,
       selected: workspace.id === this.documents.selected()?.id,
@@ -637,7 +636,6 @@ export class McpDocumentAdapter {
               workspace.sourceSize != null
                 ? {
                     filePath: workspace.filePath,
-                    format: workspace.sourceFormat ?? undefined,
                     mtimeMs: workspace.sourceMtimeMs,
                     size: workspace.sourceSize,
                   }

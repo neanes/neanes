@@ -218,7 +218,7 @@ try {
   assert.equal(saved.hasUnsavedChanges, false);
   assert.equal(saved.savedContentUnchanged, true);
   assert.equal(saved.savedRevision, changed.revision);
-  assert.equal(saved.sourceFormat, 'byzx');
+  assert.equal(saved.filePath, scorePath);
   const persisted = JSON.parse(await fs.readFile(scorePath, 'utf8'));
   assert.equal(persisted.documentProperties.author, 'MCP smoke');
   await fs.copyFile(scorePath, reopenedPath);
@@ -459,7 +459,7 @@ try {
       await fs.copyFile(format === 'byz' ? archivePath : reopenedPath, target);
       await fs.symlink(target, alias);
       const source = await call('open_document', { filePath: alias });
-      assert.equal(source.sourceFormat, format);
+      assert.equal(source.filePath, alias);
       const changedSource = await call('replace_document_properties', {
         documentId: source.documentId,
         expectedRevision: source.revision,
@@ -469,7 +469,7 @@ try {
         documentId: source.documentId,
         expectedRevision: changedSource.revision,
       });
-      assert.equal(savedSource.sourceFormat, format);
+      assert.equal(savedSource.filePath, alias);
       assert.equal(savedSource.savedContentUnchanged, true);
       assert.equal((await fs.lstat(alias)).isSymbolicLink(), true);
       const bytes = await fs.readFile(target);

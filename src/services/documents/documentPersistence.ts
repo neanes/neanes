@@ -5,6 +5,5 @@ export function snapshotDocument(workspace: Workspace) {
   return JSON.stringify({
     revision: workspace.contentRevision,
     filePath: workspace.filePath,
-    sourceFormat: workspace.sourceFormat,
   });
 }

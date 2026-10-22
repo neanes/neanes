@@ -197,7 +197,6 @@ describe('exact element content retrieval', () => {
           documentId: 'test',
           revision: 0,
           filePath: null,
-          sourceFormat: null,
           title: '',
           hasUnsavedChanges: false,
           selected: false,

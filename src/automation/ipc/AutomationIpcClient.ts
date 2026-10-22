@@ -18,13 +18,12 @@ export class AutomationIpcClient {
     snapshot: ScoreRenderSnapshot,
     pageNumber: number,
     maxEdge: number,
-    expectedGeometry: string,
   ): Promise<PreviewImage> {
     return unwrapAutomationOutcome(
       await window.ipcRenderer.invoke(
         IpcRendererChannels.AutomationPreviewPage,
         this.requestId,
-        { snapshot, pageNumber, maxEdge, expectedGeometry },
+        { snapshot, pageNumber, maxEdge },
       ),
     );
   }

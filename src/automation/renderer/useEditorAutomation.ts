@@ -76,13 +76,8 @@ export function useEditorAutomation(options: {
     ipc,
     exportAutomationPdf,
     options.renderPages,
-    (workspace, pageNumber, maxEdge, expectedGeometry) =>
-      ipc.previewPage(
-        options.snapshot(workspace),
-        pageNumber,
-        maxEdge,
-        expectedGeometry,
-      ),
+    (workspace, pageNumber, maxEdge) =>
+      ipc.previewPage(options.snapshot(workspace), pageNumber, maxEdge),
     options.requireSessions ? 'headless' : 'interactive',
   );
 
@@ -155,12 +150,11 @@ export function useEditorAutomation(options: {
               ipc,
               exportAutomationPdf,
               options.renderPages,
-              (workspace, pageNumber, maxEdge, expectedGeometry) =>
+              (workspace, pageNumber, maxEdge) =>
                 ipc.previewPage(
                   options.snapshot(workspace),
                   pageNumber,
                   maxEdge,
-                  expectedGeometry,
                 ),
               options.requireSessions ? 'headless' : 'interactive',
             );

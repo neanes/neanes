@@ -9,7 +9,6 @@ import {
 } from '@/services/documents/pageSetup';
 import { projectSettings } from '@/services/documents/pageSetupSchema';
 import { paragraphStyleDefinition } from '@/services/documents/paragraphStyles';
-import { renderGeometry } from '@/services/rendering/renderGeometry';
 
 import { getElementCatalog } from '../contracts/elementSchemas';
 import {
@@ -57,7 +56,6 @@ export class McpDocumentAdapter {
       workspace: Workspace,
       pageNumber: number,
       maxEdge: number,
-      expectedGeometry: string,
     ) => Promise<PreviewImage>,
     private mode: 'interactive' | 'headless' = 'interactive',
   ) {}
@@ -308,7 +306,6 @@ export class McpDocumentAdapter {
             copy,
             request.arguments.pageNumber,
             request.arguments.maxEdge,
-            renderGeometry(copy.score, pages),
           );
           if (!this.documents.list().includes(workspace)) {
             throw new Error('DOCUMENT_NOT_FOUND');

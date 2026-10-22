@@ -207,20 +207,7 @@ export async function startAutomationHost(options: {
         requireRequest(event, 'preview_page', requestId);
         const signal = exportController!.signal;
         signal.throwIfAborted();
-        let image: PreviewImage;
-        try {
-          image = await options.previewPage(args, signal);
-        } catch (error) {
-          if (
-            error instanceof Error &&
-            error.message.startsWith('EXPORT_RENDER_FAILED: LAYOUT_CONFLICT:')
-          ) {
-            throw new Error(
-              'LAYOUT_CONFLICT: PNG layout differs from page discovery',
-            );
-          }
-          throw error;
-        }
+        const image = await options.previewPage(args, signal);
         signal.throwIfAborted();
         await options.authorize();
         requireRequest(event, 'preview_page', requestId);

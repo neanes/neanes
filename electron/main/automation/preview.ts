@@ -13,7 +13,6 @@ export interface PreviewPageOptions {
   snapshot: ScoreRenderSnapshot;
   pageNumber: number;
   maxEdge: number;
-  expectedGeometry: string;
 }
 
 export async function renderPagePreview(options: {
@@ -31,7 +30,6 @@ export async function renderPagePreview(options: {
     png: {
       dpi: 192,
       maxEdge: options.args.maxEdge,
-      expectedGeometry: options.args.expectedGeometry,
       pageNumbers: [options.args.pageNumber],
       transparentBackground: false,
     },

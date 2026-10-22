@@ -15,10 +15,8 @@ import { useTemplateRef } from 'vue';
 
 import SettledScorePages from '@/components/SettledScorePages.vue';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
-import type { Page } from '@/models/Page';
 import { Workspace } from '@/models/Workspace';
 import { fontCatalog } from '@/services/FontCatalog';
-import { renderGeometry } from '@/services/rendering/renderGeometry';
 import type {
   PngRenderOptions,
   ScoreRenderSnapshot,
@@ -51,16 +49,7 @@ function failed(error: Error) {
 }
 const settledPages =
   useTemplateRef<InstanceType<typeof SettledScorePages>>('settledPages');
-async function complete(pages: Page[]) {
-  if (
-    props.png?.expectedGeometry !== undefined &&
-    renderGeometry(workspace.score, pages) !== props.png.expectedGeometry
-  ) {
-    failed(
-      new Error('LAYOUT_CONFLICT: PNG layout differs from page discovery'),
-    );
-    return;
-  }
+async function complete() {
   if (props.png) {
     try {
       const selected = settledPages

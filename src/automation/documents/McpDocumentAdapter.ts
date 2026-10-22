@@ -583,14 +583,30 @@ export class McpDocumentAdapter {
           JSON.stringify(paragraphStyleDefinition(style)),
         ]),
       );
-      this.documents.replaceParagraphStyles(
-        workspace,
-        planParagraphStyleEdits(
-          workspace.score.paragraphStyles,
-          request.arguments.changes,
-        ),
-      );
-      await this.documents.settle(workspace);
+      const revision = this.revision(workspace);
+      let applied: boolean | undefined;
+      try {
+        this.documents.replaceParagraphStyles(
+          workspace,
+          planParagraphStyleEdits(
+            workspace.score.paragraphStyles,
+            request.arguments.changes,
+          ),
+        );
+        applied = this.revision(workspace) !== revision;
+        await this.documents.settle(workspace);
+      } catch (error) {
+        const failure = automationError(error);
+        throw new AutomationError({
+          ...failure,
+          details: {
+            ...failure.details,
+            documentId: workspace.id,
+            editsApplied: applied ?? this.revision(workspace) !== revision,
+            revision: this.revision(workspace),
+          },
+        });
+      }
       const after = new Map(
         workspace.score.paragraphStyles.map((style) => [
           style.id,
@@ -608,11 +624,27 @@ export class McpDocumentAdapter {
       };
     }
     if (request.tool === 'replace_document_properties') {
-      this.documents.replaceDocumentProperties(
-        workspace,
-        request.arguments.properties,
-      );
-      await this.documents.settle(workspace);
+      const revision = this.revision(workspace);
+      let applied: boolean | undefined;
+      try {
+        this.documents.replaceDocumentProperties(
+          workspace,
+          request.arguments.properties,
+        );
+        applied = this.revision(workspace) !== revision;
+        await this.documents.settle(workspace);
+      } catch (error) {
+        const failure = automationError(error);
+        throw new AutomationError({
+          ...failure,
+          details: {
+            ...failure.details,
+            documentId: workspace.id,
+            editsApplied: applied ?? this.revision(workspace) !== revision,
+            revision: this.revision(workspace),
+          },
+        });
+      }
       return {
         ...this.summary(workspace),
         properties: { ...workspace.score.documentProperties },

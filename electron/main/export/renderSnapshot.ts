@@ -7,6 +7,7 @@ import {
 import type {
   PngRenderOptions,
   ScoreRenderSnapshot,
+  SnapshotRenderResult,
 } from '../../../src/services/rendering/scoreRenderSnapshot';
 
 // One disposable renderer per snapshot. It has no editor/workspace lifecycle.
@@ -20,7 +21,10 @@ export async function renderSnapshot<T>(options: {
     data: string,
     signal: AbortSignal,
   ) => Promise<boolean>;
-  complete: (window: BrowserWindow) => Promise<T>;
+  complete: (
+    window: BrowserWindow,
+    result: Extract<SnapshotRenderResult, { success: true }>,
+  ) => Promise<T>;
   preload: string;
   entry: string;
   devServerUrl?: string;
@@ -58,10 +62,7 @@ export async function renderSnapshot<T>(options: {
       });
     }
   };
-  const onResult = (
-    event: IpcMainEvent,
-    result: { success: boolean; message?: string },
-  ) => {
+  const onResult = (event: IpcMainEvent, result: SnapshotRenderResult) => {
     if (event.sender !== window.webContents || !started || completing) {
       return;
     }
@@ -75,7 +76,7 @@ export async function renderSnapshot<T>(options: {
       clearTimeout(timer);
     }
     void Promise.resolve()
-      .then(() => options.complete(window))
+      .then(() => options.complete(window, result))
       .then(outcome.resolve, (error: unknown) => fail(String(error)));
   };
   const onAbort = () => {

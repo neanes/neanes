@@ -181,7 +181,6 @@ export const automationResultSchemas = {
   }),
   preview_page: documentSummarySchema.extend({
     capturedRevision: revision,
-    layoutId: z.string().regex(/^[a-f0-9]{64}$/),
     pageCount: z.number().int().nonnegative(),
     pageNumber: z.number().int().positive(),
     mimeType: z.literal('image/png'),

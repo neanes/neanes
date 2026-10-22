@@ -5,6 +5,8 @@ import {
   PREVIEW_MAX_BYTES,
   type PreviewImage,
   previewImageSchema,
+  type PreviewPageResult,
+  previewPageResultSchema,
 } from '../../../src/automation/contracts/preview';
 import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 import { renderSnapshot } from '../export/renderSnapshot';
@@ -22,9 +24,9 @@ export async function renderPagePreview(options: {
   entry: string;
   devServerUrl?: string;
   signal: AbortSignal;
-}): Promise<PreviewImage> {
+}): Promise<PreviewPageResult> {
   let image: PreviewImage | undefined;
-  return renderSnapshot({
+  const result = await renderSnapshot({
     ...options,
     snapshot: options.args.snapshot,
     png: {
@@ -65,12 +67,19 @@ export async function renderPagePreview(options: {
       });
       return true;
     },
-    complete: async () => {
+    complete: async (_window, result) => {
       options.signal.throwIfAborted();
-      if (image === undefined) {
-        throw new Error('INVALID_PAGE_NUMBER');
-      }
-      return image;
+      return { image, pageCount: result.pageCount };
     },
+  });
+  if (options.args.pageNumber > result.pageCount) {
+    throw new Error('INVALID_PAGE_NUMBER');
+  }
+  if (result.image === undefined) {
+    throw new Error('EXPORT_RENDER_FAILED: Preview image was not returned');
+  }
+  return previewPageResultSchema.parse({
+    ...result.image,
+    pageCount: result.pageCount,
   });
 }

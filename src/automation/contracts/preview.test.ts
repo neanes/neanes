@@ -2,7 +2,11 @@ import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv
 import { describe, expect, it } from 'vitest';
 
 import { automationTools } from '../../../electron/main/automation/tools';
-import { PREVIEW_MAX_BYTES, previewImageSchema } from './preview';
+import {
+  PREVIEW_MAX_BYTES,
+  previewImageSchema,
+  previewPageResultSchema,
+} from './preview';
 import { parseAutomationRequest } from './protocol';
 import { automationResultSchemas } from './results';
 
@@ -21,7 +25,7 @@ describe('page preview contract', () => {
       { maxEdge: 255 },
       { maxEdge: 2049 },
       { maxEdge: Infinity },
-      { expectedLayoutId: 'invalid' },
+      { expectedLayoutId: 'a'.repeat(64) },
       { filePath: '/tmp/preview.png' },
     ]) {
       expect(() =>
@@ -41,6 +45,19 @@ describe('page preview contract', () => {
     expect(
       new AjvJsonSchemaValidator().getValidator(tool.inputSchema)(args).valid,
     ).toBe(true);
+  });
+
+  it('requires the image renderer to return a positive settled page count', () => {
+    const image = { imageData: 'AAAA', width: 1200, height: 1600 };
+    expect(previewPageResultSchema.parse({ ...image, pageCount: 2 })).toEqual({
+      ...image,
+      pageCount: 2,
+    });
+    for (const pageCount of [undefined, 0, -1, 1.5]) {
+      expect(
+        previewPageResultSchema.safeParse({ ...image, pageCount }).success,
+      ).toBe(false);
+    }
   });
 
   it('bounds internal image delivery and keeps base64 out of metadata', () => {
@@ -75,7 +92,6 @@ describe('page preview contract', () => {
       hasUnsavedChanges: true,
       selected: false,
       elementCount: 1,
-      layoutId: 'a'.repeat(64),
       pageCount: 2,
       pageNumber: 1,
       mimeType: 'image/png',

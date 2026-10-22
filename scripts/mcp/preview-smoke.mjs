@@ -269,7 +269,6 @@ try {
     const stable = {
       ...args,
       expectedRevision: pages.revision,
-      expectedLayoutId: pages.layoutId,
     };
     for (const [pageNumber, maxEdge] of [
       [1, 512],
@@ -282,7 +281,7 @@ try {
       });
       assert.equal(preview.capturedRevision, pages.revision);
       assert.equal(preview.revision, pages.revision);
-      assert.equal(preview.layoutId, pages.layoutId);
+      assert.ok(!('layoutId' in preview));
       assert.equal(preview.pageNumber, pageNumber);
       assert.equal(preview.pageCount, 2);
       assert.ok(Math.max(preview.width, preview.height) <= maxEdge);
@@ -327,7 +326,7 @@ try {
     await call(
       'preview_page',
       { ...stable, expectedLayoutId: '0'.repeat(64), pageNumber: 1 },
-      'LAYOUT_CONFLICT',
+      'VALIDATION_ERROR',
     );
     await call(
       'preview_page',
@@ -483,7 +482,6 @@ try {
   const landscapePreview = await call('preview_page', {
     ...argsSaved,
     expectedRevision: layoutSaved.revision,
-    expectedLayoutId: layoutSaved.layoutId,
     pageNumber: 1,
   });
   assert.ok(landscapePreview.width > landscapePreview.height);
@@ -526,7 +524,7 @@ try {
       expectedRevision: broken.revision,
       pageNumber: 1,
     },
-    'LAYOUT_SETTLEMENT_FAILED',
+    'EXPORT_RENDER_FAILED',
   );
   await eventually(async () => assert.equal(await exportWindows(), 0));
   console.log(`Preview smoke passed. PNGs: ${directory}`);
@@ -540,5 +538,7 @@ try {
   }
   const exit = new Promise((resolve) => editor.once('exit', resolve));
   editor.kill();
+  const forceExit = setTimeout(() => editor.kill('SIGKILL'), 5_000);
   await exit;
+  clearTimeout(forceExit);
 }

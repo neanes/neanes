@@ -20,6 +20,9 @@ export interface PngRenderOptions {
   transparentBackground: boolean;
 }
 
+export type SnapshotRenderResult =
+  { success: true; pageCount: number } | { success: false; message?: string };
+
 export interface SnapshotRenderRequest {
   snapshot: ScoreRenderSnapshot;
   png?: PngRenderOptions;

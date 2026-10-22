@@ -15,6 +15,7 @@ import { useTemplateRef } from 'vue';
 
 import SettledScorePages from '@/components/SettledScorePages.vue';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Page } from '@/models/Page';
 import { Workspace } from '@/models/Workspace';
 import { fontCatalog } from '@/services/FontCatalog';
 import type {
@@ -49,7 +50,7 @@ function failed(error: Error) {
 }
 const settledPages =
   useTemplateRef<InstanceType<typeof SettledScorePages>>('settledPages');
-async function complete() {
+async function complete(pages: Page[]) {
   if (props.png) {
     try {
       const selected = settledPages
@@ -105,6 +106,7 @@ async function complete() {
     finished = true;
     window.ipcRenderer.send(IpcRendererChannels.ExportRendererResult, {
       success: true,
+      pageCount: pages.length,
     });
   }
 }

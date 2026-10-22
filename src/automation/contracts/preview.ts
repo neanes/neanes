@@ -12,3 +12,7 @@ export const previewImageSchema = z.strictObject({
   height: z.number().int().positive().max(PREVIEW_MAX_EDGE),
 });
 export type PreviewImage = z.output<typeof previewImageSchema>;
+export const previewPageResultSchema = previewImageSchema.extend({
+  pageCount: z.number().int().positive(),
+});
+export type PreviewPageResult = z.output<typeof previewPageResultSchema>;

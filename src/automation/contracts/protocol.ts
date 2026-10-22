@@ -171,7 +171,6 @@ export const automationSchemas = {
     sessionId,
     documentId,
     expectedRevision: revision,
-    expectedLayoutId: layoutReadShape.expectedLayoutId,
     pageNumber: z.number().int().positive(),
     maxEdge: z.number().int().min(256).max(2048).default(1600),
   }),

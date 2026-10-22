@@ -8,7 +8,7 @@ import {
   AutomationError,
   automationOutcome,
 } from '../../../src/automation/contracts/errors';
-import type { PreviewImage } from '../../../src/automation/contracts/preview';
+import type { PreviewPageResult } from '../../../src/automation/contracts/preview';
 import type {
   AutomationMessage,
   AutomationReply,
@@ -43,7 +43,7 @@ export async function startAutomationHost(options: {
   previewPage(
     args: PreviewPageOptions,
     signal: AbortSignal,
-  ): Promise<PreviewImage>;
+  ): Promise<PreviewPageResult>;
   printPdf(args: PdfExportOptions, signal: AbortSignal): Promise<Buffer>;
   withFileLock<T>(operation: () => Promise<T>): Promise<T>;
   runExclusive<T>(operation: () => Promise<T>): Promise<T>;

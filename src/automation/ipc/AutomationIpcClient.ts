@@ -10,7 +10,7 @@ import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapsh
 
 import type { BatchQuery } from '../contracts/batch';
 import { unwrapAutomationOutcome } from '../contracts/errors';
-import type { PreviewImage } from '../contracts/preview';
+import type { PreviewPageResult } from '../contracts/preview';
 
 export class AutomationIpcClient {
   requestId = '';
@@ -18,7 +18,7 @@ export class AutomationIpcClient {
     snapshot: ScoreRenderSnapshot,
     pageNumber: number,
     maxEdge: number,
-  ): Promise<PreviewImage> {
+  ): Promise<PreviewPageResult> {
     return unwrapAutomationOutcome(
       await window.ipcRenderer.invoke(
         IpcRendererChannels.AutomationPreviewPage,

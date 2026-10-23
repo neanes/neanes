@@ -19,6 +19,7 @@ import { fileDiscoveryQuerySchema } from './fileDiscovery';
 import { modeKeyTemplatesQuerySchema } from './modeKeyTemplates';
 import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
+import { PREVIEW_MAX_EDGE } from './preview';
 import { richTextFormatQuerySchema } from './richTextFormat';
 import { textSearchShape } from './textSearchSchema';
 
@@ -138,7 +139,7 @@ export const automationSchemas = {
   preview_page: z.strictObject({
     ...documentMutation,
     pageNumber: z.number().int().positive(),
-    maxEdge: z.number().int().min(256).max(2048).default(1600),
+    maxEdge: z.number().int().min(256).max(PREVIEW_MAX_EDGE).default(1600),
   }),
   export_pdf: z.strictObject({
     ...documentMutation,
@@ -148,6 +149,21 @@ export const automationSchemas = {
 };
 
 export type AutomationTool = keyof typeof automationSchemas;
+export type AutomationMode = 'interactive' | 'headless';
+
+// Isolated sessions only exist in the interactive editor; headless workers
+// hold private documents instead.
+const sessionTools = new Set<string>(['create_session', 'close_session']);
+
+export function isToolAvailable(
+  tool: string,
+  mode: AutomationMode = 'interactive',
+): tool is AutomationTool {
+  return (
+    Object.hasOwn(automationSchemas, tool) &&
+    (mode !== 'headless' || !sessionTools.has(tool))
+  );
+}
 export type AutomationRequest = {
   [K in AutomationTool]: {
     tool: K;

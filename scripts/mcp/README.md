@@ -661,7 +661,7 @@ Read-only JSON results are limited to 64,000 serialized characters (the finite, 
 Pure unit tests cover style graph and metadata validation, undo/redo, serialization, filesystem scope, overwrite behavior, and file conflicts:
 
 ```sh
-npx vitest run src/services/documents src/automation electron/main/files electron/main/automation/files.test.ts electron/main/OperationQueue.test.ts
+npx vitest run src/services/documents src/automation electron/main/files electron/main/automation/files.test.ts src/utils/OperationQueue.test.ts
 ```
 
 Run the read-only element discovery regression against a disposable profile. It checks interactive and isolated reads, nested collections, header/footer templates, pagination, reference ownership, revision conflicts, explicit overrides, and unchanged source content after reads:

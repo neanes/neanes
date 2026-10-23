@@ -29,7 +29,7 @@ const layoutResultShape = {
   offset: index,
   nextOffset: index.nullable(),
 };
-export const pageSummarySchema = z.strictObject({
+const pageSummarySchema = z.strictObject({
   pageNumber: z.number().int().positive(),
   displayedPageNumber: z.number().int(),
   lineCount: index,

@@ -6,6 +6,7 @@ import type {
   FileDiscoveryQuery,
   FileDiscoveryResult,
 } from '../../../src/automation/contracts/fileDiscovery';
+import { isScoreFile } from '../files/scoreFiles';
 
 // Bound traversal as well as results; never silently omit unreadable subfolders.
 const MAX_ENTRIES = 10000;
@@ -48,10 +49,7 @@ export async function discoverScoreFiles(
       // Dirent predicates intentionally skip symlinks, including directory links.
       if (entry.isDirectory() && query.recursive) {
         children.push(filePath);
-      } else if (
-        entry.isFile() &&
-        ['.byz', '.byzx'].includes(path.extname(entry.name))
-      ) {
+      } else if (entry.isFile() && isScoreFile(entry.name)) {
         if (matches++ < query.offset) {
           continue;
         }

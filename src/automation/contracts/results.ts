@@ -30,12 +30,13 @@ import { automationErrorSchema } from './errors';
 import { fileDiscoveryResultSchema } from './fileDiscovery';
 import { modeKeyTemplatesResultSchema } from './modeKeyTemplates';
 import { pageElementsResultShape, pageListResultShape } from './pageSchemas';
+import { PREVIEW_MAX_EDGE } from './preview';
 import type { AutomationTool } from './protocol';
 import { selectionResultShape } from './selectionSchema';
 import { textSearchResultShape } from './textSearchSchema';
 
 const revision = z.number().int().nonnegative();
-export const documentSummarySchema = z.strictObject({
+const documentSummarySchema = z.strictObject({
   documentId: z.string().min(1),
   revision,
   filePath: z.string().nullable(),
@@ -77,7 +78,7 @@ const capabilityFields = {
   }),
 };
 
-export const capabilitiesSchemas = {
+const capabilitiesSchemas = {
   interactive: z.strictObject({
     ...capabilityFields,
     mode: z.literal('interactive'),
@@ -168,7 +169,7 @@ export const automationResultSchemas = {
     documentSummarySchema.extend({ styleIds: z.array(z.string()) }),
   ]),
   edit_paragraph_styles: styleResultSchema
-    .partial({ styles: true, resolvedStyles: true, units: true })
+    .partial({ styles: true, units: true })
     .extend({
       affectedStyleIds: z.array(z.string()),
     }),
@@ -184,8 +185,8 @@ export const automationResultSchemas = {
     pageCount: z.number().int().nonnegative(),
     pageNumber: z.number().int().positive(),
     mimeType: z.literal('image/png'),
-    width: z.number().int().positive().max(2048),
-    height: z.number().int().positive().max(2048),
+    width: z.number().int().positive().max(PREVIEW_MAX_EDGE),
+    height: z.number().int().positive().max(PREVIEW_MAX_EDGE),
   }),
   export_pdf: documentSummarySchema.extend({
     exportedRevision: revision,
@@ -237,6 +238,16 @@ const publishedStyleResult = styleResultSchema
   .partial({ styles: true, units: true })
   .extend({ styleIds: z.array(z.string()).optional() });
 
+const publishedResultSchemas: Partial<Record<AutomationTool, z.ZodType>> = {
+  batch_update_files: publishedBatchResultSchema,
+  get_paragraph_styles: publishedStyleResult,
+  get_elements: publishedElementResult,
+  find_elements: publishedSearchResult,
+  get_element: publishedLookupResult,
+  get_page_setup: publishedSettingsResult,
+  get_header_footer_settings: publishedSettingsResult,
+};
+
 export function publishedAutomationOutputSchema(
   tool: AutomationTool,
   mode: 'interactive' | 'headless' = 'interactive',
@@ -247,20 +258,7 @@ export function publishedAutomationOutputSchema(
       result:
         tool === 'get_capabilities'
           ? capabilitiesSchemas[mode]
-          : tool === 'batch_update_files'
-            ? publishedBatchResultSchema
-            : tool === 'get_paragraph_styles'
-              ? publishedStyleResult
-              : tool === 'get_elements'
-                ? publishedElementResult
-                : tool === 'find_elements'
-                  ? publishedSearchResult
-                  : tool === 'get_element'
-                    ? publishedLookupResult
-                    : tool === 'get_page_setup' ||
-                        tool === 'get_header_footer_settings'
-                      ? publishedSettingsResult
-                      : automationResultSchemas[tool],
+          : (publishedResultSchemas[tool] ?? automationResultSchemas[tool]),
     }),
     z.strictObject({
       success: z.literal(false),

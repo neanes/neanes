@@ -1337,19 +1337,7 @@ const activeDialog = computed(
       { name: 'about', open: aboutDialogIsOpen.value },
     ].find((dialog) => dialog.open)?.name ?? null,
 );
-const dialogOpen = computed(() => {
-  return (
-    modeKeyDialogIsOpen.value ||
-    pageSetupDialogIsOpen.value ||
-    paragraphStylesDialogIsOpen.value ||
-    documentPropertiesDialogIsOpen.value ||
-    playbackSettingsDialogIsOpen.value ||
-    syllablePositioningDialogIsOpen.value ||
-    exportDialogIsOpen.value ||
-    editorPreferencesDialogIsOpen.value ||
-    aboutDialogIsOpen.value
-  );
-});
+const dialogOpen = computed(() => activeDialog.value !== null);
 
 const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;

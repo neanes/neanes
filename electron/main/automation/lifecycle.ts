@@ -10,6 +10,7 @@ import type {
 } from '../../../src/ipc/agentAccess';
 import { IpcRendererChannels } from '../../../src/ipc/ipcChannels';
 import type { PdfExportOptions } from '../../../src/services/documents/fileTypes';
+import { OperationQueue } from '../../../src/utils/OperationQueue';
 import {
   hasAgentDrafts,
   initializeAccessPolicy,
@@ -49,7 +50,9 @@ export function installAgentAccess(options: {
   let accessPolicy: AgentAccessPolicy | null = null;
   let automationRendererReady = false;
   let accessError: string | null = null;
-  let accessQueue = Promise.resolve();
+  const accessQueue = new OperationQueue();
+  const failure = (error: unknown) =>
+    getErrorMessage(error) ?? 'MCP_START_FAILED';
   ipcMain.on(IpcRendererChannels.AutomationReady, (event) => {
     if (event.sender === win?.webContents) {
       automationRendererReady = true;
@@ -59,10 +62,10 @@ export function installAgentAccess(options: {
     }
   });
 
-  let endpointPublication = Promise.resolve();
+  const endpointPublication = new OperationQueue();
   function publishEditorEndpoint() {
-    endpointPublication = endpointPublication
-      .then(async () => {
+    return endpointPublication
+      .run(async () => {
         if (headless || !accessPolicy) {
           return;
         }
@@ -82,10 +85,9 @@ export function installAgentAccess(options: {
         );
       })
       .catch((error) => {
-        accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+        accessError = failure(error);
         console.error(error);
       });
-    return endpointPublication;
   }
 
   async function createAutomationHost(
@@ -117,7 +119,7 @@ export function installAgentAccess(options: {
           entry: path.join(process.env.DIST!, 'export.html'),
           devServerUrl: url,
         }),
-      printPdf: (args, signal) => options.printPdf(args, signal),
+      printPdf: options.printPdf,
     });
   }
 
@@ -133,14 +135,14 @@ export function installAgentAccess(options: {
     }
     try {
       automationHost = await createAutomationHost({
-        token: process.env.NEANES_MCP_TOKEN ?? accessPolicy!.token,
+        token: process.env.NEANES_MCP_TOKEN ?? accessPolicy.token,
         port: Number(process.env.NEANES_MCP_PORT ?? 0),
       });
       if (win) {
-        automationHost.attach(win);
+        automationHost.attach(win, automationRendererReady);
       }
     } catch (error) {
-      accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+      accessError = failure(error);
       console.error(error);
     }
     await publishEditorEndpoint();
@@ -176,10 +178,8 @@ export function installAgentAccess(options: {
           ? 'error'
           : !accessPolicy?.enabled
             ? 'off'
-            : automationHost
-              ? automationHost.isReady()
-                ? 'ready'
-                : 'starting'
+            : automationHost?.isReady()
+              ? 'ready'
               : 'starting',
       error: accessError ?? automationHost?.error() ?? null,
       endpoint: automationHost
@@ -207,7 +207,7 @@ export function installAgentAccess(options: {
       ) {
         throw new Error('INVALID_AGENT_ACCESS_SETTING');
       }
-      const operation = accessQueue.then(async () => {
+      return accessQueue.run(async () => {
         const current = await initializeAccessPolicy(accessPolicyFile);
         if (
           current.enabled === enabled &&
@@ -226,11 +226,6 @@ export function installAgentAccess(options: {
         await syncAgentAccess();
         return { state: agentAccessState(), confirmationRequired: false };
       });
-      accessQueue = operation.then(
-        () => undefined,
-        () => undefined,
-      );
-      return operation;
     },
   );
 
@@ -242,46 +237,43 @@ export function installAgentAccess(options: {
       return;
     }
     policyCheckRunning = true;
-    const operation = accessQueue.then(async () => {
-      try {
-        const next = await readAccessPolicy(accessPolicyFile);
-        if (
-          next.enabled !== accessPolicy?.enabled ||
-          next.token !== accessPolicy?.token
-        ) {
-          accessPolicy = next;
-          await syncAgentAccess();
+    void accessQueue
+      .run(async () => {
+        try {
+          const next = await readAccessPolicy(accessPolicyFile);
+          if (
+            next.enabled !== accessPolicy?.enabled ||
+            next.token !== accessPolicy?.token
+          ) {
+            accessPolicy = next;
+            await syncAgentAccess();
+          }
+        } catch (error) {
+          accessPolicy = null;
+          await automationHost?.close();
+          automationHost = null;
+          accessError = failure(error);
         }
-      } catch (error) {
-        accessPolicy = null;
-        await automationHost?.close();
-        automationHost = null;
-        accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
-      }
-    });
-    accessQueue = operation.catch(console.error).finally(() => {
-      policyCheckRunning = false;
-    });
+      })
+      .catch(console.error)
+      .finally(() => {
+        policyCheckRunning = false;
+      });
   }, 1000);
   policyTimer.unref();
   app.on('will-quit', () => clearInterval(policyTimer));
 
   ipcMain.handle(IpcRendererChannels.AgentAccessRetry, (event) => {
     requireEditorSender(event);
-    const operation = accessQueue.then(async () => {
+    return accessQueue.run(async () => {
       try {
         accessPolicy = await initializeAccessPolicy(accessPolicyFile);
         await syncAgentAccess();
       } catch (error) {
-        accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+        accessError = failure(error);
       }
       return agentAccessState();
     });
-    accessQueue = operation.then(
-      () => undefined,
-      () => undefined,
-    );
-    return operation;
   });
 
   async function launchHeadless() {
@@ -308,7 +300,7 @@ export function installAgentAccess(options: {
     });
     options.setWindow(win);
     win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-    automationHost.attach(win);
+    automationHost.attach(win, automationRendererReady);
     const startup = setTimeout(() => app.exit(1), 60_000);
     const onReady = (event: Electron.IpcMainEvent) => {
       if (event.sender !== win?.webContents) {
@@ -375,7 +367,7 @@ export function installAgentAccess(options: {
           }
         },
       );
-      automationHost?.attach(window);
+      automationHost?.attach(window, automationRendererReady);
     },
     detach() {
       win = null;
@@ -412,7 +404,7 @@ export function installAgentAccess(options: {
           token: randomBytes(32).toString('hex'),
           enabled: false,
         };
-        accessError = getErrorMessage(error) ?? 'MCP_START_FAILED';
+        accessError = failure(error);
         console.error('Could not load agent access settings', error);
       }
 

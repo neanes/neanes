@@ -116,7 +116,9 @@ describe('exact element content retrieval', () => {
       offset: 3,
       limit: 8000,
     });
-    expect(() => assertResultBudget(escaped)).not.toThrow();
+    expect(() =>
+      assertResultBudget(escaped, 'get_element_content'),
+    ).not.toThrow();
     expect(
       discovery.readContent(score, {
         ...query,

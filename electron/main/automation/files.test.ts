@@ -31,7 +31,7 @@ describe('automation file access', () => {
     );
     root = path.join(directory, 'allowed');
     await fs.mkdir(root);
-    files = await AutomationFiles.create();
+    files = new AutomationFiles();
   });
   afterEach(async () => {
     await fs.rm(directory, { recursive: true, force: true });
@@ -140,7 +140,7 @@ describe('requested paths and file validation', () => {
         await fs.mkdtemp(path.join(os.tmpdir(), 'neanes-requested-path-')),
       );
       try {
-        const files = await AutomationFiles.create();
+        const files = new AutomationFiles();
         const score = SaveService.SaveScoreToJson(new Score());
         for (const suffix of ['', format === 'byz' ? '.byzx' : '.byz']) {
           const target = path.join(directory, `target${suffix}`);
@@ -206,7 +206,7 @@ describe('requested paths and file validation', () => {
     try {
       const root = path.join(directory, 'allowed');
       await fs.mkdir(root);
-      const files = await AutomationFiles.create();
+      const files = new AutomationFiles();
       const score = SaveService.SaveScoreToJson(new Score());
       const source = path.join(root, 'source.byzx');
       await writeScoreFile(source, score);

@@ -7,12 +7,13 @@ import {
 } from '@/services/documents/DocumentService';
 import { LayoutService } from '@/services/LayoutService';
 import {
-  getFontFamilyLoadDescriptors,
-  getScoreFontLoadDescriptors,
+  loadFontFamilies,
+  loadScoreFonts,
 } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
 import { SaveService } from '@/services/SaveService';
+import { OperationQueue } from '@/utils/OperationQueue';
 
 import type { EditorBusyState } from '../contracts/editorBusy';
 import { useEditorAutomation } from './useEditorAutomation';
@@ -32,21 +33,19 @@ export function useEditorDocumentAutomation(
 ) {
   const dirtyTextBoxWorkspaces = new Set<string>();
   const pendingTextBoxMeasurements = new Map<string, Promise<void>>();
-  let textBoxMeasurementQueue = Promise.resolve();
+  const textBoxMeasurementQueue = new OperationQueue();
   let editorUnmounted = false;
   const { textBoxes, pages } = useWorkspaceMeasurements();
 
   function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
     dirtyTextBoxWorkspaces.add(workspace.id);
-    const pending = textBoxMeasurementQueue.then(async () => {
+    const pending = textBoxMeasurementQueue.run(async () => {
+      // Let the previous measurement's component unmount before mounting the next.
+      await nextTick();
       if (editorUnmounted || !isActive(workspace)) {
         return;
       }
-      await Promise.all(
-        getScoreFontLoadDescriptors(
-          SaveService.SaveScoreToJson(workspace.score),
-        ).map((descriptor) => document.fonts.load(descriptor)),
-      );
+      await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
       await document.fonts.ready;
       // Compute target widths and inherited legacy text styles before mounting measurements.
       LayoutService.processPages(toRaw(workspace));
@@ -58,16 +57,14 @@ export function useEditorDocumentAutomation(
       if (!isActive(workspace)) {
         return;
       }
-      if (workspace.id === options.selectedWorkspace()?.id) {
-        options.changed(workspace);
-      } else if (!automation.ownsPrivateWorkspace(workspace)) {
+      if (
+        workspace.id === options.selectedWorkspace()?.id ||
+        !automation.ownsPrivateWorkspace(workspace)
+      ) {
         options.changed(workspace);
       }
     });
     pendingTextBoxMeasurements.set(workspace.id, pending);
-    textBoxMeasurementQueue = pending
-      .catch(() => undefined)
-      .then(() => nextTick());
     void pending.then(
       () => {
         if (pendingTextBoxMeasurements.get(workspace.id) === pending) {
@@ -109,13 +106,7 @@ export function useEditorDocumentAutomation(
         await nextTick();
       }
     },
-    async ensureFonts(families) {
-      await Promise.all(
-        getFontFamilyLoadDescriptors(families).map((descriptor) =>
-          document.fonts.load(descriptor),
-        ),
-      );
-    },
+    ensureFonts: loadFontFamilies,
     elementsChanged(workspace) {
       dirtyTextBoxWorkspaces.add(workspace.id);
     },
@@ -134,10 +125,12 @@ export function useEditorDocumentAutomation(
     documents,
     enabled: options.enabled,
     busyState: options.busyState,
-    createScore: options.createScore,
-    prepare: options.prepare,
-    dispose: disposeWorkspace,
-    settle: queueWorkspaceTextBoxMeasurement,
+    hooks: {
+      createScore: options.createScore,
+      prepare: options.prepare,
+      dispose: disposeWorkspace,
+      settle: queueWorkspaceTextBoxMeasurement,
+    },
     snapshot: options.snapshot,
     renderPages: pages.start,
   });

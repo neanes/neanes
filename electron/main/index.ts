@@ -66,13 +66,13 @@ import {
   type WorkspacePaneVisibility,
 } from '../../src/models/WorkspacePane';
 import type { PdfExportOptions } from '../../src/services/documents/fileTypes';
+import { OperationQueue } from '../../src/utils/OperationQueue';
 import { TestFileType } from '../../src/utils/TestFileType';
 import { installAgentAccess } from './automation/lifecycle';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
 import { readScoreFile, writeScoreFile } from './files/scoreFiles';
-import { OperationQueue } from './OperationQueue';
 import { RecoveryStore } from './recovery';
 
 // The built directory structure
@@ -2988,16 +2988,15 @@ app.on('will-quit', () => {
   void agentAccess.close();
 });
 
-app.on('activate', () => {
-  if (headless) {
-    return;
-  }
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
+if (!headless) {
+  app.on('activate', () => {
+    // On macOS it's common to re-create a window in the app when the
+    // dock icon is clicked and there are no other windows open.
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+}
 
 const agentAccess = installAgentAccess({
   headless,

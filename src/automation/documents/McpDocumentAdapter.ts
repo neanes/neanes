@@ -130,6 +130,18 @@ export class McpDocumentAdapter {
     };
   }
 
+  // After asynchronous rendering, the document may have been closed or edited.
+  private reverify(workspace: Workspace, revision: number, message: string) {
+    this.revision(workspace);
+    this.documents.prepare(workspace);
+    return this.checkedSummary(workspace, revision, message);
+  }
+
+  private forget(documentId: string) {
+    this.discoveries.delete(documentId);
+    this.revisions.delete(documentId);
+  }
+
   private checkedSummary(
     workspace: Workspace,
     expectedRevision: number | undefined,
@@ -172,7 +184,6 @@ export class McpDocumentAdapter {
     for (const id of this.discoveries.keys()) {
       if (!openIds.has(id)) {
         this.discoveries.delete(id);
-        this.revisions.delete(id);
       }
     }
     if (request.tool === 'get_rich_text_format') {
@@ -275,11 +286,7 @@ export class McpDocumentAdapter {
           request.arguments.pageNumber,
           request.arguments.maxEdge,
         );
-        if (!this.documents.list().includes(workspace)) {
-          throw new Error('DOCUMENT_NOT_FOUND');
-        }
-        this.documents.prepare(workspace);
-        const completed = this.checkedSummary(
+        const completed = this.reverify(
           workspace,
           summary.revision,
           'The document changed while rendering the preview. Read it again.',
@@ -314,15 +321,9 @@ export class McpDocumentAdapter {
           });
         }
         // Interactive content or document ownership can change during rendering.
-        if (!this.documents.list().some((item) => item.id === workspace.id)) {
-          throw new Error('DOCUMENT_NOT_FOUND');
-        }
-        this.documents.prepare(workspace);
-        this.checkedSummary(
-          workspace,
-          summary.revision,
-          'The document changed while measuring pages. Read it again.',
-        );
+        const changedMessage =
+          'The document changed while measuring pages. Read it again.';
+        this.reverify(workspace, summary.revision, changedMessage);
         const layout = discoverPages(
           workspace.score,
           score,
@@ -331,14 +332,10 @@ export class McpDocumentAdapter {
           this.discovery(workspace),
         );
         const layoutId = await fingerprintLayout(layout);
-        if (!this.documents.list().some((item) => item.id === workspace.id)) {
-          throw new Error('DOCUMENT_NOT_FOUND');
-        }
-        this.documents.prepare(workspace);
-        const current = this.checkedSummary(
+        const current = this.reverify(
           workspace,
           summary.revision,
-          'The document changed while measuring pages. Read it again.',
+          changedMessage,
         );
         if (
           request.arguments.expectedLayoutId !== undefined &&
@@ -525,8 +522,7 @@ export class McpDocumentAdapter {
           }
           throw error;
         }
-        this.discoveries.delete(workspace.id);
-        this.revisions.delete(workspace.id);
+        this.forget(workspace.id);
         throw new AutomationError({
           code: 'RECOVERY_CLEANUP_FAILED',
           message: 'The document closed, but its recovery cleanup failed.',
@@ -537,8 +533,7 @@ export class McpDocumentAdapter {
           },
         });
       }
-      this.discoveries.delete(workspace.id);
-      this.revisions.delete(workspace.id);
+      this.forget(workspace.id);
       if (!cleanupSucceeded) {
         throw new AutomationError({
           code: 'RECOVERY_CLEANUP_FAILED',

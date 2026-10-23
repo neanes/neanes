@@ -45,18 +45,11 @@ export function elementSearchTexts(
     default:
       return [];
   }
-  return fields.map((field) => {
-    const value = Reflect.get(element, field) as string;
-    return {
-      field,
-      text:
-        element.elementType === ElementType.RichTextBox ||
-        element.elementType === ElementType.Annotation
-          ? searchPlainText(value)
-          : searchPlainText(value),
-      lyric,
-    };
-  });
+  return fields.map((field) => ({
+    field,
+    text: searchPlainText(Reflect.get(element, field) as string),
+    lyric,
+  }));
 }
 
 export interface TextSearchPart {

@@ -34,8 +34,8 @@ import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
 import {
   getBundledFontLoadDescriptors,
-  getFontFamilyLoadDescriptors,
-  getScoreFontLoadDescriptors,
+  loadFontFamilies,
+  loadScoreFonts,
 } from '@/services/rendering/fontReadiness';
 import { SaveService } from '@/services/SaveService';
 
@@ -73,39 +73,31 @@ async function settle(workspace: Workspace) {
     return;
   }
   const complete = settlements.begin(workspace);
-  await Promise.all(
-    getScoreFontLoadDescriptors(
-      SaveService.SaveScoreToJson(workspace.score),
-    ).map((d) => document.fonts.load(d)),
-  );
+  await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
   LayoutService.processPages(workspace);
   await textBoxes.start(workspace);
   await nextTick();
   LayoutService.processPages(workspace);
   complete();
 }
-// One private store lives until the worker shuts down or access is revoked.
-const privateStore = new PrivateDocumentStore({
+const hooks = {
   createScore: () => new Score(),
   prepare,
-  dispose: (workspace) => settlements.dispose(workspace),
-  fonts: () => fonts.value,
-  async ensureFonts(families) {
-    await Promise.all(
-      getFontFamilyLoadDescriptors(families).map((d) => document.fonts.load(d)),
-    );
-  },
+  dispose: (workspace: Workspace) => settlements.dispose(workspace),
   settle,
+};
+// One private store lives until the worker shuts down or access is revoked.
+const privateStore = new PrivateDocumentStore({
+  ...hooks,
+  fonts: () => fonts.value,
+  ensureFonts: loadFontFamilies,
 });
 const automation = useEditorAutomation({
   enabled: true,
   documents: privateStore.documents,
   privateStore,
   busyState: () => null,
-  createScore: () => new Score(),
-  prepare,
-  dispose: (workspace) => settlements.dispose(workspace),
-  settle,
+  hooks,
   snapshot: (workspace) => ({
     score: SaveService.SaveScoreToJson(workspace.score),
     filePath: workspace.filePath,

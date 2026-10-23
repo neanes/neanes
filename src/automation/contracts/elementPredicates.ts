@@ -6,7 +6,7 @@ import { elementPropertySchemas } from './elementPropertySchemas';
 
 const valueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 type Value = z.infer<typeof valueSchema>;
-export type ElementPredicate =
+type ElementPredicate =
   | { and: ElementPredicate[] }
   | { or: ElementPredicate[] }
   | { field: string; op: 'eq'; value: Value }

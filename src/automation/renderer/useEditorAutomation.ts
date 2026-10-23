@@ -3,10 +3,10 @@ import { onBeforeUnmount, onMounted } from 'vue';
 import { EventBus } from '@/eventBus';
 import { IpcMainChannels, IpcRendererChannels } from '@/ipc/ipcChannels';
 import type { Page } from '@/models/Page';
-import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
+import { OperationQueue } from '@/utils/OperationQueue';
 import { Unit } from '@/utils/Unit';
 
 import { editorBusyError, type EditorBusyState } from '../contracts/editorBusy';
@@ -31,10 +31,7 @@ export function useEditorAutomation(options: {
   documents: DocumentService;
   privateStore?: PrivateDocumentStore;
   busyState(): EditorBusyState | null;
-  createScore(): Score;
-  prepare(workspace: Workspace): void;
-  dispose(workspace: Workspace): void;
-  settle(workspace: Workspace): Promise<void>;
+  hooks: Omit<PrivateDocumentHooks, 'fonts' | 'ensureFonts'>;
   snapshot(workspace: Workspace): ScoreRenderSnapshot;
   renderPages(workspace: Workspace): Promise<Page[]>;
 }) {
@@ -43,12 +40,9 @@ export function useEditorAutomation(options: {
   }
   const ipc = new AutomationIpcClient();
   const sessionHooks: PrivateDocumentHooks = {
-    createScore: options.createScore,
-    prepare: options.prepare,
-    dispose: options.dispose,
+    ...options.hooks,
     fonts: () => options.documents.fonts(),
     ensureFonts: (families) => options.documents.ensureFonts(families),
-    settle: options.settle,
   };
   const privateStore = options.privateStore;
   const mode = privateStore ? 'headless' : 'interactive';
@@ -86,14 +80,18 @@ export function useEditorAutomation(options: {
     activeBatchStore?.clear();
     isolatedTools.clear();
   });
-  const documentTools = new McpDocumentAdapter(
+  const createAdapter = (service: DocumentService) =>
+    new McpDocumentAdapter(
+      service,
+      ipc,
+      exportAutomationPdf,
+      options.renderPages,
+      (workspace, pageNumber, maxEdge) =>
+        ipc.previewPage(options.snapshot(workspace), pageNumber, maxEdge),
+      mode,
+    );
+  const documentTools = createAdapter(
     privateStore?.documents ?? options.documents,
-    ipc,
-    exportAutomationPdf,
-    options.renderPages,
-    (workspace, pageNumber, maxEdge) =>
-      ipc.previewPage(options.snapshot(workspace), pageNumber, maxEdge),
-    mode,
   );
 
   async function onAutomationRequest(message: AutomationMessage) {
@@ -153,19 +151,7 @@ export function useEditorAutomation(options: {
           if (existing) {
             adapter = existing;
           } else {
-            adapter = new McpDocumentAdapter(
-              service,
-              ipc,
-              exportAutomationPdf,
-              options.renderPages,
-              (workspace, pageNumber, maxEdge) =>
-                ipc.previewPage(
-                  options.snapshot(workspace),
-                  pageNumber,
-                  maxEdge,
-                ),
-              mode,
-            );
+            adapter = createAdapter(service);
             isolatedTools.set(service, adapter);
           }
         }
@@ -201,14 +187,14 @@ export function useEditorAutomation(options: {
   }
 
   // Keep renderer operations serialized across server disable/re-enable cycles.
-  let requestQueue = Promise.resolve();
+  const requestQueue = new OperationQueue();
   const enqueue = (message: AutomationMessage) => {
-    requestQueue = requestQueue
-      .then(() => onAutomationRequest(message))
+    void requestQueue
+      .run(() => onAutomationRequest(message))
       .catch((error) => console.error(error));
   };
   const reset = () => {
-    requestQueue = requestQueue.then(() => {
+    void requestQueue.run(async () => {
       isolatedSessions?.clear();
       privateStore?.clear();
       isolatedTools.clear();

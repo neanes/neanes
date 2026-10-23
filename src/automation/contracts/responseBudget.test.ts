@@ -41,9 +41,14 @@ describe('JSON result budgets', () => {
     },
   );
   it('counts escaped wire JSON rather than source string length', () => {
-    expect(() => assertResultBudget({ text: 'a'.repeat(1000) })).not.toThrow();
     expect(() =>
-      assertResultBudget({ text: '\u0000'.repeat(MAX_RESULT_CHARACTERS / 5) }),
+      assertResultBudget({ text: 'a'.repeat(1000) }, 'get_elements'),
+    ).not.toThrow();
+    expect(() =>
+      assertResultBudget(
+        { text: '\u0000'.repeat(MAX_RESULT_CHARACTERS / 5) },
+        'get_elements',
+      ),
     ).toThrow('JSON response budget');
   });
 

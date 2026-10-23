@@ -1,21 +1,15 @@
 import { z } from 'zod';
 
+import { type PageSize, pageSizes, pageSizeUnits } from '@/models/PageSetup';
+
 import { NEUME_FONT_FAMILIES } from '../../utils/fontConstants';
 
 // Persisted live settings only; derived getters and transient melisma settings are excluded.
 export const pageSetupSchema = z.strictObject({
-  pageSize: z.enum([
-    'A3',
-    'A4',
-    'A5',
-    'Legal',
-    'Letter',
-    'Tabloid',
-    'Half-Letter',
-    'Half-Legal',
-    'Custom',
-  ]),
-  pageSizeUnit: z.enum(['pc', 'pt', 'cm', 'mm', 'in']),
+  pageSize: z.enum(
+    pageSizes.map((size) => size.name) as [PageSize, ...PageSize[]],
+  ),
+  pageSizeUnit: z.enum(pageSizeUnits),
   landscape: z.boolean(),
   pageWidth: z.number().positive(),
   pageHeight: z.number().positive(),

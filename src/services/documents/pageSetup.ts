@@ -1,4 +1,6 @@
-import { type PageSetup, pageSizes } from '@/models/PageSetup';
+import type { z } from 'zod';
+
+import { type PageSetup, resolvePageDimensions } from '@/models/PageSetup';
 import type { Workspace } from '@/models/Workspace';
 import { CommandFactory } from '@/services/history/CommandService';
 
@@ -11,26 +13,23 @@ import {
   pageSetupSchema,
 } from './pageSetupSchema';
 
-export function readPageSetup(setup: PageSetup) {
-  return pageSetupSchema.parse(
+function readSettings<Schema extends z.ZodObject>(
+  schema: Schema,
+  setup: PageSetup,
+) {
+  return schema.parse(
     Object.fromEntries(
-      Object.keys(pageSetupSchema.shape).map((key) => [
-        key,
-        Reflect.get(setup, key),
-      ]),
+      Object.keys(schema.shape).map((key) => [key, Reflect.get(setup, key)]),
     ),
   );
 }
 
+export function readPageSetup(setup: PageSetup) {
+  return readSettings(pageSetupSchema, setup);
+}
+
 export function readHeaderFooterSettings(setup: PageSetup) {
-  return headerFooterSettingsSchema.parse(
-    Object.fromEntries(
-      Object.keys(headerFooterSettingsSchema.shape).map((key) => [
-        key,
-        Reflect.get(setup, key),
-      ]),
-    ),
-  );
+  return readSettings(headerFooterSettingsSchema, setup);
 }
 
 // Both settings tools update the same live PageSetup object in one undo step.
@@ -53,13 +52,7 @@ export function updatePageSetup(
         (key) => Object.hasOwn(changes, key),
       )
     ) {
-      const size = pageSizes.find((size) => size.name === next.pageSize)!;
-      const width =
-        next.pageSize === 'Custom' ? next.pageWidthCustom : size.width;
-      const height =
-        next.pageSize === 'Custom' ? next.pageHeightCustom : size.height;
-      values.pageWidth = next.landscape ? height : width;
-      values.pageHeight = next.landscape ? width : height;
+      Object.assign(values, resolvePageDimensions(next));
     }
     const pageWidth = values.pageWidth ?? setup.pageWidth;
     const pageHeight = values.pageHeight ?? setup.pageHeight;

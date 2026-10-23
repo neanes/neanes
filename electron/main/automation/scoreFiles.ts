@@ -37,27 +37,26 @@ export async function canonicalFileIdentity(filePath: string): Promise<string> {
 
 export class ScoreFiles {
   constructor(
-    private resolveOutputPath:
-      | ((
-          filePath: string,
-          source: WriteScoreFileArgs['expectedSource'],
-        ) => Promise<string>)
-      | null = null,
+    private resolveOutputPath: (
+      filePath: string,
+      source: WriteScoreFileArgs['expectedSource'],
+    ) => Promise<string> | string,
   ) {}
   async open(
     filePath: string,
     workspaces: WorkspaceFile[],
   ): Promise<OpenScoreFileResult> {
-    const canonical = await canonicalFileIdentity(filePath);
-    for (const workspace of workspaces) {
-      if (
-        path.relative(
-          await canonicalFileIdentity(workspace.filePath),
-          canonical,
-        ) === ''
-      ) {
-        return { documentId: workspace.documentId };
-      }
+    const [canonical, ...identities] = await Promise.all([
+      canonicalFileIdentity(filePath),
+      ...workspaces.map((workspace) =>
+        canonicalFileIdentity(workspace.filePath),
+      ),
+    ]);
+    const open = workspaces.find(
+      (_workspace, index) => path.relative(identities[index], canonical) === '',
+    );
+    if (open) {
+      return { documentId: open.documentId };
     }
     return this.read(filePath);
   }
@@ -119,9 +118,7 @@ export class ScoreFiles {
     overwrite: boolean,
     expectedSource: WriteScoreFileArgs['expectedSource'] = null,
   ) {
-    if (this.resolveOutputPath != null) {
-      filePath = await this.resolveOutputPath(filePath, expectedSource);
-    }
+    filePath = await this.resolveOutputPath(filePath, expectedSource);
     if (expectedSource != null) {
       const stats = await fs.stat(filePath);
       if (

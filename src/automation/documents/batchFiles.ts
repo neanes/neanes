@@ -12,6 +12,11 @@ import { automationError } from '../contracts/errors';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { planParagraphStyleEdits } from './paragraphStyleEdits';
 
+function failureSummary(error: unknown) {
+  const failure = automationError(error);
+  return { code: failure.code, message: failure.message.slice(0, 240) };
+}
+
 // Request-owned private documents only. No interactive or caller-owned drafts.
 export function applyBatchEdits(
   documents: DocumentService,
@@ -163,24 +168,16 @@ export async function batchUpdateFiles(
         }
       }
     } catch (error) {
-      const failure = automationError(error);
       result.status = 'failed';
-      result.error = {
-        code: failure.code,
-        message: failure.message.slice(0, 240),
-      };
+      result.error = failureSummary(error);
     } finally {
       if (workspace) {
         try {
           await documents.close(workspace, { discardUnsavedChanges: true });
         } catch (error) {
           cleanupFailed = true;
-          const failure = automationError(error);
           result.status = 'failed';
-          result.error ??= {
-            code: failure.code,
-            message: failure.message.slice(0, 240),
-          };
+          result.error ??= failureSummary(error);
         }
       }
     }

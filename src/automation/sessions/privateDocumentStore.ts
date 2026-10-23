@@ -1,5 +1,5 @@
 import type { Score } from '@/models/Score';
-import { Workspace } from '@/models/Workspace';
+import type { Workspace } from '@/models/Workspace';
 import { DocumentService } from '@/services/documents/DocumentService';
 
 export const PRIVATE_DOCUMENT_LIMIT = 16;
@@ -25,7 +25,6 @@ export class PrivateDocumentStore {
       workspaces: () => workspaces,
       selectedWorkspace: () => null,
       createScore: () => hooks.createScore(),
-      createWorkspace: () => new Workspace(),
       fonts: () => hooks.fonts(),
       addWorkspace(workspace) {
         if (workspaces.length >= PRIVATE_DOCUMENT_LIMIT) {

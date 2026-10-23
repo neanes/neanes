@@ -53,6 +53,7 @@ import {
   childCollections,
   type ElementCollection,
   headerFooterVariants,
+  reachableElements,
 } from './elementDiscovery';
 
 const constructors = {
@@ -169,21 +170,7 @@ export function planElementEdits(
       );
     }
   }
-  const reachable = () => {
-    const result = new Set<ScoreElement>();
-    const visit = (elements: ScoreElement[]) => {
-      for (const element of elements) {
-        result.add(element);
-        for (const children of Object.values(childCollections(element))) {
-          visit(children);
-        }
-      }
-    };
-    for (const elements of roots.values()) {
-      visit(elements);
-    }
-    return result;
-  };
+  const reachable = () => reachableElements([...roots.values()].flat());
   const resolve = (ref: string) => {
     const element = refs.get(ref);
     if (element === undefined || !reachable().has(element)) {
@@ -693,17 +680,10 @@ export function applyElementEdits(workspace: Workspace, plan: ElementEditPlan) {
   }
   const previousRevision = workspace.contentRevision;
   workspace.commandService.executeAsBatch(plan.commands);
-  const reachable = new Set<ScoreElement>();
-  const visit = (elements: ScoreElement[]) => {
-    for (const element of elements) {
-      reachable.add(toRaw(element));
-      Object.values(childCollections(element)).forEach(visit);
-    }
-  };
-  visit([
-    ...workspace.score.staff.elements,
-    ...workspace.score.headersAndFooters,
-  ]);
+  const reachable = reachableElements(
+    [...workspace.score.staff.elements, ...workspace.score.headersAndFooters],
+    toRaw,
+  );
   for (const key of [
     'selectedElement',
     'selectedLyrics',

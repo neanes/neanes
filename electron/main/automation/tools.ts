@@ -4,8 +4,10 @@ import { z } from 'zod';
 import { publishedBatchQuerySchema } from '../../../src/automation/contracts/batch';
 import { compactJsonSchema } from '../../../src/automation/contracts/jsonSchema';
 import {
+  type AutomationMode,
   automationSchemas,
   type AutomationTool,
+  isToolAvailable,
 } from '../../../src/automation/contracts/protocol';
 import { publishedAutomationOutputSchema } from '../../../src/automation/contracts/results';
 import { isReadOnlyAutomationTool } from '../../../src/automation/contracts/toolBehavior';
@@ -81,15 +83,11 @@ const descriptions: Record<AutomationTool, string> = {
 };
 
 // The server and inventory budgets use this exact wire definition.
-export type AutomationMode = 'interactive' | 'headless';
+export type { AutomationMode };
 
 export function automationTools(mode: AutomationMode = 'interactive'): Tool[] {
-  return (Object.keys(automationSchemas) as AutomationTool[])
-    .filter(
-      (tool) =>
-        mode !== 'headless' ||
-        !['create_session', 'close_session'].includes(tool),
-    )
+  return Object.keys(automationSchemas)
+    .filter((tool) => isToolAvailable(tool, mode))
     .map((tool) => automationTool(tool, mode));
 }
 

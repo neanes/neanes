@@ -89,17 +89,14 @@ export function automationError(error: unknown): AutomationErrorData {
         issue.code === 'invalid_value'
           ? 'Invalid value. Consult the tool schema or focused element catalog for permitted values.'
           : issue.message.slice(0, 240);
-      const path = issue.path
-        .slice(0, 8)
-        .map((part) => String(part).slice(0, 64));
+      const parts = issue.path.slice(0, 8);
+      const path = parts.map((part) => String(part).slice(0, 64));
       // Group repeated failures in batches while retaining the first location.
       const key = JSON.stringify([
         issue.code,
-        issue.path
-          .slice(0, 8)
-          .map((part) =>
-            typeof part === 'number' ? '*' : String(part).slice(0, 64),
-          ),
+        parts.map((part) =>
+          typeof part === 'number' ? '*' : String(part).slice(0, 64),
+        ),
         message,
       ]);
       const group = groups.get(key);

@@ -25,7 +25,7 @@ describe('score files', () => {
     );
     root = path.join(directory, 'allowed');
     await fs.mkdir(root);
-    files = new ScoreFiles();
+    files = new ScoreFiles((filePath) => filePath);
   });
   afterEach(async () => {
     await fs.rm(directory, { recursive: true, force: true });

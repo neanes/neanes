@@ -7,35 +7,39 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '../../../src/services/documents/fileTypes';
+import { isScoreFile } from '../files/scoreFiles';
 import { canonicalFileIdentity, ScoreFiles } from './scoreFiles';
+
+type OutputKind = 'score' | 'pdf';
+
+function outputKind(filePath: string): OutputKind {
+  return path.extname(filePath) === '.pdf' ? 'pdf' : 'score';
+}
+
+function assertOutputPath(filePath: string, kind: OutputKind) {
+  if (!path.isAbsolute(filePath)) {
+    throw new Error('ABSOLUTE_PATH_REQUIRED');
+  }
+  if (
+    kind === 'pdf' ? path.extname(filePath) !== '.pdf' : !isScoreFile(filePath)
+  ) {
+    throw new Error('UNSUPPORTED_FILE_TYPE');
+  }
+}
 
 // File access uses the application's OS permissions.
 export class AutomationFiles {
   private files = new ScoreFiles((filePath, source) =>
-    this.resolve(
-      filePath,
-      path.extname(filePath) === '.pdf' ? 'pdf' : 'score',
-      true,
-      source != null,
-    ),
+    this.resolve(filePath, outputKind(filePath), true, source != null),
   );
-  static async create() {
-    return new AutomationFiles();
-  }
 
   async resolve(
     filePath: string,
-    extension: 'score' | 'pdf',
+    kind: OutputKind,
     writing = false,
     sourceSave = false,
   ) {
-    if (!path.isAbsolute(filePath)) {
-      throw new Error('ABSOLUTE_PATH_REQUIRED');
-    }
-    const extensions = extension === 'score' ? ['.byzx', '.byz'] : ['.pdf'];
-    if (!extensions.includes(path.extname(filePath))) {
-      throw new Error('UNSUPPORTED_FILE_TYPE');
-    }
+    assertOutputPath(filePath, kind);
     let canonical: string;
     if (writing) {
       // In-place saves may follow the opened source's symlink. Other outputs
@@ -63,17 +67,12 @@ export class AutomationFiles {
   }
 
   async planBatch(query: BatchQuery) {
-    const identity = async (filePath: string, extensions: string[]) => {
-      if (!path.isAbsolute(filePath)) {
-        throw new Error('ABSOLUTE_PATH_REQUIRED');
-      }
-      if (!extensions.includes(path.extname(filePath))) {
-        throw new Error('UNSUPPORTED_FILE_TYPE');
-      }
+    const identity = (filePath: string, kind: OutputKind) => {
+      assertOutputPath(filePath, kind);
       return canonicalFileIdentity(filePath);
     };
     const inputs = await Promise.all(
-      query.files.map((file) => identity(file.filePath, ['.byz', '.byzx'])),
+      query.files.map((file) => identity(file.filePath, 'score')),
     );
     const collision = (filePath: string) => {
       throw new AutomationError({
@@ -92,18 +91,18 @@ export class AutomationFiles {
     }
     const outputs = new Set<string>();
     for (const [index, file] of query.files.entries()) {
-      for (const [requested, extensions, ownSource] of [
+      for (const [requested, kind, ownSource] of [
         [
           query.save === 'inPlace' ? file.filePath : file.outputFilePath,
-          ['.byz', '.byzx'],
+          'score',
           query.save === 'inPlace',
         ],
-        [file.pdfFilePath, ['.pdf'], false],
+        [file.pdfFilePath, 'pdf', false],
       ] as const) {
         if (requested === undefined) {
           continue;
         }
-        const output = await identity(requested, [...extensions]);
+        const output = await identity(requested, kind);
         if (
           outputs.has(output) ||
           inputs.some(
@@ -127,12 +126,8 @@ export class AutomationFiles {
     return this.files.write(args);
   }
 
+  // ScoreFiles resolves and validates the destination before writing.
   async writeOutput(filePath: string, data: Buffer, overwrite: boolean) {
-    filePath = await this.resolve(
-      filePath,
-      path.extname(filePath) === '.pdf' ? 'pdf' : 'score',
-      true,
-    );
     return this.files.writeOutput(filePath, data, overwrite);
   }
 }

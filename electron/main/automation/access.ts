@@ -6,6 +6,7 @@ import {
   type AgentAccessPolicy,
   agentAccessPolicySchema,
 } from '../../../src/ipc/agentAccess';
+import { OperationQueue } from '../../../src/utils/OperationQueue';
 import { atomicWrite } from './atomicWrite';
 
 export async function readAccessPolicy(
@@ -120,21 +121,25 @@ export async function registerAgentHost(file: string, token: string) {
   const directory = `${file}.hosts`;
   await fs.mkdir(directory, { recursive: true, mode: 0o700 });
   const record = path.join(directory, `${process.pid}-${randomUUID()}.json`);
-  let queue = Promise.resolve();
+  const queue = new OperationQueue();
+  let written: string | null = null;
   return {
     update(dirty: boolean, busy: boolean) {
-      const operation = queue.then(async () => {
-        await atomicWrite(
-          record,
-          JSON.stringify({ pid: process.pid, dirty, busy, generation }),
-        );
+      return queue.run(async () => {
+        const content = JSON.stringify({
+          pid: process.pid,
+          dirty,
+          busy,
+          generation,
+        });
+        if (content !== written) {
+          await atomicWrite(record, content);
+          written = content;
+        }
       });
-      queue = operation.catch(() => {});
-      return operation;
     },
-    async close() {
-      await queue;
-      await fs.rm(record, { force: true });
+    close() {
+      return queue.run(() => fs.rm(record, { force: true }));
     },
   };
 }

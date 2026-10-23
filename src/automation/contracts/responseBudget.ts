@@ -5,11 +5,11 @@ import { isReadOnlyAutomationTool } from './toolBehavior';
 // JSON character budgets bound model-visible text independently of element count.
 export const MAX_RESULT_CHARACTERS = 64_000;
 export const MAX_ELEMENT_PAGE_CHARACTERS = 24_000;
-export const MAX_CATALOG_CHARACTERS = 128_000;
+const MAX_CATALOG_CHARACTERS = 128_000;
 
-export function assertResultBudget(result: unknown, tool?: AutomationTool) {
+export function assertResultBudget(result: unknown, tool: AutomationTool) {
   // A completed write must retain its success acknowledgment and reference maps.
-  if (tool !== undefined && !isReadOnlyAutomationTool(tool)) {
+  if (!isReadOnlyAutomationTool(tool)) {
     return;
   }
   const maxCharacters =

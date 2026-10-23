@@ -1,10 +1,10 @@
 import { McpError } from '@modelcontextprotocol/sdk/types.js';
 
 import {
-  automationSchemas,
-  type AutomationTool,
+  type AutomationMode,
+  isToolAvailable,
 } from '../../../src/automation/contracts/protocol';
-import { type AutomationMode, automationTool, automationTools } from './tools';
+import { automationTool, automationTools } from './tools';
 
 export const schemaResourceInstructions =
   'Complete tool schemas: neanes://schemas/{tool}/{view}, view=input|output (MCP resources). Read these for omitted constraints, defaults, field guidance or recursive shapes; resolve local $refs within schema. JSON values recursively contain scalars, null, arrays or objects.';
@@ -35,14 +35,10 @@ export function readToolSchemaResource(
   if (!match) {
     throw new McpError(-32002, 'Unknown tool schema resource.');
   }
-  if (
-    !Object.hasOwn(automationSchemas, match[1]) ||
-    (mode === 'headless' &&
-      ['create_session', 'close_session'].includes(match[1]))
-  ) {
+  if (!isToolAvailable(match[1], mode)) {
     throw new McpError(-32002, 'Unknown tool schema resource.');
   }
-  const tool = automationTool(match[1] as AutomationTool, mode);
+  const tool = automationTool(match[1], mode);
   return {
     contents: [
       {

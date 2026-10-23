@@ -35,10 +35,14 @@ export async function readScoreFile(filePath: string) {
   return data;
 }
 
-export function scoreFileFormat(filePath: string): 'byz' | 'byzx' {
+export function isScoreFile(filePath: string) {
   const extension = path.extname(filePath);
-  if (extension !== '.byz' && extension !== '.byzx') {
+  return extension === '.byz' || extension === '.byzx';
+}
+
+export function scoreFileFormat(filePath: string): 'byz' | 'byzx' {
+  if (!isScoreFile(filePath)) {
     throw new Error('UNSUPPORTED_FILE_TYPE');
   }
-  return extension === '.byz' ? 'byz' : 'byzx';
+  return path.extname(filePath) === '.byz' ? 'byz' : 'byzx';
 }

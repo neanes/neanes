@@ -48,7 +48,7 @@ export async function startAutomationHost(options: {
   withFileLock<T>(operation: () => Promise<T>): Promise<T>;
   runExclusive<T>(operation: () => Promise<T>): Promise<T>;
 }) {
-  const files = await AutomationFiles.create();
+  const files = new AutomationFiles();
   let ready = options.initiallyReady ?? false;
   let closed = false;
   let failure: string | null = null;
@@ -66,12 +66,12 @@ export async function startAutomationHost(options: {
   let dirty = false;
   const fileOperations = new Set<Promise<unknown>>();
   async function finishFileOperation<T>(operation: () => Promise<T>) {
-    const pending = operation();
-    fileOperations.add(pending);
+    const result = operation();
+    fileOperations.add(result);
     try {
-      return await pending;
+      return await result;
     } finally {
-      fileOperations.delete(pending);
+      fileOperations.delete(result);
     }
   }
   await record.update(false, false);
@@ -289,20 +289,14 @@ export async function startAutomationHost(options: {
           throw new Error('EDITOR_NOT_READY');
         }
         const requestId = randomUUID();
-        if (
-          (request.tool === 'export_pdf' ||
-            request.tool === 'preview_page' ||
-            request.tool === 'batch_update_files') &&
-          signal.aborted
-        ) {
-          throw new Error('EXPORT_CANCELLED');
-        }
-        exportController =
+        const cancellable =
           request.tool === 'export_pdf' ||
           request.tool === 'preview_page' ||
-          request.tool === 'batch_update_files'
-            ? new AbortController()
-            : null;
+          request.tool === 'batch_update_files';
+        if (cancellable && signal.aborted) {
+          throw new Error('EXPORT_CANCELLED');
+        }
+        exportController = cancellable ? new AbortController() : null;
         const onCancel = () =>
           exportController?.abort(new Error('EXPORT_CANCELLED'));
         signal.addEventListener('abort', onCancel, { once: true });
@@ -365,9 +359,11 @@ export async function startAutomationHost(options: {
     port: server.port,
     isReady: () => ready,
     error: () => failure,
-    attach(win: BrowserWindow) {
+    // The caller supplies the renderer's current readiness. The creation-time
+    // value is stale once a later window attaches.
+    attach(win: BrowserWindow, isReady: boolean) {
       const { webContents } = win;
-      ready = options.initiallyReady ?? false;
+      ready = isReady;
       const onNavigation = (
         _event: Electron.Event,
         _url: string,

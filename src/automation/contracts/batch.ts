@@ -13,14 +13,14 @@ import {
 import { automationErrorSchema } from './errors';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
 
-export const batchEditsSchema = z.strictObject({
+const batchEditsSchema = z.strictObject({
   paragraphStyles: z.array(paragraphStyleChangeSchema).min(1).optional(),
   pageSetup: pageSetupChangesSchema.optional(),
   headerFooter: headerFooterChangesSchema.optional(),
   documentProperties: documentPropertiesSchema.partial().optional(),
 });
 const batchPath = z.string().min(1).max(4096);
-export const batchFileSchema = z.strictObject({
+const batchFileSchema = z.strictObject({
   filePath: batchPath,
   outputFilePath: batchPath
     .describe('Score destination; required only for save:copy.')
@@ -83,9 +83,8 @@ export const batchQuerySchema = z
   });
 export type BatchQuery = z.output<typeof batchQuerySchema>;
 export type BatchEdits = z.output<typeof batchEditsSchema>;
-export type BatchFile = z.output<typeof batchFileSchema>;
 
-export const batchFileResultSchema = z.strictObject({
+const batchFileResultSchema = z.strictObject({
   index: z.number().int().nonnegative(),
   filePath: z.string(),
   status: z.enum(['completed', 'unchanged', 'dryRun', 'failed']),

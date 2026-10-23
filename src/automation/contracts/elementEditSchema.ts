@@ -11,7 +11,7 @@ import {
 } from './lyricSyntax';
 import { modeKeyEditIssue } from './modeKeyTemplates';
 
-export const editReferenceSchema = z
+const editReferenceSchema = z
   .union([
     z.string().uuid(),
     z.string().regex(/^@[A-Za-z][A-Za-z0-9_-]{0,63}$/),
@@ -21,7 +21,7 @@ export const editReferenceSchema = z
   );
 const clientId = z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/);
 const index = z.number().int().nonnegative();
-export const editCollectionSchema = z.discriminatedUnion('kind', [
+const editCollectionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('staff') }),
   z.strictObject({
     kind: z.literal('headers'),
@@ -110,11 +110,10 @@ function editPropertySchema(type: ElementType) {
         'lyricsFontSize',
         'customWidth',
         'customHeight',
+        'bpm',
+        'modeChangeBpm',
       ].includes(key)
     ) {
-      value = z.number().positive();
-    }
-    if (key === 'bpm' || key === 'modeChangeBpm') {
       value = z.number().positive();
     }
     if (key === 'mode') {
@@ -229,7 +228,7 @@ function validateProperties(
 }
 // Keep full type-specific validation without expanding every element/property
 // enum into the tools/list prompt. Detailed schemas are available on demand.
-export const elementDefinitionSchema = z
+const elementDefinitionSchema = z
   .strictObject({
     elementType: z.enum(ElementType).exclude(['Empty']),
     properties: propertyValues,
@@ -238,7 +237,7 @@ export const elementDefinitionSchema = z
   .superRefine((element, ctx) =>
     validateProperties(element.elementType, element.properties, ctx, true),
   );
-export const elementEditActionSchema = z.discriminatedUnion('action', [
+const elementEditActionSchema = z.discriminatedUnion('action', [
   z.strictObject({
     action: z.literal('insert'),
     collection: editCollectionSchema.default({ kind: 'staff' }),
@@ -295,4 +294,3 @@ export const elementEditBatchSchema = z
   .min(1)
   .max(1000);
 export type ElementDefinition = z.infer<typeof elementDefinitionSchema>;
-export type ElementEditAction = z.infer<typeof elementEditActionSchema>;

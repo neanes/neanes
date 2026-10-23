@@ -105,7 +105,12 @@ describe('settled page discovery', () => {
         expect(JSON.stringify(result).length).toBeLessThan(
           MAX_ELEMENT_PAGE_CHARACTERS,
         );
-        expect(() => assertResultBudget(result)).not.toThrow();
+        expect(() =>
+          assertResultBudget(
+            result,
+            kind === 'pages' ? 'get_pages' : 'get_page_elements',
+          ),
+        ).not.toThrow();
         const entries =
           'pages' in result
             ? result.pages.map((page) => page.pageNumber)

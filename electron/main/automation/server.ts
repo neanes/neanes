@@ -19,11 +19,12 @@ import {
 import { previewImageSchema } from '../../../src/automation/contracts/preview';
 import {
   type AutomationRequest,
-  automationSchemas,
+  isToolAvailable,
   parseAutomationRequest,
 } from '../../../src/automation/contracts/protocol';
 import { assertResultBudget } from '../../../src/automation/contracts/responseBudget';
 import { automationResultSchemas } from '../../../src/automation/contracts/results';
+import { OperationQueue } from '../../../src/utils/OperationQueue';
 import {
   readToolSchemaResource,
   schemaResourceInstructions,
@@ -54,7 +55,9 @@ export async function startMcpServer(options: McpServerOptions) {
   ) {
     throw new Error('INVALID_MCP_PORT');
   }
-  let queue = Promise.resolve();
+  const queue = new OperationQueue();
+  const tools = automationTools(options.mode);
+  const resources = toolSchemaResources(options.mode);
   const active = new Set<McpServer>();
   const http = createServer(async (req, res) => {
     // Do not expose the endpoint to browser origins or non-loopback hosts.
@@ -106,10 +109,10 @@ export async function startMcpServer(options: McpServerOptions) {
       maxRequestBodySize: 1024 * 1024,
     });
     server.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: automationTools(options.mode),
+      tools,
     }));
     server.server.setRequestHandler(ListResourcesRequestSchema, async () => ({
-      resources: toolSchemaResources(options.mode),
+      resources,
     }));
     server.server.setRequestHandler(
       ListResourceTemplatesRequestSchema,
@@ -129,11 +132,7 @@ export async function startMcpServer(options: McpServerOptions) {
         let outcome;
         let imageData: string | undefined;
         try {
-          if (
-            !Object.hasOwn(automationSchemas, params.name) ||
-            (options.mode === 'headless' &&
-              ['create_session', 'close_session'].includes(params.name))
-          ) {
+          if (!isToolAvailable(params.name, options.mode)) {
             throw new AutomationError({
               code: 'TOOL_NOT_FOUND',
               message: 'Unknown tool.',
@@ -154,7 +153,7 @@ export async function startMcpServer(options: McpServerOptions) {
               details: {},
             });
           }
-          const pending = queue.then(() => {
+          let result = await queue.run(() => {
             connection.signal.throwIfAborted();
             extra.signal.throwIfAborted();
             return options.execute(
@@ -162,11 +161,6 @@ export async function startMcpServer(options: McpServerOptions) {
               AbortSignal.any([connection.signal, extra.signal]),
             );
           });
-          queue = pending.then(
-            () => undefined,
-            () => undefined,
-          );
-          let result = await pending;
           if (request.tool === 'preview_page') {
             const image = previewImageSchema.safeParse({
               imageData: Reflect.get(result as object, 'imageData'),

@@ -80,6 +80,44 @@ export const elementPropertyNames = new Set(
   ),
 );
 
+// Collect every element in the trees rooted at the given elements.
+export function reachableElements(
+  roots: Iterable<ScoreElement>,
+  normalize: (element: ScoreElement) => ScoreElement = (element) => element,
+) {
+  const result = new Set<ScoreElement>();
+  const visit = (elements: Iterable<ScoreElement>) => {
+    for (const element of elements) {
+      result.add(normalize(element));
+      for (const children of Object.values(childCollections(element))) {
+        visit(children);
+      }
+    }
+  };
+  visit(roots);
+  return result;
+}
+
+// Projection schemas are built once; a fresh partial per element is costly.
+const partialPropertySchemas = new Map<
+  ElementType,
+  ReturnType<(typeof elementPropertySchemas)[ElementType]['partial']>
+>();
+function partialPropertySchema(type: ElementType) {
+  let schema = partialPropertySchemas.get(type);
+  if (schema === undefined) {
+    schema = elementPropertySchemas[type].partial();
+    partialPropertySchemas.set(type, schema);
+  }
+  return schema;
+}
+
+// Legacy text boxes may lack fields that newer constructors initialize.
+const textBoxDefaults = {
+  [ElementType.RichTextBox]: new RichTextBoxElement(),
+  [ElementType.TextBox]: new TextBoxElement(),
+} as Partial<Record<ElementType, ScoreElement>>;
+
 // Owned by one open document. Object identity survives insertion, movement and
 // history restoration, without assigning IDs or retaining removed elements.
 export class ElementDiscovery {
@@ -100,12 +138,7 @@ export class ElementDiscovery {
     query: { properties?: string[]; includeContent?: boolean } = {},
   ) {
     const schema = elementPropertySchemas[element.elementType];
-    const defaults =
-      element.elementType === ElementType.RichTextBox
-        ? new RichTextBoxElement()
-        : element.elementType === ElementType.TextBox
-          ? new TextBoxElement()
-          : null;
+    const defaults = textBoxDefaults[element.elementType];
     const properties = Object.fromEntries(
       Object.keys(schema.shape).flatMap((key) => {
         if (
@@ -138,7 +171,17 @@ export class ElementDiscovery {
     );
     return query.properties === undefined && query.includeContent === true
       ? schema.parse(properties)
-      : schema.partial().parse(properties);
+      : partialPropertySchema(element.elementType).parse(properties);
+  }
+
+  // Locate a referenced element anywhere in the document.
+  private entry(score: Score, elementRef: string) {
+    for (const entry of this.entries(score)) {
+      if (this.refs.get(toRaw(entry.element)) === elementRef) {
+        return entry;
+      }
+    }
+    throw new Error('ELEMENT_NOT_FOUND');
   }
 
   private collection(
@@ -246,33 +289,28 @@ export class ElementDiscovery {
   }
 
   readContent(score: Score, query: ElementContentQuery) {
-    for (const { element } of this.entries(score)) {
-      if (this.refs.get(toRaw(element)) !== query.elementRef) {
-        continue;
-      }
-      const value: unknown = Reflect.get(element, query.property);
-      if (
-        !elementContentProperties.has(query.property) ||
-        !Object.hasOwn(
-          elementPropertySchemas[element.elementType].shape,
-          query.property,
-        ) ||
-        typeof value !== 'string'
-      ) {
-        throw new AutomationError({
-          code: 'INVALID_ELEMENT_CONTENT',
-          message:
-            'The selected element does not have that string content field.',
-          details: { elementRef: query.elementRef, property: query.property },
-        });
-      }
-      return {
-        elementRef: query.elementRef,
-        property: query.property,
-        ...readContentChunk(value, query),
-      };
+    const { element } = this.entry(score, query.elementRef);
+    const value: unknown = Reflect.get(element, query.property);
+    if (
+      !elementContentProperties.has(query.property) ||
+      !Object.hasOwn(
+        elementPropertySchemas[element.elementType].shape,
+        query.property,
+      ) ||
+      typeof value !== 'string'
+    ) {
+      throw new AutomationError({
+        code: 'INVALID_ELEMENT_CONTENT',
+        message:
+          'The selected element does not have that string content field.',
+        details: { elementRef: query.elementRef, property: query.property },
+      });
     }
-    throw new Error('ELEMENT_NOT_FOUND');
+    return {
+      elementRef: query.elementRef,
+      property: query.property,
+      ...readContentChunk(value, query),
+    };
   }
 
   private candidates(score: Score, scope: ElementSearchQuery['scope']) {
@@ -371,27 +409,19 @@ export class ElementDiscovery {
   }
 
   lookup(score: Score, query: ElementLookupQuery) {
-    for (const { element, collection, index } of this.entries(score)) {
-      if (this.refs.get(toRaw(element)) !== query.elementRef) {
-        continue;
-      }
-      const elements = this.collection(score, collection);
-      const start = Math.max(0, index - query.before);
-      const end = Math.min(elements.length, index + query.after + 1);
-      return {
-        elementRef: query.elementRef,
-        collection,
-        collectionSize: elements.length,
-        start,
-        end,
-        elements: elements
-          .slice(start, end)
-          .map((element, offset) =>
-            this.project(element, start + offset, query),
-          ),
-      };
-    }
-    throw new Error('ELEMENT_NOT_FOUND');
+    const { collection, index, elements } = this.entry(score, query.elementRef);
+    const start = Math.max(0, index - query.before);
+    const end = Math.min(elements.length, index + query.after + 1);
+    return {
+      elementRef: query.elementRef,
+      collection,
+      collectionSize: elements.length,
+      start,
+      end,
+      elements: elements
+        .slice(start, end)
+        .map((element, offset) => this.project(element, start + offset, query)),
+    };
   }
 
   read(

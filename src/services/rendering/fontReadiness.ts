@@ -60,3 +60,17 @@ export function getFontFamilyLoadDescriptors(families: Iterable<string>) {
       .map((style) => createFontLoadDescriptor(family, style)),
   );
 }
+
+async function loadFontDescriptors(descriptors: string[]) {
+  await Promise.all(
+    descriptors.map((descriptor) => document.fonts.load(descriptor)),
+  );
+}
+
+export function loadFontFamilies(families: Iterable<string>) {
+  return loadFontDescriptors(getFontFamilyLoadDescriptors(families));
+}
+
+export function loadScoreFonts(score: Score) {
+  return loadFontDescriptors(getScoreFontLoadDescriptors(score));
+}

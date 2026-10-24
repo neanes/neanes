@@ -352,7 +352,7 @@
       "off": "Dezactivat",
       "disableNotice": "Dezactivarea deconectează agenții și elimină ciornele lor temporare. Fișierele salvate și filele editorului sunt păstrate.",
       "disableTitle": "Dezactivezi accesul agenților?",
-      "disableWarning": "Un agent are modificări temporare nesalvate sau o sarcină în desfășurare. Dezactivarea deconectează agenții și elimină ciornele temporare. Fișierele salvate și filele editorului sunt păstrate.",
+      "disableWarning": "Dezactivarea deconectează agenții și elimină ciornele temporare. Fișierele salvate și filele editorului sunt păstrate.",
       "cancel": "Anulează",
       "disable": "Dezactivează"
     }

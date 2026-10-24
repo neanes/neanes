@@ -352,7 +352,7 @@
       "off": "Off",
       "disableNotice": "Turning this off disconnects agents and discards temporary agent drafts. Saved files and editor tabs are kept.",
       "disableTitle": "Turn off agent access?",
-      "disableWarning": "An agent has unsaved temporary work or a task in progress. Turning access off disconnects agents and discards temporary drafts. Saved files and editor tabs are kept.",
+      "disableWarning": "Turning access off disconnects agents and discards temporary drafts. Saved files and editor tabs are kept.",
       "cancel": "Cancel",
       "disable": "Turn off"
     }

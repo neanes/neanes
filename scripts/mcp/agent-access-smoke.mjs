@@ -368,7 +368,7 @@ try {
     (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).status,
     'ready',
   );
-  // Disabling needs confirmation only when private drafts or tasks may be lost.
+  // Disabling always asks for confirmation, whether workers have drafts or not.
   const dirtyClient = await connect(configuration);
   await call(dirtyClient, 'create_document', { title: 'Unsaved agent draft' });
   const warning = await evaluate(
@@ -454,23 +454,18 @@ try {
   const clean = await connect(configuration);
   assert.deepEqual(await call(clean, 'list_documents'), []);
   await clean.close();
-  await eventually(async () =>
-    assert.equal(
-      (
-        await evaluate(
-          "window.ipcRenderer.invoke('AgentAccessSetEnabled', false)",
-        )
-      ).confirmationRequired,
-      false,
-    ),
-  );
-  const cleanOff = await evaluate(
+  const cleanWarning = await evaluate(
     "window.ipcRenderer.invoke('AgentAccessSetEnabled', false)",
+  );
+  assert.equal(cleanWarning.confirmationRequired, true);
+  assert.equal(cleanWarning.state.enabled, true);
+  const cleanOff = await evaluate(
+    "window.ipcRenderer.invoke('AgentAccessSetEnabled', false, true)",
   );
   assert.equal(cleanOff.confirmationRequired, false);
   assert.equal(cleanOff.state.status, 'off');
   console.log(
-    'Agent access smoke passed: both launch orders, private defaults, live scope, failure/retry, draft confirmation, disable/re-enable, and unchanged editor documents.',
+    'Agent access smoke passed: both launch orders, private defaults, live scope, failure/retry, disable confirmation, disable/re-enable, and unchanged editor documents.',
   );
 } finally {
   try {

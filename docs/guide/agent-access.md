@@ -133,7 +133,7 @@ Full input and output schemas are available as MCP resources at `neanes://schema
 
 ## Turn agent access off
 
-Turn off **Allow agent access** in Preferences to disconnect agents and stop background workers. This also prevents future connections while the editor is closed. Neanes asks for confirmation if an agent has unsaved private drafts or a task in progress.
+Turn off **Allow agent access** in Preferences to disconnect agents and stop background workers. This also prevents future connections while the editor is closed. Neanes asks for confirmation before turning access off because temporary agent work may be discarded.
 
 Temporary agent drafts are discarded. Saved files and editor tabs keep their contents, including edits already applied by an agent. A file write already underway may finish. Re-enable access and reconnect the client to start fresh.
 

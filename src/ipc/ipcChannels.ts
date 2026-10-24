@@ -91,7 +91,6 @@ export enum IpcRendererChannels {
   ExportRendererResult = 'ExportRendererResult',
   // Automation-only bridge; implemented under src/automation/ and main/automation/.
   AutomationReady = 'AutomationReady',
-  AutomationDraftsChanged = 'AutomationDraftsChanged',
   AutomationAuthorizeRequest = 'AutomationAuthorizeRequest',
   AutomationReply = 'AutomationReply',
   AutomationPlanBatch = 'AutomationPlanBatch',

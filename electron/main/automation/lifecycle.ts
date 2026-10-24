@@ -12,7 +12,6 @@ import { IpcRendererChannels } from '../../../src/ipc/ipcChannels';
 import type { PdfExportOptions } from '../../../src/services/documents/fileTypes';
 import { OperationQueue } from '../../../src/utils/OperationQueue';
 import {
-  hasAgentDrafts,
   initializeAccessPolicy,
   readAccessPolicy,
   requireAgentAccess,
@@ -96,8 +95,6 @@ export function installAgentAccess(options: {
   ) {
     return startAutomationHost({
       mode: headless ? 'headless' : 'interactive',
-      policyFile: accessPolicyFile,
-      policyToken,
       authorize: () => requireAgentAccess(accessPolicyFile, policyToken),
       onStateChange: () => {
         if (!headless) {
@@ -215,11 +212,7 @@ export function installAgentAccess(options: {
         ) {
           return { state: agentAccessState(), confirmationRequired: false };
         }
-        if (
-          !enabled &&
-          !discardUnsavedChanges &&
-          (await hasAgentDrafts(accessPolicyFile))
-        ) {
+        if (!enabled && !discardUnsavedChanges) {
           return { state: agentAccessState(), confirmationRequired: true };
         }
         accessPolicy = await setAccessEnabled(accessPolicyFile, enabled);

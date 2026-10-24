@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
@@ -6,7 +6,6 @@ import {
   type AgentAccessPolicy,
   agentAccessPolicySchema,
 } from '../../../src/ipc/agentAccess';
-import { OperationQueue } from '../../../src/utils/OperationQueue';
 import { atomicWrite } from './atomicWrite';
 
 export async function readAccessPolicy(
@@ -66,80 +65,4 @@ export async function requireAgentAccess(file: string, token?: string) {
     throw new Error('AGENT_ACCESS_DISABLED');
   }
   return policy;
-}
-
-// Private host records let the editor warn about drafts in background workers.
-export async function hasAgentDrafts(file: string) {
-  const policy = await readAccessPolicy(file);
-  const generation = createHash('sha256').update(policy.token).digest('hex');
-  let names: string[];
-  try {
-    names = await fs.readdir(`${file}.hosts`);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return false;
-    }
-    throw error;
-  }
-  for (const name of names.filter((name) => name.endsWith('.json'))) {
-    const record = path.join(`${file}.hosts`, name);
-    let host: {
-      pid: number;
-      dirty: boolean;
-      busy: boolean;
-      generation: string;
-    };
-    try {
-      host = JSON.parse(await fs.readFile(record, 'utf8'));
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        continue;
-      }
-      throw error;
-    }
-    if (!Number.isInteger(host.pid) || host.pid <= 0) {
-      throw new Error('INVALID_AGENT_HOST');
-    }
-    try {
-      process.kill(host.pid, 0);
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ESRCH') {
-        await fs.rm(record, { force: true });
-        continue;
-      }
-      throw error;
-    }
-    if (host.generation === generation && (host.dirty || host.busy)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-export async function registerAgentHost(file: string, token: string) {
-  const generation = createHash('sha256').update(token).digest('hex');
-  const directory = `${file}.hosts`;
-  await fs.mkdir(directory, { recursive: true, mode: 0o700 });
-  const record = path.join(directory, `${process.pid}-${randomUUID()}.json`);
-  const queue = new OperationQueue();
-  let written: string | null = null;
-  return {
-    update(dirty: boolean, busy: boolean) {
-      return queue.run(async () => {
-        const content = JSON.stringify({
-          pid: process.pid,
-          dirty,
-          busy,
-          generation,
-        });
-        if (content !== written) {
-          await atomicWrite(record, content);
-          written = content;
-        }
-      });
-    },
-    close() {
-      return queue.run(() => fs.rm(record, { force: true }));
-    },
-  };
 }

@@ -46,11 +46,6 @@ export function useEditorAutomation(options: {
   const privateStore = options.privateStore;
   const mode = privateStore ? 'headless' : 'interactive';
   let activeBatchStore: PrivateDocumentStore | undefined;
-  const publishDrafts = () =>
-    EventBus.$emit(
-      IpcRendererChannels.AutomationDraftsChanged,
-      privateStore?.hasUnsavedDrafts() ?? false,
-    );
   onBeforeUnmount(() => {
     privateStore?.clear();
     activeBatchStore?.clear();
@@ -107,7 +102,6 @@ export function useEditorAutomation(options: {
         error: automationError(error),
       };
     }
-    publishDrafts();
     EventBus.$emit(IpcRendererChannels.AutomationReply, reply);
   }
 
@@ -138,7 +132,6 @@ export function useEditorAutomation(options: {
   const reset = () => {
     void requestQueue.run(async () => {
       privateStore?.clear();
-      publishDrafts();
     });
   };
   onMounted(() => {

@@ -352,7 +352,7 @@
       "off": "Nonaktif",
       "disableNotice": "Menonaktifkan akses akan memutus koneksi agen dan membuang draf sementara agen. Berkas tersimpan dan tab editor tetap dipertahankan.",
       "disableTitle": "Nonaktifkan akses agen?",
-      "disableWarning": "Agen memiliki pekerjaan sementara yang belum disimpan atau tugas yang sedang berjalan. Menonaktifkan akses akan memutus koneksi agen dan membuang draf sementara. Berkas tersimpan dan tab editor tetap dipertahankan.",
+      "disableWarning": "Menonaktifkan akses akan memutus koneksi agen dan membuang draf sementara. Berkas tersimpan dan tab editor tetap dipertahankan.",
       "cancel": "Batal",
       "disable": "Nonaktifkan"
     }

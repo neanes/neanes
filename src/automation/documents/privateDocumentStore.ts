@@ -55,12 +55,6 @@ export class PrivateDocumentStore {
     return this.workspaces.includes(workspace);
   }
 
-  hasUnsavedDrafts() {
-    return this.workspaces.some(
-      (workspace) => workspace.hasUnsavedChanges || workspace.isRecovered,
-    );
-  }
-
   clear() {
     for (const workspace of this.workspaces) {
       this.hooks.dispose(workspace);

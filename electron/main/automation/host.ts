@@ -24,7 +24,6 @@ import type {
   WriteScoreFileArgs,
 } from '../../../src/services/documents/fileTypes';
 import { withAbortDeadline } from './abortDeadline';
-import { registerAgentHost } from './access';
 import { discoverScoreFiles } from './fileDiscovery';
 import { AutomationFiles } from './files';
 import type { PreviewPageOptions } from './preview';
@@ -33,8 +32,6 @@ import { startMcpServer } from './server';
 export async function startAutomationHost(options: {
   mode?: 'interactive' | 'headless';
   getWindow(): BrowserWindow | null;
-  policyFile: string;
-  policyToken: string;
   authorize(): Promise<unknown>;
   config?: { token: string; port: number };
   initiallyReady?: boolean;
@@ -59,11 +56,6 @@ export async function startAutomationHost(options: {
     resolve(value: unknown): void;
     reject(error: Error): void;
   } | null = null;
-  const record = await registerAgentHost(
-    options.policyFile,
-    options.policyToken,
-  );
-  let dirty = false;
   const fileOperations = new Set<Promise<unknown>>();
   async function finishFileOperation<T>(operation: () => Promise<T>) {
     const result = operation();
@@ -74,14 +66,6 @@ export async function startAutomationHost(options: {
       fileOperations.delete(result);
     }
   }
-  await record.update(false, false);
-  const onDraftsChanged = (event: Electron.IpcMainEvent, value: boolean) => {
-    if (isSender(event) && typeof value === 'boolean' && !closed) {
-      dirty = value;
-      void record.update(dirty, pending !== null).catch(console.error);
-    }
-  };
-  ipcMain.on(IpcRendererChannels.AutomationDraftsChanged, onDraftsChanged);
   let exportController: AbortController | null = null;
 
   function isSender(event: { sender: Electron.WebContents }) {
@@ -233,10 +217,6 @@ export async function startAutomationHost(options: {
 
   function removeHandlers() {
     ipcMain.removeListener(IpcRendererChannels.AutomationReady, onReady);
-    ipcMain.removeListener(
-      IpcRendererChannels.AutomationDraftsChanged,
-      onDraftsChanged,
-    );
     ipcMain.removeListener(IpcRendererChannels.AutomationReply, onReply);
     for (const channel of [
       IpcRendererChannels.AutomationAuthorizeRequest,
@@ -315,11 +295,6 @@ export async function startAutomationHost(options: {
           );
         }, 60_000);
         try {
-          await record.update(dirty, true);
-          await options.authorize();
-          if (closed) {
-            throw new Error('AGENT_ACCESS_DISABLED');
-          }
           return await new Promise((resolve, reject) => {
             pending = { requestId, tool: request.tool, resolve, reject };
             win.webContents.send(IpcMainChannels.AutomationRequest, {
@@ -331,9 +306,6 @@ export async function startAutomationHost(options: {
           clearTimeout(timer);
           signal.removeEventListener('abort', onCancel);
           pending = null;
-          if (!closed) {
-            await record.update(dirty, false);
-          }
           exportController = null;
         }
       };
@@ -348,9 +320,8 @@ export async function startAutomationHost(options: {
           : runOperation();
       return Promise.race([result, timeout]);
     },
-  }).catch(async (error) => {
+  }).catch((error) => {
     removeHandlers();
-    await record.close();
     throw error;
   });
 
@@ -408,7 +379,6 @@ export async function startAutomationHost(options: {
       if (win && !win.isDestroyed()) {
         win.webContents.send(IpcMainChannels.AutomationReset);
       }
-      await record.close();
     },
   };
 }

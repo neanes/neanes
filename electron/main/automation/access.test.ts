@@ -5,10 +5,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
-  hasAgentDrafts,
   initializeAccessPolicy,
   readAccessPolicy,
-  registerAgentHost,
   requireAgentAccess,
   setAccessEnabled,
 } from './access';
@@ -94,33 +92,6 @@ describe('internal agent credentials', () => {
       await rm(file);
       await expect(requireAgentAccess(file)).rejects.toThrow();
       await expect(stat(file)).rejects.toMatchObject({ code: 'ENOENT' });
-    } finally {
-      await rm(directory, { recursive: true, force: true });
-    }
-  });
-  it('reports private drafts and in-progress tasks across hosts, and removes closed records', async () => {
-    const directory = await mkdtemp(path.join(tmpdir(), 'neanes-hosts-'));
-    try {
-      const file = path.join(directory, 'policy.json');
-      const policy = await setAccessEnabled(file, true);
-      expect(await hasAgentDrafts(file)).toBe(false);
-      const first = await registerAgentHost(file, policy.token);
-      const second = await registerAgentHost(file, policy.token);
-      await first.update(false, false);
-      await second.update(false, false);
-      expect(await hasAgentDrafts(file)).toBe(false);
-      await first.update(true, false);
-      expect(await hasAgentDrafts(file)).toBe(true);
-      await first.update(false, false);
-      await second.update(false, true);
-      expect(await hasAgentDrafts(file)).toBe(true);
-      await setAccessEnabled(file, false);
-      await setAccessEnabled(file, true);
-      expect(await hasAgentDrafts(file)).toBe(false);
-      await second.close();
-      expect(await hasAgentDrafts(file)).toBe(false);
-      await first.close();
-      expect(await hasAgentDrafts(file)).toBe(false);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

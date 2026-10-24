@@ -86,10 +86,8 @@ policy at request execution and file operations; idle hosts and bridges check on
 per second. Toggling rotates internal credentials, so an off/on cycle cannot revive
 an old worker or connection. Explicit refusal never triggers worker fallback.
 Private drafts are discarded, editor tabs stay intact, and file commits already
-underway finish before worker exit. Preferences asks for confirmation when private
-host records report unsaved drafts or an in-progress request. Records live beside
-the policy in `agent-access.json.hosts`, contain only process/draft/busy state, and
-are removed on shutdown; records from exited processes are ignored and cleaned up.
+underway finish before worker exit. Preferences always asks for confirmation before
+turning enabled access off, since temporary agent work may be discarded.
 After enabling again, reconnect clients to start fresh connections.
 
 Editor startup failures are caught, recorded, and leave the editor usable. The

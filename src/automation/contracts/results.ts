@@ -254,9 +254,7 @@ export function publishedAutomationOutputSchema(
       error: automationErrorSchema.extend({
         code: z
           .string()
-          .describe(
-            'Stable error code. Request get_capabilities with includeErrorCodes:true for the vocabulary.',
-          ),
+          .describe('Codes: get_capabilities({includeErrorCodes:true}).'),
       }),
     }),
   ]);

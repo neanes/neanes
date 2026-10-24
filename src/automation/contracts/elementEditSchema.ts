@@ -155,16 +155,29 @@ function editPropertySchema(type: ElementType) {
       );
     }
     if (key === 'lyrics') {
-      value = value.describe(literalLyricsDescription);
-    }
-    if (['isMelisma', 'isMelismaStart', 'isHyphen'].includes(key)) {
       value = value.describe(
-        'A literal lyric flag; not inferred from direct lyrics updates. ' +
-          literalLyricsDescription,
+        'Literal note text; _ and - are stored verbatim. Omitted lyric flags remain unchanged. See shared actions guidance for direct lyric combinations.',
+      );
+    }
+    if (key === 'isMelisma') {
+      value = value.describe(
+        'Whether the note participates in a lyric extension or hyphenated group.',
+      );
+    }
+    if (key === 'isMelismaStart') {
+      value = value.describe(
+        'Whether the note starts a lyric extension or hyphenated group.',
+      );
+    }
+    if (key === 'isHyphen') {
+      value = value.describe(
+        'Whether the lyric group uses hyphens instead of an extension line.',
       );
     }
     if (key === 'acceptsLyrics') {
-      value = value.describe(lyricParserDescription);
+      value = value.describe(
+        'Parser token consumption: Yes consumes syllables/continuations; No skips the note; MelismaOnly continues the preceding syllable without consuming a new one; Default derives behavior from the quantitative neume and preceding tie.',
+      );
     }
     if (
       [
@@ -198,8 +211,7 @@ const propertyValues = z
   .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
   .default({})
   .describe(
-    'Typed property values are fully validated for elementType at runtime. Query get_element_catalog with elementTypes/properties for permitted names and constraints. ' +
-      literalLyricsDescription,
+    'Typed property values are fully validated for elementType at runtime. Query get_element_catalog with elementTypes/properties for permitted names and constraints. Direct lyrics are literal; omitted lyric flags remain unchanged.',
   );
 
 function validateProperties(
@@ -302,7 +314,9 @@ export const elementEditBatchSchema = z
   .max(1000)
   .describe(
     'Shared parser guidance for set_staff_lyrics.text and assign_lyrics.text: ' +
-      lyricParserDescription,
+      lyricParserDescription +
+      ' Direct lyric properties: ' +
+      literalLyricsDescription,
   );
 export type ElementDefinition = z.infer<typeof elementDefinitionSchema>;
 export type ElementEditBatch = z.infer<typeof elementEditBatchSchema>;

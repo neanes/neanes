@@ -254,20 +254,20 @@ export class McpDocumentAdapter {
     if (workspace == null) {
       throw new Error('DOCUMENT_NOT_FOUND');
     }
+    // Flush pending editor content before revision checks or detached snapshots.
+    this.documents.prepare(workspace);
     if (
-      request.tool === 'get_document_properties' ||
-      request.tool === 'get_page_setup' ||
-      request.tool === 'get_header_footer_settings' ||
-      request.tool === 'get_paragraph_styles' ||
-      request.tool === 'get_staff_lyrics' ||
-      request.tool === 'get_selection' ||
-      request.tool === 'close_document'
+      request.tool === 'get_elements' ||
+      request.tool === 'get_element' ||
+      request.tool === 'find_elements' ||
+      request.tool === 'edit_elements' ||
+      request.tool === 'update_page_setup' ||
+      request.tool === 'update_header_footer_settings' ||
+      request.tool === 'edit_paragraph_styles' ||
+      request.tool === 'save_document'
     ) {
-      // Flush editor buffers without making stored data or closure depend on layout.
-      this.documents.prepare(workspace);
-    } else {
-      // Element discovery includes derived properties; rendering and persistence
-      // also require the existing geometry settlement and revision checks.
+      // Discovery exposes calculated notation properties. Geometry edits and
+      // persistence retain source settlement; detached rendering settles its copy.
       await this.documents.settle(workspace);
     }
     if (
@@ -590,11 +590,9 @@ export class McpDocumentAdapter {
       };
     }
     if (request.tool === 'replace_document_properties') {
-      await this.mutateAndSettle(workspace, () =>
-        this.documents.replaceDocumentProperties(
-          workspace,
-          request.arguments.properties,
-        ),
+      this.documents.replaceDocumentProperties(
+        workspace,
+        request.arguments.properties,
       );
       return {
         ...this.summary(workspace),
@@ -634,6 +632,8 @@ export class McpDocumentAdapter {
         savedContentUnchanged: saved.savedContentUnchanged,
       };
     }
+    // The PDF captures this revision. The completion summary may describe newer
+    // edits; do not report a conflict after successfully writing the snapshot.
     await this.documents.exportPdf(workspace, (workspace) =>
       this.renderPdf(
         workspace,

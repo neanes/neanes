@@ -44,7 +44,7 @@ export function discoverPages(
       },
     ]),
   );
-  const originalElements = new Map<string, ScoreElement>();
+  const settledElements = new Map<string, ScoreElement>();
   const geometry: unknown[] = [];
   const markers = resolveRunningMarkerPageMetadata(pages);
   const result = pages.map((page, pageIndex) => {
@@ -61,7 +61,7 @@ export function discoverPages(
         region,
         ...(lineIndex === undefined ? {} : { lineIndex }),
       });
-      originalElements.set(location.elementRef, original);
+      settledElements.set(location.elementRef, element);
       geometry.push([
         location.elementRef,
         element.x,
@@ -118,7 +118,7 @@ export function discoverPages(
       occurrences,
     };
   });
-  return { pages: result, geometry, originalElements };
+  return { pages: result, geometry, settledElements };
 }
 export type DiscoveredPages = ReturnType<typeof discoverPages>;
 export function readPages(
@@ -147,7 +147,7 @@ export function readPageElements(
         query.elementTypes.includes(occurrence.elementType)) &&
       (query.where === undefined ||
         matchesElement(
-          layout.originalElements.get(occurrence.elementRef)!,
+          layout.settledElements.get(occurrence.elementRef)!,
           query.where,
         )),
   );

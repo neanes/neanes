@@ -5,9 +5,12 @@ import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import {
   AlternateLineElement,
   AnnotationElement,
+  MartyriaElement,
   NoteElement,
 } from '@/models/Element';
+import { Note, RootSign } from '@/models/Neumes';
 import { Line, Page } from '@/models/Page';
+import { Scale } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import { cloneScoreForLayout } from '@/services/documents/layoutSnapshot';
 
@@ -238,6 +241,56 @@ describe('settled page discovery', () => {
     expect(
       readPages({ ...layout, pages: [] }, { offset: 0, limit: 1 }).pages,
     ).toEqual([]);
+  });
+
+  it('filters calculated martyria properties on the copy while returning source references', () => {
+    const source = new Score();
+    source.pageSetup.showHeader = false;
+    source.pageSetup.showFooter = false;
+    const martyria = new MartyriaElement();
+    martyria.note = Note.Ni;
+    martyria.scale = Scale.Diatonic;
+    martyria.rootSign = RootSign.Delta;
+    source.staff.elements.unshift(martyria);
+    const copy = cloneScoreForLayout(source);
+    const settled = copy.score.staff.elements[0] as MartyriaElement;
+    settled.note = Note.Pa;
+    settled.scale = Scale.SoftChromatic;
+    settled.rootSign = RootSign.Alpha;
+    const page = new Page();
+    page.physicalPageNumber = 1;
+    const line = new Line();
+    line.elements = [settled];
+    page.lines.push(line);
+    const discovery = new ElementDiscovery();
+    const layout = discoverPages(
+      source,
+      copy.score,
+      [page],
+      copy.sources,
+      discovery,
+    );
+    const where = {
+      and: [
+        { field: 'note', op: 'eq', value: Note.Pa },
+        { field: 'scale', op: 'eq', value: Scale.SoftChromatic },
+        { field: 'rootSign', op: 'eq', value: RootSign.Alpha },
+      ],
+    };
+    expect(readPageElements(layout, args({ where })).occurrences).toEqual([
+      expect.objectContaining({ elementRef: discovery.reference(martyria) }),
+    ]);
+    expect(
+      readPageElements(
+        layout,
+        args({
+          where: { field: 'note', op: 'eq', value: Note.Ni },
+        }),
+      ).occurrences,
+    ).toEqual([]);
+    expect(martyria.note).toBe(Note.Ni);
+    expect(martyria.scale).toBe(Scale.Diatonic);
+    expect(martyria.rootSign).toBe(RootSign.Delta);
   });
 
   it('fingerprints membership, line placement, geometry and displayed numbering without content or clone identity', async () => {

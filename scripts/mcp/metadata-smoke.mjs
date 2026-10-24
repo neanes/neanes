@@ -28,6 +28,26 @@ try {
     title: 'Metadata regression',
   });
   const args = { documentId: created.documentId };
+  const inserted = await call('edit_elements', {
+    ...args,
+    expectedRevision: created.revision,
+    actions: [
+      {
+        action: 'insert',
+        index: 0,
+        elements: [
+          {
+            elementType: 'TextBox',
+            clientId: 'text',
+            properties: { content: 'Stored content regression' },
+          },
+        ],
+      },
+    ],
+  });
+  const elementRef = inserted.created.find(
+    (item) => item.clientId === 'text',
+  ).elementRef;
   const current = await call('get_document_properties', args);
   // Ensure there is a genuinely stale revision for the conflict checks below.
   const edited = await call('replace_document_properties', {
@@ -48,26 +68,61 @@ try {
     'get_header_footer_settings',
     'get_staff_lyrics',
     'get_selection',
+    'find_text',
+    'get_element_content',
   ];
   await Promise.race([
     (async () => {
       for (const tool of reads) {
         const result = await call(tool, {
           ...args,
+          ...(tool === 'find_text' ? { query: 'Stored content' } : {}),
+          ...(tool === 'get_element_content'
+            ? { elementRef, property: 'content' }
+            : {}),
           expectedRevision: edited.revision,
         });
         assert.equal(result.revision, edited.revision);
+        if (tool === 'find_text') {
+          assert.equal(result.matches[0].elementRef, elementRef);
+        }
+        if (tool === 'get_element_content') {
+          assert.equal(result.content, 'Stored content regression');
+        }
         if (tool === 'get_document_properties') {
           assert.equal(result.properties.title, 'Updated metadata');
         }
         await call(
           tool,
-          { ...args, expectedRevision: current.revision },
+          {
+            ...args,
+            ...(tool === 'find_text' ? { query: 'Stored content' } : {}),
+            ...(tool === 'get_element_content'
+              ? { elementRef, property: 'content' }
+              : {}),
+            expectedRevision: current.revision,
+          },
           'REVISION_CONFLICT',
         );
       }
+      await call(
+        'replace_document_properties',
+        {
+          ...args,
+          expectedRevision: current.revision,
+          properties: { title: 'Stale update', author: '' },
+        },
+        'REVISION_CONFLICT',
+      );
+      const replaced = await call('replace_document_properties', {
+        ...args,
+        expectedRevision: edited.revision,
+        properties: { title: 'Updated while fonts pending', author: 'Author' },
+      });
+      assert.ok(replaced.revision > edited.revision);
+      assert.equal(replaced.properties.author, 'Author');
       const styles = await call('get_paragraph_styles', args);
-      assert.equal(styles.revision, edited.revision);
+      assert.equal(styles.revision, replaced.revision);
       await call(
         'close_document',
         {
@@ -79,12 +134,12 @@ try {
       );
       await call(
         'close_document',
-        { ...args, expectedRevision: edited.revision },
+        { ...args, expectedRevision: replaced.revision },
         'UNSAVED_CHANGES',
       );
       await call('close_document', {
         ...args,
-        expectedRevision: edited.revision,
+        expectedRevision: replaced.revision,
         discardUnsavedChanges: true,
       });
       assert.equal(await evaluate('document.fonts.status'), 'loading');
@@ -103,7 +158,7 @@ try {
     }),
   ]);
   console.log(
-    'Metadata smoke passed: reads and close bypass pending fonts and retain revision/unsaved checks.',
+    'Metadata smoke passed: content reads, metadata edits and close bypass pending fonts and retain revision/unsaved checks.',
   );
 } finally {
   clearTimeout(deadline);

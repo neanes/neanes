@@ -749,10 +749,19 @@ Alternatively, add `--native-print-save`, choose the native dialog's PDF output,
 ## Code organization
 
 After `npx vite build`, run `node scripts/mcp/metadata-smoke.mjs` outside the
-agent command sandbox to check metadata reads and document closure while a real
-font request remains pending. It launches a disposable editor and verifies that
-revision conflicts and unsaved-change protection still apply without awaiting
-layout settlement.
+agent command sandbox to check metadata/content reads, document-property edits,
+and document closure while a real font request remains pending. It launches a
+disposable editor and verifies that revision conflicts and unsaved-change
+protection still apply without awaiting layout settlement.
+
+Document requests flush pending editor content before revision checks. Stored
+content reads and title/author edits do not settle source layout. Element
+property discovery, geometry edits, and saving retain source settlement.
+Previews, PDF exports, and page discovery settle detached copies instead; page
+predicates use calculated properties from those copies while returning source
+element references. Preview and page discovery reject intervening edits after
+rendering. PDF export retains snapshot semantics: a successful write returns its
+`exportedRevision` alongside the completion summary even if the source was edited.
 
 Shared document operations live in `src/services/documents/`: workspace creation and opening, metadata and paragraph-style edits, serialization, save completion, and export preparation. Both the editor UI and MCP call `DocumentService`. Editor hooks supply rendering, focus, recovery, and layout behavior; persistence callbacks supply either dialog-based or explicit-path file writes.
 

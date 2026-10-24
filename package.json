@@ -67,7 +67,7 @@
     "clsx": "^2.1.1",
     "dockview-vue": "^8.5.1",
     "electron": "^44.8.0",
-    "electron-builder": "^26.15.3",
+    "electron-builder": "^26.17.0",
     "eslint": "^10.13.0",
     "eslint-plugin-prettier": "^5.5.7",
     "eslint-plugin-simple-import-sort": "^14.0.0",

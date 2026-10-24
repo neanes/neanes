@@ -9,9 +9,13 @@ import type {
 } from '@/models/Element';
 import { ElementType } from '@/models/Element';
 import { TATWEEL } from '@/utils/constants';
+import {
+  normalizeSearchRun,
+  normalizeSearchText,
+} from '@/utils/searchNormalization';
 
 // Extract rich text without creating DOM nodes or consulting rendered pages.
-function searchPlainText(html: string) {
+export function searchPlainText(html: string) {
   let text = '';
   let suppressed = 0;
   const blocks = new Set([
@@ -61,58 +65,10 @@ function searchPlainText(html: string) {
   return text;
 }
 
-function normalizeSearchText(text: string, lyrics = false) {
-  const normalized = text
-    .normalize('NFC')
-    .replaceAll(TATWEEL, '')
-    .replace(/\s+/gu, lyrics ? '' : ' ');
-  // Final sigma must compare equally even when a lyric word spans elements.
-  return normalized.toLowerCase().replaceAll('ς', 'σ').normalize('NFC');
-}
-
 type RunPart = { index: number; text: string };
-const graphemes = new Intl.Segmenter('und', { granularity: 'grapheme' });
-
-function normalizeLyricRun(parts: RunPart[]) {
-  let sourceOffset = 0;
-  const ranges = parts.map((part) => {
-    const sourceStart = sourceOffset;
-    sourceOffset += part.text.length;
-    return { part, sourceStart, sourceEnd: sourceOffset, end: 0 };
-  });
-  const source = parts.map((part) => part.text).join('');
-  const text = normalizeSearchText(source, true);
-  if (ranges.length === 1) {
-    ranges[0].end = text.length;
-  } else {
-    let normalizedOffset = 0;
-    let firstRange = 0;
-    // Grapheme boundaries are normalization-safe. A composed character can
-    // belong to multiple elements when its base and marks were split.
-    for (const { segment, index } of graphemes.segment(source)) {
-      const end = normalizedOffset + normalizeSearchText(segment, true).length;
-      while (
-        firstRange < ranges.length &&
-        ranges[firstRange].sourceEnd <= index
-      ) {
-        firstRange++;
-      }
-      for (
-        let i = firstRange;
-        i < ranges.length && ranges[i].sourceStart < index + segment.length;
-        i++
-      ) {
-        const range = ranges[i];
-        range.end = end;
-      }
-      normalizedOffset = end;
-    }
-  }
-  return { text, ranges };
-}
 
 function* matchLyrics(parts: RunPart[], query: string) {
-  const { text, ranges } = normalizeLyricRun(parts);
+  const { text, ranges } = normalizeSearchRun(parts, { lyrics: true });
   let firstRange = 0;
   for (
     let start = text.indexOf(query);
@@ -137,7 +93,7 @@ function activeTextPanels(element: TextBoxElement | RichTextBoxElement) {
 
 function* matchingIndices(elements: ScoreElement[], query: string) {
   const ordinaryQuery = normalizeSearchText(query).trim();
-  const lyricQuery = normalizeSearchText(query, true);
+  const lyricQuery = normalizeSearchText(query, { lyrics: true });
   if (!ordinaryQuery || !lyricQuery) {
     return;
   }

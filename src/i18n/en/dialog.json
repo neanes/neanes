@@ -327,8 +327,34 @@
       "general": "General",
       "appearance": "Appearance",
       "editing": "Editing",
-      "advanced": "Advanced"
+      "advanced": "Advanced",
+      "agent": "Agent access (MCP)"
     },
-    "close": "Close"
+    "close": "Close",
+    "agentAccess": {
+      "description": "Allow connected agents to read, edit, save, and export scores, including background tasks when Neanes is closed. Agents use the same file access as Neanes. Enable this setting before connecting an agent.",
+      "status": "Connection status",
+      "starting": "Starting",
+      "ready": "Ready",
+      "error": "Unavailable",
+      "startupError": "Could not start the connection. Check the connection details.",
+      "connect": "Connect an agent",
+      "connectDescription": "Copy this configuration into your MCP client settings, then reconnect the client. Neanes starts automatically when needed.",
+      "copyConfiguration": "Copy configuration",
+      "runtime": "Requires Node.js 22 or later. Configure a command-based MCP server; the executable and bridge paths are included.",
+      "copied": "Copied",
+      "details": "Connection details",
+      "endpoint": "Editor endpoint",
+      "failed": "The operation failed. Check access settings and try again.",
+      "retry": "Retry connection",
+      "unavailable": "Unavailable",
+      "allow": "Allow agent access",
+      "off": "Off",
+      "disableNotice": "Turning this off disconnects agents and discards temporary agent drafts. Saved files and editor tabs are kept.",
+      "disableTitle": "Turn off agent access?",
+      "disableWarning": "An agent has unsaved temporary work or a task in progress. Turning access off disconnects agents and discards temporary drafts. Saved files and editor tabs are kept.",
+      "cancel": "Cancel",
+      "disable": "Turn off"
+    }
   }
 }

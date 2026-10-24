@@ -64,3 +64,10 @@ outside this tracking. Replacing a score clears commands for the previous score.
 
 Saves for one workspace are queued through recovery completion; different
 workspaces can save independently.
+
+History availability is instance-scoped. `CommandService.subscribe` immediately
+publishes the current Undo/Redo availability and returns an unsubscribe function.
+The editor observes only the selected workspace's history and owns toolbar and
+native-menu publication. Background and private histories need no UI suppression
+or compensating publication. Selection changes flush pending edits before
+switching the subscription; editor teardown removes the subscription.

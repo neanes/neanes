@@ -31,6 +31,30 @@ export default [
     },
   },
   {
+    files: [
+      'src/services/**/*.ts',
+      'src/models/**/*.ts',
+      'src/utils/**/*.ts',
+      'src/composables/**/*.ts',
+      'electron/main/files/**/*.ts',
+      'electron/main/export/**/*.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/automation/**', '**/automation/**'],
+              message:
+                'Shared application code must not depend on automation. Supply application hooks from the automation integration instead.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['src/components/ui/**/*.vue'],
     rules: {
       'vue/multi-word-component-names': 'off',

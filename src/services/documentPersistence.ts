@@ -95,3 +95,40 @@ export function applyDocumentSave(
   }
   return unchanged;
 }
+
+export function saveDocument<T extends DocumentSaveResult>(
+  workspace: Workspace,
+  persist: () => Promise<T>,
+  hooks: {
+    prepare(workspace: Workspace): void;
+    saved(workspace: Workspace): Promise<void>;
+    recover(workspace: Workspace): Promise<void>;
+  },
+) {
+  return queueDocumentSave(workspace, async () => {
+    hooks.prepare(workspace);
+    const state = captureDocumentSaveState(workspace);
+    const result = await persist();
+    let savedContentUnchanged = false;
+    if (result.success) {
+      hooks.prepare(workspace);
+      savedContentUnchanged = applyDocumentSave(workspace, result, state);
+      if (savedContentUnchanged) {
+        const savedState = captureDocumentSaveState(workspace);
+        await hooks.saved(workspace);
+        hooks.prepare(workspace);
+        savedContentUnchanged = isDocumentSaveStateCurrent(
+          workspace,
+          savedState,
+        );
+        if (!isDocumentSaveContextCurrent(workspace, savedState)) {
+          workspace.hasUnsavedChanges = true;
+        }
+      }
+      if (!savedContentUnchanged) {
+        await hooks.recover(workspace);
+      }
+    }
+    return { ...result, savedContentUnchanged };
+  });
+}

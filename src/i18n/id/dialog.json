@@ -327,8 +327,34 @@
       "general": "Umum",
       "appearance": "Tampilan",
       "editing": "Penyuntingan",
-      "advanced": "Lanjutan"
+      "advanced": "Lanjutan",
+      "agent": "Akses agen (MCP)"
     },
-    "close": "Tutup"
+    "close": "Tutup",
+    "agentAccess": {
+      "description": "Izinkan agen yang terhubung membaca, mengedit, menyimpan, dan mengekspor partitur, termasuk tugas latar belakang saat Neanes ditutup. Agen memiliki akses berkas yang sama dengan Neanes. Aktifkan pengaturan ini sebelum menghubungkan agen.",
+      "status": "Status koneksi",
+      "starting": "Memulai",
+      "ready": "Siap",
+      "error": "Tidak tersedia",
+      "startupError": "Koneksi tidak dapat dimulai. Periksa detail koneksi.",
+      "connect": "Hubungkan agen",
+      "connectDescription": "Salin konfigurasi ini ke pengaturan klien MCP, lalu hubungkan ulang klien. Neanes dimulai otomatis saat diperlukan.",
+      "copyConfiguration": "Salin konfigurasi",
+      "runtime": "Memerlukan Node.js 22 atau lebih baru. Konfigurasikan server MCP berbasis perintah; jalur aplikasi dan penghubung sudah disertakan.",
+      "copied": "Disalin",
+      "details": "Detail koneksi",
+      "endpoint": "Alamat editor",
+      "failed": "Operasi gagal. Periksa pengaturan akses dan coba lagi.",
+      "retry": "Coba ulang koneksi",
+      "unavailable": "Tidak tersedia",
+      "allow": "Izinkan akses agen",
+      "off": "Nonaktif",
+      "disableNotice": "Menonaktifkan akses akan memutus koneksi agen dan membuang draf sementara agen. Berkas tersimpan dan tab editor tetap dipertahankan.",
+      "disableTitle": "Nonaktifkan akses agen?",
+      "disableWarning": "Agen memiliki pekerjaan sementara yang belum disimpan atau tugas yang sedang berjalan. Menonaktifkan akses akan memutus koneksi agen dan membuang draf sementara. Berkas tersimpan dan tab editor tetap dipertahankan.",
+      "cancel": "Batal",
+      "disable": "Nonaktifkan"
+    }
   }
 }

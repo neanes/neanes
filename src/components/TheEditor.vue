@@ -37,6 +37,9 @@ import { toast } from 'vue-sonner';
 import type { Tab } from 'vue3-tabs-chrome';
 import Vue3TabsChrome from 'vue3-tabs-chrome';
 
+import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
+import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
+import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
 import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
@@ -214,12 +217,8 @@ import type {
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
 import {
-  applyDocumentSave,
-  captureDocumentSaveState,
   type DocumentSaveResult,
-  isDocumentSaveContextCurrent,
-  isDocumentSaveStateCurrent,
-  queueDocumentSave,
+  saveDocument,
 } from '@/services/documentPersistence';
 import {
   createMartyriaUpdateCommand,
@@ -228,7 +227,7 @@ import {
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
 import { fontCatalog } from '@/services/FontCatalog';
-import type { Command } from '@/services/history/CommandService';
+import type { Command, HistoryState } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import {
@@ -467,6 +466,7 @@ const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
+let unsubscribeHistory: (() => void) | undefined;
 const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
   set: (value: string[]) => setAccordionState('developer', value),
@@ -708,7 +708,7 @@ const selectedWorkspace = computed({
     }
 
     selectedWorkspaceValue.value = value;
-    selectedWorkspace.value.commandService.notify();
+    observeSelectedHistory();
     save();
 
     // Scroll to the new workspace's saved scroll position
@@ -1317,19 +1317,27 @@ const pageVisibilityIntersection = computed(() => {
   } as IntersectionObserver;
 });
 
-const dialogOpen = computed(() => {
-  return (
-    modeKeyDialogIsOpen.value ||
-    pageSetupDialogIsOpen.value ||
-    paragraphStylesDialogIsOpen.value ||
-    documentPropertiesDialogIsOpen.value ||
-    playbackSettingsDialogIsOpen.value ||
-    syllablePositioningDialogIsOpen.value ||
-    exportDialogIsOpen.value ||
-    editorPreferencesDialogIsOpen.value ||
-    aboutDialogIsOpen.value
-  );
-});
+const activeDialog = computed(
+  () =>
+    [
+      { name: 'mode_key', open: modeKeyDialogIsOpen.value },
+      { name: 'page_setup', open: pageSetupDialogIsOpen.value },
+      { name: 'paragraph_styles', open: paragraphStylesDialogIsOpen.value },
+      {
+        name: 'document_properties',
+        open: documentPropertiesDialogIsOpen.value,
+      },
+      { name: 'playback_settings', open: playbackSettingsDialogIsOpen.value },
+      {
+        name: 'syllable_positioning',
+        open: syllablePositioningDialogIsOpen.value,
+      },
+      { name: 'export', open: exportDialogIsOpen.value },
+      { name: 'preferences', open: editorPreferencesDialogIsOpen.value },
+      { name: 'about', open: aboutDialogIsOpen.value },
+    ].find((dialog) => dialog.open)?.name ?? null,
+);
+const dialogOpen = computed(() => activeDialog.value !== null);
 
 const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
@@ -1610,8 +1618,6 @@ onMounted(() => {
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
-  EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
-  EventBus.$on(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$on(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$on(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1707,10 +1713,12 @@ onMounted(() => {
   EventBus.$on(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 
   EventBus.$on(AudioServiceEventNames.Stop, onAudioServiceStop);
-  selectedWorkspace.value.commandService.notify();
+  observeSelectedHistory();
 });
 
 onBeforeUnmount(() => {
+  unsubscribeHistory?.();
+
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
 
@@ -1730,8 +1738,6 @@ onBeforeUnmount(() => {
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
-  EventBus.$off(IpcRendererChannels.SetCanUndo, onSetCanUndo);
-  EventBus.$off(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$off(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$off(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1865,6 +1871,7 @@ async function initialize() {
     console.error(error);
   } finally {
     isLoading.value = false;
+    editorAutomation.ready();
   }
 }
 
@@ -1916,6 +1923,75 @@ const pageHandlers: ScorePageHandlers = {
       imageHeight: size.height,
     }),
 };
+
+const {
+  automation: editorAutomation,
+  disposeWorkspace: disposeAutomationWorkspace,
+  workspaceTextBoxMeasurement,
+  workspacePageMeasurement,
+  completePageMeasurement,
+  failPageMeasurement,
+  completeWorkspaceTextBoxMeasurement,
+  failWorkspaceTextBoxMeasurement,
+} = useEditorDocumentAutomation({
+  enabled: !isBrowser.value,
+  workspaces: () => workspaces.value as Workspace[],
+  selectedWorkspace: () => selectedWorkspace.value,
+  createScore: createDefaultScore,
+  addWorkspace(workspace) {
+    workspace.tempFileName = getTempFilename();
+    addWorkspace(workspace);
+  },
+  selectWorkspace(workspace) {
+    selectedWorkspace.value = workspace;
+  },
+  prepare: prepareWorkspaceForSerialization,
+  changed(workspace) {
+    if (workspace.id === selectedWorkspace.value.id) {
+      save();
+    } else {
+      scheduleRecoverySnapshot(workspace);
+    }
+  },
+  fonts: () => [
+    ...fontCatalog.bundledFamilies(),
+    ...fontCatalog.systemFamilies(),
+  ],
+  async saved(workspace) {
+    await discardRecoverySnapshot(workspace.id);
+  },
+  recover: persistRecoverySnapshot,
+  close: async (workspace) => {
+    removeWorkspace(workspace);
+    if (workspaces.value.length === 0) {
+      onFileMenuNewScore();
+    }
+    return await discardRecoverySnapshot(workspace.id);
+  },
+  snapshot: createScoreRenderSnapshot,
+  busyState() {
+    if (isLoading.value) {
+      return { reason: 'loading' };
+    }
+
+    if (closingWorkspaceIds.size > 0) {
+      return {
+        reason: 'workspace_closing',
+        documentIds: [...closingWorkspaceIds],
+      };
+    }
+    if (activeDialog.value) {
+      return { reason: 'dialog_open', dialog: activeDialog.value };
+    }
+    if (recoveryDialogIsOpen.value) {
+      return { reason: 'dialog_open', dialog: 'recovery' };
+    }
+    if (printMode.value) {
+      return { reason: 'printing' };
+    }
+    return null;
+  },
+});
 
 void initialize();
 
@@ -3108,12 +3184,17 @@ function onClickPrintScore() {
   }
 }
 
-function onSetCanUndo(value: boolean) {
-  canUndo.value = value;
+function observeSelectedHistory() {
+  unsubscribeHistory?.();
+  unsubscribeHistory =
+    selectedWorkspace.value.commandService.subscribe(publishHistoryState);
 }
 
-function onSetCanRedo(value: boolean) {
-  canRedo.value = value;
+function publishHistoryState(state: HistoryState) {
+  canUndo.value = state.canUndo;
+  canRedo.value = state.canRedo;
+  EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
+  EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
 }
 
 function togglePageBreak() {
@@ -5271,7 +5352,11 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
 }
 
 function scheduleRecoverySnapshot(workspace: Workspace) {
-  if (isBrowser.value || workspace == null) {
+  if (
+    isBrowser.value ||
+    workspace == null ||
+    editorAutomation.ownsPrivateWorkspace(workspace)
+  ) {
     return;
   }
 
@@ -5296,6 +5381,9 @@ function clearRecoverySnapshotTimer(workspaceId: string) {
 }
 
 async function persistRecoverySnapshot(workspace: Workspace) {
+  if (editorAutomation.ownsPrivateWorkspace(workspace)) {
+    return;
+  }
   if (isBrowser.value) {
     return;
   }
@@ -5316,7 +5404,7 @@ async function persistRecoverySnapshot(workspace: Workspace) {
 
 async function discardRecoverySnapshot(workspaceId: string) {
   if (isBrowser.value) {
-    return;
+    return true;
   }
 
   clearRecoverySnapshotTimer(workspaceId);
@@ -5328,6 +5416,7 @@ async function discardRecoverySnapshot(workspaceId: string) {
       result.errorMessage ?? 'Unable to discard recovery snapshot.',
     );
   }
+  return result.success;
 }
 
 function saveWorkspace(workspace: Workspace) {
@@ -5346,39 +5435,29 @@ function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
   workspace: Workspace,
   persist: () => Promise<T>,
 ) {
-  return queueDocumentSave(workspace, async () => {
-    prepareWorkspaceForSerialization(workspace);
-    // Both IPC implementations serialize immediately, before their first await.
-    const state = captureDocumentSaveState(workspace);
-    const result = await persist();
-    let savedContentUnchanged = false;
-
-    if (result.success) {
-      // Include pending editor text that has not reached the score model yet.
-      prepareWorkspaceForSerialization(workspace);
-      savedContentUnchanged = applyDocumentSave(workspace, result, state);
-      if (savedContentUnchanged) {
-        const savedState = captureDocumentSaveState(workspace);
-        await discardRecoverySnapshot(workspace.id);
-        prepareWorkspaceForSerialization(workspace);
-        savedContentUnchanged = isDocumentSaveStateCurrent(
-          workspace,
-          savedState,
-        );
-        if (!isDocumentSaveContextCurrent(workspace, savedState)) {
-          workspace.hasUnsavedChanges = true;
-        }
-      }
-      if (!savedContentUnchanged) {
-        await persistRecoverySnapshot(workspace);
-      }
-    }
-
-    return { ...result, savedContentUnchanged };
+  return saveDocument(workspace, persist, {
+    prepare: prepareWorkspaceForSerialization,
+    saved: async (workspace) => {
+      await discardRecoverySnapshot(workspace.id);
+    },
+    recover: persistRecoverySnapshot,
   });
 }
 
+const closingWorkspaceIds = new Set<string>();
 async function closeWorkspace(workspace: Workspace) {
+  if (closingWorkspaceIds.has(workspace.id)) {
+    return false;
+  }
+  closingWorkspaceIds.add(workspace.id);
+  try {
+    return await closeWorkspaceImpl(workspace);
+  } finally {
+    closingWorkspaceIds.delete(workspace.id);
+  }
+}
+
+async function closeWorkspaceImpl(workspace: Workspace) {
   let shouldClose = true;
   let shouldDiscardRecoverySnapshot = false;
   let savedDuringClose = false;
@@ -6097,8 +6176,6 @@ function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
 
   if (workspaceIsSelected) {
     save();
-  } else {
-    selectedWorkspace.value.commandService.notify();
   }
 }
 
@@ -9012,6 +9089,7 @@ function addWorkspace(workspace: Workspace) {
 }
 
 function removeWorkspace(workspace: Workspace) {
+  disposeAutomationWorkspace(workspace);
   cancelLyricsAssignment(workspace);
   clearRecoverySnapshotTimer(workspace.id);
 
@@ -10061,6 +10139,22 @@ function renderTabLabel(tab: Tab) {
         @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
       />
     </template>
+    <WorkspacePageMeasurement
+      v-if="workspacePageMeasurement"
+      :workspace="workspacePageMeasurement.workspace"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @ready="completePageMeasurement"
+      @failed="failPageMeasurement"
+    />
+    <WorkspaceTextBoxMeasurement
+      v-if="workspaceTextBoxMeasurement"
+      :workspace="workspaceTextBoxMeasurement.workspace"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="completeWorkspaceTextBoxMeasurement"
+      @failed="failWorkspaceTextBoxMeasurement"
+    />
   </div>
 </template>
 

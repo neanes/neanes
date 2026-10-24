@@ -5,29 +5,17 @@ import JSZip from 'jszip';
 
 import type { Score } from '../../../src/models/save/v1/Score';
 
-export async function writeScoreFile(filePath: string, score: Score) {
-  // If using the compressed file format, zip first
+export async function encodeScore(filePath: string, score: Score) {
   if (path.extname(filePath) === '.byz') {
     const zip = new JSZip();
-
-    const unzippedFileName = `${path.basename(filePath, '.byz')}.byzx`;
-
-    const data = JSON.stringify(score);
-
-    zip.file(unzippedFileName, data);
-
-    const file = await zip.generateAsync({
-      type: 'nodebuffer',
-      compression: 'DEFLATE',
-    });
-
-    await fs.writeFile(filePath, file);
-  } else {
-    // For uncompressed files, and white space and indentation
-    // to make the file easier to read
-    const data = JSON.stringify(score, null, 2);
-    await fs.writeFile(filePath, data);
+    zip.file(`${path.basename(filePath, '.byz')}.byzx`, JSON.stringify(score));
+    return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
   }
+  return Buffer.from(JSON.stringify(score, null, 2));
+}
+
+export async function writeScoreFile(filePath: string, score: Score) {
+  await fs.writeFile(filePath, await encodeScore(filePath, score));
 }
 
 export async function readScoreFile(filePath: string) {
@@ -45,4 +33,16 @@ export async function readScoreFile(filePath: string) {
   }
 
   return data;
+}
+
+export function isScoreFile(filePath: string) {
+  const extension = path.extname(filePath);
+  return extension === '.byz' || extension === '.byzx';
+}
+
+export function scoreFileFormat(filePath: string): 'byz' | 'byzx' {
+  if (!isScoreFile(filePath)) {
+    throw new Error('UNSUPPORTED_FILE_TYPE');
+  }
+  return path.extname(filePath) === '.byz' ? 'byz' : 'byzx';
 }

@@ -1,3 +1,4 @@
+import type { AgentAccessState, AgentAccessUpdate } from '@/ipc/agentAccess';
 import type {
   ClipboardReplyArgs,
   DiscardRecoverySnapshotReplyArgs,
@@ -16,13 +17,26 @@ import type {
   ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
+import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 
 export interface IIpcService {
-  saveWorkspace(workspace: Workspace): Promise<SaveWorkspaceReplyArgs>;
+  setAgentAccessEnabled(
+    enabled: boolean,
+    discardUnsavedChanges?: boolean,
+  ): Promise<AgentAccessUpdate>;
+  getAgentAccess(): Promise<AgentAccessState>;
+  retryAgentAccess(): Promise<AgentAccessState>;
+  saveWorkspace(
+    workspace: Workspace,
+    data?: SavedScore,
+  ): Promise<SaveWorkspaceReplyArgs>;
 
-  saveWorkspaceAs(workspace: Workspace): Promise<SaveWorkspaceAsReplyArgs>;
+  saveWorkspaceAs(
+    workspace: Workspace,
+    data?: SavedScore,
+  ): Promise<SaveWorkspaceAsReplyArgs>;
 
   exportWorkspaceAsPdf(
     workspace: Workspace,

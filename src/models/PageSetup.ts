@@ -10,7 +10,8 @@ export type PageSize =
   | 'Half-Letter'
   | 'Half-Legal'
   | 'Custom';
-export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
+export const pageSizeUnits = ['pc', 'pt', 'cm', 'mm', 'in'] as const;
+export type PageSizeUnit = (typeof pageSizeUnits)[number];
 
 export interface PageSizeOption {
   name: PageSize;
@@ -65,6 +66,24 @@ export const pageSizes: PageSizeOption[] = [
     height: 0,
   },
 ];
+
+// Page width and height are derived from the selected size, the custom
+// dimensions when the size is Custom, and the orientation.
+export function resolvePageDimensions(setup: {
+  pageSize: PageSize;
+  landscape: boolean;
+  pageWidthCustom: number;
+  pageHeightCustom: number;
+}) {
+  const size = pageSizes.find((size) => size.name === setup.pageSize)!;
+  const width =
+    setup.pageSize === 'Custom' ? setup.pageWidthCustom : size.width;
+  const height =
+    setup.pageSize === 'Custom' ? setup.pageHeightCustom : size.height;
+  return setup.landscape
+    ? { pageWidth: height, pageHeight: width }
+    : { pageWidth: width, pageHeight: height };
+}
 
 export class PageSetup {
   public pageSize: PageSize = 'Letter';

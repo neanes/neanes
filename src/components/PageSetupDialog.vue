@@ -1596,7 +1596,11 @@ import {
   VocalExpressionNeume,
 } from '@/models/Neumes';
 import type { PageSize, PageSizeUnit } from '@/models/PageSetup';
-import { PageSetup, pageSizes } from '@/models/PageSetup';
+import {
+  PageSetup,
+  pageSizes,
+  resolvePageDimensions,
+} from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ParagraphStyle,
@@ -2414,27 +2418,7 @@ function isTempoElement(elementType: ElementType) {
 }
 
 function updatePageSize() {
-  if (form.value.pageSize === 'Custom') {
-    if (form.value.landscape) {
-      form.value.pageWidth = form.value.pageHeightCustom;
-      form.value.pageHeight = form.value.pageWidthCustom;
-    } else {
-      form.value.pageWidth = form.value.pageWidthCustom;
-      form.value.pageHeight = form.value.pageHeightCustom;
-    }
-    return;
-  }
-
-  const pageSize = pageSizes.find((x) => x.name === form.value.pageSize);
-  if (pageSize) {
-    if (form.value.landscape) {
-      form.value.pageWidth = pageSize.height;
-      form.value.pageHeight = pageSize.width;
-    } else {
-      form.value.pageWidth = pageSize.width;
-      form.value.pageHeight = pageSize.height;
-    }
-  }
+  Object.assign(form.value, resolvePageDimensions(form.value));
 }
 
 function updatePageSetup() {

@@ -13,7 +13,6 @@ import {
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
 import { SaveService } from '@/services/SaveService';
-import { OperationQueue } from '@/utils/OperationQueue';
 
 import type { EditorBusyState } from '../contracts/editorBusy';
 import { useEditorAutomation } from './useEditorAutomation';
@@ -32,73 +31,47 @@ export function useEditorDocumentAutomation(
   },
 ) {
   const dirtyTextBoxWorkspaces = new Set<string>();
-  const pendingTextBoxMeasurements = new Map<string, Promise<void>>();
-  const textBoxMeasurementQueue = new OperationQueue();
   let editorUnmounted = false;
   const { textBoxes, pages } = useWorkspaceMeasurements();
 
-  function queueWorkspaceTextBoxMeasurement(workspace: Workspace) {
-    dirtyTextBoxWorkspaces.add(workspace.id);
-    const pending = textBoxMeasurementQueue.run(async () => {
-      // Let the previous measurement's component unmount before mounting the next.
+  // Automation requests await settlement serially, including private batch documents.
+  async function measureWorkspaceTextBoxes(workspace: Workspace) {
+    // Let the previous measurement's component unmount before mounting the next.
+    await nextTick();
+    if (editorUnmounted || !isActive(workspace)) {
+      return;
+    }
+    await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
+    await document.fonts.ready;
+    if (editorUnmounted || !isActive(workspace)) {
+      return;
+    }
+    // Compute target widths and inherited legacy text styles before mounting measurements.
+    LayoutService.processPages(toRaw(workspace));
+    if (getResizableTextBoxes(workspace.score).length > 0) {
+      await textBoxes.start(workspace);
       await nextTick();
       if (editorUnmounted || !isActive(workspace)) {
         return;
       }
-      await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
-      await document.fonts.ready;
-      // Compute target widths and inherited legacy text styles before mounting measurements.
       LayoutService.processPages(toRaw(workspace));
-      if (getResizableTextBoxes(workspace.score).length > 0) {
-        await textBoxes.start(workspace);
-        await nextTick();
-        LayoutService.processPages(toRaw(workspace));
-      }
-      if (!isActive(workspace)) {
-        return;
-      }
-      if (
-        workspace.id === options.selectedWorkspace()?.id ||
-        !automation.ownsPrivateWorkspace(workspace)
-      ) {
-        options.changed(workspace);
-      }
-    });
-    pendingTextBoxMeasurements.set(workspace.id, pending);
-    void pending.then(
-      () => {
-        if (pendingTextBoxMeasurements.get(workspace.id) === pending) {
-          pendingTextBoxMeasurements.delete(workspace.id);
-          dirtyTextBoxWorkspaces.delete(workspace.id);
-        }
-      },
-      () => {
-        // Keep the workspace dirty so the next save retries instead of persisting stale heights.
-        if (pendingTextBoxMeasurements.get(workspace.id) === pending) {
-          pendingTextBoxMeasurements.delete(workspace.id);
-        }
-      },
-    );
-    return pending;
-  }
-
-  async function settleWorkspaceTextBoxes(workspace: Workspace) {
-    if (
-      dirtyTextBoxWorkspaces.has(workspace.id) &&
-      !pendingTextBoxMeasurements.has(workspace.id)
-    ) {
-      queueWorkspaceTextBoxMeasurement(workspace);
     }
-    let pending;
-    while ((pending = pendingTextBoxMeasurements.get(workspace.id)) != null) {
-      await pending;
+    if (
+      workspace.id === options.selectedWorkspace()?.id ||
+      !automation.ownsPrivateWorkspace(workspace)
+    ) {
+      options.changed(workspace);
     }
   }
 
   const documents = new DocumentService({
     ...options,
     async settle(workspace) {
-      await settleWorkspaceTextBoxes(workspace);
+      if (dirtyTextBoxWorkspaces.has(workspace.id)) {
+        await measureWorkspaceTextBoxes(workspace);
+        // A failed measurement leaves the workspace dirty so the next save retries.
+        dirtyTextBoxWorkspaces.delete(workspace.id);
+      }
       await nextTick();
       await document.fonts.ready;
       if (workspace.id === options.selectedWorkspace()?.id) {
@@ -112,12 +85,11 @@ export function useEditorDocumentAutomation(
     },
     changeStyles(workspace, operation) {
       operation();
-      void queueWorkspaceTextBoxMeasurement(workspace);
+      dirtyTextBoxWorkspaces.add(workspace.id);
     },
   });
   function disposeWorkspace(workspace: Workspace) {
     dirtyTextBoxWorkspaces.delete(workspace.id);
-    pendingTextBoxMeasurements.delete(workspace.id);
     textBoxes.cancel(workspace);
     pages.cancel(workspace);
   }
@@ -129,7 +101,7 @@ export function useEditorDocumentAutomation(
       createScore: options.createScore,
       prepare: options.prepare,
       dispose: disposeWorkspace,
-      settle: queueWorkspaceTextBoxMeasurement,
+      settle: measureWorkspaceTextBoxes,
     },
     snapshot: options.snapshot,
     renderPages: pages.start,

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { automationOutputSchema } from '@/automation/__tests__/helpers';
+import { elementEditBatchSchema } from '@/automation/contracts/elementEditSchema';
 import { Workspace } from '@/models/Workspace';
 
 import { automationTools } from '../../../electron/main/automation/tools';
@@ -58,7 +59,7 @@ describe('JSON result budgets', () => {
     const plan = planElementEdits(
       workspace,
       discovery,
-      [
+      elementEditBatchSchema.parse([
         {
           action: 'insert',
           elements: Array.from({ length: 1000 }, (_, index) => ({
@@ -66,7 +67,7 @@ describe('JSON result budgets', () => {
             clientId: `note-${index}`,
           })),
         },
-      ],
+      ]),
       ['Source Serif'],
     );
     applyElementEdits(workspace, plan);

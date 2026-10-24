@@ -44,7 +44,7 @@ import { LyricService } from '@/services/LyricService';
 
 import {
   type ElementDefinition,
-  elementEditBatchSchema,
+  type ElementEditBatch,
   elementEditPropertySchemas,
 } from '../contracts/elementEditSchema';
 import { modeKeyTemplateFields } from '../contracts/modeKeyTemplates';
@@ -114,10 +114,9 @@ export function createdElementResult(
 export function planElementEdits(
   workspace: Workspace,
   discovery: ElementDiscovery,
-  input: unknown,
+  actions: ElementEditBatch,
   fonts: readonly string[],
 ): ElementEditPlan {
-  const actions = elementEditBatchSchema.parse(input);
   const originals = new Map<ScoreElement, ScoreElement>();
   const collections = new Map<ScoreElement[], ScoreElement[]>();
   const refs = new Map<string, ScoreElement>();
@@ -227,7 +226,7 @@ export function planElementEdits(
   };
   const applyProperties = (
     element: ScoreElement,
-    values: Record<string, unknown>,
+    properties: Record<string, unknown>,
     reset: string[] = [],
     options: { creating?: boolean; staffManaged?: boolean } = {},
   ) => {
@@ -235,7 +234,7 @@ export function planElementEdits(
     if (
       lyricSetup.locked &&
       (options.staffManaged ?? staff.includes(element)) &&
-      [...Object.keys(values), ...reset].some(
+      [...Object.keys(properties), ...reset].some(
         (key) =>
           (element.elementType === ElementType.Note &&
             ['lyrics', 'isMelisma', 'isMelismaStart', 'isHyphen'].includes(
@@ -246,7 +245,6 @@ export function planElementEdits(
     ) {
       throw new Error('LYRICS_LOCKED');
     }
-    const properties = schema.parse(values);
     validateProperties(properties);
     const defaults =
       element.elementType === ElementType.Empty

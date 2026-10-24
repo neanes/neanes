@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { reactive } from 'vue';
 
+import { elementEditBatchSchema } from '@/automation/contracts/elementEditSchema';
 import {
   AcceptsLyricsOption,
   ModeKeyElement,
@@ -22,9 +23,12 @@ function document() {
   const workspace = reactive(new Workspace()) as Workspace;
   const discovery = new ElementDiscovery();
   const edit = (input: unknown) => {
-    const plan = planElementEdits(workspace, discovery, input, [
-      'Source Serif',
-    ]);
+    const plan = planElementEdits(
+      workspace,
+      discovery,
+      elementEditBatchSchema.parse(input),
+      ['Source Serif'],
+    );
     applyElementEdits(workspace, plan);
     return plan;
   };
@@ -204,7 +208,12 @@ describe('validated element transactions', () => {
       edit([...changes, insert([{ elementType: 'Annotation' }])]),
     ).toThrow('INVALID_ELEMENT_COLLECTION');
     expect(saved(workspace)).toBe(before);
-    const plan = planElementEdits(workspace, discovery, changes, []);
+    const plan = planElementEdits(
+      workspace,
+      discovery,
+      elementEditBatchSchema.parse(changes),
+      [],
+    );
     expect(saved(workspace)).toBe(before);
     applyElementEdits(workspace, plan);
     expect(nested.secondaryFthora).toBeNull();
@@ -322,6 +331,25 @@ describe('validated element transactions', () => {
     workspace.commandService.undo();
     expect(box.lineHeight).toBe(1.2);
     expect(box.fontSize).toBeNull();
+  });
+
+  it('uses normalized properties from the validated batch for creation and updates', () => {
+    const { workspace, discovery, edit } = document();
+    const plan = edit([
+      insert([
+        {
+          elementType: 'Note',
+          properties: { lyricsFontFamily: ' Missing Font ' },
+        },
+      ]),
+    ]);
+    const note = workspace.score.staff.elements[0] as NoteElement;
+    expect(note.lyricsFontFamily).toBe('Missing Font');
+    expect(plan.fontFamilies).toEqual([]);
+    edit([update(discovery.reference(note), { lyricsColor: ' #123456 ' })]);
+    expect(note.lyricsColor).toBe('#123456');
+    workspace.commandService.undo();
+    expect(note.lyricsColor).toBeNull();
   });
 
   it('preserves unavailable text fonts through edits, serialization and undo', () => {
@@ -487,7 +515,7 @@ describe('validated element transactions', () => {
       const plan = planElementEdits(
         workspace,
         new ElementDiscovery(),
-        [
+        elementEditBatchSchema.parse([
           { action: 'remove_range', start, end: start + removed },
           ...(inserted > 0
             ? [
@@ -500,7 +528,7 @@ describe('validated element transactions', () => {
                 },
               ]
             : []),
-        ],
+        ]),
         [],
       );
       expect(plan.commands).toHaveLength(removed + (inserted > 0 ? 1 : 0));
@@ -625,7 +653,7 @@ describe('validated element transactions', () => {
     const noOp = planElementEdits(
       workspace,
       discovery,
-      [update(ref, { lyrics: '' })],
+      elementEditBatchSchema.parse([update(ref, { lyrics: '' })]),
       [],
     );
     expect(applyElementEdits(workspace, noOp)).toBe(false);
@@ -641,7 +669,9 @@ describe('validated element transactions', () => {
       planElementEdits(
         workspace,
         other,
-        [update(ref, { lyrics: 'cross-document' })],
+        elementEditBatchSchema.parse([
+          update(ref, { lyrics: 'cross-document' }),
+        ]),
         [],
       ),
     ).toThrow('ELEMENT_NOT_FOUND');

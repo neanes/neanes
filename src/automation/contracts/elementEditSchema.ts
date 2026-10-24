@@ -220,7 +220,10 @@ function validateProperties(
     }
   }
   const result = elementEditPropertySchemas[type].safeParse(values);
-  if (!result.success) {
+  if (result.success) {
+    // Keep normalization at the boundary so planners can use validated values.
+    Object.assign(values, result.data);
+  } else {
     for (const issue of result.error.issues) {
       ctx.addIssue({ ...issue, path: ['properties', ...issue.path] });
     }
@@ -294,3 +297,4 @@ export const elementEditBatchSchema = z
   .min(1)
   .max(1000);
 export type ElementDefinition = z.infer<typeof elementDefinitionSchema>;
+export type ElementEditBatch = z.infer<typeof elementEditBatchSchema>;

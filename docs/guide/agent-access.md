@@ -65,7 +65,7 @@ Tell the agent which score or folder to use and where to save the result. For ex
 
 Ordinary agent tasks use private documents without adding editor tabs. Each client connection has its own background worker. Private drafts last until the connection ends, the worker stops, or access is turned off. Ask the agent to save work you want to keep.
 
-Ask the agent to work with your **open score** when you want help with editor documents, including unsaved changes. The editor must be open and its connection ready. Edits to editor documents appear in Neanes; document editing tools make undoable changes, but saving remains a separate action. Closing an agent connection never closes an editor you opened.
+Ask the agent to work with your **open score** when you want help with editor documents, including unsaved changes. Agents can also create a new score or open a saved file in a visible editor tab. The editor must be open and its connection ready. Edits to editor documents appear in Neanes; document editing tools make undoable changes, but saving remains a separate action. Closing an agent connection never closes an editor you opened.
 
 Private documents read saved files independently of editor tabs. Saving a file privately does not update an already-open tab. Save your editor changes first, or ask the agent to write to another file when you want to preserve the original.
 
@@ -124,7 +124,7 @@ Batch operations work on saved files privately. They can save changes in place, 
 
 For clients or workflows that call tools directly:
 
-- Document tools default to `documentScope: "private"`. To work with editor tabs, pass `documentScope: "editor"` to `list_documents` and subsequent document calls. Use the returned document IDs in the same scope. The copied bridge configuration manages private documents without a `sessionId`.
+- Document tools default to `documentScope: "private"`. To work with editor tabs, pass `documentScope: "editor"` to `list_documents` and subsequent document calls. Use the returned document IDs in the same scope.
 - Read the document first and pass its latest `revision` as `expectedRevision` when editing, saving, exporting, or previewing. If a revision conflict occurs, read the document again before deciding whether to retry.
 - Find elements first, then use their returned references for targeted edits. Follow `nextOffset` when reading paginated results.
 - Use absolute file paths. Saving or exporting to an existing destination requires `overwrite: true`, except when saving a score back to its unchanged source.

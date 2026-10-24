@@ -21,8 +21,6 @@ import type { PreviewPageResult } from '../contracts/preview';
 import type { AutomationRequest } from '../contracts/protocol';
 import { getRichTextFormat } from '../contracts/richTextFormat';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
-import { ISOLATED_SESSION_LIMITS } from '../sessions/isolatedSessions';
-import { PRIVATE_DOCUMENT_LIMIT } from '../sessions/privateDocumentStore';
 import { readStaffLyrics } from './contentRead';
 import { DocumentRevisions } from './documentRevisions';
 import {
@@ -38,6 +36,7 @@ import {
 } from './pageDiscovery';
 import { planParagraphStyleEdits } from './paragraphStyleEdits';
 import { getParagraphStyles } from './paragraphStyleRead';
+import { PRIVATE_DOCUMENT_LIMIT } from './privateDocumentStore';
 import { readSelection } from './selectionRead';
 
 // Adapts MCP tool requests to shared document operations.
@@ -169,11 +168,7 @@ export class McpDocumentAdapter {
     request: Exclude<
       AutomationRequest,
       {
-        tool:
-          | 'create_session'
-          | 'close_session'
-          | 'batch_update_files'
-          | 'discover_score_files';
+        tool: 'batch_update_files' | 'discover_score_files';
       }
     >,
   ): Promise<unknown> {
@@ -208,7 +203,7 @@ export class McpDocumentAdapter {
                 lifetime: 'worker',
               },
             }
-          : { isolatedSessions: ISOLATED_SESSION_LIMITS }),
+          : {}),
         paragraphStyles: {
           actions: ['create', 'replace', 'update', 'delete'],
           dimensions: 'css-px',

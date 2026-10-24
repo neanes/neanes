@@ -44,7 +44,7 @@ describe('complete tool schema resources', () => {
     expect(JSON.stringify(tools)).toBe(before);
   });
 
-  it('publishes worker storage without exposing session leases', () => {
+  it('publishes worker storage and excludes retired session tools in both modes', () => {
     const tools = automationTools('headless');
     expect(
       tools.some(({ name }) =>
@@ -64,6 +64,9 @@ describe('complete tool schema resources', () => {
         );
       }
     }
+    expect(automationTools().map(({ name }) => name)).toEqual(
+      tools.map(({ name }) => name),
+    );
     for (const name of ['create_session', 'close_session']) {
       expect(() =>
         readToolSchemaResource(`neanes://schemas/${name}/input`, 'headless'),
@@ -111,7 +114,7 @@ describe('complete tool schema resources', () => {
       maximum: 2048,
       default: 1600,
     });
-    expect(preview.properties.sessionId.format).toBe('uuid');
+    expect(preview.properties).not.toHaveProperty('sessionId');
     const validate = new AjvJsonSchemaValidator().getValidator(preview);
     expect(
       validate({

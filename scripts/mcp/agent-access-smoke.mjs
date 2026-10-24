@@ -117,64 +117,6 @@ try {
       /could not start agent access/,
     );
   } else {
-    // Direct HTTP clients retain independent leased stores on the editor server.
-    const directCall = async (name, args = {}) => {
-      const response = await fetch(configured.endpoint, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${originalToken}`,
-          'Content-Type': 'application/json',
-          Accept: 'application/json, text/event-stream',
-        },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 'session-regression',
-          method: 'tools/call',
-          params: { name, arguments: args },
-        }),
-      });
-      assert.equal(response.status, 200);
-      return (await response.json()).result.structuredContent;
-    };
-    const directSessions = [];
-    try {
-      for (let i = 0; i < 2; i++) {
-        const created = await directCall('create_session');
-        assert.equal(created.success, true);
-        assert.equal(created.result.idleTimeoutMs, 900000);
-        directSessions.push(created.result.sessionId);
-      }
-      const [sessionId, otherSessionId] = directSessions;
-      const draft = await directCall('create_document', {
-        sessionId,
-        title: 'Direct HTTP private draft',
-      });
-      assert.equal(draft.success, true);
-      assert.equal(draft.result.selected, false);
-      const foreign = await directCall('get_document_properties', {
-        sessionId: otherSessionId,
-        documentId: draft.result.documentId,
-      });
-      assert.equal(foreign.error.code, 'DOCUMENT_NOT_FOUND');
-      const refused = await directCall('close_session', { sessionId });
-      assert.equal(refused.error.code, 'UNSAVED_CHANGES');
-      const retained = await directCall('list_documents', { sessionId });
-      assert.equal(retained.result.length, 1);
-      const empty = await directCall('list_documents', {
-        sessionId: otherSessionId,
-      });
-      assert.deepEqual(empty.result, []);
-    } finally {
-      for (const sessionId of directSessions) {
-        const closed = await directCall('close_session', {
-          sessionId,
-          discardUnsavedChanges: true,
-        });
-        assert.equal(closed.success, true);
-        const missing = await directCall('list_documents', { sessionId });
-        assert.equal(missing.error.code, 'SESSION_NOT_FOUND');
-      }
-    }
     const liveFromWorker = await first.callTool({
       name: 'list_documents',
       arguments: { documentScope: 'editor' },

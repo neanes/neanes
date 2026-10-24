@@ -13,7 +13,7 @@ export interface PrivateDocumentHooks {
   settle(workspace: Workspace): Promise<void>;
 }
 
-// Ownership and cleanup without a lease. The caller controls the store lifetime.
+// The caller controls document ownership, cleanup, and store lifetime.
 export class PrivateDocumentStore {
   private workspaces: Workspace[] = [];
   readonly documents: DocumentService;

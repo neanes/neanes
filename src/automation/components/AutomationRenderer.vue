@@ -22,10 +22,10 @@ import { nextTick, onBeforeUnmount, onMounted, shallowRef, watch } from 'vue';
 
 import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
+import { PrivateDocumentStore } from '@/automation/documents/privateDocumentStore';
 import { useEditorAutomation } from '@/automation/renderer/useEditorAutomation';
 import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
 import { WorkerSettlement } from '@/automation/renderer/workerSettlement';
-import { PrivateDocumentStore } from '@/automation/sessions/privateDocumentStore';
 import { EditorPreferences } from '@/models/EditorPreferences';
 import { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';

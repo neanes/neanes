@@ -29,14 +29,7 @@ describe('automation result contracts', () => {
     },
   );
 
-  it('publishes isolated session bounds and permits closing without a selected tab', () => {
-    expect(
-      automationResultSchemas.create_session.parse({
-        sessionId: '00000000-0000-4000-8000-000000000001',
-        idleTimeoutMs: 900000,
-        maxDocuments: 16,
-      }),
-    ).toMatchObject({ maxDocuments: 16 });
+  it('permits closing a private document without a selected tab', () => {
     expect(
       automationResultSchemas.close_document.parse({
         documentId: workspace.id,

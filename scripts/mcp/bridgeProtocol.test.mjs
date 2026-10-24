@@ -62,23 +62,17 @@ describe('one bridge connection', () => {
       originals.map((tool) => tool.name),
     );
   });
-  it('defaults to private documents and rejects session IDs', () => {
+  it('defaults to private documents and validates explicit scope', () => {
     expect(documentScope({ documentId: 'score' })).toEqual({
       scope: 'private',
       arguments: { documentId: 'score' },
     });
-    expect(() => documentScope({ sessionId: 'session' })).toThrow(
-      'do not accept sessionId',
-    );
     expect(
       documentScope({ documentScope: 'editor', documentId: 'score' }),
     ).toEqual({
       scope: 'editor',
       arguments: { documentId: 'score' },
     });
-    expect(() =>
-      documentScope({ documentScope: 'editor', sessionId: 'session' }),
-    ).toThrow('do not accept sessionId');
     expect(() => documentScope({ documentScope: 'other' })).toThrow('Invalid');
   });
 

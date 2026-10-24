@@ -6,17 +6,16 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectHttpClient,
+  connectBridgeClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
 const directory = process.argv[2];
-const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(
-  directory && path.isAbsolute(directory) && token,
-  'Pass an allowed output directory and NEANES_MCP_TOKEN.',
+  directory && path.isAbsolute(directory),
+  'Pass an allowed absolute output directory.',
 );
-const client = await connectHttpClient('neanes-element-edit-smoke');
+const client = await connectBridgeClient('neanes-element-edit-smoke');
 let call = createToolCaller(client);
 let socket;
 async function evaluate(expression) {
@@ -29,7 +28,6 @@ const image =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
 const introduced = new Map();
 const output = [];
-let sessionId;
 let primaryError;
 const stamp = Date.now();
 try {
@@ -58,9 +56,13 @@ try {
       .editProperties,
   );
   const control = await call('create_document', {
+    documentScope: 'editor',
     title: 'Interactive control',
   });
-  const controlArgs = { documentId: control.documentId };
+  const controlArgs = {
+    documentScope: 'editor',
+    documentId: control.documentId,
+  };
   introduced.set(control.documentId, controlArgs);
   const controlPath = path.join(directory, `edit-${stamp}-control.byzx`);
   output.push(controlPath);
@@ -69,8 +71,10 @@ try {
     expectedRevision: control.revision,
     filePath: controlPath,
   });
-  sessionId = (await call('create_session')).sessionId;
-  for (const scope of [{}, { sessionId }]) {
+  for (const scope of [
+    { documentScope: 'editor' },
+    { documentScope: 'private' },
+  ]) {
     const unrelatedBefore = await readScoreSnapshot(call, controlArgs);
     const controlState = process.env.NEANES_DEBUG_URL
       ? await evaluate(
@@ -235,7 +239,7 @@ try {
     assert.equal(staff.elements[1].elementRef, refs.first);
     assert.equal(staff.elements[3].properties.bpm, 168);
     assert.equal(staff.elements[4].properties.lineHeight, null);
-    if (!scope.sessionId && process.env.NEANES_DEBUG_URL) {
+    if (scope.documentScope === 'editor' && process.env.NEANES_DEBUG_URL) {
       await evaluate(
         `document.querySelector('.main-toolbar button[aria-label^="Undo"]').click()`,
       );
@@ -485,7 +489,7 @@ try {
     for (const suffix of ['byzx', 'byz']) {
       const filePath = path.join(
         directory,
-        `edit-${stamp}-${scope.sessionId ? 'isolated' : 'interactive'}.${suffix}`,
+        `edit-${stamp}-${scope.documentScope === 'private' ? 'private' : 'editor'}.${suffix}`,
       );
       output.push(filePath);
       const result = await call('save_document', {
@@ -497,7 +501,7 @@ try {
     }
     const pdf = path.join(
       directory,
-      `edit-${stamp}-${scope.sessionId ? 'isolated' : 'interactive'}.pdf`,
+      `edit-${stamp}-${scope.documentScope === 'private' ? 'private' : 'editor'}.pdf`,
     );
     output.push(pdf);
     const exported = await call('export_pdf', {
@@ -536,7 +540,7 @@ try {
       (await readScoreSnapshot(call, controlArgs)).score,
       unrelatedBefore.score,
     );
-    if (scope.sessionId && process.env.NEANES_DEBUG_URL) {
+    if (scope.documentScope === 'private' && process.env.NEANES_DEBUG_URL) {
       assert.equal(
         await evaluate(
           `JSON.stringify(window._editor.workspaces.value.find(w => w.id === ${JSON.stringify(control.documentId)}))`,
@@ -546,7 +550,7 @@ try {
     }
   }
   console.log(
-    'Element edit transactions passed for interactive and isolated documents, save/reopen, PDF and optional UI undo/redo.',
+    'Element edit transactions passed for editor and private-worker documents, save/reopen, PDF and optional UI undo/redo.',
   );
 } catch (error) {
   primaryError = error;
@@ -555,9 +559,6 @@ try {
   try {
     for (const args of [...introduced.values()].reverse()) {
       await closeDocument(call, args);
-    }
-    if (sessionId) {
-      await call('close_session', { sessionId, discardUnsavedChanges: true });
     }
     for (const file of output) {
       await fs.rm(file, { force: true });

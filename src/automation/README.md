@@ -7,11 +7,10 @@ reusing the existing model, history, lyric, layout, and rendering services.
 - `contracts/`: tool inputs, outputs, errors, property schemas, published JSON
   schemas, and API guidance. These modules are also imported by Electron main.
 - `documents/`: API discovery and references, revisions, read projections,
-  sequential edit planning, and the MCP adapter to shared document operations.
-- `sessions/`: private document ownership, capacity, and disposal, plus explicit
-  leases for direct HTTP clients sharing the interactive server. Workers own one
-  store without idle expiry; batch operations own separate temporary stores.
-- `renderer/`: the editor integration hook, request dispatch, readiness, session
+  sequential edit planning, the MCP adapter to shared document operations, and
+  private document ownership, capacity, and disposal. Workers own one store; batch
+  operations own separate temporary stores.
+- `renderer/`: the editor integration hook, request dispatch, readiness, worker
   lifecycle, and explicit-path PDF dispatch.
 - `ipc/`: the Electron-only client for automation file and export requests.
 

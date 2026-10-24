@@ -3,21 +3,14 @@ import assert from 'node:assert/strict';
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import {
   closeDocument,
-  connectHttpClient,
+  connectBridgeClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
-const token = process.env.NEANES_MCP_TOKEN;
-if (!token) {
-  throw new Error(
-    'NEANES_MCP_TOKEN is required. Run against a disposable app profile.',
-  );
-}
-const client = await connectHttpClient('neanes-element-search-smoke');
+const client = await connectBridgeClient('neanes-element-search-smoke');
 const tools = (await client.listTools()).tools;
 const call = createToolCaller(client, tools);
 const introduced = [];
-let sessionId;
 try {
   for (const name of ['find_elements', 'get_element']) {
     assert.equal(
@@ -25,8 +18,10 @@ try {
       true,
     );
   }
-  sessionId = (await call('create_session')).sessionId;
-  for (const scope of [{}, { sessionId }]) {
+  for (const scope of [
+    { documentScope: 'editor' },
+    { documentScope: 'private' },
+  ]) {
     const created = await call('create_document', {
       ...scope,
       title: 'Element search regression',
@@ -246,15 +241,12 @@ try {
       'ELEMENT_NOT_FOUND',
     );
     console.log(
-      `Element search passed: ${scope.sessionId ? 'isolated' : 'interactive'}`,
+      `Element search passed: ${scope.documentScope === 'private' ? 'private' : 'editor'}`,
     );
   }
 } finally {
   for (const args of introduced.reverse()) {
     await closeDocument(call, args);
-  }
-  if (sessionId) {
-    await call('close_session', { sessionId, discardUnsavedChanges: true });
   }
   await client.close();
 }

@@ -82,11 +82,6 @@ const capabilitiesSchemas = {
   interactive: z.strictObject({
     ...capabilityFields,
     mode: z.literal('interactive'),
-    isolatedSessions: z.strictObject({
-      maxSessions: z.number(),
-      maxDocuments: z.number(),
-      idleTimeoutMs: z.number(),
-    }),
   }),
   headless: z.strictObject({
     ...capabilityFields,
@@ -101,12 +96,6 @@ const capabilitiesSchemas = {
 export const automationResultSchemas = {
   discover_score_files: fileDiscoveryResultSchema,
   batch_update_files: batchResultSchema,
-  create_session: z.strictObject({
-    sessionId: z.string().uuid(),
-    idleTimeoutMs: z.number(),
-    maxDocuments: z.number(),
-  }),
-  close_session: z.strictObject({ sessionId: z.string().uuid() }),
   get_capabilities: z.discriminatedUnion('mode', [
     capabilitiesSchemas.interactive,
     capabilitiesSchemas.headless,

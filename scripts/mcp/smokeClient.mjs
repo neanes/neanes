@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict';
+import path from 'node:path';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
+import electron from 'electron';
 
 export async function connectHttpClient(
   name,
@@ -79,4 +82,36 @@ export async function closeDocument(call, args) {
     expectedRevision: current.revision,
     discardUnsavedChanges: true,
   });
+}
+
+export async function connectBridgeClient(
+  name,
+  {
+    policyPath = process.env.NEANES_DEV_USER_DATA_DIR &&
+      path.join(process.env.NEANES_DEV_USER_DATA_DIR, 'agent-access.json'),
+  } = {},
+) {
+  assert.ok(
+    policyPath,
+    'Set NEANES_DEV_USER_DATA_DIR to the disposable editor profile.',
+  );
+  const client = new Client({ name, version: '1.0.0' });
+  await client.connect(
+    new StdioClientTransport({
+      command: process.execPath,
+      args: [
+        path.resolve('scripts/mcp/bridge.mjs'),
+        '--executable',
+        process.env.NEANES_TEST_EXECUTABLE || electron,
+        ...(!process.env.NEANES_TEST_EXECUTABLE
+          ? ['--app', process.cwd()]
+          : []),
+        '--policy',
+        policyPath,
+      ],
+      stderr: 'inherit',
+    }),
+    { timeout: 70_000 },
+  );
+  return client;
 }

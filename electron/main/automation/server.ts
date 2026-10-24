@@ -132,7 +132,7 @@ export async function startMcpServer(options: McpServerOptions) {
         let outcome;
         let imageData: string | undefined;
         try {
-          if (!isToolAvailable(params.name, options.mode)) {
+          if (!isToolAvailable(params.name)) {
             throw new AutomationError({
               code: 'TOOL_NOT_FOUND',
               message: 'Unknown tool.',
@@ -143,16 +143,6 @@ export async function startMcpServer(options: McpServerOptions) {
             tool: params.name,
             arguments: params.arguments ?? {},
           });
-          if (
-            options.mode === 'headless' &&
-            Object.hasOwn(params.arguments ?? {}, 'sessionId')
-          ) {
-            throw new AutomationError({
-              code: 'VALIDATION_ERROR',
-              message: 'Private worker documents do not accept sessionId.',
-              details: {},
-            });
-          }
           let result = await queue.run(() => {
             connection.signal.throwIfAborted();
             extra.signal.throwIfAborted();

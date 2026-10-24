@@ -36,7 +36,17 @@ const reopenedArchivePath = path.join(
 );
 try {
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 33);
+  assert.equal(tools.tools.length, 31);
+  assert.ok(
+    tools.tools.every(
+      (tool) => !['create_session', 'close_session'].includes(tool.name),
+    ),
+  );
+  await fails(
+    'list_documents',
+    { sessionId: '00000000-0000-4000-8000-000000000001' },
+    'VALIDATION_ERROR',
+  );
   assert.ok(tools.tools.every((tool) => tool.outputSchema?.type === 'object'));
   await fails(
     'get_page_setup',
@@ -62,15 +72,6 @@ try {
     'FILE_NOT_FOUND',
   );
   await checkSettings(client);
-  const settingsSession = await call('create_session');
-  try {
-    await checkSettings(client, { sessionId: settingsSession.sessionId });
-  } finally {
-    await call('close_session', {
-      sessionId: settingsSession.sessionId,
-      discardUnsavedChanges: true,
-    });
-  }
   const capabilities = await call('get_capabilities');
   assert.equal('fonts' in capabilities, false);
   const withFonts = await call('get_capabilities', { includeFonts: true });

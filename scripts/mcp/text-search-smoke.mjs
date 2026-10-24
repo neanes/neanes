@@ -3,21 +3,26 @@ import assert from 'node:assert/strict';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
-import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { connectBridgeClient, createToolCaller } from './smokeClient.mjs';
 
 const app = await createSmokeApp('neanes-text-search-');
 let client;
 try {
   app.start();
-  client = await connectHttpClient('text-search-smoke', await app.endpoint());
+  await app.endpoint();
+  client = await connectBridgeClient('text-search-smoke', {
+    policyPath: app.policyPath,
+  });
   const tools = (await client.listTools()).tools;
   const call = createToolCaller(client, tools);
   assert.equal(
     tools.find((tool) => tool.name === 'find_text').annotations.readOnlyHint,
     true,
   );
-  const sessionId = (await call('create_session')).sessionId;
-  for (const scope of [{}, { sessionId }]) {
+  for (const scope of [
+    { documentScope: 'editor' },
+    { documentScope: 'private' },
+  ]) {
     const created = await call('create_document', {
       ...scope,
       title: 'Text search regression',
@@ -235,15 +240,14 @@ try {
     );
     assert.deepEqual(await readScoreSnapshot(call, args), before);
     await call('find_text', { ...search, query: ' \tـ' }, 'VALIDATION_ERROR');
-    if (scope.sessionId) {
-      await call(
-        'find_text',
-        { ...search, sessionId: undefined },
-        'DOCUMENT_NOT_FOUND',
-      );
-    } else {
-      await call('find_text', { ...search, sessionId }, 'DOCUMENT_NOT_FOUND');
-    }
+    await call(
+      'find_text',
+      {
+        ...search,
+        documentScope: scope.documentScope === 'private' ? 'editor' : 'private',
+      },
+      'DOCUMENT_NOT_FOUND',
+    );
     const edited = await call('edit_elements', {
       ...args,
       expectedRevision: updated.revision,
@@ -256,10 +260,9 @@ try {
       discardUnsavedChanges: true,
     });
     console.log(
-      `Text search passed: ${scope.sessionId ? 'isolated' : 'interactive'}`,
+      `Text search passed: ${scope.documentScope === 'private' ? 'private' : 'editor'}`,
     );
   }
-  await call('close_session', { sessionId, discardUnsavedChanges: true });
 } catch (error) {
   console.error(app.log());
   throw error;

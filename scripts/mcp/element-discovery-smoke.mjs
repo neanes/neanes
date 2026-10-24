@@ -6,18 +6,17 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectHttpClient,
+  connectBridgeClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
 const directory = process.argv[2];
-const token = process.env.NEANES_MCP_TOKEN;
-if (!directory || !path.isAbsolute(directory) || !token) {
+if (!directory || !path.isAbsolute(directory)) {
   throw new Error(
-    'Usage: NEANES_MCP_TOKEN=... node scripts/mcp/element-discovery-smoke.mjs /absolute/allowed/directory',
+    'Usage: NEANES_DEV_USER_DATA_DIR=... node scripts/mcp/element-discovery-smoke.mjs /absolute/allowed/directory',
   );
 }
-const client = await connectHttpClient('neanes-element-discovery-smoke');
+const client = await connectBridgeClient('neanes-element-discovery-smoke');
 const call = createToolCaller(client);
 // Optional renderer access exercises live edits that the save format omits.
 // Restrict this to a disposable Electron profile.
@@ -34,7 +33,6 @@ async function mutateChildren(documentId, operation) {
 }
 
 const documents = [];
-let sessionId;
 const fixture = path.join(directory, `element-discovery-${Date.now()}.byzx`);
 try {
   const tools = await client.listTools();
@@ -47,14 +45,11 @@ try {
   const catalog = await call('get_element_catalog', { includeNeumes: true });
   assert.equal(catalog.elementTypes.length, 11);
   assert.ok(catalog.neumes.QuantitativeNeume.includes('Oligon'));
-  sessionId = (await call('create_session')).sessionId;
-  const seed = await call('create_document', { sessionId });
+  const seed = await call('create_document');
   const { score } = await readScoreSnapshot(call, {
-    sessionId,
     documentId: seed.documentId,
   });
   await call('close_document', {
-    sessionId,
     documentId: seed.documentId,
     expectedRevision: seed.revision,
     discardUnsavedChanges: true,
@@ -99,7 +94,10 @@ try {
     { elementType: 'Empty' },
   ];
   await fs.writeFile(fixture, JSON.stringify(score));
-  for (const scope of [{}, { sessionId }]) {
+  for (const scope of [
+    { documentScope: 'editor' },
+    { documentScope: 'private' },
+  ]) {
     const opened = await call('open_document', { ...scope, filePath: fixture });
     assert.equal(opened.created, true);
     const args = { ...scope, documentId: opened.documentId };
@@ -250,16 +248,23 @@ try {
     );
     await call(
       'get_elements',
-      { ...args, sessionId: scope.sessionId ? undefined : sessionId },
+      {
+        ...args,
+        documentScope: scope.documentScope === 'private' ? 'editor' : 'private',
+      },
       'DOCUMENT_NOT_FOUND',
     );
-    if (!scope.sessionId && process.env.NEANES_DEBUG_URL) {
+    if (scope.documentScope === 'editor' && process.env.NEANES_DEBUG_URL) {
       // Keep blank annotation editors unmounted: focusing/blurring them can
       // legitimately delete blank drafts before the revision check runs.
       const foreground = await call('create_document', {
+        documentScope: 'editor',
         title: 'Revision regression control',
       });
-      documents.push({ documentId: foreground.documentId });
+      documents.push({
+        documentScope: 'editor',
+        documentId: foreground.documentId,
+      });
       await mutateChildren(
         args.documentId,
         `
@@ -324,7 +329,7 @@ try {
       }
       console.log('Live child edits invalidate stale discovery revisions.');
     }
-    if (scope.sessionId) {
+    if (scope.documentScope === 'private') {
       const other = await call('get_elements', documents[0]);
       await call(
         'get_elements',
@@ -341,14 +346,11 @@ try {
     }
   }
   console.log(
-    'Element discovery passed for interactive and isolated documents.',
+    'Element discovery passed for editor and private-worker documents.',
   );
 } finally {
   for (const args of documents.reverse()) {
     await closeDocument(call, args);
-  }
-  if (sessionId) {
-    await call('close_session', { sessionId, discardUnsavedChanges: true });
   }
   await fs.rm(fixture, { force: true });
   debugSocket?.close();

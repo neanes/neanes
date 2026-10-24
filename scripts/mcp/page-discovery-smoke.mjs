@@ -6,17 +6,16 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectHttpClient,
+  connectBridgeClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
 const directory = process.argv[2];
-const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(
-  directory && path.isAbsolute(directory) && token,
-  'Use an allowed absolute directory and NEANES_MCP_TOKEN with a disposable app.',
+  directory && path.isAbsolute(directory),
+  'Use an allowed absolute directory with a disposable app.',
 );
-const client = await connectHttpClient('neanes-page-discovery-smoke');
+const client = await connectBridgeClient('neanes-page-discovery-smoke');
 const tools = (await client.listTools()).tools;
 const call = createToolCaller(client, tools);
 let socket;
@@ -29,7 +28,6 @@ async function evaluate(expression) {
 const introduced = new Map();
 const stamp = Date.now();
 const fixture = path.join(directory, `page-query-${stamp}.byzx`);
-let sessionId;
 try {
   const seed = await call('create_document', {
     title: 'A long document title for page-specific header token measurement',
@@ -133,8 +131,10 @@ try {
     content: 'Footer $:pageNumber',
   });
   await fs.writeFile(fixture, JSON.stringify(score));
-  sessionId = (await call('create_session')).sessionId;
-  for (const scope of [{}, { sessionId }]) {
+  for (const scope of [
+    { documentScope: 'editor' },
+    { documentScope: 'private' },
+  ]) {
     const opened = await call('open_document', { ...scope, filePath: fixture });
     const args = { ...scope, documentId: opened.documentId };
     introduced.set(opened.documentId, args);
@@ -247,10 +247,10 @@ try {
       expectedRevision: after.revision,
       filePath: path.join(
         directory,
-        `page-query-${stamp}-${scope.sessionId ? 'isolated' : 'interactive'}.pdf`,
+        `page-query-${stamp}-${scope.documentScope === 'private' ? 'private' : 'editor'}.pdf`,
       ),
     });
-    if (process.env.NEANES_DEBUG_URL && !scope.sessionId) {
+    if (process.env.NEANES_DEBUG_URL && scope.documentScope === 'editor') {
       const pendingRead = call('get_pages', stable, 'REVISION_CONFLICT');
       await evaluate(
         `(() => {const workspace = window._editor.workspaces.value.find(w=>w.id===${JSON.stringify(args.documentId)}); workspace.updateLyricsLocked(!workspace.score.staff.lyrics.locked);})()`,
@@ -309,15 +309,12 @@ try {
       );
     }
     console.log(
-      `Page discovery passed: ${scope.sessionId ? 'isolated' : 'interactive'}`,
+      `Page discovery passed: ${scope.documentScope === 'private' ? 'private' : 'editor'}`,
     );
   }
 } finally {
   for (const args of [...introduced.values()].reverse()) {
     await closeDocument(call, args);
-  }
-  if (sessionId) {
-    await call('close_session', { sessionId, discardUnsavedChanges: true });
   }
   socket?.close();
   await client.close();

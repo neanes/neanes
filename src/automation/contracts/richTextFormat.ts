@@ -104,7 +104,7 @@ export function getRichTextFormat(
     guide: [
       'RichTextBox content/contentBottom/contentLeft/contentCenter/contentRight and Annotation.text are CKEditor HTML fragments. TextBox fields and DropCap.content are plain text. Every p needs one neanes-paragraph-style-STYLE_ID class; preserve existing classes. Paragraph styles format paragraphs; span CSS overrides words/selections. Do not send Markdown or a full HTML document.',
       'Escape literal text: & -> &amp;, < -> &lt;, > -> &gt;; attribute quotes -> &quot;. JSON-encode the HTML string normally; do not HTML-escape markup.',
-      "Read exact content and revision before editing (get_element_content for omitted/chunked HTML). Supplied fields replace complete HTML; omitted fields stay unchanged. Empty string clears a field. In examples replace DOCUMENT_ID, NOTE_REF, ELEMENT_REF and expectedRevision:0 with current values; pass the same documentScope/sessionId as reads and use each edit's returned revision for the next edit.",
+      "Read exact content and revision before editing (get_element_content for omitted/chunked HTML). Supplied fields replace complete HTML; omitted fields stay unchanged. Empty string clears a field. In examples replace DOCUMENT_ID, NOTE_REF, ELEMENT_REF and expectedRevision:0 with current values; pass the same documentScope as reads and use each edit's returned revision for the next edit.",
       ...[...new Set(topics)].flatMap((topic) => sections[topic]),
     ].join('\n'),
   };

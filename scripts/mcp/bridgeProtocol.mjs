@@ -58,10 +58,5 @@ export function documentScope(args) {
   if (!['private', 'editor'].includes(scope)) {
     throw new Error('Invalid document scope.');
   }
-  if (Object.hasOwn(args, 'sessionId')) {
-    throw new Error(
-      'Bridge documents do not accept sessionId. Use documentScope to choose private documents or editor tabs.',
-    );
-  }
   return { scope, arguments: argumentsWithoutScope };
 }

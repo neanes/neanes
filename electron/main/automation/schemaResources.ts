@@ -35,7 +35,7 @@ export function readToolSchemaResource(
   if (!match) {
     throw new McpError(-32002, 'Unknown tool schema resource.');
   }
-  if (!isToolAvailable(match[1], mode)) {
+  if (!isToolAvailable(match[1])) {
     throw new McpError(-32002, 'Unknown tool schema resource.');
   }
   const tool = automationTool(match[1], mode);

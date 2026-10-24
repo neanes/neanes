@@ -25,10 +25,8 @@ import { textSearchShape } from './textSearchSchema';
 
 const documentId = z.string().min(1);
 const revision = z.number().int().nonnegative();
-const sessionId = z.string().uuid().optional();
 const filePath = z.string().min(1);
 const documentRead = {
-  sessionId,
   documentId,
   expectedRevision: revision.optional(),
 };
@@ -37,12 +35,7 @@ const documentMutation = { ...documentRead, expectedRevision: revision };
 export const automationSchemas = {
   discover_score_files: fileDiscoveryQuerySchema,
   batch_update_files: batchQuerySchema,
-  create_session: z.strictObject({}),
-  close_session: z.strictObject({
-    sessionId: z.string().uuid(),
-    discardUnsavedChanges: z.boolean().default(false),
-  }),
-  list_documents: z.strictObject({ sessionId }),
+  list_documents: z.strictObject({}),
   get_capabilities: z.strictObject({
     includeErrorCodes: z.boolean().default(false),
     includeFonts: z.boolean().default(false),
@@ -109,14 +102,13 @@ export const automationSchemas = {
     ...documentMutation,
     changes: headerFooterChangesSchema,
   }),
-  create_document: z.strictObject({ sessionId, title: z.string().optional() }),
-  open_document: z.strictObject({ sessionId, filePath }),
+  create_document: z.strictObject({ title: z.string().optional() }),
+  open_document: z.strictObject({ filePath }),
   close_document: z.strictObject({
     ...documentMutation,
     discardUnsavedChanges: z.boolean().default(false),
   }),
   get_paragraph_styles: z.strictObject({
-    sessionId,
     documentId,
     ids: z.array(z.string().min(1)).optional(),
     view: z.enum(['definitions', 'ids']).default('definitions'),
@@ -151,18 +143,8 @@ export const automationSchemas = {
 export type AutomationTool = keyof typeof automationSchemas;
 export type AutomationMode = 'interactive' | 'headless';
 
-// Isolated sessions only exist in the interactive editor; headless workers
-// hold private documents instead.
-const sessionTools = new Set<string>(['create_session', 'close_session']);
-
-export function isToolAvailable(
-  tool: string,
-  mode: AutomationMode = 'interactive',
-): tool is AutomationTool {
-  return (
-    Object.hasOwn(automationSchemas, tool) &&
-    (mode !== 'headless' || !sessionTools.has(tool))
-  );
+export function isToolAvailable(tool: string): tool is AutomationTool {
+  return Object.hasOwn(automationSchemas, tool);
 }
 export type AutomationRequest = {
   [K in AutomationTool]: {

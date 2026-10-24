@@ -5,7 +5,7 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectHttpClient,
+  connectBridgeClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
@@ -41,16 +41,16 @@ async function click(selector, modifiers = 0) {
     });
   }
 }
-const client = await connectHttpClient('neanes-selection-smoke');
+const client = await connectBridgeClient('neanes-selection-smoke');
 const tools = (await client.listTools()).tools;
 const call = createToolCaller(client, tools);
 const introduced = [];
-let sessionId;
 try {
   const created = await call('create_document', {
+    documentScope: 'editor',
     title: 'Selection regression',
   });
-  const args = { documentId: created.documentId };
+  const args = { documentScope: 'editor', documentId: created.documentId };
   introduced.push(args);
   const inserted = await call('edit_elements', {
     ...args,
@@ -196,8 +196,9 @@ try {
   );
   const control = await call('create_document', {
     title: 'Selection background control',
+    documentScope: 'editor',
   });
-  introduced.push({ documentId: control.documentId });
+  introduced.push({ documentId: control.documentId, documentScope: 'editor' });
   const remembered = await call('get_selection', args);
   assert.equal(remembered.status, 'remembered');
   assert.equal(remembered.selection.kind, 'headerFooter');
@@ -205,19 +206,22 @@ try {
     await evaluate('window._editor.selectedWorkspace.value.id'),
     control.documentId,
   );
-  sessionId = (await call('create_session')).sessionId;
-  const privateDocument = await call('create_document', { sessionId });
-  const privateArgs = { sessionId, documentId: privateDocument.documentId };
+  const privateDocument = await call('create_document');
+  const privateArgs = { documentId: privateDocument.documentId };
   introduced.push(privateArgs);
   const unavailable = await call('get_selection', privateArgs);
   assert.equal(unavailable.status, 'unavailable');
   assert.equal(unavailable.selection, null);
   await call(
     'get_selection',
-    { documentId: privateDocument.documentId },
+    { documentScope: 'editor', documentId: privateDocument.documentId },
     'DOCUMENT_NOT_FOUND',
   );
-  await call('get_selection', { ...args, sessionId }, 'DOCUMENT_NOT_FOUND');
+  await call(
+    'get_selection',
+    { ...args, documentScope: 'private' },
+    'DOCUMENT_NOT_FOUND',
+  );
   const current = await call('get_document_properties', args);
   await call('replace_document_properties', {
     ...args,
@@ -230,14 +234,11 @@ try {
     'REVISION_CONFLICT',
   );
   console.log(
-    'Selection regression passed: UI clicks/ranges, nested/lyric/template state, remembered tabs, isolated access, revisions and read-only state.',
+    'Selection regression passed: UI clicks/ranges, nested/lyric/template state, remembered tabs, private-worker access, revisions and read-only state.',
   );
 } finally {
   for (const args of introduced.reverse()) {
     await closeDocument(call, args);
-  }
-  if (sessionId) {
-    await call('close_session', { sessionId, discardUnsavedChanges: true });
   }
   socket.close();
   await client.close();

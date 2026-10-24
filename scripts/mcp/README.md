@@ -18,7 +18,7 @@ never retries edits automatically or migrates drafts after a disconnect.
 Disconnecting stops the bridge's worker and never closes an existing editor.
 
 Document tools through the bridge default to one private document store per
-worker, regardless of launch order. No session ID or session creation is needed.
+worker, regardless of launch order.
 Private documents have no idle expiry and last until explicitly closed, the
 worker stops, or agent access is revoked. Each worker allows 16 open documents;
 `get_capabilities.privateDocuments` reports this limit and `lifetime: "worker"`.
@@ -26,12 +26,11 @@ To discover live tabs use `list_documents` with `documentScope: "editor"`, then 
 `documentScope: "editor"` to document tools operating on those IDs. No editor is launched
 for that explicit scope; an editor must be open. The bridge discovers the editor
 only for explicit editor requests, including after the user opens it later,
-while keeping private tasks in the worker. The bridge rejects `sessionId`;
-`create_session` and `close_session` are not published by workers. The bridge advertises `documentScope` in
+while keeping private tasks in the worker. The bridge advertises `documentScope` in
 tool input schemas and supplies initialization guidance.
 
 Complete published schemas are available as read-only MCP resources, independently
-of documents and sessions. `resources/list` lists input and output resources for
+of documents. `resources/list` lists input and output resources for
 every tool; `resources/templates/list` advertises
 `neanes://schemas/{tool}/{view}`, where `view` is `input` or `output`.
 For example, read `neanes://schemas/edit_elements/input` or
@@ -66,7 +65,7 @@ private pipe. Diagnostics go to stderr, stdout carries only MCP JSON-RPC, and
 credentials stay out of command arguments.
 
 Headless capabilities report `mode: "headless"`. Raw HTTP headless document calls
-use the worker's private store directly and reject session IDs. HTTP requests do
+use the worker's private store directly. HTTP requests do
 not own that store; the bridge's process lifetime controls worker cleanup.
 The hidden host shares document operations, fonts, rich-text measurement, layout,
 and PDF output without mounting the editor, recovery, router, or service worker.
@@ -91,7 +90,7 @@ underway finish before worker exit. Preferences asks for confirmation when priva
 host records report unsaved drafts or an in-progress request. Records live beside
 the policy in `agent-access.json.hosts`, contain only process/draft/busy state, and
 are removed on shutdown; records from exited processes are ignored and cleaned up.
-After enabling again, reconnect clients to start new sessions.
+After enabling again, reconnect clients to start fresh connections.
 
 Editor startup failures are caught, recorded, and leave the editor usable. The
 settings section exposes status, Copy configuration, endpoint details, and Retry
@@ -137,9 +136,8 @@ Enable Allow agent access in the disposable development profile first. The defau
 The environment overrides above are optional developer controls for existing direct
 HTTP test clients; normal users and bridge clients do not set them. Settings show
 the actual endpoint, but never disclose credentials. Raw HTTP document tools retain
-their original interactive default; the bridge defaults to its private worker and supplies explicit editor
-scope. Explicit sessions remain supported for direct HTTP clients sharing the
-interactive server; they are not part of the bridge workflow. NEANES_DEV_USER_DATA_DIR applies to development builds, or
+their visible-editor default; the bridge defaults to its private worker and routes
+explicit editor scope to the interactive server. NEANES_DEV_USER_DATA_DIR applies to development builds, or
 production smoke runs explicitly marked IS_TEST=1.
 
 Authentication uses a bearer token of at least 32 characters. HTTP binds to IPv4
@@ -149,64 +147,26 @@ paths. Existing suffix validation, overwrite protection, source-conflict checks,
 in-place score writes that preserve existing file metadata, and symlink-output rules remain. MCP client roots do not restrict
 file access.
 
-## Direct HTTP isolated sessions
-
-Call `create_session` and pass the returned `sessionId` to document tools (including
-`list_documents`, `create_document`, and `open_document`). Omitting it retains the
-interactive behavior. A document is accessible only in its owning session; an
-interactive ID cannot be used inside a session, and isolated IDs cannot be used
-outside it. `selected` is always false and closing an isolated document returns
-`selectedDocumentId: null`.
-
-Session IDs are bearer capabilities within the authenticated server, not separate
-client identities. Keep them private. The stateless HTTP connection does not own
-the session: disconnecting a client leaves its session available for inspection
-and cleanup after an uncertain request. Sessions expire after 15 minutes without
-a tool call, discarding unsaved drafts. At most 4 sessions may exist with 16 open
-documents each. `get_capabilities.isolatedSessions` advertises these bounds.
-`SESSION_NOT_FOUND` covers expired/closed/unknown sessions; capacity failures use
-`SESSION_LIMIT_REACHED` or `DOCUMENT_LIMIT_REACHED`.
-
-`close_session` requires the session ID and explicit `discardUnsavedChanges: true`
-if any owned document is dirty. It checks all documents before removing any.
-Session expiry, editor reload/disconnect, and app exit release all private drafts.
-No tabs, selection, recovery drafts, recent-file entries, or interactive undo
-history are created or changed. Sessions are available on the interactive server for direct HTTP clients that need independent private copies. Headless workers use one store without session leases.
-
-Opening a file in a session reads its saved contents, independently of interactive
-unsaved edits or other sessions. Repeated opens within one session reuse its own
-copy by canonical identity and preserve that copy's edits. Explicit saves may
-change disk contents, including files open interactively; they never update the
-interactive copy. Existing source modification-time/size conflict and overwrite
-rules apply. Save to a separate destination to preserve the original disk file.
-PDF export uses the shared detached snapshot renderer.
-
-Run the isolated lifecycle regression with a disposable development profile and
-`--remote-debugging-port=9334` (see the hidden export instructions below). Pass
-`NEANES_DEV_USER_DATA_DIR` to the script as well to check recovery files on disk:
-
-```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node scripts/mcp/isolated-session-smoke.mjs /tmp/neanes-mcp/files
-```
+The mixed-scope smoke tests below use the bridge. Run them with
+`NEANES_DEV_USER_DATA_DIR` pointing to the same disposable editor profile.
 
 ## Tools
 
 The contracts below describe direct HTTP access to the interactive server. Through
 the bridge, document tools default to private worker documents; use `documentScope`
-to choose editor tabs. Session IDs are available only on the direct interactive
-HTTP endpoint.
+to choose editor tabs.
 
 - `get_capabilities`: supported style actions, units, and formats. Pass `includeFonts: true` to add this host's installed/bundled font families (omitted by default). Pass `includeErrorCodes: true` for the stable error-code vocabulary.
 - `list_documents`: open workspace IDs, revisions, canonical source paths, source format (`byz`, `byzx`, or null), selection, and unsaved state.
 - `get_element_catalog`: defaults to a small inventory of element types, child collections, units, and stored header/footer variants. Request `elementTypes: ["Note"]` and/or `properties: ["lyrics", "isMelisma"]` for focused schemas; `view: "read" | "edit" | "both"` defaults to both. Read schemas are in `properties`, writable validation schemas in `editProperties` (null for `Empty`). A property filter omits types without matching properties. `includeProperties: true` requests all property schemas; `includeNeumes: true` adds the full enum vocabulary. Schemas use self-contained local `$defs`/`$ref`; clients must resolve references within each schema. The shared `tempoBpmDefaults` map exposes all tempo-sign BPM defaults. Dimensions are CSS pixels; line height is a multiplier. Tool input schemas use JSON Schema input semantics, so defaulted fields may be omitted; response schemas describe settled output. Tool schemas advertise compact property maps; the server still validates every supplied property against its complete element-specific schema.
 - `get_rich_text_format`: document-independent CKEditor HTML authoring guide for RichTextBox content/panel fields and Annotation.text. Optional `topics` selects `basics`, `inline`, and/or `opentype` (default: `basics` + `inline`). Covers paragraph classes, escaping, panels, word/selection span overrides (color, size, family, weight/slant), and complete edit calls; `opentype` gives supported font-variant values and inheritance/reset rules. Use spans for local overrides; create paragraph styles for reusable paragraph formatting. Read before the first rich-text edit. TextBox content remains plain text.
-- `get_mode_key_templates`: compact mode-key template summaries with stable English descriptions, internal `scale`/`scaleNote`, and `supportsOptionalDiatonicFthora`. Optional `mode` (1-4 authentic, 5 plagal first, 6 plagal second, 7 grave, 8 plagal fourth) and `templateIds` filters combine with AND; no filters returns all templates. No document/session is required. Musical terminology is interpreted by the agent; there is no text search or alias catalog.
+- `get_mode_key_templates`: compact mode-key template summaries with stable English descriptions, internal `scale`/`scaleNote`, and `supportsOptionalDiatonicFthora`. Optional `mode` (1-4 authentic, 5 plagal first, 6 plagal second, 7 grave, 8 plagal fourth) and `templateIds` filters combine with AND; no filters returns all templates. No document is required. Musical terminology is interpreted by the agent; there is no text search or alias catalog.
 - `get_elements`: typed, read-only elements from `collection` (default `{ kind: "staff" }`). Ranges are zero-based, `start` inclusive and `end` exclusive; omitted `end` means the collection size. `offset` and `nextOffset` are relative to that range; `limit` defaults to 100, maximum 1000. Empty ranges and an offset at the range end return no elements. Out-of-bounds or reversed ranges return `INVALID_ELEMENT_RANGE`. Pass the first page's `revision` as `expectedRevision` on subsequent pages to reject mixed-revision reads. Each element has an opaque `elementRef`, its collection index, typed live `properties`, and child-collection counts. Discover children with `{ kind: "children", parentRef: elementRef, collection: "annotations" | "alternateLines" | "elements" }`. Unknown/removed/cross-document references return `ELEMENT_NOT_FOUND`; an unsupported child collection returns `INVALID_ELEMENT_COLLECTION`. References survive movement, content changes, and undo restoration of the same live object, but only within one open document; closing/reopening assigns fresh references. They are not saved IDs or layout indexes. Staff reads include the terminal `Empty` sentinel. Read stored templates with `{ kind: "headers" | "footers", variant: "default" | "firstPage" | "odd" | "even" | "chapterOpening" }`, including disabled variants; these are not page-resolved instances. Element properties omit null and undefined values except `lineHeight: null` for text boxes and drop caps, which explicitly resets line height to normal. Omitted `lineHeight` inherits the paragraph style; a numeric value overrides its multiplier. Other missing properties are unset. Values such as `false`, `0`, and `""` remain present. Use `properties: ["quantitativeNeume", "lyrics"]` to select fields, or `properties: []` for identities/indexes/child counts only. Unknown property names are rejected; fields inapplicable to an element type are omitted. `includeContent: false` omits image `data` and all five text-box `content*` fields, even if selected. Annotation `text` and drop-cap `content` are included by default when requested by the field projection. If an annotation or drop cap exceeds the element budget, its content is omitted with an explicit `omittedContent` field listing the property; use `get_element_content` to retrieve it exactly. Note lyrics remain ordinary properties. Properties default to all readable fields, with large content excluded (`includeContent: false`). Pages may end before `limit` to fit a 24,000-character JSON budget; always follow `nextOffset`. In a projected view, missing fields may be unrequested or excluded content; do not infer defaults or use projections as complete replacement definitions. Retrieve content explicitly by selecting its property with `includeContent: true`. The catalog marks unsettable properties optional; published outputs use compact property envelopes while runtime validation remains element-specific. Properties omit layout caches; annotations/alternate lines expose their stored x/y offsets.
 - `find_text`: find literal text across lyrics, drop caps, annotations, and plain/rich text-box panels, with snippets and element references. See the text search contract below.
 - `find_elements`: search stored element fields with `eq`, `in`, `isNull`, and `isNotNull`, nested inside `and`/`or` groups. Optional `elementTypes` restricts types. Defaults to document scope (staff and descendants, then stored header/footer variants, including disabled variants), compact `properties: []`, and `includeContent: false`. Results carry a `collection` and zero-based `index` per match. See the search contract below.
 - `get_element`: retrieve an existing `elementRef` at its current location, with optional `before`/`after` counts (0 to 499 each). Returns the anchor reference, its collection, collection size, half-open `start`/`end`, and elements in collection order, including the anchor. Windows clip at collection boundaries and count actual elements without filtering. Defaults to all readable properties excluding large content. Supports `properties`, `includeContent`, and optional `expectedRevision`. Removed/foreign references return `ELEMENT_NOT_FOUND`.
 - `get_element_content`: read exact original string chunks from text-box/rich-text/drop-cap `content` or panel fields, annotation `text`, or image `data` URLs. Supply `documentId`, `elementRef`, `property`, and optional `offset`/`limit` (default 8000, range 2-8000). Offsets and `totalLength` use UTF-16 code units; chunks never split surrogate pairs. Returns `content`, `offset`, `nextOffset`, `totalLength`, document ID and revision. Concatenate chunks in order, passing the first returned revision as `expectedRevision` on continuations to reject mixed-revision content. Empty strings return an empty final chunk. No HTML, text, or base64 transformation occurs. Inapplicable fields return `INVALID_ELEMENT_CONTENT`; unavailable references return `ELEMENT_NOT_FOUND`; out-of-range offsets or offsets inside surrogate pairs return `INVALID_ELEMENT_RANGE`.
-- `get_staff_lyrics`: read the staff lyrics manager text and lock state in bounded chunks, independently of element content. Supply `documentId`, optional `sessionId`, `offset`/`limit` (default/max 8000; minimum 2), and `expectedRevision` for continuations. Returns `text`, `locked`, `offset`, `nextOffset`, `totalLength`, document ID and revision. Offsets count UTF-16 code units and chunks never split surrogate pairs. Concatenate `text` chunks in order; pass the first returned revision as `expectedRevision` to reject mixed-revision reads. Empty text returns an empty final chunk. Does not edit or save.
+- `get_staff_lyrics`: read the staff lyrics manager text and lock state in bounded chunks, independently of element content. Supply `documentId`, `offset`/`limit` (default/max 8000; minimum 2), and `expectedRevision` for continuations. Returns `text`, `locked`, `offset`, `nextOffset`, `totalLength`, document ID and revision. Offsets count UTF-16 code units and chunks never split surrogate pairs. Concatenate `text` chunks in order; pass the first returned revision as `expectedRevision` to reject mixed-revision reads. Empty text returns an empty final chunk. Does not edit or save.
 - `get_document_properties`: title and author in `properties`, plus the document summary. Pairs with `replace_document_properties`.
 - `get_page_setup`: live page geometry, notation defaults and layout settings in `settings`. Optional `properties` selects fields; `[]` returns only the summary with empty settings. Dimensions are CSS pixels. Typography is managed through paragraph styles; header/footer configuration has its own reader.
 - `update_page_setup`: partial `changes` in one undo step. Requires `expectedRevision`. Omitted fields stay unchanged. `pageWidth`/`pageHeight` are read-only and computed from `pageSize`, `landscape`, and (for `Custom`) `pageWidthCustom`/`pageHeightCustom`. Custom dimensions are before orientation. Margins must leave positive content area. Unknown fields, invalid types and nonpositive dimensions are rejected before mutation. Does not save.
@@ -215,7 +175,7 @@ HTTP endpoint.
 
 All three focused readers accept optional `expectedRevision`. Settings writes return only the document summary. If settlement fails after a write, `details.editsApplied` and `revision` describe the committed state; inspect it before retrying. The old `get_document` tool has been removed; use these readers together with element, lyrics and paragraph-style tools instead of reading a raw save-format score.
 
-- `get_selection`: inspect the selection for an explicit `documentId`, with optional `expectedRevision` and `sessionId`. Returns `status: "active"` for the selected interactive tab, `"remembered"` for a background tab, or `"unavailable"` for an isolated document. `selection` is null when none is reachable. See the selection contract below.
+- `get_selection`: inspect the selection for an explicit `documentId`, with optional `expectedRevision`. Returns `status: "active"` for the selected interactive tab, `"remembered"` for a background tab, or `"unavailable"` for a private document. `selection` is null when none is reachable. See the selection contract below.
 - `get_pages`: settled page summaries with `pageCount`, `layoutId`, and paginated `pages`. Each summary contains one-based physical `pageNumber`, numeric `displayedPageNumber`, `lineCount`, and `occurrenceCount`. Supports optional `expectedRevision` and `expectedLayoutId`; `offset`/`limit` paginate pages (default 100, max 1000). Pages may end early to fit the 24,000-character discovery budget; follow `nextOffset`.
 - `get_page_elements`: compact occurrences on a required one-based physical `pageNumber`. Filter `regions` (`staff`, `header`, `footer`, all by default), `elementTypes`, and `where` with the existing stored-field predicate grammar. `offset`/`limit` paginate matching occurrences. Pages may end early to fit the 24,000-character discovery budget; follow `nextOffset`. Each has `elementRef`, `elementType`, `collection`, `index`, `region`, and zero-based `lineIndex` for staff/descendants. The response also includes the page summary, `pageCount`, and `layoutId`. Use `get_element` for properties/content.
 - `edit_elements`: apply an ordered, validated transaction to one document using its latest `expectedRevision`. Actions run on detached live-model drafts; schema, reference, font/style, musical component, and collection validation completes before commands mutate the document. Invalid batches leave no partial musical edits or history entries. Successful changes form one undo step, preserve existing element identities and collection arrays, and do not save. A no-op returns `applied: false` without adding history. The result includes current document metadata/revision, `createdCount`, and `created` entries (`clientId`, `elementRef`, `elementType`) for inserted/replacement objects still present. Set `includeCreated: false` for a compact acknowledgment that keeps `createdCount` and omits `created`; references are included by default. See the transaction contract below.
@@ -226,12 +186,12 @@ All three focused readers accept optional `expectedRevision`. Settings writes re
 - `edit_paragraph_styles`: an atomic batch of `create`, `replace`, `update`, and `delete` actions. `update` takes an `id` and sparse `changes` (`displayName`, `parentStyleId`, and/or `overrides`); supplied overrides merge into existing overrides, and omitted fields stay unchanged. An empty overrides object preserves existing overrides. Supported null values explicitly reset. `resetOverrides` removes named override keys to resume inheritance; it can be used alone, without `changes`, or alongside changes to other overrides. Setting and resetting the same override is rejected. Resetting an already absent override leaves it absent. Each create/replace supplies a complete definition (`id`, `parentStyleId`, `overrides`, and `displayName` for custom styles). Built-in names are read-only metadata and must be omitted. For create/replace, missing overrides inherit; supported null values explicitly reset. Each ID can appear once per batch. Action order does not matter: a child may refer to a parent created later in the payload. Validation checks the final graph for missing parents, cycles, duplicate IDs/names, and protected built-ins before applying anything. Built-in styles cannot be created, deleted, or renamed. Custom null parents normalize to `default-text`. Deleted styles' untouched children inherit from their nearest surviving ancestor or `default-text`; content references use their nearest surviving ancestor or surface default. Explicit references to a parent deleted in the same batch are rejected. Text font families do not need to be available on this computer; their names are preserved for rendering elsewhere. Local previews/PDFs use locally available fonts and may fall back. Notation fonts remain restricted to supported chant fonts. The response defaults to a document summary and `affectedStyleIds`: definitions actually changed, created, deleted, or reparented (not every descendant whose resolved values changed). Pass `includeStyles: true` to also return the complete `styles`, `resolvedStyles`, and `units`. The entire edit is one undo step and preserves per-element overrides. Before returning, it measures the target workspace's resizable body text boxes and enabled headers/footers with the updated styles, even when that workspace is in the background. Measurement preserves the selected workspace. Saves and recovery snapshots wait for pending measurements; failed measurement reports `TEXT_BOX_MEASUREMENT_FAILED` rather than saving stale heights. Does not save.
 - `replace_document_properties`: replaces the complete metadata object, requiring both `title` and `author`. One undo step; does not save.
 - `save_document`: save to `filePath`, or to the document's source if omitted. Save-as changes the workspace's source path. Existing unrelated destinations require `overwrite: true`. Saving back to the source checks its last known modification time and size, even when overwrite is true. Existing score files are written in place to preserve their filesystem metadata. A failed or interrupted write can leave partial content; no atomic replacement is promised. Same-source saves preserve the format used to open the score, including extensionless or differently suffixed symlink targets, and preserve the alias itself. Save-as to a different identity uses the destination suffix. Unrelated symlink outputs remain forbidden. The result includes `savedRevision` (the revision written) and `savedContentUnchanged` (whether that saved snapshot is still current). `revision` describes the current workspace, which can include newer interactive edits or the new source path.
-- `preview_page`: return one full-page PNG as an MCP image content block, without writing an output file. Works with unsaved interactive or isolated documents. Supply `documentId`, `expectedRevision`, and one-based physical `pageNumber`. `maxEdge` defaults to 1600 pixels and accepts 256-2048, preserving aspect ratio (up to 192 DPI); the PNG is limited to 4 MiB. Text and structured results contain metadata only: `capturedRevision`, current `revision`, `pageCount`, `pageNumber`, `mimeType`, `width`, and `height`, plus the document summary. The image is the second content block, with `type: "image"`, `mimeType: "image/png"`, and base64 `data`. Clients must support MCP image content to inspect it. Concurrent source changes reject with `REVISION_CONFLICT`. The image renderer returns `pageCount` from its settled snapshot without running page discovery. Rendering failures return `EXPORT_RENDER_FAILED`; out-of-range pages return `INVALID_PAGE_NUMBER`. Rendering uses the shared settled pages, opaque white background, export overlays, font/image readiness, cancellation, and disposal. Does not select, edit, save, or create a private copy. Pending input follows the same normal document settlement as other reads.
+- `preview_page`: return one full-page PNG as an MCP image content block, without writing an output file. Works with unsaved editor or private-worker documents. Supply `documentId`, optional `expectedRevision`, and one-based physical `pageNumber`. `maxEdge` defaults to 1600 pixels and accepts 256-2048, preserving aspect ratio (up to 192 DPI); the PNG is limited to 4 MiB. Text and structured results contain metadata only: `capturedRevision`, current `revision`, `pageCount`, `pageNumber`, `mimeType`, `width`, and `height`, plus the document summary. The image is the second content block, with `type: "image"`, `mimeType: "image/png"`, and base64 `data`. Clients must support MCP image content to inspect it. Concurrent source changes reject with `REVISION_CONFLICT`. The image renderer returns `pageCount` from its settled snapshot without running page discovery. Rendering failures return `EXPORT_RENDER_FAILED`; out-of-range pages return `INVALID_PAGE_NUMBER`. Rendering uses the shared settled pages, opaque white background, export overlays, font/image readiness, cancellation, and disposal. Does not select, edit, save, or create a private copy. Pending input follows the same normal document settlement as other reads.
 - `export_pdf`: render to an explicit absolute PDF path without a save dialog or external PDF viewer. Existing destinations require `overwrite: true`. Does not save the score. Export uses a dedicated hidden renderer and leaves tabs, selection, editor input, and undo history available. The result includes `exportedRevision`, identifying the snapshot written to the PDF; `revision` describes the workspace at completion and may include newer interactive edits. Snapshot metadata and file-name tokens are captured together. No workspace, recovery state, or save is created by the hidden renderer. Rendering failure uses `EXPORT_RENDER_FAILED`; an aborted HTTP request cancels pending rendering and disposes its window. Cancellation uses `EXPORT_CANCELLED` when a response can still be delivered. Existing destination checks still apply; cancellation racing with a completed commit can have an unknown outcome.
 
 ### Text search contract
 
-`find_text` takes `documentId`, optional `sessionId` and `expectedRevision`, and
+`find_text` takes `documentId`, optional `expectedRevision`, and
 `query` (1-256 UTF-16 code units, containing searchable text). It never selects,
 edits, or saves. The editor's next/previous search uses the same text extraction
 and matching service.
@@ -289,9 +249,9 @@ command sandbox on macOS:
 node scripts/mcp/text-search-smoke.mjs
 ```
 
-It starts a disposable Electron profile and checks interactive and isolated
+It starts a disposable Electron profile and checks editor and private-worker
 searches, rich HTML/entities, cross-note lyrics, nested collections, disabled
-headers, field filters, pagination, published schemas, session ownership, stale
+headers, field filters, pagination, published schemas, document ownership, stale
 revisions, and unchanged document snapshots.
 
 ### Element search contract
@@ -319,7 +279,7 @@ Pass the start match's `index` as `get_elements.start` and the next match's
 `index` as exclusive `end`, using their staff `collection` and the returned
 `revision` as `expectedRevision`. If there is no next mode key, omit `end`.
 
-`find_elements` accepts the same `documentId`, optional `sessionId`, and optional
+`find_elements` accepts the same `documentId` and optional
 `expectedRevision` as element discovery. It never edits or saves. Predicates use
 live fields listed by `get_element_catalog`. Use bare property names such as
 `"mode"`, not `"properties.mode"`. Inherited typography, uncatalogued layout caches,
@@ -365,13 +325,13 @@ Run the search regression against a disposable app profile:
 NEANES_MCP_TOKEN=<same-token> node scripts/mcp/element-search-smoke.mjs
 ```
 
-It checks interactive and isolated searches, nested collections, predicates,
+It checks editor and private-worker searches, nested collections, predicates,
 compact projections, reference windows, read-only state, revision conflicts,
 validation bounds, and cleanup. Published input/output schemas are validated.
 
 ### Settled page queries
 
-Both page tools work with interactive documents and isolated sessions. They use
+Both page tools work with editor and private-worker documents. They use
 the same full-page renderer as Electron PDF/PNG/printing: load fonts, await rich
 text and image decoding, measure page-specific content, and repeat layout until
 heights converge (maximum 12 passes). Shared header/footer templates reserve the
@@ -414,7 +374,7 @@ membership, numbering, line placement, and geometry. Use the same `expectedRevis
 and `expectedLayoutId` across page and occurrence reads. Concurrent content changes
 return `REVISION_CONFLICT`; a changed fingerprint returns `LAYOUT_CONFLICT` even
 when content revisions match (for example, changed font metrics). Restart discovery
-after either conflict. Layout IDs are not saved IDs or retained server sessions.
+after either conflict. Layout IDs are not saved IDs or retained server state.
 Newly opened documents have new element references and therefore new layout IDs.
 Pagination can change across machines with different fonts. Results describe the
 settled Neanes rendering, not a permanent page assignment.
@@ -464,7 +424,7 @@ it selected. Moving the selection does not advance the document-content revision
 or create an undo step. `expectedRevision` checks content only; use the returned
 references and revision for subsequent edits rather than following later UI
 selection changes. Caret offsets and highlighted text inside lyrics or rich-text
-editors are not exposed. Existing editor-readiness/busy and document/session
+editors are not exposed. Existing editor-readiness/busy and document
 access rules apply.
 
 Run the regression against a disposable app started with
@@ -482,7 +442,7 @@ live element constructor defaults and the document's paragraph styles. `clientId
 is a batch-local name matching `[A-Za-z][A-Za-z0-9_-]{0,63}`. Later actions may
 use `@clientId` wherever an element reference is accepted, including a child
 collection's `parentRef`. Forward references and duplicate names are rejected.
-References from discovery remain scoped to the owning open document/session.
+References from discovery remain scoped to the owning open document.
 
 Actions:
 
@@ -595,7 +555,7 @@ The target document's stale selections are cleared after removal; property edits
 preserve selection, and staff structure edits clear its index-based selection
 range. Other documents' content, selection, and history are untouched. The normal
 font/layout/text-measurement lifecycle runs after commit, including background
-and isolated documents. A subsequent settlement failure is not rolled back over
+and private-worker documents. A subsequent settlement failure is not rolled back over
 possible interactive edits: error details include `editsApplied` and `revision`.
 Inspect the document before retrying. Timeouts/disconnects retain the existing
 unknown-outcome contract. Rich-text normalization can advance revisions; always
@@ -675,7 +635,7 @@ Pure unit tests cover style graph and metadata validation, undo/redo, serializat
 npx vitest run src/services/documents src/automation electron/main/files electron/main/automation/files.test.ts src/utils/OperationQueue.test.ts
 ```
 
-Run the read-only element discovery regression against a disposable profile. It checks interactive and isolated reads, nested collections, header/footer templates, pagination, reference ownership, revision conflicts, explicit overrides, and unchanged source content after reads:
+Run the read-only element discovery regression against a disposable profile. It checks editor and private-worker reads, nested collections, header/footer templates, pagination, reference ownership, revision conflicts, explicit overrides, and unchanged source content after reads:
 
 ```sh
 NEANES_MCP_TOKEN=<same-token> node scripts/mcp/element-discovery-smoke.mjs /tmp/neanes-mcp/files
@@ -794,7 +754,7 @@ Shared document operations live in `src/services/documents/`: workspace creation
 
 `electron/main/files/scoreFiles.ts` owns shared score encoding and in-place I/O. `electron/main/automation/scoreFiles.ts` adds canonical file identity and API conflict/overwrite checks. Dialog-driven saves retain their existing write behavior; explicit-path saves preserve existing files and their metadata as well. `electron/main/automation/files.ts` validates explicit paths and formats without imposing folder restrictions. General file types live in `src/services/documents/fileTypes.ts`.
 
-`src/automation/` owns automation-only contracts, discovery, edit planning, read projections, revisions, sessions, renderer dispatch, and its Electron IPC client. See [the automation architecture](../../src/automation/README.md) for the directory map and dependency rule. `TheEditor.vue` attaches `useEditorAutomation` through explicit application hooks. Shared document and file services do not import automation types or tool contracts; ESLint enforces this boundary.
+`src/automation/` owns automation-only contracts, discovery, edit planning, read projections, revisions, private stores, renderer dispatch, and its Electron IPC client. See [the automation architecture](../../src/automation/README.md) for the directory map and dependency rule. `TheEditor.vue` attaches `useEditorAutomation` through explicit application hooks. Shared document and file services do not import automation types or tool contracts; ESLint enforces this boundary.
 
 The shared paragraph-style service owns graph validation, replacement, and deleted-style reference repair. API create/replace/delete batches and read projections live under automation. Shared rendering regression scripts live in `scripts/rendering/`; they still use MCP as a test driver.
 
@@ -806,7 +766,7 @@ The editor and hidden export renderer both use `ScorePageContent.vue` for header
 without opening or validating their contents. Pass an absolute `folderPath` and
 optionally `recursive: true` (default false). Symlink entries are skipped, including
 directory symlinks; the explicitly supplied root is resolved to its canonical path.
-No document session or editor scope is required. Cancellation or a 60-second
+No document ID or editor scope is required. Cancellation or a 60-second
 request deadline releases the API queue immediately. An in-flight OS filesystem
 call may finish later; discovery stops before processing its result or traversing
 another folder. Discovery timeout returns `AUTOMATION_TIMEOUT` without requiring
@@ -844,8 +804,8 @@ manifests and inspect each batch's results before continuing.
 
 `batch_update_files` processes an explicit manifest of up to 100 saved scores in
 request-owned private documents. It never reuses interactive tabs or caller-owned
-private documents and accepts neither `sessionId` nor `documentScope`. It holds
-one score at a time, so the 16-open-document session limit does not constrain the
+private documents and does not accept `documentScope`. It holds
+one score at a time, so the 16-open-document worker limit does not constrain the
 manifest. The normal bridge routes it to its private worker.
 
 ```js
@@ -947,7 +907,7 @@ places in its context.
 `tools/list` definitions (including descriptions and annotations), separate input
 and output views, and validates published schemas. Pure discovery/document/style
 regressions cover representative response sizes; the transaction smoke script
-checks focused reads in both interactive and isolated document modes.
+checks focused reads in both editor and private-worker document modes.
 
 ## Mode-key templates
 

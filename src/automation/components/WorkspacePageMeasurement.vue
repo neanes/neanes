@@ -18,7 +18,7 @@ import { EditorPreferences } from '@/models/EditorPreferences';
 import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
 
-// The supplied workspace is a detached copy, never an editor tab or session draft.
+// The supplied workspace is a detached copy, never an editor tab or private draft.
 defineProps<{
   workspace: Workspace;
   fonts: string[];

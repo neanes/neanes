@@ -19,12 +19,11 @@ import {
 import { canRunWhileEditorBusy } from '../contracts/toolBehavior';
 import { batchUpdateFiles } from '../documents/batchFiles';
 import { McpDocumentAdapter } from '../documents/McpDocumentAdapter';
-import { AutomationIpcClient } from '../ipc/AutomationIpcClient';
-import { IsolatedSessions } from '../sessions/isolatedSessions';
 import {
   type PrivateDocumentHooks,
   PrivateDocumentStore,
-} from '../sessions/privateDocumentStore';
+} from '../documents/privateDocumentStore';
+import { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 
 export function useEditorAutomation(options: {
   enabled: boolean;
@@ -39,59 +38,31 @@ export function useEditorAutomation(options: {
     return { ready() {}, ownsPrivateWorkspace: () => false };
   }
   const ipc = new AutomationIpcClient();
-  const sessionHooks: PrivateDocumentHooks = {
+  const privateHooks: PrivateDocumentHooks = {
     ...options.hooks,
     fonts: () => options.documents.fonts(),
     ensureFonts: (families) => options.documents.ensureFonts(families),
   };
   const privateStore = options.privateStore;
   const mode = privateStore ? 'headless' : 'interactive';
-  const isolatedSessions = privateStore
-    ? undefined
-    : new IsolatedSessions(sessionHooks);
   let activeBatchStore: PrivateDocumentStore | undefined;
-  const isolatedTools = new Map<DocumentService, McpDocumentAdapter>();
   const publishDrafts = () =>
     EventBus.$emit(
       IpcRendererChannels.AutomationDraftsChanged,
-      privateStore
-        ? privateStore.hasUnsavedDrafts()
-        : isolatedSessions!.hasUnsavedDrafts(),
+      privateStore?.hasUnsavedDrafts() ?? false,
     );
-  const isolatedSessionTimer =
-    isolatedSessions &&
-    setInterval(() => {
-      isolatedSessions.expire();
-      publishDrafts();
-      for (const service of isolatedTools.keys()) {
-        if (
-          !service.list().some((workspace) => isolatedSessions.owns(workspace))
-        ) {
-          isolatedTools.delete(service);
-        }
-      }
-    }, 30_000);
   onBeforeUnmount(() => {
-    if (isolatedSessionTimer) {
-      clearInterval(isolatedSessionTimer);
-    }
-    isolatedSessions?.clear();
     privateStore?.clear();
     activeBatchStore?.clear();
-    isolatedTools.clear();
   });
-  const createAdapter = (service: DocumentService) =>
-    new McpDocumentAdapter(
-      service,
-      ipc,
-      exportAutomationPdf,
-      options.renderPages,
-      (workspace, pageNumber, maxEdge) =>
-        ipc.previewPage(options.snapshot(workspace), pageNumber, maxEdge),
-      mode,
-    );
-  const documentTools = createAdapter(
-    privateStore?.documents ?? options.documents,
+  const documentTools = new McpDocumentAdapter(
+    options.documents,
+    ipc,
+    exportAutomationPdf,
+    options.renderPages,
+    (workspace, pageNumber, maxEdge) =>
+      ipc.previewPage(options.snapshot(workspace), pageNumber, maxEdge),
+    mode,
   );
 
   async function onAutomationRequest(message: AutomationMessage) {
@@ -112,7 +83,7 @@ export function useEditorAutomation(options: {
           'AUTOMATION_REQUEST_REQUIRED: Discovery runs in the main process.',
         );
       } else if (request.tool === 'batch_update_files') {
-        const batchStore = new PrivateDocumentStore(sessionHooks);
+        const batchStore = new PrivateDocumentStore(privateHooks);
         activeBatchStore = batchStore;
         try {
           result = await batchUpdateFiles(
@@ -125,37 +96,8 @@ export function useEditorAutomation(options: {
           batchStore.clear();
           activeBatchStore = undefined;
         }
-      } else if (request.tool === 'create_session') {
-        if (!isolatedSessions) {
-          throw new Error('TOOL_NOT_FOUND');
-        }
-        result = isolatedSessions.create();
-      } else if (request.tool === 'close_session') {
-        if (!isolatedSessions) {
-          throw new Error('TOOL_NOT_FOUND');
-        }
-        const service = isolatedSessions.get(request.arguments.sessionId);
-        result = isolatedSessions.close(
-          request.arguments.sessionId,
-          request.arguments.discardUnsavedChanges,
-        );
-        isolatedTools.delete(service);
       } else {
-        let adapter = documentTools;
-        if ('sessionId' in request.arguments && request.arguments.sessionId) {
-          if (!isolatedSessions) {
-            throw new Error('VALIDATION_ERROR');
-          }
-          const service = isolatedSessions.get(request.arguments.sessionId);
-          const existing = isolatedTools.get(service);
-          if (existing) {
-            adapter = existing;
-          } else {
-            adapter = createAdapter(service);
-            isolatedTools.set(service, adapter);
-          }
-        }
-        result = await adapter.execute(request);
+        result = await documentTools.execute(request);
       }
       reply = { requestId: message.requestId, success: true, result };
     } catch (error) {
@@ -195,9 +137,7 @@ export function useEditorAutomation(options: {
   };
   const reset = () => {
     void requestQueue.run(async () => {
-      isolatedSessions?.clear();
       privateStore?.clear();
-      isolatedTools.clear();
       publishDrafts();
     });
   };
@@ -212,7 +152,7 @@ export function useEditorAutomation(options: {
   return {
     ready: () => EventBus.$emit(IpcRendererChannels.AutomationReady),
     ownsPrivateWorkspace: (workspace: Workspace) =>
-      (privateStore?.owns(workspace) ?? isolatedSessions!.owns(workspace)) ||
+      (privateStore?.owns(workspace) ?? false) ||
       (activeBatchStore?.owns(workspace) ?? false),
   };
 }

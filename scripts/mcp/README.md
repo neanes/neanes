@@ -748,6 +748,12 @@ Alternatively, add `--native-print-save`, choose the native dialog's PDF output,
 
 ## Code organization
 
+After `npx vite build`, run `node scripts/mcp/metadata-smoke.mjs` outside the
+agent command sandbox to check metadata reads and document closure while a real
+font request remains pending. It launches a disposable editor and verifies that
+revision conflicts and unsaved-change protection still apply without awaiting
+layout settlement.
+
 Shared document operations live in `src/services/documents/`: workspace creation and opening, metadata and paragraph-style edits, serialization, save completion, and export preparation. Both the editor UI and MCP call `DocumentService`. Editor hooks supply rendering, focus, recovery, and layout behavior; persistence callbacks supply either dialog-based or explicit-path file writes.
 
 `electron/main/files/scoreFiles.ts` owns shared score encoding and in-place I/O. `electron/main/automation/scoreFiles.ts` adds canonical file identity and API conflict/overwrite checks. Dialog-driven saves retain their existing write behavior; explicit-path saves preserve existing files and their metadata as well. `electron/main/automation/files.ts` validates explicit paths and formats without imposing folder restrictions. General file types live in `src/services/documents/fileTypes.ts`.

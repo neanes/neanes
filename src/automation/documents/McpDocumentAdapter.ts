@@ -254,7 +254,22 @@ export class McpDocumentAdapter {
     if (workspace == null) {
       throw new Error('DOCUMENT_NOT_FOUND');
     }
-    await this.documents.settle(workspace);
+    if (
+      request.tool === 'get_document_properties' ||
+      request.tool === 'get_page_setup' ||
+      request.tool === 'get_header_footer_settings' ||
+      request.tool === 'get_paragraph_styles' ||
+      request.tool === 'get_staff_lyrics' ||
+      request.tool === 'get_selection' ||
+      request.tool === 'close_document'
+    ) {
+      // Flush editor buffers without making stored data or closure depend on layout.
+      this.documents.prepare(workspace);
+    } else {
+      // Element discovery includes derived properties; rendering and persistence
+      // also require the existing geometry settlement and revision checks.
+      await this.documents.settle(workspace);
+    }
     if (
       request.tool === 'get_elements' ||
       request.tool === 'get_document_properties' ||

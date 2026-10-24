@@ -17,7 +17,7 @@ const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 if (!directory || !path.isAbsolute(directory) || !token) {
   throw new Error(
-    'Usage: NEANES_MCP_TOKEN=... node scripts/mcp/smoke.mjs /absolute/allowed/output-directory',
+    'Usage: NEANES_MCP_TOKEN=... node tests/integration/mcp/smoke.mjs /absolute/allowed/output-directory',
   );
 }
 const url = new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp');

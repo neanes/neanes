@@ -29,11 +29,11 @@
   },
   "extraResources": [
     {
-      "from": "scripts/mcp/bridge.mjs",
+      "from": "electron/mcp/bridge.mjs",
       "to": "mcp/bridge.mjs"
     },
     {
-      "from": "scripts/mcp/bridgeProtocol.mjs",
+      "from": "electron/mcp/bridgeProtocol.mjs",
       "to": "mcp/bridgeProtocol.mjs"
     }
   ]

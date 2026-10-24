@@ -13,7 +13,7 @@ import {
 const directory = process.argv[2];
 if (!directory || !path.isAbsolute(directory)) {
   throw new Error(
-    'Usage: NEANES_DEV_USER_DATA_DIR=... node scripts/mcp/element-discovery-smoke.mjs /absolute/allowed/directory',
+    'Usage: NEANES_DEV_USER_DATA_DIR=... node tests/integration/mcp/element-discovery-smoke.mjs /absolute/allowed/directory',
   );
 }
 const client = await connectBridgeClient('neanes-element-discovery-smoke');

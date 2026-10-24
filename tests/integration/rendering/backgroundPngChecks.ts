@@ -4,11 +4,11 @@ import path from 'node:path';
 
 import { type BrowserWindow, nativeImage } from 'electron';
 
-import { renderSnapshot } from '../../electron/main/export/renderSnapshot';
+import { renderSnapshot } from '../../../electron/main/export/renderSnapshot';
 import type {
   PngRenderOptions,
   ScoreRenderSnapshot,
-} from '../../src/services/rendering/scoreRenderSnapshot';
+} from '../../../src/services/rendering/scoreRenderSnapshot';
 
 export async function checkBackgroundPng(options: {
   rich: ScoreRenderSnapshot;

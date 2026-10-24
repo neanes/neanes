@@ -34,7 +34,7 @@ async function connect(configuration) {
     new StdioClientTransport({
       command: configuration?.command ?? process.execPath,
       args: configuration?.args ?? [
-        path.resolve('scripts/mcp/bridge.mjs'),
+        path.resolve('electron/mcp/bridge.mjs'),
         '--executable',
         executable,
         ...(!process.env.NEANES_TEST_EXECUTABLE

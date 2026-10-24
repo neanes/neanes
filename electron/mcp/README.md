@@ -102,8 +102,8 @@ orphan grace period), independently of the editor's internal credential file.
 Verify after `npx vite build`:
 
 ```sh
-node scripts/mcp/headless-launch-smoke.mjs
-node scripts/mcp/agent-access-smoke.mjs
+node tests/integration/mcp/headless-launch-smoke.mjs
+node tests/integration/mcp/agent-access-smoke.mjs
 ```
 
 Tests use disposable profiles and folders. Set NEANES_TEST_EXECUTABLE to a built
@@ -244,7 +244,7 @@ Build with `npx vite build`, then run the standalone regression outside the agen
 command sandbox on macOS:
 
 ```sh
-node scripts/mcp/text-search-smoke.mjs
+node tests/integration/mcp/text-search-smoke.mjs
 ```
 
 It starts a disposable Electron profile and checks editor and private-worker
@@ -320,7 +320,7 @@ Use the page tools for layout-based discovery and get_selection for UI context.
 Run the search regression against a disposable app profile:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/mcp/element-search-smoke.mjs
+NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/element-search-smoke.mjs
 ```
 
 It checks editor and private-worker searches, nested collections, predicates,
@@ -384,7 +384,7 @@ reason. Ordinary preparation/measurement errors can also occur before page
 rendering. Client timeout/disconnect can leave bounded read-only rendering in
 progress until its completion or deadline. No page query saves or exports.
 
-Run `scripts/mcp/page-discovery-smoke.mjs` with an allowed absolute output
+Run `tests/integration/mcp/page-discovery-smoke.mjs` with an allowed absolute output
 directory, `NEANES_MCP_TOKEN`, and optionally `NEANES_DEBUG_URL` for concurrent
 interactive-edit and offscreen-cleanup checks. It covers both document modes,
 repeated templates, numbering, pagination, references, conflicts, failure/retry,
@@ -429,7 +429,7 @@ Run the regression against a disposable app started with
 `--remote-debugging-port=9334`:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node scripts/mcp/selection-smoke.mjs
+NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node tests/integration/mcp/selection-smoke.mjs
 ```
 
 ### Element transaction contract
@@ -636,7 +636,7 @@ npx vitest run src/services/documents src/automation electron/main/files electro
 Run the read-only element discovery regression against a disposable profile. It checks editor and private-worker reads, nested collections, header/footer templates, pagination, reference ownership, revision conflicts, explicit overrides, and unchanged source content after reads:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/mcp/element-discovery-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/element-discovery-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 To also exercise revision conflicts after live child edits that serialize identically,
@@ -652,7 +652,7 @@ With the app's disposable debugging endpoint enabled, `NEANES_DEBUG_URL` also
 checks one-step UI undo/redo and the unrelated interactive workspace's live state.
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node scripts/mcp/element-edit-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node tests/integration/mcp/element-edit-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 Run the rich-text lifecycle regression after `npx vite build`. It launches its own
@@ -662,13 +662,13 @@ pending user typing, blur, and saved HTML. On macOS, run it outside the agent's
 command sandbox as described in AGENTS.md.
 
 ```sh
-node scripts/mcp/rich-text-update-smoke.mjs
+node tests/integration/mcp/rich-text-update-smoke.mjs
 ```
 
 With the development app running and ready, run the real MCP client smoke test from another terminal with the same token:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/mcp/smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/smoke.mjs /tmp/neanes-mcp/files
 ```
 
 The smoke test creates an interactive workspace and unique output files, updates lyrics defaults, saves/reopens both formats, exports PDFs (including custom 6 x 9-inch portrait and landscape paper dimensions), and checks revision conflicts, external changes, output collisions, authentication, and Origin rejection. It closes the workspaces introduced by the run and leaves output files available for inspection. Run it with an isolated development profile.
@@ -676,7 +676,7 @@ The smoke test creates an interactive workspace and unique output files, updates
 To verify reuse of an interactively opened workspace through a path alias, run the additional smoke test with the same token, URL, and isolated development profile:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node scripts/mcp/interactive-open-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/interactive-open-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This invokes a real second Electron instance to open the file, changes the open workspace without saving, and verifies that MCP preserves its ID and unsaved content when opening the canonical path. On macOS with a canonical `/private/tmp` output directory, it uses the corresponding `/tmp` path for the interactive open.
@@ -684,7 +684,7 @@ This invokes a real second Electron instance to open the file, changes the open 
 To verify real recovery cleanup and last-document behavior, run this only against an isolated development profile with one blank workspace (the regular smoke test restores that state):
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node scripts/mcp/close-document-smoke.mjs
+NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/close-document-smoke.mjs
 ```
 
 It waits for a real recovery snapshot, explicitly discards that draft, verifies the snapshot does not return, checks partial cleanup failure using an invalid recovery path on disk, then closes the last blank workspace and verifies that a fresh blank workspace replaces it while MCP stays available.
@@ -692,7 +692,7 @@ It waits for a real recovery snapshot, explicitly discards that draft, verifies 
 To compare background and foreground typography measurement using real editors:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/mcp/background-style-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/background-style-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This uses matching scores with plain, rich, multipanel, header, and footer text boxes. It changes inherited typography in a background workspace, saves immediately, and compares persisted heights with a foreground control while checking that selection and the active workspace's heights stay unchanged. It closes only workspaces introduced by the run.
@@ -702,7 +702,7 @@ This uses matching scores with plain, rich, multipanel, header, and footer text 
 Run the development Electron app with a dedicated profile and `--remote-debugging-port=9334`, or launch a production build with that flag, `--no-update`, and an explicit disposable `--user-data-dir=/tmp/neanes-mcp/export-profile`. The `NEANES_DEV_USER_DATA_DIR` override applies only to development builds. The debugging endpoint must be restricted to a disposable test instance; this test intentionally changes tabs and edits a document through the real renderer.
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/rendering/hidden-export-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node tests/integration/rendering/hidden-export-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 Set `NEANES_DEBUG_URL` for another local debugging endpoint. The test constructs a multi-page score with notes, lyrics, melismas, a drop cap, martyria, tempo, rich text, and headers/footers. It first exercises selection, range selection, lyric focus/editing/undo, flushing pending inline-rich-text edits on tab switches, and page-specific focus for repeated headers. It also checks style undo/redo with unchanged heights while switching tabs, and exports long title, chapter, and filename tokens in headers/footers with horizontal rules. It then exports a background document while changing tabs and editing the source, checks the exported and current revisions, verifies unchanged control content and undo history, and checks disposal after success, a broken-image failure, and HTTP cancellation. It closes its introduced workspaces. The resulting PDF remains available for visual inspection.
@@ -710,7 +710,7 @@ Set `NEANES_DEBUG_URL` for another local debugging endpoint. The test constructs
 To verify Print Overlays against actual PDF drawing and text content, use the same isolated app and debugging endpoint:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/rendering/print-overlays-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node tests/integration/rendering/print-overlays-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This test reloads the disposable editor with each overlay preference, exports a real PDF, and checks that guides, all bounding-box options, lyric baselines, glue widths, and adjustment ratios add PDF content. It also checks that disabling Print Overlays, Overlays, or Developer Panels suppresses them. It restores the original preferences and closes its documents. Run it separately from other smoke tests because it reloads the renderer.
@@ -722,7 +722,7 @@ The snapshot protocol uses a separate `export.html` entry, without the normal ed
 After `npx vite build`, run outside the agent command sandbox:
 
 ```sh
-node scripts/mcp/preview-smoke.mjs
+node tests/integration/mcp/preview-smoke.mjs
 ```
 
 This starts and stops a disposable editor and bridge using OS-assigned debugging ports.
@@ -737,7 +737,7 @@ temporary directory. It does not use the normal profile.
 With the same disposable profile, debugging endpoint, and MCP configuration:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node scripts/rendering/rendering-migration-smoke.mjs /tmp/neanes-mcp/files
+NEANES_MCP_TOKEN=<same-token> node tests/integration/rendering/rendering-migration-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This exercises actual detached PNG rendering and filesystem output. It checks a two-page custom landscape score with rich text, an embedded image, resolved header/footer tokens, and overlays. It verifies dimensions at 96 and 192 DPI, page selection, transparent/opaque backgrounds, source content/revision/selection/undo preservation, empty page selection, broken-image failure, and disposal when a rendering window is closed. It intentionally supplies stale heights in the detached snapshot to exercise measurement and repagination. Output images remain available for visual inspection. Do not run it concurrently with other smoke tests.
@@ -748,7 +748,7 @@ Alternatively, add `--native-print-save`, choose the native dialog's PDF output,
 
 ## Code organization
 
-After `npx vite build`, run `node scripts/mcp/metadata-smoke.mjs` outside the
+After `npx vite build`, run `node tests/integration/mcp/metadata-smoke.mjs` outside the
 agent command sandbox to check metadata/content reads, document-property edits,
 and document closure while a real font request remains pending. It launches a
 disposable editor and verifies that revision conflicts and unsaved-change
@@ -769,7 +769,7 @@ Shared document operations live in `src/services/documents/`: workspace creation
 
 `src/automation/` owns automation-only contracts, discovery, edit planning, read projections, revisions, private stores, renderer dispatch, and its Electron IPC client. See [the automation architecture](../../src/automation/README.md) for the directory map and dependency rule. `TheEditor.vue` attaches `useEditorAutomation` through explicit application hooks. Shared document and file services do not import automation types or tool contracts; ESLint enforces this boundary.
 
-The shared paragraph-style service owns graph validation, replacement, and deleted-style reference repair. API create/replace/delete batches and read projections live under automation. Shared rendering regression scripts live in `scripts/rendering/`; they still use MCP as a test driver.
+The shared paragraph-style service owns graph validation, replacement, and deleted-style reference repair. API create/replace/delete batches and read projections live under automation. Shared rendering regression scripts live in `tests/integration/rendering/`; they still use MCP as a test driver.
 
 The editor and hidden export renderer both use `ScorePageContent.vue` for headers, footers, notation, lyrics, and element rendering. The editor retains its page DOM wrappers, visibility tracking, focus handling, and mutation handlers. Each page owns its child refs and exposes methods for element, lyric, annotation, and page-specific header/footer lookup; the editor holds only page-component refs. Page content forwards typed interaction events; editor-only badges and developer overlays are supplied through slots. Print pages use local component refs to await rich-text readiness. Overlay markup, geometry, and styles also live in the shared page component. Snapshots capture overlay preferences, and the detached renderer regenerates layout diagnostics so enabled Print Overlays settings apply to every PDF route.
 

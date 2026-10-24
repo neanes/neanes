@@ -4,9 +4,9 @@ import path from 'node:path';
 
 import type { BrowserWindow } from 'electron';
 
-import { getNativePrintPageSize } from '../../electron/main/export/pageSize';
-import { renderSnapshot } from '../../electron/main/export/renderSnapshot';
-import type { ScoreRenderSnapshot } from '../../src/services/rendering/scoreRenderSnapshot';
+import { getNativePrintPageSize } from '../../../electron/main/export/pageSize';
+import { renderSnapshot } from '../../../electron/main/export/renderSnapshot';
+import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 
 export async function checkPrintPreparation(options: {
   snapshot: ScoreRenderSnapshot;

@@ -16,6 +16,10 @@ Enable the pinned npm first with `corepack enable npm`.
 - `npm run build` - type-check (`vue-tsc --noEmit`), Vite build, then `electron-builder` package into `release/` (no publish).
 - `npm run lint` - `eslint` plus `prettier --check`. `npm run lint:fix` autofixes both.
 - `npm test` - run the full Vitest suite once. `npm run test:dev` watches.
+- `npm run test:integration:mcp` - run self-launching Electron MCP scenarios after `npx vite build`; append `-- --list` to list scenarios.
+- `npm run test:integration:rendering` - run real Electron PDF, PNG, and print-preparation checks after `npx vite build`.
+- `npm run test:integration:saving` - run editor save/recovery checks with a disposable Vite/Electron instance (POSIX desktop session required).
+- Integration test setup and fixtures are documented in `tests/README.md`.
 - Single test file: `npx vitest run src/services/LayoutService.test.ts`
 - Single test by name: `npx vitest run -t "part of the test title"`
 - `npm run coverage` - Vitest with `istanbul` coverage.
@@ -28,9 +32,9 @@ Useful development environment variables (put in `.env.local`, or `.env.web.loca
 **Use unsandboxed execution on the first attempt for any command that launches Electron on macOS. Do not try a sandboxed launch first.** The agent command sandbox can block macOS Launch Services registration, causing Electron to abort with `SIGABRT` in `_RegisterApplication` before Neanes JavaScript runs. Each attempt can produce a macOS crash-report dialog.
 
 - With `exec_command`, set `sandbox_permissions: "require_escalated"` and provide a justification explaining that the test launches disposable Electron processes and needs macOS application registration. Apply this to the entire launching command so its child processes inherit the correct execution context. Follow the environment's approval policy; if unsandboxed execution is unavailable or denied, report the limitation instead of launching inside the sandbox.
-- This includes `npm run dev`, direct Electron executable invocations, smoke tests under `scripts/mcp/`, `scripts/rendering/`, and `scripts/saving/` that spawn Electron, and custom test harnesses. MCP bridge tests can launch Electron indirectly; private/headless workers and hidden windows still require native application registration.
-- For example, run `node scripts/mcp/text-search-smoke.mjs` with `sandbox_permissions: "require_escalated"` from the outset. The same applies to `headless-launch-smoke.mjs`, `agent-access-smoke.mjs`, `preview-smoke.mjs`, and `rich-text-update-smoke.mjs`.
-- Use the documented disposable profiles and output directories. Run tests against a disposable app, preserving the user's normal Neanes instance and documents. See `scripts/mcp/README.md`, `scripts/rendering/README.md`, and `scripts/saving/README.md` for setup.
+- This includes `npm run dev`, direct Electron executable invocations, smoke tests under `tests/integration/mcp/`, `tests/integration/rendering/`, and `tests/integration/saving/` that spawn Electron, and custom test harnesses. MCP bridge tests can launch Electron indirectly; private/headless workers and hidden windows still require native application registration.
+- For example, run `node tests/integration/mcp/text-search-smoke.mjs` with `sandbox_permissions: "require_escalated"` from the outset. The same applies to `headless-launch-smoke.mjs`, `agent-access-smoke.mjs`, `preview-smoke.mjs`, and `rich-text-update-smoke.mjs`.
+- Use the documented disposable profiles and output directories. Run tests against a disposable app, preserving the user's normal Neanes instance and documents. See `electron/mcp/README.md`, `tests/integration/rendering/README.md`, and `tests/integration/saving/README.md` for setup.
 - If a launch still fails, inspect the child exit signal and logs before retrying. A startup `SIGABRT` with `_RegisterApplication` indicates the launch environment; do not repeatedly retry it or change application code to work around it. A missing MCP endpoint or readiness timeout alone does not establish an application bug.
 - This concerns the agent command sandbox. Do not add Electron's `--no-sandbox` flag or disable renderer security. Pure unit tests, linting, type-checking, and build-only commands can run in the normal agent sandbox; clients that only connect to an existing disposable app do not need this GUI-launch exception.
 

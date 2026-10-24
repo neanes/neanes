@@ -28,7 +28,10 @@
     "test:dev": "vitest",
     "coverage": "vitest run --coverage",
     "web:dev": "vite --mode web",
-    "web:build": "vue-tsc --noEmit && vite build --mode web"
+    "web:build": "vue-tsc --noEmit && vite build --mode web",
+    "test:integration:mcp": "node tests/integration/mcp/run.mjs",
+    "test:integration:rendering": "node tests/integration/rendering/background-pdf-smoke.mjs",
+    "test:integration:saving": "node tests/integration/saving/revision-smoke.mjs"
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {

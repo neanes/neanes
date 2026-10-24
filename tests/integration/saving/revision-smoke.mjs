@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import electron from 'electron';
 import { createServer } from 'vite';
 
-const root = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
+const root = path.resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 const temporary = await mkdtemp(path.join(os.tmpdir(), 'neanes-save-smoke-'));
 const output = path.resolve(process.argv[2] ?? path.join(temporary, 'scores'));
 await mkdir(output, { recursive: true });
@@ -39,7 +39,10 @@ try {
   }
   const child = spawn(
     electron,
-    [path.join(root, 'scripts/saving/revisionSmokeHost.mjs'), '--no-update'],
+    [
+      path.join(root, 'tests/integration/saving/revisionSmokeHost.mjs'),
+      '--no-update',
+    ],
     {
       cwd: root,
       env: {

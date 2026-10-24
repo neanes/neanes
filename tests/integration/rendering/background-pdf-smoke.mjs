@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 import electron from 'electron';
 import { build } from 'vite';
 
-const root = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
+const root = path.resolve(fileURLToPath(new URL('../../..', import.meta.url)));
 await access(path.join(root, 'dist', 'export.html'));
 const temporary = await mkdtemp(path.join(os.tmpdir(), 'neanes-pdf-smoke-'));
 const output = path.resolve(process.argv[2] ?? path.join(temporary, 'pdfs'));
@@ -20,7 +20,10 @@ await build({
   build: {
     outDir: path.join(temporary, 'host'),
     lib: {
-      entry: path.join(root, 'scripts/rendering/backgroundPdfSmokeHost.ts'),
+      entry: path.join(
+        root,
+        'tests/integration/rendering/backgroundPdfSmokeHost.ts',
+      ),
       formats: ['cjs'],
       fileName: () => 'smoke.cjs',
     },

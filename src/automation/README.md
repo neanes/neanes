@@ -34,7 +34,7 @@ use that same code. File I/O types in `src/services/documents/fileTypes.ts` are
 shared by both file paths, rather than being MCP tool contracts.
 
 Tests live beside their owners. MCP lifecycle and transaction scripts live in
-`scripts/mcp/`. Shared rendering regressions live in `scripts/rendering/`; they
+`tests/integration/mcp/`. Shared rendering regressions live in `tests/integration/rendering/`; they
 use the Electron debugging endpoint as their test driver.
 
 Future automation jobs and export transformations belong in this feature area

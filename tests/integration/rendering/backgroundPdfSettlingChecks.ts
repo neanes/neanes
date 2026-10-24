@@ -5,14 +5,14 @@ import { inflateSync } from 'node:zlib';
 
 import type { BrowserWindow } from 'electron';
 
-import { renderPdf } from '../../electron/main/export/renderPdf';
-import { renderSnapshot } from '../../electron/main/export/renderSnapshot';
+import { renderPdf } from '../../../electron/main/export/renderPdf';
+import { renderSnapshot } from '../../../electron/main/export/renderSnapshot';
 import {
   EmptyElement,
   RichTextBoxElement,
   TextBoxElement,
-} from '../../src/models/save/v1/Element';
-import type { ScoreRenderSnapshot } from '../../src/services/rendering/scoreRenderSnapshot';
+} from '../../../src/models/save/v1/Element';
+import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 
 interface BoxGeometry {
   text: string;

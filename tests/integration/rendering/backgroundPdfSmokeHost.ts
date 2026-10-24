@@ -5,8 +5,8 @@ import path from 'node:path';
 
 import { app, BrowserWindow } from 'electron';
 
-import { renderPdf } from '../../electron/main/export/renderPdf';
-import type { ScoreRenderSnapshot } from '../../src/services/rendering/scoreRenderSnapshot';
+import { renderPdf } from '../../../electron/main/export/renderPdf';
+import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 import { checkPdfSettling } from './backgroundPdfSettlingChecks';
 import { checkBackgroundPng } from './backgroundPngChecks';
 import { checkPrintPreparation } from './backgroundPrintChecks';

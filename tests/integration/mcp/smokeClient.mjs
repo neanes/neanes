@@ -100,7 +100,7 @@ export async function connectBridgeClient(
     new StdioClientTransport({
       command: process.execPath,
       args: [
-        path.resolve('scripts/mcp/bridge.mjs'),
+        path.resolve('electron/mcp/bridge.mjs'),
         '--executable',
         process.env.NEANES_TEST_EXECUTABLE || electron,
         ...(!process.env.NEANES_TEST_EXECUTABLE

@@ -81,6 +81,10 @@ To run tests before committing, type:
 npm test
 ```
 
+Vitest tests live beside their implementation. Real Electron scenarios and test
+helpers live separately in `tests/integration/`; see the [test guide](tests/README.md)
+for setup, commands, and disposable-profile requirements.
+
 ## IDE Support
 
 When using [Visual Studio Code](https://github.com/microsoft/vscode), install the following extension:

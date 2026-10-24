@@ -39,7 +39,7 @@ async function connect(
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: [
-      path.resolve('scripts/mcp/bridge.mjs'),
+      path.resolve('electron/mcp/bridge.mjs'),
       '--executable',
       executable,
       ...(process.env.NEANES_TEST_EXECUTABLE ? [] : ['--app', process.cwd()]),

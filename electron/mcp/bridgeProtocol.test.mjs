@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   readToolSchemaResource,
   schemaResourceInstructions,
-} from '../../electron/main/automation/schemaResources';
-import { automationTools } from '../../electron/main/automation/tools';
+} from '../main/automation/schemaResources';
+import { automationTools } from '../main/automation/tools';
 import {
   bridgeInstructions,
   bridgeResourceContents,

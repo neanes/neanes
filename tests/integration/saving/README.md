@@ -3,7 +3,7 @@
 Run on macOS or Linux with a desktop session:
 
 ```sh
-node scripts/saving/revision-smoke.mjs /absolute/output/directory
+node tests/integration/saving/revision-smoke.mjs /absolute/output/directory
 ```
 
 The harness starts the real Vite editor and Electron main/preload processes with

@@ -3,7 +3,7 @@
 Build the Electron target with `npx vite build`, then run:
 
 ```sh
-node scripts/rendering/background-pdf-smoke.mjs /absolute/output/directory
+node tests/integration/rendering/background-pdf-smoke.mjs /absolute/output/directory
 ```
 
 The script launches real Electron renderers using a temporary profile. It checks

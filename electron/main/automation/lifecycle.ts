@@ -148,7 +148,7 @@ export function installAgentAccess(options: {
   function agentAccessState(): AgentAccessState {
     const bridge = app.isPackaged
       ? installedBridge
-      : path.resolve('scripts/mcp/bridge.mjs');
+      : path.resolve('electron/mcp/bridge.mjs');
     const configuration = JSON.stringify(
       {
         mcpServers: {

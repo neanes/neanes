@@ -7,7 +7,7 @@ export const lyricParserDescription =
   '\u03c4\u03c9___ gives \u03c4\u03c9 / empty / empty (continuing vowel \u03c9), and \u03c4\u03c9\u03bd___ gives \u03c4\u03c9 / empty / \u03c9\u03bd, placing the final consonant on the last note and marking the split as hyphenated. ' +
   'disableGreekMelismata=true disables automatic Greek vowel/consonant redistribution; _ and - markers still work. ' +
   'acceptsLyrics controls token consumption: Yes consumes syllables/continuations, No skips the note, MelismaOnly continues the preceding syllable without consuming a new one, and Default derives behavior from the quantitative neume and preceding tie. ' +
-  'For predictable one-token-per-note examples use acceptsLyrics=Yes. Direct note properties do not run this parser. assign_lyrics ranges must include complete tied, melismatic, or hyphenated groups; a boundary cutting such a group is rejected with INVALID_ELEMENT_RANGE. Expand start/end to include the complete group, or explicitly update note lyrics and flags. assign_lyrics rejects unconsumed input (including nonempty text for an empty range) with INVALID_ELEMENT_RANGE; expand the range or shorten the input. set_staff_lyrics with locked=true may retain excess text for future notes.';
+  'For predictable one-token-per-note examples use acceptsLyrics=Yes. Direct note properties do not run this parser.';
 
 export const literalLyricsDescription =
   'Literal note text, not parser syntax. Setting lyrics="Al-" stores the hyphen literally. ' +

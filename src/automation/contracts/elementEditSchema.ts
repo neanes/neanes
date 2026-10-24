@@ -277,7 +277,11 @@ const elementEditActionSchema = z.discriminatedUnion('action', [
   }),
   z.strictObject({
     action: z.literal('set_staff_lyrics'),
-    text: z.string().describe(lyricParserDescription),
+    text: z
+      .string()
+      .describe(
+        'Complete staff lyrics parsed using the shared actions syntax. With locked=true, text stays authoritative for later structural edits and may retain excess input for future notes; direct main-staff lyric edits are rejected. With locked=false, staff text is derived from element lyrics during settlement.',
+      ),
     locked: z.boolean(),
   }),
   z.strictObject({
@@ -285,12 +289,20 @@ const elementEditActionSchema = z.discriminatedUnion('action', [
     collection: editCollectionSchema.default({ kind: 'staff' }),
     start: index.default(0),
     end: index.optional(),
-    text: z.string().describe(lyricParserDescription),
+    text: z
+      .string()
+      .describe(
+        'Lyrics parsed into collection[start,end) using the shared actions syntax; end defaults to collection size. Locked main-staff lyrics reject assignment with LYRICS_LOCKED; alternate lines remain editable. Include complete tied, melismatic, or hyphenated groups: cutting a group or leaving unconsumed input (including nonempty text for an empty range) raises INVALID_ELEMENT_RANGE. Expand the range or shorten the input; use direct note lyrics and flags for partial groups.',
+      ),
   }),
 ]);
 export const elementEditBatchSchema = z
   .array(elementEditActionSchema)
   .min(1)
-  .max(1000);
+  .max(1000)
+  .describe(
+    'Shared parser guidance for set_staff_lyrics.text and assign_lyrics.text: ' +
+      lyricParserDescription,
+  );
 export type ElementDefinition = z.infer<typeof elementDefinitionSchema>;
 export type ElementEditBatch = z.infer<typeof elementEditBatchSchema>;

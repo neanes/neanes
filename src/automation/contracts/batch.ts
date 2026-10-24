@@ -11,7 +11,10 @@ import {
 } from '@/services/documents/paragraphStyleSchema';
 
 import { automationErrorSchema } from './errors';
-import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
+import {
+  paragraphStyleChangeSchema,
+  paragraphStyleUpdateSchema,
+} from './paragraphStyleChanges';
 
 const batchEditsSchema = z.strictObject({
   paragraphStyles: z.array(paragraphStyleChangeSchema).min(1).optional(),
@@ -105,19 +108,21 @@ const publishedStyleDefinition = paragraphStyleDefinitionSchema.extend({
     z.union([z.string(), z.number(), z.null()]),
   ),
 });
-const updateStyle = paragraphStyleChangeSchema.options[2];
 const publishedStyleChange = z.strictObject({
   action: z.enum(
-    paragraphStyleChangeSchema.options.map(
-      (option) => option.shape.action.value,
-    ),
+    paragraphStyleChangeSchema.options.flatMap((option) => {
+      const action = option.shape.action;
+      return action instanceof z.ZodEnum ? action.options : [action.value];
+    }),
   ),
-  id: updateStyle.shape.id.describe('Required for update/delete.').optional(),
+  id: paragraphStyleUpdateSchema.shape.id
+    .describe('Required for update/delete.')
+    .optional(),
   style: publishedStyleDefinition
     .describe('Required for create/replace; complete style definition.')
     .optional(),
   changes: publishedStyleDefinition.omit({ id: true }).partial().optional(),
-  resetOverrides: updateStyle.shape.resetOverrides,
+  resetOverrides: paragraphStyleUpdateSchema.shape.resetOverrides,
 });
 const publishedEdits = batchEditsSchema.extend({
   paragraphStyles: z

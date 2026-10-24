@@ -24,11 +24,7 @@ const index = z.number().int().nonnegative();
 const editCollectionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('staff') }),
   z.strictObject({
-    kind: z.literal('headers'),
-    variant: z.enum(headerFooterVariants),
-  }),
-  z.strictObject({
-    kind: z.literal('footers'),
+    kind: z.enum(['headers', 'footers']),
     variant: z.enum(headerFooterVariants),
   }),
   z.strictObject({

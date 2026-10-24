@@ -1,111 +1,24 @@
 // Run outside the agent command sandbox; this starts a disposable Electron app.
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
-import electron from 'electron';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { createSmokeApp } from './smokeApp.mjs';
+import { callTool } from './smokeClient.mjs';
+import { eventually } from './smokePolling.mjs';
 
-const directory = await mkdtemp(path.join(tmpdir(), 'neanes-preview-'));
-const policyPath = path.join(directory, 'agent-access.json');
-await writeFile(
-  policyPath,
-  JSON.stringify({ enabled: true, token: randomBytes(32).toString('hex') }),
-  { mode: 0o600 },
-);
-const editor = spawn(
-  electron,
-  [
-    process.cwd(),
-    '--remote-debugging-port=9356',
-    '--inspect=9357',
-    '--no-update',
-  ],
-  {
-    env: {
-      ...process.env,
-      IS_TEST: '1',
-      NEANES_DEV_USER_DATA_DIR: directory,
-      NEANES_MCP_PORT: '0',
-      NEANES_MCP_TOKEN: undefined,
-    },
-    stdio: ['ignore', 'pipe', 'pipe'],
-  },
-);
-let log = '';
-editor.stdout.on('data', (data) => {
-  log += data;
-});
-editor.stderr.on('data', (data) => {
-  log += data;
-});
-const sockets = [];
+const app = await createSmokeApp('neanes-preview-', { keepArtifacts: true });
+const { directory } = app;
 let client;
-async function eventually(operation) {
-  let error;
-  for (let attempt = 0; attempt < 160; attempt++) {
-    try {
-      return await operation();
-    } catch (e) {
-      error = e;
-      await delay(100);
-    }
-  }
-  throw error;
-}
-async function debuggerConnection(port) {
-  const target = await eventually(async () => {
-    const targets = await (
-      await fetch(`http://127.0.0.1:${port}/json/list`)
-    ).json();
-    const target = targets.find(
-      (t) => !t.url.includes('export.html') && !t.url.startsWith('devtools:'),
-    );
-    assert.ok(target?.webSocketDebuggerUrl);
-    return target;
-  });
-  const socket = new WebSocket(target.webSocketDebuggerUrl);
-  sockets.push(socket);
-  await new Promise((resolve) =>
-    socket.addEventListener('open', resolve, { once: true }),
-  );
-  let id = 0;
-  return (expression) =>
-    new Promise((resolve, reject) => {
-      const requestId = ++id;
-      const listener = (event) => {
-        const reply = JSON.parse(event.data);
-        if (reply.id !== requestId) {
-          return;
-        }
-        socket.removeEventListener('message', listener);
-        if (reply.error || reply.result?.exceptionDetails) {
-          reject(new Error(JSON.stringify(reply)));
-        } else {
-          resolve(reply.result.result.value);
-        }
-      };
-      socket.addEventListener('message', listener);
-      socket.send(
-        JSON.stringify({
-          id: requestId,
-          method: 'Runtime.evaluate',
-          params: { expression, awaitPromise: true, returnByValue: true },
-        }),
-      );
-    });
-}
 try {
-  const evaluate = await debuggerConnection(9356);
-  const evaluateMain = await debuggerConnection(9357);
+  app.start({ args: ['--remote-debugging-port=0', '--inspect=0'] });
+  const { evaluate } = await app.debugger();
+  const { evaluate: evaluateMain } = await app.debugger('main');
   await eventually(async () =>
     assert.equal(
       (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).status,
@@ -137,16 +50,13 @@ try {
         true,
       );
     }
-    const reply = await client.callTool({ name, arguments: args });
+    const reply = await callTool(client, name, args, error);
     const outcome = reply.structuredContent;
-    assert.deepEqual(outcome, JSON.parse(reply.content[0].text));
     assert.equal(
       validator.getValidator(definition.outputSchema)(outcome).valid,
       true,
     );
-    assert.equal(outcome.success, !error, JSON.stringify(outcome));
     if (error) {
-      assert.equal(outcome.error.code, error);
       return;
     }
     return { ...outcome.result, content: reply.content };
@@ -529,16 +439,12 @@ try {
   await eventually(async () => assert.equal(await exportWindows(), 0));
   console.log(`Preview smoke passed. PNGs: ${directory}`);
 } catch (error) {
-  console.error(log);
+  console.error(app.log());
   throw error;
 } finally {
-  await client?.close();
-  for (const socket of sockets) {
-    socket.close();
+  try {
+    await client?.close();
+  } finally {
+    await app.close();
   }
-  const exit = new Promise((resolve) => editor.once('exit', resolve));
-  editor.kill();
-  const forceExit = setTimeout(() => editor.kill('SIGKILL'), 5_000);
-  await exit;
-  clearTimeout(forceExit);
 }

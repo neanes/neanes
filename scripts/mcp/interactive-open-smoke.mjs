@@ -4,9 +4,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import electron from 'electron';
+
+import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
 
 const directory = process.argv[2];
 if (
@@ -19,30 +19,8 @@ if (
     'Set NEANES_MCP_TOKEN and NEANES_DEV_USER_DATA_DIR for the running dev instance, then pass an absolute allowed output directory.',
   );
 }
-const client = new Client({
-  name: 'neanes-interactive-open-smoke',
-  version: '1.0.0',
-});
-await client.connect(
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    {
-      requestInit: {
-        headers: { Authorization: `Bearer ${process.env.NEANES_MCP_TOKEN}` },
-      },
-    },
-  ),
-);
-async function call(name, args = {}) {
-  const result = await client.callTool({ name, arguments: args });
-  assert.ok(!result.isError, JSON.stringify(result));
-  assert.deepEqual(
-    result.structuredContent,
-    JSON.parse(result.content[0].text),
-  );
-  assert.equal(result.structuredContent.success, true);
-  return result.structuredContent.result;
-}
+const client = await connectHttpClient('neanes-interactive-open-smoke');
+const call = createToolCaller(client);
 try {
   const initial = await call('list_documents');
   const unique = Date.now();

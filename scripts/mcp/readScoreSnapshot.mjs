@@ -1,30 +1,21 @@
-import { setTimeout } from 'node:timers/promises';
+import { eventually } from './smokePolling.mjs';
 
 // Test-only aggregate of the focused readers, for fixture construction and
 // before/after comparisons. This is not a save-format serializer or MCP tool.
 export async function readScoreSnapshot(call, args) {
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await readSnapshot(call, args);
-    } catch (error) {
-      if (
-        args.expectedRevision !== undefined ||
-        attempt === 9 ||
-        !error.message.includes('REVISION_CONFLICT')
-      ) {
-        throw error;
-      }
-      // Only replay a read snapshot if live text measurement advanced revision.
-      await setTimeout(50);
-    }
+  if (args.expectedRevision !== undefined) {
+    return readSnapshot(call, args);
   }
+  // Only replay a read snapshot if live text measurement advanced revision.
+  return eventually(() => readSnapshot(call, args), {
+    timeoutMs: 5000,
+    intervalMs: 50,
+    retry: (error) => error.message.includes('REVISION_CONFLICT'),
+  });
 }
 
 async function readSnapshot(call, args) {
   const scope = { ...args };
-  delete scope.sections;
-  delete scope.offset;
-  delete scope.limit;
   const metadata = await call('get_document_properties', scope);
   const atRevision = { ...scope, expectedRevision: metadata.revision };
   const page = await call('get_page_setup', atRevision);

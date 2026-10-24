@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
-
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import {
+  closeDocument,
+  connectHttpClient,
+  createToolCaller,
+} from './smokeClient.mjs';
 
 const token = process.env.NEANES_MCP_TOKEN;
 if (!token) {
@@ -12,49 +13,9 @@ if (!token) {
     'NEANES_MCP_TOKEN is required. Run against a disposable app profile.',
   );
 }
-const client = new Client({
-  name: 'neanes-element-search-smoke',
-  version: '1.0.0',
-});
-await client.connect(
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    {
-      requestInit: { headers: { Authorization: `Bearer ${token}` } },
-    },
-  ),
-);
+const client = await connectHttpClient('neanes-element-search-smoke');
 const tools = (await client.listTools()).tools;
-const validator = new AjvJsonSchemaValidator();
-const inputs = new Map(
-  tools.map((tool) => [tool.name, validator.getValidator(tool.inputSchema)]),
-);
-const outputs = new Map(
-  tools.map((tool) => [tool.name, validator.getValidator(tool.outputSchema)]),
-);
-async function call(name, args = {}, error) {
-  if (!error) {
-    assert.equal(
-      inputs.get(name)(args).valid,
-      true,
-      `Invalid published input for ${name}`,
-    );
-  }
-  const reply = await client.callTool({ name, arguments: args });
-  const outcome = reply.structuredContent;
-  assert.deepEqual(outcome, JSON.parse(reply.content[0].text));
-  assert.equal(
-    outputs.get(name)(outcome).valid,
-    true,
-    `Invalid published output for ${name}`,
-  );
-  assert.equal(outcome.success, !error, JSON.stringify(outcome));
-  if (error) {
-    assert.equal(outcome.error.code, error);
-  } else {
-    return outcome.result;
-  }
-}
+const call = createToolCaller(client, tools);
 const introduced = [];
 let sessionId;
 try {
@@ -290,12 +251,7 @@ try {
   }
 } finally {
   for (const args of introduced.reverse()) {
-    const current = await readScoreSnapshot(call, { ...args, sections: [] });
-    await call('close_document', {
-      ...args,
-      expectedRevision: current.revision,
-      discardUnsavedChanges: true,
-    });
+    await closeDocument(call, args);
   }
   if (sessionId) {
     await call('close_session', { sessionId, discardUnsavedChanges: true });

@@ -1,14 +1,17 @@
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { setTimeout } from 'node:timers/promises';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import JSZip from 'jszip';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { checkSettings } from './settingsChecks.mjs';
+import {
+  closeDocument,
+  connectHttpClient,
+  createToolCaller,
+} from './smokeClient.mjs';
+import { settledDocument } from './smokePolling.mjs';
 
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
@@ -18,12 +21,9 @@ if (!directory || !path.isAbsolute(directory) || !token) {
   );
 }
 const url = new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp');
-const client = new Client({ name: 'neanes-mcp-smoke', version: '1.0.0' });
-await client.connect(
-  new StreamableHTTPClientTransport(url, {
-    requestInit: { headers: { Authorization: `Bearer ${token}` } },
-  }),
-);
+const client = await connectHttpClient('neanes-mcp-smoke', { url });
+const call = createToolCaller(client);
+const fails = call;
 const suffix = Date.now();
 const scorePath = path.join(directory, `smoke-${suffix}.byzx`);
 const pdfPath = path.join(directory, `smoke-${suffix}.pdf`);
@@ -34,34 +34,6 @@ const reopenedArchivePath = path.join(
   directory,
   `smoke-${suffix}-reopened.byz`,
 );
-async function call(name, args = {}) {
-  const reply = await client.callTool({ name, arguments: args });
-  assert.equal(reply.isError, undefined, JSON.stringify(reply));
-  assert.deepEqual(reply.structuredContent, JSON.parse(reply.content[0].text));
-  assert.equal(reply.structuredContent.success, true);
-  return reply.structuredContent.result;
-}
-async function fails(name, args, code) {
-  const reply = await client.callTool({ name, arguments: args });
-  assert.equal(reply.isError, true);
-  assert.deepEqual(reply.structuredContent, JSON.parse(reply.content[0].text));
-  assert.equal(reply.structuredContent.success, false);
-  assert.equal(reply.structuredContent.error.code, code);
-}
-// A newly mounted rich-text editor can normalize imported HTML asynchronously.
-// Wait on reads before issuing a mutation; never retry a stale write automatically.
-async function settledDocument(documentId) {
-  let previous;
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const document = await readScoreSnapshot(call, { documentId });
-    if (previous?.revision === document.revision) {
-      return document;
-    }
-    previous = document;
-    await setTimeout(50);
-  }
-  throw new Error('Imported rich-text document did not settle.');
-}
 try {
   const tools = await client.listTools();
   assert.equal(tools.tools.length, 33);
@@ -276,7 +248,9 @@ try {
     await fs.writeFile(customPath, JSON.stringify(customScore));
     const custom = await call('open_document', { filePath: customPath });
     try {
-      const current = await settledDocument(custom.documentId);
+      const current = await settledDocument(call, {
+        documentId: custom.documentId,
+      });
       await call('export_pdf', {
         documentId: current.documentId,
         expectedRevision: current.revision,
@@ -296,12 +270,7 @@ try {
         );
       }
     } finally {
-      const current = await settledDocument(custom.documentId);
-      await call('close_document', {
-        documentId: current.documentId,
-        expectedRevision: current.revision,
-        discardUnsavedChanges: true,
-      });
+      await closeDocument(call, { documentId: custom.documentId });
     }
   }
   const other = await call('create_document', { title: 'Other document' });
@@ -428,13 +397,21 @@ try {
   richScore.headers.default.elements = [structuredClone(richElement)];
   await fs.writeFile(richPath, JSON.stringify(richScore));
   const rich = await call('open_document', { filePath: richPath });
-  const readyRich = await settledDocument(rich.documentId);
+  const readyRich = await settledDocument(call, {
+    documentId: rich.documentId,
+  });
   await call('edit_paragraph_styles', {
     documentId: rich.documentId,
     expectedRevision: readyRich.revision,
     changes: [{ action: 'delete', id: 'smoke-parent' }],
   });
-  const richDocument = await settledDocument(rich.documentId);
+  const settledRich = await settledDocument(call, {
+    documentId: rich.documentId,
+  });
+  const richDocument = await readScoreSnapshot(call, {
+    documentId: rich.documentId,
+    expectedRevision: settledRich.revision,
+  });
   for (const element of [
     richDocument.score.staff.elements[0],
     richDocument.score.headers.default.elements[0],

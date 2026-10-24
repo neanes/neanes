@@ -1,64 +1,24 @@
 import assert from 'node:assert/strict';
 import { setTimeout } from 'node:timers/promises';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
-
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { connectCdp, editorTarget } from './smokeCdp.mjs';
+import {
+  closeDocument,
+  connectHttpClient,
+  createToolCaller,
+} from './smokeClient.mjs';
 
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(
   token,
   'Run against a disposable app with NEANES_MCP_TOKEN and remote debugging.',
 );
-const targets = await (
-  await fetch(
-    `${process.env.NEANES_DEBUG_URL ?? 'http://127.0.0.1:9334'}/json/list`,
-  )
-).json();
-const target = targets.find(
-  (entry) =>
-    entry.type === 'page' &&
-    !entry.url.includes('export.html') &&
-    !entry.url.startsWith('devtools:'),
+const socket = await connectCdp(
+  (await editorTarget(process.env.NEANES_DEBUG_URL ?? 'http://127.0.0.1:9334'))
+    .webSocketDebuggerUrl,
 );
-assert.ok(target);
-const socket = new WebSocket(target.webSocketDebuggerUrl);
-await new Promise((resolve) =>
-  socket.addEventListener('open', resolve, { once: true }),
-);
-let nextId = 0;
-const pending = new Map();
-socket.addEventListener('message', (event) => {
-  const result = JSON.parse(event.data);
-  const request = pending.get(result.id);
-  if (!request) {
-    return;
-  }
-  pending.delete(result.id);
-  if (result.error || result.result?.exceptionDetails) {
-    request.reject(new Error(JSON.stringify(result)));
-  } else {
-    request.resolve(result.result);
-  }
-});
-function send(method, params) {
-  return new Promise((resolve, reject) => {
-    const id = ++nextId;
-    pending.set(id, { resolve, reject });
-    socket.send(JSON.stringify({ id, method, params }));
-  });
-}
-async function evaluate(expression) {
-  return (
-    await send('Runtime.evaluate', {
-      expression,
-      awaitPromise: true,
-      returnByValue: true,
-    })
-  ).result.value;
-}
+const { send, evaluate } = socket;
 async function click(selector, modifiers = 0) {
   for (let i = 0; i < 100; i++) {
     if (
@@ -81,36 +41,9 @@ async function click(selector, modifiers = 0) {
     });
   }
 }
-const client = new Client({ name: 'neanes-selection-smoke', version: '1.0.0' });
-await client.connect(
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
-  ),
-);
+const client = await connectHttpClient('neanes-selection-smoke');
 const tools = (await client.listTools()).tools;
-const validator = new AjvJsonSchemaValidator();
-const inputs = new Map(
-  tools.map((tool) => [tool.name, validator.getValidator(tool.inputSchema)]),
-);
-const outputs = new Map(
-  tools.map((tool) => [tool.name, validator.getValidator(tool.outputSchema)]),
-);
-async function call(name, args = {}, error) {
-  if (!error) {
-    assert.equal(inputs.get(name)(args).valid, true);
-  }
-  const result = await client.callTool({ name, arguments: args });
-  const outcome = result.structuredContent;
-  assert.deepEqual(outcome, JSON.parse(result.content[0].text));
-  assert.equal(outputs.get(name)(outcome).valid, true);
-  assert.equal(outcome.success, !error, JSON.stringify(outcome));
-  if (error) {
-    assert.equal(outcome.error.code, error);
-  } else {
-    return outcome.result;
-  }
-}
+const call = createToolCaller(client, tools);
 const introduced = [];
 let sessionId;
 try {
@@ -285,7 +218,7 @@ try {
     'DOCUMENT_NOT_FOUND',
   );
   await call('get_selection', { ...args, sessionId }, 'DOCUMENT_NOT_FOUND');
-  const current = await readScoreSnapshot(call, { ...args, sections: [] });
+  const current = await call('get_document_properties', args);
   await call('replace_document_properties', {
     ...args,
     expectedRevision: current.revision,
@@ -301,12 +234,7 @@ try {
   );
 } finally {
   for (const args of introduced.reverse()) {
-    const current = await readScoreSnapshot(call, { ...args, sections: [] });
-    await call('close_document', {
-      ...args,
-      expectedRevision: current.revision,
-      discardUnsavedChanges: true,
-    });
+    await closeDocument(call, args);
   }
   if (sessionId) {
     await call('close_session', { sessionId, discardUnsavedChanges: true });

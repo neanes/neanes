@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
-
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { connectCdp, editorTarget } from './smokeCdp.mjs';
+import {
+  closeDocument,
+  connectHttpClient,
+  createToolCaller,
+} from './smokeClient.mjs';
 
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
@@ -14,79 +16,14 @@ assert.ok(
   directory && path.isAbsolute(directory) && token,
   'Pass an allowed output directory and NEANES_MCP_TOKEN.',
 );
-const client = new Client({
-  name: 'neanes-element-edit-smoke',
-  version: '1.0.0',
-});
-await client.connect(
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
-  ),
-);
-let inputValidators;
-async function call(name, args = {}, error) {
-  // Deliberately invalid calls must reach runtime validation below.
-  if (inputValidators && !error) {
-    assert.equal(
-      inputValidators.get(name)(args).valid,
-      true,
-      `Published input schema rejects ${name}`,
-    );
-  }
-  const reply = await client.callTool({ name, arguments: args });
-  const outcome = reply.structuredContent;
-  assert.deepEqual(outcome, JSON.parse(reply.content[0].text));
-  if (error) {
-    assert.equal(outcome.success, false, JSON.stringify(outcome));
-    assert.equal(outcome.error.code, error);
-  } else {
-    assert.equal(outcome.success, true, JSON.stringify(outcome));
-    return outcome.result;
-  }
-}
+const client = await connectHttpClient('neanes-element-edit-smoke');
+let call = createToolCaller(client);
 let socket;
-let nextId = 0;
 async function evaluate(expression) {
-  if (!socket) {
-    const targets = await (
-      await fetch(`${process.env.NEANES_DEBUG_URL}/json/list`)
-    ).json();
-    const target = targets.find(
-      (target) =>
-        target.type === 'page' &&
-        !target.url.includes('export.html') &&
-        !target.url.startsWith('devtools:'),
-    );
-    assert.ok(target);
-    socket = new WebSocket(target.webSocketDebuggerUrl);
-    await new Promise((resolve) =>
-      socket.addEventListener('open', resolve, { once: true }),
-    );
-  }
-  return new Promise((resolve, reject) => {
-    const id = ++nextId;
-    const handler = (event) => {
-      const reply = JSON.parse(event.data);
-      if (reply.id !== id) {
-        return;
-      }
-      socket.removeEventListener('message', handler);
-      if (reply.error || reply.result?.exceptionDetails) {
-        reject(new Error(JSON.stringify(reply)));
-      } else {
-        resolve(reply.result.result.value);
-      }
-    };
-    socket.addEventListener('message', handler);
-    socket.send(
-      JSON.stringify({
-        id,
-        method: 'Runtime.evaluate',
-        params: { expression, awaitPromise: true, returnByValue: true },
-      }),
-    );
-  });
+  socket ??= await connectCdp(
+    (await editorTarget(process.env.NEANES_DEBUG_URL)).webSocketDebuggerUrl,
+  );
+  return socket.evaluate(expression);
 }
 const image =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
@@ -105,13 +42,7 @@ try {
     includeErrorCodes: true,
   });
   assert.ok(capabilities.errorCodes.includes('REVISION_CONFLICT'));
-  const validator = new AjvJsonSchemaValidator();
-  inputValidators = new Map(
-    tools.tools.map((tool) => [
-      tool.name,
-      validator.getValidator(tool.inputSchema),
-    ]),
-  );
+  call = createToolCaller(client, tools.tools);
   assert.ok(
     JSON.stringify(
       tools.tools.find((tool) => tool.name === 'edit_elements').inputSchema,
@@ -623,12 +554,7 @@ try {
 } finally {
   try {
     for (const args of [...introduced.values()].reverse()) {
-      const current = await readScoreSnapshot(call, args);
-      await call('close_document', {
-        ...args,
-        expectedRevision: current.revision,
-        discardUnsavedChanges: true,
-      });
+      await closeDocument(call, args);
     }
     if (sessionId) {
       await call('close_session', { sessionId, discardUnsavedChanges: true });

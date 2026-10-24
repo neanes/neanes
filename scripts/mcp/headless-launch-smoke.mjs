@@ -20,6 +20,7 @@ import electron from 'electron';
 
 import { checkBatch } from './batchChecks.mjs';
 import { checkSettings } from './settingsChecks.mjs';
+import { callTool } from './smokeClient.mjs';
 
 const directory = await mkdtemp(path.join(tmpdir(), 'neanes-headless-smoke-'));
 const policyPath = path.join(directory, 'agent-access.json');
@@ -52,9 +53,7 @@ async function connect(
   return client;
 }
 async function call(client, name, args = {}) {
-  const result = await client.callTool({ name, arguments: args });
-  assert.ok(!result.isError, JSON.stringify(result));
-  return result.structuredContent.result;
+  return (await callTool(client, name, args)).structuredContent.result;
 }
 try {
   const [first, second] = await Promise.all([connect(), connect()]);

@@ -3,8 +3,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
 
 const profile = process.env.NEANES_DEV_USER_DATA_DIR;
 const token = process.env.NEANES_MCP_TOKEN;
@@ -13,21 +12,8 @@ if (!profile || !path.isAbsolute(profile) || !token) {
     'Use the same token, URL, and isolated NEANES_DEV_USER_DATA_DIR as the test app.',
   );
 }
-const client = new Client({ name: 'neanes-close-smoke', version: '1.0.0' });
-await client.connect(
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    {
-      requestInit: { headers: { Authorization: `Bearer ${token}` } },
-    },
-  ),
-);
-async function call(name, args = {}) {
-  const reply = await client.callTool({ name, arguments: args });
-  assert.ok(!reply.isError, JSON.stringify(reply));
-  assert.equal(reply.structuredContent.success, true);
-  return reply.structuredContent.result;
-}
+const client = await connectHttpClient('neanes-close-smoke');
+const call = createToolCaller(client);
 try {
   const initial = await call('list_documents');
   assert.equal(

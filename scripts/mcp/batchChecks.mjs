@@ -3,12 +3,10 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+import { createToolCaller } from './smokeClient.mjs';
+
 export async function checkBatch(client, directory, seedPath) {
-  async function call(name, args = {}) {
-    const reply = await client.callTool({ name, arguments: args });
-    assert.ok(!reply.isError, JSON.stringify(reply));
-    return reply.structuredContent.result;
-  }
+  const call = createToolCaller(client);
   const initialIds = (await call('list_documents')).map(
     (doc) => doc.documentId,
   );

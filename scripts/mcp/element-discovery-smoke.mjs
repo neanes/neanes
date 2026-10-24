@@ -2,10 +2,13 @@ import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { connectCdp, editorTarget } from './smokeCdp.mjs';
+import {
+  closeDocument,
+  connectHttpClient,
+  createToolCaller,
+} from './smokeClient.mjs';
 
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
@@ -14,81 +17,20 @@ if (!directory || !path.isAbsolute(directory) || !token) {
     'Usage: NEANES_MCP_TOKEN=... node scripts/mcp/element-discovery-smoke.mjs /absolute/allowed/directory',
   );
 }
-const client = new Client({
-  name: 'neanes-element-discovery-smoke',
-  version: '1.0.0',
-});
-await client.connect(
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
-  ),
-);
-async function call(name, args = {}, error) {
-  const reply = await client.callTool({ name, arguments: args });
-  const outcome = reply.structuredContent;
-  assert.deepEqual(outcome, JSON.parse(reply.content[0].text));
-  if (error) {
-    assert.equal(outcome.success, false, JSON.stringify(outcome));
-    assert.equal(outcome.error.code, error);
-  } else {
-    assert.equal(outcome.success, true, JSON.stringify(outcome));
-    return outcome.result;
-  }
-}
+const client = await connectHttpClient('neanes-element-discovery-smoke');
+const call = createToolCaller(client);
 // Optional renderer access exercises live edits that the save format omits.
 // Restrict this to a disposable Electron profile.
 let debugSocket;
-let debugRequestId = 0;
 async function mutateChildren(documentId, operation) {
-  if (!debugSocket) {
-    const targets = await (
-      await fetch(`${process.env.NEANES_DEBUG_URL}/json/list`)
-    ).json();
-    const target = targets.find(
-      (target) =>
-        target.type === 'page' &&
-        !target.url.includes('export.html') &&
-        !target.url.startsWith('devtools:'),
-    );
-    assert.ok(target, 'No disposable editor debugging target found.');
-    debugSocket = new WebSocket(target.webSocketDebuggerUrl);
-    await new Promise((resolve) =>
-      debugSocket.addEventListener('open', resolve, { once: true }),
-    );
-  }
-  const result = await new Promise((resolve, reject) => {
-    const id = ++debugRequestId;
-    const onMessage = (event) => {
-      const reply = JSON.parse(event.data);
-      if (reply.id !== id) {
-        return;
-      }
-      debugSocket.removeEventListener('message', onMessage);
-      if (reply.error || reply.result?.exceptionDetails) {
-        reject(new Error(JSON.stringify(reply)));
-      } else {
-        resolve(reply.result);
-      }
-    };
-    debugSocket.addEventListener('message', onMessage);
-    debugSocket.send(
-      JSON.stringify({
-        id,
-        method: 'Runtime.evaluate',
-        params: {
-          expression: `(() => {
-        const workspace = window._editor.workspaces.value.find(w => w.id === ${JSON.stringify(documentId)});
-        const note = workspace.score.staff.elements[0];
-        ${operation}
-      })()`,
-          returnByValue: true,
-          awaitPromise: true,
-        },
-      }),
-    );
-  });
-  return result;
+  debugSocket ??= await connectCdp(
+    (await editorTarget(process.env.NEANES_DEBUG_URL)).webSocketDebuggerUrl,
+  );
+  return debugSocket.evaluate(`(() => {
+    const workspace = window._editor.workspaces.value.find(w => w.id === ${JSON.stringify(documentId)});
+    const note = workspace.score.staff.elements[0];
+    ${operation}
+  })()`);
 }
 
 const documents = [];
@@ -403,12 +345,7 @@ try {
   );
 } finally {
   for (const args of documents.reverse()) {
-    const current = await readScoreSnapshot(call, args);
-    await call('close_document', {
-      ...args,
-      expectedRevision: current.revision,
-      discardUnsavedChanges: true,
-    });
+    await closeDocument(call, args);
   }
   if (sessionId) {
     await call('close_session', { sessionId, discardUnsavedChanges: true });

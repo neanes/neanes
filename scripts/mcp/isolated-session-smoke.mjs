@@ -3,85 +3,27 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { connectCdp, editorTarget } from './smokeCdp.mjs';
+import {
+  closeDocument,
+  connectHttpClient,
+  createToolCaller,
+} from './smokeClient.mjs';
+import { eventually } from './smokePolling.mjs';
 
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(directory && path.isAbsolute(directory) && token);
 const debugUrl = process.env.NEANES_DEBUG_URL ?? 'http://127.0.0.1:9334';
 const targets = async () => (await fetch(`${debugUrl}/json/list`)).json();
-const editorTarget = (await targets()).find(
-  (target) =>
-    target.type === 'page' &&
-    !target.url.includes('export.html') &&
-    !target.url.startsWith('devtools:'),
+const socket = await connectCdp(
+  (await editorTarget(debugUrl)).webSocketDebuggerUrl,
 );
-assert.ok(
-  editorTarget,
-  'Start an isolated Electron instance with --remote-debugging-port=9334.',
-);
-const socket = new WebSocket(editorTarget.webSocketDebuggerUrl);
-await new Promise((resolve) =>
-  socket.addEventListener('open', resolve, { once: true }),
-);
-let nextId = 0;
-const requests = new Map();
-socket.addEventListener('message', (event) => {
-  const reply = JSON.parse(event.data);
-  if (requests.has(reply.id)) {
-    const { resolve, reject } = requests.get(reply.id);
-    requests.delete(reply.id);
-    if (reply.error || reply.result.exceptionDetails) {
-      reject(new Error(JSON.stringify(reply)));
-    } else {
-      resolve(reply.result);
-    }
-  }
-});
-function send(method, params) {
-  return new Promise((resolve, reject) => {
-    const id = ++nextId;
-    requests.set(id, { resolve, reject });
-    socket.send(
-      JSON.stringify({
-        id,
-        method,
-        params,
-      }),
-    );
-  });
-}
-async function evaluate(expression) {
-  const result = await send('Runtime.evaluate', {
-    expression,
-    returnByValue: true,
-    awaitPromise: true,
-  });
-  return result.result.value;
-}
-const client = new Client({ name: 'neanes-isolation-smoke', version: '1.0.0' });
-const transport = () =>
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
-  );
-await client.connect(transport());
-async function call(name, args = {}) {
-  const reply = await client.callTool({ name, arguments: args });
-  assert.ok(!reply.isError, `${name}: ${JSON.stringify(reply)}`);
-  return reply.structuredContent.result;
-}
-async function fails(name, args, code) {
-  const reply = await client.callTool({ name, arguments: args });
-  assert.equal(
-    reply.structuredContent.error?.code,
-    code,
-    JSON.stringify(reply),
-  );
-}
+const { evaluate } = socket;
+const client = await connectHttpClient('neanes-isolation-smoke');
+const call = createToolCaller(client);
+const fails = call;
 let primaryError;
 const sessions = new Set();
 const introduced = [];
@@ -335,19 +277,16 @@ try {
     },
   );
   const rejected = assert.rejects(cancelled, { name: 'AbortError' });
-  async function waitFor(predicate) {
-    for (let i = 0; i < 300; i++) {
-      if (await predicate()) {
-        return;
-      }
-      await setTimeout(20);
-    }
-    throw new Error('Renderer lifecycle timed out');
-  }
-  await waitFor(async () => (await hiddenTargets()).length === 1);
+  await eventually(
+    async () => assert.equal((await hiddenTargets()).length, 1),
+    { timeoutMs: 6000, intervalMs: 20 },
+  );
   controller.abort();
   await rejected;
-  await waitFor(async () => (await hiddenTargets()).length === 0);
+  await eventually(
+    async () => assert.equal((await hiddenTargets()).length, 0),
+    { timeoutMs: 6000, intervalMs: 20 },
+  );
   await assert.rejects(fs.access(cancelledPath), { code: 'ENOENT' });
   assert.equal(
     (
@@ -416,12 +355,7 @@ try {
   }
   for (const documentId of introduced) {
     try {
-      const current = await readScoreSnapshot(call, { documentId });
-      await call('close_document', {
-        documentId,
-        expectedRevision: current.revision,
-        discardUnsavedChanges: true,
-      });
+      await closeDocument(call, { documentId });
     } catch (error) {
       cleanupErrors.push(error);
     }

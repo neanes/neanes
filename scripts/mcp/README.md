@@ -110,8 +110,19 @@ node scripts/mcp/agent-access-smoke.mjs
 ```
 
 Tests use disposable profiles and folders. Set NEANES_TEST_EXECUTABLE to a built
-app executable for packaging checks. The editor test uses debug ports 9346/9347;
+app executable for packaging checks. Self-launching editor tests use OS-assigned
+debugging ports;
 NEANES_TEST_MCP_FAILURE=1 occupies the configured port to verify nonfatal editor startup, independent private workers, and retry after the port is released.
+
+Smoke scripts share `smokeClient.mjs` for HTTP connections, MCP outcome assertions,
+and optional published-schema validation. `smokeCdp.mjs` owns debugger request
+dispatch and JavaScript evaluation. `smokeApp.mjs` creates disposable profiles,
+launches Electron, discovers endpoints/debuggers, captures logs, and removes the
+profile after stopping the app. Preview image artifacts are retained separately.
+`smokePolling.mjs` shares bounded observation polling and metadata-only revision
+settlement. Document cleanup uses the metadata reader instead of reconstructing
+scores. Scenario scripts retain their readiness and lifecycle assertions; preview
+checks also inspect raw response content for images.
 
 ## Direct HTTP development setup
 
@@ -756,7 +767,7 @@ After `npx vite build`, run outside the agent command sandbox:
 node scripts/mcp/preview-smoke.mjs
 ```
 
-This starts and stops a disposable editor and bridge using debug ports 9356/9357.
+This starts and stops a disposable editor and bridge using OS-assigned debugging ports.
 It checks unsaved interactive/private documents, multiple pages, image delivery
 through the bridge, pixel bounds and visible content, revision/layout conflicts,
 cancellation, concurrent edits, broken-image failure, renderer disposal, and

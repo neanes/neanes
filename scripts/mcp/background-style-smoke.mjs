@@ -1,43 +1,16 @@
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { setTimeout } from 'node:timers/promises';
-
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { settledDocument } from './smokePolling.mjs';
 
 const directory = process.argv[2];
 const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(directory && path.isAbsolute(directory) && token);
-const client = new Client({
-  name: 'neanes-background-style-smoke',
-  version: '1.0.0',
-});
-await client.connect(
-  new StreamableHTTPClientTransport(
-    new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp'),
-    { requestInit: { headers: { Authorization: `Bearer ${token}` } } },
-  ),
-);
-async function call(name, args = {}) {
-  const reply = await client.callTool({ name, arguments: args });
-  assert.ok(!reply.isError, JSON.stringify(reply));
-  return reply.structuredContent.result;
-}
-async function settledDocument(documentId) {
-  let previous;
-  for (let attempt = 0; attempt < 100; attempt++) {
-    const current = await readScoreSnapshot(call, { documentId });
-    if (current.revision === previous?.revision) {
-      return current;
-    }
-    previous = current;
-    await setTimeout(50);
-  }
-  throw new Error('Document did not settle.');
-}
+const client = await connectHttpClient('neanes-background-style-smoke');
+const call = createToolCaller(client);
 function heights(score) {
   return [
     score.staff.elements[0].height,
@@ -147,7 +120,13 @@ try {
     fontVariantCaps: 'all-small-caps',
     textDecoration: 'underline',
   });
-  const beforeForeground = await settledDocument(foreground.documentId);
+  const beforeForegroundRevision = await settledDocument(call, {
+    documentId: foreground.documentId,
+  });
+  const beforeForeground = await readScoreSnapshot(call, {
+    documentId: foreground.documentId,
+    expectedRevision: beforeForegroundRevision.revision,
+  });
   const foregroundHeights = heights(beforeForeground.score);
   const beforeBackground = await readScoreSnapshot(call, {
     documentId: background.documentId,
@@ -163,7 +142,13 @@ try {
       .documentId,
     foreground.documentId,
   );
-  const unchangedForeground = await settledDocument(foreground.documentId);
+  const unchangedForegroundRevision = await settledDocument(call, {
+    documentId: foreground.documentId,
+  });
+  const unchangedForeground = await readScoreSnapshot(call, {
+    documentId: foreground.documentId,
+    expectedRevision: unchangedForegroundRevision.revision,
+  });
   assert.deepEqual(
     heights(unchangedForeground.score),
     foregroundHeights,
@@ -185,7 +170,9 @@ try {
     'The multipanel center must contribute to the measured height.',
   );
   await enlarge(foreground.documentId);
-  const currentForeground = await settledDocument(foreground.documentId);
+  const currentForeground = await settledDocument(call, {
+    documentId: foreground.documentId,
+  });
   await call('save_document', {
     documentId: foreground.documentId,
     expectedRevision: currentForeground.revision,

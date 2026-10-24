@@ -1,28 +1,13 @@
 import assert from 'node:assert/strict';
-import { setTimeout } from 'node:timers/promises';
+
+import { closeDocument, createToolCaller } from './smokeClient.mjs';
+import { settledDocument } from './smokePolling.mjs';
 
 // Exercise the real MCP transport in interactive, private and headless smoke runs.
 export async function checkSettings(client, scope = {}) {
-  async function call(name, args = {}, errorCode) {
-    const reply = await client.callTool({
-      name,
-      arguments: { ...scope, ...args },
-    });
-    if (errorCode) {
-      assert.equal(
-        reply.structuredContent.error.code,
-        errorCode,
-        JSON.stringify(reply),
-      );
-      return;
-    }
-    assert.ok(!reply.isError, JSON.stringify(reply));
-    assert.deepEqual(
-      reply.structuredContent,
-      JSON.parse(reply.content[0].text),
-    );
-    return reply.structuredContent.result;
-  }
+  const caller = createToolCaller(client);
+  const call = (name, args = {}, error) =>
+    caller(name, { ...scope, ...args }, error);
   const tools = (await client.listTools()).tools;
   assert.ok(!tools.some(({ name }) => name === 'get_document'));
   for (const name of [
@@ -137,7 +122,7 @@ export async function checkSettings(client, scope = {}) {
       changes: {},
     });
     assert.equal(unchanged.revision, updated.revision);
-    const changedHeader = await call('update_header_footer_settings', {
+    await call('update_header_footer_settings', {
       ...args,
       expectedRevision: updated.revision,
       changes: {
@@ -149,17 +134,7 @@ export async function checkSettings(client, scope = {}) {
         richHeaderFooter: true,
       },
     });
-    // Newly visible live text boxes can report measured heights asynchronously.
-    // Refresh reads before a dependent operation; never replay a write.
-    let settled = changedHeader;
-    for (let attempt = 0; attempt < 20; attempt++) {
-      await setTimeout(50);
-      const current = await call('get_document_properties', args);
-      if (current.revision === settled.revision) {
-        break;
-      }
-      settled = current;
-    }
+    const settled = await settledDocument(call, args);
     const settings = await call('get_header_footer_settings', {
       ...args,
       expectedRevision: settled.revision,
@@ -210,11 +185,6 @@ export async function checkSettings(client, scope = {}) {
       { title: 'Changed settings title', author: 'Author' },
     );
   } finally {
-    const current = await call('get_document_properties', args);
-    await call('close_document', {
-      ...args,
-      expectedRevision: current.revision,
-      discardUnsavedChanges: true,
-    });
+    await closeDocument(call, args);
   }
 }

@@ -1,32 +1,23 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
-import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { setTimeout } from 'node:timers/promises';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import electron from 'electron';
 
-const directory = await mkdtemp(path.join(tmpdir(), 'neanes-agent-access-'));
-const policyPath = path.join(directory, 'agent-access.json');
+import { createSmokeApp } from './smokeApp.mjs';
+import { callTool } from './smokeClient.mjs';
+import { eventually as poll } from './smokePolling.mjs';
+
+const app = await createSmokeApp('neanes-agent-access-');
+const { directory, policyPath } = app;
 const files = path.join(directory, 'files');
 await mkdir(files);
-await writeFile(
-  policyPath,
-  JSON.stringify({
-    enabled: true,
-    token: randomBytes(32).toString('hex'),
-  }),
-  { mode: 0o600 },
-);
 const executable = process.env.NEANES_TEST_EXECUTABLE || electron;
 const appArgs = process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()];
-const clients = [],
-  sockets = [];
+const clients = [];
 let editor;
 const startupFailure = process.env.NEANES_TEST_MCP_FAILURE === '1';
 let occupiedPort;
@@ -34,18 +25,8 @@ if (startupFailure) {
   occupiedPort = createServer();
   await new Promise((resolve) => occupiedPort.listen(0, '127.0.0.1', resolve));
 }
-async function eventually(operation) {
-  let error;
-  for (let i = 0; i < 120; i++) {
-    try {
-      return await operation();
-    } catch (e) {
-      error = e;
-      await setTimeout(250);
-    }
-  }
-  throw error;
-}
+const eventually = (operation) =>
+  poll(operation, { timeoutMs: 30_000, intervalMs: 250 });
 async function connect(configuration) {
   const client = new Client({ name: 'neanes-access-smoke', version: '1' });
   clients.push(client);
@@ -69,85 +50,20 @@ async function connect(configuration) {
   return client;
 }
 async function call(client, name, args = {}) {
-  const result = await client.callTool({ name, arguments: args });
-  assert.ok(!result.isError, JSON.stringify(result));
-  return result.structuredContent.result;
-}
-async function debuggerConnection(url) {
-  const targets = await eventually(async () => {
-    const list = await (await fetch(url)).json();
-    assert.ok(list[0]?.webSocketDebuggerUrl);
-    return list;
-  });
-  const target = targets.find((t) => t.type === 'page') || targets[0];
-  const socket = new WebSocket(target.webSocketDebuggerUrl);
-  sockets.push(socket);
-  await new Promise((resolve) =>
-    socket.addEventListener('open', resolve, { once: true }),
-  );
-  let id = 0;
-  const requests = new Map();
-  socket.addEventListener('message', (event) => {
-    const reply = JSON.parse(event.data);
-    const pending = requests.get(reply.id);
-    if (pending) {
-      requests.delete(reply.id);
-      if (reply.error || reply.result?.exceptionDetails) {
-        pending.reject(new Error(JSON.stringify(reply)));
-      } else {
-        pending.resolve(reply.result);
-      }
-    }
-  });
-  return (method, params) =>
-    new Promise((resolve, reject) => {
-      const requestId = ++id;
-      requests.set(requestId, { resolve, reject });
-      socket.send(JSON.stringify({ id: requestId, method, params }));
-    });
+  return (await callTool(client, name, args)).structuredContent.result;
 }
 try {
   // Worker first, then editor; another worker after editor startup covers the opposite order.
   const first = await connect();
   await call(first, 'create_document', { title: 'Background draft' });
-  editor = spawn(
+  editor = app.start({
     executable,
-    [
-      ...appArgs,
-      '--remote-debugging-port=9346',
-      '--inspect=9347',
-      '--no-update',
-    ],
-    {
-      env: {
-        ...process.env,
-        IS_TEST: '1',
-        NEANES_MCP_PORT: String(occupiedPort?.address().port ?? 0),
-        NEANES_MCP_TOKEN: undefined,
-        NEANES_DEV_USER_DATA_DIR: directory,
-      },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    },
-  );
-  editor.stderr.on('data', (data) => process.stderr.write(data));
-  const renderer = await debuggerConnection('http://127.0.0.1:9346/json/list');
-  const main = await debuggerConnection('http://127.0.0.1:9347/json/list');
-  const evaluate = async (expression) =>
-    (
-      await renderer('Runtime.evaluate', {
-        expression,
-        awaitPromise: true,
-        returnByValue: true,
-      })
-    ).result.value;
-  const evaluateMain = async (expression) =>
-    (
-      await main('Runtime.evaluate', {
-        expression,
-        awaitPromise: true,
-        returnByValue: true,
-      })
-    ).result.value;
+    appArgs,
+    args: ['--remote-debugging-port=0', '--inspect=0'],
+    port: occupiedPort?.address().port ?? 0,
+  });
+  const { send: renderer, evaluate } = await app.debugger();
+  const { evaluate: evaluateMain } = await app.debugger('main');
   await eventually(async () =>
     assert.equal(
       (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).status,
@@ -620,16 +536,12 @@ try {
     'Agent access smoke passed: both launch orders, private defaults, live scope, failure/retry, draft confirmation, disable/re-enable, and unchanged editor documents.',
   );
 } finally {
-  if (occupiedPort) {
-    await new Promise((resolve) => occupiedPort.close(resolve));
+  try {
+    if (occupiedPort) {
+      await new Promise((resolve) => occupiedPort.close(resolve));
+    }
+    await Promise.allSettled(clients.map((client) => client.close()));
+  } finally {
+    await app.close();
   }
-  await Promise.allSettled(clients.map((client) => client.close()));
-  for (const socket of sockets) {
-    socket.close();
-  }
-  if (editor && editor.exitCode === null) {
-    editor.kill('SIGTERM');
-    await new Promise((resolve) => editor.once('exit', resolve));
-  }
-  await rm(directory, { recursive: true, force: true });
 }

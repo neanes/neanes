@@ -1,104 +1,17 @@
 // Run outside the agent command sandbox; starts a disposable Electron app.
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
-
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
-import electron from 'electron';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
+import { createSmokeApp } from './smokeApp.mjs';
+import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
 
-const directory = await mkdtemp(path.join(tmpdir(), 'neanes-text-search-'));
-await writeFile(
-  path.join(directory, 'agent-access.json'),
-  JSON.stringify({ enabled: true, token: randomBytes(32).toString('hex') }),
-  { mode: 0o600 },
-);
-const editor = spawn(electron, [process.cwd(), '--no-update'], {
-  env: {
-    ...process.env,
-    IS_TEST: '1',
-    NEANES_DEV_USER_DATA_DIR: directory,
-    NEANES_MCP_PORT: '0',
-    NEANES_MCP_TOKEN: undefined,
-  },
-  stdio: ['ignore', 'pipe', 'pipe'],
-});
-let log = '';
-editor.stdout.on('data', (data) => {
-  log += data;
-});
-editor.stderr.on('data', (data) => {
-  log += data;
-});
+const app = await createSmokeApp('neanes-text-search-');
 let client;
 try {
-  let endpoint;
-  for (let attempt = 0; attempt < 300; attempt++) {
-    if (editor.exitCode !== null) {
-      throw new Error(`Electron exited: ${log}`);
-    }
-    try {
-      endpoint = JSON.parse(
-        await readFile(
-          path.join(directory, 'agent-access.json.endpoint'),
-          'utf8',
-        ),
-      );
-      if (endpoint.endpoint) {
-        break;
-      }
-    } catch (error) {
-      if (error.code !== 'ENOENT') {
-        throw error;
-      }
-    }
-    await delay(100);
-  }
-  assert.ok(endpoint?.endpoint, log);
-  client = new Client({ name: 'text-search-smoke', version: '1' });
-  await client.connect(
-    new StreamableHTTPClientTransport(new URL(endpoint.endpoint), {
-      requestInit: { headers: { Authorization: `Bearer ${endpoint.token}` } },
-    }),
-  );
+  app.start();
+  client = await connectHttpClient('text-search-smoke', await app.endpoint());
   const tools = (await client.listTools()).tools;
-  const validator = new AjvJsonSchemaValidator();
-  const inputs = new Map(
-    tools.map((tool) => [tool.name, validator.getValidator(tool.inputSchema)]),
-  );
-  const outputs = new Map(
-    tools.map((tool) => [tool.name, validator.getValidator(tool.outputSchema)]),
-  );
-  async function call(name, args = {}, error) {
-    if (!error) {
-      assert.equal(
-        inputs.get(name)(args).valid,
-        true,
-        `Invalid input: ${name}`,
-      );
-    }
-    const reply = await client.callTool({ name, arguments: args });
-    const outcome = reply.structuredContent;
-    assert.deepEqual(outcome, JSON.parse(reply.content[0].text));
-    assert.equal(
-      outputs.get(name)(outcome).valid,
-      true,
-      `Invalid output: ${name}`,
-    );
-    assert.equal(outcome.success, !error, JSON.stringify(outcome));
-    if (error) {
-      assert.equal(outcome.error.code, error);
-    } else {
-      return outcome.result;
-    }
-  }
+  const call = createToolCaller(client, tools);
   assert.equal(
     tools.find((tool) => tool.name === 'find_text').annotations.readOnlyHint,
     true,
@@ -348,9 +261,12 @@ try {
   }
   await call('close_session', { sessionId, discardUnsavedChanges: true });
 } catch (error) {
-  console.error(log);
+  console.error(app.log());
   throw error;
 } finally {
-  await client?.close();
-  editor.kill('SIGKILL');
+  try {
+    await client?.close();
+  } finally {
+    await app.close();
+  }
 }

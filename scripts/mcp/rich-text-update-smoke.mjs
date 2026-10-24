@@ -1,81 +1,17 @@
 // Run outside the agent command sandbox; this starts a disposable Electron app.
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import electron from 'electron';
+import { createSmokeApp } from './smokeApp.mjs';
+import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { eventually } from './smokePolling.mjs';
 
-const directory = await mkdtemp(
-  path.join(tmpdir(), 'neanes-rich-text-update-'),
-);
-const token = randomBytes(32).toString('hex');
-await writeFile(
-  path.join(directory, 'agent-access.json'),
-  JSON.stringify({ enabled: true, token }),
-  { mode: 0o600 },
-);
-const env = {
-  ...process.env,
-  IS_TEST: '1',
-  NEANES_DEV_USER_DATA_DIR: directory,
-  NEANES_MCP_PORT: '0',
-  NEANES_MCP_TOKEN: token,
-};
-delete env.ELECTRON_RUN_AS_NODE;
-const editor = spawn(
-  electron,
-  [process.cwd(), '--remote-debugging-port=0', '--no-update'],
-  { env, stdio: ['ignore', 'pipe', 'pipe'] },
-);
-let log = '';
-editor.stdout.on('data', (data) => {
-  log += data;
-});
-editor.stderr.on('data', (data) => {
-  log += data;
-});
-let socket, client;
-let nextId = 0;
-const requests = new Map();
-async function eventually(operation) {
-  let error;
-  for (let i = 0; i < 160; i++) {
-    try {
-      return await operation();
-    } catch (e) {
-      error = e;
-      await delay(100);
-    }
-  }
-  throw error;
-}
-function send(method, params) {
-  return new Promise((resolve, reject) => {
-    const id = ++nextId;
-    requests.set(id, { resolve, reject });
-    socket.send(JSON.stringify({ id, method, params }));
-  });
-}
-async function evaluate(expression) {
-  const result = await send('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  assert.ok(!result.exceptionDetails, JSON.stringify(result.exceptionDetails));
-  return result.result.value;
-}
-async function call(name, args = {}) {
-  const reply = await client.callTool({ name, arguments: args });
-  assert.ok(reply.structuredContent?.success, JSON.stringify(reply));
-  return reply.structuredContent.result;
-}
+const app = await createSmokeApp('neanes-rich-text-update-');
+const { directory } = app;
+let socket, client, call;
+const send = (method, params) => socket.send(method, params);
+const evaluate = (expression) => socket.evaluate(expression);
 const paragraph = (text) =>
   `<p class="neanes-paragraph-style-default-text">${text}</p>`;
 const workspace = 'window._editor.selectedWorkspace.value';
@@ -98,40 +34,8 @@ async function clickAt(point, clickCount = 1) {
   }
 }
 try {
-  const debugPort = await eventually(() => {
-    const match = /DevTools listening on ws:\/\/127\.0\.0\.1:(\d+)/.exec(log);
-    assert.ok(match, log);
-    return match[1];
-  });
-  const target = await eventually(async () => {
-    const targets = await (
-      await fetch(`http://127.0.0.1:${debugPort}/json/list`)
-    ).json();
-    const page = targets.find(
-      (t) =>
-        t.type === 'page' &&
-        !t.url.includes('export.html') &&
-        !t.url.startsWith('devtools:'),
-    );
-    assert.ok(page?.webSocketDebuggerUrl);
-    return page;
-  });
-  socket = new WebSocket(target.webSocketDebuggerUrl);
-  await new Promise((resolve) =>
-    socket.addEventListener('open', resolve, { once: true }),
-  );
-  socket.addEventListener('message', (event) => {
-    const reply = JSON.parse(event.data);
-    const pending = requests.get(reply.id);
-    if (pending) {
-      requests.delete(reply.id);
-      if (reply.error) {
-        pending.reject(new Error(JSON.stringify(reply.error)));
-      } else {
-        pending.resolve(reply.result);
-      }
-    }
-  });
+  app.start({ args: ['--remote-debugging-port=0'] });
+  socket = await app.debugger();
   await eventually(async () => {
     assert.equal(
       await evaluate(
@@ -144,15 +48,11 @@ try {
       'ready',
     );
   });
-  const url = /Neanes MCP listening at (http:\/\/127\.0\.0\.1:\d+\/mcp)/.exec(
-    log,
-  )[1];
-  client = new Client({ name: 'rich-text-update-smoke', version: '1' });
-  await client.connect(
-    new StreamableHTTPClientTransport(new URL(url), {
-      requestInit: { headers: { Authorization: `Bearer ${token}` } },
-    }),
+  client = await connectHttpClient(
+    'rich-text-update-smoke',
+    await app.endpoint(),
   );
+  call = createToolCaller(client);
 
   for (const [name, layout, fields] of [
     ['ordinary', {}, ['content']],
@@ -528,14 +428,12 @@ try {
     'Rich-text update smoke passed: content and mixed updates, all panels, Undo/Redo, pending typing, blur, saved HTML, headers/footers, and annotations.',
   );
 } catch (error) {
-  console.error(log);
+  console.error(app.log());
   throw error;
 } finally {
-  await client?.close();
-  socket?.close();
-  // This profile is disposable; never prompt to save failed-test drafts at shutdown.
-  const exited = new Promise((resolve) => editor.once('exit', resolve));
-  editor.kill('SIGKILL');
-  await exited;
-  await rm(directory, { recursive: true, force: true });
+  try {
+    await client?.close();
+  } finally {
+    await app.close();
+  }
 }

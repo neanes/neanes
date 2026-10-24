@@ -47,16 +47,24 @@ You do not need to keep every pane open. Use `View > Neume Selector`, `View > Co
 
 ## Set application preferences
 
-Choose `Edit > Preferences` to change settings that apply throughout Neanes, then choose **Update** to save them.
+Choose `Edit > Preferences` to change settings that apply throughout Neanes. Changes take effect immediately; choose **Close** when finished.
 
 - **Language** changes the language of the Neanes interface. Choose **System default** to follow your operating system or browser language. This setting does not change the language or direction of lyrics and other text in a score.
 - **Color Mode** sets the interface to **Light** or **Dark**. Choose **System** to follow your operating system's appearance setting.
 - **Menu Interaction** controls toolbar buttons that contain a family of related signs. With **Press and hold to select**, hold the button, move to the desired sign, and release. With **Click to open menu**, click the button and then click a sign.
 - **Tempo Defaults** sets the BPM used when you add each kind of tempo sign, including a tempo attached to a martyria. To give one tempo sign a different speed, select it in the score and change **BPM** in Properties. Changing a default does not alter tempo signs already in the score.
 
-Preferences are remembered between sessions. Choose **Use System Default** in the dialog to restore the application defaults, including the system language and appearance.
+Preferences are remembered between sessions. Choose **Use System Default** to restore the defaults for the current section.
 
-Desktop users can [connect an agent through MCP](./agent-access.md) from Preferences.
+### Agent access (MCP)
+
+In the desktop app, choose **Agent access (MCP)** to connect an AI assistant that supports the Model Context Protocol. Connected agents can read, edit, save, and export scores with the same file access as Neanes, including background work while the editor is closed.
+
+**Allow agent access** is off by default and takes effect immediately. Turn it on, then choose **Copy configuration** to get the connection settings for your MCP client. This requires Node.js 22 or later. **Connection status** shows whether the editor connection is ready; **Connection details** and **Retry connection** help resolve startup problems.
+
+Turning access off disconnects agents and discards temporary agent drafts. Save work you want to keep first. Saved files and editor tabs retain their contents, including edits already applied by an agent.
+
+See [MCP Server](./agent-access.md) for setup, capabilities, example requests, and the command reference.
 
 ## Understand the current selection
 

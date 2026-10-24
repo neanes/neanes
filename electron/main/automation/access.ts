@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
@@ -16,6 +16,7 @@ export async function readAccessPolicy(
   );
 }
 
+// Only the editor creates policy files; its access queue serializes callers.
 export async function initializeAccessPolicy(file: string) {
   try {
     return await readAccessPolicy(file);
@@ -28,23 +29,8 @@ export async function initializeAccessPolicy(file: string) {
       enabled: false,
     };
     await fs.mkdir(path.dirname(file), { recursive: true });
-    const temporary = `${file}.${randomUUID()}.tmp`;
-    try {
-      await fs.writeFile(temporary, JSON.stringify(policy), {
-        mode: 0o600,
-        flag: 'wx',
-      });
-      try {
-        await fs.link(temporary, file);
-      } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-          throw error;
-        }
-      }
-    } finally {
-      await fs.rm(temporary, { force: true });
-    }
-    return readAccessPolicy(file);
+    await atomicWrite(file, JSON.stringify(policy));
+    return policy;
   }
 }
 

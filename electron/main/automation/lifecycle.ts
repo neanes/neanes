@@ -379,29 +379,36 @@ export function installAgentAccess(options: {
         }
         return;
       }
-      try {
-        accessPolicy = await initializeAccessPolicy(accessPolicyFile);
-        if (app.isPackaged) {
-          await fs.mkdir(path.dirname(installedBridge), { recursive: true });
-          for (const name of ['bridgeProtocol.mjs', 'bridge.mjs']) {
-            const destination = path.join(path.dirname(installedBridge), name);
-            await atomicWrite(
-              destination,
-              await fs.readFile(path.join(process.resourcesPath, 'mcp', name)),
-            );
+      await accessQueue.run(async () => {
+        try {
+          accessPolicy = await initializeAccessPolicy(accessPolicyFile);
+          if (app.isPackaged) {
+            await fs.mkdir(path.dirname(installedBridge), { recursive: true });
+            for (const name of ['bridgeProtocol.mjs', 'bridge.mjs']) {
+              const destination = path.join(
+                path.dirname(installedBridge),
+                name,
+              );
+              await atomicWrite(
+                destination,
+                await fs.readFile(
+                  path.join(process.resourcesPath, 'mcp', name),
+                ),
+              );
+            }
           }
+          await syncAgentAccess();
+        } catch (error) {
+          accessPolicy ??= {
+            token: randomBytes(32).toString('hex'),
+            enabled: false,
+          };
+          accessError = failure(error);
+          console.error('Could not load agent access settings', error);
         }
-        await syncAgentAccess();
-      } catch (error) {
-        accessPolicy ??= {
-          token: randomBytes(32).toString('hex'),
-          enabled: false,
-        };
-        accessError = failure(error);
-        console.error('Could not load agent access settings', error);
-      }
 
-      agentAccessInitialized = true;
+        agentAccessInitialized = true;
+      });
     },
   };
 }

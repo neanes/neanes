@@ -12,15 +12,11 @@ import {
 } from './access';
 
 describe('internal agent credentials', () => {
-  it('generates private credentials once, including concurrent first launches', async () => {
+  it('generates private credentials once and reuses the saved policy', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'neanes-access-'));
     try {
-      const file = path.join(directory, 'credentials.json');
-      const [first, second] = await Promise.all([
-        initializeAccessPolicy(file),
-        initializeAccessPolicy(file),
-      ]);
-      expect(first).toEqual(second);
+      const file = path.join(directory, 'settings', 'credentials.json');
+      const first = await initializeAccessPolicy(file);
       expect(first.enabled).toBe(false);
       await expect(requireAgentAccess(file)).rejects.toThrow(
         'AGENT_ACCESS_DISABLED',

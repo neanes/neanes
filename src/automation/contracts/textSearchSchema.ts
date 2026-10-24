@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-import { searchableTextFields } from '@/automation/documents/textSearch';
 import { ElementType } from '@/models/Element';
+import { searchableTextFields } from '@/services/TextSearchService';
 import { normalizeSearchText } from '@/utils/searchNormalization';
 
 import { elementCollectionSchema } from './elementSchemas';

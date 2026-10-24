@@ -3,7 +3,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { createToolCaller } from './smokeClient.mjs';
+import JSZip from 'jszip';
+
+import { closeDocument, createToolCaller } from './smokeClient.mjs';
 
 export async function checkBatch(client, directory, seedPath) {
   const call = createToolCaller(client);
@@ -75,7 +77,6 @@ export async function checkBatch(client, directory, seedPath) {
       headerFooter: { showHeader: false },
       documentProperties: { author: 'Shared' },
     },
-    verifySaved: true,
   };
   const dry = await call('batch_update_files', {
     ...query,
@@ -102,10 +103,7 @@ export async function checkBatch(client, directory, seedPath) {
   assert.equal(outcomes.length, 37);
   assert.ok(
     outcomes.every(
-      (result) =>
-        result.status === 'completed' &&
-        result.verified &&
-        result.savedFilePath,
+      (result) => result.status === 'completed' && result.savedFilePath,
     ),
   );
   for (const [index, file] of files.entries()) {
@@ -132,12 +130,10 @@ export async function checkBatch(client, directory, seedPath) {
   ).height = 1;
   const staleSource = JSON.stringify(stale);
   await fs.writeFile(stalePath, staleSource);
-  const staleVerified = await call('batch_update_files', {
+  const staleUnchanged = await call('batch_update_files', {
     files: [{ filePath: stalePath }],
-    verifySaved: true,
   });
-  assert.equal(staleVerified.results[0].status, 'unchanged');
-  assert.equal(staleVerified.results[0].verified, true);
+  assert.equal(staleUnchanged.results[0].status, 'unchanged');
   assert.equal(await fs.readFile(stalePath, 'utf8'), staleSource);
   const noOpPath = files[2].filePath;
   const before = await fs.readFile(noOpPath, 'utf8');
@@ -177,9 +173,22 @@ export async function checkBatch(client, directory, seedPath) {
       { filePath: noOpPath, outputFilePath: copyPath, pdfFilePath: pdfPath },
     ],
     save: 'copy',
-    verifySaved: true,
   });
-  assert.equal(copied.results[0].verified, true);
+  assert.equal(copied.results[0].status, 'completed');
+  const archive = await JSZip.loadAsync(await fs.readFile(copyPath));
+  const copiedScore = JSON.parse(
+    await archive.file('batch-copy.byzx').async('text'),
+  );
+  assert.deepEqual(copiedScore, JSON.parse(before));
+  const reopened = await call('open_document', { filePath: copyPath });
+  try {
+    const metadata = await call('get_document_properties', {
+      documentId: reopened.documentId,
+    });
+    assert.deepEqual(metadata.properties, copiedScore.documentProperties);
+  } finally {
+    await closeDocument(call, { documentId: reopened.documentId });
+  }
   assert.ok((await fs.stat(pdfPath)).size > 1000);
   assert.equal(await fs.readFile(noOpPath, 'utf8'), before);
   const temporary = await call('batch_update_files', {
@@ -237,9 +246,8 @@ export async function checkBatch(client, directory, seedPath) {
   const aliasResult = await call('batch_update_files', {
     files: [{ filePath: aliasPath }],
     edits: { documentProperties: { author: 'Alias save' } },
-    verifySaved: true,
   });
-  assert.equal(aliasResult.results[0].verified, true);
+  assert.equal(aliasResult.results[0].status, 'completed');
   assert.ok((await fs.lstat(aliasPath)).isSymbolicLink());
   assert.equal(
     JSON.parse(await fs.readFile(aliasTarget, 'utf8')).documentProperties
@@ -302,6 +310,6 @@ export async function checkBatch(client, directory, seedPath) {
     initialIds,
   );
   console.info(
-    'Batch smoke passed: 37 varied scores, per-file plans, dry run, no-op, resume, errors, copy/PDF, temporary export, verification, collision protection, cancellation, and cleanup.',
+    'Batch smoke passed: 37 varied scores, per-file plans, dry run, no-op, resume, errors, copy/PDF, temporary export, save/reopen, collision protection, cancellation, and cleanup.',
   );
 }

@@ -45,7 +45,6 @@ describe('batch file contracts', () => {
       save: 'inPlace',
       startIndex: 0,
       dryRun: false,
-      verifySaved: false,
       onError: 'stop',
     });
     const tool = automationTools().find(
@@ -56,6 +55,7 @@ describe('batch file contracts', () => {
       valid: true,
     });
     expect(tool.inputSchema.properties).not.toHaveProperty('sessionId');
+    expect(tool.inputSchema.properties).not.toHaveProperty('verifySaved');
     for (const invalid of [
       { files: [] },
       { files: Array.from({ length: 101 }, () => files[0]) },
@@ -63,7 +63,7 @@ describe('batch file contracts', () => {
       { files, startIndex: -1 },
       { files, save: 'copy' },
       { files: [{ ...files[0], outputFilePath: '/out/a.byzx' }] },
-      { files, save: 'none', verifySaved: true },
+      { files, verifySaved: true },
       { files, sessionId: 'session' },
       { files, edits: { pageSetup: { unsupported: 1 } } },
       {
@@ -230,7 +230,6 @@ describe('batch file contracts', () => {
       {
         files: [{ ...files[0], outputFilePath: '/out/a.byzx' }],
         save: 'copy',
-        verifySaved: true,
       },
       {
         files: [{ ...files[0], pdfFilePath: '/out/a.pdf' }],

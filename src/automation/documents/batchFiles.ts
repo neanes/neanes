@@ -1,6 +1,5 @@
 import type { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
-import { SaveService } from '@/services/SaveService';
 
 import type {
   BatchEdits,
@@ -44,14 +43,6 @@ export function applyBatchEdits(
       ...edits.documentProperties,
     });
   }
-}
-
-function normalizedContent(data: string) {
-  return JSON.stringify(
-    SaveService.SaveScoreToJson(
-      SaveService.LoadScoreFromJson(JSON.parse(data)),
-    ),
-  );
 }
 
 export async function batchUpdateFiles(
@@ -110,30 +101,24 @@ export async function batchUpdateFiles(
           ? 'completed'
           : 'unchanged';
       if (!query.dryRun) {
-        let savedContent: string | undefined;
         if (
           query.save === 'copy' ||
           (query.save === 'inPlace' && result.changed)
         ) {
-          const saved = await documents.save(workspace, async (data) => {
-            savedContent = JSON.stringify(data);
-            return {
-              success: true,
-              ...(await ipc.automationWriteScore({
-                filePath:
-                  query.save === 'copy'
-                    ? file.outputFilePath!
-                    : opened.filePath,
-                data,
-                overwrite: query.overwrite,
-                expectedSource: {
-                  filePath: opened.filePath,
-                  mtimeMs: opened.sourceMtimeMs,
-                  size: opened.sourceSize,
-                },
-              })),
-            };
-          });
+          const saved = await documents.save(workspace, async (data) => ({
+            success: true,
+            ...(await ipc.automationWriteScore({
+              filePath:
+                query.save === 'copy' ? file.outputFilePath! : opened.filePath,
+              data,
+              overwrite: query.overwrite,
+              expectedSource: {
+                filePath: opened.filePath,
+                mtimeMs: opened.sourceMtimeMs,
+                size: opened.sourceSize,
+              },
+            })),
+          }));
           result.savedFilePath = saved.filePath;
           result.status = 'completed';
           if (!saved.savedContentUnchanged) {
@@ -141,23 +126,6 @@ export async function batchUpdateFiles(
               'REVISION_CONFLICT: Saved content changed unexpectedly.',
             );
           }
-        }
-        if (query.verifySaved) {
-          const saved = await ipc.automationReadScore(
-            query.save === 'copy' ? file.outputFilePath! : file.filePath,
-            [],
-          );
-          if ('documentId' in saved) {
-            throw new Error(
-              'INTERNAL_ERROR: Verification cannot reuse a document.',
-            );
-          }
-          // Skipped saves verify the original disk snapshot, not refreshed layout measurements.
-          const expected = savedContent ?? opened.data;
-          if (normalizedContent(saved.data) !== normalizedContent(expected)) {
-            throw new Error('SAVED_FILE_VERIFICATION_FAILED');
-          }
-          result.verified = true;
         }
         if (file.pdfFilePath) {
           await documents.exportPdf(workspace, (current) =>

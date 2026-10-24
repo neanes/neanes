@@ -233,7 +233,6 @@ try {
                 },
               ],
             },
-            verifySaved: true,
           },
         },
       }),
@@ -247,10 +246,6 @@ try {
     assert.equal(
       batchReply.result.structuredContent.result.results[0].status,
       'completed',
-    );
-    assert.equal(
-      batchReply.result.structuredContent.result.results[0].verified,
-      true,
     );
     const afterBatch = JSON.parse(await readFile(batchPath, 'utf8'));
     const afterBatchHeight = afterBatch.staff.elements.find(

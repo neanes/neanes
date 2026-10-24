@@ -42,7 +42,11 @@ describe('score files', () => {
         expectedSource: null,
       });
       const result = await files.read(filePath);
-      expect(JSON.parse(result.data)).toEqual(score);
+      const saved = JSON.parse(result.data);
+      expect(saved).toEqual(score);
+      expect(
+        SaveService.SaveScoreToJson(SaveService.LoadScoreFromJson(saved)),
+      ).toEqual(score);
       expect(result.filePath).toBe(filePath);
     },
   );

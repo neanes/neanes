@@ -47,12 +47,6 @@ export const batchQuerySchema = z
         'Validate edits and measure text without writing scores or rendering PDFs.',
       )
       .default(false),
-    verifySaved: z
-      .boolean()
-      .describe(
-        'Reread saved scores and compare normalized content; requires saving.',
-      )
-      .default(false),
     onError: z.enum(['stop', 'continue']).default('stop'),
     startIndex: z.number().int().nonnegative().default(0),
   })
@@ -62,13 +56,6 @@ export const batchQuerySchema = z
         code: 'custom',
         path: ['startIndex'],
         message: 'startIndex must address a file in the manifest.',
-      });
-    }
-    if (query.verifySaved && query.save === 'none') {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['verifySaved'],
-        message: 'Saved-file verification requires saving.',
       });
     }
     query.files.forEach((file, index) => {
@@ -91,7 +78,6 @@ const batchFileResultSchema = z.strictObject({
   changed: z.boolean().optional(),
   savedFilePath: z.string().optional(),
   pdfFilePath: z.string().optional(),
-  verified: z.boolean().optional(),
   error: automationErrorSchema.pick({ code: true, message: true }).optional(),
 });
 export const batchResultSchema = z.strictObject({

@@ -868,7 +868,6 @@ const query = {
     pageSetup: { topMargin: 50 },
   },
   save: 'inPlace',
-  verifySaved: true,
 };
 ```
 
@@ -903,14 +902,10 @@ score and exporting its PDF are also separate commits.
 `dryRun: true` loads, validates, applies edits, and settles text measurements without
 saving or rendering PDFs. It reports whether the score would change, but does not
 guarantee destination permissions/availability or successful PDF rendering.
-`verifySaved: true` rereads the saved score and compares normalized serialized
-content; it also verifies unchanged in-place inputs. It requires a saving mode,
-and is skipped during dry runs. This checks persisted score data, not PDF font
-embedding or actual installed-font availability.
 
 Results contain `index`, input `filePath`, `status` (completed/unchanged/dryRun/failed),
-`changed` when known, committed `savedFilePath`/`pdfFilePath`, optional `verified`,
-and a compact error code/message. A later verification/PDF failure retains already
+`changed` when known, committed `savedFilePath`/`pdfFilePath`,
+and a compact error code/message. A later PDF failure retains already
 committed output paths. No document definitions or transient IDs/revisions are
 returned. `onError` defaults to `stop`; `continue` attempts later files. Cancellation
 and access revocation stop further work at authorization/render checkpoints.

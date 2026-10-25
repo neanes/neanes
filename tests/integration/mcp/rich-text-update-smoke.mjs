@@ -46,15 +46,21 @@ async function typeInReadyEditor(selector, expectedContent, text) {
       'Remounted CKEditor must be ready with the current content before typing',
     );
   });
+  await send('Page.bringToFront');
   await click(selector);
+  // Xvfb may run without a window manager to activate the clicked window.
+  // Focus through CKEditor's real view API before sending Chromium input.
+  await evaluate(`${editable}.ckeditorInstance.editing.view.focus()`);
   await eventually(async () => {
-    assert.equal(
+    assert.deepEqual(
       await evaluate(`(() => {
         const node = ${editable};
-        return Boolean(node?.ckeditorInstance?.ui.focusTracker.isFocused &&
-          node.contains(document.activeElement));
+        return {
+          editorFocused: Boolean(node?.ckeditorInstance?.ui.focusTracker.isFocused),
+          editableFocused: Boolean(node?.contains(document.activeElement)),
+        };
       })()`),
-      true,
+      { editorFocused: true, editableFocused: true },
       'CKEditor must own focus before typing',
     );
   });

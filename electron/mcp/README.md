@@ -55,14 +55,58 @@ discarded. HTTP timeouts/disconnects while the
 bridge remains alive preserve its documents for inspection. A crashed bridge leaves
 its worker a 60-second orphan grace period; private drafts are not recovered.
 
-The bridge ships at `resources/mcp/bridge.mjs` with `bridgeProtocol.mjs`; packaged
-startup installs both in the normal profile. The stable profile path works after
-a Linux AppImage unmounts, and executable configuration uses the original APPIMAGE
-path. No separate npm install is needed. Arguments are `--executable <absolute app
-executable>` and `--policy <absolute agent-access.json>`; development also uses
-`--app <absolute repository path>`. Startup waits for renderer readiness on a
-private pipe. Diagnostics go to stderr, stdout carries only MCP JSON-RPC, and
-credentials stay out of command arguments.
+The bridge ships at `resources/mcp/bridge.mjs` with `bridgeProtocol.mjs` and
+`compatibility.json`; packaged startup installs these files in the normal profile.
+The stable profile path works after a Linux AppImage unmounts. No separate npm
+install is needed. Arguments are `--executable <absolute app executable>` and
+`--policy <absolute agent-access.json>`; development also uses
+`--app <absolute repository path>`. The copied configuration uses the original
+APPIMAGE path on Linux.
+
+Linux users must refresh their MCP client configuration after updating Neanes if
+the AppImage filename or location changes. Open the updated Neanes app, copy the
+configuration from Preferences, replace the saved client configuration, and
+reconnect. The bridge uses the configured executable path; it does not discover
+or substitute a newer AppImage automatically. Moving the app on any platform also
+requires refreshing the configuration when its executable path changes.
+
+Startup waits for renderer readiness on a private pipe. Diagnostics go to stderr,
+stdout carries only MCP JSON-RPC, and credentials stay out of command arguments.
+Invalid JSON-RPC envelopes return Invalid Request errors without discarding
+private drafts.
+
+### Releases and compatibility
+
+There are three independent versions:
+
+- The MCP wire revision is negotiated at initialization. Each HTTP target retains
+  its negotiated revision, and the bridge supplies `MCP-Protocol-Version` on
+  subsequent requests. `compatibility.json` lists revisions implemented by the bridge:
+  `2025-11-25` and `2025-06-18`. Unsupported client revisions negotiate the preferred
+  supported revision; clients that cannot use it must disconnect. Older revisions
+  are excluded because they require receiving JSON-RPC batches, which this bridge
+  does not implement. SDK recognition alone does not establish bridge support.
+- `serverInfo.version` is the Neanes application version, supplied by `app.getVersion()`.
+- `capabilities.experimental["neanes/automation"].contractVersion` is the Neanes
+  automation compatibility version from `compatibility.json`. It starts at `1`.
+  Keep it unchanged for compatible additions. Increment it for breaking changes to
+  existing tool inputs, outputs, semantics, or bridge/worker routing assumptions.
+  This is independent of the score file format version.
+
+The bridge checks its worker's contract before discovery and checks each newly
+discovered editor connection before routing requests. An absent or different
+contract version is refused, with instructions to save private drafts, update
+Neanes, and reconnect. App versions may differ when their contracts match. Contract
+version checks do not replace bearer authentication or the access policy.
+
+An update does not hot-reload existing bridges, migrate private drafts, or replay
+requests. Save private documents before updating, open the updated Neanes app to
+install its bridge files, refresh the MCP configuration if the executable path
+changed, and reconnect the MCP client to load the new bridge and rediscover tools.
+Reconnecting starts a fresh private store. Clients with cached tool declarations
+may also need their normal tool-refresh action. Release testing
+should verify freshly copied configuration and exercise both compatible and
+incompatible automation contract versions.
 
 Headless capabilities report `mode: "headless"`. Raw HTTP headless document calls
 use the worker's private store directly. HTTP requests do

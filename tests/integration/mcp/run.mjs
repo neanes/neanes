@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const scenarios = [
+  'bridge-protocol',
   'headless-launch',
   'agent-access',
   'metadata',

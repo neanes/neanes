@@ -10,12 +10,17 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
 
 import {
+  acceptInitialization,
   bridgeInstructions,
   bridgeResourceContents,
   bridgeTools,
   documentScope,
   isDocumentTool,
+  isRequestId,
+  isRpcRequest,
+  preferredProtocolVersion,
 } from './bridgeProtocol.mjs';
+import compatibility from './compatibility.json' with { type: 'json' };
 
 const { values } = parseArgs({
   options: {
@@ -68,7 +73,7 @@ function validateConnection(connection) {
   }
   return connection;
 }
-async function rpc(connection, message, signal = AbortSignal.timeout(65_000)) {
+async function rpc(connection, message, signal) {
   validateConnection(connection);
   const response = await fetch(connection.endpoint, {
     method: 'POST',
@@ -76,9 +81,15 @@ async function rpc(connection, message, signal = AbortSignal.timeout(65_000)) {
       Authorization: `Bearer ${connection.token}`,
       'Content-Type': 'application/json',
       Accept: 'application/json, text/event-stream',
+      ...(message.method !== 'initialize' && connection.protocolVersion
+        ? { 'MCP-Protocol-Version': connection.protocolVersion }
+        : {}),
     },
     body: JSON.stringify(message),
-    signal,
+    signal: AbortSignal.any([
+      AbortSignal.timeout(65_000),
+      ...(signal ? [signal] : []),
+    ]),
   });
   if (!response.ok) {
     throw new Error(
@@ -89,21 +100,27 @@ async function rpc(connection, message, signal = AbortSignal.timeout(65_000)) {
     ? null
     : response.json();
 }
-const initialize = (connection) =>
-  rpc(
+async function initialize(connection) {
+  const reply = await rpc(
     connection,
     {
       jsonrpc: '2.0',
       id: 'bridge-initialize',
       method: 'initialize',
       params: {
-        protocolVersion: '2025-03-26',
+        protocolVersion: preferredProtocolVersion,
         capabilities: {},
         clientInfo: { name: 'neanes-bridge', version: '1' },
       },
     },
     AbortSignal.timeout(3000),
   );
+  connection.protocolVersion = acceptInitialization(reply?.result);
+  await rpc(connection, {
+    jsonrpc: '2.0',
+    method: 'notifications/initialized',
+  });
+}
 async function discoverEditor() {
   const deadline = Date.now() + 60_000;
   while (true) {
@@ -151,13 +168,10 @@ async function discoverEditor() {
     if (state.endpoint) {
       const connection = validateConnection(state);
       if (!validatedEditor) {
-        const reply = await initialize(connection);
-        if (reply?.result?.serverInfo?.name !== 'neanes') {
-          throw new Error('The editor endpoint is not Neanes.');
-        }
+        await initialize(connection);
         validatedEditor = connection;
       }
-      return connection;
+      return validatedEditor;
     }
     if (Date.now() > deadline) {
       throw new Error(
@@ -249,6 +263,17 @@ async function launchWorker() {
 async function forward(message, signal) {
   await requireAccess();
   let connection = primary;
+  if (
+    message.method === 'initialize' &&
+    typeof message.params?.protocolVersion === 'string' &&
+    !compatibility.protocolVersions.includes(message.params.protocolVersion)
+  ) {
+    // The SDK also accepts older revisions whose batch semantics we do not implement.
+    message = {
+      ...message,
+      params: { ...message.params, protocolVersion: preferredProtocolVersion },
+    };
+  }
   if (message.method === 'tools/call') {
     const tool = tools.find((tool) => tool.name === message.params?.name);
     if (tool && isDocumentTool(tool)) {
@@ -282,6 +307,7 @@ async function forward(message, signal) {
     reply.result.contents = bridgeResourceContents(reply.result.contents);
   }
   if (message.method === 'initialize' && reply?.result) {
+    connection.protocolVersion = acceptInitialization(reply.result);
     reply.result.instructions = bridgeInstructions(reply.result.instructions);
   }
   return reply;
@@ -295,6 +321,7 @@ async function main() {
   await requireAccess();
   // Private work never inherits the interactive editor's modal or loading state.
   primary = await launchWorker();
+  await initialize(primary);
   const policyTimer = setInterval(() => {
     void requireAccess().catch(async (error) => {
       log(error.message);
@@ -322,6 +349,14 @@ async function main() {
         jsonrpc: '2.0',
         id: null,
         error: { code: -32700, message: 'Parse error' },
+      });
+      return;
+    }
+    if (!isRpcRequest(message) || requests.has(message.id)) {
+      send({
+        jsonrpc: '2.0',
+        id: isRequestId(message?.id) ? message.id : null,
+        error: { code: -32600, message: 'Invalid Request' },
       });
       return;
     }

@@ -25,6 +25,7 @@ import {
 import { assertResultBudget } from '../../../src/automation/contracts/responseBudget';
 import { automationResultSchemas } from '../../../src/automation/contracts/results';
 import { OperationQueue } from '../../../src/utils/OperationQueue';
+import compatibility from '../../mcp/compatibility.json';
 import {
   readToolSchemaResource,
   schemaResourceInstructions,
@@ -99,7 +100,15 @@ export async function startMcpServer(options: McpServerOptions) {
     const server = new McpServer(
       { name: 'neanes', version: options.version },
       {
-        capabilities: { tools: {}, resources: {} },
+        capabilities: {
+          tools: {},
+          resources: {},
+          experimental: {
+            'neanes/automation': {
+              contractVersion: compatibility.contractVersion,
+            },
+          },
+        },
         instructions: schemaResourceInstructions,
       },
     );

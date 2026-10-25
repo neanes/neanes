@@ -384,7 +384,11 @@ export function installAgentAccess(options: {
           accessPolicy = await initializeAccessPolicy(accessPolicyFile);
           if (app.isPackaged) {
             await fs.mkdir(path.dirname(installedBridge), { recursive: true });
-            for (const name of ['bridgeProtocol.mjs', 'bridge.mjs']) {
+            for (const name of [
+              'compatibility.json',
+              'bridgeProtocol.mjs',
+              'bridge.mjs',
+            ]) {
               const destination = path.join(
                 path.dirname(installedBridge),
                 name,

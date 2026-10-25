@@ -3,8 +3,8 @@ import { spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { createInterface } from 'node:readline';
 
+import { ReadBuffer } from '@modelcontextprotocol/sdk/shared/stdio.js';
 import electron from 'electron';
 
 import compatibility from '../../../electron/main/automation/compatibility.json' with { type: 'json' };
@@ -31,24 +31,41 @@ async function runScenario(protocolVersion, expectedVersion) {
   const exited = new Promise((resolve) =>
     child.once('exit', (code, signal) => resolve({ code, signal })),
   );
-  const lines = createInterface({ input: child.stdout });
+  const buffer = new ReadBuffer();
+  const protocolFailure = Promise.withResolvers();
   const replies = [];
   let awaitingReply;
-  lines.on('line', (line) => {
-    const reply = JSON.parse(line);
-    if (awaitingReply) {
-      const resolve = awaitingReply;
-      awaitingReply = undefined;
-      resolve(reply);
-    } else {
-      replies.push(reply);
+  const onData = (chunk) => {
+    try {
+      buffer.append(chunk);
+      let reply;
+      while ((reply = buffer.readMessage()) !== null) {
+        if (awaitingReply) {
+          const resolve = awaitingReply;
+          awaitingReply = undefined;
+          resolve(reply);
+        } else {
+          replies.push(reply);
+        }
+      }
+    } catch (error) {
+      protocolFailure.reject(
+        new Error(
+          `Invalid bridge stdout: ${JSON.stringify(chunk.toString('utf8').slice(0, 512))}; stderr: ${logs}`,
+          { cause: error },
+        ),
+      );
     }
-  });
+  };
+  // Use MCP's LF framing. Readline also splits at CR, so a delayed LF in
+  // Windows CRLF output can otherwise become a spurious empty JSON message.
+  child.stdout.on('data', onData);
   async function exchange(line) {
     child.stdin.write(line + '\n');
     let timer;
     try {
       return await Promise.race([
+        protocolFailure.promise,
         replies.length
           ? Promise.resolve(replies.shift())
           : new Promise((resolve) => {
@@ -138,7 +155,7 @@ async function runScenario(protocolVersion, expectedVersion) {
     const outcome = await exited;
     clearTimeout(kill);
     assert.deepEqual(outcome, { code: 0, signal: null }, logs);
-    lines.close();
+    child.stdout.off('data', onData);
     await rm(directory, { recursive: true, force: true });
   }
 }

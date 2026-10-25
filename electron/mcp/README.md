@@ -6,6 +6,10 @@ Node installation, or HTTP endpoint to configure. The browser build does not hos
 
 ## Setup
 
+In the desktop app, choose **Help > Connect to AI tools...** to copy a setup
+command or JSON/TOML configuration using your installation's executable path.
+The dialog includes instructions for Codex, Claude Code, and other MCP clients.
+
 Point your MCP client at the Neanes executable with `--mcp`.
 
 Choose the command for your client and operating system. Replace example paths

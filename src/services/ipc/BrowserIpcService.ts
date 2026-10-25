@@ -9,6 +9,7 @@ import type {
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
+  McpLaunchConfiguration,
   OpenWorkspaceFromArgvArgs,
   RecoverySnapshotArgs,
   SaveRecoverySnapshotReplyArgs,
@@ -47,6 +48,10 @@ function getExportDownloadFileName(
 }
 
 export class BrowserIpcService implements IIpcService {
+  public async getMcpLaunchConfiguration(): Promise<McpLaunchConfiguration | null> {
+    return null;
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

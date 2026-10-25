@@ -59,6 +59,7 @@ export enum IpcMainChannels {
 
   FileMenuPreferences = 'FileMenuPreferences',
   OpenAboutDialog = 'OpenAboutDialog',
+  OpenMcpSetupDialog = 'OpenMcpSetupDialog',
 
   FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
   FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
@@ -81,7 +82,13 @@ export enum IpcMainChannels {
   CloseApplication = 'CloseApplication',
 }
 
+export interface McpLaunchConfiguration {
+  command: string;
+  args: string[];
+}
+
 export enum IpcRendererChannels {
+  GetMcpLaunchConfiguration = 'GetMcpLaunchConfiguration',
   ExportSnapshotAsPng = 'ExportSnapshotAsPng',
   ExportRendererImage = 'ExportRendererImage',
   ExportRendererReady = 'ExportRendererReady',

@@ -13,6 +13,7 @@ import type {
   ExportWorkspaceAsPdfArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
+  McpLaunchConfiguration,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   RecoverySnapshotArgs,
@@ -34,6 +35,12 @@ import { SaveService } from '../SaveService';
 import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
+  public async getMcpLaunchConfiguration(): Promise<McpLaunchConfiguration> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.GetMcpLaunchConfiguration,
+    );
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

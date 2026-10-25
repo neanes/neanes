@@ -8,6 +8,7 @@ import type {
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
+  McpLaunchConfiguration,
   OpenWorkspaceFromArgvArgs,
   RecoverySnapshotArgs,
   SaveRecoverySnapshotReplyArgs,
@@ -21,6 +22,8 @@ import type { Workspace } from '@/models/Workspace';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 
 export interface IIpcService {
+  getMcpLaunchConfiguration(): Promise<McpLaunchConfiguration | null>;
+
   saveWorkspace(
     workspace: Workspace,
     data?: SavedScore,

@@ -54,6 +54,7 @@ import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
+import McpSetupDialog from '@/components/McpSetupDialog.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
 import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
@@ -498,6 +499,7 @@ const paragraphStylesDialogSelectedStyleId = ref<string>(
 const documentPropertiesDialogIsOpen = ref(false);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
+const mcpSetupDialogIsOpen = ref(false);
 const exportDialogIsOpen = ref(false);
 const exportFormat = ref(ExportFormat.PNG);
 interface ClipboardState {
@@ -1335,6 +1337,7 @@ const activeDialog = computed(
       { name: 'export', open: exportDialogIsOpen.value },
       { name: 'preferences', open: editorPreferencesDialogIsOpen.value },
       { name: 'about', open: aboutDialogIsOpen.value },
+      { name: 'mcp_setup', open: mcpSetupDialogIsOpen.value },
     ].find((dialog) => dialog.open)?.name ?? null,
 );
 const dialogOpen = computed(() => activeDialog.value !== null);
@@ -1676,6 +1679,7 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$on(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
+  EventBus.$on(IpcMainChannels.OpenMcpSetupDialog, onOpenMcpSetupDialog);
   EventBus.$on(
     IpcMainChannels.FileMenuInsertAnnotation,
     onFileMenuInsertAnnotation,
@@ -1795,6 +1799,7 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$off(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
+  EventBus.$off(IpcMainChannels.OpenMcpSetupDialog, onOpenMcpSetupDialog);
   EventBus.$off(
     IpcMainChannels.FileMenuInsertAnnotation,
     onFileMenuInsertAnnotation,
@@ -8759,6 +8764,12 @@ function onFileMenuPreferences() {
   }
 }
 
+function onOpenMcpSetupDialog() {
+  if (isElectron() && !dialogOpen.value) {
+    mcpSetupDialogIsOpen.value = true;
+  }
+}
+
 function onOpenAboutDialog() {
   aboutDialogIsOpen.value = true;
 }
@@ -10069,6 +10080,10 @@ function renderTabLabel(tab: Tab) {
       @update="updateEditorPreferences"
     />
     <AboutDialog v-if="aboutDialogIsOpen" v-model:open="aboutDialogIsOpen" />
+    <McpSetupDialog
+      v-if="mcpSetupDialogIsOpen"
+      v-model:open="mcpSetupDialogIsOpen"
+    />
     <RecoveryDialog
       v-if="recoveryDialogIsOpen"
       v-model:open="recoveryDialogIsOpen"

@@ -2398,6 +2398,13 @@ function createMenu() {
       role: 'help',
       submenu: [
         {
+          label: i18next.t(($) => $.menu.help.connectAiTools),
+          click() {
+            void openApplicationDialog(IpcMainChannels.OpenMcpSetupDialog);
+          },
+        },
+        { type: 'separator' },
+        {
           label: i18next.t(($) => $.menu.help.guide),
           click() {
             shell.openExternal(import.meta.env.VITE_GUIDE_URL);
@@ -2437,6 +2444,10 @@ function createMenu() {
 }
 
 async function openAboutDialog() {
+  await openApplicationDialog(IpcMainChannels.OpenAboutDialog);
+}
+
+async function openApplicationDialog(channel: IpcMainChannels) {
   if (!win) {
     await createWindow();
   }
@@ -2446,10 +2457,10 @@ async function openAboutDialog() {
   }
 
   if (loaded) {
-    win.webContents.send(IpcMainChannels.OpenAboutDialog);
+    win.webContents.send(channel);
   } else {
     win.webContents.once('did-finish-load', () => {
-      win?.webContents.send(IpcMainChannels.OpenAboutDialog);
+      win?.webContents.send(channel);
     });
   }
 
@@ -2748,6 +2759,14 @@ ipcMain.handle(
     });
   },
 );
+
+ipcMain.handle(IpcRendererChannels.GetMcpLaunchConfiguration, () => ({
+  command:
+    app.isPackaged && process.platform === 'linux'
+      ? process.env.APPIMAGE || process.execPath
+      : process.execPath,
+  args: app.isPackaged ? ['--mcp'] : [app.getAppPath(), '--mcp'],
+}));
 
 ipcMain.handle(IpcRendererChannels.ShowItemInFolder, async (event, path) => {
   shell.showItemInFolder(path);

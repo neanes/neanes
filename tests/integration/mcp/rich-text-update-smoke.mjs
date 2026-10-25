@@ -33,6 +33,42 @@ async function clickAt(point, clickCount = 1) {
     });
   }
 }
+async function typeInReadyEditor(selector, expectedContent, text) {
+  const editable = `document.querySelector(${JSON.stringify(selector)})`;
+  await eventually(async () => {
+    const state = await evaluate(`(() => {
+      const editor = ${editable}?.ckeditorInstance;
+      return editor ? { state: editor.state, content: editor.getData() } : null;
+    })()`);
+    assert.deepEqual(
+      state,
+      { state: 'ready', content: expectedContent },
+      'Remounted CKEditor must be ready with the current content before typing',
+    );
+  });
+  await click(selector);
+  await eventually(async () => {
+    assert.equal(
+      await evaluate(`(() => {
+        const node = ${editable};
+        return Boolean(node?.ckeditorInstance?.ui.focusTracker.isFocused &&
+          node.contains(document.activeElement));
+      })()`),
+      true,
+      'CKEditor must own focus before typing',
+    );
+  });
+  await send('Input.insertText', { text });
+  await eventually(async () => {
+    assert.equal(
+      await evaluate(
+        `${editable}?.ckeditorInstance?.getData().includes(${JSON.stringify(text)}) ?? false`,
+      ),
+      true,
+      'CKEditor must receive the real input before testing persistence',
+    );
+  });
+}
 try {
   app.start({ args: ['--remote-debugging-port=0'] });
   socket = await app.debugger();
@@ -169,8 +205,8 @@ try {
       const id = await evaluate(
         `${workspace}.score.staff.elements.find(e=>e.elementType==='RichTextBox').id`,
       );
-      await click(`#element-${id} .ck-content`);
-      await send('Input.insertText', { text: 'USER_PENDING' });
+      const selector = `#element-${id} .ck-content`;
+      await typeInReadyEditor(selector, latest, 'USER_PENDING');
       const pendingModel = await evaluate(
         `${workspace}.score.staff.elements.find(e=>e.elementType==='RichTextBox').content`,
       );
@@ -181,12 +217,12 @@ try {
       await evaluate(
         `${workspace}.score.staff.elements.find(e=>e.elementType==='RichTextBox').keyHelper++`,
       );
+      const afterTeardown = (await content(field)).content;
       assert.ok(
-        (await content(field)).content.includes('USER_PENDING'),
+        afterTeardown.includes('USER_PENDING'),
         'Teardown must preserve genuine pending typing',
       );
-      await click(`#element-${id} .ck-content`);
-      await send('Input.insertText', { text: 'USER_BLUR' });
+      await typeInReadyEditor(selector, afterTeardown, 'USER_BLUR');
       await evaluate('document.activeElement.blur()');
       assert.ok(
         (await content(field)).content.includes('USER_BLUR'),

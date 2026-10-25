@@ -19,6 +19,9 @@ async function runScenario(protocolVersion, expectedVersion) {
     NEANES_DEV_USER_DATA_DIR: path.join(directory, 'profile'),
   };
   delete env.ELECTRON_RUN_AS_NODE;
+  if (process.platform === 'win32') {
+    env.ELECTRON_NO_ATTACH_CONSOLE = '1';
+  }
   const child = spawn(
     process.env.NEANES_TEST_EXECUTABLE || electron,
     [...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]), '--mcp'],

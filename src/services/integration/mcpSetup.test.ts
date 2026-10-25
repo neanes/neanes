@@ -12,6 +12,32 @@ const launch: McpLaunchConfiguration = {
 };
 
 describe('MCP setup snippets', () => {
+  it.each(['codex', 'claude'] as const)(
+    'includes Windows pipe environment in the %s registration command',
+    (client) => {
+      const windows = {
+        command: 'C:\\Scores\\Neanes.exe',
+        args: ['--mcp'],
+        env: { ELECTRON_NO_ATTACH_CONSOLE: '1' },
+      };
+      expect(createMcpSetupSnippet(windows, client, 'command', true)).toBe(
+        `${client} mcp add neanes --env 'ELECTRON_NO_ATTACH_CONSOLE=1' -- 'C:\\Scores\\Neanes.exe' '--mcp'`,
+      );
+      if (client === 'codex') {
+        expect(
+          createMcpSetupSnippet(windows, client, 'configuration', true),
+        ).toContain(
+          '[mcp_servers.neanes.env]\n"ELECTRON_NO_ATTACH_CONSOLE" = "1"',
+        );
+      } else {
+        expect(
+          JSON.parse(
+            createMcpSetupSnippet(windows, client, 'configuration', true),
+          ),
+        ).toEqual({ mcpServers: { neanes: windows } });
+      }
+    },
+  );
   it.skipIf(process.platform === 'win32').each(['codex', 'claude'] as const)(
     'preserves arguments literally in a POSIX shell for %s',
     (client) => {

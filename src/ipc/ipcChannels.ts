@@ -85,6 +85,7 @@ export enum IpcMainChannels {
 export interface McpLaunchConfiguration {
   command: string;
   args: string[];
+  env?: Record<string, string>;
 }
 
 export enum IpcRendererChannels {

@@ -125,6 +125,9 @@ export function stdioConfiguration(
     NEANES_DEV_USER_DATA_DIR: profile,
   };
   delete env.ELECTRON_RUN_AS_NODE;
+  if (process.platform === 'win32') {
+    env.ELECTRON_NO_ATTACH_CONSOLE = '1';
+  }
   return {
     command: process.env.NEANES_TEST_EXECUTABLE || electron,
     args: [

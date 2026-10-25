@@ -9,7 +9,7 @@ import { executeInEditor, startEditorConnection } from './editorConnection';
 import { createAutomationHost } from './host';
 import { renderPagePreview } from './preview';
 import { createMcpServer } from './server';
-import { McpStdioTransport } from './stdio';
+import { createMcpStdioStreams, McpStdioTransport } from './stdio';
 
 export function installAutomation(options: {
   headless: boolean;
@@ -82,6 +82,7 @@ export function installAutomation(options: {
   }
 
   async function launchStdio() {
+    const { input, output } = createMcpStdioStreams();
     if (isMac) {
       app.dock!.hide();
     }
@@ -118,18 +119,20 @@ export function installAutomation(options: {
       });
       server.server.onerror = (error) => console.error('MCP error', error);
       server.server.onclose = () => void stop();
-      void server.connect(new McpStdioTransport()).catch((error) => {
-        console.error(error);
-        void stop(1);
-      });
+      void server
+        .connect(new McpStdioTransport(input, output))
+        .catch((error) => {
+          console.error(error);
+          void stop(1);
+        });
     };
     ipcMain.on(IpcRendererChannels.AutomationReady, onReady);
-    process.stdin.once('end', () => void stop());
-    process.stdin.once('error', () => void stop(1));
+    input.once('end', () => void stop());
+    input.once('error', () => void stop(1));
     // Preserve input sent before the renderer is ready; consuming stdin starts
     // only when the stdio transport has installed its reader.
-    process.stdin.pause();
-    process.stdout.once('error', () => void stop(1));
+    input.pause();
+    output.once('error', () => void stop(1));
     process.once('SIGTERM', () => void stop());
     process.once('SIGINT', () => void stop());
     const url = options.getDevServerUrl();

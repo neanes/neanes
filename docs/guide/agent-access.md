@@ -58,13 +58,13 @@ $neanes = 'C:\path\to\Neanes.exe'
 **Codex:**
 
 ```powershell
-codex mcp add neanes -- "$neanes" --mcp
+codex mcp add neanes --env ELECTRON_NO_ATTACH_CONSOLE=1 -- "$neanes" --mcp
 ```
 
 **Claude Code:**
 
 ```powershell
-claude mcp add neanes -- "$neanes" --mcp
+claude mcp add neanes --env ELECTRON_NO_ATTACH_CONSOLE=1 -- "$neanes" --mcp
 ```
 
 Keep the quotes around the path so installation folders containing spaces work.

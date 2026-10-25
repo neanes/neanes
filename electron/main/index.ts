@@ -2765,6 +2765,9 @@ ipcMain.handle(IpcRendererChannels.GetMcpLaunchConfiguration, () => ({
       ? process.env.APPIMAGE || process.execPath
       : process.execPath,
   args: app.isPackaged ? ['--mcp'] : [app.getAppPath(), '--mcp'],
+  ...(process.platform === 'win32'
+    ? { env: { ELECTRON_NO_ATTACH_CONSOLE: '1' } }
+    : {}),
 }));
 
 ipcMain.handle(IpcRendererChannels.ShowItemInFolder, async (event, path) => {

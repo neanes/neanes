@@ -1,11 +1,17 @@
+import { createReadStream, createWriteStream } from 'node:fs';
+import type { Readable, Writable } from 'node:stream';
+
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import compatibility from './compatibility.json';
 import { MAX_AUTOMATION_MESSAGE_BYTES } from './messageLimits';
 
 export class McpStdioTransport extends StdioServerTransport {
-  constructor() {
-    super(process.stdin, process.stdout, {
+  constructor(
+    readonly input: Readable,
+    output: Writable,
+  ) {
+    super(input, output, {
       maxBufferSize: MAX_AUTOMATION_MESSAGE_BYTES,
     });
   }
@@ -28,6 +34,16 @@ export class McpStdioTransport extends StdioServerTransport {
     };
     await super.start();
     // Startup pauses stdin until the renderer and transport are ready.
-    process.stdin.resume();
+    this.input.resume();
   }
+}
+export function createMcpStdioStreams() {
+  // Electron replaces process.stdin with an EOF-only stream on Windows.
+  // Use the inherited pipe descriptors instead of that Electron wrapper.
+  return process.platform === 'win32'
+    ? {
+        input: createReadStream('', { fd: 0, autoClose: false }),
+        output: createWriteStream('', { fd: 1, autoClose: false }),
+      }
+    : { input: process.stdin, output: process.stdout };
 }

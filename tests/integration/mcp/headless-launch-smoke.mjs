@@ -10,7 +10,7 @@ import electron from 'electron';
 
 import { checkBatch } from './batchChecks.mjs';
 import { checkSettings } from './settingsChecks.mjs';
-import { callTool } from './smokeClient.mjs';
+import { callTool, stdioConfiguration } from './smokeClient.mjs';
 
 const directory = await mkdtemp(path.join(tmpdir(), 'neanes-headless-smoke-'));
 const profile = path.join(directory, 'profile');
@@ -22,13 +22,8 @@ async function connect(
 ) {
   const client = new Client({ name: 'neanes-headless-smoke', version: '1' });
   const transport = new StdioClientTransport({
+    ...stdioConfiguration(profile),
     command: executable,
-    args: [
-      ...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]),
-      '--mcp',
-    ],
-    env: { ...process.env, IS_TEST: '1', NEANES_DEV_USER_DATA_DIR: profile },
-    stderr: 'inherit',
   });
   clients.push(client);
   await client.connect(transport, { timeout: 70_000 });

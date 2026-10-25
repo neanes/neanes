@@ -67,8 +67,16 @@ jobs:
       - name: Configure Linux Electron sandbox
         if: runner.os == 'Linux'
         run: |
-          sudo chown root:root node_modules/electron/dist/chrome-sandbox
-          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+          electron_executable="$(node -p 'require("node:fs").realpathSync(require("electron"))')"
+          sudo tee /etc/apparmor.d/neanes-ci-electron > /dev/null <<EOF
+          abi <abi/4.0>,
+          include <tunables/global>
+
+          profile neanes-ci-electron "$electron_executable" flags=(unconfined) {
+            userns,
+          }
+          EOF
+          sudo apparmor_parser --replace /etc/apparmor.d/neanes-ci-electron
 
       - name: MCP integration tests
         timeout-minutes: 15

@@ -86,8 +86,10 @@ async function runScenario(protocolVersion, expectedVersion) {
     }
   }
   let id = 0;
-  const rpc = (method, params) =>
-    exchange(
+  let lastRequest;
+  const rpc = (method, params) => {
+    lastRequest = params?.name ? `${method}: ${params.name}` : method;
+    return exchange(
       JSON.stringify({
         jsonrpc: '2.0',
         id: ++id,
@@ -95,6 +97,8 @@ async function runScenario(protocolVersion, expectedVersion) {
         ...(params ? { params } : {}),
       }),
     );
+  };
+  const failures = [];
   try {
     const initialized = await rpc('initialize', {
       protocolVersion,
@@ -149,14 +153,48 @@ async function runScenario(protocolVersion, expectedVersion) {
       listed.result.structuredContent.result[0].documentId,
       documentId,
     );
+    console.log(
+      `Bridge protocol ${protocolVersion}: checks passed; closing stdin.`,
+    );
+  } catch (error) {
+    failures.push(
+      new Error(
+        `Bridge protocol ${protocolVersion} failed during ${lastRequest}`,
+        { cause: error },
+      ),
+    );
   } finally {
     child.stdin.end();
     const kill = setTimeout(() => child.kill('SIGKILL'), 10_000);
-    const outcome = await exited;
-    clearTimeout(kill);
-    assert.deepEqual(outcome, { code: 0, signal: null }, logs);
-    child.stdout.off('data', onData);
-    await rm(directory, { recursive: true, force: true });
+    try {
+      const outcome = await exited;
+      assert.deepEqual(
+        outcome,
+        { code: 0, signal: null },
+        `Bridge protocol ${protocolVersion}: stdin EOF shutdown failed; last request: ${lastRequest}; stderr: ${logs}`,
+      );
+    } catch (error) {
+      failures.push(error);
+    } finally {
+      clearTimeout(kill);
+      child.stdout.off('data', onData);
+      try {
+        await rm(directory, {
+          recursive: true,
+          force: true,
+          maxRetries: 5,
+          retryDelay: 100,
+        });
+      } catch (error) {
+        failures.push(error);
+      }
+    }
+  }
+  if (failures.length) {
+    throw new AggregateError(
+      failures,
+      `Bridge protocol ${protocolVersion} failed (including any cleanup errors)`,
+    );
   }
 }
 

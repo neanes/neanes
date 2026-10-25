@@ -82,9 +82,6 @@ export enum IpcMainChannels {
 }
 
 export enum IpcRendererChannels {
-  AgentAccessGet = 'AgentAccessGet',
-  AgentAccessRetry = 'AgentAccessRetry',
-  AgentAccessSetEnabled = 'AgentAccessSetEnabled',
   ExportSnapshotAsPng = 'ExportSnapshotAsPng',
   ExportRendererImage = 'ExportRendererImage',
   ExportRendererReady = 'ExportRendererReady',

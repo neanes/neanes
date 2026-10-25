@@ -6,7 +6,7 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectBridgeClient,
+  connectStdioClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
@@ -15,7 +15,7 @@ assert.ok(
   directory && path.isAbsolute(directory),
   'Use an allowed absolute directory with a disposable app.',
 );
-const client = await connectBridgeClient('neanes-page-discovery-smoke');
+const client = await connectStdioClient('neanes-page-discovery-smoke');
 const tools = (await client.listTools()).tools;
 const call = createToolCaller(client, tools);
 let socket;

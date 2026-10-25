@@ -152,7 +152,6 @@ export async function batchUpdateFiles(
     results.push(result);
     if (
       result.error?.code === 'EXPORT_CANCELLED' ||
-      result.error?.code === 'AGENT_ACCESS_DISABLED' ||
       result.error?.code === 'AUTOMATION_REQUEST_REQUIRED' ||
       result.error?.code === 'AUTOMATION_TIMEOUT' ||
       result.error?.code === 'EDITOR_DISCONNECTED'

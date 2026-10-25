@@ -6,20 +6,19 @@ import { setTimeout } from 'node:timers/promises';
 
 import electron from 'electron';
 
-import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { connectEditorClient, createToolCaller } from './smokeClient.mjs';
 
 const directory = process.argv[2];
 if (
   !directory ||
   !path.isAbsolute(directory) ||
-  !process.env.NEANES_MCP_TOKEN ||
   !process.env.NEANES_DEV_USER_DATA_DIR
 ) {
   throw new Error(
-    'Set NEANES_MCP_TOKEN and NEANES_DEV_USER_DATA_DIR for the running dev instance, then pass an absolute allowed output directory.',
+    'Set NEANES_DEV_USER_DATA_DIR for the running dev instance, then pass an absolute allowed output directory.',
   );
 }
-const client = await connectHttpClient('neanes-interactive-open-smoke');
+const client = await connectEditorClient('neanes-interactive-open-smoke');
 const call = createToolCaller(client);
 try {
   const initial = await call('list_documents');

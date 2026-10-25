@@ -3,13 +3,11 @@ import assert from 'node:assert/strict';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
-import { callTool } from './smokeClient.mjs';
+import { callTool, connectStdioClient } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
 const app = await createSmokeApp('neanes-preview-', { keepArtifacts: true });
@@ -19,12 +17,7 @@ try {
   app.start({ args: ['--remote-debugging-port=0', '--inspect=0'] });
   const { evaluate } = await app.debugger();
   const { evaluate: evaluateMain } = await app.debugger('main');
-  await eventually(async () =>
-    assert.equal(
-      (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).status,
-      'ready',
-    ),
-  );
+  await app.ready();
   await eventually(async () =>
     assert.ok(
       await evaluate(
@@ -32,14 +25,7 @@ try {
       ),
     ),
   );
-  const configuration = JSON.parse(
-    (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')"))
-      .configuration,
-  ).mcpServers.neanes;
-  client = new Client({ name: 'preview-smoke', version: '1' });
-  await client.connect(
-    new StdioClientTransport({ ...configuration, stderr: 'inherit' }),
-  );
+  client = await connectStdioClient('preview-smoke', { profile: app.profile });
   const definitions = (await client.listTools()).tools;
   const validator = new AjvJsonSchemaValidator();
   async function call(name, args = {}, error) {

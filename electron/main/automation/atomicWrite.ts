@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 
-// For private metadata and installed bridge files, not in-place score saves.
+// For private connection metadata, not in-place score saves.
 export async function atomicWrite(file: string, data: string | Buffer) {
   const temporary = `${file}.${randomUUID()}.tmp`;
   try {

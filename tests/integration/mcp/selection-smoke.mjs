@@ -5,14 +5,13 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectBridgeClient,
+  connectStdioClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
-const token = process.env.NEANES_MCP_TOKEN;
 assert.ok(
-  token,
-  'Run against a disposable app with NEANES_MCP_TOKEN and remote debugging.',
+  process.env.NEANES_DEV_USER_DATA_DIR,
+  'Run against a disposable app with remote debugging.',
 );
 const socket = await connectCdp(
   (await editorTarget(process.env.NEANES_DEBUG_URL ?? 'http://127.0.0.1:9334'))
@@ -41,7 +40,7 @@ async function click(selector, modifiers = 0) {
     });
   }
 }
-const client = await connectBridgeClient('neanes-selection-smoke');
+const client = await connectStdioClient('neanes-selection-smoke');
 const tools = (await client.listTools()).tools;
 const call = createToolCaller(client, tools);
 const introduced = [];

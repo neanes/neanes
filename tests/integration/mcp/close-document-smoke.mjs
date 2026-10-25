@@ -3,16 +3,15 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
 
-import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { connectEditorClient, createToolCaller } from './smokeClient.mjs';
 
 const profile = process.env.NEANES_DEV_USER_DATA_DIR;
-const token = process.env.NEANES_MCP_TOKEN;
-if (!profile || !path.isAbsolute(profile) || !token) {
+if (!profile || !path.isAbsolute(profile)) {
   throw new Error(
-    'Use the same token, URL, and isolated NEANES_DEV_USER_DATA_DIR as the test app.',
+    'Use the same isolated NEANES_DEV_USER_DATA_DIR as the test app.',
   );
 }
-const client = await connectHttpClient('neanes-close-smoke');
+const client = await connectEditorClient('neanes-close-smoke');
 const call = createToolCaller(client);
 try {
   const initial = await call('list_documents');

@@ -14,42 +14,112 @@ The Neanes desktop app includes a local [Model Context Protocol (MCP)](https://m
 ## Requirements
 
 - Neanes installed on the same computer as your MCP client.
-- Node.js 22 or later, with `node` available to the client.
 - A client that supports command-based (stdio) MCP servers.
-- **Allow agent access** enabled in Neanes Preferences.
 
-Agent access is off by default. Connected agents have the same file access as Neanes; this setting does not restrict them to a particular folder. Your MCP client determines which model receives the score content returned by tools, so use a client and model you trust with your scores.
+Adding Neanes to your client's MCP configuration enables access. Connected agents
+have the same file access as Neanes and can edit your open tabs. Your MCP client
+determines which model receives score content, so choose a client and model you
+trust with your scores.
 
 ## Connect an agent
 
-1. Open `Edit > Preferences` and choose **Agent access (MCP)**.
-2. Turn on **Allow agent access**. The change takes effect immediately.
-3. Choose **Copy configuration**.
-4. Add the copied server entry to your client's MCP settings, preserving any other configured servers, then reconnect the client.
-5. Ask the agent to report the Neanes capabilities to check the connection.
+Configure your client to run the Neanes executable with the `--mcp` argument.
+No separate Node.js installation or Neanes preference is needed.
 
-The copied configuration contains the correct paths for your installation. For clients that accept an `mcpServers` JSON object, its structure looks like this; the paths below are placeholders, so use the copied values:
+Choose the command for your client and operating system. Replace example paths
+with the location of your installed Neanes executable.
+
+### macOS
+
+These commands assume Neanes is installed in `/Applications`.
+
+**Codex:**
+
+```sh
+codex mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
+```
+
+**Claude Code:**
+
+```sh
+claude mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
+```
+
+### Windows
+
+In PowerShell, set `$neanes` to the full path of your installed `Neanes.exe`.
+To find it, open the Neanes shortcut's **Properties** and check **Target**.
+The path below is a placeholder; replace it before running either setup command.
+
+```powershell
+$neanes = 'C:\path\to\Neanes.exe'
+```
+
+**Codex:**
+
+```powershell
+codex mcp add neanes -- "$neanes" --mcp
+```
+
+**Claude Code:**
+
+```powershell
+claude mcp add neanes -- "$neanes" --mcp
+```
+
+Keep the quotes around the path so installation folders containing spaces work.
+
+### Linux
+
+Use the full path to your downloaded AppImage and make it executable. These
+examples assume it is saved as `~/Applications/Neanes.AppImage`; use your actual
+filename and location.
+
+```sh
+chmod +x "$HOME/Applications/Neanes.AppImage"
+```
+
+**Codex:**
+
+```sh
+codex mcp add neanes -- "$HOME/Applications/Neanes.AppImage" --mcp
+```
+
+**Claude Code:**
+
+```sh
+claude mcp add neanes -- "$HOME/Applications/Neanes.AppImage" --mcp
+```
+
+Run the client in your desktop session when you want it to access open editor
+tabs. If an update changes the AppImage filename or location, update the path in
+your MCP client configuration.
+
+### Other MCP clients
+
+For clients that accept an `mcpServers` JSON object, this example uses the macOS
+path:
 
 ```json
 {
   "mcpServers": {
     "neanes": {
-      "command": "node",
-      "args": [
-        "/absolute/path/to/bridge.mjs",
-        "--executable",
-        "/absolute/path/to/Neanes",
-        "--policy",
-        "/absolute/path/to/agent-access.json"
-      ]
+      "command": "/Applications/Neanes.app/Contents/MacOS/Neanes",
+      "args": ["--mcp"]
     }
   }
 }
 ```
 
-If your client has separate fields, use `command` as its command and each item in `args` as a separate argument. Clients with another configuration format need the same command and arguments in that format.
+Replace `command` with your executable's absolute path. In JSON, Windows
+backslashes must be doubled, for example `"C:\\path\\to\\Neanes.exe"`.
+If your client has separate fields, enter the executable path as the command and
+`--mcp` as its argument.
 
-The client connects over stdio through the bridge shipped with Neanes. Neanes starts a private background worker automatically; you do not need to launch the editor for ordinary file tasks or configure an HTTP endpoint or token. Authentication is handled automatically. If you move or reinstall Neanes at another location, copy the configuration again.
+Neanes runs privately in the background for ordinary file tasks. You only need to
+open the editor when you want the agent to work with visible tabs. If you move
+Neanes or an update changes the AppImage filename, update the executable path in
+your client settings.
 
 ## Example requests
 
@@ -63,9 +133,9 @@ Tell the agent which score or folder to use and where to save the result. For ex
 
 ## Private documents and editor tabs
 
-Ordinary agent tasks use private documents without adding editor tabs. Each client connection has its own background worker. Private drafts last until the connection ends, the worker stops, or access is turned off. Ask the agent to save work you want to keep.
+Ordinary agent tasks use private documents without adding editor tabs. Each client connection has its own background worker. Private drafts last until the connection ends, or the background process stops. Ask the agent to save work you want to keep.
 
-Ask the agent to work with your **open score** when you want help with editor documents, including unsaved changes. Agents can also create a new score or open a saved file in a visible editor tab. The editor must be open and its connection ready. Edits to editor documents appear in Neanes; document editing tools make undoable changes, but saving remains a separate action. Closing an agent connection never closes an editor you opened.
+Ask the agent to work with your **open score** when you want help with editor documents, including unsaved changes. Agents can also create a new score or open a saved file in a visible editor tab. The editor must be open and ready. Edits to editor documents appear in Neanes; document editing tools make undoable changes, but saving remains a separate action. Closing an agent connection never closes an editor you opened.
 
 Private documents read saved files independently of editor tabs. Saving a file privately does not update an already-open tab. Save your editor changes first, or ask the agent to write to another file when you want to preserve the original.
 
@@ -131,23 +201,23 @@ For clients or workflows that call tools directly:
 
 Full input and output schemas are available as MCP resources at `neanes://schemas/{tool}/input` and `neanes://schemas/{tool}/output`. For example, read `neanes://schemas/edit_elements/input` for supported edit actions. Clients that support MCP resources can use these for detailed field descriptions and constraints.
 
-## Turn agent access off
+## Disconnect an agent
 
-Turn off **Allow agent access** in Preferences to disconnect agents and stop background workers. This also prevents future connections while the editor is closed. Neanes asks for confirmation before turning access off because temporary agent work may be discarded.
+Disconnect the Neanes server in your MCP client to stop that connection's
+background process. Remove its configuration to prevent future connections.
+Disconnect each client separately if you configured more than one.
 
-Temporary agent drafts are discarded. Saved files and editor tabs keep their contents, including edits already applied by an agent. A file write already underway may finish. Re-enable access and reconnect the client to start fresh.
-
-The command-line `--headless-mcp` flag also requires this setting; launching a worker does not enable access automatically.
+Temporary private drafts are discarded. Save work you want to keep before
+disconnecting. Saved files and editor tabs keep their contents, including edits
+already applied by an agent. A file write already underway may finish.
 
 ## Troubleshooting
 
-| Problem                                              | What to do                                                                                                                                                                                                      |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The client cannot find `node`                        | Install Node.js 22 or later and make sure the client can find it. If necessary, replace `command` with the absolute path to your Node.js executable.                                                            |
-| Agent access is disabled                             | Enable **Allow agent access** in Neanes Preferences, then reconnect the client.                                                                                                                                 |
-| The editor connection is unavailable                 | Check **Connection status** and the reported error in Preferences. Choose **Retry connection** after resolving the problem. A private background task can still run while the editor connection is unavailable. |
-| The agent cannot see open tabs                       | Open Neanes and ask explicitly to work with editor tabs. Direct tool calls must use `documentScope: "editor"`.                                                                                                  |
-| The connection fails after moving Neanes             | Copy the configuration again from Preferences and update the client settings.                                                                                                                                   |
-| A task disconnects or reports an error after editing | Reconnect if needed and inspect the current document or saved file before repeating edits. Some work may already have completed.                                                                                |
-
-An editor connection failure does not prevent normal score editing. **Connection details** shows the editor endpoint for troubleshooting; credentials remain internal.
+| Problem                                              | What to do                                                                                                              |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| The client cannot launch Neanes                      | Check the executable path and confirm Neanes can run normally on your computer. Use the executable itself with `--mcp`. |
+| The agent cannot see open tabs                       | Open Neanes and ask explicitly to work with editor tabs. Direct tool calls must use `documentScope: "editor"`.          |
+| The editor connection is unavailable                 | Wait for Neanes to finish opening. If necessary, restart the editor. Private tasks can still run independently.         |
+| The connection fails after moving or updating Neanes | Update the executable path if it changed, then reconnect the client.                                                    |
+| A task disconnects or reports an error after editing | Inspect the current document or saved file before repeating edits. Some work may already have completed.                |
+| Neanes reports incompatible versions                 | Save private drafts, update Neanes, reopen the editor, and reconnect the client.                                        |

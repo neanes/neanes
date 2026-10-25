@@ -2,11 +2,11 @@
 
 Fast Vitest tests stay beside their implementation in `src/` and `electron/`.
 Run them with `npm test`; CI runs this suite on Linux, Windows, and macOS.
-The production MCP bridge and its protocol unit test live in `electron/mcp/`.
+The MCP transports, scope publication, and unit tests live in `electron/main/automation/`.
 
 Real Electron integration scenarios and their helpers live in `tests/integration/`:
 
-- `mcp/`: bridge, agent access, and document-tool scenarios.
+- `mcp/`: stdio launch, editor socket access, and document-tool scenarios.
 - `rendering/`: detached PDF, PNG, and native-print preparation checks.
 - `saving/`: editor save, undo, and recovery revision checks.
 

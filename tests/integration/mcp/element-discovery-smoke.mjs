@@ -6,7 +6,7 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectBridgeClient,
+  connectStdioClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
@@ -16,7 +16,7 @@ if (!directory || !path.isAbsolute(directory)) {
     'Usage: NEANES_DEV_USER_DATA_DIR=... node tests/integration/mcp/element-discovery-smoke.mjs /absolute/allowed/directory',
   );
 }
-const client = await connectBridgeClient('neanes-element-discovery-smoke');
+const client = await connectStdioClient('neanes-element-discovery-smoke');
 const call = createToolCaller(client);
 // Optional renderer access exercises live edits that the save format omits.
 // Restrict this to a disposable Electron profile.

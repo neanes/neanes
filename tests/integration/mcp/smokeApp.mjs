@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -13,12 +12,7 @@ import { eventually } from './smokePolling.mjs';
 export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), prefix));
   const profile = path.join(directory, 'profile');
-  const policyPath = path.join(profile, 'agent-access.json');
-  const token = randomBytes(32).toString('hex');
   await mkdir(profile);
-  await writeFile(policyPath, JSON.stringify({ enabled: true, token }), {
-    mode: 0o600,
-  });
   let child, exited, spawnError;
   let log = '';
   const connections = [];
@@ -36,31 +30,19 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
   return {
     directory,
     profile,
-    policyPath,
-    token,
     log: () => log,
     start({
       args = [],
       executable = electron,
       appArgs = [process.cwd()],
-      port = 0,
     } = {}) {
       assert.equal(child, undefined, 'This fixture already launched Electron.');
       const env = {
         ...process.env,
         IS_TEST: '1',
         NEANES_DEV_USER_DATA_DIR: profile,
-        NEANES_MCP_PORT: String(port),
       };
-      for (const key of [
-        'ELECTRON_RUN_AS_NODE',
-        'NEANES_MCP_TOKEN',
-        'NEANES_HEADLESS_PROFILE',
-        'NEANES_HEADLESS_POLICY',
-        'NEANES_WORKER_TOKEN',
-      ]) {
-        delete env[key];
-      }
+      delete env.ELECTRON_RUN_AS_NODE;
       child = spawn(executable, [...appArgs, ...args, '--no-update'], {
         env,
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -80,15 +62,18 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
       });
       return child;
     },
-    async endpoint() {
+    async ready() {
       return eventually(
         async () => {
           requireRunning();
-          const endpoint = JSON.parse(
-            await readFile(`${policyPath}.endpoint`, 'utf8'),
+          const connection = JSON.parse(
+            await readFile(path.join(profile, 'mcp-editor.json'), 'utf8'),
           );
-          assert.ok(endpoint.endpoint, `MCP endpoint is not ready: ${log}`);
-          return { url: endpoint.endpoint, token: endpoint.token };
+          assert.ok(
+            connection.socket,
+            `Editor connection is not ready: ${log}`,
+          );
+          return { profile };
         },
         { timeoutMs: 30_000, retry: isRunning },
       );

@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { createSmokeApp } from './smokeApp.mjs';
-import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { connectEditorClient, createToolCaller } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
 const app = await createSmokeApp('neanes-rich-text-update-');
@@ -43,14 +43,10 @@ try {
       ),
       true,
     );
-    assert.equal(
-      (await evaluate("window.ipcRenderer.invoke('AgentAccessGet')")).status,
-      'ready',
-    );
   });
-  client = await connectHttpClient(
+  client = await connectEditorClient(
     'rich-text-update-smoke',
-    await app.endpoint(),
+    await app.ready(),
   );
   call = createToolCaller(client);
 

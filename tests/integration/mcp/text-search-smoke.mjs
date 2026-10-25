@@ -3,15 +3,15 @@ import assert from 'node:assert/strict';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
-import { connectBridgeClient, createToolCaller } from './smokeClient.mjs';
+import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
 
 const app = await createSmokeApp('neanes-text-search-');
 let client;
 try {
   app.start();
-  await app.endpoint();
-  client = await connectBridgeClient('text-search-smoke', {
-    policyPath: app.policyPath,
+  await app.ready();
+  client = await connectStdioClient('text-search-smoke', {
+    profile: app.profile,
   });
   const tools = (await client.listTools()).tools;
   const call = createToolCaller(client, tools);

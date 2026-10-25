@@ -8,20 +8,18 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { checkSettings } from './settingsChecks.mjs';
 import {
   closeDocument,
-  connectHttpClient,
+  connectEditorClient,
   createToolCaller,
 } from './smokeClient.mjs';
 import { settledDocument } from './smokePolling.mjs';
 
 const directory = process.argv[2];
-const token = process.env.NEANES_MCP_TOKEN;
-if (!directory || !path.isAbsolute(directory) || !token) {
+if (!directory || !path.isAbsolute(directory)) {
   throw new Error(
-    'Usage: NEANES_MCP_TOKEN=... node tests/integration/mcp/smoke.mjs /absolute/allowed/output-directory',
+    'Usage: NEANES_DEV_USER_DATA_DIR=... node tests/integration/mcp/smoke.mjs /absolute/allowed/output-directory',
   );
 }
-const url = new URL(process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp');
-const client = await connectHttpClient('neanes-mcp-smoke', { url });
+const client = await connectEditorClient('neanes-mcp-smoke');
 const call = createToolCaller(client);
 const fails = call;
 const suffix = Date.now();
@@ -539,20 +537,6 @@ try {
     JSON.parse(await fs.readFile(reopenedPath, 'utf8')).documentProperties
       .author,
     'MCP smoke',
-  );
-  // Authentication and browser-origin protections apply before MCP parsing.
-  assert.equal((await fetch(url, { method: 'POST' })).status, 401);
-  assert.equal(
-    (
-      await fetch(url, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Origin: 'https://example.com',
-        },
-      })
-    ).status,
-    403,
   );
   console.log(`MCP smoke passed. Score, archive, and PDF: ${directory}`);
 } finally {

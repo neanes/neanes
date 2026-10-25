@@ -6,7 +6,7 @@ import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import {
   closeDocument,
-  connectBridgeClient,
+  connectStdioClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
@@ -15,7 +15,7 @@ assert.ok(
   directory && path.isAbsolute(directory),
   'Pass an allowed absolute output directory.',
 );
-const client = await connectBridgeClient('neanes-element-edit-smoke');
+const client = await connectStdioClient('neanes-element-edit-smoke');
 let call = createToolCaller(client);
 let socket;
 async function evaluate(expression) {

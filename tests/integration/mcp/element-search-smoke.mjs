@@ -3,11 +3,11 @@ import assert from 'node:assert/strict';
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import {
   closeDocument,
-  connectBridgeClient,
+  connectStdioClient,
   createToolCaller,
 } from './smokeClient.mjs';
 
-const client = await connectBridgeClient('neanes-element-search-smoke');
+const client = await connectStdioClient('neanes-element-search-smoke');
 const tools = (await client.listTools()).tools;
 const call = createToolCaller(client, tools);
 const introduced = [];

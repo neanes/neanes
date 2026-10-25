@@ -1,36 +1,28 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
 
 import electron from 'electron';
 
-import compatibility from '../../../electron/mcp/compatibility.json' with { type: 'json' };
+import compatibility from '../../../electron/main/automation/compatibility.json' with { type: 'json' };
 
 async function runScenario(protocolVersion, expectedVersion) {
   const directory = await mkdtemp(
     path.join(tmpdir(), 'neanes-bridge-protocol-'),
   );
-  const policyPath = path.join(directory, 'agent-access.json');
-  await writeFile(
-    policyPath,
-    JSON.stringify({ enabled: true, token: randomBytes(32).toString('hex') }),
-    { mode: 0o600 },
-  );
+  const env = {
+    ...process.env,
+    IS_TEST: '1',
+    NEANES_DEV_USER_DATA_DIR: path.join(directory, 'profile'),
+  };
+  delete env.ELECTRON_RUN_AS_NODE;
   const child = spawn(
-    process.execPath,
-    [
-      path.resolve('electron/mcp/bridge.mjs'),
-      '--executable',
-      process.env.NEANES_TEST_EXECUTABLE || electron,
-      ...(process.env.NEANES_TEST_EXECUTABLE ? [] : ['--app', process.cwd()]),
-      '--policy',
-      policyPath,
-    ],
-    { stdio: ['pipe', 'pipe', 'pipe'] },
+    process.env.NEANES_TEST_EXECUTABLE || electron,
+    [...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]), '--mcp'],
+    { env, stdio: ['pipe', 'pipe', 'pipe'] },
   );
   let logs = '';
   child.stderr.on('data', (data) => {
@@ -142,8 +134,9 @@ async function runScenario(protocolVersion, expectedVersion) {
   } finally {
     child.stdin.end();
     const kill = setTimeout(() => child.kill('SIGKILL'), 10_000);
-    await exited;
+    const outcome = await exited;
     clearTimeout(kill);
+    assert.deepEqual(outcome, { code: 0, signal: null }, logs);
     lines.close();
     await rm(directory, { recursive: true, force: true });
   }

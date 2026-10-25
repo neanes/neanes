@@ -294,16 +294,14 @@
                     </Field>
                   </FieldGroup>
                 </FieldSet>
-                <AgentAccessSettings
-                  v-if="section === 'agent'"
-                /> </FieldGroup></ScrollArea
-          ></TabsContent>
+              </FieldGroup></ScrollArea
+            ></TabsContent
+          >
         </Tabs>
       </form>
 
       <DialogFooter>
         <Button
-          v-if="section !== 'agent'"
           variant="outline"
           type="button"
           class="h-auto min-h-8 max-w-full whitespace-normal text-center"
@@ -339,7 +337,6 @@ import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 
-import AgentAccessSettings from '@/automation/components/AgentAccessSettings.vue';
 import Neume from '@/components/NeumeGlyph.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -376,17 +373,10 @@ import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { getTempoSignLabelSelector } from '@/models/NeumeI18nMappings';
 import { TempoSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
-import { isElectron } from '@/utils/isElectron';
 
 import InputBpm from './InputBpm.vue';
 
-const sections = [
-  'general',
-  'appearance',
-  'editing',
-  ...(isElectron() ? ['agent' as const] : []),
-  'advanced',
-] as const;
+const sections = ['general', 'appearance', 'editing', 'advanced'] as const;
 const section = ref<(typeof sections)[number]>('general');
 
 const emit = defineEmits<{

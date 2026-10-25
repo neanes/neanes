@@ -327,34 +327,8 @@
       "general": "General",
       "appearance": "Aspect",
       "editing": "Editare",
-      "advanced": "Avansat",
-      "agent": "Acces pentru agenți (MCP)"
+      "advanced": "Avansat"
     },
-    "close": "Închide",
-    "agentAccess": {
-      "description": "Permite agenților conectați să citească, să editeze, să salveze și să exporte partituri, inclusiv în fundal când Neanes este închis. Agenții au același acces la fișiere ca Neanes. Activează această setare înainte de a conecta un agent.",
-      "status": "Starea conexiunii",
-      "starting": "Pornire",
-      "ready": "Pregătită",
-      "error": "Indisponibilă",
-      "startupError": "Conexiunea nu a putut fi pornită. Verificați detaliile conexiunii.",
-      "connect": "Conectează un agent",
-      "connectDescription": "Copiați această configurație în setările clientului MCP, apoi reconectați clientul. Neanes pornește automat când este necesar.",
-      "copyConfiguration": "Copiază configurația",
-      "runtime": "Necesită Node.js 22 sau ulterior. Configurați un server MCP pornit prin comandă; căile executabilului și punții sunt incluse.",
-      "copied": "Copiat",
-      "details": "Detaliile conexiunii",
-      "endpoint": "Adresa editorului",
-      "failed": "Operația a eșuat. Verificați setările de acces și încercați din nou.",
-      "retry": "Reîncearcă conexiunea",
-      "unavailable": "Indisponibilă",
-      "allow": "Permite accesul agenților",
-      "off": "Dezactivat",
-      "disableNotice": "Dezactivarea deconectează agenții și elimină ciornele lor temporare. Fișierele salvate și filele editorului sunt păstrate.",
-      "disableTitle": "Dezactivezi accesul agenților?",
-      "disableWarning": "Dezactivarea deconectează agenții și elimină ciornele temporare. Fișierele salvate și filele editorului sunt păstrate.",
-      "cancel": "Anulează",
-      "disable": "Dezactivează"
-    }
+    "close": "Închide"
   }
 }

@@ -9,6 +9,7 @@ const scenarios = [
   'text-search',
   'rich-text-update',
   'preview',
+  'dev-server',
 ];
 const requested = process.argv.slice(2);
 if (requested.length === 1 && requested[0] === '--list') {

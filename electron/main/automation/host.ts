@@ -23,20 +23,16 @@ import type {
   WorkspaceFile,
   WriteScoreFileArgs,
 } from '../../../src/services/documents/fileTypes';
+import { OperationQueue } from '../../../src/utils/OperationQueue';
 import { withAbortDeadline } from './abortDeadline';
 import { discoverScoreFiles } from './fileDiscovery';
 import { AutomationFiles } from './files';
 import type { PreviewPageOptions } from './preview';
-import { startMcpServer } from './server';
 
-export async function startAutomationHost(options: {
+export function createAutomationHost(options: {
   mode?: 'interactive' | 'headless';
   getWindow(): BrowserWindow | null;
-  authorize(): Promise<unknown>;
-  config?: { token: string; port: number };
   initiallyReady?: boolean;
-  onStateChange?(): void;
-  version: string;
   previewPage(
     args: PreviewPageOptions,
     signal: AbortSignal,
@@ -48,7 +44,6 @@ export async function startAutomationHost(options: {
   const files = new AutomationFiles();
   let ready = options.initiallyReady ?? false;
   let closed = false;
-  let failure: string | null = null;
   const detach = new Set<() => void>();
   let pending: {
     requestId: string;
@@ -101,8 +96,6 @@ export async function startAutomationHost(options: {
   const onReady = (event: Electron.IpcMainEvent) => {
     if (isSender(event)) {
       ready = true;
-      failure = null;
-      options.onStateChange?.();
     }
   };
   ipcMain.on(IpcRendererChannels.AutomationReady, onReady);
@@ -124,7 +117,7 @@ export async function startAutomationHost(options: {
         if (closed || !isSender(event) || pending?.requestId !== requestId) {
           throw new Error('AUTOMATION_REQUEST_REQUIRED');
         }
-        await options.authorize();
+        requireOpen();
         if (pending?.tool === 'batch_update_files') {
           exportController?.signal.throwIfAborted();
         }
@@ -135,7 +128,7 @@ export async function startAutomationHost(options: {
     IpcRendererChannels.AutomationPlanBatch,
     (event, requestId: string, query: unknown) =>
       automationOutcome(async () => {
-        await options.authorize();
+        requireOpen();
         requireRequest(event, 'batch_update_files', requestId);
         await files.planBatch(batchQuerySchema.parse(query));
         return null;
@@ -145,7 +138,7 @@ export async function startAutomationHost(options: {
     IpcRendererChannels.AutomationReadScore,
     (event, requestId: string, filePath: string, workspaces: WorkspaceFile[]) =>
       automationOutcome(async () => {
-        await options.authorize();
+        requireOpen();
         requireRequest(event, 'open_document', requestId);
         return files.open(filePath, workspaces);
       }),
@@ -154,10 +147,10 @@ export async function startAutomationHost(options: {
     IpcRendererChannels.AutomationWriteScore,
     (event, requestId: string, args: WriteScoreFileArgs) =>
       automationOutcome(async () => {
-        await options.authorize();
+        requireOpen();
         requireRequest(event, 'save_document', requestId);
         return options.withFileLock(async () => {
-          await options.authorize();
+          requireOpen();
           requireRequest(event, 'save_document', requestId);
           return finishFileOperation(() => files.write(args));
         });
@@ -167,14 +160,14 @@ export async function startAutomationHost(options: {
     IpcRendererChannels.AutomationExportPdf,
     (event, requestId: string, args: PdfExportOptions) =>
       automationOutcome(async () => {
-        await options.authorize();
+        requireOpen();
         requireRequest(event, 'export_pdf', requestId);
         await options.withFileLock(async () => {
           const filePath = await files.resolve(args.filePath, 'pdf', true);
           const signal = exportController!.signal;
           const data = await options.printPdf(args, signal);
           signal.throwIfAborted();
-          await options.authorize();
+          requireOpen();
           requireRequest(event, 'export_pdf', requestId);
           await finishFileOperation(() =>
             files.writeOutput(filePath, data, args.overwrite),
@@ -188,13 +181,13 @@ export async function startAutomationHost(options: {
     IpcRendererChannels.AutomationPreviewPage,
     (event, requestId: string, args: PreviewPageOptions) =>
       automationOutcome(async () => {
-        await options.authorize();
+        requireOpen();
         requireRequest(event, 'preview_page', requestId);
         const signal = exportController!.signal;
         signal.throwIfAborted();
         const image = await options.previewPage(args, signal);
         signal.throwIfAborted();
-        await options.authorize();
+        requireOpen();
         requireRequest(event, 'preview_page', requestId);
         return image;
       }),
@@ -202,8 +195,6 @@ export async function startAutomationHost(options: {
 
   function invalidate() {
     ready = false;
-    failure = 'EDITOR_DISCONNECTED';
-    options.onStateChange?.();
     exportController?.abort(new Error('EDITOR_DISCONNECTED'));
     pending?.reject(
       new AutomationError({
@@ -229,107 +220,101 @@ export async function startAutomationHost(options: {
       ipcMain.removeHandler(channel);
     }
   }
-  const server = await startMcpServer({
-    mode: options.mode,
-    token: options.config?.token ?? process.env.NEANES_MCP_TOKEN ?? '',
-    port: options.config?.port ?? Number(process.env.NEANES_MCP_PORT ?? 38765),
-    version: options.version,
-    authorize: options.authorize,
-    async execute(request, signal) {
-      if (request.tool === 'discover_score_files') {
-        return withAbortDeadline(async (discoverySignal) => {
-          const checkpoint = async () => {
-            if (closed) {
-              throw new Error('AGENT_ACCESS_DISABLED');
-            }
-            discoverySignal.throwIfAborted();
-            await options.authorize();
-            discoverySignal.throwIfAborted();
-          };
-          await checkpoint();
-          const result = await discoverScoreFiles(
-            request.arguments,
-            discoverySignal,
-          );
-          await checkpoint();
-          return result;
-        }, signal);
-      }
-      if (closed || !ready) {
+  function requireOpen() {
+    if (closed) {
+      throw new Error('EDITOR_DISCONNECTED');
+    }
+  }
+  const queue = new OperationQueue();
+  async function execute(request: AutomationRequest, signal: AbortSignal) {
+    if (request.tool === 'discover_score_files') {
+      return withAbortDeadline(async (discoverySignal) => {
+        const checkpoint = async () => {
+          discoverySignal.throwIfAborted();
+          requireOpen();
+          discoverySignal.throwIfAborted();
+        };
+        await checkpoint();
+        const result = await discoverScoreFiles(
+          request.arguments,
+          discoverySignal,
+        );
+        await checkpoint();
+        return result;
+      }, signal);
+    }
+    if (closed || !ready) {
+      throw new Error('EDITOR_NOT_READY');
+    }
+    let rejectTimeout: (error: Error) => void;
+    const timeout = new Promise<never>((_resolve, reject) => {
+      rejectTimeout = reject;
+    });
+    const operation = async () => {
+      requireOpen();
+      const win = options.getWindow();
+      if (closed || !ready || win == null || win.isDestroyed()) {
         throw new Error('EDITOR_NOT_READY');
       }
-      let rejectTimeout: (error: Error) => void;
-      const timeout = new Promise<never>((_resolve, reject) => {
-        rejectTimeout = reject;
-      });
-      const operation = async () => {
-        await options.authorize();
-        const win = options.getWindow();
-        if (closed || !ready || win == null || win.isDestroyed()) {
-          throw new Error('EDITOR_NOT_READY');
-        }
-        const requestId = randomUUID();
-        const cancellable =
-          request.tool === 'export_pdf' ||
-          request.tool === 'preview_page' ||
-          request.tool === 'batch_update_files';
-        if (cancellable && signal.aborted) {
-          throw new Error('EXPORT_CANCELLED');
-        }
-        exportController = cancellable ? new AbortController() : null;
-        const onCancel = () =>
-          exportController?.abort(new Error('EXPORT_CANCELLED'));
-        signal.addEventListener('abort', onCancel, { once: true });
-        const timer = setTimeout(() => {
-          ready = false;
-          failure = 'AUTOMATION_TIMEOUT';
-          options.onStateChange?.();
-          exportController?.abort(new Error('AUTOMATION_TIMEOUT'));
-          rejectTimeout(
-            new AutomationError({
-              code: 'AUTOMATION_TIMEOUT',
-              message:
-                'Inspect the document and output before retrying; reload the editor to reconnect.',
-              details: { outcome: 'unknown', requiresReload: true },
-            }),
-          );
-        }, 60_000);
-        try {
-          return await new Promise((resolve, reject) => {
-            pending = { requestId, tool: request.tool, resolve, reject };
-            win.webContents.send(IpcMainChannels.AutomationRequest, {
-              requestId,
-              request,
-            } satisfies AutomationMessage);
-          });
-        } finally {
-          clearTimeout(timer);
-          signal.removeEventListener('abort', onCancel);
-          pending = null;
-          exportController = null;
-        }
-      };
-      // Interactive close still shares the native file-operation queue.
-      const runOperation = () =>
-        request.tool === 'close_document'
-          ? options.withFileLock(operation)
-          : operation();
-      const result =
-        request.tool === 'close_document'
-          ? options.runExclusive(runOperation)
-          : runOperation();
-      return Promise.race([result, timeout]);
-    },
-  }).catch((error) => {
-    removeHandlers();
-    throw error;
-  });
+      const requestId = randomUUID();
+      const cancellable =
+        request.tool === 'export_pdf' ||
+        request.tool === 'preview_page' ||
+        request.tool === 'batch_update_files';
+      if (cancellable && signal.aborted) {
+        throw new Error('EXPORT_CANCELLED');
+      }
+      exportController = cancellable ? new AbortController() : null;
+      const onCancel = () =>
+        exportController?.abort(new Error('EXPORT_CANCELLED'));
+      signal.addEventListener('abort', onCancel, { once: true });
+      const timer = setTimeout(() => {
+        ready = false;
+        exportController?.abort(new Error('AUTOMATION_TIMEOUT'));
+        rejectTimeout(
+          new AutomationError({
+            code: 'AUTOMATION_TIMEOUT',
+            message:
+              'Inspect the document and output before retrying; reload the editor to reconnect.',
+            details: { outcome: 'unknown', requiresReload: true },
+          }),
+        );
+      }, 60_000);
+      try {
+        return await new Promise((resolve, reject) => {
+          pending = { requestId, tool: request.tool, resolve, reject };
+          win.webContents.send(IpcMainChannels.AutomationRequest, {
+            requestId,
+            request,
+          } satisfies AutomationMessage);
+        });
+      } finally {
+        clearTimeout(timer);
+        signal.removeEventListener('abort', onCancel);
+        pending = null;
+        exportController = null;
+      }
+    };
+    // Interactive close still shares the native file-operation queue.
+    const runOperation = () =>
+      request.tool === 'close_document'
+        ? options.withFileLock(operation)
+        : operation();
+    const result =
+      request.tool === 'close_document'
+        ? options.runExclusive(runOperation)
+        : runOperation();
+    return Promise.race([result, timeout]);
+  }
 
-  console.log(`Neanes MCP listening at http://127.0.0.1:${server.port}/mcp`);
   return {
-    port: server.port,
-    isReady: () => ready,
-    error: () => failure,
+    execute(request: AutomationRequest, signal: AbortSignal) {
+      return queue.run(() => {
+        requireOpen();
+        signal.throwIfAborted();
+        return execute(request, signal);
+      });
+    },
     // The caller supplies the renderer's current readiness. The creation-time
     // value is stale once a later window attaches.
     attach(win: BrowserWindow, isReady: boolean) {
@@ -373,7 +358,6 @@ export async function startAutomationHost(options: {
       }
       detach.clear();
       removeHandlers();
-      await server.close();
       await Promise.allSettled([...fileOperations]);
       const win = options.getWindow();
       if (win && !win.isDestroyed()) {

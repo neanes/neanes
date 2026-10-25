@@ -1,202 +1,212 @@
 # Neanes MCP
 
-When agent access is enabled, the Electron app starts an authenticated local MCP Streamable HTTP endpoint while running. The web build does not host a server. Through the bridge, document tools use private documents by default. Pass `documentScope: "editor"` to work with open editor tabs. MCP PDF export and page previews render detached snapshots in dedicated hidden windows. Typed element and lyric transactions are available in both document modes. Bounded batch transformations support saved scores and temporary PDF edits. Persistent background jobs remain deferred.
+Neanes provides a local MCP server directly over stdio. Configuring it in your MCP
+client is the opt-in; there is no Neanes preference, policy file, separate bridge,
+Node installation, or HTTP endpoint to configure. The browser build does not host MCP.
 
-## Normal setup: one connection
+## Setup
 
-Open Edit > Preferences > Agent access (MCP), turn on Allow agent access, and copy the
-configuration into your MCP client. Node.js 22+ runs the dependency-free bridge.
-One switch controls editor and background access. There are no user-managed tokens, folder permissions, or connection modes to configure. The copied JSON
-uses the common `mcpServers` shape; clients using another configuration format need
-its command and args values.
+Point your MCP client at the Neanes executable with `--mcp`.
 
-Each bridge launches its own private headless Electron worker, profile, and random
-loopback port, even when the editor is running. Private operations and capability
-queries use that worker without connecting to the editor;
-editor dialogs and loading state do not block them. An in-progress connection
-never retries edits automatically or migrates drafts after a disconnect.
-Disconnecting stops the bridge's worker and never closes an existing editor.
+Choose the command for your client and operating system. Replace example paths
+with the location of your installed Neanes executable.
 
-Document tools through the bridge default to one private document store per
-worker, regardless of launch order.
-Private documents have no idle expiry and last until explicitly closed, the
-worker stops, or agent access is revoked. Each worker allows 16 open documents;
-`get_capabilities.privateDocuments` reports this limit and `lifetime: "worker"`.
-To discover live tabs use `list_documents` with `documentScope: "editor"`, then pass
-`documentScope: "editor"` to document tools operating on those IDs. No editor is launched
-for that explicit scope; an editor must be open. The bridge discovers the editor
-only for explicit editor requests, including after the user opens it later,
-while keeping private tasks in the worker. The bridge advertises `documentScope` in
-tool input schemas and supplies initialization guidance.
+### macOS
 
-Complete published schemas are available as read-only MCP resources, independently
-of documents. `resources/list` lists input and output resources for
-every tool; `resources/templates/list` advertises
-`neanes://schemas/{tool}/{view}`, where `view` is `input` or `output`.
-For example, read `neanes://schemas/edit_elements/input` or
-`neanes://schemas/get_paragraph_styles/output` with `resources/read`.
-Each JSON resource contains `tool`, `description`, and `schema`. Local `$ref`
-values resolve within `schema`. The bridge includes `documentScope` in document
-input resources, matching its `tools/list` publication.
+These commands assume Neanes is installed in `/Applications`.
 
-Clients may shorten generated tool declarations: Codex 0.163.0-alpha.10.2 removes
-some validation keywords and field descriptions, and limits recursive type
-expansion. Read the corresponding schema resource for complete bounds, patterns,
-defaults, dictionary keys, field guidance, and recursive definitions. Resources
-preserve the published schemas without client schema conversion; runtime
-validation still enforces additional rules described by each tool, including
-cross-field and document-state checks. Small reused types are inline in both
-input and output schemas to avoid exhausting client reference budgets; larger
-repeated structures remain shared. Tool-level descriptions retain critical
-authoring guidance, including lyric parser versus literal-text behavior.
-
-On graceful bridge shutdown, its worker stops and all its private documents are
-discarded. HTTP timeouts/disconnects while the
-bridge remains alive preserve its documents for inspection. A crashed bridge leaves
-its worker a 60-second orphan grace period; private drafts are not recovered.
-
-The bridge ships at `resources/mcp/bridge.mjs` with `bridgeProtocol.mjs` and
-`compatibility.json`; packaged startup installs these files in the normal profile.
-The stable profile path works after a Linux AppImage unmounts. No separate npm
-install is needed. Arguments are `--executable <absolute app executable>` and
-`--policy <absolute agent-access.json>`; development also uses
-`--app <absolute repository path>`. The copied configuration uses the original
-APPIMAGE path on Linux.
-
-Linux users must refresh their MCP client configuration after updating Neanes if
-the AppImage filename or location changes. Open the updated Neanes app, copy the
-configuration from Preferences, replace the saved client configuration, and
-reconnect. The bridge uses the configured executable path; it does not discover
-or substitute a newer AppImage automatically. Moving the app on any platform also
-requires refreshing the configuration when its executable path changes.
-
-Startup waits for renderer readiness on a private pipe. Diagnostics go to stderr,
-stdout carries only MCP JSON-RPC, and credentials stay out of command arguments.
-Invalid JSON-RPC envelopes return Invalid Request errors without discarding
-private drafts.
-
-### Releases and compatibility
-
-There are three independent versions:
-
-- The MCP wire revision is negotiated at initialization. Each HTTP target retains
-  its negotiated revision, and the bridge supplies `MCP-Protocol-Version` on
-  subsequent requests. `compatibility.json` lists revisions implemented by the bridge:
-  `2025-11-25` and `2025-06-18`. Unsupported client revisions negotiate the preferred
-  supported revision; clients that cannot use it must disconnect. Older revisions
-  are excluded because they require receiving JSON-RPC batches, which this bridge
-  does not implement. SDK recognition alone does not establish bridge support.
-- `serverInfo.version` is the Neanes application version, supplied by `app.getVersion()`.
-- `capabilities.experimental["neanes/automation"].contractVersion` is the Neanes
-  automation compatibility version from `compatibility.json`. It starts at `1`.
-  Keep it unchanged for compatible additions. Increment it for breaking changes to
-  existing tool inputs, outputs, semantics, or bridge/worker routing assumptions.
-  This is independent of the score file format version.
-
-The bridge checks its worker's contract before discovery and checks each newly
-discovered editor connection before routing requests. An absent or different
-contract version is refused, with instructions to save private drafts, update
-Neanes, and reconnect. App versions may differ when their contracts match. Contract
-version checks do not replace bearer authentication or the access policy.
-
-An update does not hot-reload existing bridges, migrate private drafts, or replay
-requests. Save private documents before updating, open the updated Neanes app to
-install its bridge files, refresh the MCP configuration if the executable path
-changed, and reconnect the MCP client to load the new bridge and rediscover tools.
-Reconnecting starts a fresh private store. Clients with cached tool declarations
-may also need their normal tool-refresh action. Release testing
-should verify freshly copied configuration and exercise both compatible and
-incompatible automation contract versions.
-
-Headless capabilities report `mode: "headless"`. Raw HTTP headless document calls
-use the worker's private store directly. HTTP requests do
-not own that store; the bridge's process lifetime controls worker cleanup.
-The hidden host shares document operations, fonts, rich-text measurement, layout,
-and PDF output without mounting the editor, recovery, router, or service worker.
-New worker documents use built-in defaults. This is desktop Electron without
-visible windows; display-server-free Linux operation is not established.
-
-Agent access is off by default. The normal profile's private agent-access.json stores
-`enabled` and a generated token. Missing `enabled` means off; explicit legacy
-booleans are preserved, while obsolete root/generation fields are ignored.
-Only editor startup creates missing credentials, with access disabled. Bridge and
-`--headless-mcp` startup refuse missing, invalid, or disabled policy files. Enabling
-access requires the preference; environment token/port overrides do not bypass it.
-Each worker also has a private random bearer token passed through its environment.
-Tokens never appear in settings responses, copied configuration, or settings controls.
-
-Disabling is persisted atomically before the editor transport closes. Hosts recheck
-policy at request execution and file operations; idle hosts and bridges check once
-per second. Toggling rotates internal credentials, so an off/on cycle cannot revive
-an old worker or connection. Explicit refusal never triggers worker fallback.
-Private drafts are discarded, editor tabs stay intact, and file commits already
-underway finish before worker exit. Preferences always asks for confirmation before
-turning enabled access off, since temporary agent work may be discarded.
-After enabling again, reconnect clients to start fresh connections.
-
-Editor startup failures are caught, recorded, and leave the editor usable. The
-settings section exposes status, Copy configuration, endpoint details, and Retry
-connection only after a failure. Retry restarts the transport without changing
-credentials. Private bridge tasks use their worker regardless of editor server
-failures; explicit editor scope reports that failure. Worker startup failures still
-exit the worker because it has no other purpose. Interrupted requests are never
-automatically replayed. Workers stop with their owning bridge (or after the existing
-orphan grace period), independently of the editor's internal credential file.
-
-Verify after `npx vite build`:
+**Codex:**
 
 ```sh
-node tests/integration/mcp/headless-launch-smoke.mjs
-node tests/integration/mcp/agent-access-smoke.mjs
+codex mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
 ```
 
-Tests use disposable profiles and folders. Set NEANES_TEST_EXECUTABLE to a built
-app executable for packaging checks. Self-launching editor tests use OS-assigned
-debugging ports;
-NEANES_TEST_MCP_FAILURE=1 occupies the configured port to verify nonfatal editor startup, independent private workers, and retry after the port is released.
-
-Smoke scripts share `smokeClient.mjs` for HTTP connections, MCP outcome assertions,
-and optional published-schema validation. `smokeCdp.mjs` owns debugger request
-dispatch and JavaScript evaluation. `smokeApp.mjs` creates disposable profiles,
-launches Electron, discovers endpoints/debuggers, captures logs, and removes the
-profile after stopping the app. Preview image artifacts are retained separately.
-`smokePolling.mjs` shares bounded observation polling and metadata-only revision
-settlement. Document cleanup uses the metadata reader instead of reconstructing
-scores. Scenario scripts retain their readiness and lifecycle assertions; preview
-checks also inspect raw response content for images.
-
-## Direct HTTP development setup
+**Claude Code:**
 
 ```sh
-export NEANES_MCP_PORT=38765
-export NEANES_MCP_TOKEN="$(openssl rand -hex 32)"
-export NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile
-npm run dev
+claude mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
 ```
 
-Enable Allow agent access in the disposable development profile first. The default port is OS-assigned, and the internal token is generated automatically.
-The environment overrides above are optional developer controls for existing direct
-HTTP test clients; normal users and bridge clients do not set them. Settings show
-the actual endpoint, but never disclose credentials. Raw HTTP document tools retain
-their visible-editor default; the bridge defaults to its private worker and routes
-explicit editor scope to the interactive server. NEANES_DEV_USER_DATA_DIR applies to development builds, or
-production smoke runs explicitly marked IS_TEST=1.
+Use the executable inside `Neanes.app`, rather than the `open` command, so your
+client can communicate with Neanes.
 
-Authentication uses a bearer token of at least 32 characters. HTTP binds to IPv4
-loopback, validates Host, rejects browser Origin headers, and uses stateless JSON
-responses. MCP file operations use normal OS permissions with explicit absolute
-paths. Existing suffix validation, overwrite protection, source-conflict checks,
-in-place score writes that preserve existing file metadata, and symlink-output rules remain. MCP client roots do not restrict
-file access.
+### Windows
 
-The mixed-scope smoke tests below use the bridge. Run them with
-`NEANES_DEV_USER_DATA_DIR` pointing to the same disposable editor profile.
+In PowerShell, set `$neanes` to the full path of your installed `Neanes.exe`.
+To find it, open the Neanes shortcut's **Properties** and check **Target**.
+The path below is a placeholder; replace it before running either setup command.
+
+```powershell
+$neanes = 'C:\path\to\Neanes.exe'
+```
+
+**Codex:**
+
+```powershell
+codex mcp add neanes -- "$neanes" --mcp
+```
+
+**Claude Code:**
+
+```powershell
+claude mcp add neanes -- "$neanes" --mcp
+```
+
+Keep the quotes around the path so installation folders containing spaces work.
+
+### Linux
+
+Use the full path to your downloaded AppImage and make it executable. These
+examples assume it is saved as `~/Applications/Neanes.AppImage`; use your actual
+filename and location.
+
+```sh
+chmod +x "$HOME/Applications/Neanes.AppImage"
+```
+
+**Codex:**
+
+```sh
+codex mcp add neanes -- "$HOME/Applications/Neanes.AppImage" --mcp
+```
+
+**Claude Code:**
+
+```sh
+claude mcp add neanes -- "$HOME/Applications/Neanes.AppImage" --mcp
+```
+
+Run the client in your desktop session when you want it to access open editor
+tabs. If an update changes the AppImage filename or location, update the path in
+your MCP client configuration.
+
+### Other MCP clients
+
+For clients that accept an `mcpServers` JSON object, this example uses the macOS
+path:
+
+```json
+{
+  "mcpServers": {
+    "neanes": {
+      "command": "/Applications/Neanes.app/Contents/MacOS/Neanes",
+      "args": ["--mcp"]
+    }
+  }
+}
+```
+
+Replace `command` with your executable's absolute path. In JSON, Windows
+backslashes must be doubled, for example `"C:\\path\\to\\Neanes.exe"`.
+If your client has separate fields, enter the executable path as the command and
+`--mcp` as its argument.
+
+Reconnect the client after adding the server. See the
+[Codex MCP documentation](https://learn.chatgpt.com/docs/extend/mcp) for client
+configuration details. Moving the app or changing the AppImage filename requires
+updating the executable path. Older configurations using `node .../bridge.mjs`
+must be replaced.
+
+Each client launches an independent hidden Neanes process with a disposable
+profile and private documents. The visible editor need not be running. stdout
+contains only MCP JSON-RPC; diagnostics go to stderr. Closing stdin or terminating
+the MCP process shuts down its renderer and discards its private drafts. Save
+explicitly; drafts have no idle expiry and are not recovered after a crash.
+Each process allows 16 private documents; `get_capabilities.privateDocuments`
+reports the limit and `lifetime: "worker"`.
+
+Document tools default to private documents. To discover visible tabs, use
+`list_documents` with `documentScope: "editor"`; include that scope on subsequent
+document calls. An editor must already be running. It can be opened after the MCP
+connection starts, and no request automatically launches an editor. Editor dialogs
+and loading state do not block private documents. Disconnecting an MCP client never
+closes the visible editor or another client's private documents. Requests are never
+automatically replayed after a timeout or disconnect; inspect before retrying.
+
+## Internal editor connection
+
+The visible editor automatically starts a Unix domain socket on macOS/Linux or a
+named pipe on Windows. It publishes `mcp-editor.json` in its normal profile with
+the socket path, a fresh random session token, and the automation contract version.
+The discovery file is written atomically with private file permissions; Unix
+sockets live in a private directory with a short path. Credentials are internal
+and require no user configuration. MCP processes re-read discovery for explicit
+editor requests, authenticate each operation, and reject incompatible contracts.
+No TCP port or HTTP server is opened. Normal OS file permissions apply to score
+operations; MCP client roots do not restrict file access.
+
+The internal transport carries bounded newline-delimited JSON, one typed operation
+per connection. Disconnecting cancels queued work and cancellable rendering/batch
+operations. Existing revision checks, overwrite protection, source-conflict checks,
+symlink-output rules, native file-operation coordination, and structured errors
+remain. An edit or file commit already underway may complete after disconnection.
+
+PDF export and page previews render detached snapshots in hidden windows. The MCP
+process uses the same fonts, measurement, layout, and export code as the editor,
+without mounting editor tabs, recovery, router, or service worker. New private
+documents use built-in defaults. This remains desktop Electron; display-server-free
+Linux operation is not established.
+
+## Schemas and compatibility
+
+`resources/list` publishes complete input/output schema resources for every tool.
+`resources/templates/list` advertises `neanes://schemas/{tool}/{view}` with `input`
+or `output`, for example `neanes://schemas/edit_elements/input`. Local `$ref`
+values resolve within the returned `schema`. Input resources include `documentScope`
+where applicable, matching `tools/list`. Clients may shorten tool declarations;
+read schema resources for complete constraints and guidance. Runtime validation
+also enforces document-state and cross-field rules.
+
+The MCP wire revisions are listed in `electron/main/automation/compatibility.json`.
+Unsupported revisions negotiate the preferred supported revision. `serverInfo.version`
+is the application version. `capabilities.experimental["neanes/automation"].contractVersion`
+is the separate automation contract version, checked between MCP and editor
+processes. Increment it for breaking tool or routing changes. This is unrelated
+to the score save-format version.
+
+Save private drafts before updating Neanes, then reconnect the MCP client to load
+the new executable and rediscover tools. Existing MCP processes do not hot-reload,
+migrate drafts, or replay requests. Clients with cached declarations may also need
+their normal tool-refresh action.
+
+## Development and tests
+
+For local work, start the editor with `npm run dev`, then register the repository's
+Electron executable and repository path once. On macOS, from the repository:
+
+```sh
+codex mcp add neanes-dev -- "$PWD/node_modules/.bin/electron" "$PWD" --mcp
+```
+
+The running development editor publishes its Vite URL with its socket discovery
+information. An unpackaged MCP process discovers that URL automatically before
+loading its renderer, previews, and PDF exports. No `VITE_DEV_SERVER_URL` setting
+is needed in the client configuration. An explicit environment URL still takes
+precedence. Reconnect after main-process changes to load the updated code.
+
+Both processes must use the same editor profile. If the editor was started with
+`NEANES_DEV_USER_DATA_DIR`, include the same value in the registration using
+`--env NEANES_DEV_USER_DATA_DIR=/absolute/path/to/profile`. Private MCP profiles
+are created automatically. Packaged apps ignore development URL discovery.
+
+With no live development editor, MCP uses built renderer files. Run `npx vite build`
+first for that workflow; set `IS_TEST=1` on both processes if you want that production
+build to honor a disposable `NEANES_DEV_USER_DATA_DIR`. No token or MCP port settings
+are needed.
+
+```sh
+npm run test:integration:mcp
+```
+
+Tests use disposable profiles and folders. Set `NEANES_TEST_EXECUTABLE` to a packaged
+app executable to check the packaged launch path. On macOS, agents must launch
+Electron outside their command sandbox as required by the repository's AGENTS.md.
+See [integration setup](../../tests/integration/mcp/README.md) for scenarios.
 
 ## Tools
 
-The contracts below describe direct HTTP access to the interactive server. Through
-the bridge, document tools default to private worker documents; use `documentScope`
-to choose editor tabs.
+Document tools default to private documents in the MCP process. Set
+`documentScope: "editor"` to work with tabs in an already-running editor.
 
 - `get_capabilities`: supported style actions, units, and formats. Pass `includeFonts: true` to add this host's installed/bundled font families (omitted by default). Pass `includeErrorCodes: true` for the stable error-code vocabulary.
 - `list_documents`: open workspace IDs, revisions, canonical source paths, source format (`byz`, `byzx`, or null), selection, and unsaved state.
@@ -229,7 +239,7 @@ All three focused readers accept optional `expectedRevision`. Settings writes re
 - `replace_document_properties`: replaces the complete metadata object, requiring both `title` and `author`. One undo step; does not save.
 - `save_document`: save to `filePath`, or to the document's source if omitted. Save-as changes the workspace's source path. Existing unrelated destinations require `overwrite: true`. Saving back to the source checks its last known modification time and size, even when overwrite is true. Existing score files are written in place to preserve their filesystem metadata. A failed or interrupted write can leave partial content; no atomic replacement is promised. Same-source saves preserve the format used to open the score, including extensionless or differently suffixed symlink targets, and preserve the alias itself. Save-as to a different identity uses the destination suffix. Unrelated symlink outputs remain forbidden. The result includes `savedRevision` (the revision written) and `savedContentUnchanged` (whether that saved snapshot is still current). `revision` describes the current workspace, which can include newer interactive edits or the new source path.
 - `preview_page`: return one full-page PNG as an MCP image content block, without writing an output file. Works with unsaved editor or private-worker documents. Supply `documentId`, optional `expectedRevision`, and one-based physical `pageNumber`. `maxEdge` defaults to 1600 pixels and accepts 256-2048, preserving aspect ratio (up to 192 DPI); the PNG is limited to 4 MiB. Text and structured results contain metadata only: `capturedRevision`, current `revision`, `pageCount`, `pageNumber`, `mimeType`, `width`, and `height`, plus the document summary. The image is the second content block, with `type: "image"`, `mimeType: "image/png"`, and base64 `data`. Clients must support MCP image content to inspect it. Concurrent source changes reject with `REVISION_CONFLICT`. The image renderer returns `pageCount` from its settled snapshot without running page discovery. Rendering failures return `EXPORT_RENDER_FAILED`; out-of-range pages return `INVALID_PAGE_NUMBER`. Rendering uses the shared settled pages, opaque white background, export overlays, font/image readiness, cancellation, and disposal. Does not select, edit, save, or create a private copy. Pending input follows the same normal document settlement as other reads.
-- `export_pdf`: render to an explicit absolute PDF path without a save dialog or external PDF viewer. Existing destinations require `overwrite: true`. Does not save the score. Export uses a dedicated hidden renderer and leaves tabs, selection, editor input, and undo history available. The result includes `exportedRevision`, identifying the snapshot written to the PDF; `revision` describes the workspace at completion and may include newer interactive edits. Snapshot metadata and file-name tokens are captured together. No workspace, recovery state, or save is created by the hidden renderer. Rendering failure uses `EXPORT_RENDER_FAILED`; an aborted HTTP request cancels pending rendering and disposes its window. Cancellation uses `EXPORT_CANCELLED` when a response can still be delivered. Existing destination checks still apply; cancellation racing with a completed commit can have an unknown outcome.
+- `export_pdf`: render to an explicit absolute PDF path without a save dialog or external PDF viewer. Existing destinations require `overwrite: true`. Does not save the score. Export uses a dedicated hidden renderer and leaves tabs, selection, editor input, and undo history available. The result includes `exportedRevision`, identifying the snapshot written to the PDF; `revision` describes the workspace at completion and may include newer interactive edits. Snapshot metadata and file-name tokens are captured together. No workspace, recovery state, or save is created by the hidden renderer. Rendering failure uses `EXPORT_RENDER_FAILED`; a cancelled MCP request cancels pending rendering and disposes its window. Cancellation uses `EXPORT_CANCELLED` when a response can still be delivered. Existing destination checks still apply; cancellation racing with a completed commit can have an unknown outcome.
 
 ### Text search contract
 
@@ -364,7 +374,7 @@ Use the page tools for layout-based discovery and get_selection for UI context.
 Run the search regression against a disposable app profile:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/element-search-smoke.mjs
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/element-search-smoke.mjs
 ```
 
 It checks editor and private-worker searches, nested collections, predicates,
@@ -429,7 +439,7 @@ rendering. Client timeout/disconnect can leave bounded read-only rendering in
 progress until its completion or deadline. No page query saves or exports.
 
 Run `tests/integration/mcp/page-discovery-smoke.mjs` with an allowed absolute output
-directory, `NEANES_MCP_TOKEN`, and optionally `NEANES_DEBUG_URL` for concurrent
+directory, `NEANES_DEV_USER_DATA_DIR`, and optionally `NEANES_DEBUG_URL` for concurrent
 interactive-edit and offscreen-cleanup checks. It covers both document modes,
 repeated templates, numbering, pagination, references, conflicts, failure/retry,
 and PDF compatibility. Use a disposable application profile.
@@ -473,7 +483,7 @@ Run the regression against a disposable app started with
 `--remote-debugging-port=9334`:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node tests/integration/mcp/selection-smoke.mjs
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile NEANES_DEBUG_URL=http://127.0.0.1:9334 node tests/integration/mcp/selection-smoke.mjs
 ```
 
 ### Element transaction contract
@@ -680,7 +690,7 @@ npx vitest run src/services/documents src/automation electron/main/files electro
 Run the read-only element discovery regression against a disposable profile. It checks editor and private-worker reads, nested collections, header/footer templates, pagination, reference ownership, revision conflicts, explicit overrides, and unchanged source content after reads:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/element-discovery-smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/element-discovery-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 To also exercise revision conflicts after live child edits that serialize identically,
@@ -696,7 +706,7 @@ With the app's disposable debugging endpoint enabled, `NEANES_DEBUG_URL` also
 checks one-step UI undo/redo and the unrelated interactive workspace's live state.
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEBUG_URL=http://127.0.0.1:9334 node tests/integration/mcp/element-edit-smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile NEANES_DEBUG_URL=http://127.0.0.1:9334 node tests/integration/mcp/element-edit-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 Run the rich-text lifecycle regression after `npx vite build`. It launches its own
@@ -709,18 +719,18 @@ command sandbox as described in AGENTS.md.
 node tests/integration/mcp/rich-text-update-smoke.mjs
 ```
 
-With the development app running and ready, run the real MCP client smoke test from another terminal with the same token:
+With the development app running and ready, run the real MCP client smoke test from another terminal with the same disposable profile:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/smoke.mjs /tmp/neanes-mcp/files
 ```
 
 The smoke test creates an interactive workspace and unique output files, updates lyrics defaults, saves/reopens both formats, exports PDFs (including custom 6 x 9-inch portrait and landscape paper dimensions), and checks revision conflicts, external changes, output collisions, authentication, and Origin rejection. It closes the workspaces introduced by the run and leaves output files available for inspection. Run it with an isolated development profile.
 
-To verify reuse of an interactively opened workspace through a path alias, run the additional smoke test with the same token, URL, and isolated development profile:
+To verify reuse of an interactively opened workspace through a path alias, run the additional smoke test with the same isolated development profile:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/interactive-open-smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/interactive-open-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This invokes a real second Electron instance to open the file, changes the open workspace without saving, and verifies that MCP preserves its ID and unsaved content when opening the canonical path. On macOS with a canonical `/private/tmp` output directory, it uses the corresponding `/tmp` path for the interactive open.
@@ -728,7 +738,7 @@ This invokes a real second Electron instance to open the file, changes the open 
 To verify real recovery cleanup and last-document behavior, run this only against an isolated development profile with one blank workspace (the regular smoke test restores that state):
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/close-document-smoke.mjs
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/close-document-smoke.mjs
 ```
 
 It waits for a real recovery snapshot, explicitly discards that draft, verifies the snapshot does not return, checks partial cleanup failure using an invalid recovery path on disk, then closes the last blank workspace and verifies that a fresh blank workspace replaces it while MCP stays available.
@@ -736,7 +746,7 @@ It waits for a real recovery snapshot, explicitly discards that draft, verifies 
 To compare background and foreground typography measurement using real editors:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node tests/integration/mcp/background-style-smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/mcp/background-style-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This uses matching scores with plain, rich, multipanel, header, and footer text boxes. It changes inherited typography in a background workspace, saves immediately, and compares persisted heights with a foreground control while checking that selection and the active workspace's heights stay unchanged. It closes only workspaces introduced by the run.
@@ -746,15 +756,15 @@ This uses matching scores with plain, rich, multipanel, header, and footer text 
 Run the development Electron app with a dedicated profile and `--remote-debugging-port=9334`, or launch a production build with that flag, `--no-update`, and an explicit disposable `--user-data-dir=/tmp/neanes-mcp/export-profile`. The `NEANES_DEV_USER_DATA_DIR` override applies only to development builds. The debugging endpoint must be restricted to a disposable test instance; this test intentionally changes tabs and edits a document through the real renderer.
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node tests/integration/rendering/hidden-export-smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/rendering/hidden-export-smoke.mjs /tmp/neanes-mcp/files
 ```
 
-Set `NEANES_DEBUG_URL` for another local debugging endpoint. The test constructs a multi-page score with notes, lyrics, melismas, a drop cap, martyria, tempo, rich text, and headers/footers. It first exercises selection, range selection, lyric focus/editing/undo, flushing pending inline-rich-text edits on tab switches, and page-specific focus for repeated headers. It also checks style undo/redo with unchanged heights while switching tabs, and exports long title, chapter, and filename tokens in headers/footers with horizontal rules. It then exports a background document while changing tabs and editing the source, checks the exported and current revisions, verifies unchanged control content and undo history, and checks disposal after success, a broken-image failure, and HTTP cancellation. It closes its introduced workspaces. The resulting PDF remains available for visual inspection.
+Set `NEANES_DEBUG_URL` for another local debugging endpoint. The test constructs a multi-page score with notes, lyrics, melismas, a drop cap, martyria, tempo, rich text, and headers/footers. It first exercises selection, range selection, lyric focus/editing/undo, flushing pending inline-rich-text edits on tab switches, and page-specific focus for repeated headers. It also checks style undo/redo with unchanged heights while switching tabs, and exports long title, chapter, and filename tokens in headers/footers with horizontal rules. It then exports a background document while changing tabs and editing the source, checks the exported and current revisions, verifies unchanged control content and undo history, and checks disposal after success, a broken-image failure, and MCP cancellation. It closes its introduced workspaces. The resulting PDF remains available for visual inspection.
 
 To verify Print Overlays against actual PDF drawing and text content, use the same isolated app and debugging endpoint:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node tests/integration/rendering/print-overlays-smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/rendering/print-overlays-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This test reloads the disposable editor with each overlay preference, exports a real PDF, and checks that guides, all bounding-box options, lyric baselines, glue widths, and adjustment ratios add PDF content. It also checks that disabling Print Overlays, Overlays, or Developer Panels suppresses them. It restores the original preferences and closes its documents. Run it separately from other smoke tests because it reloads the renderer.
@@ -769,9 +779,9 @@ After `npx vite build`, run outside the agent command sandbox:
 node tests/integration/mcp/preview-smoke.mjs
 ```
 
-This starts and stops a disposable editor and bridge using OS-assigned debugging ports.
+This starts and stops a disposable editor and MCP process using OS-assigned debugging ports.
 It checks unsaved interactive/private documents, multiple pages, image delivery
-through the bridge, pixel bounds and visible content, revision/layout conflicts,
+through stdio, pixel bounds and visible content, revision/layout conflicts,
 cancellation, concurrent edits, broken-image failure, renderer disposal, and
 unchanged source content/history/selection. Output PNGs remain in the reported
 temporary directory. It does not use the normal profile.
@@ -781,7 +791,7 @@ temporary directory. It does not use the normal profile.
 With the same disposable profile, debugging endpoint, and MCP configuration:
 
 ```sh
-NEANES_MCP_TOKEN=<same-token> node tests/integration/rendering/rendering-migration-smoke.mjs /tmp/neanes-mcp/files
+NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile node tests/integration/rendering/rendering-migration-smoke.mjs /tmp/neanes-mcp/files
 ```
 
 This exercises actual detached PNG rendering and filesystem output. It checks a two-page custom landscape score with rich text, an embedded image, resolved header/footer tokens, and overlays. It verifies dimensions at 96 and 192 DPI, page selection, transparent/opaque backgrounds, source content/revision/selection/undo preservation, empty page selection, broken-image failure, and disposal when a rendering window is closed. It intentionally supplies stale heights in the detached snapshot to exercise measurement and repagination. Output images remain available for visual inspection. Do not run it concurrently with other smoke tests.
@@ -863,7 +873,7 @@ manifests and inspect each batch's results before continuing.
 request-owned private documents. It never reuses interactive tabs or caller-owned
 private documents and does not accept `documentScope`. It holds
 one score at a time, so the 16-open-document worker limit does not constrain the
-manifest. The normal bridge routes it to its private worker.
+manifest. The MCP process handles it privately.
 
 ```js
 const query = {
@@ -925,7 +935,7 @@ Results contain `index`, input `filePath`, `status` (completed/unchanged/dryRun/
 and a compact error code/message. A later PDF failure retains already
 committed output paths. No document definitions or transient IDs/revisions are
 returned. `onError` defaults to `stop`; `continue` attempts later files. Cancellation
-and access revocation stop further work at authorization/render checkpoints.
+stops further work at request/render checkpoints.
 
 The tool yields between files after a soft 20-second work budget or a 16,000-character
 result threshold. A single slow file can still hit the existing 60-second request

@@ -1,25 +1,28 @@
 import assert from 'node:assert/strict';
-import path from 'node:path';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import electron from 'electron';
 
-export async function connectHttpClient(
-  name,
-  {
-    url = process.env.NEANES_MCP_URL ?? 'http://127.0.0.1:38765/mcp',
-    token = process.env.NEANES_MCP_TOKEN,
-  } = {},
-) {
-  const client = new Client({ name, version: '1.0.0' });
-  await client.connect(
-    new StreamableHTTPClientTransport(new URL(url), {
-      requestInit: { headers: { Authorization: `Bearer ${token}` } },
-    }),
-  );
+export async function connectEditorClient(name, options = {}) {
+  const client = await connectStdioClient(name, options);
+  const tools = (await client.listTools()).tools;
+  const call = client.callTool.bind(client);
+  client.callTool = (params, ...rest) =>
+    call(
+      {
+        ...params,
+        arguments: {
+          ...params.arguments,
+          ...(tools.find((tool) => tool.name === params.name)?.inputSchema
+            .properties?.documentScope
+            ? { documentScope: 'editor' }
+            : {}),
+        },
+      },
+      ...rest,
+    );
   return client;
 }
 
@@ -84,34 +87,37 @@ export async function closeDocument(call, args) {
   });
 }
 
-export async function connectBridgeClient(
-  name,
-  {
-    policyPath = process.env.NEANES_DEV_USER_DATA_DIR &&
-      path.join(process.env.NEANES_DEV_USER_DATA_DIR, 'agent-access.json'),
-  } = {},
+export function stdioConfiguration(
+  profile = process.env.NEANES_DEV_USER_DATA_DIR,
 ) {
   assert.ok(
-    policyPath,
+    profile,
     'Set NEANES_DEV_USER_DATA_DIR to the disposable editor profile.',
   );
+  const env = {
+    ...process.env,
+    IS_TEST: '1',
+    NEANES_DEV_USER_DATA_DIR: profile,
+  };
+  delete env.ELECTRON_RUN_AS_NODE;
+  return {
+    command: process.env.NEANES_TEST_EXECUTABLE || electron,
+    args: [
+      ...(!process.env.NEANES_TEST_EXECUTABLE ? [process.cwd()] : []),
+      '--mcp',
+    ],
+    env,
+    stderr: 'inherit',
+  };
+}
+
+export async function connectStdioClient(
+  name,
+  { profile = process.env.NEANES_DEV_USER_DATA_DIR } = {},
+) {
   const client = new Client({ name, version: '1.0.0' });
-  await client.connect(
-    new StdioClientTransport({
-      command: process.execPath,
-      args: [
-        path.resolve('electron/mcp/bridge.mjs'),
-        '--executable',
-        process.env.NEANES_TEST_EXECUTABLE || electron,
-        ...(!process.env.NEANES_TEST_EXECUTABLE
-          ? ['--app', process.cwd()]
-          : []),
-        '--policy',
-        policyPath,
-      ],
-      stderr: 'inherit',
-    }),
-    { timeout: 70_000 },
-  );
+  await client.connect(new StdioClientTransport(stdioConfiguration(profile)), {
+    timeout: 70_000,
+  });
   return client;
 }

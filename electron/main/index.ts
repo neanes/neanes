@@ -1,5 +1,7 @@
 'use strict';
 
+import { tmpdir } from 'node:os';
+
 import type { Input, MenuItemConstructorOptions } from 'electron';
 import {
   app,
@@ -12,7 +14,7 @@ import {
   shell,
 } from 'electron';
 import { autoUpdater } from 'electron-updater';
-import { promises as fs } from 'fs';
+import { mkdtempSync, promises as fs } from 'fs';
 import i18next from 'i18next';
 import { imageSizeFromFile } from 'image-size/fromFile';
 import mimetypes from 'mime-types';
@@ -68,7 +70,8 @@ import {
 import type { PdfExportOptions } from '../../src/services/documents/fileTypes';
 import { OperationQueue } from '../../src/utils/OperationQueue';
 import { TestFileType } from '../../src/utils/TestFileType';
-import { installAgentAccess } from './automation/lifecycle';
+import { readEditorDevelopmentUrl } from './automation/editorConnection';
+import { installAutomation } from './automation/lifecycle';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
@@ -92,7 +95,7 @@ process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
   : process.env.DIST;
 
 const preload = path.join(__dirname, '../preload/index.js');
-const url = process.env.VITE_DEV_SERVER_URL;
+let url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = path.join(process.env.DIST, 'index.html');
 
 // Remove electron security warnings
@@ -101,22 +104,19 @@ const indexHtml = path.join(process.env.DIST, 'index.html');
 process.env['ELECTRON_DISABLE_SECURITY_WARNINGS'] = 'true';
 
 const isDevelopment = import.meta.env.DEV;
-const headless = process.argv.includes('--headless-mcp');
+const headless = process.argv.includes('--mcp');
 const normalUserData =
   ((isDevelopment || process.env.IS_TEST === '1') &&
     process.env.NEANES_DEV_USER_DATA_DIR) ||
   app.getPath('userData');
-const installedBridge = path.join(normalUserData, 'mcp', 'bridge.mjs');
-const accessPolicyFile =
-  process.env.NEANES_HEADLESS_POLICY ||
-  path.join(normalUserData, 'agent-access.json');
-if (headless) {
-  const profile = process.env.NEANES_HEADLESS_PROFILE;
-  if (!profile || !path.isAbsolute(profile)) {
-    throw new Error('HEADLESS_PROFILE_REQUIRED');
-  }
-  app.setPath('userData', profile);
-  app.setPath('sessionData', profile);
+const privateProfile = headless
+  ? mkdtempSync(path.join(tmpdir(), 'neanes-mcp-'))
+  : null;
+if (privateProfile) {
+  // stdout belongs exclusively to the MCP transport.
+  console.log = console.info = console.debug = console.error;
+  app.setPath('userData', privateProfile);
+  app.setPath('sessionData', privateProfile);
 }
 
 if ((isDevelopment || process.env.IS_TEST === '1') && !headless) {
@@ -269,6 +269,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 if (
+  !headless &&
   !app.requestSingleInstanceLock({ argv: process.argv } as SecondInstanceData)
 ) {
   app.exit();
@@ -2494,7 +2495,7 @@ async function createWindow() {
     win.maximize();
   }
 
-  agentAccess.attach(win);
+  automation.attach(win);
 
   win.on('resize', debouncedSaveWindowState);
   win.on('move', debouncedSaveWindowState);
@@ -2532,7 +2533,7 @@ async function createWindow() {
   });
 
   win.on('closed', () => {
-    agentAccess.detach();
+    automation.detach();
 
     win = null;
     loaded = false;
@@ -2975,7 +2976,7 @@ app.on(
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
-  if (!isMac) {
+  if (!headless && !isMac) {
     app.quit();
   }
 });
@@ -2984,8 +2985,18 @@ app.on('before-quit', () => {
   quitting = true;
 });
 
-app.on('will-quit', () => {
-  void agentAccess.close();
+let automationClosed = false;
+app.on('will-quit', (event) => {
+  if (!automationClosed) {
+    event.preventDefault();
+    void automation
+      .close()
+      .catch(console.error)
+      .finally(() => {
+        automationClosed = true;
+        app.quit();
+      });
+  }
 });
 
 if (!headless) {
@@ -2998,17 +3009,16 @@ if (!headless) {
   });
 }
 
-const agentAccess = installAgentAccess({
+const automation = installAutomation({
   headless,
   isMac,
-  accessPolicyFile,
-  installedBridge,
+  normalUserData,
+  privateProfile,
   preload,
-  url,
+  getDevServerUrl: () => url,
   setWindow(window) {
     win = window;
   },
-  getErrorMessage,
   runExclusive: (operation) => editorOperationQueue.run(operation),
   async withFileLock(operation) {
     if (saving) {
@@ -3029,6 +3039,15 @@ const agentAccess = installAgentAccess({
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  if (headless && !app.isPackaged && !url) {
+    url = await readEditorDevelopmentUrl(
+      path.join(normalUserData, 'mcp-editor.json'),
+    );
+    if (url) {
+      process.env.VITE_DEV_SERVER_URL = url;
+      process.env.PUBLIC = path.join(process.env.DIST_ELECTRON!, '../public');
+    }
+  }
   // Load the persisted store first so the user's chosen language (if any)
   // is honored when we initialize i18next and build the native menu.
   await loadStore();
@@ -3038,18 +3057,18 @@ app.on('ready', async () => {
   });
 
   if (headless) {
-    await agentAccess.start();
+    await automation.start();
     return;
   }
   setupAutoUpdater();
-  await agentAccess.start();
+  await automation.start();
   if (!win) {
     createWindow();
   }
 });
 
 // Exit cleanly on request from parent process in development mode.
-if (isDevelopment) {
+if (isDevelopment && !headless) {
   if (process.platform === 'win32') {
     process.on('message', (data) => {
       if (data === 'graceful-exit') {

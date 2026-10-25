@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 
 import { createSmokeApp } from './smokeApp.mjs';
-import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { connectEditorClient, createToolCaller } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
 const app = await createSmokeApp('neanes-metadata-');
@@ -22,7 +22,7 @@ try {
       ),
     ),
   );
-  client = await connectHttpClient('metadata-smoke', await app.endpoint());
+  client = await connectEditorClient('metadata-smoke', await app.ready());
   const call = createToolCaller(client, (await client.listTools()).tools);
   const created = await call('create_document', {
     title: 'Metadata regression',

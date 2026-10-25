@@ -3,13 +3,12 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
-import { connectHttpClient, createToolCaller } from './smokeClient.mjs';
+import { connectEditorClient, createToolCaller } from './smokeClient.mjs';
 import { settledDocument } from './smokePolling.mjs';
 
 const directory = process.argv[2];
-const token = process.env.NEANES_MCP_TOKEN;
-assert.ok(directory && path.isAbsolute(directory) && token);
-const client = await connectHttpClient('neanes-background-style-smoke');
+assert.ok(directory && path.isAbsolute(directory));
+const client = await connectEditorClient('neanes-background-style-smoke');
 const call = createToolCaller(client);
 function heights(score) {
   return [

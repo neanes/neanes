@@ -1,18 +1,8 @@
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
-import {
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  stat,
-  writeFile,
-} from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
-import { promisify } from 'node:util';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -23,29 +13,21 @@ import { checkSettings } from './settingsChecks.mjs';
 import { callTool } from './smokeClient.mjs';
 
 const directory = await mkdtemp(path.join(tmpdir(), 'neanes-headless-smoke-'));
-const policyPath = path.join(directory, 'agent-access.json');
+const profile = path.join(directory, 'profile');
 const files = path.join(directory, 'files');
 await mkdir(files);
-const policy = {
-  enabled: true,
-  token: randomBytes(32).toString('hex'),
-};
-await writeFile(policyPath, JSON.stringify(policy), { mode: 0o600 });
 const clients = [];
 async function connect(
   executable = process.env.NEANES_TEST_EXECUTABLE || electron,
 ) {
   const client = new Client({ name: 'neanes-headless-smoke', version: '1' });
   const transport = new StdioClientTransport({
-    command: process.execPath,
+    command: executable,
     args: [
-      path.resolve('electron/mcp/bridge.mjs'),
-      '--executable',
-      executable,
-      ...(process.env.NEANES_TEST_EXECUTABLE ? [] : ['--app', process.cwd()]),
-      '--policy',
-      policyPath,
+      ...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]),
+      '--mcp',
     ],
+    env: { ...process.env, IS_TEST: '1', NEANES_DEV_USER_DATA_DIR: profile },
     stderr: 'inherit',
   });
   clients.push(client);
@@ -57,7 +39,7 @@ async function call(client, name, args = {}) {
 }
 try {
   const [first, second] = await Promise.all([connect(), connect()]);
-  // Each bridge owns a worker; documents never resolve in a different worker.
+  // Each MCP connection owns its documents; IDs never resolve in another process.
   const capabilities = await call(first, 'get_capabilities');
   assert.equal(capabilities.mode, 'headless');
   assert.deepEqual(capabilities.privateDocuments, {
@@ -399,66 +381,19 @@ try {
   );
   if (process.platform === 'darwin' || process.platform === 'linux') {
     const doomed = await connect();
-    const { stdout } = await promisify(execFile)('pgrep', [
-      '-P',
-      String(doomed.transport.pid),
-    ]);
-    const children = stdout.trim().split(/\s+/).map(Number);
-    assert.equal(children.length, 1);
-    process.kill(children[0], 'SIGKILL');
+    process.kill(doomed.transport.pid, 'SIGKILL');
     await setTimeout(500);
     await assert.rejects(() => call(doomed, 'get_capabilities'));
   }
-  // Revocation stops existing workers and does not undo saved files.
   const saved = await readFile(scorePath, 'utf8');
-  await writeFile(policyPath, JSON.stringify({ ...policy, enabled: false }));
-  await assert.rejects(() => connect());
-  await setTimeout(1500);
-  await assert.rejects(() => call(first, 'get_capabilities'));
-  await assert.rejects(() => call(second, 'get_capabilities'));
+  await first.close();
+  await second.close();
   assert.equal(await readFile(scorePath, 'utf8'), saved);
-  // Re-enabling starts a fresh host without reviving private drafts.
-  await writeFile(
-    policyPath,
-    JSON.stringify({ enabled: true, token: randomBytes(32).toString('hex') }),
-  );
   const fresh = await connect();
   assert.deepEqual(await call(fresh, 'list_documents'), []);
   await fresh.close();
-  // Neither the bridge nor --headless-mcp may bootstrap permission.
-  await rm(policyPath);
-  await assert.rejects(() => connect());
-  await assert.rejects(() => stat(policyPath), { code: 'ENOENT' });
-  for (const content of [
-    JSON.stringify({ token: policy.token }),
-    JSON.stringify({ ...policy, enabled: false }),
-    '{invalid',
-  ]) {
-    await writeFile(policyPath, content);
-    await assert.rejects(() => connect());
-    const workerProfile = path.join(directory, 'refused-worker');
-    await mkdir(workerProfile, { recursive: true });
-    const env = {
-      ...process.env,
-      IS_TEST: '1',
-      NEANES_HEADLESS_PROFILE: workerProfile,
-      NEANES_HEADLESS_POLICY: policyPath,
-    };
-    delete env.ELECTRON_RUN_AS_NODE;
-    await assert.rejects(() =>
-      promisify(execFile)(
-        process.env.NEANES_TEST_EXECUTABLE || electron,
-        [
-          ...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]),
-          '--headless-mcp',
-        ],
-        { env, timeout: 15000 },
-      ),
-    );
-    assert.equal(await readFile(policyPath, 'utf8'), content);
-  }
   console.log(
-    'Headless bridge smoke passed: private workers, save/reopen, PDF, revocation, fresh reconnect, and disabled/missing/invalid policy refusal.',
+    'Stdio MCP smoke passed: independent processes, private defaults, save/reopen, PDF, capacity, crash isolation, and fresh reconnect.',
   );
 } finally {
   await Promise.allSettled(clients.map((client) => client.close()));

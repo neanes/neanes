@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- Electron's --require bootstrap uses CommonJS. */
 const { appendFileSync, fstatSync } = require('node:fs');
 
-const { app } = require('electron');
+const { app, ipcMain } = require('electron');
 
 const record = (event, details) =>
   appendFileSync(
@@ -20,6 +20,8 @@ for (const fd of [0, 1, 2]) {
       fifo: stat.isFIFO(),
       file: stat.isFile(),
       characterDevice: stat.isCharacterDevice(),
+      socket: stat.isSocket(),
+      mode: stat.mode,
     });
   } catch (error) {
     record('stdio descriptor error', { fd, error: error.stack });
@@ -29,6 +31,7 @@ process.on('uncaughtExceptionMonitor', (error) =>
   record('uncaught exception', error.stack),
 );
 app.on('ready', () => record('app ready'));
+ipcMain.on('AutomationReady', () => record('automation ready'));
 app.on('browser-window-created', (_event, window) => {
   record('window created', { id: window.id, visible: window.isVisible() });
   window.webContents.on('did-finish-load', () => record('renderer loaded'));
@@ -41,4 +44,14 @@ app.on('browser-window-created', (_event, window) => {
   window.webContents.on('render-process-gone', (_event, details) =>
     record('renderer exited', details),
   );
+  window.webContents.on('console-message', (_event, details) => {
+    if (details.level === 'error' || details.level === 'warning') {
+      record('renderer console', {
+        level: details.level,
+        message: details.message,
+        lineNumber: details.lineNumber,
+        sourceId: details.sourceId,
+      });
+    }
+  });
 });

@@ -1,10 +1,10 @@
-import { createReadStream, createWriteStream } from 'node:fs';
 import type { Readable, Writable } from 'node:stream';
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import compatibility from './compatibility.json';
 import { MAX_AUTOMATION_MESSAGE_BYTES } from './messageLimits';
+import { openMcpInput } from './stdioInput';
 
 export class McpStdioTransport extends StdioServerTransport {
   constructor(
@@ -39,11 +39,10 @@ export class McpStdioTransport extends StdioServerTransport {
 }
 export function createMcpStdioStreams() {
   // Electron replaces process.stdin with an EOF-only stream on Windows.
-  // Use the inherited pipe descriptors instead of that Electron wrapper.
-  return process.platform === 'win32'
-    ? {
-        input: createReadStream('', { fd: 0, autoClose: false }),
-        output: createWriteStream('', { fd: 1, autoClose: false }),
-      }
-    : { input: process.stdin, output: process.stdout };
+  // Reopen input using Node's pipe handling; keep Node's existing stdout stream
+  // so we don't register a second handle for its inherited Windows pipe.
+  return {
+    input: process.platform === 'win32' ? openMcpInput(0) : process.stdin,
+    output: process.stdout,
+  };
 }

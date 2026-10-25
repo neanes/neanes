@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { request as httpRequest } from 'node:http';
+import path from 'node:path';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -125,12 +126,25 @@ export function stdioConfiguration(
     NEANES_DEV_USER_DATA_DIR: profile,
   };
   delete env.ELECTRON_RUN_AS_NODE;
-  if (process.platform === 'win32') {
-    env.ELECTRON_NO_ATTACH_CONSOLE = '1';
+  const useLauncher =
+    process.platform === 'win32' ||
+    process.env.NEANES_TEST_USE_MCP_LAUNCHER === '1';
+  if (useLauncher) {
+    env.ELECTRON_RUN_AS_NODE = '1';
   }
   return {
     command: process.env.NEANES_TEST_EXECUTABLE || electron,
     args: [
+      ...(useLauncher
+        ? [
+            process.env.NEANES_TEST_EXECUTABLE
+              ? path.join(
+                  path.dirname(process.env.NEANES_TEST_EXECUTABLE),
+                  'resources/mcp/stdio-launcher.mjs',
+                )
+              : path.join(process.cwd(), 'electron/mcp/stdio-launcher.mjs'),
+          ]
+        : []),
       ...(!process.env.NEANES_TEST_EXECUTABLE ? [process.cwd()] : []),
       '--mcp',
     ],

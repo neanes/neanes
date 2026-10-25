@@ -53,21 +53,27 @@ The path below is a placeholder; replace it before running either setup command.
 
 ```powershell
 $neanes = 'C:\path\to\Neanes.exe'
+$launcher = Join-Path (Split-Path $neanes) 'resources\mcp\stdio-launcher.mjs'
 ```
 
 **Codex:**
 
 ```powershell
-codex mcp add neanes --env ELECTRON_NO_ATTACH_CONSOLE=1 -- "$neanes" --mcp
+codex mcp add neanes --env ELECTRON_RUN_AS_NODE=1 -- "$neanes" "$launcher" --mcp
 ```
 
 **Claude Code:**
 
 ```powershell
-claude mcp add neanes --env ELECTRON_NO_ATTACH_CONSOLE=1 -- "$neanes" --mcp
+claude mcp add neanes --env ELECTRON_RUN_AS_NODE=1 -- "$neanes" "$launcher" --mcp
 ```
 
 Keep the quotes around the path so installation folders containing spaces work.
+The Windows launcher removes an extra newline emitted by Electron during startup.
+It uses the Node runtime included with Neanes; no separate installation is needed.
+For manual JSON configuration, set `"env": { "ELECTRON_RUN_AS_NODE": "1" }` and
+put the launcher path before `--mcp` in `args`. The setup dialog includes these
+settings automatically.
 
 ### Linux
 

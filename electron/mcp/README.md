@@ -42,24 +42,28 @@ The path below is a placeholder; replace it before running either setup command.
 
 ```powershell
 $neanes = 'C:\path\to\Neanes.exe'
+$launcher = Join-Path (Split-Path $neanes) 'resources\mcp\stdio-launcher.mjs'
 ```
 
 **Codex:**
 
 ```powershell
-codex mcp add neanes --env ELECTRON_NO_ATTACH_CONSOLE=1 -- "$neanes" --mcp
+codex mcp add neanes --env ELECTRON_RUN_AS_NODE=1 -- "$neanes" "$launcher" --mcp
 ```
 
 **Claude Code:**
 
 ```powershell
-claude mcp add neanes --env ELECTRON_NO_ATTACH_CONSOLE=1 -- "$neanes" --mcp
+claude mcp add neanes --env ELECTRON_RUN_AS_NODE=1 -- "$neanes" "$launcher" --mcp
 ```
 
 Keep the quotes around the path so installation folders containing spaces work.
-The Windows environment setting prevents Electron from attaching to the client
-console. Include `"env": { "ELECTRON_NO_ATTACH_CONSOLE": "1" }` in a manually
-written JSON server configuration; the setup dialog includes it automatically.
+On Windows, Electron writes a startup newline before application code runs.
+The bundled launcher runs in Node mode, starts the actual MCP worker, and removes
+only that first CRLF so clients receive clean protocol output. No separate Node
+installation is needed. For manual JSON configuration, set
+`"env": { "ELECTRON_RUN_AS_NODE": "1" }` and put the launcher path before `--mcp`
+in `args`. The setup dialog includes these settings automatically.
 
 ### Linux
 

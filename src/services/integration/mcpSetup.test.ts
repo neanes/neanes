@@ -13,22 +13,20 @@ const launch: McpLaunchConfiguration = {
 
 describe('MCP setup snippets', () => {
   it.each(['codex', 'claude'] as const)(
-    'includes Windows pipe environment in the %s registration command',
+    'includes the Windows launcher and environment in the %s registration command',
     (client) => {
       const windows = {
         command: 'C:\\Scores\\Neanes.exe',
-        args: ['--mcp'],
-        env: { ELECTRON_NO_ATTACH_CONSOLE: '1' },
+        args: ['C:\\Scores\\resources\\mcp\\stdio-launcher.mjs', '--mcp'],
+        env: { ELECTRON_RUN_AS_NODE: '1' },
       };
       expect(createMcpSetupSnippet(windows, client, 'command', true)).toBe(
-        `${client} mcp add neanes --env 'ELECTRON_NO_ATTACH_CONSOLE=1' -- 'C:\\Scores\\Neanes.exe' '--mcp'`,
+        `${client} mcp add neanes --env 'ELECTRON_RUN_AS_NODE=1' -- 'C:\\Scores\\Neanes.exe' 'C:\\Scores\\resources\\mcp\\stdio-launcher.mjs' '--mcp'`,
       );
       if (client === 'codex') {
         expect(
           createMcpSetupSnippet(windows, client, 'configuration', true),
-        ).toContain(
-          '[mcp_servers.neanes.env]\n"ELECTRON_NO_ATTACH_CONSOLE" = "1"',
-        );
+        ).toContain('[mcp_servers.neanes.env]\n"ELECTRON_RUN_AS_NODE" = "1"');
       } else {
         expect(
           JSON.parse(

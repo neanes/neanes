@@ -2764,9 +2764,19 @@ ipcMain.handle(IpcRendererChannels.GetMcpLaunchConfiguration, () => ({
     app.isPackaged && process.platform === 'linux'
       ? process.env.APPIMAGE || process.execPath
       : process.execPath,
-  args: app.isPackaged ? ['--mcp'] : [app.getAppPath(), '--mcp'],
+  args: [
+    ...(process.platform === 'win32'
+      ? [
+          app.isPackaged
+            ? path.join(process.resourcesPath, 'mcp', 'stdio-launcher.mjs')
+            : path.join(app.getAppPath(), 'electron/mcp/stdio-launcher.mjs'),
+        ]
+      : []),
+    ...(app.isPackaged ? [] : [app.getAppPath()]),
+    '--mcp',
+  ],
   ...(process.platform === 'win32'
-    ? { env: { ELECTRON_NO_ATTACH_CONSOLE: '1' } }
+    ? { env: { ELECTRON_RUN_AS_NODE: '1' } }
     : {}),
 }));
 

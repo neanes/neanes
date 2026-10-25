@@ -13,7 +13,7 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), prefix));
   const profile = path.join(directory, 'profile');
   await mkdir(profile);
-  let child, exited, spawnError;
+  let child, closed, spawnError;
   let log = '';
   const connections = [];
   const isRunning = () =>
@@ -47,11 +47,10 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
         env,
         stdio: ['ignore', 'pipe', 'pipe'],
       });
-      exited = new Promise((resolve) => {
-        child.once('exit', resolve);
+      closed = new Promise((resolve) => {
+        child.once('close', resolve);
         child.once('error', (error) => {
           spawnError = error;
-          resolve();
         });
       });
       child.stdout.on('data', (data) => {
@@ -110,10 +109,14 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
       if (child && child.exitCode === null && child.signalCode === null) {
         child.kill('SIGKILL');
       }
-      await exited;
+      // Wait for stdio to close as well as the main process to exit. Chromium
+      // subprocesses can briefly keep writing profile files after SIGKILL.
+      await closed;
       await rm(keepArtifacts ? profile : directory, {
         recursive: true,
         force: true,
+        maxRetries: 10,
+        retryDelay: 100,
       });
     },
   };

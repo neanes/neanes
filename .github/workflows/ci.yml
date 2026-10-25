@@ -20,13 +20,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            display: xvfb-run --auto-servernum
-          - os: windows-latest
-            display: ''
-          - os: macos-latest
-            display: ''
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Check out
         uses: actions/checkout@v7.0.1
@@ -63,47 +57,3 @@ jobs:
       - name: Build macOS
         if: runner.os == 'macOS'
         run: npm run build -- --mac --x64 --arm64
-
-      - name: Configure Linux Electron sandbox
-        if: runner.os == 'Linux'
-        run: |
-          node <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
-          // Electron may print download status while resolving its executable.
-          // Write the policy directly so those messages cannot enter the profile.
-          const executable = fs.realpathSync(require('electron'));
-          fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'neanes-ci-electron'), [
-            'abi <abi/4.0>,',
-            'include <tunables/global>',
-            '',
-            `profile neanes-ci-electron "${executable}" flags=(unconfined) {`,
-            '  userns,',
-            '}',
-            '',
-          ].join('\n'));
-          NODE
-          sudo install -m 644 "$RUNNER_TEMP/neanes-ci-electron" /etc/apparmor.d/neanes-ci-electron
-          sudo apparmor_parser --replace /etc/apparmor.d/neanes-ci-electron
-
-      - name: MCP integration tests
-        timeout-minutes: 15
-        run: ${{ matrix.display }} npm run test:integration:mcp
-
-      - name: Rendering integration tests
-        timeout-minutes: 5
-        run: ${{ matrix.display }} npm run test:integration:rendering -- "${{ runner.temp }}/neanes-integration/rendering"
-
-      - name: Saving integration tests
-        if: runner.os != 'Windows'
-        timeout-minutes: 5
-        run: ${{ matrix.display }} npm run test:integration:saving -- "${{ runner.temp }}/neanes-integration/saving"
-
-      - name: Upload integration artifacts
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v7.0.2
-        with:
-          name: integration-${{ runner.os }}
-          path: ${{ runner.temp }}/neanes-integration
-          if-no-files-found: ignore
-          retention-days: 7

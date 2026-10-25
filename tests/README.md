@@ -10,11 +10,7 @@ Real Electron integration scenarios and their helpers live in `tests/integration
 - `rendering/`: detached PDF, PNG, and native-print preparation checks.
 - `saving/`: editor save, undo, and recovery revision checks.
 
-These scenarios run separately from Vitest. CI runs the self-launching MCP and
-rendering suites on Linux, Windows, and macOS after the production build, followed
-by the saving suite on Linux and macOS (it requires POSIX FIFOs). Linux uses Xvfb
-with Electron's sandbox enabled. Rendering and saving artifacts are uploaded for
-seven days, including when a test fails.
+These scenarios run separately from Vitest and are not currently run in CI.
 
 They use real Electron processes without mocks or DOM emulation. Use disposable
 profiles, never the normal Neanes profile. On macOS, agents must launch them

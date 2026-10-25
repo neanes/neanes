@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { ReadBuffer } from '@modelcontextprotocol/sdk/shared/stdio.js';
 import electron from 'electron';
@@ -19,12 +20,29 @@ async function runScenario(protocolVersion, expectedVersion) {
     NEANES_DEV_USER_DATA_DIR: path.join(directory, 'profile'),
   };
   delete env.ELECTRON_RUN_AS_NODE;
+  const startupLog = path.join(directory, 'startup.jsonl');
+  const diagnoseStartup =
+    process.platform === 'win32' && !process.env.NEANES_TEST_EXECUTABLE;
   if (process.platform === 'win32') {
     env.ELECTRON_NO_ATTACH_CONSOLE = '1';
   }
+  if (diagnoseStartup) {
+    env.NEANES_TEST_STARTUP_LOG = startupLog;
+  }
   const child = spawn(
     process.env.NEANES_TEST_EXECUTABLE || electron,
-    [...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]), '--mcp'],
+    [
+      ...(diagnoseStartup
+        ? [
+            '--require',
+            fileURLToPath(
+              new URL('./windowsStartupDiagnostics.cjs', import.meta.url),
+            ),
+          ]
+        : []),
+      ...(process.env.NEANES_TEST_EXECUTABLE ? [] : [process.cwd()]),
+      '--mcp',
+    ],
     { env, stdio: ['pipe', 'pipe', 'pipe'] },
   );
   let logs = '';
@@ -181,6 +199,16 @@ async function runScenario(protocolVersion, expectedVersion) {
     } finally {
       clearTimeout(kill);
       child.stdout.off('data', onData);
+      if (failures.length && diagnoseStartup) {
+        try {
+          console.error(
+            'Windows Electron startup events:\n' +
+              (await readFile(startupLog, 'utf8')),
+          );
+        } catch (error) {
+          console.error('Windows startup diagnostics unavailable:', error);
+        }
+      }
       try {
         await rm(directory, {
           recursive: true,

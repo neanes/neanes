@@ -67,15 +67,23 @@ jobs:
       - name: Configure Linux Electron sandbox
         if: runner.os == 'Linux'
         run: |
-          electron_executable="$(node -p 'require("node:fs").realpathSync(require("electron"))')"
-          sudo tee /etc/apparmor.d/neanes-ci-electron > /dev/null <<EOF
-          abi <abi/4.0>,
-          include <tunables/global>
-
-          profile neanes-ci-electron "$electron_executable" flags=(unconfined) {
-            userns,
-          }
-          EOF
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          // Electron may print download status while resolving its executable.
+          // Write the policy directly so those messages cannot enter the profile.
+          const executable = fs.realpathSync(require('electron'));
+          fs.writeFileSync(path.join(process.env.RUNNER_TEMP, 'neanes-ci-electron'), [
+            'abi <abi/4.0>,',
+            'include <tunables/global>',
+            '',
+            `profile neanes-ci-electron "${executable}" flags=(unconfined) {`,
+            '  userns,',
+            '}',
+            '',
+          ].join('\n'));
+          NODE
+          sudo install -m 644 "$RUNNER_TEMP/neanes-ci-electron" /etc/apparmor.d/neanes-ci-electron
           sudo apparmor_parser --replace /etc/apparmor.d/neanes-ci-electron
 
       - name: MCP integration tests

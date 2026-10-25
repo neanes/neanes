@@ -108,8 +108,11 @@ const normalUserData =
   ((isDevelopment || process.env.IS_TEST === '1') &&
     process.env.NEANES_DEV_USER_DATA_DIR) ||
   app.getPath('userData');
+const launcherProfile = headless
+  ? process.env.NEANES_MCP_USER_DATA_DIR
+  : undefined;
 const privateProfile = headless
-  ? mkdtempSync(path.join(tmpdir(), 'neanes-mcp-'))
+  ? launcherProfile || mkdtempSync(path.join(tmpdir(), 'neanes-mcp-'))
   : null;
 if (privateProfile) {
   // stdout belongs exclusively to the MCP transport.
@@ -3044,7 +3047,8 @@ const automation = installAutomation({
   headless,
   isMac,
   normalUserData,
-  privateProfile,
+  // The launcher removes its profile after Chromium has fully exited.
+  privateProfile: launcherProfile ? null : privateProfile,
   preload,
   getDevServerUrl: () => url,
   setWindow(window) {

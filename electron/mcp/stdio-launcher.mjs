@@ -1,4 +1,7 @@
 import { spawn } from 'node:child_process';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { Transform } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 
@@ -30,8 +33,9 @@ export function createStartupNewlineFilter() {
   });
 }
 
-function launch() {
-  const env = { ...process.env };
+async function launch() {
+  const privateProfile = await mkdtemp(path.join(tmpdir(), 'neanes-mcp-'));
+  const env = { ...process.env, NEANES_MCP_USER_DATA_DIR: privateProfile };
   delete env.ELECTRON_RUN_AS_NODE;
   const child = spawn(process.execPath, process.argv.slice(2), {
     env,
@@ -60,16 +64,26 @@ function launch() {
       ? child.stdout.pipe(createStartupNewlineFilter())
       : child.stdout;
   output.pipe(process.stdout);
-  child.once('close', (code) => {
+  const code = await new Promise((resolve) => child.once('close', resolve));
+  try {
     process.stdin.unpipe(child.stdin);
     process.stdin.pause();
     process.exitCode = code ?? 1;
-  });
+  } finally {
+    // Chromium keeps profile files open beyond BrowserWindow.destroy(). Remove
+    // the directory only after the worker process and its stdio have closed.
+    await rm(privateProfile, {
+      recursive: true,
+      force: true,
+      maxRetries: 10,
+      retryDelay: 100,
+    });
+  }
 }
 
 if (
   process.argv[1] &&
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
-  launch();
+  await launch();
 }

@@ -48,7 +48,8 @@ export function installAutomation(options: {
     }
     exiting = true;
     await close();
-    // Chromium must release its profile before it can be removed on Windows.
+    // Launcher-owned profiles are removed externally after app.exit releases
+    // Chromium's file handles. Direct launches clean up their own profile here.
     win?.destroy();
     if (options.privateProfile) {
       await fs

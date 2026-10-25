@@ -1,9 +1,20 @@
 # Save revision integration checks
 
-Run on macOS or Linux with a desktop session:
+Run with a desktop session:
 
 ```sh
 node tests/integration/saving/revision-smoke.mjs /absolute/output/directory
+```
+
+Windows automatically runs the basic checks: buffered CKEditor text, repeated
+unchanged saves, dirty state and undo/redo revisions, a real write failure and
+retry, recovery-file cleanup after saving, and reopening saved content in a fresh
+workspace. It does not run the FIFO race checks described below.
+
+To run the same basic checks on macOS or Linux:
+
+```sh
+npm run test:integration:saving -- --basic
 ```
 
 The harness starts the real Vite editor and Electron main/preload processes with
@@ -11,7 +22,7 @@ an isolated temporary profile. It accesses the development Vue component state
 to invoke actual editor operations, and enters rich text through Chromium's
 `webContents.insertText` input API into a real CKEditor instance.
 
-POSIX FIFOs hold actual filesystem operations open at deterministic boundaries.
+On macOS and Linux, POSIX FIFOs hold actual filesystem operations open at deterministic boundaries.
 No app methods, IPC handlers, or filesystem functions are replaced; there are no
 mocks, spies, or DOM emulation. The checks cover:
 
@@ -39,7 +50,8 @@ mocks, spies, or DOM emulation. The checks cover:
   without leaving stale current, previous, or temporary recovery candidates.
 - An intentional directory write failure, retaining changes and allowing retry.
 
-The intentional failure logs `EISDIR`; the harness must then report that retry
+The intentional directory write failure logs `EISDIR` on macOS/Linux (Windows
+may report a different filesystem error); the harness must then report that retry
 passed and exit successfully. Score files and an editor screenshot remain in the
 output directory for inspection. The ordinary user profile is never used.
 

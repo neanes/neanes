@@ -180,6 +180,77 @@ async function run() {
     'PASS: buffered CKEditor text is saved; repeated unchanged saves stay clean',
   );
 
+  if (process.env.NEANES_SAVE_SMOKE_BASIC === '1') {
+    await evaluate(
+      `window.__saveSmoke.updateDocumentProperties({title: 'Basic save edit', author: ''}); true`,
+    );
+    assert.equal(await dirty(), true);
+    const afterEdit = await revision();
+    await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+    assert.equal(await revision(), afterEdit + 1);
+    assert.equal(await dirty(), false);
+    await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+    assert.equal(await revision(), afterEdit + 2);
+    assert.equal(await dirty(), true);
+    console.log(
+      'PASS: undo restores the saved state; redo makes it dirty again',
+    );
+
+    await setPath(output);
+    console.log('Checking intentional directory write failure:');
+    result = await save();
+    assert.equal(result.success, false);
+    assert.equal(await dirty(), true);
+    await setPath(scorePath);
+    result = await save();
+    assert.equal(result.success, true);
+    assert.equal(result.savedContentUnchanged, true);
+    assert.equal(await dirty(), false);
+    const data = await readFile(scorePath, 'utf8');
+    assert.equal(JSON.parse(data).documentProperties.title, 'Basic save edit');
+    assertScoreContains(JSON.parse(data), 'Saved content');
+    await assert.rejects(readFile(recoveryPath), { code: 'ENOENT' });
+    console.log(
+      'PASS: real write failure preserves dirty content; retry saves it',
+    );
+
+    const reopened = await evaluate(`
+      (async () => {
+        const editor = window.__saveSmoke;
+        const previous = editor.selectedWorkspace;
+        editor.onFileMenuNewScore();
+        if (!await editor.closeWorkspace(previous)) {
+          throw new Error('Clean saved document did not close');
+        }
+        editor.openScore({success: true, filePath: ${JSON.stringify(scorePath)}, data: ${JSON.stringify(data)}});
+        const current = editor.selectedWorkspace;
+        return {
+          differentWorkspace: current.id !== previous.id,
+          filePath: current.filePath,
+          dirty: current.hasUnsavedChanges,
+          title: current.score.documentProperties.title,
+          content: current.score.staff.elements.find(element => element.elementType === 'RichTextBox').content,
+        };
+      })()
+    `);
+    assert.equal(reopened.differentWorkspace, true);
+    assert.equal(reopened.filePath, scorePath);
+    assert.equal(reopened.dirty, false);
+    assert.equal(reopened.title, 'Basic save edit');
+    assert.ok(reopened.content.includes('Saved content'));
+    console.log(
+      'PASS: saved score reopens in a fresh workspace with clean content',
+    );
+    await writeFile(
+      path.join(output, 'editor.png'),
+      (await window.webContents.capturePage()).toPNG(),
+    );
+    console.log(
+      'Basic saving smoke passed; FIFO race checks are not included.',
+    );
+    return;
+  }
+
   // A real FIFO holds the application's file write until a reader is attached.
   // Its payload is captured before the user types; no IPC or filesystem method
   // is replaced to control the timing.

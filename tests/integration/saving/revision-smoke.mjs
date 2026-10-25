@@ -9,8 +9,12 @@ import electron from 'electron';
 import { createServer } from 'vite';
 
 const root = path.resolve(fileURLToPath(new URL('../../..', import.meta.url)));
+const args = process.argv.slice(2);
+const basic = process.platform === 'win32' || args.includes('--basic');
 const temporary = await mkdtemp(path.join(os.tmpdir(), 'neanes-save-smoke-'));
-const output = path.resolve(process.argv[2] ?? path.join(temporary, 'scores'));
+const output = path.resolve(
+  args.filter((arg) => arg !== '--basic')[0] ?? path.join(temporary, 'scores'),
+);
 await mkdir(output, { recursive: true });
 
 // Build the real main/preload entries without the Vite plugin launching its own
@@ -51,6 +55,7 @@ try {
         NEANES_DEV_USER_DATA_DIR: path.join(temporary, 'profile'),
         NEANES_SAVE_SMOKE_ROOT: root,
         NEANES_SAVE_SMOKE_OUTPUT: output,
+        NEANES_SAVE_SMOKE_BASIC: basic ? '1' : '0',
       },
       stdio: 'inherit',
     },

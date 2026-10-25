@@ -59,6 +59,10 @@ export const automationSchemas = {
     ...documentRead,
     ...elementLookupShape,
   }),
+  get_element_image: z.strictObject({
+    ...documentRead,
+    elementRef: z.string().uuid(),
+  }),
   get_element_content: z.strictObject({
     ...documentRead,
     ...elementContentQueryShape,

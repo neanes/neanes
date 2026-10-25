@@ -15,16 +15,17 @@ Set `NEANES_TEST_EXECUTABLE` to a freshly packaged app executable to cover direc
 Socket tests cover matching and incompatible automation contracts and session authentication. Executable paths remain in the client configuration;
 Linux users must refresh it when an update changes the AppImage path.
 
-`message-size` generates real 512-, 1024-, and 2048-pixel lossless PNGs, inserts
-each over stdio and directly over the editor socket, then checks that saving
-preserves the complete image data. The measured request sizes are approximately
-1.15, 4.59, and 18.35 MiB. A 1 MiB receive limit rejected even the 512-pixel image;
-the shared 32 MiB limit accommodates the 2048-pixel image with headroom for its
-base64 envelope. Editor response framing retains its existing 32 MiB limit.
-The scenario also checks stdio acceptance just below 32 MiB and rejection above
-it; socket tests check oversized unfinished-message rejection and recovery.
-Run the script directly with `--probe` to report below/above-1-MiB image outcomes
-without requiring large-image acceptance when comparing an older build.
+`message-size` generates real 512-, 1024-, and 2048-pixel lossless PNG files,
+inserts each over stdio and editor HTTP using `imagePath`, exports the original
+with `get_element_image`, renders a file-backed preview, and checks that saving
+preserves the complete image data. Image edit envelopes are approximately
+400-500 bytes even for the 14.4 MB PNG; preview metadata is approximately 390
+bytes. Discovery and previews contain no inline image data. It also round trips
+a 2.56 MB Unicode lyrics-manager write, which exceeds 1 MiB independently of
+images. The shared stdio/editor HTTP body limit is 8 MiB, allowing headroom for
+large text writes and bulk edits. The scenario checks stdio acceptance just
+below 8 MiB and rejection above it; real HTTP socket tests check oversized
+request/response rejection, chunked transfer, fragmentation, and recovery.
 
 `agent-access` checks both launch orders, shared editor tab mutations, independent
 private stores, socket authentication, preferences without agent settings, and

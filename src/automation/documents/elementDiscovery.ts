@@ -9,6 +9,7 @@ import { RichTextBoxElement, TextBoxElement } from '@/models/Element';
 import {
   type AlternateLineElement,
   ElementType,
+  type ImageBoxElement,
   type NoteElement,
   type ScoreElement,
 } from '@/models/Element';
@@ -66,7 +67,6 @@ export function childCollections(
 // Content can be large even for a single element. Lyrics remain ordinary
 // properties so musical discovery can omit embedded content independently.
 export const elementContentProperties = new Set([
-  'data',
   'content',
   'contentBottom',
   'contentLeft',
@@ -286,6 +286,16 @@ export class ElementDiscovery {
       return { ...result, omittedContent: [smallContent] };
     }
     return result;
+  }
+
+  readImage(score: Score, elementRef: string) {
+    const { element } = this.entry(score, elementRef);
+    if (element.elementType !== ElementType.ImageBox) {
+      throw new Error(
+        'INVALID_ELEMENT_CONTENT: The selected element is not an image',
+      );
+    }
+    return (element as ImageBoxElement).data;
   }
 
   readContent(score: Score, query: ElementContentQuery) {

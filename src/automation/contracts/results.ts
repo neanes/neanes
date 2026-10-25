@@ -114,6 +114,12 @@ export const automationResultSchemas = {
   find_text: documentSummarySchema.extend(textSearchResultShape),
   find_elements: documentSummarySchema.extend(elementSearchResultShape),
   get_element: documentSummarySchema.extend(elementLookupResultShape),
+  get_element_image: documentSummarySchema.extend({
+    outputFilePath: z.string().min(1),
+    mimeType: z.string(),
+    width: z.number().positive(),
+    height: z.number().positive(),
+  }),
   get_element_content: z.strictObject({
     documentId: z.string().min(1),
     revision,
@@ -170,6 +176,7 @@ export const automationResultSchemas = {
     savedContentUnchanged: z.boolean(),
   }),
   preview_page: documentSummarySchema.extend({
+    outputFilePath: z.string().min(1),
     capturedRevision: revision,
     pageCount: z.number().int().nonnegative(),
     pageNumber: z.number().int().positive(),

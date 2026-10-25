@@ -116,6 +116,7 @@ export function planElementEdits(
   discovery: ElementDiscovery,
   actions: ElementEditBatch,
   fonts: readonly string[],
+  images: ReadonlyMap<string, string> = new Map(),
 ): ElementEditPlan {
   const originals = new Map<ScoreElement, ScoreElement>();
   const collections = new Map<ScoreElement[], ScoreElement[]>();
@@ -252,12 +253,24 @@ export function planElementEdits(
         : new constructors[element.elementType]();
     const update: Record<string, unknown> = {};
     for (const key of reset) {
-      if (!Object.hasOwn(schema.shape, key) || Object.hasOwn(properties, key)) {
+      if (
+        key === 'imagePath' ||
+        !Object.hasOwn(schema.shape, key) ||
+        Object.hasOwn(properties, key)
+      ) {
         throw new Error('INVALID_ELEMENT_EDIT');
       }
       update[key] = Reflect.get(defaults!, key);
     }
     Object.assign(update, properties);
+    if (typeof properties.imagePath === 'string') {
+      const data = images.get(properties.imagePath);
+      if (data === undefined) {
+        throw new Error('INVALID_ELEMENT_EDIT: Image file was not loaded');
+      }
+      update.data = data;
+      delete update.imagePath;
+    }
     if (
       element instanceof ModeKeyElement &&
       Object.hasOwn(properties, 'templateId')
@@ -308,6 +321,9 @@ export function planElementEdits(
           update.alignRight as boolean,
         ),
       );
+    }
+    if (element instanceof ImageBoxElement && typeof update.data === 'string') {
+      element.data = update.data;
     }
     // Apply setters in model-schema order, regardless of JSON key order.
     for (const key of Object.keys(schema.shape)) {

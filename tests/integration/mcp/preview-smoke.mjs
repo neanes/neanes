@@ -1,6 +1,6 @@
 // Run outside the agent command sandbox; this starts a disposable Electron app.
 import assert from 'node:assert/strict';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
@@ -13,6 +13,7 @@ import { eventually } from './smokePolling.mjs';
 const app = await createSmokeApp('neanes-preview-', { keepArtifacts: true });
 const { directory } = app;
 let client;
+const imageDirectories = new Set();
 try {
   app.start({ args: ['--remote-debugging-port=0', '--inspect=0'] });
   const { evaluate } = await app.debugger();
@@ -38,6 +39,12 @@ try {
     }
     const reply = await callTool(client, name, args, error);
     const outcome = reply.structuredContent;
+    if (
+      outcome.success &&
+      ['preview_page', 'get_element_image'].includes(name)
+    ) {
+      imageDirectories.add(path.dirname(outcome.result.outputFilePath));
+    }
     assert.equal(
       validator.getValidator(definition.outputSchema)(outcome).valid,
       true,
@@ -181,16 +188,14 @@ try {
       assert.equal(preview.pageNumber, pageNumber);
       assert.equal(preview.pageCount, 2);
       assert.ok(Math.max(preview.width, preview.height) <= maxEdge);
-      assert.equal(preview.content.length, 2);
-      const image = preview.content[1];
-      assert.equal(image.type, 'image');
-      assert.equal(image.mimeType, 'image/png');
-      const buffer = Buffer.from(image.data, 'base64');
+      assert.equal(preview.content.length, 1);
+      assert.equal(preview.mimeType, 'image/png');
+      const buffer = await readFile(preview.outputFilePath);
       assert.ok(buffer.length <= 4 * 1024 * 1024);
       assert.equal(buffer.subarray(1, 4).toString(), 'PNG');
       assert.equal(buffer.readUInt32BE(16), preview.width);
       assert.equal(buffer.readUInt32BE(20), preview.height);
-      assert.ok(!JSON.stringify(preview.content[0]).includes(image.data));
+      assert.ok(!JSON.stringify(preview).includes('base64'));
       await writeFile(
         path.join(
           directory,
@@ -199,7 +204,7 @@ try {
         buffer,
       );
       const pixels = await evaluate(
-        `(async()=>{const image=new Image();image.src=${JSON.stringify('data:image/png;base64,' + image.data)};await image.decode();const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);const p=ctx.getImageData(0,0,c.width,c.height).data;let ink=0;for(let i=0;i<p.length;i+=4){if(p[i+3] && Math.min(p[i],p[i+1],p[i+2])<240)ink++;}return {ink,alpha:p[3]};})()`,
+        `(async()=>{const image=new Image();image.src=${JSON.stringify('data:image/png;base64,' + buffer.toString('base64'))};await image.decode();const c=document.createElement('canvas');c.width=image.width;c.height=image.height;const ctx=c.getContext('2d');ctx.drawImage(image,0,0);const p=ctx.getImageData(0,0,c.width,c.height).data;let ink=0;for(let i=0;i<p.length;i+=4){if(p[i+3] && Math.min(p[i],p[i+1],p[i+2])<240)ink++;}return {ink,alpha:p[3]};})()`,
       );
       assert.ok(pixels.ink > 100);
       assert.equal(pixels.alpha, 255);
@@ -388,7 +393,7 @@ try {
   );
   await writeFile(
     path.join(directory, 'landscape.png'),
-    Buffer.from(landscapePreview.content[1].data, 'base64'),
+    await readFile(landscapePreview.outputFilePath),
   );
   await call('close_document', {
     ...argsSaved,
@@ -432,5 +437,10 @@ try {
     await client?.close();
   } finally {
     await app.close();
+    // This disposable editor is force-killed; copied preview artifacts above
+    // remain in directory while temporary working files are removed.
+    for (const directory of imageDirectories) {
+      await rm(directory, { recursive: true, force: true });
+    }
   }
 }

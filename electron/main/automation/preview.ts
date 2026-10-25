@@ -10,6 +10,7 @@ import {
 } from '../../../src/automation/contracts/preview';
 import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 import { renderSnapshot } from '../export/renderSnapshot';
+import { writeTemporaryImage } from './imageFiles';
 
 export interface PreviewPageOptions {
   snapshot: ScoreRenderSnapshot;
@@ -61,7 +62,9 @@ export async function renderPagePreview(options: {
         );
       }
       image = previewImageSchema.parse({
-        imageData,
+        outputFilePath: (
+          await writeTemporaryImage('data:image/png;base64,' + imageData)
+        ).outputFilePath,
         width: size.width,
         height: size.height,
       });

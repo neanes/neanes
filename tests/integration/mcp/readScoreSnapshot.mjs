@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import { eventually } from './smokePolling.mjs';
 
 // Test-only aggregate of the focused readers, for fixture construction and
@@ -54,18 +56,24 @@ async function readSnapshot(call, args) {
       }
       for (const element of result.elements) {
         const properties = { ...element.properties };
-        const contentProperties =
-          element.elementType === 'ImageBox'
-            ? ['data']
-            : ['TextBox', 'RichTextBox'].includes(element.elementType)
-              ? [
-                  'content',
-                  'contentLeft',
-                  'contentCenter',
-                  'contentRight',
-                  'contentBottom',
-                ]
-              : (element.omittedContent ?? []);
+        if (element.elementType === 'ImageBox') {
+          const image = await call('get_element_image', {
+            ...atRevision,
+            elementRef: element.elementRef,
+          });
+          properties.data = `data:${image.mimeType};base64,${(await readFile(image.outputFilePath)).toString('base64')}`;
+        }
+        const contentProperties = ['TextBox', 'RichTextBox'].includes(
+          element.elementType,
+        )
+          ? [
+              'content',
+              'contentLeft',
+              'contentCenter',
+              'contentRight',
+              'contentBottom',
+            ]
+          : (element.omittedContent ?? []);
         for (const property of contentProperties) {
           if (!Object.hasOwn(properties, property)) {
             properties[property] = await content(element.elementRef, property);

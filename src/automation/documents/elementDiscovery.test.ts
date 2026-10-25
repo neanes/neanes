@@ -134,6 +134,26 @@ describe('typed element discovery', () => {
     const page = reader.read(score, request.arguments);
     expect(JSON.stringify(page).length).toBeLessThan(3000);
     expect(page.elements[0].properties).not.toHaveProperty('data');
+    expect(
+      reader.read(score, { ...request.arguments, includeContent: true })
+        .elements[0].properties,
+    ).not.toHaveProperty('data');
+    expect(reader.readImage(score, page.elements[0].elementRef)).toBe(
+      image.data,
+    );
+    expect(() => reader.readImage(score, page.elements[1].elementRef)).toThrow(
+      'not an image',
+    );
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'get_element_content',
+        arguments: {
+          documentId: 'test',
+          elementRef: page.elements[0].elementRef,
+          property: 'data',
+        },
+      }),
+    ).toThrow();
     expect(page.elements[1].properties).not.toHaveProperty('content');
     expect(
       reader.read(score, {
@@ -427,9 +447,19 @@ describe('typed element discovery', () => {
         includeContent: false,
       }).elements[0].properties,
     ).toEqual({});
+    expect(
+      reader.read(score, {
+        ...query(),
+        properties: ['data'],
+        includeContent: true,
+      }).elements[0].properties,
+    ).toEqual({});
     expect(() =>
-      reader.read(score, { ...query(), properties: ['data'] }),
-    ).toThrow('One element exceeds the page budget');
+      parseAutomationRequest({
+        tool: 'get_elements',
+        arguments: { documentId: 'test', properties: ['data'] },
+      }),
+    ).toThrow();
     box.contentCenter = '<p>Small explicit content</p>';
     expect(
       reader.read(score, {

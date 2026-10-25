@@ -26,6 +26,8 @@ async function evaluate(expression) {
 }
 const image =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=';
+const imagePath = path.join(directory, 'input-image.png');
+await fs.writeFile(imagePath, Buffer.from(image.split(',')[1], 'base64'));
 const introduced = new Map();
 const output = [];
 let primaryError;
@@ -177,7 +179,7 @@ try {
             {
               elementType: 'ImageBox',
               clientId: 'image',
-              properties: { data: image, imageWidth: 20, imageHeight: 20 },
+              properties: { imagePath, imageWidth: 20, imageHeight: 20 },
             },
           ],
         },

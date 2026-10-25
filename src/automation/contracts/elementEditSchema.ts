@@ -118,13 +118,6 @@ function editPropertySchema(type: ElementType) {
     if (key === 'lineSpan') {
       value = z.number().int().min(1);
     }
-    if (key === 'data') {
-      value = z
-        .string()
-        .regex(
-          /^data:image\/(?:png|jpeg|gif|webp|svg\+xml);base64,[A-Za-z0-9+/]+={0,2}$/,
-        );
-    }
     if (key === 'templateId') {
       value = z
         .number()
@@ -193,6 +186,15 @@ function editPropertySchema(type: ElementType) {
     }
     shape[key] = value.optional();
   }
+  if (type === ElementType.ImageBox) {
+    shape.imagePath = z
+      .string()
+      .min(1)
+      .optional()
+      .describe(
+        'Absolute path to a PNG, JPEG, GIF, WebP, SVG, BMP or ICO on the Neanes host. Read and embedded when the edit executes; no image bytes are sent through MCP.',
+      );
+  }
   if (type === ElementType.ModeKey) {
     shape.useOptionalDiatonicFthoras = z
       .boolean()
@@ -221,6 +223,13 @@ function validateProperties(
   creating = false,
   reset: string[] = [],
 ) {
+  if (type === ElementType.ImageBox && creating && !values.imagePath) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['properties', 'imagePath'],
+      message: 'Image creation requires imagePath.',
+    });
+  }
   if (type === ElementType.ModeKey) {
     const issue = modeKeyEditIssue(values, creating, reset);
     if (issue) {

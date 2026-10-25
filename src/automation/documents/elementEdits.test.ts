@@ -28,6 +28,7 @@ function document() {
       discovery,
       elementEditBatchSchema.parse(input),
       ['Source Serif'],
+      new Map([['/tmp/test.png', image]]),
     );
     applyElementEdits(workspace, plan);
     return plan;
@@ -44,6 +45,34 @@ const saved = (workspace: Workspace) =>
   JSON.stringify(SaveService.SaveScoreToJson(workspace.score));
 
 describe('validated element transactions', () => {
+  it('requires file paths for images and keeps them out of saved model properties', () => {
+    const { workspace, discovery, edit } = document();
+    for (const properties of [{ data: image }, {}, { imagePath: '' }]) {
+      expect(() =>
+        elementEditBatchSchema.parse([
+          insert([{ elementType: 'ImageBox', properties }]),
+        ]),
+      ).toThrow();
+    }
+    edit([
+      insert([
+        { elementType: 'ImageBox', properties: { imagePath: '/tmp/test.png' } },
+      ]),
+    ]);
+    const element = workspace.score.staff.elements[0];
+    expect(Reflect.get(element, 'data')).toBe(image);
+    expect(element).not.toHaveProperty('imagePath');
+    edit([
+      {
+        action: 'update',
+        elementRef: discovery.reference(element),
+        elementType: 'ImageBox',
+        properties: { imageWidth: 80 },
+      },
+    ]);
+    expect(Reflect.get(element, 'data')).toBe(image);
+    expect(Reflect.get(element, 'imageWidth')).toBe(80);
+  });
   it('constructs nested elements with local references in one reversible undo step', () => {
     const { workspace, discovery, edit } = document();
     const staff = workspace.score.staff.elements;
@@ -452,7 +481,7 @@ describe('validated element transactions', () => {
           properties: { content: '<p>Rich text</p>' },
         },
         { elementType: 'DropCap' },
-        { elementType: 'ImageBox', properties: { data: image } },
+        { elementType: 'ImageBox', properties: { imagePath: '/tmp/test.png' } },
       ]),
     ]);
     const loaded = SaveService.LoadScoreFromJson(JSON.parse(saved(workspace)));

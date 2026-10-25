@@ -27,6 +27,11 @@ import { OperationQueue } from '../../../src/utils/OperationQueue';
 import { withAbortDeadline } from './abortDeadline';
 import { discoverScoreFiles } from './fileDiscovery';
 import { AutomationFiles } from './files';
+import {
+  cleanupTemporaryImages,
+  readImageFile,
+  writeTemporaryImage,
+} from './imageFiles';
 import type { PreviewPageOptions } from './preview';
 
 export function createAutomationHost(options: {
@@ -178,6 +183,28 @@ export function createAutomationHost(options: {
   );
 
   ipcMain.handle(
+    IpcRendererChannels.AutomationReadImage,
+    (event, requestId: string, filePath: string) =>
+      automationOutcome(async () => {
+        requireOpen();
+        requireRequest(event, 'edit_elements', requestId);
+        const image = await finishFileOperation(() => readImageFile(filePath));
+        requireOpen();
+        requireRequest(event, 'edit_elements', requestId);
+        return image;
+      }),
+  );
+  ipcMain.handle(
+    IpcRendererChannels.AutomationExportImage,
+    (event, requestId: string, data: string) =>
+      automationOutcome(async () => {
+        requireOpen();
+        requireRequest(event, 'get_element_image', requestId);
+        return finishFileOperation(() => writeTemporaryImage(data));
+      }),
+  );
+
+  ipcMain.handle(
     IpcRendererChannels.AutomationPreviewPage,
     (event, requestId: string, args: PreviewPageOptions) =>
       automationOutcome(async () => {
@@ -185,7 +212,9 @@ export function createAutomationHost(options: {
         requireRequest(event, 'preview_page', requestId);
         const signal = exportController!.signal;
         signal.throwIfAborted();
-        const image = await options.previewPage(args, signal);
+        const image = await finishFileOperation(() =>
+          options.previewPage(args, signal),
+        );
         signal.throwIfAborted();
         requireOpen();
         requireRequest(event, 'preview_page', requestId);
@@ -216,6 +245,8 @@ export function createAutomationHost(options: {
       IpcRendererChannels.AutomationWriteScore,
       IpcRendererChannels.AutomationExportPdf,
       IpcRendererChannels.AutomationPreviewPage,
+      IpcRendererChannels.AutomationReadImage,
+      IpcRendererChannels.AutomationExportImage,
     ]) {
       ipcMain.removeHandler(channel);
     }
@@ -359,6 +390,7 @@ export function createAutomationHost(options: {
       detach.clear();
       removeHandlers();
       await Promise.allSettled([...fileOperations]);
+      await cleanupTemporaryImages();
       const win = options.getWindow();
       if (win && !win.isDestroyed()) {
         win.webContents.send(IpcMainChannels.AutomationReset);

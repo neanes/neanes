@@ -6,7 +6,6 @@ import {
 } from './contentChunkSchema';
 
 export const elementContentPropertySchema = z.enum([
-  'data',
   'content',
   'contentBottom',
   'contentLeft',

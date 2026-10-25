@@ -5,7 +5,6 @@ import { automationOutputSchema } from '@/automation/__tests__/helpers';
 import {
   AnnotationElement,
   DropCapElement,
-  ImageBoxElement,
   NoteElement,
   RichTextBoxElement,
   TextBoxElement,
@@ -37,7 +36,6 @@ describe('exact element content retrieval', () => {
       'contentCenter',
       '<p>' + 'panel'.repeat(14000) + '</p>',
     ],
-    [ImageBoxElement, 'data', 'data:image/png;base64,' + 'A'.repeat(70000)],
     [AnnotationElement, 'text', 'annotation'.repeat(7000)],
     [DropCapElement, 'content', 'drop'.repeat(17500)],
   ] as const)(

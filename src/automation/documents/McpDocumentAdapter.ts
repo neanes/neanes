@@ -279,6 +279,7 @@ export class McpDocumentAdapter {
       request.tool === 'find_text' ||
       request.tool === 'get_element' ||
       request.tool === 'get_element_content' ||
+      request.tool === 'get_element_image' ||
       request.tool === 'get_staff_lyrics' ||
       request.tool === 'get_selection' ||
       request.tool === 'get_pages' ||
@@ -290,6 +291,20 @@ export class McpDocumentAdapter {
         request.arguments.expectedRevision,
         'Read the document again before continuing discovery.',
       );
+      if (request.tool === 'get_element_image') {
+        const image = await this.ipc.exportImage(
+          this.discovery(workspace).readImage(
+            workspace.score,
+            request.arguments.elementRef,
+          ),
+        );
+        const completed = this.reverify(
+          workspace,
+          summary.revision,
+          'The document changed while exporting the image. Read it again.',
+        );
+        return { ...completed, ...image };
+      }
       if (request.tool === 'preview_page') {
         const image = await this.previewPage(
           workspace,
@@ -481,12 +496,40 @@ export class McpDocumentAdapter {
     }
     if (request.tool === 'edit_elements') {
       const discovery = this.discovery(workspace);
+      const images = new Map<string, string>();
+      for (const action of request.arguments.actions) {
+        const properties =
+          action.action === 'insert'
+            ? action.elements.map((element) => element.properties)
+            : action.action === 'update'
+              ? [action.properties]
+              : action.action === 'replace'
+                ? [action.element.properties]
+                : [];
+        for (const values of properties) {
+          if (
+            typeof values.imagePath === 'string' &&
+            !images.has(values.imagePath)
+          ) {
+            images.set(
+              values.imagePath,
+              await this.ipc.readImage(values.imagePath),
+            );
+          }
+        }
+      }
+      this.checkedSummary(
+        workspace,
+        request.arguments.expectedRevision,
+        'The document changed while loading image files. Read it again before editing.',
+      );
       this.documents.prepare(workspace);
       const plan = planElementEdits(
         workspace,
         discovery,
         request.arguments.actions,
         this.documents.fonts(),
+        images,
       );
       await this.documents.ensureFonts(plan.fontFamilies);
       this.checkedSummary(

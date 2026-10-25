@@ -290,8 +290,14 @@ try {
     },
   });
   assert.ok(!preview.isError, JSON.stringify(preview.structuredContent));
-  assert.equal(preview.content[1].type, 'image');
-  assert.equal(preview.content[1].mimeType, 'image/png');
+  assert.equal(preview.content.length, 1);
+  assert.equal(preview.structuredContent.result.mimeType, 'image/png');
+  assert.equal(
+    (await readFile(preview.structuredContent.result.outputFilePath))
+      .subarray(1, 4)
+      .toString(),
+    'PNG',
+  );
   assert.ok(
     Math.max(
       preview.structuredContent.result.width,

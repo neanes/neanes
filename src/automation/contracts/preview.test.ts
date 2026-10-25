@@ -2,11 +2,7 @@ import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv
 import { describe, expect, it } from 'vitest';
 
 import { automationTools } from '../../../electron/main/automation/tools';
-import {
-  PREVIEW_MAX_BYTES,
-  previewImageSchema,
-  previewPageResultSchema,
-} from './preview';
+import { previewImageSchema, previewPageResultSchema } from './preview';
 import { parseAutomationRequest } from './protocol';
 import { automationResultSchemas } from './results';
 
@@ -48,7 +44,11 @@ describe('page preview contract', () => {
   });
 
   it('requires the image renderer to return a positive settled page count', () => {
-    const image = { imageData: 'AAAA', width: 1200, height: 1600 };
+    const image = {
+      outputFilePath: '/tmp/preview.png',
+      width: 1200,
+      height: 1600,
+    };
     expect(previewPageResultSchema.parse({ ...image, pageCount: 2 })).toEqual({
       ...image,
       pageCount: 2,
@@ -63,7 +63,7 @@ describe('page preview contract', () => {
   it('bounds internal image delivery and keeps base64 out of metadata', () => {
     expect(
       previewImageSchema.safeParse({
-        imageData: 'AAAA',
+        outputFilePath: '/tmp/preview.png',
         width: 1600,
         height: 1200,
       }).success,
@@ -71,12 +71,12 @@ describe('page preview contract', () => {
     for (const invalid of [
       { width: 2049 },
       { height: 0 },
-      { imageData: 'not base64' },
-      { imageData: 'A'.repeat(4 * Math.ceil(PREVIEW_MAX_BYTES / 3) + 4) },
+      { outputFilePath: '' },
+      { imageData: 'AAAA' },
     ]) {
       expect(
         previewImageSchema.safeParse({
-          imageData: 'AAAA',
+          outputFilePath: '/tmp/preview.png',
           width: 1600,
           height: 1200,
           ...invalid,
@@ -84,6 +84,7 @@ describe('page preview contract', () => {
       ).toBe(false);
     }
     const result = {
+      outputFilePath: '/tmp/preview.png',
       documentId: 'test',
       revision: 0,
       capturedRevision: 0,

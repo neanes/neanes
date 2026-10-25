@@ -264,37 +264,42 @@ try {
       });
       await call('get_pages', stable, 'REVISION_CONFLICT');
     }
-    const current = await call('get_document_properties', args);
-    const broken = await call('edit_elements', {
-      ...args,
-      expectedRevision: current.revision,
+    // Malformed imported images must still exercise layout failure; the edit
+    // API now rejects malformed image files before committing a transaction.
+    const brokenScore = (await readScoreSnapshot(call, args)).score;
+    brokenScore.staff.elements.unshift({
+      elementType: 'ImageBox',
+      data: 'data:image/png;base64,broken',
+      imageWidth: 20,
+      imageHeight: 20,
+    });
+    const brokenPath = path.join(
+      directory,
+      `broken-image-${stamp}-${scope.documentScope ?? 'private'}.byzx`,
+    );
+    await fs.writeFile(brokenPath, JSON.stringify(brokenScore));
+    const broken = await call('open_document', {
+      ...scope,
+      filePath: brokenPath,
+    });
+    const brokenArgs = { ...scope, documentId: broken.documentId };
+    introduced.set(broken.documentId, brokenArgs);
+    await call('get_pages', brokenArgs, 'LAYOUT_SETTLEMENT_FAILED');
+    const recovered = await call('edit_elements', {
+      ...brokenArgs,
+      expectedRevision: broken.revision,
       actions: [
         {
-          action: 'insert',
-          elements: [
-            {
-              elementType: 'ImageBox',
-              clientId: 'broken',
-              properties: {
-                data: 'data:image/png;base64,broken',
-                imageWidth: 20,
-                imageHeight: 20,
-              },
-            },
-          ],
+          action: 'remove',
+          elementRef: (await call('get_elements', brokenArgs)).elements[0]
+            .elementRef,
         },
       ],
-    });
-    await call('get_pages', args, 'LAYOUT_SETTLEMENT_FAILED');
-    const recovered = await call('edit_elements', {
-      ...args,
-      expectedRevision: broken.revision,
-      actions: [{ action: 'remove', elementRef: broken.created[0].elementRef }],
     });
     assert.equal(
       (
         await call('get_pages', {
-          ...args,
+          ...brokenArgs,
           expectedRevision: recovered.revision,
         })
       ).pageCount,

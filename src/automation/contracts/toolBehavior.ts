@@ -24,6 +24,7 @@ const readOnlyTools = new Set<AutomationTool>([
   'find_text',
   'get_element',
   'get_element_content',
+  'get_element_image',
   'get_staff_lyrics',
   'get_selection',
   'get_pages',

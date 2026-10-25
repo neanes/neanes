@@ -22,6 +22,17 @@ export class AutomationIpcClient {
       await window.ipcRenderer.invoke(channel, this.requestId, ...args),
     );
   }
+  readImage(filePath: string): Promise<string> {
+    return this.invoke(IpcRendererChannels.AutomationReadImage, filePath);
+  }
+  exportImage(data: string): Promise<{
+    outputFilePath: string;
+    mimeType: string;
+    width: number;
+    height: number;
+  }> {
+    return this.invoke(IpcRendererChannels.AutomationExportImage, data);
+  }
   previewPage(
     snapshot: ScoreRenderSnapshot,
     pageNumber: number,

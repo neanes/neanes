@@ -284,7 +284,6 @@ export const elementPropertySchemas = {
   }),
   [ElementType.ImageBox]: z.strictObject({
     ...breaks,
-    data: z.string(),
     imageHeight: z.number(),
     imageWidth: z.number(),
     inline: z.boolean(),

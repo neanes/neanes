@@ -155,11 +155,7 @@ export function installAutomation(options: {
           await launchStdio();
         } else {
           host = makeHost();
-          connection = await startEditorConnection(
-            discoveryFile,
-            host.execute,
-            app.isPackaged ? undefined : options.getDevServerUrl(),
-          );
+          connection = await startEditorConnection(discoveryFile, host.execute);
         }
       } catch (error) {
         console.error('Could not start automation', error);

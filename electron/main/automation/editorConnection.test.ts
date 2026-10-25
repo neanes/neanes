@@ -11,11 +11,7 @@ import {
   parseAutomationRequest,
 } from '../../../src/automation/contracts/protocol';
 import compatibility from './compatibility.json';
-import {
-  executeInEditor,
-  readEditorDevelopmentUrl,
-  startEditorConnection,
-} from './editorConnection';
+import { executeInEditor, startEditorConnection } from './editorConnection';
 import { discoverScoreFiles } from './fileDiscovery';
 import { MAX_AUTOMATION_MESSAGE_BYTES } from './messageLimits';
 
@@ -153,43 +149,6 @@ describe('editor HTTP connection', () => {
     expect(
       await executeInEditor(discovery, request(root), signal),
     ).toMatchObject({ nextOffset: null });
-  });
-  it('discovers development URLs only for a live compatible editor', async () => {
-    const state = JSON.parse(await fs.readFile(discovery, 'utf8'));
-    expect(await readEditorDevelopmentUrl(discovery)).toBeUndefined();
-    await fs.writeFile(
-      discovery,
-      JSON.stringify({ ...state, devServerUrl: 'http://127.0.0.1:5173/' }),
-    );
-    expect(await readEditorDevelopmentUrl(discovery)).toBe(
-      'http://127.0.0.1:5173/',
-    );
-    await connection.close();
-    await fs.writeFile(
-      discovery,
-      JSON.stringify({ ...state, devServerUrl: 'http://127.0.0.1:5173/' }),
-    );
-    expect(await readEditorDevelopmentUrl(discovery)).toBeUndefined();
-    await fs.rm(discovery);
-    expect(await readEditorDevelopmentUrl(discovery)).toBeUndefined();
-  });
-
-  it('ignores malformed, incompatible, and non-local development discovery', async () => {
-    const state = JSON.parse(await fs.readFile(discovery, 'utf8'));
-    for (const value of [
-      '{',
-      JSON.stringify({ ...state, devServerUrl: 'https://example.com/' }),
-      JSON.stringify({ ...state, devServerUrl: 'file:///tmp/renderer.html' }),
-      JSON.stringify({
-        ...state,
-        devServerUrl: 'http://127.0.0.1:5173/',
-        contractVersion: -1,
-      }),
-    ]) {
-      await fs.writeFile(discovery, value);
-      expect(await readEditorDevelopmentUrl(discovery)).toBeUndefined();
-    }
-    await fs.writeFile(discovery, JSON.stringify(state));
   });
 });
 

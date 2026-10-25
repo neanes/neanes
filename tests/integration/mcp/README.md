@@ -31,12 +31,6 @@ request/response rejection, chunked transfer, fragmentation, and recovery.
 private stores, socket authentication, preferences without agent settings, and
 client/editor shutdown isolation. It requires no policy file or token setup.
 
-`dev-server` starts a real Vite development editor, then launches Electron with
-`--mcp` without a Vite URL environment variable. It checks URL discovery, editor
-tabs, private previews, and PDF exports. It runs last because Vite rebuilds the
-main/preload entries in development mode. Run `npx vite build` afterward if you
-need production build artifacts.
-
 Additional scenarios in this directory connect to an existing disposable editor.
 Their environment, output-directory, and debugger requirements are documented in
 the [MCP guide](../../../electron/mcp/README.md). Run these individually, following

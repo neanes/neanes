@@ -70,7 +70,6 @@ import {
 import type { PdfExportOptions } from '../../src/services/documents/fileTypes';
 import { OperationQueue } from '../../src/utils/OperationQueue';
 import { TestFileType } from '../../src/utils/TestFileType';
-import { readEditorDevelopmentUrl } from './automation/editorConnection';
 import { installAutomation } from './automation/lifecycle';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
 import { renderPdf } from './export/renderPdf';
@@ -95,7 +94,7 @@ process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL
   : process.env.DIST;
 
 const preload = path.join(__dirname, '../preload/index.js');
-let url = process.env.VITE_DEV_SERVER_URL;
+const url = process.env.VITE_DEV_SERVER_URL;
 const indexHtml = path.join(process.env.DIST, 'index.html');
 
 // Remove electron security warnings
@@ -3058,15 +3057,6 @@ const automation = installAutomation({
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  if (headless && !app.isPackaged && !url) {
-    url = await readEditorDevelopmentUrl(
-      path.join(normalUserData, 'mcp-editor.json'),
-    );
-    if (url) {
-      process.env.VITE_DEV_SERVER_URL = url;
-      process.env.PUBLIC = path.join(process.env.DIST_ELECTRON!, '../public');
-    }
-  }
   // Load the persisted store first so the user's chosen language (if any)
   // is honored when we initialize i18next and build the native menu.
   await loadStore();

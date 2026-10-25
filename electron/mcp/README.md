@@ -175,28 +175,30 @@ their normal tool-refresh action.
 
 ## Development and tests
 
-For local work, start the editor with `npm run dev`, then register the repository's
-Electron executable and repository path once. On macOS, from the repository:
+For local work, build the renderer, main process, and preload with `npx vite build`,
+then register the repository's Electron executable and repository path once. On
+macOS, from the repository:
 
 ```sh
+npx vite build
 codex mcp add neanes-dev -- "$PWD/node_modules/.bin/electron" "$PWD" --mcp
 ```
 
-The running development editor publishes its Vite URL with its socket discovery
-information. An unpackaged MCP process discovers that URL automatically before
-loading its renderer, previews, and PDF exports. No `VITE_DEV_SERVER_URL` setting
-is needed in the client configuration. An explicit environment URL still takes
-precedence. Reconnect after main-process changes to load the updated code.
+MCP loads the built renderer from `dist`; no running Vite server or visible editor
+is required. `npm run build` also works, but additionally packages the app with
+electron-builder. Rebuild and reconnect after code changes to load updated code.
 
-Both processes must use the same editor profile. If the editor was started with
-`NEANES_DEV_USER_DATA_DIR`, include the same value in the registration using
-`--env NEANES_DEV_USER_DATA_DIR=/absolute/path/to/profile`. Private MCP profiles
-are created automatically. Packaged apps ignore development URL discovery.
+To work with editor tabs, launch the visible editor from the same build:
 
-With no live development editor, MCP uses built renderer files. Run `npx vite build`
-first for that workflow; set `IS_TEST=1` on both processes if you want that production
-build to honor a disposable `NEANES_DEV_USER_DATA_DIR`. No token or MCP port settings
-are needed.
+```sh
+./node_modules/.bin/electron .
+```
+
+Both processes must use the same editor profile. To use a disposable profile with
+this production build, set `IS_TEST=1` and
+`NEANES_DEV_USER_DATA_DIR=/absolute/path/to/profile` on both processes, including
+those environment variables in the MCP registration with `--env`. Private MCP
+profiles are created automatically. No token or MCP port settings are needed.
 
 ```sh
 npm run test:integration:mcp

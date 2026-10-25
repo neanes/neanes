@@ -38,6 +38,11 @@ Useful development environment variables (put in `.env.local`, or `.env.web.loca
 - If a launch still fails, inspect the child exit signal and logs before retrying. A startup `SIGABRT` with `_RegisterApplication` indicates the launch environment; do not repeatedly retry it or change application code to work around it. A missing MCP endpoint or readiness timeout alone does not establish an application bug.
 - This concerns the agent command sandbox. Do not add Electron's `--no-sandbox` flag or disable renderer security. Pure unit tests, linting, type-checking, and build-only commands can run in the normal agent sandbox; clients that only connect to an existing disposable app do not need this GUI-launch exception.
 
+### Unix socket tests and the agent command sandbox
+
+- Tests that create real Unix socket listeners, including `electron/main/automation/editorConnection.test.ts`, need unsandboxed execution in this environment even though they do not launch Electron. Use `sandbox_permissions: "require_escalated"` on the first attempt and explain that the test creates disposable Unix socket listeners.
+- A `listen EPERM: operation not permitted` error for a temporary socket path indicates a sandbox restriction. Do not change application code to work around it; rerun outside the sandbox. If execution is unavailable or denied, report the limitation.
+
 ## Architecture
 
 ### One codebase, two runtime targets

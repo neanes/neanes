@@ -117,12 +117,13 @@ async function runScenario(protocolVersion, expectedVersion) {
       '"ping"',
       '{"jsonrpc":"2.0","id":{},"method":"ping"}',
       '{"jsonrpc":"2.0","id":42,"method":"ping","params":null}',
+      '{',
     ]) {
-      const reply = await exchange(input);
-      assert.equal(reply.error.code, -32600, input);
-      assert.equal(reply.id, input.includes('42') ? 42 : null);
+      child.stdin.write(input + '\n');
+      const reply = await rpc('ping');
+      assert.equal(reply.id, id, input);
+      assert.deepEqual(reply.result, {}, input);
     }
-    assert.equal((await exchange('{')).error.code, -32700);
     const listed = await rpc('tools/call', {
       name: 'list_documents',
       arguments: {},
@@ -154,5 +155,5 @@ for (const protocolVersion of [
   await runScenario(protocolVersion, compatibility.protocolVersions[0]);
 }
 console.log(
-  'Bridge protocol smoke passed: fresh-session negotiation, unsupported revision fallback, batch rejection, contract publication, and private draft survival.',
+  'Bridge protocol smoke passed: fresh-session negotiation, unsupported revision fallback, malformed input recovery, contract publication, and private draft survival.',
 );

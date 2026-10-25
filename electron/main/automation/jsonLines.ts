@@ -1,6 +1,6 @@
 import type { Readable } from 'node:stream';
 
-// Shared framing for stdio and the internal editor connection. Bound incomplete
+// Framing for the internal editor connection. Bound incomplete
 // messages too, so a peer cannot grow the receive buffer without a newline.
 export function readJsonLines(
   stream: Readable,

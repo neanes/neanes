@@ -13,6 +13,7 @@ import {
   startEditorConnection,
 } from './editorConnection';
 import { discoverScoreFiles } from './fileDiscovery';
+import { MAX_AUTOMATION_MESSAGE_BYTES } from './messageLimits';
 
 // Exercise the actual transport and file discovery; no Electron or fake host.
 describe('editor socket connection', () => {
@@ -127,7 +128,9 @@ describe('editor socket connection', () => {
         }
       });
       socket.once('close', () => resolve());
-      socket.once('connect', () => socket.write('x'.repeat(1024 * 1024 + 1)));
+      socket.once('connect', () =>
+        socket.write('x'.repeat(MAX_AUTOMATION_MESSAGE_BYTES + 1)),
+      );
     });
     expect(
       await executeInEditor(discovery, request(root), signal),

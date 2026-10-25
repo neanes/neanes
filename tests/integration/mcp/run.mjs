@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 const scenarios = [
   'bridge-protocol',
+  'message-size',
   'headless-launch',
   'agent-access',
   'metadata',

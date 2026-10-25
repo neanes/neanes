@@ -18,6 +18,7 @@ import {
 import { atomicWrite } from './atomicWrite';
 import compatibility from './compatibility.json';
 import { readJsonLines } from './jsonLines';
+import { MAX_AUTOMATION_MESSAGE_BYTES } from './messageLimits';
 
 const connectionSchema = z.object({
   socket: z.string().min(1),
@@ -74,7 +75,7 @@ export async function startEditorConnection(
     });
     const detach = readJsonLines(
       socket,
-      1024 * 1024,
+      MAX_AUTOMATION_MESSAGE_BYTES,
       (message) => {
         // One operation per connection. Closing it also cancels queued/export work.
         if (started) {
@@ -236,7 +237,7 @@ export async function executeInEditor(
     const cancel = () => finish(new Error('EXPORT_CANCELLED'));
     const detach = readJsonLines(
       socket,
-      32 * 1024 * 1024,
+      MAX_AUTOMATION_MESSAGE_BYTES,
       (message) => {
         const outcome = z
           .discriminatedUnion('success', [

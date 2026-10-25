@@ -117,6 +117,7 @@ export function installAutomation(options: {
           executeInEditor(discoveryFile, request, signal),
       });
       server.server.onerror = (error) => console.error('MCP error', error);
+      server.server.onclose = () => void stop();
       void server.connect(new McpStdioTransport()).catch((error) => {
         console.error(error);
         void stop(1);

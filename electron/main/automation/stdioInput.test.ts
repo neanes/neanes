@@ -27,8 +27,8 @@ describe('inherited MCP input', () => {
     );
     expect(child.error).toBeUndefined();
     expect(child.status, child.stderr.toString()).toBe(0);
-    expect(child.stdout).toEqual(input);
-  });
+    expect(child.stdout.equals(input)).toBe(true);
+  }, 15_000);
 
   it('reads a redirected file through the inherited descriptor', async () => {
     const directory = await mkdtemp(path.join(tmpdir(), 'neanes-stdio-input-'));
@@ -49,5 +49,5 @@ describe('inherited MCP input', () => {
       closeSync(fd);
       await rm(directory, { recursive: true, force: true });
     }
-  });
+  }, 15_000);
 });

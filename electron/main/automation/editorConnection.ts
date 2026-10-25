@@ -1,7 +1,8 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { promises as fs } from 'node:fs';
-import type { Socket } from 'node:net';
-import { createConnection, createServer } from 'node:net';
+import type { IncomingMessage } from 'node:http';
+import { createServer, request as httpRequest } from 'node:http';
+import { createConnection } from 'node:net';
 import path from 'node:path';
 
 import { z } from 'zod';
@@ -17,8 +18,7 @@ import {
 } from '../../../src/automation/contracts/protocol';
 import { atomicWrite } from './atomicWrite';
 import compatibility from './compatibility.json';
-import { readJsonLines } from './jsonLines';
-import { MAX_AUTOMATION_MESSAGE_BYTES } from './messageLimits';
+import { readJsonBody } from './httpJson';
 
 const connectionSchema = z.object({
   socket: z.string().min(1),
@@ -61,65 +61,51 @@ export async function startEditorConnection(
   const socketPath = directory
     ? path.join(directory, 'editor.sock')
     : `\\\\.\\pipe\\neanes-${randomBytes(16).toString('hex')}`;
-  const sockets = new Set<Socket>();
-  const server = createServer((socket) => {
-    sockets.add(socket);
+  const server = createServer((req, res) => {
     const controller = new AbortController();
-    let started = false;
-    socket.setTimeout(70_000, () => socket.destroy());
-    socket.on('error', () => socket.destroy());
-    socket.once('close', () => {
-      controller.abort(new Error('EDITOR_DISCONNECTED'));
-      sockets.delete(socket);
-      detach();
+    res.once('close', () => controller.abort(new Error('EDITOR_DISCONNECTED')));
+    void automationOutcome(async () => {
+      if (req.method !== 'POST' || req.url !== '/operation') {
+        throw new Error('Invalid editor request.');
+      }
+      const envelope = requestSchema.parse(await readJsonBody(req));
+      const supplied = Buffer.from(envelope.token);
+      const expected = Buffer.from(token);
+      if (
+        supplied.length !== expected.length ||
+        !timingSafeEqual(supplied, expected)
+      ) {
+        throw new Error('PERMISSION_DENIED');
+      }
+      if (envelope.contractVersion !== compatibility.contractVersion) {
+        throw new Error(
+          'Incompatible Neanes automation contract. Update Neanes and reconnect.',
+        );
+      }
+      const request = parseAutomationRequest(envelope.request);
+      return execute(request, controller.signal);
+    }).then((outcome) => {
+      if (!res.destroyed) {
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify(outcome));
+      }
     });
-    const detach = readJsonLines(
-      socket,
-      MAX_AUTOMATION_MESSAGE_BYTES,
-      (message) => {
-        // One operation per connection. Closing it also cancels queued/export work.
-        if (started) {
-          socket.destroy();
-          return;
-        }
-        started = true;
-        void automationOutcome(async () => {
-          const envelope = requestSchema.parse(message);
-          const supplied = Buffer.from(envelope.token);
-          const expected = Buffer.from(token);
-          if (
-            supplied.length !== expected.length ||
-            !timingSafeEqual(supplied, expected)
-          ) {
-            throw new Error('PERMISSION_DENIED');
-          }
-          if (envelope.contractVersion !== compatibility.contractVersion) {
-            throw new Error(
-              'Incompatible Neanes automation contract. Update Neanes and reconnect.',
-            );
-          }
-          const request = parseAutomationRequest(envelope.request);
-          return execute(request, controller.signal);
-        }).then((outcome) => {
-          if (!socket.destroyed) {
-            socket.end(JSON.stringify(outcome) + '\n');
-          }
-        });
-      },
-      () => socket.destroy(),
-    );
   });
+  // Each operation owns its connection; disconnecting cancels its work.
+  server.maxRequestsPerSocket = 1;
+  server.headersTimeout = 10_000;
+  server.requestTimeout = 70_000;
+  server.setTimeout(70_000);
   server.on('error', (error) =>
     console.error('Editor connection failed', error),
   );
   async function close() {
-    for (const socket of sockets) {
-      socket.destroy();
-    }
     if (server.listening) {
-      await new Promise<void>((resolve, reject) =>
+      const closed = new Promise<void>((resolve, reject) =>
         server.close((error) => (error ? reject(error) : resolve())),
       );
+      server.closeAllConnections();
+      await closed;
     }
     if (directory) {
       await fs.rm(directory, { recursive: true, force: true });
@@ -217,73 +203,59 @@ export async function executeInEditor(
       'Incompatible Neanes automation contract. Update Neanes and reconnect.',
     );
   }
-  return new Promise((resolve, reject) => {
-    const socket = createConnection(connection.socket);
-    let settled = false;
-    const finish = (error?: Error, result?: unknown) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      detach();
-      signal.removeEventListener('abort', cancel);
-      socket.destroy();
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    };
-    const cancel = () => finish(new Error('EXPORT_CANCELLED'));
-    const detach = readJsonLines(
-      socket,
-      MAX_AUTOMATION_MESSAGE_BYTES,
-      (message) => {
-        const outcome = z
-          .discriminatedUnion('success', [
-            z.object({ success: z.literal(true), result: z.unknown() }),
-            z.object({
-              success: z.literal(false),
-              error: automationErrorSchema,
-            }),
-          ])
-          .safeParse(message);
-        if (!outcome.success) {
-          finish(new Error('Invalid editor response.'));
-        } else if (outcome.data.success) {
-          finish(undefined, outcome.data.result);
-        } else {
-          finish(new AutomationError(outcome.data.error));
-        }
-      },
-      (error) => finish(error),
-    );
-    socket.setTimeout(65_000, () =>
-      finish(new Error('Editor request timed out. Inspect before retrying.')),
-    );
-    socket.once('error', (error: NodeJS.ErrnoException) =>
-      finish(
-        error.code === 'ENOENT' || error.code === 'ECONNREFUSED'
-          ? new Error(
-              'No editor is open. Open Neanes to work with editor tabs.',
-            )
-          : error,
-      ),
-    );
-    socket.once('close', () =>
-      finish(
-        new Error(
-          'Editor disconnected. The request may have completed; inspect before retrying.',
-        ),
-      ),
-    );
-    signal.addEventListener('abort', cancel, { once: true });
-    if (signal.aborted) {
-      cancel();
-      return;
-    }
-    socket.once('connect', () => {
-      socket.write(JSON.stringify({ ...connection, request }) + '\n');
+  const timeout = AbortSignal.timeout(65_000);
+  try {
+    const response = await new Promise<IncomingMessage>((resolve, reject) => {
+      const outgoing = httpRequest(
+        {
+          socketPath: connection.socket,
+          path: '/operation',
+          method: 'POST',
+          agent: false,
+          signal: AbortSignal.any([signal, timeout]),
+        },
+        resolve,
+      );
+      outgoing.once('error', reject);
+      outgoing.end(JSON.stringify({ ...connection, request }));
     });
-  });
+    if (response.statusCode !== 200) {
+      response.destroy();
+      throw new Error(`Invalid editor HTTP response: ${response.statusCode}.`);
+    }
+    const outcome = z
+      .discriminatedUnion('success', [
+        z.object({ success: z.literal(true), result: z.unknown() }),
+        z.object({ success: z.literal(false), error: automationErrorSchema }),
+      ])
+      .safeParse(await readJsonBody(response));
+    if (!outcome.success) {
+      throw new Error('Invalid editor response.');
+    }
+    if (!outcome.data.success) {
+      throw new AutomationError(outcome.data.error);
+    }
+    return outcome.data.result;
+  } catch (error) {
+    if (signal.aborted) {
+      throw new Error('EXPORT_CANCELLED');
+    }
+    if (timeout.aborted) {
+      throw new Error('Editor request timed out. Inspect before retrying.');
+    }
+    const code = (error as NodeJS.ErrnoException).code;
+    if (code === 'ENOENT' || code === 'ECONNREFUSED') {
+      throw new Error(
+        'No editor is open. Open Neanes to work with editor tabs.',
+      );
+    }
+    if (
+      ['ECONNRESET', 'EPIPE', 'ERR_STREAM_PREMATURE_CLOSE'].includes(code ?? '')
+    ) {
+      throw new Error(
+        'Editor disconnected. The request may have completed; inspect before retrying.',
+      );
+    }
+    throw error;
+  }
 }

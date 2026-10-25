@@ -1,9 +1,34 @@
 import assert from 'node:assert/strict';
+import { request as httpRequest } from 'node:http';
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 import electron from 'electron';
+
+export async function requestEditor(connection, request) {
+  const response = await new Promise((resolve, reject) => {
+    const outgoing = httpRequest(
+      {
+        socketPath: connection.socket,
+        path: '/operation',
+        method: 'POST',
+        agent: false,
+        signal: AbortSignal.timeout(70_000),
+      },
+      resolve,
+    );
+    outgoing.once('error', reject);
+    outgoing.end(JSON.stringify({ ...connection, request }));
+  });
+  assert.equal(response.statusCode, 200);
+  response.setEncoding('utf8');
+  let body = '';
+  for await (const chunk of response) {
+    body += chunk;
+  }
+  return JSON.parse(body);
+}
 
 export async function connectEditorClient(name, options = {}) {
   const client = await connectStdioClient(name, options);

@@ -1,11 +1,15 @@
 import { promises as fs } from 'node:fs';
+import { request as httpRequest } from 'node:http';
 import { createConnection } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { parseAutomationRequest } from '../../../src/automation/contracts/protocol';
+import {
+  type AutomationRequest,
+  parseAutomationRequest,
+} from '../../../src/automation/contracts/protocol';
 import compatibility from './compatibility.json';
 import {
   executeInEditor,
@@ -16,7 +20,7 @@ import { discoverScoreFiles } from './fileDiscovery';
 import { MAX_AUTOMATION_MESSAGE_BYTES } from './messageLimits';
 
 // Exercise the actual transport and file discovery; no Electron or fake host.
-describe('editor socket connection', () => {
+describe('editor HTTP connection', () => {
   let root: string;
   let discovery: string;
   let connection: Awaited<ReturnType<typeof startEditorConnection>>;
@@ -104,20 +108,29 @@ describe('editor socket connection', () => {
   it('handles fragmented messages and refuses oversized unfinished messages', async () => {
     const state = JSON.parse(await fs.readFile(discovery, 'utf8'));
     const outcome = await new Promise<string>((resolve, reject) => {
-      const socket = createConnection(state.socket);
-      let response = '';
-      socket.on('error', reject);
-      socket.on('data', (chunk) => {
-        response += chunk;
-      });
-      socket.on('end', () => resolve(response));
-      socket.once('connect', () => {
-        const line =
-          JSON.stringify({ ...state, request: request(root) }) + '\n';
-        for (const character of line) {
-          socket.write(character);
-        }
-      });
+      const outgoing = httpRequest(
+        {
+          socketPath: state.socket,
+          path: '/operation',
+          method: 'POST',
+          agent: false,
+        },
+        (response) => {
+          let body = '';
+          response.setEncoding('utf8');
+          response.on('data', (chunk) => {
+            body += chunk;
+          });
+          response.once('end', () => resolve(body));
+          response.once('error', reject);
+        },
+      );
+      outgoing.once('error', reject);
+      const body = JSON.stringify({ ...state, request: request(root) });
+      for (const character of body) {
+        outgoing.write(character);
+      }
+      outgoing.end();
     });
     expect(JSON.parse(outcome).success).toBe(true);
     await new Promise<void>((resolve, reject) => {
@@ -129,7 +142,12 @@ describe('editor socket connection', () => {
       });
       socket.once('close', () => resolve());
       socket.once('connect', () =>
-        socket.write('x'.repeat(MAX_AUTOMATION_MESSAGE_BYTES + 1)),
+        socket.write(
+          'POST /operation HTTP/1.1\r\nHost: localhost\r\nContent-Length: ' +
+            (MAX_AUTOMATION_MESSAGE_BYTES + 2) +
+            '\r\n\r\n' +
+            'x'.repeat(MAX_AUTOMATION_MESSAGE_BYTES + 1),
+        ),
       );
     });
     expect(
@@ -172,5 +190,152 @@ describe('editor socket connection', () => {
       expect(await readEditorDevelopmentUrl(discovery)).toBeUndefined();
     }
     await fs.writeFile(discovery, JSON.stringify(state));
+  });
+});
+
+it('refuses an oversized unfinished chunked upload and remains usable', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'neanes-http-chunked-'));
+  const discovery = path.join(root, 'discovery.json');
+  const connection = await startEditorConnection(
+    discovery,
+    (request, signal) => {
+      if (request.tool !== 'discover_score_files') {
+        throw new Error('Unexpected tool');
+      }
+      return discoverScoreFiles(request.arguments, signal);
+    },
+  );
+  try {
+    const state = JSON.parse(await fs.readFile(discovery, 'utf8'));
+    await new Promise<void>((resolve, reject) => {
+      const socket = createConnection(state.socket);
+      socket.on('error', (error: NodeJS.ErrnoException) => {
+        if (!['EPIPE', 'ECONNRESET'].includes(error.code ?? '')) {
+          reject(error);
+        }
+      });
+      socket.once('close', () => resolve());
+      socket.once('connect', () => {
+        socket.write(
+          'POST /operation HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\n\r\n' +
+            (MAX_AUTOMATION_MESSAGE_BYTES + 2).toString(16) +
+            '\r\n' +
+            'x'.repeat(MAX_AUTOMATION_MESSAGE_BYTES + 1),
+        );
+      });
+    });
+    const result = await executeInEditor(
+      discovery,
+      parseAutomationRequest({
+        tool: 'discover_score_files',
+        arguments: { folderPath: root },
+      }),
+      new AbortController().signal,
+    );
+    expect(result).toMatchObject({ nextOffset: null });
+  } finally {
+    await connection.close();
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+describe('editor HTTP lifecycle', () => {
+  for (const action of ['cancel', 'shutdown'] as const) {
+    it(`${action} aborts in-flight file discovery`, async () => {
+      const root = await fs.mkdtemp(
+        path.join(os.tmpdir(), 'neanes-http-lifecycle-'),
+      );
+      const source = path.join(root, 'scores');
+      await fs.mkdir(source);
+      await Promise.all(
+        Array.from({ length: 1000 }, (_, index) =>
+          fs.mkdir(path.join(source, `folder-${index}`)),
+        ),
+      );
+      const started = Promise.withResolvers<void>();
+      const finished = Promise.withResolvers<boolean>();
+      const discovery = path.join(root, 'discovery.json');
+      const connection = await startEditorConnection(
+        discovery,
+        async (request, signal) => {
+          if (request.tool !== 'discover_score_files') {
+            throw new Error('Unexpected tool');
+          }
+          started.resolve();
+          try {
+            const result = await discoverScoreFiles(request.arguments, signal);
+            finished.resolve(false);
+            return result;
+          } catch (error) {
+            finished.resolve(signal.aborted);
+            throw error;
+          }
+        },
+      );
+      const controller = new AbortController();
+      const request = parseAutomationRequest({
+        tool: 'discover_score_files',
+        arguments: { folderPath: source, recursive: true },
+      });
+      const running = executeInEditor(discovery, request, controller.signal);
+      const checked = expect(running).rejects.toThrow(
+        action === 'cancel' ? 'EXPORT_CANCELLED' : 'may have completed',
+      );
+      try {
+        await started.promise;
+        if (action === 'cancel') {
+          controller.abort();
+        } else {
+          await connection.close();
+        }
+        await checked;
+        expect(await finished.promise).toBe(true);
+        if (action === 'cancel') {
+          expect(
+            await executeInEditor(
+              discovery,
+              parseAutomationRequest({
+                tool: 'discover_score_files',
+                arguments: { folderPath: root },
+              }),
+              new AbortController().signal,
+            ),
+          ).toMatchObject({ nextOffset: null });
+        }
+      } finally {
+        controller.abort();
+        await connection.close();
+        await fs.rm(root, { recursive: true, force: true });
+      }
+    });
+  }
+
+  it('preserves discovery metadata replaced by another editor', async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), 'neanes-http-owner-'));
+    const discovery = path.join(root, 'discovery.json');
+    const execute = (request: AutomationRequest, signal: AbortSignal) => {
+      if (request.tool !== 'discover_score_files') {
+        throw new Error('Unexpected tool');
+      }
+      return discoverScoreFiles(request.arguments, signal);
+    };
+    const first = await startEditorConnection(discovery, execute);
+    const second = await startEditorConnection(discovery, execute);
+    try {
+      const replacement = await fs.readFile(discovery, 'utf8');
+      await first.close();
+      expect(await fs.readFile(discovery, 'utf8')).toBe(replacement);
+      const request = parseAutomationRequest({
+        tool: 'discover_score_files',
+        arguments: { folderPath: root },
+      });
+      expect(
+        await executeInEditor(discovery, request, new AbortController().signal),
+      ).toMatchObject({ nextOffset: null });
+    } finally {
+      await first.close();
+      await second.close();
+      await fs.rm(root, { recursive: true, force: true });
+    }
   });
 });

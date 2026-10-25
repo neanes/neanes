@@ -1,11 +1,14 @@
 // Run outside the agent command sandbox; starts disposable Electron processes.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createConnection } from 'node:net';
 import path from 'node:path';
 
 import { createSmokeApp } from './smokeApp.mjs';
-import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
+import {
+  connectStdioClient,
+  createToolCaller,
+  requestEditor,
+} from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
 const app = await createSmokeApp('neanes-editor-access-');
@@ -89,27 +92,10 @@ try {
   // Discovery credentials authenticate the connection, independent of app signing.
   const discovery = path.join(app.profile, 'mcp-editor.json');
   const connection = JSON.parse(await readFile(discovery, 'utf8'));
-  const refused = await new Promise((resolve, reject) => {
-    const socket = createConnection(connection.socket);
-    let text = '';
-    socket.setTimeout(5000, () =>
-      socket.destroy(new Error('Authentication test timed out')),
-    );
-    socket.on('error', reject);
-    socket.on('data', (data) => {
-      text += data;
-    });
-    socket.on('end', () => resolve(JSON.parse(text)));
-    socket.on('connect', () =>
-      socket.write(
-        JSON.stringify({
-          ...connection,
-          token: 'wrong-token',
-          request: { tool: 'list_documents', arguments: {} },
-        }) + '\n',
-      ),
-    );
-  });
+  const refused = await requestEditor(
+    { ...connection, token: 'wrong-token' },
+    { tool: 'list_documents', arguments: {} },
+  );
   assert.equal(refused.success, false);
   assert.equal(refused.error.code, 'PERMISSION_DENIED');
 

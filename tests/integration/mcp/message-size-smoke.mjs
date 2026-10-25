@@ -1,13 +1,16 @@
 // Run outside the agent command sandbox; starts disposable Electron processes.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { createConnection } from 'node:net';
 import path from 'node:path';
 
 import { EmptyResultSchema } from '@modelcontextprotocol/sdk/types.js';
 
 import { createSmokeApp } from './smokeApp.mjs';
-import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
+import {
+  connectStdioClient,
+  createToolCaller,
+  requestEditor,
+} from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
 const probe = process.argv.includes('--probe');
@@ -28,34 +31,10 @@ try {
   const connection = JSON.parse(
     await readFile(path.join(app.profile, 'mcp-editor.json'), 'utf8'),
   );
-  async function socketCall(tool, args) {
-    const wire =
-      JSON.stringify({
-        ...connection,
-        request: { tool, arguments: args },
-      }) + '\n';
-    return new Promise((resolve, reject) => {
-      const socket = createConnection(connection.socket);
-      let response = '';
-      socket.setTimeout(70_000, () =>
-        socket.destroy(new Error('Socket timeout')),
-      );
-      socket.on('error', reject);
-      socket.on('data', (chunk) => {
-        response += chunk;
-      });
-      socket.on('end', () => {
-        try {
-          assert.ok(response, 'Editor disconnected without a response');
-          const outcome = JSON.parse(response);
-          assert.equal(outcome.success, true, JSON.stringify(outcome));
-          resolve(outcome.result);
-        } catch (error) {
-          reject(error);
-        }
-      });
-      socket.on('connect', () => socket.write(wire));
-    });
+  async function editorCall(tool, args) {
+    const outcome = await requestEditor(connection, { tool, arguments: args });
+    assert.equal(outcome.success, true, JSON.stringify(outcome));
+    return outcome.result;
   }
   for (const edge of probe ? [256, 512] : [512, 1024, 2048]) {
     // A real, lossless PNG with deterministic high-detail pixels, rather than
@@ -100,9 +79,9 @@ try {
         ],
       },
     ];
-    for (const route of ['stdio', 'editor-socket']) {
+    for (const route of ['stdio', 'editor-http']) {
       let client;
-      let call = socketCall;
+      let call = editorCall;
       if (route === 'stdio') {
         client = await connectStdioClient('message-size-smoke', {
           profile: app.profile,
@@ -134,7 +113,9 @@ try {
         edge,
         route,
         pngBytes: Buffer.from(data.split(',')[1], 'base64').length,
-        wireBytes: Buffer.byteLength(JSON.stringify(wire) + '\n'),
+        wireBytes: Buffer.byteLength(
+          JSON.stringify(wire) + (route === 'stdio' ? '\n' : ''),
+        ),
       };
       try {
         const edited = await call('edit_elements', args);

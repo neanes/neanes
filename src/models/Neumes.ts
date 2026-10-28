@@ -431,6 +431,7 @@ export enum NoteIndicator {
 
 export enum Ison {
   Unison = 'Ison.Unison',
+  GaLow = 'Ison.GaLow',
   ThiLow = 'Ison.ThiLow',
   KeLow = 'Ison.KeLow',
   Zo = 'Ison.Zo',

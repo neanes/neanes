@@ -7,7 +7,7 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { Fthora, QuantitativeNeume, TempoSign } from '@/models/Neumes';
+import { Fthora, Ison, QuantitativeNeume, TempoSign } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -37,6 +37,17 @@ function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
 }
 
 describe('ByzHtmlExporter', () => {
+  it('exports the low Ga ison indicator', () => {
+    const exporter = new ByzHtmlExporter();
+    const note = new NoteElement();
+    note.ison = Ison.GaLow;
+
+    const html = exporter.exportNote(note, new PageSetup(), [], 0);
+
+    expect(html).toContain('<x-ii-ga-low');
+    expect(html).not.toContain('undefined');
+  });
+
   it('exports a right-aligned martyria fthora after its quantitative neume', () => {
     const exporter = new ByzHtmlExporter();
     const martyria = new MartyriaElement();

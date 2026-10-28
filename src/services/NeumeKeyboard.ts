@@ -971,6 +971,12 @@ export class NeumeKeyboard {
       modifier: this.isonKey,
       neume: Ison.ThiLow,
     });
+
+    this.isonKeyboardMap.push({
+      code: 'Period',
+      modifier: this.isonKey,
+      neume: Ison.GaLow,
+    });
   }
 
   private initMartyriaConfigKeyboardMap() {

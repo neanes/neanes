@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesStathisSeries",
-  "fontVersion": "1.0.9",
+  "fontVersion": "1.0.10",
   "metrics": {
     "ascent": 0.8,
     "descent": 0.2,
@@ -7904,6 +7904,12 @@
         0.587,
         0.887
       ]
+    },
+    "isonIndicatorGaLow": {
+      "isonIndicator": [
+        0.0,
+        0.996
+      ]
     }
   },
   "glyphsWithAlternates": {
@@ -8629,7 +8635,8 @@
     "fthoraDiatonicKe": 0.342,
     "yporroi.gorgon": 0.544,
     "yporroi.digorgon": 0.513,
-    "yporroi.trigorgon": 0.624
+    "yporroi.trigorgon": 0.624,
+    "isonIndicatorGaLow": 0.0
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -12538,6 +12545,16 @@
       "bBoxSW": [
         0.055,
         0.176
+      ]
+    },
+    "isonIndicatorGaLow": {
+      "bBoxNE": [
+        0.35,
+        1.348
+      ],
+      "bBoxSW": [
+        -0.262,
+        0.894
       ]
     }
   },

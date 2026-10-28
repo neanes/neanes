@@ -623,11 +623,9 @@ export class LyricService {
       QuantitativeNeume.VareiaDotted4,
     ];
 
-    const melismaOnly = [
-      QuantitativeNeume.Kentemata,
-      QuantitativeNeume.Hyporoe,
-      QuantitativeNeume.KentemataPlusOligon,
-    ];
+    // Keep saved Default settings stable. Use explicit MelismaOnly settings
+    // when a hyporoe or kentemata below oligon should extend a syllable.
+    const melismaOnly = [QuantitativeNeume.Kentemata];
 
     if (noLyricsAccepted.includes(note.quantitativeNeume)) {
       return AcceptsLyricsOption.No;

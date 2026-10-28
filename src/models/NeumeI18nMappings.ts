@@ -501,6 +501,7 @@ const NOTE_INDICATOR_LABEL_SELECTORS: Record<NoteIndicator, ModelSelector> = {
 };
 
 const ISON_LABEL_SELECTORS: Partial<Record<Ison, ModelSelector>> = {
+  [Ison.GaLow]: ($) => $.model.note.gaLow,
   [Ison.ThiLow]: ($) => $.model.note.diLow,
   [Ison.KeLow]: ($) => $.model.note.keLow,
   [Ison.Zo]: ($) => $.model.note.zo,

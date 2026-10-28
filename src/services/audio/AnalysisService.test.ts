@@ -1,13 +1,24 @@
 import { describe, expect, it } from 'vitest';
 
-import { MartyriaElement } from '@/models/Element';
-import { Fthora, Note, QuantitativeNeume, TempoSign } from '@/models/Neumes';
+import { MartyriaElement, NoteElement } from '@/models/Element';
+import {
+  Fthora,
+  Ison,
+  Note,
+  QuantitativeNeume,
+  TempoSign,
+} from '@/models/Neumes';
 import { getNeumeValue } from '@/models/NeumeValues';
-import { getNoteValue, getScaleNoteFromValue } from '@/models/Scales';
+import {
+  getNoteValue,
+  getScaleNoteFromValue,
+  ScaleNote,
+} from '@/models/Scales';
 
 import {
   AnalysisService,
   type FthoraNode,
+  type IsonNode,
   NodeType,
   type TempoNode,
 } from './AnalysisService';
@@ -66,5 +77,21 @@ describe('AnalysisService martyria tempos', () => {
     expect(nodes.some((node) => node.nodeType === NodeType.TempoNode)).toBe(
       false,
     );
+  });
+});
+
+describe('AnalysisService ison indicators', () => {
+  it('resolves low Ga to its physical and virtual playback notes', () => {
+    const note = new NoteElement();
+    note.ison = Ison.GaLow;
+
+    const nodes = AnalysisService.analyze([note], false);
+    const isonNode = nodes.find(
+      (node): node is IsonNode => node.nodeType === NodeType.IsonNode,
+    );
+
+    expect(isonNode?.unison).toBe(false);
+    expect(isonNode?.physicalNote).toBe(ScaleNote.GaLow);
+    expect(isonNode?.virtualNote).toBe(ScaleNote.GaLow);
   });
 });

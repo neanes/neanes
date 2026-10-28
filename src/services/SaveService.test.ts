@@ -11,7 +11,7 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { Fthora, QuantitativeNeume } from '@/models/Neumes';
+import { Fthora, Ison, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -1766,5 +1766,21 @@ describe('SaveService font styles', () => {
 
     expect(saved.pageSetup.dropCapDefaultLineSpan).toBe(4);
     expect(loaded.pageSetup.dropCapDefaultLineSpan).toBe(4);
+  });
+});
+
+describe('ison indicator serialization', () => {
+  it('preserves the low Ga indicator when saving and loading a score', () => {
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+    const score = new Score();
+    const note = new NoteElement();
+    note.ison = Ison.GaLow;
+    score.staff.elements = [note];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    expect((saved.staff.elements[0] as NoteElement_v1).ison).toBe('Ison.GaLow');
+
+    const loaded = SaveService.LoadScoreFromJson(saved);
+    expect((loaded.staff.elements[0] as NoteElement).ison).toBe(Ison.GaLow);
   });
 });

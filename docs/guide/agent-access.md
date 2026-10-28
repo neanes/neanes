@@ -133,9 +133,39 @@ Tell the agent which score or folder to use and where to save the result. For ex
 
 - "Open `/scores/hymn.byz` privately, tell me its title and author, and find its Third Mode sections."
 - "In my open Neanes score, read the selected passage and its lyrics without changing anything."
+- "Copy the selected passage from my open hymn to the end of my other open score, including lyrics, annotations, and alternate lines. Leave the result unsaved for review."
 - "In my open score, change the default text paragraph style to Arial, preview the first page, and leave the changes for me to review."
+- "In my open score, find all text boxes using Times New Roman and change them to Arial, including boxes that inherit their font from a paragraph style. Leave the changes unsaved for me to review."
+- "Find all drop caps in my open score whose font size is not 36 pt and set them to 36 pt. Include drop caps that inherit their size from a paragraph style."
 - "Open `/scores/hymn.byz`, set the author to Maria, and save a copy as `/scores/hymn-revised.byz`."
+- "Remove all barlines from the scores in `/scores/service` so I can test the layout engine without them. Save the edited copies in `/scores/layout-test` and keep the originals unchanged."
+- "Open `/scores/hymn.byz` privately, temporarily remove all ison indicators, and export `/scores/hymn-without-ison.pdf`. Discard the draft afterward and leave the original score unchanged."
 - "Find the scores in `/scores/service`, export each to a PDF alongside its source, and leave the score files unchanged."
+
+For font and size changes, specify whether you mean the element's current appearance or only formatting set directly on that element. Paragraph styles can supply inherited formatting, and advanced text boxes can contain several fonts. Use **font size** for the size of a drop cap's letter, or **Lines to Drop** for the number of lines it spans.
+
+### Export a temporary variation
+
+To export a saved score without its ison indicators, the agent can:
+
+1. Open the saved score as a private document.
+2. Find notes with ison indicators and clear those indicators in the private draft.
+3. Export the draft to the requested PDF path without saving the score.
+4. Close the private draft and explicitly discard its changes.
+
+This needs no temporary score file: the original file and any open editor tab keep their contents. The PDF retains the temporary variation.
+
+Private documents read the saved version. To include unsaved changes from an open tab, ask the agent to save a separate score copy first, open that copy privately, and apply the temporary edits there. Saving to a new path also makes that copy the open tab's save destination. Keep the copy until the PDF has been checked; it can then be deleted if no longer needed.
+
+### Copy a passage between scores
+
+Tell the agent which passage to copy, which score should receive it, and where to insert it. It can copy a selected passage from an open score, a range identified by its contents, or an entire saved score's staff. Both scores must be open in the editor or both opened privately.
+
+The copy includes lyrics, annotations, alternate lines, text boxes, images, and explicit formatting. Missing custom paragraph styles are imported; styles with matching IDs or custom names use the destination's definitions. The destination keeps its page layout and built-in styles, so inherited formatting can look different. The source stays unchanged, and the insertion and imported styles can be undone together in the destination. Saving is a separate action.
+
+Ask to copy **without lyrics** to omit note lyrics and their formatting, including lyrics in alternate lines. Drop caps, annotations, and text boxes are still copied.
+
+If the destination's Lyrics Manager text is locked, unlock it before copying a passage into that score. The agent will report the lock instead of replacing the copied lyrics with the destination's locked text.
 
 ## Private documents and editor tabs
 
@@ -180,6 +210,7 @@ Batch operations work on saved files privately. They can save changes in place, 
 | `get_staff_lyrics`    | Read the Lyrics Manager text and whether it is locked.                                                        |
 | `get_selection`       | Read the selection in an editor tab. Private documents have no editor selection.                              |
 | `edit_elements`       | Insert, update, replace, or remove elements, assign lyrics, or update the Lyrics Manager text and lock state. |
+| `copy_elements`       | Copy a staff range within a score or between scores, including lyrics, child elements, and images.            |
 | `get_pages`           | List laid-out pages.                                                                                          |
 | `get_page_elements`   | Find which elements appear on a page.                                                                         |
 | `preview_page`        | Return an image of one page for visual inspection without writing a file.                                     |

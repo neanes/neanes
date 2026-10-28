@@ -23,6 +23,7 @@ import { getRichTextFormat } from '../contracts/richTextFormat';
 import type { AutomationIpcClient } from '../ipc/AutomationIpcClient';
 import { readStaffLyrics } from './contentRead';
 import { DocumentRevisions } from './documentRevisions';
+import { planElementCopy } from './elementCopy';
 import {
   applyElementEdits,
   createdElementResult,
@@ -261,6 +262,7 @@ export class McpDocumentAdapter {
       request.tool === 'get_element' ||
       request.tool === 'find_elements' ||
       request.tool === 'edit_elements' ||
+      request.tool === 'copy_elements' ||
       request.tool === 'update_page_setup' ||
       request.tool === 'update_header_footer_settings' ||
       request.tool === 'edit_paragraph_styles' ||
@@ -493,6 +495,49 @@ export class McpDocumentAdapter {
         { includeSettlementChanges: true },
       );
       return this.summary(workspace);
+    }
+    if (request.tool === 'copy_elements') {
+      const source = this.documents
+        .list()
+        .find((item) => item.id === request.arguments.sourceDocumentId);
+      if (source === undefined) {
+        throw new Error('DOCUMENT_NOT_FOUND');
+      }
+      this.documents.prepare(source);
+      await this.documents.settle(source);
+      const verify = () => {
+        this.reverify(
+          source,
+          request.arguments.expectedSourceRevision,
+          'The source changed. Read it again before copying.',
+        );
+        this.reverify(
+          workspace,
+          request.arguments.expectedRevision,
+          'The destination changed. Read it again before copying.',
+        );
+      };
+      verify();
+      const plan = planElementCopy(source, workspace, request.arguments);
+      await this.documents.ensureFonts(plan.fontFamilies);
+      verify();
+      const sourceRevision = this.revision(source);
+      const applied = await this.mutateAndSettle(workspace, () =>
+        this.documents.changeElements(workspace, () =>
+          applyElementEdits(workspace, plan),
+        ),
+      );
+      return {
+        ...this.summary(workspace),
+        applied,
+        sourceDocumentId: source.id,
+        sourceRevision,
+        ...createdElementResult(
+          plan.created,
+          this.discovery(workspace),
+          request.arguments.includeCreated,
+        ),
+      };
     }
     if (request.tool === 'edit_elements') {
       const discovery = this.discovery(workspace);

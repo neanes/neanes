@@ -148,6 +148,21 @@ export const automationResultSchemas = {
       )
       .optional(),
   }),
+  copy_elements: documentSummarySchema.extend({
+    applied: z.boolean(),
+    sourceDocumentId: z.string().min(1),
+    sourceRevision: revision,
+    createdCount: z.number().int().nonnegative(),
+    created: z
+      .array(
+        z.strictObject({
+          clientId: z.string().nullable(),
+          elementRef: z.string().uuid(),
+          elementType: z.enum(ElementType),
+        }),
+      )
+      .optional(),
+  }),
   get_document_properties: documentSummarySchema.extend({
     properties: documentPropertiesSchema,
   }),

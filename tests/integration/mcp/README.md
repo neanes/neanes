@@ -36,5 +36,14 @@ Their environment, output-directory, and debugger requirements are documented in
 the [MCP guide](../../../electron/mcp/README.md). Run these individually, following
 that guide; they are not included in the self-launching command.
 
+`element-copy` copies a passage in private and editor scopes, including nested
+annotations/alternate lines, custom style imports and rich-text remapping, and
+embedded images. It checks unchanged sources and source files, stale revisions,
+invalid ranges, missing documents, locked destination lyrics, same-document
+copying, compact acknowledgments, and a real editor undo/redo of the complete
+copy and imported styles.
+It also checks opting out of lyrics on the main staff and alternate lines while
+retaining annotations.
+
 On macOS, agents must launch Electron outside the command sandbox as described in
 [AGENTS.md](../../../AGENTS.md). Never connect these tests to the normal user profile.

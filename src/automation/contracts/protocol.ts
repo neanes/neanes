@@ -87,6 +87,16 @@ export const automationSchemas = {
     actions: elementEditBatchSchema,
     includeCreated: z.boolean().default(true),
   }),
+  copy_elements: z.strictObject({
+    ...documentMutation,
+    sourceDocumentId: documentId,
+    expectedSourceRevision: revision,
+    includeLyrics: z.boolean().default(true),
+    start: z.number().int().nonnegative().default(0),
+    end: z.number().int().nonnegative().optional(),
+    index: z.number().int().nonnegative().optional(),
+    includeCreated: z.boolean().default(true),
+  }),
   get_document_properties: z.strictObject({
     ...documentRead,
   }),

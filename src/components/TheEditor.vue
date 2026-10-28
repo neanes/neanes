@@ -6258,18 +6258,22 @@ function updateAnnotation(
 ) {
   const annotationContext = getAnnotationContext(element);
 
+  // Unmounting after removal can flush an editor update. It must not create
+  // a command for a detached element or replace the history's redo entries.
+  if (annotationContext == null) {
+    return;
+  }
+
   if (
     newValues.text != null &&
     !hasMeaningfulRichTextHtmlContent(newValues.text)
   ) {
-    if (annotationContext != null) {
-      removeAnnotation(annotationContext.parent, element);
-    }
+    removeAnnotation(annotationContext.parent, element);
 
     return;
   }
 
-  if (newValues.text == null && annotationContext?.component != null) {
+  if (newValues.text == null && annotationContext.component != null) {
     const currentText = annotationContext.component.getCurrentText();
 
     if (!hasMeaningfulRichTextHtmlContent(currentText)) {
@@ -6349,6 +6353,14 @@ function updateRichTextBox(
   element: RichTextBoxElement,
   newValues: Partial<RichTextBoxElement>,
 ) {
+  // Removed boxes can emit a final content update while their editors unmount.
+  if (
+    !score.value.staff.elements.includes(element) &&
+    !score.value.headersAndFooters.includes(element)
+  ) {
+    return;
+  }
+
   newValues = {
     ...getPendingRichTextBoxUpdates(element),
     ...newValues,

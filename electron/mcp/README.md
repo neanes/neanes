@@ -134,6 +134,63 @@ and loading state do not block private documents. Disconnecting an MCP client ne
 closes the visible editor or another client's private documents. Requests are never
 automatically replayed after a timeout or disconnect; inspect before retrying.
 
+## Practical bulk-edit workflows
+
+Example requests:
+
+- "Find all text boxes using Times New Roman and change them to Arial, including inherited fonts. Leave the changes unsaved for review."
+- "Copy the selected passage from my open hymn into the end of my other open score, including lyrics, annotations, and alternate lines. Leave the result unsaved for review."
+- "Find all drop caps whose font size is not 36 pt and set them to 36 pt, including inherited sizes."
+- "Remove all barlines from the scores in `/scores/service` for layout testing. Save copies in `/scores/layout-test` and preserve the originals."
+- "Temporarily remove all ison indicators from `/scores/hymn.byz`, export `/scores/hymn-without-ison.pdf`, then discard the draft without saving the score."
+
+Use `find_elements` to discover targets, follow every `nextOffset` at the same
+revision before editing, then apply targeted `edit_elements` updates using the
+returned references and latest `expectedRevision`. These tasks need element
+edits; `batch_update_files` supports document-level formatting and metadata,
+not arbitrary element transformations. For several scores, discover files and
+process each privately, saving to a separate output path when copies are wanted.
+
+- **Text-box fonts:** `TextBox.fontFamily` is a direct override. To match the
+  font currently in use, also read `paragraphStyleId` and resolve inherited
+  values with `get_paragraph_styles`. Set `fontFamily` on matching boxes to
+  avoid changing unrelated users of a shared style. `RichTextBox` formatting
+  lives in its HTML content; read the relevant panels and consult
+  `get_rich_text_format` before changing font declarations there.
+- **Drop-cap sizes:** read all `DropCap` elements with `fontSize` and
+  `paragraphStyleId`, resolve inherited sizes, and compare in the client.
+  Search predicates have no not-equal operator. Font sizes use CSS pixels;
+  36 pt is 48 CSS pixels. Update only differing drop caps' `fontSize` values.
+  This changes the letter size; `lineSpan` controls Lines to Drop separately.
+- **Barlines:** find `Note` and `Martyria` elements where `measureBarLeft` or
+  `measureBarRight` is not null, then set both properties to null. Use document
+  search scope to include alternate lines as well as the main staff.
+- **Ison indicators:** find `Note` elements with
+  `where: { field: "ison", op: "isNotNull" }` and update each with
+  `properties: { ison: null }`. This clears the indicators; the quantitative
+  neume named Ison is a separate field and should be preserved.
+
+### Temporary PDF without changing the source
+
+For a saved score, use `open_document` with `documentScope: "private"`, clear
+the indicators with `edit_elements`, then call `export_pdf` with an explicit
+absolute output path and the updated revision. Export does not save the score.
+After a successful export, call `close_document` with the current revision and
+`discardUnsavedChanges: true`. No on-disk score copy is needed. Editor tabs are
+independent and retain their current contents.
+
+Check `open_document.created` before treating a workspace as disposable. If it
+is false, the private workspace may already contain other work; do not discard
+it. Use a fresh client connection for an independent private draft. Close only
+documents introduced by this workflow.
+
+To include unsaved editor changes, first use `save_document` in editor scope
+with a separate absolute score path, then open that copy privately. Save-as
+changes the editor workspace's source path. The MCP tools have no clone-document
+operation. Keep the copy until the PDF is verified; deleting that file afterward
+requires the client's filesystem tools, since `close_document` does not delete
+files.
+
 ## Internal editor connection
 
 The visible editor automatically starts a Unix domain socket on macOS/Linux or a
@@ -502,6 +559,60 @@ Run the regression against a disposable app started with
 ```sh
 NEANES_DEV_USER_DATA_DIR=/tmp/neanes-mcp/profile NEANES_DEBUG_URL=http://127.0.0.1:9334 node tests/integration/mcp/selection-smoke.mjs
 ```
+
+### Copying a staff range
+
+`copy_elements` copies stored staff elements directly, without passing their
+content or embedded images through the client. Both documents must be in the
+same `documentScope`. It also supports copying within one document.
+
+```json
+{
+  "documentScope": "editor",
+  "documentId": "destination-document-id",
+  "expectedRevision": 4,
+  "sourceDocumentId": "source-document-id",
+  "expectedSourceRevision": 7,
+  "start": 10,
+  "end": 20,
+  "index": 5
+}
+```
+
+`documentId` and `expectedRevision` identify the destination. `start` (default 0) and `end` select the source's half-open main-staff range; omitted `end` stops
+before the terminal `Empty`. `index` is a zero-based insertion position in the
+destination before copying; omission appends before `Empty`. At most 1000
+top-level elements can be copied per call. Invalid ranges, sentinel-inclusive
+ranges, and out-of-bounds insertion positions return `INVALID_ELEMENT_RANGE`.
+An empty range is a no-op, without a history entry or style imports.
+
+Copies have fresh identities and include lyrics and their flags, break state,
+annotations, alternate lines and their notes, text-box panels, and embedded
+images. Calculated pitches and layout are recomputed in the destination.
+`includeLyrics` defaults to `true`. Set it to `false` to omit note lyrics,
+hyphen/melisma flags, and lyric formatting on both the main staff and alternate
+lines. Drop-cap content, annotations, and text boxes are still copied. Custom
+styles used only by omitted lyrics are not imported. The destination lyrics
+lock requirement applies with either setting.
+Custom styles follow editor paste rules: reuse destination IDs or matching
+custom display names, import missing custom styles and their ancestors, and
+remap direct and rich-text references. Destination built-in styles and page
+setup stay unchanged, so inherited appearance may differ. Headers, footers,
+document metadata and the source's Lyrics Manager lock are not copied.
+
+The destination must have unlocked staff lyrics for a nonempty copy;
+`LYRICS_LOCKED` leaves it unchanged. Unlock explicitly with `edit_elements`
+before retrying if desired. The source may remain locked. Both revisions are
+checked after document settlement and again after font preparation; a missing
+document or revision conflict rejects the copy before mutation.
+
+The insertion and imported styles form one destination undo step. Neither score
+is saved, and the source is unchanged (unless source and destination are the
+same document). The response contains the destination summary, `applied`,
+`sourceDocumentId`, `sourceRevision` captured before insertion, and top-level
+`createdCount` and `created` references. Set `includeCreated: false` for a
+count-only acknowledgment. Settlement failures after commit report
+`details.editsApplied` and the destination revision; inspect before retrying.
 
 ### Element transaction contract
 

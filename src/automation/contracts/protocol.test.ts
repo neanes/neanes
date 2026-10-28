@@ -17,6 +17,52 @@ const edit = (overrides: unknown) => ({
 });
 
 describe('automation protocol validation', () => {
+  it('requires both document revisions when copying a range', () => {
+    const args = {
+      documentId: 'destination',
+      expectedRevision: 3,
+      sourceDocumentId: 'source',
+      expectedSourceRevision: 2,
+    };
+    expect(
+      parseAutomationRequest({ tool: 'copy_elements', arguments: args })
+        .arguments,
+    ).toEqual({ ...args, start: 0, includeCreated: true, includeLyrics: true });
+    expect(
+      parseAutomationRequest({
+        tool: 'copy_elements',
+        arguments: { ...args, includeLyrics: false },
+      }).arguments,
+    ).toMatchObject({ includeLyrics: false });
+    for (const key of [
+      'expectedRevision',
+      'expectedSourceRevision',
+      'sourceDocumentId',
+    ]) {
+      const incomplete: Record<string, unknown> = { ...args };
+      delete incomplete[key];
+      expect(() =>
+        parseAutomationRequest({
+          tool: 'copy_elements',
+          arguments: incomplete,
+        }),
+      ).toThrow();
+    }
+    for (const range of [
+      { start: -1 },
+      { end: 1.5 },
+      { index: -1 },
+      { includeLyrics: 'false' },
+    ]) {
+      expect(() =>
+        parseAutomationRequest({
+          tool: 'copy_elements',
+          arguments: { ...args, ...range },
+        }),
+      ).toThrow();
+    }
+  });
+
   it('keeps created references by default and supports compact edit acknowledgments', () => {
     const args = {
       documentId: 'id',

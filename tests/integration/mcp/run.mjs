@@ -8,6 +8,7 @@ const scenarios = [
   'agent-access',
   'metadata',
   'text-search',
+  'element-copy',
   'rich-text-update',
   'preview',
 ];

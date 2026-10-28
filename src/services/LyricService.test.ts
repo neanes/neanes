@@ -521,10 +521,115 @@ describe('LyricService (Arab phonetics)', () => {
   });
 });
 
+describe('Stable lyric defaults', () => {
+  it.each([QuantitativeNeume.Hyporoe, QuantitativeNeume.KentemataPlusOligon])(
+    'keeps Default syllable acceptance on %s through lyric and neume edits',
+    (neume) => {
+      const service = new LyricService();
+      const notes = [createNote(''), createNote(''), createNote('')];
+      notes[1].quantitativeNeume = neume;
+      const assign = (text: string) =>
+        service.assignLyrics(
+          text,
+          notes,
+          false,
+          false,
+          () => {},
+          (note, values) => Object.assign(note, values),
+          () => {},
+        );
+
+      expect(service.getEffectiveAcceptsLyrics(notes[1], notes[0])).toBe(
+        AcceptsLyricsOption.Yes,
+      );
+      assign('one two three');
+      expect(notes.map((note) => note.lyrics)).toEqual(['one', 'two', 'three']);
+      expect(notes.map((note) => note.isMelisma)).toEqual([
+        false,
+        false,
+        false,
+      ]);
+
+      service.assignAcceptsLyricsFromCurrentLyrics(
+        notes,
+        false,
+        (note, value) => {
+          note.acceptsLyrics = value;
+        },
+      );
+      expect(notes[1].acceptsLyrics).toBe(AcceptsLyricsOption.Default);
+
+      notes[1].quantitativeNeume = QuantitativeNeume.Ison;
+      assign('new words here');
+      expect(notes.map((note) => note.lyrics)).toEqual([
+        'new',
+        'words',
+        'here',
+      ]);
+    },
+  );
+
+  it.each(['', ' unused trailing words'])(
+    'preserves historical Greek syllable positions through edits and saves: %s',
+    async (suffix) => {
+      (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+      const saved = JSON.parse(
+        await readFile('tests/data/lyrics-before-2723.byzx', 'utf8'),
+      );
+      saved.staff.lyrics.text += suffix;
+      let score = SaveService.LoadScoreFromJson(saved);
+      expect(
+        score.staff.elements.map((element) => (element as NoteElement).lyrics),
+      ).toEqual(['τω', 'ων', 'σου', 'μου', 'one', 'two']);
+      expect((score.staff.elements[1] as NoteElement).acceptsLyrics).toBe(
+        AcceptsLyricsOption.Default,
+      );
+      expect((score.staff.elements[3] as NoteElement).acceptsLyrics).toBe(
+        AcceptsLyricsOption.Default,
+      );
+
+      for (const text of [
+        'των__ σου μου one two' + suffix,
+        'των__ σου μου new words' + suffix,
+      ]) {
+        score.staff.lyrics.text = text;
+        new LyricService().assignLyrics(
+          text,
+          score.staff.elements,
+          false,
+          false,
+          () => {},
+          (note, values) => Object.assign(note, values),
+          () => {},
+        );
+        // Current shared-pair rendering keeps the complete Greek syllable on
+        // the apostrophos, while subsequent syllables retain their positions.
+        expect(
+          score.staff.elements
+            .slice(0, 4)
+            .map((element) => (element as NoteElement).lyrics),
+        ).toEqual(['των', '', 'σου', 'μου']);
+        expect(
+          score.staff.elements
+            .slice(4)
+            .map((element) => (element as NoteElement).lyrics),
+        ).toEqual(
+          text.includes('new words') ? ['new', 'words'] : ['one', 'two'],
+        );
+        score = SaveService.LoadScoreFromJson(
+          SaveService.SaveScoreToJson(score),
+        );
+        expect(score.staff.lyrics.text).toBe(text);
+        expect((score.staff.elements[1] as NoteElement).acceptsLyrics).toBe(
+          AcceptsLyricsOption.Default,
+        );
+      }
+    },
+  );
+});
+
 describe('Save current melismas', () => {
   it.each([
-    QuantitativeNeume.Hyporoe,
-    QuantitativeNeume.KentemataPlusOligon,
     QuantitativeNeume.Kentemata,
     QuantitativeNeume.Cross,
     QuantitativeNeume.Breath,
@@ -631,7 +736,7 @@ describe('Save current melismas', () => {
       notes[2].quantitativeNeume = neume;
 
       expect(service.getEffectiveAcceptsLyrics(notes[1], notes[0])).toBe(
-        AcceptsLyricsOption.MelismaOnly,
+        AcceptsLyricsOption.Yes,
       );
       service.assignAcceptsLyricsFromCurrentLyrics(
         notes,
@@ -694,8 +799,8 @@ describe('Greek shared apostrophos-hyporoe assignment', () => {
     ]);
   });
 
-  it('preserves the pair when the hyporoe takes an implicit continuation', () => {
-    const data = setup(AcceptsLyricsOption.Default);
+  it('preserves the pair when MelismaOnly takes an implicit continuation', () => {
+    const data = setup(AcceptsLyricsOption.MelismaOnly);
     const text = data.service.extractLyrics(data.notes, false);
     expect(text).toBe('μην σου');
     data.assign(text);

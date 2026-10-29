@@ -6,6 +6,7 @@ const scenarios = [
   'message-size',
   'headless-launch',
   'agent-access',
+  'shutdown',
   'metadata',
   'text-search',
   'element-copy',

@@ -46,6 +46,10 @@ request/response rejection, chunked transfer, fragmentation, and recovery.
 private stores, socket authentication, preferences without agent settings, and
 client/editor shutdown isolation. It requires no policy file or token setup.
 
+`shutdown` checks that explicit Quit removes editor discovery and Unix socket
+directories. It also checks window-close shutdown and that closing a macOS window
+preserves the connection until the application quits.
+
 Additional scenarios in this directory connect to an existing disposable editor.
 Their environment, output-directory, and debugger requirements are documented in
 the [MCP guide](../../../electron/mcp/README.md). Run these individually, following

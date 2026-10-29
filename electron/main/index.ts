@@ -2668,6 +2668,12 @@ ipcMain.handle(IpcRendererChannels.ExitApplication, async () => {
     }
   }
 
+  if (pendingUpdateInstall || quitting) {
+    // Explicit exits bypass will-quit. Keep automation alive when macOS only
+    // closes the window, but finish cleanup before quitting or installing updates.
+    await automation.close().catch(console.error);
+  }
+
   if (pendingUpdateInstall) {
     pendingUpdateInstall = false;
 

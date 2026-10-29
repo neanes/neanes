@@ -9,6 +9,8 @@ import * as Neumes from '@/models/Neumes';
 import { TextBoxAlignment } from '@/models/ParagraphStyle';
 import { Scale, ScaleNote } from '@/models/Scales';
 
+import { dropCapLyricsDescription } from './lyricSyntax';
+
 // Read-only live content projections. These are not edit validation schemas.
 // Layout caches are excluded except the explicitly exposed calculated pitches.
 // Rendering state, saved IDs and nested objects are excluded.
@@ -232,7 +234,7 @@ export const elementPropertySchemas = {
     ...breaks,
     paragraphStyleId: z.string(),
     color: z.string().optional(),
-    content: plainTextContent,
+    content: z.string().describe(dropCapLyricsDescription),
     fontSize: z.number().optional(),
     fontFamily: z.string().optional(),
     fontStyle: z.string().optional(),

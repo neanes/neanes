@@ -47,6 +47,26 @@ const query = (collection: ElementCollection = { kind: 'staff' }) => ({
 });
 
 describe('typed element discovery', () => {
+  it('explains drop-cap lyric association in focused read and edit catalogs', () => {
+    const catalog = getElementCatalog({
+      elementTypes: [ElementType.DropCap],
+      properties: ['content'],
+      view: 'both',
+      includeNeumes: false,
+      includeProperties: false,
+    });
+    const dropCap = catalog.elementTypes[0];
+    for (const schema of [dropCap.properties, dropCap.editProperties]) {
+      expect(schema!.properties).toMatchObject({
+        content: {
+          description: expect.stringContaining(
+            'DropCap.content="A" followed by Note.lyrics="l" represents "Al"',
+          ),
+        },
+      });
+    }
+  });
+
   it('exposes calculated pitches by default and projection, but never for editing', () => {
     const score = new Score();
     const note = new NoteElement();

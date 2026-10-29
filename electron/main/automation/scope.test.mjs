@@ -37,6 +37,9 @@ describe('stdio scope publication', () => {
     const instructions = scopedInstructions(schemaResourceInstructions);
     expect(instructions).toContain('documentScope:"editor"');
     expect(instructions).toContain(schemaResourceInstructions);
+    expect(instructions.slice(0, 512)).toContain(
+      "A drop cap and the following note's lyrics form one syllable",
+    );
     expect(scopedInstructions(undefined)).not.toContain('undefined');
   });
 

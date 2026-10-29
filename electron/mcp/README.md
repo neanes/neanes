@@ -668,6 +668,13 @@ tertiary, and martyria quantitative-neume fthoras. Other model setters can clear
 components that are incompatible with a newly selected quantitative neume.
 
 Lyric parser syntax applies to `assign_lyrics.text` and `set_staff_lyrics.text`.
+A drop cap is the initial letter of the following note's lyric syllable, not a
+separate syllable. For example, `DropCap.content: "A"` and `Note.lyrics: "l"`
+represent `Al`. Supply the complete syllable when assigning lyrics across both
+elements; the shared parser distributes the text. Direct property edits store
+the two parts separately. A concise rule is included in server instructions;
+focused `DropCap.content` catalog queries provide the detailed guidance.
+
 Spaces separate syllables, `-` marks a hyphenated syllable, and `_` marks an
 extension. With three notes set to `acceptsLyrics: "Yes"`:
 

@@ -3,6 +3,8 @@ import type {
   Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 
+import { dropCapLyricInstruction } from '../../../src/automation/contracts/lyricSyntax';
+
 // Private defaults keep agent tasks independent of the app launch order.
 export function isDocumentTool(tool: Tool) {
   return (
@@ -53,6 +55,7 @@ export function scopedResourceContents(
 
 export function scopedInstructions(instructions: string) {
   return [
+    dropCapLyricInstruction,
     'Document tools default to private documents, regardless of launch order. Set documentScope:"editor" on list_documents to discover open editor tabs, and on subsequent tools to work with them. Private documents last for the worker lifetime without idle expiry. Save explicitly. Connection loss never retries edits automatically.',
     instructions,
   ]

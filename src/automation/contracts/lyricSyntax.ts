@@ -1,4 +1,14 @@
 // Shared guidance for the tool, parser actions and writable property schemas.
+export const dropCapLyricInstruction =
+  "A drop cap and the following note's lyrics form one syllable; the drop cap does not consume a separate syllable.";
+
+// Detailed guidance is exposed through focused DropCap content catalog queries.
+export const dropCapLyricsDescription =
+  'Plain-text initial letter of the following lyric syllable, not a separate syllable. ' +
+  'For example, DropCap.content="A" followed by Note.lyrics="l" represents "Al". ' +
+  'When assign_lyrics includes both elements, or when using set_staff_lyrics, supply the complete syllable: the parser assigns the initial character to the drop cap and the remainder to the note. ' +
+  'Direct property edits store each part separately.';
+
 export const lyricParserDescription =
   'Parser syntax: spaces separate syllables; - ends a syllable with a hyphen and _ extends it to another note. ' +
   'For three notes accepting lyrics, Al-le-lu gives Al / le / lu with hyphen starts; Al___ gives Al / empty / empty with extension flags. ' +

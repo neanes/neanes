@@ -1,10 +1,7 @@
 ---
 name: Verify Packaged MCP
 
-on:
-  push:
-    branches:
-      - codex/mcp-integration
+on: workflow_dispatch
 
 permissions:
   contents: read

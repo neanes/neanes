@@ -1473,7 +1473,7 @@ watch(selectedWorkspaceId, () => {
   window.document.title = windowTitle.value;
 
   if (paneVisibility.value.lyrics) {
-    refreshStaffLyrics();
+    initializeStaffLyricsPane();
   }
 });
 
@@ -1573,7 +1573,7 @@ watch(
 
 watch(isLyricsManagerOpen, (isOpen, wasOpen) => {
   if (isOpen && !wasOpen) {
-    refreshStaffLyrics();
+    initializeStaffLyricsPane();
   }
 });
 
@@ -6239,6 +6239,16 @@ function updateLyrics(
     );
     refreshStaffLyrics();
     save();
+  }
+}
+
+function initializeStaffLyricsPane() {
+  flushLyricsAssignment(selectedWorkspace.value);
+
+  // Locked text can include syllables that do not yet fit on the staff.
+  // Display it as saved without reassigning lyrics just to open the pane.
+  if (!lyricsLocked.value) {
+    extractStaffLyrics(selectedWorkspace.value);
   }
 }
 

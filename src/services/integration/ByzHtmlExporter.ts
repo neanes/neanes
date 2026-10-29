@@ -1920,6 +1920,7 @@ export class ByzHtmlExporter {
     map.set('noteIndicatorKe', 'x-ni-ke');
     map.set('noteIndicatorZo', 'x-ni-zo');
     map.set('isonIndicatorUnison', 'x-ii-uni');
+    map.set('isonIndicatorGaLow', 'x-ii-ga-low');
     map.set('isonIndicatorDiLow', 'x-ii-di-low');
     map.set('isonIndicatorKeLow', 'x-ii-ke-low');
     map.set('isonIndicatorZo', 'x-ii-zo');

@@ -1,6 +1,6 @@
 {
   "fontName": "NeanesEngraving",
-  "fontVersion": "1.0.9",
+  "fontVersion": "1.0.10",
   "metrics": {
     "ascent": 0.8,
     "descent": 0.2,
@@ -7872,6 +7872,12 @@
         0.308,
         0.527
       ]
+    },
+    "isonIndicatorGaLow": {
+      "isonIndicator": [
+        0.0,
+        0.996
+      ]
     }
   },
   "glyphsWithAlternates": {
@@ -8597,7 +8603,8 @@
     "chroaSpathi": 0.837,
     "yporroi.gorgon": 0.307,
     "yporroi.digorgon": 0.307,
-    "yporroi.trigorgon": 0.307
+    "yporroi.trigorgon": 0.307,
+    "isonIndicatorGaLow": 0.0
   },
   "optionalGlyphs": {
     "oligonKentimataBelow.alt01": {
@@ -12506,6 +12513,16 @@
       "bBoxSW": [
         0.0,
         0.161
+      ]
+    },
+    "isonIndicatorGaLow": {
+      "bBoxNE": [
+        0.456,
+        1.298
+      ],
+      "bBoxSW": [
+        -0.456,
+        0.931
       ]
     }
   },

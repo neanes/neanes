@@ -1,0 +1,27 @@
+---
+name: Packaged MCP smoke tests
+description: Exercise stdio MCP from the native packaged Neanes application.
+runs:
+  using: composite
+  steps:
+    - name: Prepare native packaged executable
+      shell: bash
+      run: node scripts/ci/prepare-packaged-mcp.mjs
+
+    - name: Allow sandboxed Linux Electron launches
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        sudo install -m 644 "$RUNNER_TEMP/neanes-packaged-electron" /etc/apparmor.d/neanes-packaged-electron
+        sudo apparmor_parser --replace /etc/apparmor.d/neanes-packaged-electron
+
+    - name: Test packaged MCP protocol and document lifecycle
+      shell: bash
+      env:
+        NEANES_TEST_EXECUTABLE: ${{ env.NEANES_PACKAGED_EXECUTABLE }}
+      run: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          xvfb-run --auto-servernum npm run test:integration:mcp -- bridge-protocol headless-launch
+        else
+          npm run test:integration:mcp -- bridge-protocol headless-launch
+        fi

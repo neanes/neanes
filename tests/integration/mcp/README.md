@@ -27,6 +27,21 @@ revisions and automation contract publication, and verifies malformed messages
 Stdio framing and validation use the MCP SDK; malformed input is reported on
 stderr without a JSON-RPC error reply.
 Set `NEANES_TEST_EXECUTABLE` to a freshly packaged app executable to cover direct packaged stdio launch; source builds launch Electron with the repository path and `--mcp`.
+The standalone **Verify Packaged MCP** workflow (`mcp-ci-verify.yml`) runs only
+when manually triggered. In GitHub Actions, choose that workflow, click
+**Run workflow**, and select the branch to verify. It builds native packages on
+Windows, macOS, and Linux without publishing, then runs `bridge-protocol` and
+`headless-launch` through `.github/actions/packaged-mcp`. Regular CI and release
+workflows do not run these packaged checks.
+
+macOS tests extract the release ZIP; Linux tests extract the release AppImage
+without FUSE; Windows tests use the packaged application directory, including
+its bundled stdio launcher. The scenarios cover protocol negotiation, tool
+listing, private document edits, save/reopen, preview/PDF export, independent
+clients, and shutdown. Only the runner's native architecture is exercised.
+These checks do not install the Windows installer or simulate an upgrade over
+an existing installation.
+
 Socket tests cover matching and incompatible automation contracts and session authentication. Executable paths remain in the client configuration;
 Linux users must refresh it when an update changes the AppImage path.
 

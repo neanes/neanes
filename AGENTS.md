@@ -81,6 +81,14 @@ Forward compatibility (an older app opening a newer file) is explicitly out of s
 Vue 3 (`script setup` / Composition API), Tailwind CSS v4, `shadcn-vue` components (vendored under `src/components/ui/`), `reka-ui` primitives, `dockview` for the pane layout, and CKEditor 5 for rich text (custom plugins in `src/ckeditor-plugins/`: `insertneume`, `fontstyle`, `alignmentoverride`, `opentype`, `richtextselection`).
 `i18n` is `i18next` with locales under `src/i18n/` (`en`, `el`, `ro`, `id`, `ru`), managed via Crowdin.
 
+### Keep MCP in sync with application changes
+
+When changing score models, editable properties, element types, serialization, editor commands, document lifecycle, layout, or export behavior, consider whether the MCP API needs corresponding updates.
+
+If affected, update the relevant contracts, schemas, discovery/read projections, edit handlers, documentation, and tests in `src/automation/`, `electron/main/automation/`, and `tests/integration/mcp/`.
+
+Reuse existing application services rather than duplicating behavior in MCP handlers. See `src/automation/README.md` for ownership boundaries and `electron/mcp/README.md` for connection and launch documentation.
+
 ## Conventions
 
 - **Do not modify `src/components/ui/`.** These are vendored/generated `shadcn-vue` components, regenerated upstream; local edits get clobbered and break the vendoring contract. When a UI component lacks something a consumer needs, add it at the call site, not in the component. This is enforced strictly.

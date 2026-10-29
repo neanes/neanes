@@ -4,7 +4,6 @@ import { createServer } from 'node:http';
 
 import { createSmokeApp } from './smokeApp.mjs';
 import { connectEditorClient, createToolCaller } from './smokeClient.mjs';
-import { eventually } from './smokePolling.mjs';
 
 const app = await createSmokeApp('neanes-metadata-');
 // Hold a real font request open so document.fonts.ready cannot settle.
@@ -15,13 +14,6 @@ let deadline;
 try {
   app.start({ args: ['--remote-debugging-port=0'] });
   const { evaluate } = await app.debugger();
-  await eventually(async () =>
-    assert.ok(
-      await evaluate(
-        'Boolean(window._editor?.workspaces.value.length && !document.querySelector(".loading-overlay"))',
-      ),
-    ),
-  );
   client = await connectEditorClient('metadata-smoke', await app.ready());
   const call = createToolCaller(client, (await client.listTools()).tools);
   const created = await call('create_document', {

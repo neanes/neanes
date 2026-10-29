@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { promises as fs } from 'node:fs';
+import { createServer } from 'node:http';
 import path from 'node:path';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
@@ -9,6 +10,7 @@ import {
   connectStdioClient,
   createToolCaller,
 } from './smokeClient.mjs';
+import { eventually } from './smokePolling.mjs';
 
 const directory = process.argv[2];
 assert.ok(
@@ -251,11 +253,72 @@ try {
       ),
     });
     if (process.env.NEANES_DEBUG_URL && scope.documentScope === 'editor') {
-      const pendingRead = call('get_pages', stable, 'REVISION_CONFLICT');
-      await evaluate(
-        `(() => {const workspace = window._editor.workspaces.value.find(w=>w.id===${JSON.stringify(args.documentId)}); workspace.updateLyricsLocked(!workspace.score.staff.lyrics.locked);})()`,
+      const font = await fs.readFile(
+        new URL(
+          '../../../src/assets/fonts/SourceSerif4-Regular.otf',
+          import.meta.url,
+        ),
       );
-      await pendingRead;
+      let fontResponse;
+      const server = createServer((_request, response) => {
+        response.setHeader('Access-Control-Allow-Origin', '*');
+        response.setHeader('Content-Type', 'font/otf');
+        fontResponse = response;
+      });
+      await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+      try {
+        await evaluate(`(() => {
+          const face = new FontFace('PageReadPendingFont', 'url(http://127.0.0.1:${server.address().port}/pending.otf)');
+          window.__pageReadFont = face;
+          document.fonts.add(face);
+          void face.load().catch(() => {});
+        })()`);
+        await eventually(() => assert.ok(fontResponse));
+        const pendingRead = call('get_pages', stable, 'REVISION_CONFLICT').then(
+          () => null,
+          (error) => error,
+        );
+        const failures = [];
+        // The detached measuring component mounts only after the initial
+        // revision check. Its font dependency keeps this read in progress.
+        try {
+          await eventually(async () => {
+            assert.equal(await evaluate('document.fonts.status'), 'loading');
+            assert.equal(
+              await evaluate(
+                'document.querySelectorAll(".workspace-page-measurement").length',
+              ),
+              1,
+            );
+          });
+          await evaluate(
+            `(() => {const workspace = window._editor.workspaces.value.find(w=>w.id===${JSON.stringify(args.documentId)}); workspace.updateLyricsLocked(!workspace.score.staff.lyrics.locked);})()`,
+          );
+        } catch (error) {
+          failures.push(error);
+        } finally {
+          fontResponse.end(font);
+        }
+        const failure = await pendingRead;
+        if (failure) {
+          failures.push(failure);
+        }
+        if (failures.length) {
+          throw new AggregateError(
+            failures,
+            'Concurrent page discovery failed.',
+          );
+        }
+      } finally {
+        if (fontResponse && !fontResponse.writableEnded) {
+          fontResponse.end(font);
+        }
+        server.closeAllConnections();
+        await new Promise((resolve) => server.close(resolve));
+        await evaluate(
+          'document.fonts.delete(window.__pageReadFont); delete window.__pageReadFont',
+        );
+      }
     } else {
       await call('replace_document_properties', {
         ...args,

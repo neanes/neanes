@@ -78,14 +78,6 @@ async function typeInReadyEditor(selector, expectedContent, text) {
 try {
   app.start({ args: ['--remote-debugging-port=0'] });
   socket = await app.debugger();
-  await eventually(async () => {
-    assert.equal(
-      await evaluate(
-        `Boolean(window._editor?.workspaces.value.length && !document.querySelector('.loading-overlay'))`,
-      ),
-      true,
-    );
-  });
   client = await connectEditorClient(
     'rich-text-update-smoke',
     await app.ready(),

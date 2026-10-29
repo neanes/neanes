@@ -5,6 +5,21 @@ scenarios. Each starts its own disposable worker or editor and cleans up its
 processes. Preview artifacts are retained for inspection. Use `-- --list` to list
 scenarios or pass names to run a subset.
 
+Editor fixtures wait for a successful document-list operation before mutating
+documents. The preview cancellation check disables JavaScript in a real
+editor-owned export renderer, confirms that the request is still pending, then
+cancels over MCP and checks that the server destroys that window. Window-count
+checks apply only to editor-owned renderers; private worker file cleanup is
+covered by `message-size`.
+Concurrent preview checks pause a real export renderer with the debugger;
+page-discovery checks hold a real font download open. Both observe work in
+progress, edit the source, then release the dependency and require a revision
+conflict. Element-edit round trips reopen both score
+formats and compare the complete discovered score, including nested content.
+Debugger connections and commands have bounded timeouts. The preview scenario
+checks command expiry, a late renderer reply, and subsequent successful commands
+using the real Electron debugger connection.
+
 `bridge-protocol` exercises the real stdio Neanes process across its declared MCP revisions,
 uses a fresh connection for each negotiation, checks fallback from unsupported
 revisions and automation contract publication, and verifies malformed messages

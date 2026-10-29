@@ -7,6 +7,7 @@ import path from 'node:path';
 import electron from 'electron';
 
 import { connectCdp, editorTarget } from './smokeCdp.mjs';
+import { requestEditor } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
 export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
@@ -72,9 +73,32 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
             connection.socket,
             `Editor connection is not ready: ${log}`,
           );
+          const outcome = await requestEditor(connection, {
+            tool: 'list_documents',
+            arguments: {},
+          });
+          if (!outcome.success) {
+            throw Object.assign(
+              new Error(
+                `Editor is not ready: ${JSON.stringify(outcome)}\n${log}`,
+              ),
+              { code: outcome.error.code },
+            );
+          }
+          assert.ok(outcome.result.length > 0, 'No startup document is ready.');
           return { profile };
         },
-        { timeoutMs: 30_000, retry: isRunning },
+        {
+          timeoutMs: 30_000,
+          retry: (error) =>
+            isRunning() &&
+            [
+              'ENOENT',
+              'ECONNREFUSED',
+              'EDITOR_NOT_READY',
+              'EDITOR_BUSY',
+            ].includes(error.code),
+        },
       );
     },
     async debugger(kind = 'renderer') {

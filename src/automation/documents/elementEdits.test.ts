@@ -145,12 +145,15 @@ describe('validated element transactions', () => {
     workspace.selectedElement = workspace.score.staff.elements[0];
     const ref = discovery.reference(workspace.selectedElement);
     const before = saved(workspace);
-    expect(() =>
-      edit([
-        update(ref, { lyrics: 'partial' }),
-        insert([{ elementType: 'Tempo', properties: { bpm: -3 } }]),
+    const actions = elementEditBatchSchema.parse([
+      update(ref, { lyrics: 'partial' }),
+      insert([
+        { elementType: 'DropCap', properties: { paragraphStyleId: 'missing' } },
       ]),
-    ).toThrow();
+    ]);
+    expect(() =>
+      planElementEdits(workspace, discovery, actions, ['Source Serif']),
+    ).toThrow('STYLE_NOT_FOUND');
     expect(saved(workspace)).toBe(before);
     expect(workspace.hasUnsavedChanges).toBe(false);
     expect(discovery.reference(workspace.selectedElement)).toBe(ref);
@@ -472,22 +475,65 @@ describe('validated element transactions', () => {
           elementType: 'ModeKey',
           properties: { templateId: 100, useOptionalDiatonicFthoras: false },
         },
-        { elementType: 'Note' },
-        { elementType: 'Martyria' },
-        { elementType: 'Tempo' },
+        {
+          elementType: 'Note',
+          clientId: 'note',
+          properties: {
+            quantitativeNeume: 'Oligon',
+            lyrics: 'Al',
+            lyricsFontSize: 21,
+          },
+        },
+        {
+          elementType: 'Martyria',
+          properties: { auto: false, verticalOffset: 17 },
+        },
+        { elementType: 'Tempo', properties: { neume: 'Quick', bpm: 123 } },
         { elementType: 'TextBox', properties: { content: 'Plain text' } },
         {
           elementType: 'RichTextBox',
           properties: { content: '<p>Rich text</p>' },
         },
-        { elementType: 'DropCap' },
+        { elementType: 'DropCap', properties: { content: 'A', fontSize: 40 } },
         { elementType: 'ImageBox', properties: { imagePath: '/tmp/test.png' } },
       ]),
+      {
+        action: 'insert',
+        collection: {
+          kind: 'children',
+          parentRef: '@note',
+          collection: 'annotations',
+        },
+        elements: [
+          {
+            elementType: 'Annotation',
+            properties: { text: '<p>Annotation</p>', x: 5 },
+          },
+        ],
+      },
+      {
+        action: 'insert',
+        collection: {
+          kind: 'children',
+          parentRef: '@note',
+          collection: 'alternateLines',
+        },
+        elements: [{ elementType: 'AlternateLine', clientId: 'alternate' }],
+      },
+      {
+        action: 'insert',
+        collection: {
+          kind: 'children',
+          parentRef: '@alternate',
+          collection: 'elements',
+        },
+        elements: [{ elementType: 'Note', properties: { lyrics: 'Nested' } }],
+      },
     ]);
     const loaded = SaveService.LoadScoreFromJson(JSON.parse(saved(workspace)));
-    expect(loaded.staff.elements.map((element) => element.elementType)).toEqual(
-      workspace.score.staff.elements.map((element) => element.elementType),
-    );
+    expect(
+      JSON.parse(JSON.stringify(SaveService.SaveScoreToJson(loaded))),
+    ).toEqual(JSON.parse(saved(workspace)));
   });
 
   it('replaces elements with positional break state and preserves collection identity for older history', () => {

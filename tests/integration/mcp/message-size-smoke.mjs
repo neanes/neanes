@@ -11,7 +11,6 @@ import {
   createToolCaller,
   requestEditor,
 } from './smokeClient.mjs';
-import { eventually } from './smokePolling.mjs';
 
 const app = await createSmokeApp('neanes-message-size-');
 const clients = [];
@@ -20,14 +19,6 @@ try {
   app.start({ args: ['--remote-debugging-port=0'] });
   await app.ready();
   const { evaluate } = await app.debugger();
-  await eventually(async () =>
-    assert.equal(
-      await evaluate(
-        'Boolean(window._editor?.workspaces.value.length && !document.querySelector(".loading-overlay"))',
-      ),
-      true,
-    ),
-  );
   const connection = JSON.parse(
     await readFile(path.join(app.profile, 'mcp-editor.json'), 'utf8'),
   );

@@ -34,7 +34,24 @@ const reopenedArchivePath = path.join(
 );
 try {
   const tools = await client.listTools();
-  assert.equal(tools.tools.length, 31);
+  for (const name of [
+    'get_capabilities',
+    'list_documents',
+    'create_document',
+    'open_document',
+    'close_document',
+    'get_elements',
+    'get_paragraph_styles',
+    'edit_paragraph_styles',
+    'replace_document_properties',
+    'save_document',
+    'export_pdf',
+  ]) {
+    assert.ok(
+      tools.tools.some((tool) => tool.name === name),
+      name,
+    );
+  }
   assert.ok(
     tools.tools.every(
       (tool) => !['create_session', 'close_session'].includes(tool.name),

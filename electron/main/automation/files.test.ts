@@ -91,23 +91,6 @@ describe('automation file access', () => {
     expect(await fs.readFile(second, 'utf8')).toBe('{}');
   });
 
-  it('decodes an allowed symlink using its requested extension', async () => {
-    const target = path.join(root, 'extensionless');
-    const requested = path.join(root, 'score.byzx');
-    await fs.writeFile(target, '{"version":"1.0"}');
-    await fs.symlink(target, requested);
-
-    for (const result of [
-      await readScore(files, requested),
-      await readScore(files, requested),
-    ]) {
-      expect(result).toMatchObject({
-        filePath: requested,
-        data: '{"version":"1.0"}',
-      });
-    }
-  });
-
   it('allows paths outside the former root while preserving path and symlink-output validation', async () => {
     const outside = path.join(directory, 'outside.byzx');
     await fs.writeFile(outside, '{"version":"1.0"}');

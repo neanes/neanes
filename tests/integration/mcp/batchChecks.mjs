@@ -18,6 +18,8 @@ export async function checkBatch(client, directory, seedPath) {
   for (let index = 0; index < 37; index++) {
     const score = structuredClone(seed);
     score.documentProperties.title = `Batch ${index}`;
+    score.pageSetup.showHeader = true;
+    score.pageSetup.bottomMargin = 40 + index;
     const style = score.paragraphStyles.find(
       (style) => style.id === 'default-text',
     );
@@ -83,13 +85,24 @@ export async function checkBatch(client, directory, seedPath) {
     files: files.slice(0, 2),
     dryRun: true,
   });
+  assert.deepEqual(
+    dry.results.map(({ index, filePath }) => ({ index, filePath })),
+    files.slice(0, 2).map(({ filePath }, index) => ({ index, filePath })),
+  );
+  assert.equal(dry.stopReason, 'complete');
+  assert.equal(dry.nextIndex, null);
   assert.ok(
     dry.results.every(
       (result) =>
         result.status === 'dryRun' && result.changed && !result.savedFilePath,
     ),
   );
-  assert.equal(await fs.readFile(files[0].filePath, 'utf8'), originals[0]);
+  for (let index = 0; index < 2; index++) {
+    assert.equal(
+      await fs.readFile(files[index].filePath, 'utf8'),
+      originals[index],
+    );
+  }
   const outcomes = [];
   let startIndex = 0;
   do {
@@ -117,6 +130,9 @@ export async function checkBatch(client, directory, seedPath) {
     );
     assert.equal(style.fontSize, index === 0 ? 88 : 21 + index);
     assert.equal(score.pageSetup.topMargin, 50);
+    assert.equal(score.pageSetup.bottomMargin, index === 0 ? 55 : 40 + index);
+    // The save format omits false when it matches the constructor default.
+    assert.equal(score.pageSetup.showHeader ?? false, false);
     assert.equal(score.documentProperties.title, `Batch ${index}`);
     assert.equal(
       score.documentProperties.author,

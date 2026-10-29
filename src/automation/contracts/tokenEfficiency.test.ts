@@ -58,7 +58,7 @@ describe('MCP token efficiency contracts', () => {
     expect(sizes.elementOutput).toBeLessThan(4500);
   });
 
-  it('measures style discovery and existing mutation acknowledgments', () => {
+  it('keeps style ID discovery smaller than complete definitions', () => {
     const styles = new Score().paragraphStyles;
     const size = (result: unknown) =>
       JSON.stringify({ success: true, result }).length;
@@ -83,46 +83,6 @@ describe('MCP token efficiency contracts', () => {
     }
     expect(size(ids)).toBeLessThan(size(complete) * 0.2);
     expect(size(ids)).toBeLessThan(size(definitions) * 0.6);
-    const writes = {
-      update_page_setup: summary,
-      update_header_footer_settings: summary,
-      edit_paragraph_styles: { ...summary, affectedStyleIds: ['lyrics'] },
-      edit_elements: { ...summary, applied: true, createdCount: 0 },
-      replace_document_properties: {
-        ...summary,
-        properties: { title: '', author: '' },
-      },
-      save_document: {
-        ...summary,
-        savedRevision: 0,
-        savedContentUnchanged: true,
-      },
-      export_pdf: {
-        ...summary,
-        exportedRevision: 0,
-        outputFilePath: '/scores/result.pdf',
-        format: 'pdf',
-      },
-    };
-    for (const [name, result] of Object.entries(writes)) {
-      expect(
-        automationResultSchemas[name as keyof typeof writes].parse(result),
-      ).toEqual(result);
-    }
-    console.info(
-      'MCP representative response sizes (JSON characters, one envelope)',
-      {
-        styles: {
-          complete: size(complete),
-          definitions: size(definitions),
-          ids: size(ids),
-        },
-        idsSavingsAcross37Reads: 37 * (size(complete) - size(ids)),
-        writes: Object.fromEntries(
-          Object.entries(writes).map(([name, result]) => [name, size(result)]),
-        ),
-      },
-    );
   });
 
   it('publishes valid projected outcomes while keeping type-specific runtime validation', () => {

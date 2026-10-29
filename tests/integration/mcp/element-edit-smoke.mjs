@@ -487,6 +487,7 @@ try {
       },
     });
     assert.equal(alternateNotes.elements[0].properties.lyrics, 'alternate');
+    const savedPaths = [];
     let revision = alternateEdit.revision;
     for (const suffix of ['byzx', 'byz']) {
       const filePath = path.join(
@@ -494,6 +495,7 @@ try {
         `edit-${stamp}-${scope.documentScope === 'private' ? 'private' : 'editor'}.${suffix}`,
       );
       output.push(filePath);
+      savedPaths.push(filePath);
       const result = await call('save_document', {
         ...args,
         expectedRevision: revision,
@@ -512,7 +514,6 @@ try {
       filePath: pdf,
     });
     assert.ok((await fs.stat(pdf)).size > 1000);
-    const sourcePath = exported.filePath;
     const savedScore = (await readScoreSnapshot(call, args)).score;
     await call('close_document', {
       ...args,
@@ -520,24 +521,24 @@ try {
       discardUnsavedChanges: true,
     });
     introduced.delete(args.documentId);
-    const reopened = await call('open_document', {
-      ...scope,
-      filePath: sourcePath,
-    });
-    const reopenArgs = { ...scope, documentId: reopened.documentId };
-    introduced.set(reopened.documentId, reopenArgs);
-    const reloaded = await readScoreSnapshot(call, reopenArgs);
-    assert.deepEqual(
-      reloaded.score.staff.elements.map((element) => element.elementType),
-      savedScore.staff.elements.map((element) => element.elementType),
-    );
-    assert.equal(reloaded.score.staff.elements[1].lyricsFontSize, 21);
-    await call('close_document', {
-      ...reopenArgs,
-      expectedRevision: reloaded.revision,
-      discardUnsavedChanges: true,
-    });
-    introduced.delete(reopened.documentId);
+    for (const filePath of savedPaths) {
+      const reopened = await call('open_document', { ...scope, filePath });
+      assert.equal(reopened.created, true);
+      const reopenArgs = { ...scope, documentId: reopened.documentId };
+      introduced.set(reopened.documentId, reopenArgs);
+      const reloaded = await readScoreSnapshot(call, reopenArgs);
+      assert.deepEqual(
+        reloaded.score,
+        savedScore,
+        `Persisted score differs: ${filePath}`,
+      );
+      await call('close_document', {
+        ...reopenArgs,
+        expectedRevision: reloaded.revision,
+        discardUnsavedChanges: true,
+      });
+      introduced.delete(reopened.documentId);
+    }
     assert.deepEqual(
       (await readScoreSnapshot(call, controlArgs)).score,
       unrelatedBefore.score,

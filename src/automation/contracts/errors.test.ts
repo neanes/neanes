@@ -81,11 +81,13 @@ describe('structured automation errors', () => {
     });
     const transferred = JSON.parse(JSON.stringify(outcome));
     expect(transferred).toEqual({ success: false, error });
-    try {
-      unwrapAutomationOutcome(transferred);
-    } catch (received) {
-      expect(automationError(received)).toEqual(error);
-    }
+    expect(() => unwrapAutomationOutcome(transferred)).toThrow(
+      expect.objectContaining({
+        name: 'AutomationError',
+        message: error.message,
+        error,
+      }),
+    );
   });
   it('returns structured validation issues without requiring clients to parse prose', () => {
     const parsed = z

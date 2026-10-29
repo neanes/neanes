@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import { ErrorCode, McpError } from '@modelcontextprotocol/sdk/types.js';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
+import { pauseNextExport } from './smokeCdp.mjs';
 import { callTool, connectStdioClient } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
@@ -19,12 +21,26 @@ try {
   const { evaluate } = await app.debugger();
   const { evaluate: evaluateMain } = await app.debugger('main');
   await app.ready();
-  await eventually(async () =>
-    assert.ok(
-      await evaluate(
-        'Boolean(window._editor?.workspaces.value.length && !document.querySelector(".loading-overlay"))',
-      ),
+  // Exercise request expiry and a late reply against the real renderer.
+  const delayedEvaluation = evaluate(
+    `new Promise(resolve => {
+      const timer = setTimeout(() => resolve('deadline missed'), 2000);
+      window.__smokeLateReply = () => { clearTimeout(timer); resolve('late reply'); };
+    })`,
+    { timeoutMs: 100 },
+  );
+  await assert.rejects(delayedEvaluation, (error) => {
+    assert.equal(error.code, 'CDP_REQUEST_TIMEOUT');
+    assert.equal(error.method, 'Runtime.evaluate');
+    assert.ok(Number.isInteger(error.requestId));
+    assert.match(error.message, /__smokeLateReply/);
+    return true;
+  });
+  assert.equal(
+    await evaluate(
+      `window.__smokeLateReply(); delete window.__smokeLateReply; 'responsive'`,
     ),
+    'responsive',
   );
   client = await connectStdioClient('preview-smoke', { profile: app.profile });
   const definitions = (await client.listTools()).tools;
@@ -62,6 +78,9 @@ try {
     evaluateMain(
       'process.getBuiltinModule("module").createRequire(process.cwd()+"/package.json")("electron").BrowserWindow.getAllWindows().filter(w=>w.webContents.getURL().includes("export.html")).length',
     );
+  async function assertEditorExportDisposed() {
+    await eventually(async () => assert.equal(await exportWindows(), 0));
+  }
   // Use an edited control document; pristine startup tabs normalize on remount.
   const controls = (
     await client.callTool({
@@ -208,7 +227,9 @@ try {
       );
       assert.ok(pixels.ink > 100);
       assert.equal(pixels.alpha, 255);
-      await eventually(async () => assert.equal(await exportWindows(), 0));
+      if (scope.documentScope === 'editor') {
+        await assertEditorExportDisposed();
+      }
     }
     await call(
       'preview_page',
@@ -251,43 +272,60 @@ try {
     assert.equal(after.revision, before.revision);
     assert.equal(after.hasUnsavedChanges, true);
     assert.equal(await state(), uiBefore);
-    // A real HTTP/MCP cancellation while the detached PNG window exists.
-    const controller = new AbortController();
-    const pending = client.callTool(
-      { name: 'preview_page', arguments: { ...stable, pageNumber: 1 } },
-      undefined,
-      { signal: controller.signal },
-    );
-    let finished = false;
-    const outcome = pending.then(
-      () => {
-        finished = true;
-        return 'completed';
-      },
-      () => {
-        finished = true;
-        return 'cancelled';
-      },
-    );
-    await eventually(async () =>
-      assert.ok((await exportWindows()) === 1 || finished),
-    );
-    controller.abort();
-    // A completed read-only preview may win the cancellation race. Both paths
-    // must dispose the detached renderer and leave the source unchanged.
-    await outcome;
-    await eventually(async () => assert.equal(await exportWindows(), 0));
-    assert.equal(await state(), uiBefore);
-    const earlyCancel = new AbortController();
-    const earlyPending = client.callTool(
-      { name: 'preview_page', arguments: { ...stable, pageNumber: 1 } },
-      undefined,
-      { signal: earlyCancel.signal },
-    );
-    const earlyRejected = assert.rejects(earlyPending);
-    earlyCancel.abort();
-    await earlyRejected;
-    await eventually(async () => assert.equal(await exportWindows(), 0));
+    // Disable scripts in the next real export renderer before it can settle.
+    // Cancellation must reach the server to dispose this pending window.
+    if (scope.documentScope === 'editor') {
+      await evaluateMain(`(() => {
+        const {app} = process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron');
+        globalThis.__previewCancellation = { held: false, error: null };
+        app.once('browser-window-created', (_event, window) => {
+          window.webContents.debugger.attach();
+          void window.webContents.debugger.sendCommand('Emulation.setScriptExecutionDisabled', {value: true}).then(
+            () => { globalThis.__previewCancellation.held = true; },
+            error => { globalThis.__previewCancellation.error = String(error); },
+          );
+        });
+      })()`);
+      const controller = new AbortController();
+      const reason = new McpError(
+        ErrorCode.RequestTimeout,
+        'Preview smoke cancellation',
+      );
+      let finished = false;
+      const outcome = client
+        .callTool(
+          { name: 'preview_page', arguments: { ...stable, pageNumber: 1 } },
+          undefined,
+          { signal: controller.signal },
+        )
+        .then(
+          (result) => {
+            finished = true;
+            return { result };
+          },
+          (error) => {
+            finished = true;
+            return { error };
+          },
+        );
+      try {
+        await eventually(async () => {
+          const held = await evaluateMain('globalThis.__previewCancellation');
+          assert.equal(held.error, null);
+          assert.equal(held.held, true);
+          assert.equal(await exportWindows(), 1);
+        });
+        assert.equal(finished, false, 'The renderer must still be pending.');
+        controller.abort(reason);
+        assert.equal((await outcome).error, reason);
+        await assertEditorExportDisposed();
+        assert.deepEqual(await readScoreSnapshot(call, args), before);
+        assert.equal(await state(), uiBefore);
+      } finally {
+        controller.abort(reason);
+        await evaluateMain('delete globalThis.__previewCancellation');
+      }
+    }
     // The editor inspector can control editor-owned renderers. Private worker
     // renderers belong to a separate process and are covered through their API.
     if (scope.documentScope === 'editor') {
@@ -302,22 +340,33 @@ try {
         { ...stable, pageNumber: 1 },
         'EXPORT_RENDER_FAILED',
       );
-      await eventually(async () => assert.equal(await exportWindows(), 0));
+      await assertEditorExportDisposed();
       assert.equal(await state(), uiBefore);
     }
     // Concurrent editor edits must not receive a misleading preview revision.
     if (scope.documentScope === 'editor') {
+      const held = await pauseNextExport(evaluateMain);
       const pending = call(
         'preview_page',
         { ...stable, pageNumber: 1 },
         'REVISION_CONFLICT',
+      ).then(
+        () => null,
+        (error) => error,
       );
-      await eventually(async () => assert.equal(await exportWindows(), 1));
-      await evaluate(
-        `(() => {const workspace = window._editor.workspaces.value.find(w=>w.id===${JSON.stringify(doc.documentId)}); workspace.updateLyricsLocked(!workspace.score.staff.lyrics.locked);})()`,
-      );
-      await pending;
-      await eventually(async () => assert.equal(await exportWindows(), 0));
+      try {
+        await held.wait();
+        await evaluate(
+          `(() => {const workspace = window._editor.workspaces.value.find(w=>w.id===${JSON.stringify(doc.documentId)}); workspace.updateLyricsLocked(!workspace.score.staff.lyrics.locked);})()`,
+        );
+      } finally {
+        await held.release();
+      }
+      const failure = await pending;
+      if (failure) {
+        throw failure;
+      }
+      await assertEditorExportDisposed();
     }
     doc = await readScoreSnapshot(call, args);
     await call('close_document', {
@@ -405,7 +454,7 @@ try {
     expectedRevision: seed.revision,
     discardUnsavedChanges: true,
   });
-  // An undecodable image fails settlement without retaining a renderer or changing source state.
+  // An undecodable private image reports a rendering failure.
   let broken = await call('create_document');
   const args = { documentId: broken.documentId };
   const score = (await readScoreSnapshot(call, args)).score;
@@ -427,7 +476,6 @@ try {
     },
     'EXPORT_RENDER_FAILED',
   );
-  await eventually(async () => assert.equal(await exportWindows(), 0));
   console.log(`Preview smoke passed. PNGs: ${directory}`);
 } catch (error) {
   console.error(app.log());

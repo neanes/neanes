@@ -38,14 +38,6 @@ try {
   await app.ready();
   const { evaluate } = await app.debugger();
   const { evaluate: evaluateMain } = await app.debugger('main');
-  await eventually(async () =>
-    assert.equal(
-      await evaluate(
-        'Boolean(window._editor?.workspaces.value.length && !document.querySelector(".loading-overlay"))',
-      ),
-      true,
-    ),
-  );
   const original = await first.call('list_documents', {
     documentScope: 'editor',
   });

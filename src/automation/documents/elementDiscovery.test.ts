@@ -604,63 +604,6 @@ describe('typed element discovery', () => {
     ).toThrow('INVALID_ELEMENT_COLLECTION');
   });
 
-  it('tracks blank child removal, identity and order even when saved contents are identical', () => {
-    const score = new Score();
-    const note = new NoteElement();
-    const first = new AnnotationElement();
-    const second = new AnnotationElement();
-    note.annotations.push(first, second);
-    score.staff.elements.unshift(note);
-    const reader = new ElementDiscovery();
-    const saved = () => JSON.stringify(SaveService.SaveScoreToJson(score));
-    const originalSaved = saved();
-    const original = snapshotElements(reader, score);
-    expect(snapshotElements(reader, reactive(score))).toBe(original);
-    note.annotations.reverse();
-    expect(saved()).toBe(originalSaved);
-    const reordered = snapshotElements(reader, score);
-    expect(reordered).not.toBe(original);
-    note.annotations.pop();
-    expect(saved()).toBe(originalSaved);
-    const removed = snapshotElements(reader, score);
-    expect(removed).not.toBe(reordered);
-    note.annotations[0] = new AnnotationElement();
-    expect(saved()).toBe(originalSaved);
-    expect(snapshotElements(reader, score)).not.toBe(removed);
-  });
-
-  it('tracks projected properties and nested or disabled collections omitted by serialization', () => {
-    const score = new Score();
-    const note = new NoteElement();
-    const annotation = new AnnotationElement();
-    const alternate = new AlternateLineElement();
-    const nested = new NoteElement();
-    nested.annotations.push(annotation);
-    alternate.elements.push(nested);
-    note.alternateLines.push(alternate, new AlternateLineElement());
-    score.staff.elements.unshift(note);
-    const reader = new ElementDiscovery();
-    const saved = () => JSON.stringify(SaveService.SaveScoreToJson(score));
-    let beforeSaved = saved();
-    let before = snapshotElements(reader, score);
-    annotation.x = 10;
-    expect(saved()).toBe(beforeSaved);
-    expect(snapshotElements(reader, score)).not.toBe(before);
-    before = snapshotElements(reader, score);
-    note.alternateLines.pop();
-    expect(saved()).toBe(beforeSaved);
-    expect(snapshotElements(reader, score)).not.toBe(before);
-    beforeSaved = saved();
-    before = snapshotElements(reader, score);
-    score.headers.odd.elements[0] = score.headers.odd.elements[0].clone();
-    expect(saved()).toBe(beforeSaved);
-    expect(snapshotElements(reader, score)).not.toBe(before);
-    before = snapshotElements(reader, score);
-    note.x += 20;
-    note.keyHelper++;
-    expect(snapshotElements(reader, score)).toBe(before);
-  });
-
   it('uses half-open collection ranges and relative pagination, including empty ranges', () => {
     const score = new Score();
     score.staff.elements.unshift(

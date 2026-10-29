@@ -40,7 +40,7 @@ the bundled launcher and an environment variable, as shown below.
 Choose the command for your client and operating system. Replace example paths
 with the location of your installed Neanes executable.
 
-#### macOS
+### macOS
 
 These commands assume Neanes is installed in `/Applications`.
 
@@ -56,7 +56,7 @@ codex mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
 claude mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
 ```
 
-#### Windows
+### Windows
 
 In PowerShell, set `$neanes` to the full path of your installed `Neanes.exe`.
 To find it, open the Neanes shortcut's **Properties** and check **Target**.
@@ -84,7 +84,7 @@ The Windows launcher removes an extra newline emitted by Electron during startup
 For manual JSON configuration, use the Windows example under
 [Other MCP clients](#other-mcp-clients).
 
-#### Linux
+### Linux
 
 Use the full path to your downloaded AppImage and make it executable. These
 examples assume it is saved as `~/Applications/Neanes.AppImage`; use your actual
@@ -109,7 +109,7 @@ claude mcp add neanes -- "$HOME/Applications/Neanes.AppImage" --mcp
 Run the client in your desktop session when you want it to access open editor
 tabs.
 
-#### Other MCP clients
+### Other MCP clients
 
 For clients that accept an `mcpServers` JSON object, this example uses the macOS
 path:

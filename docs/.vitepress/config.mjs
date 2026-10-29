@@ -81,7 +81,13 @@ export default defineConfig({
         },
         {
           text: 'Reference',
-          items: [{ text: 'Neume Keyboard', link: '/guide/keyboard.html' }],
+          items: [
+            { text: 'Neume Keyboard', link: '/guide/keyboard.html' },
+            {
+              text: 'MCP Tool Reference',
+              link: '/guide/mcp-tool-reference.html',
+            },
+          ],
         },
       ],
       '/download/': defaultNav,

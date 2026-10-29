@@ -64,7 +64,7 @@ In the desktop app, choose **Agent access (MCP)** to connect an AI assistant tha
 
 Turning access off disconnects agents and discards temporary agent drafts. Save work you want to keep first. Saved files and editor tabs retain their contents, including edits already applied by an agent.
 
-See [MCP Server](./agent-access.md) for setup, capabilities, example requests, and the command reference.
+See [MCP Server](./agent-access.md) for setup, capabilities, and example requests, or the [MCP Tool Reference](./mcp-tool-reference.md) for individual tools.
 
 ## Understand the current selection
 

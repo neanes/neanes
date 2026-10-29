@@ -4,12 +4,11 @@ The Neanes desktop app includes a local [Model Context Protocol (MCP)](https://m
 
 ## What you can do
 
-- Find saved scores and inspect their notation, lyrics, text, and document properties.
-- Create scores or edit notes, martyriæ, mode keys, tempo signs, lyrics, text, annotations, and alternate lines.
-- Change paragraph styles, page layout, and headers and footers.
-- Inspect page contents and preview a page as an image before exporting a PDF.
-- Apply common formatting changes or export PDFs across several saved scores.
-- Work privately in the background, or explicitly ask for help with open editor tabs and their unsaved changes.
+- Search scores for lyrics, text, and notation.
+- Edit scores, including notation, lyrics, and formatting.
+- Apply changes across multiple saved scores.
+- Export scores to PDF.
+- Work with open editor tabs or saved scores in the background.
 
 ## Requirements
 
@@ -23,13 +22,25 @@ trust with your scores.
 
 ## Connect an agent
 
-Configure your client to run the Neanes executable with the `--mcp` argument.
-No separate Node.js installation or Neanes preference is needed.
+1. In Neanes, choose **Help > Connect to AI tools…**.
+2. Select your client and choose **Terminal command** or **Configuration**. For other MCP clients, the dialog provides JSON configuration.
+3. Copy the generated command or configuration and follow the instructions in the dialog. Terminal commands require your client's command-line tool to be installed.
+4. Reconnect your AI tool, then ask: "List the scores open in Neanes."
+
+The dialog uses your installed Neanes executable's path and includes any
+platform-specific settings. No separate Node.js installation is needed.
+
+<details>
+<summary>Manual configuration</summary>
+
+If you prefer to configure your client manually, use the instructions below.
+On macOS and Linux, run the Neanes executable with `--mcp`. Windows requires
+the bundled launcher and an environment variable, as shown below.
 
 Choose the command for your client and operating system. Replace example paths
 with the location of your installed Neanes executable.
 
-### macOS
+#### macOS
 
 These commands assume Neanes is installed in `/Applications`.
 
@@ -45,7 +56,7 @@ codex mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
 claude mcp add neanes -- /Applications/Neanes.app/Contents/MacOS/Neanes --mcp
 ```
 
-### Windows
+#### Windows
 
 In PowerShell, set `$neanes` to the full path of your installed `Neanes.exe`.
 To find it, open the Neanes shortcut's **Properties** and check **Target**.
@@ -70,12 +81,10 @@ claude mcp add neanes --env ELECTRON_RUN_AS_NODE=1 -- "$neanes" "$launcher" --mc
 
 Keep the quotes around the path so installation folders containing spaces work.
 The Windows launcher removes an extra newline emitted by Electron during startup.
-It uses the Node runtime included with Neanes; no separate installation is needed.
-For manual JSON configuration, set `"env": { "ELECTRON_RUN_AS_NODE": "1" }` and
-put the launcher path before `--mcp` in `args`. The setup dialog includes these
-settings automatically.
+For manual JSON configuration, use the Windows example under
+[Other MCP clients](#other-mcp-clients).
 
-### Linux
+#### Linux
 
 Use the full path to your downloaded AppImage and make it executable. These
 examples assume it is saved as `~/Applications/Neanes.AppImage`; use your actual
@@ -98,10 +107,9 @@ claude mcp add neanes -- "$HOME/Applications/Neanes.AppImage" --mcp
 ```
 
 Run the client in your desktop session when you want it to access open editor
-tabs. If an update changes the AppImage filename or location, update the path in
-your MCP client configuration.
+tabs.
 
-### Other MCP clients
+#### Other MCP clients
 
 For clients that accept an `mcpServers` JSON object, this example uses the macOS
 path:
@@ -117,126 +125,63 @@ path:
 }
 ```
 
-Replace `command` with your executable's absolute path. In JSON, Windows
-backslashes must be doubled, for example `"C:\\path\\to\\Neanes.exe"`.
-If your client has separate fields, enter the executable path as the command and
-`--mcp` as its argument.
+On Linux, replace `command` with your AppImage's absolute path. On Windows,
+include the launcher and environment variable:
 
-Neanes runs privately in the background for ordinary file tasks. You only need to
-open the editor when you want the agent to work with visible tabs. If you move
-Neanes or an update changes the AppImage filename, update the executable path in
-your client settings.
+```json
+{
+  "mcpServers": {
+    "neanes": {
+      "command": "C:\\path\\to\\Neanes.exe",
+      "args": ["C:\\path\\to\\resources\\mcp\\stdio-launcher.mjs", "--mcp"],
+      "env": { "ELECTRON_RUN_AS_NODE": "1" }
+    }
+  }
+}
+```
 
-## Example requests
+Replace the example paths with your installation paths. In JSON, Windows
+backslashes must be doubled. If your client has separate fields, enter the
+executable path as the command and copy all arguments and environment settings
+from the example for your operating system.
 
-Tell the agent which score or folder to use and where to save the result. For example:
-
-- "Open `/scores/hymn.byz` privately, tell me its title and author, and find its Third Mode sections."
-- "In my open Neanes score, read the selected passage and its lyrics without changing anything."
-- "Copy the selected passage from my open hymn to the end of my other open score, including lyrics, annotations, and alternate lines. Leave the result unsaved for review."
-- "In my open score, change the default text paragraph style to Arial, preview the first page, and leave the changes for me to review."
-- "In my open score, find all text boxes using Times New Roman and change them to Arial, including boxes that inherit their font from a paragraph style. Leave the changes unsaved for me to review."
-- "Find all drop caps in my open score whose font size is not 36 pt and set them to 36 pt. Include drop caps that inherit their size from a paragraph style."
-- "Open `/scores/hymn.byz`, set the author to Maria, and save a copy as `/scores/hymn-revised.byz`."
-- "Remove all barlines from the scores in `/scores/service` so I can test the layout engine without them. Save the edited copies in `/scores/layout-test` and keep the originals unchanged."
-- "Open `/scores/hymn.byz` privately, temporarily remove all ison indicators, and export `/scores/hymn-without-ison.pdf`. Discard the draft afterward and leave the original score unchanged."
-- "Find the scores in `/scores/service`, export each to a PDF alongside its source, and leave the score files unchanged."
-
-For font and size changes, specify whether you mean the element's current appearance or only formatting set directly on that element. Paragraph styles can supply inherited formatting, and advanced text boxes can contain several fonts. Use **font size** for the size of a drop cap's letter, or **Lines to Drop** for the number of lines it spans.
-
-### Export a temporary variation
-
-To export a saved score without its ison indicators, the agent can:
-
-1. Open the saved score as a private document.
-2. Find notes with ison indicators and clear those indicators in the private draft.
-3. Export the draft to the requested PDF path without saving the score.
-4. Close the private draft and explicitly discard its changes.
-
-This needs no temporary score file: the original file and any open editor tab keep their contents. The PDF retains the temporary variation.
-
-Private documents read the saved version. To include unsaved changes from an open tab, ask the agent to save a separate score copy first, open that copy privately, and apply the temporary edits there. Saving to a new path also makes that copy the open tab's save destination. Keep the copy until the PDF has been checked; it can then be deleted if no longer needed.
-
-### Copy a passage between scores
-
-Tell the agent which passage to copy, which score should receive it, and where to insert it. It can copy a selected passage from an open score, a range identified by its contents, or an entire saved score's staff. Both scores must be open in the editor or both opened privately.
-
-The copy includes lyrics, annotations, alternate lines, text boxes, images, and explicit formatting. Missing custom paragraph styles are imported; styles with matching IDs or custom names use the destination's definitions. The destination keeps its page layout and built-in styles, so inherited formatting can look different. The source stays unchanged, and the insertion and imported styles can be undone together in the destination. Saving is a separate action.
-
-Ask to copy **without lyrics** to omit note lyrics and their formatting, including lyrics in alternate lines. Drop caps, annotations, and text boxes are still copied.
-
-If the destination's Lyrics Manager text is locked, unlock it before copying a passage into that score. The agent will report the lock instead of replacing the copied lyrics with the destination's locked text.
+</details>
 
 ## Private documents and editor tabs
 
-Ordinary agent tasks use private documents without adding editor tabs. Each client connection has its own background worker. Private drafts last until the connection ends, or the background process stops. Ask the agent to save work you want to keep.
+By default, agents open saved scores as background drafts, called **private
+documents**, without adding editor tabs. "Private" describes these separate
+drafts; your MCP client and model still determine where score content is
+processed. You do not need to open the editor for these tasks. Background edits
+are not saved automatically.
 
-Ask the agent to work with your **open score** when you want help with editor documents, including unsaved changes. Agents can also create a new score or open a saved file in a visible editor tab. The editor must be open and ready. Edits to editor documents appear in Neanes; document editing tools make undoable changes, but saving remains a separate action. Closing an agent connection never closes an editor you opened.
+Ask the agent to work with your **open score** to include unsaved editor changes.
+The editor must be open and ready. Edits appear in Neanes and can be undone;
+saving is a separate action. Agents can also create or open scores in visible
+tabs when asked.
 
-Private documents read saved files independently of editor tabs. Saving a file privately does not update an already-open tab. Save your editor changes first, or ask the agent to write to another file when you want to preserve the original.
+Background drafts and editor tabs are independent. Opening the editor does not
+move a background draft into a tab, and saving a draft does not update an
+already-open tab. Save your editor changes first, or ask the agent to write to
+another file when you want to preserve the original.
 
-Opening or closing the editor does not move an in-progress private task into or out of editor tabs. If the connection ends unexpectedly, reconnect and have the agent inspect saved files before continuing; temporary drafts are not restored.
+## Example requests
 
-## Commands (MCP tools)
+Tell the agent which score or folder to use, and whether to save the changes. For example:
 
-These are tools your agent calls through MCP, rather than commands to enter in a terminal. You can request them in ordinary language. Your client's tool list provides the current arguments for your installed version of Neanes.
+- "In my open score, find all text boxes using Times New Roman and change them to Arial, including boxes that inherit their font from a paragraph style. Leave the changes unsaved for me to review."
+- "Set all drop caps in my open score to 36 pt."
+- "Open `/scores/hymn.byz` privately, temporarily remove all ison indicators, and export `/scores/hymn-without-ison.pdf`. Discard the draft afterward and leave the original score unchanged."
+- "Find the scores in `/scores/service`, export each to a PDF alongside its source, and leave the score files unchanged."
 
-### Files and documents
+For formatting changes, tell the agent how you want the score to look. It can
+check both paragraph styles and formatting applied to individual elements.
 
-| Tool                          | Purpose                                                                                                                                                       |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `discover_score_files`        | Find saved `.byz` and `.byzx` files in a folder, optionally including subfolders.                                                                             |
-| `batch_update_files`          | Apply paragraph style, page setup, header/footer, or title/author changes to several saved scores; optionally save copies or export PDFs. Supports a dry run. |
-| `list_documents`              | List the connection's private documents, or open editor tabs when explicitly requested.                                                                       |
-| `create_document`             | Create an unsaved score.                                                                                                                                      |
-| `open_document`               | Open a saved `.byz` or `.byzx` score.                                                                                                                         |
-| `close_document`              | Close a document; discarding unsaved changes requires an explicit choice.                                                                                     |
-| `get_document_properties`     | Read the title and author.                                                                                                                                    |
-| `replace_document_properties` | Set the title and author together.                                                                                                                            |
-| `save_document`               | Save a score to its source path or another explicit path.                                                                                                     |
-| `export_pdf`                  | Export to an explicit PDF path without saving the score itself.                                                                                               |
+## MCP tool reference
 
-Batch operations work on saved files privately. They can save changes in place, save copies, or export PDFs without saving scores. Ask for a dry run to check proposed formatting changes before writing files. A batch can complete some files before an error; have the agent check the per-file results before resuming or retrying.
-
-### Score content and layout
-
-| Tool                  | Purpose                                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `find_text`           | Search lyrics, drop caps, annotations, and text boxes.                                                        |
-| `find_elements`       | Locate elements by type or property, such as mode keys for a particular mode.                                 |
-| `get_elements`        | Read a range of score elements.                                                                               |
-| `get_element`         | Inspect one element and, optionally, its neighbors.                                                           |
-| `get_element_content` | Read complete text or image content in chunks.                                                                |
-| `get_staff_lyrics`    | Read the Lyrics Manager text and whether it is locked.                                                        |
-| `get_selection`       | Read the selection in an editor tab. Private documents have no editor selection.                              |
-| `edit_elements`       | Insert, update, replace, or remove elements, assign lyrics, or update the Lyrics Manager text and lock state. |
-| `copy_elements`       | Copy a staff range within a score or between scores, including lyrics, child elements, and images.            |
-| `get_pages`           | List laid-out pages.                                                                                          |
-| `get_page_elements`   | Find which elements appear on a page.                                                                         |
-| `preview_page`        | Return an image of one page for visual inspection without writing a file.                                     |
-
-### Formatting and reference
-
-| Tool                                                           | Purpose                                                                                                                   |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `get_page_setup` / `update_page_setup`                         | Read or change page geometry, notation defaults, and layout settings.                                                     |
-| `get_header_footer_settings` / `update_header_footer_settings` | Read or change header/footer visibility, margins, rules, and page numbering. Use the element tools to edit their content. |
-| `get_paragraph_styles` / `edit_paragraph_styles`               | Read, create, or change paragraph styles and their inheritance.                                                           |
-| `get_capabilities`                                             | Discover supported formats and units; optionally list installed fonts and error codes.                                    |
-| `get_element_catalog`                                          | Discover element types, editable properties, and available neumes.                                                        |
-| `get_mode_key_templates`                                       | Find the mode-key templates used to insert or change a mode key.                                                          |
-| `get_rich_text_format`                                         | Get formatting guidance for rich text boxes and annotations.                                                              |
-
-### Tool usage and schema resources
-
-For clients or workflows that call tools directly:
-
-- Document tools default to `documentScope: "private"`. To work with editor tabs, pass `documentScope: "editor"` to `list_documents` and subsequent document calls. Use the returned document IDs in the same scope.
-- Read the document first and pass its latest `revision` as `expectedRevision` when editing, saving, exporting, or previewing. If a revision conflict occurs, read the document again before deciding whether to retry.
-- Find elements first, then use their returned references for targeted edits. Follow `nextOffset` when reading paginated results.
-- Use absolute file paths. Saving or exporting to an existing destination requires `overwrite: true`, except when saving a score back to its unchanged source.
-
-Full input and output schemas are available as MCP resources at `neanes://schemas/{tool}/input` and `neanes://schemas/{tool}/output`. For example, read `neanes://schemas/edit_elements/input` for supported edit actions. Clients that support MCP resources can use these for detailed field descriptions and constraints.
+You can request tasks in ordinary language. For the tool catalog, direct tool
+usage, schemas, and detailed formatting and copying rules, see the
+[MCP Tool Reference](./mcp-tool-reference.md).
 
 ## Disconnect an agent
 
@@ -244,17 +189,19 @@ Disconnect the Neanes server in your MCP client to stop that connection's
 background process. Remove its configuration to prevent future connections.
 Disconnect each client separately if you configured more than one.
 
-Temporary private drafts are discarded. Save work you want to keep before
-disconnecting. Saved files and editor tabs keep their contents, including edits
-already applied by an agent. A file write already underway may finish.
+Save background drafts you want to keep before disconnecting; unsaved drafts
+are discarded and cannot be restored after reconnecting. Saved files and editor
+tabs keep their contents, including edits already applied by an agent.
+Disconnecting does not close the editor, and a file write already underway may
+finish.
 
 ## Troubleshooting
 
-| Problem                                              | What to do                                                                                                              |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| The client cannot launch Neanes                      | Check the executable path and confirm Neanes can run normally on your computer. Use the executable itself with `--mcp`. |
-| The agent cannot see open tabs                       | Open Neanes and ask explicitly to work with editor tabs. Direct tool calls must use `documentScope: "editor"`.          |
-| The editor connection is unavailable                 | Wait for Neanes to finish opening. If necessary, restart the editor. Private tasks can still run independently.         |
-| The connection fails after moving or updating Neanes | Update the executable path if it changed, then reconnect the client.                                                    |
-| A task disconnects or reports an error after editing | Inspect the current document or saved file before repeating edits. Some work may already have completed.                |
-| Neanes reports incompatible versions                 | Save private drafts, update Neanes, reopen the editor, and reconnect the client.                                        |
+| Problem                                              | What to do                                                                                                                                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The client cannot launch Neanes                      | Check the executable path and confirm Neanes can run normally. Copy fresh settings from **Help > Connect to AI tools…**; Windows needs the bundled launcher and environment variable. |
+| The agent cannot see open tabs                       | Open Neanes and ask explicitly to work with your open score.                                                                                                                          |
+| The editor connection is unavailable                 | Wait for Neanes to finish opening. If necessary, restart the editor. Private tasks can still run independently.                                                                       |
+| The connection fails after moving or updating Neanes | Update the executable path if it changed, then reconnect the client.                                                                                                                  |
+| A task disconnects or reports an error after editing | Inspect the current document or saved file before repeating edits. Some work may already have completed.                                                                              |
+| Neanes reports incompatible versions                 | Save private drafts, update Neanes, reopen the editor, and reconnect the client.                                                                                                      |

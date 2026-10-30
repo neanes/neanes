@@ -8,6 +8,7 @@ import type {
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
+  McpLaunchConfiguration,
   OpenWorkspaceFromArgvArgs,
   RecoverySnapshotArgs,
   SaveRecoverySnapshotReplyArgs,
@@ -16,13 +17,22 @@ import type {
   ShowMessageBoxArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
+import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 
 export interface IIpcService {
-  saveWorkspace(workspace: Workspace): Promise<SaveWorkspaceReplyArgs>;
+  getMcpLaunchConfiguration(): Promise<McpLaunchConfiguration | null>;
 
-  saveWorkspaceAs(workspace: Workspace): Promise<SaveWorkspaceAsReplyArgs>;
+  saveWorkspace(
+    workspace: Workspace,
+    data?: SavedScore,
+  ): Promise<SaveWorkspaceReplyArgs>;
+
+  saveWorkspaceAs(
+    workspace: Workspace,
+    data?: SavedScore,
+  ): Promise<SaveWorkspaceAsReplyArgs>;
 
   exportWorkspaceAsPdf(
     workspace: Workspace,

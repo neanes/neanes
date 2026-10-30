@@ -13,6 +13,7 @@ import type {
   ExportWorkspaceAsPdfArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
+  McpLaunchConfiguration,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   RecoverySnapshotArgs,
@@ -25,6 +26,7 @@ import type {
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
@@ -33,25 +35,33 @@ import { SaveService } from '../SaveService';
 import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
+  public async getMcpLaunchConfiguration(): Promise<McpLaunchConfiguration> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.GetMcpLaunchConfiguration,
+    );
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.SaveWorkspace, {
       filePath: workspace.filePath,
       tempFileName: workspace.tempFileName,
-      data: SaveService.SaveScoreToJson(workspace.score),
+      data: data ?? SaveService.SaveScoreToJson(workspace.score),
     } as SaveWorkspaceArgs);
   }
 
   public async saveWorkspaceAs(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceAsReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.SaveWorkspaceAs,
       {
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
-        data: SaveService.SaveScoreToJson(workspace.score),
+        data: data ?? SaveService.SaveScoreToJson(workspace.score),
       } as SaveWorkspaceAsArgs,
     );
   }

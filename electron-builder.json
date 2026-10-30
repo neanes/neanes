@@ -24,6 +24,14 @@
     "hardenedRuntime": false,
     "identity": "-"
   },
+  "win": {
+    "extraResources": [
+      {
+        "from": "electron/mcp/stdio-launcher.mjs",
+        "to": "mcp/stdio-launcher.mjs"
+      }
+    ]
+  },
   "linux": {
     "target": ["AppImage"]
   }

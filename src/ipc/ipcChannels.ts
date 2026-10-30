@@ -9,6 +9,9 @@ import type {
 
 export enum IpcMainChannels {
   ExportRendererSnapshot = 'ExportRendererSnapshot',
+  // Automation-only bridge; names stay centralized for preload validation.
+  AutomationRequest = 'AutomationRequest',
+  AutomationReset = 'AutomationReset',
   UpdateAvailable = 'UpdateAvailable',
   UpdateDownloadStarted = 'UpdateDownloadStarted',
   UpdateDownloadProgress = 'UpdateDownloadProgress',
@@ -56,6 +59,7 @@ export enum IpcMainChannels {
 
   FileMenuPreferences = 'FileMenuPreferences',
   OpenAboutDialog = 'OpenAboutDialog',
+  OpenMcpSetupDialog = 'OpenMcpSetupDialog',
 
   FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
   FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
@@ -78,11 +82,29 @@ export enum IpcMainChannels {
   CloseApplication = 'CloseApplication',
 }
 
+export interface McpLaunchConfiguration {
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+}
+
 export enum IpcRendererChannels {
+  GetMcpLaunchConfiguration = 'GetMcpLaunchConfiguration',
   ExportSnapshotAsPng = 'ExportSnapshotAsPng',
   ExportRendererImage = 'ExportRendererImage',
   ExportRendererReady = 'ExportRendererReady',
   ExportRendererResult = 'ExportRendererResult',
+  // Automation-only bridge; implemented under src/automation/ and main/automation/.
+  AutomationReady = 'AutomationReady',
+  AutomationAuthorizeRequest = 'AutomationAuthorizeRequest',
+  AutomationReply = 'AutomationReply',
+  AutomationPlanBatch = 'AutomationPlanBatch',
+  AutomationReadScore = 'AutomationReadScore',
+  AutomationWriteScore = 'AutomationWriteScore',
+  AutomationExportPdf = 'AutomationExportPdf',
+  AutomationReadImage = 'AutomationReadImage',
+  AutomationExportImage = 'AutomationExportImage',
+  AutomationPreviewPage = 'AutomationPreviewPage',
   DownloadUpdate = 'DownloadUpdate',
   RestartToInstallUpdate = 'RestartToInstallUpdate',
 

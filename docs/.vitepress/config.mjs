@@ -10,6 +10,7 @@ const defaultNav = [
       { text: 'FAQ', link: '/guide/faq.html' },
       { text: 'Neume Keyboard', link: '/guide/keyboard.html' },
       { text: 'Advanced Workflows', link: '/guide/advanced.html' },
+      { text: 'MCP Server', link: '/guide/agent-access.html' },
     ],
   },
   { text: 'Download', link: '/download/' },
@@ -74,12 +75,19 @@ export default defineConfig({
               link: '/guide/saving-and-exporting.html',
             },
             { text: 'Advanced Workflows', link: '/guide/advanced.html' },
+            { text: 'MCP Server', link: '/guide/agent-access.html' },
             { text: 'FAQ', link: '/guide/faq.html' },
           ],
         },
         {
           text: 'Reference',
-          items: [{ text: 'Neume Keyboard', link: '/guide/keyboard.html' }],
+          items: [
+            { text: 'Neume Keyboard', link: '/guide/keyboard.html' },
+            {
+              text: 'MCP Tool Reference',
+              link: '/guide/mcp-tool-reference.html',
+            },
+          ],
         },
       ],
       '/download/': defaultNav,

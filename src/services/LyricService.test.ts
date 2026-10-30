@@ -13,6 +13,37 @@ import { LyricService } from './LyricService';
 import { SaveService } from './SaveService';
 
 describe('LyricService (English)', () => {
+  it('assigns and extracts a drop cap as part of the following syllable', () => {
+    const lyricService = new LyricService();
+    const dropCap = new DropCapElement();
+    const first = createNote('');
+    const second = createNote('');
+    const elements = [dropCap, first, second];
+
+    const remaining = lyricService.assignLyrics(
+      'Al-le',
+      elements,
+      false,
+      false,
+      (note, lyrics) => {
+        note.lyrics = lyrics;
+      },
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      (element, content) => {
+        element.content = content;
+      },
+    );
+
+    expect(remaining.unassignedText).toBe('');
+    expect(dropCap.content).toBe('A');
+    expect(first.lyrics).toBe('l');
+    expect(first.isHyphen).toBe(true);
+    expect(second.lyrics).toBe('le');
+    expect(lyricService.extractLyrics(elements, false)).toBe('Al-le');
+  });
+
   it('should extract single word', () => {
     const lyricService = new LyricService();
 

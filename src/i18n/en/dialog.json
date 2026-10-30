@@ -330,5 +330,28 @@
       "advanced": "Advanced"
     },
     "close": "Close"
+  },
+  "mcpSetup": {
+    "title": "Connect to AI tools…",
+    "description": "Use an MCP-compatible AI tool to work with Neanes scores.",
+    "client": "Client",
+    "otherClient": "Other MCP client",
+    "format": "Format",
+    "terminalCommand": "Terminal command",
+    "configuration": "Configuration",
+    "commandInstructions": "Run this command in your terminal. The selected client’s command-line tool must be installed.",
+    "tomlInstructions": "Merge this TOML section into your Codex configuration (~/.codex/config.toml). Keep your existing settings.",
+    "claudeJsonInstructions": "Merge this JSON example into .mcp.json in your Claude Code project. Keep any existing servers.",
+    "jsonInstructions": "Merge this JSON example into your client’s MCP configuration. If it has separate fields, use the executable as the command and the listed arguments.",
+    "copyCommand": "Copy command",
+    "copyToml": "Copy TOML",
+    "copyJson": "Copy JSON",
+    "copied": "Copied",
+    "copyFailed": "Could not copy. Select and copy the text above.",
+    "loadFailed": "Could not determine the Neanes executable path. Close this dialog and try again.",
+    "reconnect": "Reconnect your AI tool after setup. If you move Neanes or rename its AppImage, update the executable path in your client configuration.",
+    "accessTitle": "What can it access?",
+    "accessDescription": "Connected tools can read, edit, save, and export score files using your operating system’s file permissions. They work with separate private documents by default and can also read and edit open editor tabs when explicitly targeting the editor. Private drafts are discarded when the connection ends unless saved.",
+    "documentation": "Documentation"
   }
 }

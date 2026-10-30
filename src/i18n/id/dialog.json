@@ -330,5 +330,28 @@
       "advanced": "Lanjutan"
     },
     "close": "Tutup"
+  },
+  "mcpSetup": {
+    "title": "Hubungkan ke alat AI…",
+    "description": "Gunakan alat AI yang kompatibel dengan MCP untuk mengerjakan partitur Neanes.",
+    "client": "Klien",
+    "otherClient": "Klien MCP lainnya",
+    "format": "Format",
+    "terminalCommand": "Perintah terminal",
+    "configuration": "Konfigurasi",
+    "commandInstructions": "Jalankan perintah ini di terminal. Alat baris perintah untuk klien yang dipilih harus sudah terpasang.",
+    "tomlInstructions": "Gabungkan bagian TOML ini ke konfigurasi Codex (~/.codex/config.toml). Pertahankan pengaturan yang ada.",
+    "claudeJsonInstructions": "Gabungkan contoh JSON ini ke .mcp.json dalam proyek Claude Code Anda. Pertahankan server yang ada.",
+    "jsonInstructions": "Gabungkan contoh JSON ini ke konfigurasi MCP klien Anda. Jika tersedia kolom terpisah, gunakan berkas program sebagai perintah beserta argumen yang tercantum.",
+    "copyCommand": "Salin perintah",
+    "copyToml": "Salin TOML",
+    "copyJson": "Salin JSON",
+    "copied": "Disalin",
+    "copyFailed": "Tidak dapat menyalin. Pilih dan salin teks di atas.",
+    "loadFailed": "Tidak dapat menentukan lokasi berkas program Neanes. Tutup dialog ini dan coba lagi.",
+    "reconnect": "Hubungkan kembali alat AI setelah pengaturan. Jika Anda memindahkan Neanes atau mengganti nama AppImage, perbarui lokasi berkas program dalam konfigurasi klien.",
+    "accessTitle": "Apa yang dapat diakses?",
+    "accessDescription": "Alat yang terhubung dapat membaca, mengedit, menyimpan, dan mengekspor partitur sesuai izin berkas sistem operasi Anda. Secara bawaan, alat menggunakan dokumen pribadi terpisah dan juga dapat membaca serta mengedit tab editor yang terbuka jika secara eksplisit menargetkan editor. Draf pribadi akan dibuang saat koneksi berakhir kecuali sudah disimpan.",
+    "documentation": "Dokumentasi"
   }
 }

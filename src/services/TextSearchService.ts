@@ -1,17 +1,14 @@
 import { Parser } from 'htmlparser2';
 
-import type {
-  DropCapElement,
-  NoteElement,
-  RichTextBoxElement,
-  ScoreElement,
-  TextBoxElement,
-} from '@/models/Element';
-import { ElementType } from '@/models/Element';
+import { ElementType, type ScoreElement } from '@/models/Element';
 import { TATWEEL } from '@/utils/constants';
+import {
+  normalizeSearchRun,
+  normalizeSearchText,
+} from '@/utils/searchNormalization';
 
 // Extract rich text without creating DOM nodes or consulting rendered pages.
-function searchPlainText(html: string) {
+export function searchPlainText(html: string) {
   let text = '';
   let suppressed = 0;
   const blocks = new Set([
@@ -61,125 +58,142 @@ function searchPlainText(html: string) {
   return text;
 }
 
-function normalizeSearchText(text: string, lyrics = false) {
-  const normalized = text
-    .normalize('NFC')
-    .replaceAll(TATWEEL, '')
-    .replace(/\s+/gu, lyrics ? '' : ' ');
-  // Final sigma must compare equally even when a lyric word spans elements.
-  return normalized.toLowerCase().replaceAll('ς', 'σ').normalize('NFC');
-}
+export const searchableTextFields = [
+  'lyrics',
+  'content',
+  'contentBottom',
+  'contentLeft',
+  'contentCenter',
+  'contentRight',
+  'text',
+] as const;
+export type SearchableTextField = (typeof searchableTextFields)[number];
 
-type RunPart = { index: number; text: string };
-const graphemes = new Intl.Segmenter('und', { granularity: 'grapheme' });
-
-function normalizeLyricRun(parts: RunPart[]) {
-  let sourceOffset = 0;
-  const ranges = parts.map((part) => {
-    const sourceStart = sourceOffset;
-    sourceOffset += part.text.length;
-    return { part, sourceStart, sourceEnd: sourceOffset, end: 0 };
-  });
-  const source = parts.map((part) => part.text).join('');
-  const text = normalizeSearchText(source, true);
-  if (ranges.length === 1) {
-    ranges[0].end = text.length;
-  } else {
-    let normalizedOffset = 0;
-    let firstRange = 0;
-    // Grapheme boundaries are normalization-safe. A composed character can
-    // belong to multiple elements when its base and marks were split.
-    for (const { segment, index } of graphemes.segment(source)) {
-      const end = normalizedOffset + normalizeSearchText(segment, true).length;
-      while (
-        firstRange < ranges.length &&
-        ranges[firstRange].sourceEnd <= index
-      ) {
-        firstRange++;
-      }
-      for (
-        let i = firstRange;
-        i < ranges.length && ranges[i].sourceStart < index + segment.length;
-        i++
-      ) {
-        const range = ranges[i];
-        range.end = end;
-      }
-      normalizedOffset = end;
-    }
+export function elementSearchTexts(
+  element: ScoreElement,
+): { field: SearchableTextField; text: string; lyric: boolean }[] {
+  let fields: readonly SearchableTextField[];
+  const lyric =
+    element.elementType === ElementType.Note ||
+    element.elementType === ElementType.DropCap;
+  switch (element.elementType) {
+    case ElementType.Note:
+      fields = ['lyrics'];
+      break;
+    case ElementType.DropCap:
+      fields = ['content'];
+      break;
+    case ElementType.Annotation:
+      fields = ['text'];
+      break;
+    case ElementType.TextBox:
+    case ElementType.RichTextBox:
+      fields = Reflect.get(element, 'multipanel')
+        ? ['contentLeft', 'contentCenter', 'contentRight']
+        : Reflect.get(element, 'inline')
+          ? ['content', 'contentBottom']
+          : ['content'];
+      break;
+    default:
+      return [];
   }
-  return { text, ranges };
+  return fields.map((field) => ({
+    field,
+    text: searchPlainText(Reflect.get(element, field) as string),
+    lyric,
+  }));
 }
 
-function* matchLyrics(parts: RunPart[], query: string) {
-  const { text, ranges } = normalizeLyricRun(parts);
+export interface TextSearchPart {
+  element: ScoreElement;
+  index: number;
+  field: SearchableTextField;
+}
+export interface CollectionTextMatch {
+  text: string;
+  start: number;
+  end: number;
+  parts: TextSearchPart[];
+}
+
+type RunPart = TextSearchPart & { text: string };
+function* matchRun(
+  parts: RunPart[],
+  query: string,
+  caseSensitive = false,
+  lyrics = false,
+): Generator<CollectionTextMatch> {
+  const { text, ranges } = normalizeSearchRun(parts, { caseSensitive, lyrics });
   let firstRange = 0;
   for (
     let start = text.indexOf(query);
     start !== -1;
     start = text.indexOf(query, start + 1)
   ) {
-    while (ranges[firstRange].end <= start) {
+    const end = start + query.length;
+    while (firstRange < ranges.length && ranges[firstRange].end <= start) {
       firstRange++;
     }
-    yield ranges[firstRange].part.index;
+    const matchingParts: TextSearchPart[] = [];
+    for (let i = firstRange; i < ranges.length && ranges[i].start < end; i++) {
+      const { element, index, field } = ranges[i].part;
+      matchingParts.push({ element, index, field });
+    }
+    yield {
+      text,
+      start,
+      end,
+      parts: matchingParts,
+    };
   }
 }
 
-function activeTextPanels(element: TextBoxElement | RichTextBoxElement) {
-  if (element.multipanel) {
-    return [element.contentLeft, element.contentCenter, element.contentRight];
-  }
-  return element.inline
-    ? [element.content, element.contentBottom]
-    : [element.content];
-}
-
-function* matchingIndices(elements: ScoreElement[], query: string) {
-  const ordinaryQuery = normalizeSearchText(query).trim();
-  const lyricQuery = normalizeSearchText(query, true);
+// A run may pass over notation without lyrics, but never over a text box or
+// into a different collection. Each text-box panel is an independent run.
+export function* matchTextInCollection(
+  elements: ScoreElement[],
+  query: string,
+  options: { caseSensitive?: boolean; fields?: SearchableTextField[] } = {},
+): Generator<CollectionTextMatch> {
+  const ordinaryQuery = normalizeSearchText(query, {
+    caseSensitive: options.caseSensitive,
+  }).trim();
+  const lyricQuery = normalizeSearchText(query, {
+    caseSensitive: options.caseSensitive,
+    lyrics: true,
+  });
   if (!ordinaryQuery || !lyricQuery) {
     return;
   }
-
-  let lyrics: RunPart[] = [];
+  let run: (TextSearchPart & { text: string })[] = [];
   for (const [index, element] of elements.entries()) {
-    if (
-      element.elementType === ElementType.Note ||
-      element.elementType === ElementType.DropCap
-    ) {
-      const text =
-        element.elementType === ElementType.Note
-          ? (element as NoteElement).lyrics
-          : (element as DropCapElement).content;
-      // Strip ignored characters before joining so a base and its combining
-      // marks can compose even when they are stored in different elements.
-      const searchable = searchPlainText(text)
-        .replaceAll(TATWEEL, '')
-        .replace(/\s+/gu, '');
-      if (searchable) {
-        lyrics.push({ index, text: searchable });
+    const texts = elementSearchTexts(element);
+    if (texts.some((entry) => !entry.lyric)) {
+      yield* matchRun(run, lyricQuery, options.caseSensitive, true);
+      run = [];
+    }
+    for (const { field, text, lyric } of texts) {
+      if (options.fields && !options.fields.includes(field)) {
+        continue;
       }
-    } else if (
-      element.elementType === ElementType.TextBox ||
-      element.elementType === ElementType.RichTextBox
-    ) {
-      // Text boxes end lyric runs. Each visible panel is searched separately.
-      yield* matchLyrics(lyrics, lyricQuery);
-      lyrics = [];
-      const panels = activeTextPanels(
-        element as TextBoxElement | RichTextBoxElement,
-      );
-      if (
-        panels.some((panel) =>
-          normalizeSearchText(searchPlainText(panel)).includes(ordinaryQuery),
-        )
-      ) {
-        yield index;
+      const part = {
+        element,
+        index,
+        field,
+        // Remove ignored lyric characters before joining, so they cannot
+        // interrupt composition across element boundaries.
+        text: lyric ? text.replaceAll(TATWEEL, '').replace(/\s+/gu, '') : text,
+      };
+      if (lyric) {
+        if (part.text.length > 0) {
+          run.push(part);
+        }
+      } else {
+        yield* matchRun([part], ordinaryQuery, options.caseSensitive);
       }
     }
   }
-  yield* matchLyrics(lyrics, lyricQuery);
+  yield* matchRun(run, lyricQuery, options.caseSensitive, true);
 }
 
 export class TextSearchService {
@@ -192,7 +206,8 @@ export class TextSearchService {
     let first: number | undefined;
     let last: number | undefined;
     let previous: number | undefined;
-    for (const match of matchingIndices(elements, query)) {
+    for (const occurrence of matchTextInCollection(elements, query)) {
+      const match = occurrence.parts[0].index;
       first ??= match;
       last = match;
       if (!reverse && match > index) {

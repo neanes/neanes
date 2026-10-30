@@ -330,5 +330,28 @@
       "advanced": "Avansat"
     },
     "close": "Închide"
+  },
+  "mcpSetup": {
+    "title": "Conectare la instrumente AI…",
+    "description": "Folosiți un instrument AI compatibil cu MCP pentru a lucra cu partituri Neanes.",
+    "client": "Client",
+    "otherClient": "Alt client MCP",
+    "format": "Format",
+    "terminalCommand": "Comandă în terminal",
+    "configuration": "Configurare",
+    "commandInstructions": "Rulați această comandă în terminal. Instrumentul de linie de comandă al clientului selectat trebuie să fie instalat.",
+    "tomlInstructions": "Adăugați această secțiune TOML în configurația Codex (~/.codex/config.toml), păstrând setările existente.",
+    "claudeJsonInstructions": "Integrați acest exemplu JSON în .mcp.json din proiectul Claude Code, păstrând serverele existente.",
+    "jsonInstructions": "Integrați acest exemplu JSON în configurația MCP a clientului. Dacă are câmpuri separate, folosiți executabilul drept comandă și argumentele enumerate.",
+    "copyCommand": "Copiază comanda",
+    "copyToml": "Copiază TOML",
+    "copyJson": "Copiază JSON",
+    "copied": "Copiat",
+    "copyFailed": "Copierea a eșuat. Selectați și copiați textul de mai sus.",
+    "loadFailed": "Nu s-a putut determina calea executabilului Neanes. Închideți dialogul și încercați din nou.",
+    "reconnect": "Reconectați instrumentul AI după configurare. Dacă mutați Neanes sau redenumiți fișierul AppImage, actualizați calea executabilului în configurația clientului.",
+    "accessTitle": "Ce poate accesa?",
+    "accessDescription": "Instrumentele conectate pot citi, edita, salva și exporta partituri folosind permisiunile de fișiere ale sistemului de operare. Implicit, lucrează cu documente private separate și pot citi și edita filele deschise când vizează explicit editorul. Ciornele private sunt eliminate la încheierea conexiunii dacă nu sunt salvate.",
+    "documentation": "Documentație"
   }
 }

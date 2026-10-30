@@ -88,7 +88,8 @@
     "guide": "Guide",
     "requestAFeature": "Request a Feature",
     "reportAnIssue": "Report an Issue",
-    "about": "About"
+    "about": "About",
+    "connectAiTools": "Connect to AI tools…"
   },
   "tab": {
     "close": "Close",

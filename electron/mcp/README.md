@@ -715,7 +715,14 @@ variant must finish with exactly one text or rich-text box. New images require
 New font assignments must name an available family; unchanged missing families
 are retained. Style references must exist. Note setters normalize musical
 combinations in canonical property order; secondary/tertiary marks require a
-corresponding quantitative component. Nesting is bounded to 16 levels.
+corresponding quantitative component. Query `get_element_catalog` with
+`includeNeumeComponents: true` for the application mapping (independent of enum
+name order). For `OligonPlusApostrophosPlusKentemata`, primary is Kentemata and
+secondary is Apostrophos: placing a fthora on the apostrophos requires
+`secondaryFthora` with a `Secondary`-suffixed value. The same roles apply to
+accidentals, chromatic interpretations, and secondary gorgons. Offsets adjust the
+associated mark, not its component target. Missing secondary/tertiary roles are
+unsupported; unlisted neumes have only a primary target. Nesting is bounded to 16 levels.
 
 For example, construct a note and its annotation in one undo step:
 

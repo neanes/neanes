@@ -72,7 +72,11 @@ export const elementPropertySchemas = {
       .describe(
         'Read-only calculated virtual pitches in neume order, including octave, using the active fthora shift. Null entries indicate pitches outside the supported range.',
       ),
-    quantitativeNeume: z.enum(Neumes.QuantitativeNeume),
+    quantitativeNeume: z
+      .enum(Neumes.QuantitativeNeume)
+      .describe(
+        'Compound mark targets: get_element_catalog includeNeumeComponents:true. Roles follow the application mapping, not the order of names in this enum.',
+      ),
     acceptsLyrics: z.enum(AcceptsLyricsOption),
     measureBarLeft: z.enum(Neumes.MeasureBar).optional(),
     measureBarLeftOffsetX: z.number().optional(),
@@ -89,33 +93,138 @@ export const elementPropertySchemas = {
     ison: z.enum(Neumes.Ison).optional(),
     isonOffsetX: z.number().optional(),
     isonOffsetY: z.number().optional(),
-    accidental: z.enum(Neumes.Accidental).optional(),
+    accidental: z
+      .enum(Neumes.Accidental)
+      .optional()
+      .describe(
+        'Primary component mark; use unsuffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
     accidentalOffsetX: z.number().optional(),
     accidentalOffsetY: z.number().optional(),
-    secondaryAccidental: z.enum(Neumes.Accidental).optional(),
-    secondaryAccidentalOffsetX: z.number().optional(),
-    secondaryAccidentalOffsetY: z.number().optional(),
-    tertiaryAccidental: z.enum(Neumes.Accidental).optional(),
-    tertiaryAccidentalOffsetX: z.number().optional(),
-    tertiaryAccidentalOffsetY: z.number().optional(),
-    fthora: z.enum(Neumes.Fthora).optional(),
+    secondaryAccidental: z
+      .enum(Neumes.Accidental)
+      .optional()
+      .describe(
+        'Secondary component mark; use Secondary-suffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    secondaryAccidentalOffsetX: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of secondaryAccidental; does not select a component.',
+      ),
+    secondaryAccidentalOffsetY: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of secondaryAccidental; does not select a component.',
+      ),
+    tertiaryAccidental: z
+      .enum(Neumes.Accidental)
+      .optional()
+      .describe(
+        'Tertiary component mark; use Tertiary-suffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    tertiaryAccidentalOffsetX: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of tertiaryAccidental; does not select a component.',
+      ),
+    tertiaryAccidentalOffsetY: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of tertiaryAccidental; does not select a component.',
+      ),
+    fthora: z
+      .enum(Neumes.Fthora)
+      .optional()
+      .describe(
+        'Primary component mark; use unsuffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
     fthoraOffsetX: z.number().optional(),
     fthoraOffsetY: z.number().optional(),
-    secondaryFthora: z.enum(Neumes.Fthora).optional(),
-    secondaryFthoraOffsetX: z.number().optional(),
-    secondaryFthoraOffsetY: z.number().optional(),
-    tertiaryFthora: z.enum(Neumes.Fthora).optional(),
-    tertiaryFthoraOffsetX: z.number().optional(),
-    tertiaryFthoraOffsetY: z.number().optional(),
-    chromaticFthoraNote: z.enum(ScaleNote).optional(),
-    secondaryChromaticFthoraNote: z.enum(ScaleNote).optional(),
-    tertiaryChromaticFthoraNote: z.enum(ScaleNote).optional(),
-    gorgonNeume: z.enum(Neumes.GorgonNeume).optional(),
+    secondaryFthora: z
+      .enum(Neumes.Fthora)
+      .optional()
+      .describe(
+        'Secondary component mark; use Secondary-suffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    secondaryFthoraOffsetX: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of secondaryFthora; does not select a component.',
+      ),
+    secondaryFthoraOffsetY: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of secondaryFthora; does not select a component.',
+      ),
+    tertiaryFthora: z
+      .enum(Neumes.Fthora)
+      .optional()
+      .describe(
+        'Tertiary component mark; use Tertiary-suffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    tertiaryFthoraOffsetX: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of tertiaryFthora; does not select a component.',
+      ),
+    tertiaryFthoraOffsetY: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of tertiaryFthora; does not select a component.',
+      ),
+    chromaticFthoraNote: z
+      .enum(ScaleNote)
+      .optional()
+      .describe(
+        'Primary component chromatic interpretation; pairs with fthora. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    secondaryChromaticFthoraNote: z
+      .enum(ScaleNote)
+      .optional()
+      .describe(
+        'Secondary component chromatic interpretation; pairs with secondaryFthora. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    tertiaryChromaticFthoraNote: z
+      .enum(ScaleNote)
+      .optional()
+      .describe(
+        'Tertiary component chromatic interpretation; pairs with tertiaryFthora. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    gorgonNeume: z
+      .enum(Neumes.GorgonNeume)
+      .optional()
+      .describe(
+        'Primary component mark; use unsuffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
     gorgonNeumeOffsetX: z.number().optional(),
     gorgonNeumeOffsetY: z.number().optional(),
-    secondaryGorgonNeume: z.enum(Neumes.GorgonNeume).optional(),
-    secondaryGorgonNeumeOffsetX: z.number().optional(),
-    secondaryGorgonNeumeOffsetY: z.number().optional(),
+    secondaryGorgonNeume: z
+      .enum(Neumes.GorgonNeume)
+      .optional()
+      .describe(
+        'Secondary component mark; use Secondary-suffixed enum values. Resolve targets with get_element_catalog includeNeumeComponents:true.',
+      ),
+    secondaryGorgonNeumeOffsetX: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of secondaryGorgonNeume; does not select a component.',
+      ),
+    secondaryGorgonNeumeOffsetY: z
+      .number()
+      .optional()
+      .describe(
+        'CSS-pixel adjustment of secondaryGorgonNeume; does not select a component.',
+      ),
     koronis: z.boolean(),
     koronisOffsetX: z.number().optional(),
     koronisOffsetY: z.number().optional(),

@@ -273,3 +273,70 @@ describe('compact tool schemas', () => {
     },
   );
 });
+
+describe('compound mark discovery', () => {
+  it('exposes application component targets only on request', () => {
+    expect(getElementCatalog()).not.toHaveProperty('neumeComponents');
+    const catalog = getElementCatalog({ includeNeumeComponents: true });
+    expect(automationResultSchemas.get_element_catalog.parse(catalog)).toEqual(
+      catalog,
+    );
+    expect(catalog.neumeComponents).toMatchObject({
+      OligonPlusApostrophosPlusKentemata: {
+        primary: 'Kentemata',
+        secondary: 'Apostrophos',
+      },
+      OligonPlusRunningElaphronPlusKentemata: {
+        primary: 'Kentemata',
+        secondary: 'Elaphron',
+        tertiary: 'Apostrophos',
+      },
+    });
+    expect(
+      catalog.neumeComponents!.OligonPlusApostrophosPlusKentemata,
+    ).not.toHaveProperty('tertiary');
+    expect(catalog.neumeComponents).not.toHaveProperty('Oligon');
+  });
+
+  it.each(['read', 'edit'] as const)(
+    'keeps component guidance in focused %s catalogs',
+    (view) => {
+      const catalog = getElementCatalog({
+        elementTypes: [ElementType.Note],
+        properties: [
+          'secondaryFthora',
+          'tertiaryAccidental',
+          'secondaryGorgonNeume',
+          'secondaryChromaticFthoraNote',
+          'secondaryFthoraOffsetX',
+        ],
+        view,
+      });
+      const schema =
+        catalog.elementTypes[0][
+          view === 'read' ? 'properties' : 'editProperties'
+        ]!;
+      const fields = (
+        expanded(schema) as {
+          properties: Record<string, { description: string }>;
+        }
+      ).properties;
+      for (const key of [
+        'secondaryFthora',
+        'tertiaryAccidental',
+        'secondaryGorgonNeume',
+        'secondaryChromaticFthoraNote',
+      ]) {
+        expect(fields[key].description).toContain(
+          'includeNeumeComponents:true',
+        );
+      }
+      expect(fields.secondaryFthoraOffsetX.description).toContain(
+        'does not select a component',
+      );
+      if (view === 'edit') {
+        expect(fields.secondaryFthora.description).toContain('UI default');
+      }
+    },
+  );
+});

@@ -7,6 +7,11 @@ import {
   headerFooterVariants,
 } from '@/automation/documents/elementDiscovery';
 import { ElementType, TempoElement } from '@/models/Element';
+import {
+  getPrimaryNeume,
+  getSecondaryNeume,
+  getTertiaryNeume,
+} from '@/models/NeumeReplacements';
 import * as Neumes from '@/models/Neumes';
 
 import { elementContentPropertySchema } from './elementContentSchema';
@@ -85,6 +90,12 @@ export const elementCatalogQuerySchema = z.strictObject({
   view: z.enum(['names', 'read', 'edit', 'both']).default('both'),
   includeProperties: z.boolean().default(false),
   includeNeumes: z.boolean().default(false),
+  includeNeumeComponents: z
+    .boolean()
+    .default(false)
+    .describe(
+      'Include compound quantitative-neume mappings to primary/secondary/tertiary mark targets. Missing secondary/tertiary roles are unsupported; unlisted neumes have only a primary target.',
+    ),
 });
 
 export function getElementCatalog(
@@ -173,6 +184,29 @@ export function getElementCatalog(
           ),
         }
       : {}),
+    ...(query.includeNeumeComponents
+      ? {
+          neumeComponents: Object.fromEntries(
+            Object.values(Neumes.QuantitativeNeume).flatMap((neume) => {
+              const secondary = getSecondaryNeume(neume);
+              if (secondary === null) {
+                return [];
+              }
+              const tertiary = getTertiaryNeume(neume);
+              return [
+                [
+                  neume,
+                  {
+                    primary: getPrimaryNeume(neume) ?? neume,
+                    secondary,
+                    ...(tertiary === null ? {} : { tertiary }),
+                  },
+                ],
+              ];
+            }),
+          ),
+        }
+      : {}),
     headerFooterVariants: [...headerFooterVariants],
   };
 }
@@ -193,5 +227,15 @@ export const elementCatalogSchema = z.strictObject({
     }),
   ),
   neumes: z.record(z.string(), z.array(z.string())).optional(),
+  neumeComponents: z
+    .partialRecord(
+      z.enum(Neumes.QuantitativeNeume),
+      z.strictObject({
+        primary: z.enum(Neumes.QuantitativeNeume),
+        secondary: z.enum(Neumes.QuantitativeNeume),
+        tertiary: z.enum(Neumes.QuantitativeNeume).optional(),
+      }),
+    )
+    .optional(),
   headerFooterVariants: z.array(z.enum(headerFooterVariants)),
 });

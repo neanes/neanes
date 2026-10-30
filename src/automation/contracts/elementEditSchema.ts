@@ -184,6 +184,11 @@ function editPropertySchema(type: ElementType) {
         'On creation or an actual fthora change, an omitted corresponding chromaticFthoraNote uses the UI default. Resending an unchanged fthora preserves its omitted interpretation. Supply the interpretation explicitly to override that default.',
       );
     }
+    if (inspected.description && inspected.description !== value.description) {
+      value = value.describe(
+        [inspected.description, value.description].filter(Boolean).join(' '),
+      );
+    }
     shape[key] = value.optional();
   }
   if (type === ElementType.ImageBox) {

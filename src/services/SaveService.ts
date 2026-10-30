@@ -17,6 +17,7 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
+import { Footnote } from '@/models/Footnote';
 import type { Header } from '@/models/Header';
 import { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -932,7 +933,23 @@ export class SaveService {
     this.SaveFooter(score.footers.odd, s.footers.odd);
     this.SaveFooter(score.footers.firstPage, s.footers.firstPage);
 
-    for (const e of s.staff.elements) {
+    score.staff.elements = this.SaveElements(s.staff.elements);
+    score.footnotes =
+      s.footnotes.length === 0
+        ? undefined
+        : s.footnotes.map((footnote) => {
+            const staff = new Staff_v1();
+            staff.elements = this.SaveElements(footnote.staff.elements);
+            this.SaveLyricSetup(staff.lyrics, footnote.staff.lyrics);
+            return { id: footnote.id, staff };
+          });
+
+    return score;
+  }
+
+  public static SaveElements(elements: ScoreElement[]): ScoreElement_v1[] {
+    const result: ScoreElement_v1[] = [];
+    for (const e of elements) {
       let element: ScoreElement_v1 = new EmptyElement_v1();
 
       switch (e.elementType) {
@@ -995,10 +1012,10 @@ export class SaveService {
 
       element.pageBreak = e.pageBreak || undefined;
 
-      score.staff.elements.push(element);
+      result.push(element);
     }
 
-    return score;
+    return result;
   }
 
   public static SavePageSetup(pageSetup: PageSetup_v1, p: PageSetup) {
@@ -1093,6 +1110,10 @@ export class SaveService {
     }
 
     pageSetup.firstPageNumber = p.firstPageNumber;
+    pageSetup.firstFootnoteNumber =
+      p.firstFootnoteNumber !== 1 ? p.firstFootnoteNumber : undefined;
+    pageSetup.showFootnoteHorizontalRule = p.showFootnoteHorizontalRule;
+    pageSetup.footnoteHorizontalRuleLength = p.footnoteHorizontalRuleLength;
     pageSetup.numerals =
       p.numerals !== 'westernArabic' ? p.numerals : undefined;
 
@@ -1288,6 +1309,7 @@ export class SaveService {
   }
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
+    element.footnoteId = e.footnoteId ?? undefined;
     if (e.lyricsParagraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics) {
       element.lyricsParagraphStyleId = e.lyricsParagraphStyleId;
     }
@@ -1668,8 +1690,31 @@ export class SaveService {
       this.LoadFooter_v1(score.footers.firstPage, s.footers.firstPage);
     }
 
-    for (let i = 0; i < s.staff.elements.length; i++) {
-      const e = s.staff.elements[i];
+    score.staff.elements = this.LoadElements_v1(
+      s.staff.elements,
+      score.pageSetup,
+    );
+    score.footnotes = (s.footnotes ?? []).map((saved) => {
+      const footnote = new Footnote();
+      footnote.id = saved.id;
+      footnote.staff.elements = this.LoadElements_v1(
+        saved.staff.elements,
+        score.pageSetup,
+      );
+      this.LoadLyricSetup_v1(footnote.staff.lyrics, saved.staff.lyrics);
+      return footnote;
+    });
+
+    return score;
+  }
+
+  public static LoadElements_v1(
+    elements: ScoreElement_v1[],
+    pageSetup: PageSetup,
+  ): ScoreElement[] {
+    const result: ScoreElement[] = [];
+    for (let i = 0; i < elements.length; i++) {
+      const e = elements[i];
       let element: ScoreElement = new EmptyElement();
 
       switch (e.elementType) {
@@ -1678,7 +1723,7 @@ export class SaveService {
           this.LoadDropCap_v1(
             element as DropCapElement,
             e as DropCapElement_v1,
-            score.pageSetup,
+            pageSetup,
           );
           break;
         case ElementType_v1.Empty:
@@ -1754,7 +1799,7 @@ export class SaveService {
       // element that followed it keeps with its own successor instead.
       if (
         supportsKeepWithNext(element) &&
-        this.isLegacyJustifiedBreak(s.staff.elements[i - 1])
+        this.isLegacyJustifiedBreak(elements[i - 1])
       ) {
         element.keepWithNext = true;
       }
@@ -1764,10 +1809,10 @@ export class SaveService {
         normalizeLegacySectionName(legacyElement.sectionName),
       );
 
-      score.staff.elements.push(element);
+      result.push(element);
     }
 
-    return score;
+    return result;
   }
 
   public static LoadPageSetup_v1(pageSetup: PageSetup, p: PageSetup_v1) {
@@ -1804,6 +1849,10 @@ export class SaveService {
     pageSetup.showFooter = p.showFooter === true;
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
+    pageSetup.firstFootnoteNumber = p.firstFootnoteNumber ?? 1;
+    pageSetup.showFootnoteHorizontalRule = p.showFootnoteHorizontalRule ?? true;
+    pageSetup.footnoteHorizontalRuleLength =
+      p.footnoteHorizontalRuleLength ?? 40;
     pageSetup.numerals =
       p.numerals === 'easternArabic' ? 'easternArabic' : 'westernArabic';
 
@@ -2229,6 +2278,7 @@ export class SaveService {
   }
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
+    element.footnoteId = e.footnoteId ?? null;
     element.lyricsParagraphStyleId =
       e.lyricsParagraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
     element.quantitativeNeume = Object.values(QuantitativeNeume).includes(

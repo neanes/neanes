@@ -1,5 +1,10 @@
 # Roadmap
 
+## Planned features
+
+- Footnotes: see the [staged implementation plan](notes/footnotes.md), starting
+  with references after neumes and editable text/music footnote bodies.
+
 ## Nice-to-haves
 
 - Configurable Neume Keyboard

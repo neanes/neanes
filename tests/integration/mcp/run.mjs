@@ -10,6 +10,7 @@ const scenarios = [
   'metadata',
   'text-search',
   'element-copy',
+  'footnotes',
   'rich-text-update',
   'preview',
 ];

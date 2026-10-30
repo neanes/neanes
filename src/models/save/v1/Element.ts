@@ -57,6 +57,7 @@ export enum AcceptsLyricsOption {
 }
 
 export class NoteElement extends ScoreElement {
+  public footnoteId: string | undefined = undefined;
   public readonly elementType: ElementType = ElementType.Note;
   public keepWithNext: boolean | undefined = undefined;
   public quantitativeNeume: QuantitativeNeume = QuantitativeNeume.Ison;

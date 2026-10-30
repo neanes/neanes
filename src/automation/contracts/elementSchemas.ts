@@ -21,6 +21,10 @@ const index = z.number().int().nonnegative();
 export const elementCollectionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('staff') }),
   z.strictObject({
+    kind: z.literal('footnote'),
+    footnoteId: z.string().uuid(),
+  }),
+  z.strictObject({
     kind: z.enum(['headers', 'footers']),
     variant: z.enum(headerFooterVariants),
   }),

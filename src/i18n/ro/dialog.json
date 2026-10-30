@@ -249,7 +249,12 @@
     "thickness": "Grosime",
     "applyColor": "Aplică culoarea",
     "neumeBulkColor": "Schimbă culoarea mai multor neume",
-    "neumeBulkColorDescription": "Pentru a schimba culoarea mai multor neume simultan, selectați tipurile de neume de mai sus, alegeți o culoare și apăsați butonul pentru a aplica culoarea tuturor neumelor selectate."
+    "neumeBulkColorDescription": "Pentru a schimba culoarea mai multor neume simultan, selectați tipurile de neume de mai sus, alegeți o culoare și apăsați butonul pentru a aplica culoarea tuturor neumelor selectate.",
+    "footnotes": "Note de subsol",
+    "firstFootnoteNumber": "Numărul primei note de subsol",
+    "firstFootnoteNumberDescription": "Numărul de început al notelor de subsol. Numerotarea continuă în întregul document.",
+    "showFootnoteHorizontalRule": "Afișează linia separatoare deasupra notelor de subsol",
+    "footnoteHorizontalRuleLength": "Lungimea liniei separatoare (%)"
   },
   "playbackSettings": {
     "root": "Setări de redare",

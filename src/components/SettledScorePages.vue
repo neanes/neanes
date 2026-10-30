@@ -32,6 +32,7 @@ import {
 } from '@/services/rendering/fontReadiness';
 import { LayoutReconciliation } from '@/services/rendering/layoutReconciliation';
 import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
+import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { SaveService } from '@/services/SaveService';
 
 const props = defineProps<{
@@ -70,6 +71,7 @@ function measured(heights: TextBoxHeightMeasurement[]) {
       renderPass.value++;
       pages.value = processPages();
     } else {
+      assertVisualExportFits(pages.value!);
       stopped = true;
       emit('ready', pages.value!);
     }

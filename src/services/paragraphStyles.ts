@@ -74,7 +74,10 @@ export function createParagraphStyleUpdateCommands(
     }),
   ];
 
-  for (const element of [...score.staff.elements, ...score.headersAndFooters]) {
+  for (const element of [
+    ...score.staves.flatMap((staff) => staff.elements),
+    ...score.headersAndFooters,
+  ]) {
     for (const remap of planParagraphStyleReferenceRemap(
       element,
       remapResolvers,

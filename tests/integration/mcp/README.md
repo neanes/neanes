@@ -81,3 +81,13 @@ retaining annotations.
 
 On macOS, agents must launch Electron outside the command sandbox as described in
 [AGENTS.md](../../../AGENTS.md). Never connect these tests to the normal user profile.
+
+`footnotes` checks independent footnote text/music editing in private and editor
+scopes, real context-menu insertion and keyboard input, numbering and marker
+widths, same-page ownership, footer placement, stable page discovery, oversized
+body recovery, copying with new identities, undo/redo, BYZ/BYZX save/reopen, and
+PNG/PDF rendering. Its disposable output directory retains visual artifacts.
+
+Marker geometry checks cover natural and justified spacing on both sides, a
+narrow line that must move the neume and marker together, centered line endings,
+and RTL placement. Rendered examples are retained with the footnote artifacts.

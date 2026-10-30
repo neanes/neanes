@@ -1,8 +1,13 @@
 import { toRaw } from 'vue';
 
 import { ElementType, type ScoreElement } from '@/models/Element';
+import type { Footnote } from '@/models/Footnote';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
+import {
+  captureFootnotes,
+  prepareFootnotePaste,
+} from '@/services/FootnoteService';
 import { CommandFactory } from '@/services/history/CommandService';
 import {
   collectClipboardParagraphStyleIdsFromElements,
@@ -99,20 +104,28 @@ export function planElementCopy(
   const copies = elements.map((element) =>
     copyElement(element, range.includeLyrics ?? true),
   );
+  const footnotes = prepareFootnotePaste(
+    copies,
+    captureFootnotes(source.score, elements),
+  );
+  const content = [
+    ...copies,
+    ...footnotes.flatMap((body) => body.staff.elements),
+  ];
   const { importedParagraphStyles, styleIdRemap } =
     resolveClipboardParagraphStyles(
       collectClipboardParagraphStylesFromElements(
-        copies,
+        content,
         source.score.paragraphStyles,
       ),
       destination.score.paragraphStyles,
-      collectClipboardParagraphStyleIdsFromElements(copies),
+      collectClipboardParagraphStyleIdsFromElements(content),
     );
   const paragraphStyles = [
     ...destination.score.paragraphStyles,
     ...importedParagraphStyles,
   ];
-  for (const copy of copies) {
+  for (const copy of content) {
     rewriteClipboardElementParagraphStyleIds(
       copy,
       paragraphStyles,
@@ -132,7 +145,7 @@ export function planElementCopy(
       children.forEach(collectFonts);
     }
   };
-  copies.forEach(collectFonts);
+  content.forEach(collectFonts);
   for (const style of paragraphStyles) {
     if (style.overrides.fontFamily !== undefined) {
       fonts.add(style.overrides.fontFamily);
@@ -144,6 +157,14 @@ export function planElementCopy(
       new CommandFactory<Score>().create('update-properties', {
         target: destination.score,
         newValues: { paragraphStyles },
+      }),
+    );
+  }
+  if (footnotes.length > 0) {
+    plan.commands.push(
+      new CommandFactory<Footnote>().create('add-to-collection', {
+        collection: destination.score.footnotes,
+        elements: footnotes,
       }),
     );
   }

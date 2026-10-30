@@ -61,11 +61,13 @@ const { textBoxes, pages } = useWorkspaceMeasurements();
 const measurement = textBoxes.pending;
 const pageMeasurement = pages.pending;
 function prepare(workspace: Workspace) {
-  if (!workspace.score.staff.lyrics.locked) {
-    workspace.score.staff.lyrics.text = lyrics.extractLyrics(
-      workspace.score.staff.elements,
-      workspace.score.pageSetup.disableGreekMelismata,
-    );
+  for (const staff of workspace.score.staves) {
+    if (!staff.lyrics.locked) {
+      staff.lyrics.text = lyrics.extractLyrics(
+        staff.elements,
+        workspace.score.pageSetup.disableGreekMelismata,
+      );
+    }
   }
 }
 async function settle(workspace: Workspace) {

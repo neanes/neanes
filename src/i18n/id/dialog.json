@@ -249,7 +249,12 @@
     "thickness": "Ketebalan",
     "applyColor": "Terapkan Warna",
     "neumeBulkColor": "Ubah Warna Beberapa Neuma",
-    "neumeBulkColorDescription": "Untuk mengubah warna beberapa neuma sekaligus, pilih jenis neuma di atas, pilih warna, dan klik tombol untuk menerapkan warna ke semua neuma yang dipilih."
+    "neumeBulkColorDescription": "Untuk mengubah warna beberapa neuma sekaligus, pilih jenis neuma di atas, pilih warna, dan klik tombol untuk menerapkan warna ke semua neuma yang dipilih.",
+    "footnotes": "Catatan Kaki",
+    "firstFootnoteNumber": "Nomor Catatan Kaki Pertama",
+    "firstFootnoteNumberDescription": "Nomor awal catatan kaki. Penomoran berlanjut di seluruh dokumen.",
+    "showFootnoteHorizontalRule": "Tampilkan garis pemisah di atas catatan kaki",
+    "footnoteHorizontalRuleLength": "Panjang Garis Pemisah (%)"
   },
   "playbackSettings": {
     "root": "Pengaturan Pemutaran",

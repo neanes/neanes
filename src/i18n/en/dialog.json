@@ -249,7 +249,12 @@
     "thickness": "Thickness",
     "applyColor": "Apply Color",
     "neumeBulkColor": "Change Color of Multiple Neumes",
-    "neumeBulkColorDescription": "To change the color of multiple neumes at once, select the neume types above, choose a color, and click the button to apply the color to all selected neumes."
+    "neumeBulkColorDescription": "To change the color of multiple neumes at once, select the neume types above, choose a color, and click the button to apply the color to all selected neumes.",
+    "footnotes": "Footnotes",
+    "firstFootnoteNumber": "First Footnote Number",
+    "firstFootnoteNumberDescription": "The starting number for footnotes. Numbering continues throughout the document.",
+    "showFootnoteHorizontalRule": "Show separator above footnotes",
+    "footnoteHorizontalRuleLength": "Separator Length (%)"
   },
   "playbackSettings": {
     "root": "Playback Settings",

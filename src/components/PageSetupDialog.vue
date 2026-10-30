@@ -555,6 +555,65 @@
                   </Field>
                 </template>
 
+                <template v-else-if="section.value === 'footnotes'">
+                  <Field orientation="horizontal">
+                    <FieldContent>
+                      <FieldLabel for="page-setup-first-footnote-number">{{
+                        $t(($) => $.dialog.pageSetup.firstFootnoteNumber, {
+                          ns: 'dialog',
+                        })
+                      }}</FieldLabel>
+                      <FieldDescription>{{
+                        $t(
+                          ($) =>
+                            $.dialog.pageSetup.firstFootnoteNumberDescription,
+                          { ns: 'dialog' },
+                        )
+                      }}</FieldDescription>
+                    </FieldContent>
+                    <InputUnit
+                      id="page-setup-first-footnote-number"
+                      v-model="form.firstFootnoteNumber"
+                      unit="unitless"
+                      :min="1"
+                      :max="1000000"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="page-setup-footnote-rule"
+                      :model-value="form.showFootnoteHorizontalRule"
+                      @update:model-value="
+                        setBoolean('showFootnoteHorizontalRule', $event)
+                      "
+                    />
+                    <FieldLabel for="page-setup-footnote-rule">{{
+                      $t(($) => $.dialog.pageSetup.showFootnoteHorizontalRule, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-rule-length">{{
+                      $t(
+                        ($) => $.dialog.pageSetup.footnoteHorizontalRuleLength,
+                        { ns: 'dialog' },
+                      )
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-rule-length"
+                      v-model="form.footnoteHorizontalRuleLength"
+                      unit="unitless"
+                      :min="1"
+                      :max="100"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                    />
+                  </Field>
+                </template>
+
                 <template v-else-if="section.value === 'headersAndFooters'">
                   <Field
                     v-for="row in headerFooterCheckboxRows"
@@ -1778,6 +1837,11 @@ const sections = [
     value: 'spacing',
     labelSelector: ($) => $.dialog.pageSetup.spacing,
     icon: PhSplitHorizontal,
+  },
+  {
+    value: 'footnotes',
+    labelSelector: ($) => $.dialog.pageSetup.footnotes,
+    icon: PhBookOpenText,
   },
   {
     value: 'headersAndFooters',

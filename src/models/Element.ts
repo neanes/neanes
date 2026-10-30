@@ -153,6 +153,11 @@ export type NoteNotationState = Pick<
 
 export class NoteElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.Note;
+  public footnoteId: string | null = null;
+  // Derived before line breaking; identity is independent of the displayed number.
+  public footnoteNumber: number | null = null;
+  public footnoteMarkerWidth = 0;
+  public footnoteMarkerOffset = 0;
   public keepWithNext: boolean = false;
   public measureNumber: MeasureNumber | null = null;
   public tie: Tie | null = null;
@@ -262,6 +267,7 @@ export class NoteElement extends ScoreElement {
 
   public getClipboardProperties(includeLyrics: boolean) {
     return {
+      footnoteId: this.footnoteId,
       ...(includeLyrics
         ? {
             lyrics: this.lyrics,

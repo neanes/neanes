@@ -40,6 +40,7 @@ export const headerFooterVariants = [
 ] as const;
 export type ElementCollection =
   | { kind: 'staff' }
+  | { kind: 'footnote'; footnoteId: string }
   | { kind: 'headers'; variant: (typeof headerFooterVariants)[number] }
   | { kind: 'footers'; variant: (typeof headerFooterVariants)[number] }
   | {
@@ -191,10 +192,22 @@ export class ElementDiscovery {
     if (selector.kind === 'staff') {
       return score.staff.elements;
     }
+    if (selector.kind === 'footnote') {
+      const footnote = score.footnotes.find(
+        (body) => body.id === selector.footnoteId,
+      );
+      if (footnote === undefined) {
+        throw new Error('INVALID_ELEMENT_COLLECTION');
+      }
+      return footnote.staff.elements;
+    }
     if (selector.kind === 'headers' || selector.kind === 'footers') {
       return score[selector.kind][selector.variant].elements;
     }
-    const pending = [score.staff.elements, score.headersAndFooters];
+    const pending = [
+      ...score.staves.map((staff) => staff.elements),
+      score.headersAndFooters,
+    ];
     while (pending.length > 0) {
       for (const element of pending.pop()!) {
         const children = childCollections(element);
@@ -242,6 +255,13 @@ export class ElementDiscovery {
 
   *entries(score: Score) {
     yield* this.walk(score.staff.elements, { kind: 'staff' }, true);
+    for (const footnote of score.footnotes) {
+      yield* this.walk(
+        footnote.staff.elements,
+        { kind: 'footnote', footnoteId: footnote.id },
+        true,
+      );
+    }
     for (const kind of ['headers', 'footers'] as const) {
       for (const variant of headerFooterVariants) {
         yield* this.walk(

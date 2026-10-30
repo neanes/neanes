@@ -24,6 +24,7 @@ export class Score {
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();
+  public footnotes: { id: string; staff: Staff }[] | undefined = undefined;
 }
 
 export class Staff {

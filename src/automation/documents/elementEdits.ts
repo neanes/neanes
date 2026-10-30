@@ -15,6 +15,7 @@ import {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
+import { Footnote } from '@/models/Footnote';
 import type { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
@@ -162,6 +163,20 @@ export function planElementEdits(
   };
   const staff = cloneCollection(workspace.score.staff.elements);
   const roots = new Map<string, ScoreElement[]>([['staff', staff]]);
+  const footnotes = [...workspace.score.footnotes];
+  const lyricSetups = new Map<ScoreElement[], LyricSetup>([
+    [staff, lyricSetup],
+  ]);
+  const lyricOriginals = new Map<LyricSetup, LyricSetup>([
+    [lyricSetup, workspace.score.staff.lyrics],
+  ]);
+  for (const body of footnotes) {
+    const elements = cloneCollection(body.staff.elements);
+    roots.set(`footnotes.${body.id}`, elements);
+    const setup = { ...body.staff.lyrics };
+    lyricSetups.set(elements, setup);
+    lyricOriginals.set(setup, body.staff.lyrics);
+  }
   for (const region of ['headers', 'footers'] as const) {
     for (const variant of headerFooterVariants) {
       roots.set(
@@ -185,6 +200,13 @@ export function planElementEdits(
         throw new Error('INVALID_ELEMENT_COLLECTION');
       }
       return children[selector.collection];
+    }
+    if (selector.kind === 'footnote') {
+      const elements = roots.get(`footnotes.${selector.footnoteId}`);
+      if (elements === undefined) {
+        throw new Error('INVALID_ELEMENT_COLLECTION');
+      }
+      return elements;
     }
     return roots.get(
       selector.kind === 'staff'
@@ -229,12 +251,14 @@ export function planElementEdits(
     element: ScoreElement,
     properties: Record<string, unknown>,
     reset: string[] = [],
-    options: { creating?: boolean; staffManaged?: boolean } = {},
+    options: { creating?: boolean; managedLyrics?: LyricSetup } = {},
   ) => {
     const schema = elementEditPropertySchemas[element.elementType];
     if (
-      lyricSetup.locked &&
-      (options.staffManaged ?? staff.includes(element)) &&
+      (
+        options.managedLyrics ??
+        [...lyricSetups].find(([elements]) => elements.includes(element))?.[1]
+      )?.locked === true &&
       [...Object.keys(properties), ...reset].some(
         (key) =>
           (element.elementType === ElementType.Note &&
@@ -335,7 +359,7 @@ export function planElementEdits(
   const create = (
     definition: ElementDefinition,
     previous?: ScoreElement,
-    staffManaged = false,
+    managedCollection?: ScoreElement[],
   ) => {
     const element: ScoreElement = new constructors[definition.elementType]();
     if (previous) {
@@ -343,7 +367,10 @@ export function planElementEdits(
     }
     applyProperties(element, definition.properties, [], {
       creating: true,
-      staffManaged,
+      managedLyrics:
+        managedCollection === undefined
+          ? undefined
+          : lyricSetups.get(managedCollection),
     });
     // UI tempo selection also honors user preferences and resets BPM. API
     // creation uses model defaults; partial updates preserve omitted BPM.
@@ -424,20 +451,51 @@ export function planElementEdits(
     }
   };
   for (const action of actions) {
-    if (action.action === 'insert') {
+    if (
+      action.action === 'insert_footnote' ||
+      action.action === 'remove_footnote'
+    ) {
+      const reference = resolve(action.elementRef);
+      if (!(reference instanceof NoteElement) || !staff.includes(reference)) {
+        throw new Error('INVALID_ELEMENT_EDIT');
+      }
+      if (action.action === 'remove_footnote') {
+        if (reference.footnoteId === null) {
+          throw new Error('INVALID_ELEMENT_EDIT');
+        }
+        reference.footnoteId = null;
+      } else {
+        if (reference.footnoteId !== null) {
+          throw new Error('INVALID_ELEMENT_EDIT');
+        }
+        const body = new Footnote();
+        footnotes.push(body);
+        const elements = cloneCollection(body.staff.elements);
+        const setup = { ...body.staff.lyrics };
+        lyricSetups.set(elements, setup);
+        lyricOriginals.set(setup, body.staff.lyrics);
+        elements.unshift(
+          ...action.elements.map((definition) =>
+            create(definition, undefined, elements),
+          ),
+        );
+        roots.set(`footnotes.${body.id}`, elements);
+        reference.footnoteId = body.id;
+      }
+    } else if (action.action === 'insert') {
       const collection = resolveCollection(action.collection);
       const index =
         action.index ??
-        (collection === staff ? collection.length - 1 : collection.length);
+        (collection === staff || action.collection.kind === 'footnote'
+          ? collection.length - 1
+          : collection.length);
       if (index > collection.length) {
         throw new Error('INVALID_ELEMENT_RANGE');
       }
       collection.splice(
         index,
         0,
-        ...action.elements.map((item) =>
-          create(item, undefined, collection === staff),
-        ),
+        ...action.elements.map((item) => create(item, undefined, collection)),
       );
     } else if (action.action === 'update') {
       const element = resolve(action.elementRef);
@@ -457,12 +515,20 @@ export function planElementEdits(
         throw new Error('INVALID_ELEMENT_EDIT');
       }
       const { collection, index } = location(element);
+      const replacement =
+        action.action === 'replace'
+          ? create(action.element, element, collection)
+          : null;
+      if (
+        element instanceof NoteElement &&
+        replacement instanceof NoteElement
+      ) {
+        replacement.footnoteId = element.footnoteId;
+      }
       collection.splice(
         index,
         1,
-        ...(action.action === 'replace'
-          ? [create(action.element, element, collection === staff)]
-          : []),
+        ...(replacement === null ? [] : [replacement]),
       );
     } else if (action.action === 'remove_range') {
       const collection = resolveCollection(action.collection);
@@ -474,13 +540,16 @@ export function planElementEdits(
       }
       collection.splice(action.start, removed.length);
     } else if (action.action === 'set_staff_lyrics') {
-      lyricSetup.text = action.text;
-      lyricSetup.locked = action.locked;
-      assignLyrics(action.text, staff);
+      const collection = resolveCollection(action.collection);
+      const setup = lyricSetups.get(collection)!;
+      setup.text = action.text;
+      setup.locked = action.locked;
+      assignLyrics(action.text, collection);
     } else {
       const collection = resolveCollection(action.collection);
       if (
         collection !== staff &&
+        action.collection.kind !== 'footnote' &&
         !(
           action.collection.kind === 'children' &&
           action.collection.collection === 'elements'
@@ -488,7 +557,7 @@ export function planElementEdits(
       ) {
         throw new Error('INVALID_ELEMENT_COLLECTION');
       }
-      if (lyricSetup.locked && collection === staff) {
+      if (lyricSetups.get(collection)?.locked) {
         throw new Error('LYRICS_LOCKED');
       }
       const passage = range(collection, action.start, action.end);
@@ -505,8 +574,10 @@ export function planElementEdits(
     }
   }
 
-  if (lyricSetup.locked) {
-    assignLyrics(lyricSetup.text, staff);
+  for (const [elements, setup] of lyricSetups) {
+    if (setup.locked) {
+      assignLyrics(setup.text, elements);
+    }
   }
 
   // Validate the final graph, including constraints imposed by serialization
@@ -587,7 +658,37 @@ export function planElementEdits(
     ElementType.Empty,
   ]);
   for (const [name, elements] of roots) {
-    if (name !== 'staff') {
+    if (name.startsWith('footnotes.')) {
+      if (
+        elements.length === 0 ||
+        elements.at(-1)!.elementType !== ElementType.Empty ||
+        elements
+          .slice(0, -1)
+          .some((element) => element.elementType === ElementType.Empty)
+      ) {
+        throw new Error('INVALID_ELEMENT_EDIT');
+      }
+      if (
+        elements.some(
+          (element) =>
+            element.pageBreak ||
+            (element instanceof NoteElement && element.footnoteId !== null),
+        )
+      ) {
+        throw new Error('INVALID_ELEMENT_EDIT');
+      }
+      validate(elements, [
+        ElementType.Note,
+        ElementType.Martyria,
+        ElementType.Tempo,
+        ElementType.TextBox,
+        ElementType.RichTextBox,
+        ElementType.DropCap,
+        ElementType.ModeKey,
+        ElementType.ImageBox,
+        ElementType.Empty,
+      ]);
+    } else if (name !== 'staff') {
       if (elements.length !== 1) {
         throw new Error('INVALID_ELEMENT_COLLECTION');
       }
@@ -596,17 +697,37 @@ export function planElementEdits(
   }
   const live = (element: ScoreElement) => originals.get(element) ?? element;
   const commands: Command[] = [];
-  const updated: ScoreElement[] = [];
+  const referencedIds = new Set(
+    staff
+      .filter(
+        (element): element is NoteElement => element instanceof NoteElement,
+      )
+      .map((element) => element.footnoteId),
+  );
+  const finalFootnotes = footnotes.filter((body) => referencedIds.has(body.id));
   if (
-    lyricSetup.locked !== workspace.score.staff.lyrics.locked ||
-    lyricSetup.text !== workspace.score.staff.lyrics.text
+    finalFootnotes.length !== workspace.score.footnotes.length ||
+    finalFootnotes.some(
+      (body, index) => body !== workspace.score.footnotes[index],
+    )
   ) {
     commands.push(
-      new CommandFactory<LyricSetup>().create('update-properties', {
-        target: workspace.score.staff.lyrics,
-        newValues: lyricSetup,
+      new CommandFactory<Workspace['score']>().create('update-properties', {
+        target: workspace.score,
+        newValues: { footnotes: finalFootnotes },
       }),
     );
+  }
+  const updated: ScoreElement[] = [];
+  for (const [setup, original] of lyricOriginals) {
+    if (setup.locked !== original.locked || setup.text !== original.text) {
+      commands.push(
+        new CommandFactory<LyricSetup>().create('update-properties', {
+          target: original,
+          newValues: setup,
+        }),
+      );
+    }
   }
   for (const [draft, original] of originals) {
     const values: Record<string, unknown> = {};
@@ -673,6 +794,11 @@ export function planElementEdits(
     }
   }
 
+  for (const body of footnotes) {
+    if (!referencedIds.has(body.id)) {
+      roots.delete(`footnotes.${body.id}`);
+    }
+  }
   const finalElements = reachable();
   return {
     commands,
@@ -695,7 +821,10 @@ export function applyElementEdits(workspace: Workspace, plan: ElementEditPlan) {
   const previousRevision = workspace.contentRevision;
   workspace.commandService.executeAsBatch(plan.commands);
   const reachable = reachableElements(
-    [...workspace.score.staff.elements, ...workspace.score.headersAndFooters],
+    [
+      ...workspace.score.staves.flatMap((staff) => staff.elements),
+      ...workspace.score.headersAndFooters,
+    ],
     toRaw,
   );
   for (const key of [
@@ -713,8 +842,19 @@ export function applyElementEdits(workspace: Workspace, plan: ElementEditPlan) {
   for (const element of plan.updated) {
     element.keyHelper++;
   }
-  if (plan.staffStructureChanged) {
+  if (
+    plan.staffStructureChanged ||
+    (plan.commands.length > 0 && workspace.activeFootnoteId !== null)
+  ) {
     workspace.selectionRange = null;
+  }
+  if (
+    workspace.activeFootnoteId !== null &&
+    !workspace.score.footnotes.some(
+      (body) => body.id === workspace.activeFootnoteId,
+    )
+  ) {
+    workspace.activeFootnoteId = null;
   }
   return workspace.contentRevision !== previousRevision;
 }

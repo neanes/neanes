@@ -113,6 +113,9 @@ export class PageSetup {
   public showFooter = false;
   public richHeaderFooter = false;
   public firstPageNumber = 1;
+  public firstFootnoteNumber = 1;
+  public showFootnoteHorizontalRule = true;
+  public footnoteHorizontalRuleLength = 40;
   public numerals: 'westernArabic' | 'easternArabic' = 'westernArabic';
 
   public showHeaderHorizontalRule = false;

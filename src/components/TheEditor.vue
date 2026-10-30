@@ -148,6 +148,7 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
+import type { Footnote } from '@/models/Footnote';
 import type {
   ElementOverlayBox,
   ElementOverlayDiagnostics,
@@ -196,6 +197,7 @@ import {
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
+import type { Staff } from '@/models/Staff';
 import type { WorkspaceLocalStorage, ZoomFitMode } from '@/models/Workspace';
 import {
   formatZoomPercent,
@@ -228,6 +230,14 @@ import {
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
 import { fontCatalog } from '@/services/FontCatalog';
+import {
+  captureFootnotes,
+  footnoteRemovalCommands,
+  orderedFootnotes,
+  planFootnoteInsertion,
+  planFootnoteRemoval,
+  prepareFootnotePaste,
+} from '@/services/FootnoteService';
 import type { Command, HistoryState } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
@@ -247,12 +257,13 @@ import {
 } from '@/services/recovery/recoveryCandidates';
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
+import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
   collectClipboardParagraphStyleIdsFromElements,
+  collectClipboardParagraphStylesForPassageAndFootnotes,
   collectClipboardParagraphStylesFromElements,
-  collectClipboardParagraphStylesFromPasteElements,
   collectClipboardParagraphStylesFromStyleIds,
   resolveClipboardParagraphStyles,
   rewriteClipboardElementParagraphStyleIds,
@@ -416,8 +427,17 @@ function getPageContent(pageIndex: number) {
 }
 
 function getElementComponent<T>(index: number): T | undefined {
+  return getElementComponentForElement<T>(elements.value[index]);
+}
+
+function getElementComponentForElement<T>(
+  element: ScoreElement | undefined,
+): T | undefined {
+  if (element === undefined) {
+    return;
+  }
   for (const page of scorePageContents.value ?? []) {
-    const component = page.getElementRef<T>(index);
+    const component = page.getElementRef<T>(element);
     if (component != null) {
       return component;
     }
@@ -425,8 +445,15 @@ function getElementComponent<T>(index: number): T | undefined {
 }
 
 function getLyricsComponent(index: number) {
+  return getLyricsComponentForElement(elements.value[index]);
+}
+
+function getLyricsComponentForElement(element: ScoreElement | undefined) {
+  if (element === undefined) {
+    return;
+  }
   for (const page of scorePageContents.value ?? []) {
-    const component = page.getLyricsRef(index);
+    const component = page.getLyricsRef(element);
     if (component != null) {
       return component;
     }
@@ -478,7 +505,10 @@ const propertiesPaneOpenSections = computed({
 });
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
-const pendingLyricsAssignmentTimers = new Map<string, number>();
+const pendingLyricsAssignmentTimers = new Map<
+  string,
+  { timer: number; staff: Staff }
+>();
 const recoverySnapshotTimers = new Map<string, number>();
 const recoveryCandidates = ref<RecoveryCandidateArgs[]>([]);
 const recoveryDialogIsOpen = ref(false);
@@ -503,6 +533,7 @@ const mcpSetupDialogIsOpen = ref(false);
 const exportDialogIsOpen = ref(false);
 const exportFormat = ref(ExportFormat.PNG);
 interface ClipboardState {
+  footnotes: Footnote[];
   elements: ScoreElement[];
   paragraphStyleIds: string[];
   paragraphStyles: ParagraphStyle[];
@@ -515,6 +546,7 @@ interface ClipboardFormatState<T> {
 }
 
 const clipboard = ref<ClipboardState>({
+  footnotes: [],
   elements: [],
   paragraphStyleIds: [],
   paragraphStyles: [],
@@ -732,12 +764,14 @@ const score = computed(() => {
   return selectedWorkspace.value.score;
 });
 
-const elements = computed(() => {
-  return score.value?.staff.elements ?? [];
-});
+const activeStaff = computed(() => selectedWorkspace.value.activeStaff);
+const elements = computed(() => activeStaff.value.elements);
+const allElements = computed(() =>
+  score.value.staves.flatMap((staff) => staff.elements),
+);
 
 const resizableRichTextBoxElements = computed(() => {
-  return elements.value.filter(
+  return allElements.value.filter(
     (x) =>
       x.elementType === ElementType.RichTextBox &&
       !(x as RichTextBoxElement).inline,
@@ -745,15 +779,30 @@ const resizableRichTextBoxElements = computed(() => {
 });
 
 const resizableTextBoxElements = computed(() => {
-  return elements.value.filter(
+  return allElements.value.filter(
     (x) =>
       x.elementType === ElementType.TextBox && !(x as TextBoxElement).inline,
   );
 });
 
-const lyrics = computed(() => score.value.staff.lyrics.text);
+const lyrics = computed(() => activeStaff.value.lyrics.text);
+const activeLyricsLabel = computed(() => {
+  const activeId = selectedWorkspace.value.activeFootnoteId;
+  if (activeId === null) {
+    return t(($) => $.menu.view.lyrics, { ns: 'menu' });
+  }
+  const footnote = orderedFootnotes(score.value).find(
+    ({ footnote }) => footnote.id === activeId,
+  );
+  return footnote === undefined
+    ? t(($) => $.menu.view.lyrics, { ns: 'menu' })
+    : t(($) => $.menu.footnotes.lyrics, {
+        ns: 'menu',
+        number: footnote.number,
+      });
+});
 
-const lyricsLocked = computed(() => score.value.staff.lyrics.locked);
+const lyricsLocked = computed(() => activeStaff.value.lyrics.locked);
 
 const isLyricsManagerOpen = computed(() => {
   return paneVisibility.value.lyrics;
@@ -808,7 +857,10 @@ const selectedElement = computed({
       selectedHeaderFooterElement.value = null;
       toolbarInnerNeume.value = NeumeSelection.Primary;
 
-      if (audioService.state === AudioState.Playing) {
+      if (
+        audioService.state === AudioState.Playing &&
+        score.value.staff.elements.includes(element)
+      ) {
         const event = playbackEvents.value.find(
           (x) => x.elementIndex === getElementIndex(element),
         );
@@ -833,6 +885,9 @@ const selectedElement = computed({
       );
     }
 
+    if (element != null) {
+      activateContent(element);
+    }
     selectedWorkspace.value.selectedElement = element;
     selectedWorkspace.value.selectedAnnotationElement = null;
     selectedWorkspace.value.selectedAlternateLineElement = null;
@@ -951,6 +1006,9 @@ const selectedLyrics = computed({
       selectionRange.value = null;
     }
 
+    if (element != null) {
+      activateContent(element);
+    }
     selectedWorkspace.value.selectedLyrics = element;
   },
 });
@@ -1231,16 +1289,42 @@ const statusPositionElementOnPage = computed(() => {
 const statusSectionNumber = computed(() => {
   const element = statusActiveElement.value;
 
-  return element?.page === statusPageNumber.value
-    ? getSectionNumberForElementIndex(element.index)
+  const footnote =
+    element == null
+      ? undefined
+      : score.value.footnotes.find((body) =>
+          body.staff.elements.includes(element),
+        );
+  const anchor =
+    footnote === undefined
+      ? element
+      : score.value.staff.elements.find(
+          (candidate) =>
+            isSyllableElement(candidate) &&
+            candidate.footnoteId === footnote.id,
+        );
+  return anchor?.page === statusPageNumber.value
+    ? getSectionNumberForElementIndex(anchor.index)
     : getSectionNumberForPage(statusPageNumber.value);
 });
 
 const statusSectionCount = computed(() => getSectionCount());
 
+const statusContentLines = computed(() => {
+  const page = filteredPages.value[statusPageNumber.value - 1];
+  const element = statusPositionElementOnPage.value;
+  const body =
+    element == null
+      ? undefined
+      : page?.footnotes.find((footnote) =>
+          footnote.lines.some((line) => line.elements.includes(element)),
+        );
+  return body?.lines ?? page?.lines ?? [];
+});
+
 const statusLinePosition = computed(() => {
   const page = filteredPages.value[statusPageNumber.value - 1];
-  const lineCount = Math.max(page?.lines.length ?? 0, 1);
+  const lineCount = Math.max(statusContentLines.value.length, 1);
   const lineNumber =
     statusPositionElementOnPage.value?.line ??
     getFirstLineNumberForPage(page) ??
@@ -1253,8 +1337,8 @@ const statusLinePosition = computed(() => {
 });
 
 const statusColumnPosition = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
-  const line = page?.lines[statusLinePosition.value.lineNumber - 1];
+  const line =
+    statusContentLines.value[statusLinePosition.value.lineNumber - 1];
   const lineElements = line?.elements ?? [];
   const columnCount = Math.max(lineElements.length, 1);
   const element = statusPositionElementOnPage.value;
@@ -1298,7 +1382,7 @@ const hasUnsavedChanges = computed(
   () => selectedWorkspace.value.hasUnsavedChanges,
 );
 
-const pageStyle = computed(() => {
+function getPageStyle(page: Page) {
   return {
     minWidth: withZoom(score.value.pageSetup.pageWidth),
     maxWidth: withZoom(score.value.pageSetup.pageWidth),
@@ -1306,8 +1390,14 @@ const pageStyle = computed(() => {
     height: withZoom(score.value.pageSetup.pageHeight),
     minHeight: withZoom(score.value.pageSetup.pageHeight),
     maxHeight: withZoom(score.value.pageSetup.pageHeight),
+    overflow: page.footnoteOverflow ? 'visible' : undefined,
+    marginBottom: page.footnoteOverflow
+      ? withZoom(
+          page.footnoteOverflowBottom - score.value.pageSetup.pageHeight + 20,
+        )
+      : undefined,
   } as StyleValue;
-});
+}
 
 const pageVisibilityIntersection = computed(() => {
   // look ahead/behind 1 page
@@ -1891,9 +1981,11 @@ const pageInteraction = computed(() => ({
   selectedAnnotationElement: selectedWorkspace.value.selectedAnnotationElement,
   selectedAlternateLineElement:
     selectedWorkspace.value.selectedAlternateLineElement,
-  lyricsLocked: lyricsLocked.value,
+  isLyricsLocked: (element: ScoreElement) =>
+    score.value.getStaffForElement(element)?.lyrics.locked ?? true,
 }));
 const pageHandlers: ScorePageHandlers = {
+  selectFootnote: (reference) => openFootnote(reference),
   selectElement: (element) => {
     selectedElement.value = element;
   },
@@ -1910,7 +2002,10 @@ const pageHandlers: ScorePageHandlers = {
   setSelectionRange,
   openSyllablePositioningDialog,
   openModeKeyDialog,
-  focusLyrics,
+  focusLyrics: (element) => {
+    activateContent(element);
+    focusLyrics(element.index);
+  },
   updateLyrics,
   updateDropCapContent,
   updateTextBox,
@@ -2474,7 +2569,7 @@ function getPageElements(page: Page) {
 }
 
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = elements.value.filter(
+  const scoreElements = score.value.staff.elements.filter(
     (element) => element.elementType !== ElementType.Empty,
   );
 
@@ -2504,7 +2599,7 @@ function getSectionNumberForElementIndex(elementIndex: number) {
 }
 
 function getSectionCount() {
-  const scoreElements = elements.value.filter(
+  const scoreElements = score.value.staff.elements.filter(
     (element) => element.elementType !== ElementType.Empty,
   );
 
@@ -2540,7 +2635,24 @@ function isSectionMarker(element: ScoreElement) {
   return resolveRunningMarkerText(runningMarkerElement) != null;
 }
 
+function activateContent(element: ScoreElement) {
+  const workspace = selectedWorkspace.value;
+  const staff = score.value.getStaffForElement(element);
+  if (staff !== undefined && staff !== workspace.activeStaff) {
+    flushPendingRichTextEditors(workspace);
+    flushLyricsAssignment(workspace);
+    workspace.selectionRange = null;
+    workspace.selectedElement = null;
+    workspace.selectedLyrics = null;
+    workspace.selectContentForElement(element);
+  }
+}
+
 function setSelectionRange(element: ScoreElement) {
+  if (!elements.value.includes(element)) {
+    selectedElement.value = element;
+    return;
+  }
   const elementIndex = getElementIndex(element);
 
   if (selectedElement.value != null) {
@@ -2591,7 +2703,7 @@ function isSelected(element: ScoreElement) {
   if (selectedElement.value === element) {
     return true;
   }
-  if (selectionRange.value != null) {
+  if (selectionRange.value != null && elements.value.includes(element)) {
     const start = Math.min(
       selectionRange.value.start,
       selectionRange.value.end,
@@ -3029,11 +3141,13 @@ function addQuantitativeNeume(
 
 function addNeumeCombination(combo: NeumeCombination) {
   const backup: ClipboardState = {
+    footnotes: clipboard.value.footnotes.slice(),
     elements: clipboard.value.elements.slice(),
     paragraphStyleIds: clipboard.value.paragraphStyleIds.slice(),
     paragraphStyles: clipboard.value.paragraphStyles.slice(),
   };
   clipboard.value = {
+    footnotes: [],
     elements: combo.elements,
     paragraphStyleIds: [],
     paragraphStyles: [],
@@ -3182,6 +3296,10 @@ function onClickPrintScore() {
     return;
   }
 
+  if (pages.value.some((page) => page.footnoteOverflow)) {
+    toast.error(t(($) => $.menu.footnotes.overflow, { ns: 'menu' }));
+    return;
+  }
   if (isBrowser.value) {
     window.print();
   } else {
@@ -3196,13 +3314,63 @@ function observeSelectedHistory() {
 }
 
 function publishHistoryState(state: HistoryState) {
+  const workspace = selectedWorkspace.value;
+  if (
+    workspace.activeFootnoteId !== null &&
+    !workspace.score.footnotes.some(
+      (body) => body.id === workspace.activeFootnoteId,
+    )
+  ) {
+    workspace.activeFootnoteId = null;
+    workspace.selectedElement = workspace.score.staff.elements.at(-1)!;
+    workspace.selectedLyrics = null;
+    workspace.selectedAnnotationElement = null;
+    workspace.selectedAlternateLineElement = null;
+    workspace.selectionRange = null;
+  }
   canUndo.value = state.canUndo;
   canRedo.value = state.canRedo;
   EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
   EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
 }
 
+function openFootnote(reference: NoteElement) {
+  const footnote = score.value.footnotes.find(
+    (body) => body.id === reference.footnoteId,
+  );
+  if (footnote === undefined) {
+    return;
+  }
+  pages.value[reference.page - 1].isVisible = true;
+  selectedElement.value = footnote.staff.elements[0];
+  nextTick(() =>
+    document
+      .getElementById(`footnote-${footnote.id}`)
+      ?.scrollIntoView({ block: 'nearest' }),
+  );
+}
+
+function insertFootnote(reference: NoteElement) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  const plan = planFootnoteInsertion(selectedWorkspace.value, reference);
+  commandService.value.executeAsBatch(plan.commands);
+  save();
+  openFootnote(reference);
+}
+
+function removeFootnote(reference: NoteElement) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  selectedElement.value = reference;
+  commandService.value.executeAsBatch(
+    planFootnoteRemoval(score.value, reference),
+  );
+  save();
+}
+
 function togglePageBreak() {
+  if (activeStaff.value !== score.value.staff) {
+    return;
+  }
   if (selectedElement.value && !isLastElement(selectedElement.value)) {
     commandService.value.execute(
       scoreElementCommandFactory.create('update-properties', {
@@ -3278,10 +3446,6 @@ function focusLyrics(index: number, selectAll: boolean = false) {
   getLyricsComponent(index)!.focus(selectAll);
 }
 
-function setLyrics(index: number, lyrics: string) {
-  getLyricsComponent(index)?.setInnerText(lyrics);
-}
-
 function selectHeaderRichTextBox(pageIndex: number) {
   const element = getHeaderForPageIndex(pageIndex);
 
@@ -3338,14 +3502,10 @@ function getRichTextBoxComponentRef(element: RichTextBoxElement) {
 
 function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
   const components: RichTextBoxComponent[] = [];
-  const scoreElementIndex = getElementIndex(element);
-
-  if (elements.value[scoreElementIndex] === element) {
-    const component =
-      getElementComponent<RichTextBoxComponent>(scoreElementIndex);
-    if (component != null) {
-      components.push(component);
-    }
+  const component =
+    getElementComponentForElement<RichTextBoxComponent>(element);
+  if (component != null) {
+    components.push(component);
   }
 
   for (let pageIndex = 0; pageIndex < filteredPages.value.length; pageIndex++) {
@@ -3402,7 +3562,7 @@ function getAnnotationComponentRef(annotation: AnnotationElement) {
 }
 
 function getAnnotationContext(annotation: AnnotationElement) {
-  for (const element of elements.value) {
+  for (const element of allElements.value) {
     if (!isSyllableElement(element)) {
       continue;
     }
@@ -3411,9 +3571,7 @@ function getAnnotationContext(annotation: AnnotationElement) {
 
     if (annotationIndex >= 0) {
       const component = scorePageContents.value
-        ?.map((page) =>
-          page.getAnnotationRef(getElementIndex(element), annotationIndex),
-        )
+        ?.map((page) => page.getAnnotationRef(element, annotationIndex))
         .find((component) => component != null);
 
       return { component, parent: element };
@@ -4494,13 +4652,17 @@ function flushAndCloneForClipboard(
 
 function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   const elements = flushAndCloneForClipboard(elementsToCopy);
-
+  const footnotes = captureFootnotes(score.value, elementsToCopy);
+  const content = [
+    ...elementsToCopy,
+    ...footnotes.flatMap((body) => body.staff.elements),
+  ];
   return {
     elements,
-    paragraphStyleIds:
-      collectClipboardParagraphStyleIdsFromElements(elementsToCopy),
+    footnotes,
+    paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(content),
     paragraphStyles: collectClipboardParagraphStylesFromElements(
-      elementsToCopy,
+      content,
       score.value.paragraphStyles,
     ),
   };
@@ -4547,14 +4709,7 @@ function onCutScoreElements() {
 
     clipboard.value = createClipboardState(elementsToCut);
 
-    commandService.value.executeAsBatch(
-      elementsToCut.map((element) =>
-        scoreElementCommandFactory.create('remove-from-collection', {
-          element,
-          collection: elements.value,
-        }),
-      ),
-    );
+    commandService.value.executeAsBatch(removalCommands(elementsToCut));
 
     refreshStaffLyrics();
 
@@ -4607,20 +4762,51 @@ function cloneClipboardForPaste(
   includeLyrics: boolean,
   styleIdRemap: Map<string, string>,
 ) {
-  return clipboard.value.elements.map((element) =>
+  const elements = clipboard.value.elements.map((element) =>
     cloneScoreElementForPaste(element, includeLyrics, styleIdRemap),
   );
+  const footnotes = prepareFootnotePaste(elements, clipboard.value.footnotes);
+  for (const footnote of footnotes) {
+    footnote.staff.elements.forEach((element) =>
+      rewriteClipboardElementParagraphStyleIds(
+        element,
+        score.value.paragraphStyles,
+        styleIdRemap,
+      ),
+    );
+  }
+  return { elements, footnotes };
 }
 
 function collectClipboardParagraphStylesForPaste(includeLyrics: boolean) {
-  return collectClipboardParagraphStylesFromPasteElements(
+  return collectClipboardParagraphStylesForPassageAndFootnotes(
     clipboard.value.elements,
+    clipboard.value.footnotes.flatMap((body) => body.staff.elements),
     includeLyrics,
     clipboard.value.paragraphStyles,
   );
 }
 
+function footnotePasteCommands(footnotes: Footnote[]): Command[] {
+  if (footnotes.length === 0) {
+    return [];
+  }
+  return [
+    new CommandFactory<Footnote>().create('add-to-collection', {
+      collection: score.value.footnotes,
+      elements: footnotes,
+    }),
+  ];
+}
+
 function onPasteScoreElements(includeLyrics: boolean) {
+  if (
+    activeStaff.value !== score.value.staff &&
+    clipboard.value.footnotes.length > 0
+  ) {
+    toast.error(t(($) => $.menu.footnotes.nested, { ns: 'menu' }));
+    return;
+  }
   if (clipboard.value.elements.length > 0 && selectedElement.value != null) {
     switch (entryMode.value) {
       case EntryMode.Insert:
@@ -4653,8 +4839,11 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
       score.value.paragraphStyles,
       clipboard.value.paragraphStyleIds,
     );
-  const newElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
-  const commands: Command[] = [];
+  const { elements: newElements, footnotes } = cloneClipboardForPaste(
+    includeLyrics,
+    styleIdRemap,
+  );
+  const commands: Command[] = footnotePasteCommands(footnotes);
 
   if (importedParagraphStyles.length > 0) {
     commands.push(
@@ -4702,7 +4891,11 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
       score.value.paragraphStyles,
       clipboard.value.paragraphStyleIds,
     );
-  const pastedElements = cloneClipboardForPaste(includeLyrics, styleIdRemap);
+  const { elements: pastedElements, footnotes } = cloneClipboardForPaste(
+    includeLyrics,
+    styleIdRemap,
+  );
+  commands.push(...footnotePasteCommands(footnotes));
 
   if (importedParagraphStyles.length > 0) {
     commands.push(
@@ -4722,6 +4915,15 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
 
   for (const clipboardElement of pastedElements) {
     const currentElement = elements.value[currentIndex];
+    if (
+      currentElement instanceof NoteElement &&
+      clipboardElement instanceof NoteElement &&
+      clipboardElement.footnoteId === null
+    ) {
+      clipboardElement.footnoteId = currentElement.footnoteId;
+    } else if (currentElement !== undefined) {
+      commands.push(...footnoteRemovalCommands(score.value, [currentElement]));
+    }
 
     if (currentIndex >= elements.value.length - 1) {
       commands.push(
@@ -5136,7 +5338,7 @@ function save() {
   processedPages
     .filter((x) => x.isVisible)
     .forEach((page) => {
-      page.lines.forEach((line) =>
+      page.allLines.forEach((line) =>
         line.elements
           .filter((x) => x.updated)
           .forEach((element) => {
@@ -5338,8 +5540,10 @@ function prepareWorkspaceForSerialization(workspace: Workspace) {
   flushPendingRichTextEditors(workspace);
   flushLyricsAssignment(workspace);
 
-  if (!workspace.score.staff.lyrics.locked) {
-    extractStaffLyrics(workspace);
+  for (const staff of workspace.score.staves) {
+    if (!staff.lyrics.locked) {
+      extractStaffLyrics(workspace, staff);
+    }
   }
 }
 
@@ -5971,33 +6175,49 @@ function addScoreElement(
 
 function replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
   const previousElement = elements.value[replaceAtIndex];
-
-  commandService.value.execute(
+  const commands: Command[] = [];
+  if (
+    previousElement instanceof NoteElement &&
+    element instanceof NoteElement
+  ) {
+    element.footnoteId = previousElement.footnoteId;
+  } else {
+    commands.push(...footnoteRemovalCommands(score.value, [previousElement]));
+  }
+  commands.push(
     scoreElementCommandFactory.create('replace-element-in-collection', {
       element,
       collection: elements.value,
       replaceAtIndex,
     }),
   );
-
+  commandService.value.executeAsBatch(commands);
   if (selectedElement.value === previousElement) {
     selectedElement.value = element;
   }
-
   refreshStaffLyrics();
+}
+
+function removalCommands(
+  removed: ScoreElement[],
+  collection: ScoreElement[] = elements.value,
+): Command[] {
+  return [
+    ...footnoteRemovalCommands(score.value, removed),
+    ...removed.map((element) =>
+      scoreElementCommandFactory.create('remove-from-collection', {
+        element,
+        collection,
+      }),
+    ),
+  ];
 }
 
 function removeScoreElement(
   element: ScoreElement,
   collection?: ScoreElement[],
 ) {
-  commandService.value.execute(
-    scoreElementCommandFactory.create('remove-from-collection', {
-      element,
-      collection: collection ?? elements.value,
-    }),
-  );
-
+  commandService.value.executeAsBatch(removalCommands([element], collection));
   refreshStaffLyrics();
 }
 
@@ -6085,70 +6305,73 @@ function updateNoteExpression(
 }
 
 function updateLyricsLocked(locked: boolean) {
-  selectedWorkspace.value.updateLyricsLocked(locked);
+  selectedWorkspace.value.updateLyricsLocked(locked, activeStaff.value);
 }
 
 function updateStaffLyrics(staffLyrics: string) {
   const workspace = selectedWorkspace.value;
 
-  workspace.updateStaffLyrics(staffLyrics);
+  workspace.updateStaffLyrics(staffLyrics, workspace.activeStaff);
   scheduleLyricsAssignment(workspace);
 }
 
 function scheduleLyricsAssignment(workspace: Workspace) {
   cancelLyricsAssignment(workspace);
-
-  pendingLyricsAssignmentTimers.set(
-    workspace.id,
-    window.setTimeout(() => {
-      pendingLyricsAssignmentTimers.delete(workspace.id);
-      assignLyrics(workspace);
-    }, keydownThrottleIntervalMs),
-  );
+  const staff = workspace.activeStaff;
+  const timer = window.setTimeout(() => {
+    pendingLyricsAssignmentTimers.delete(workspace.id);
+    assignLyrics(workspace, staff);
+  }, keydownThrottleIntervalMs);
+  pendingLyricsAssignmentTimers.set(workspace.id, { timer, staff });
 }
 
 function flushLyricsAssignment(workspace: Workspace) {
-  if (!pendingLyricsAssignmentTimers.has(workspace.id)) {
+  const pending = pendingLyricsAssignmentTimers.get(workspace.id);
+  if (pending === undefined) {
     return;
   }
-
   cancelLyricsAssignment(workspace);
-  assignLyrics(workspace);
+  assignLyrics(workspace, pending.staff);
 }
 
 function cancelLyricsAssignment(workspace: Workspace) {
-  const timer = pendingLyricsAssignmentTimers.get(workspace.id);
-
-  if (timer == null) {
+  const pending = pendingLyricsAssignmentTimers.get(workspace.id);
+  if (pending === undefined) {
     return;
   }
-
-  window.clearTimeout(timer);
+  window.clearTimeout(pending.timer);
   pendingLyricsAssignmentTimers.delete(workspace.id);
 }
 
 function clearPendingLyricsAssignments() {
-  for (const timer of pendingLyricsAssignmentTimers.values()) {
+  for (const { timer } of pendingLyricsAssignmentTimers.values()) {
     window.clearTimeout(timer);
   }
-
   pendingLyricsAssignmentTimers.clear();
 }
 
-function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
+function assignLyrics(
+  workspace: Workspace = selectedWorkspace.value,
+  staff: Staff = workspace.activeStaff,
+) {
   const workspaceScore = workspace.score;
-  const workspaceElements = workspaceScore.staff.elements;
+  if (
+    !workspaceScore.staves.some((current) => toRaw(current) === toRaw(staff))
+  ) {
+    return;
+  }
+  const workspaceElements = staff.elements;
   const workspaceIsSelected = workspace === selectedWorkspace.value;
   const updateCommands: Command[] = [];
 
   lyricService.assignLyrics(
-    workspaceScore.staff.lyrics.text,
+    staff.lyrics.text,
     workspaceElements,
     workspaceScore.pageSetup.melkiteRtl,
     workspaceScore.pageSetup.disableGreekMelismata,
     (note, lyrics) => {
       if (workspaceIsSelected) {
-        setLyrics(getElementIndex(note), lyrics);
+        getLyricsComponentForElement(note)?.setInnerText(lyrics);
       }
     },
     (note, newValues) => {
@@ -6174,19 +6397,19 @@ function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
     return;
   }
 
-  workspace.commandService.executeAsBatch(
-    updateCommands,
-    workspaceScore.staff.lyrics.locked,
-  );
+  workspace.commandService.executeAsBatch(updateCommands, staff.lyrics.locked);
 
   if (workspaceIsSelected) {
     save();
   }
 }
 
-function extractStaffLyrics(workspace: Workspace) {
-  workspace.score.staff.lyrics.text = lyricService.extractLyrics(
-    workspace.score.staff.elements,
+function extractStaffLyrics(
+  workspace: Workspace,
+  staff: Staff = workspace.activeStaff,
+) {
+  staff.lyrics.text = lyricService.extractLyrics(
+    staff.elements,
     workspace.score.pageSetup.disableGreekMelismata,
   );
 }
@@ -6221,12 +6444,16 @@ function updateLyrics(
   lyrics: string,
   clearMelisma: boolean = false,
 ) {
+  const staff = score.value.getStaffForElement(element);
+  if (staff === undefined) {
+    return;
+  }
   const newValues = lyricService.getLyricUpdateValues(
     element,
     lyrics,
-    elements.value,
+    staff.elements,
     rtl.value,
-    (note, lyrics) => setLyrics(getElementIndex(note), lyrics),
+    (note, lyrics) => getLyricsComponentForElement(note)?.setInnerText(lyrics),
     clearMelisma,
   );
 
@@ -6237,7 +6464,11 @@ function updateLyrics(
         newValues,
       }),
     );
-    refreshStaffLyrics();
+    if (staff.lyrics.locked) {
+      assignLyrics(selectedWorkspace.value, staff);
+    } else {
+      extractStaffLyrics(selectedWorkspace.value, staff);
+    }
     save();
   }
 }
@@ -6365,7 +6596,7 @@ function updateRichTextBox(
 ) {
   // Removed boxes can emit a final content update while their editors unmount.
   if (
-    !score.value.staff.elements.includes(element) &&
+    !allElements.value.includes(element) &&
     !score.value.headersAndFooters.includes(element)
   ) {
     return;
@@ -6780,14 +7011,7 @@ function deleteSelectedElement() {
   } else if (selectionRange.value != null) {
     const elementsToDelete = getSelectedNonEmptyElements();
 
-    commandService.value.executeAsBatch(
-      elementsToDelete.map((element) =>
-        scoreElementCommandFactory.create('remove-from-collection', {
-          element,
-          collection: elements.value,
-        }),
-      ),
-    );
+    commandService.value.executeAsBatch(removalCommands(elementsToDelete));
 
     refreshStaffLyrics();
 
@@ -7459,7 +7683,7 @@ async function playAudio() {
   try {
     if (audioService.state === AudioState.Stopped) {
       playbackEvents.value = playbackService.computePlaybackSequence(
-        elements.value,
+        score.value.staff.elements,
         audioOptions,
         score.value.pageSetup.chrysanthineAccidentals,
       );
@@ -7469,7 +7693,11 @@ async function playAudio() {
       }
 
       const startAt = playbackEvents.value.find(
-        (x) => x.elementIndex >= selectedElementIndex.value,
+        (x) =>
+          x.elementIndex >=
+          (activeStaff.value === score.value.staff
+            ? selectedElementIndex.value
+            : 0),
       );
 
       await audioService.play(playbackEvents.value, audioOptions, startAt);
@@ -7598,12 +7826,12 @@ function onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     selectedWorkspace.value.playbackTime = event.absoluteTime;
     selectedWorkspace.value.playbackBpm = event.bpm;
 
-    audioElement.value = elements.value[event.elementIndex];
+    audioElement.value = score.value.staff.elements[event.elementIndex];
 
     // Scroll the currently playing element into view
-    const lyrics = getLyricsComponent(event.elementIndex)!;
+    const lyrics = getLyricsComponentForElement(audioElement.value)!;
 
-    const neumeBox = getElementComponent<any>(event.elementIndex)!;
+    const neumeBox = getElementComponentForElement<any>(audioElement.value)!;
 
     if ((lyrics?.htmlElement as any)?.scrollIntoViewIfNeeded) {
       (lyrics?.htmlElement as any).scrollIntoViewIfNeeded(false);
@@ -7925,6 +8153,8 @@ async function exportAsPng(args: ExportAsPngSettings) {
     } else {
       await nextTick();
 
+      assertVisualExportFits(pages.value as Page[]);
+
       const pageElements = pagesRef.value as HTMLElement[];
       const selectedPages = pageElements
         .map((page, index) => ({ page, pageNumber: index + 1 }))
@@ -8039,6 +8269,11 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
 async function onFileMenuExportAsHtml() {
   try {
+    if (score.value.footnotes.length > 0) {
+      throw new Error(
+        t(($) => $.menu.footnotes.unsupportedExport, { ns: 'menu' }),
+      );
+    }
     prepareWorkspaceForSerialization(selectedWorkspace.value);
 
     const reply = await ipcService.exportWorkspaceAsHtml(
@@ -8078,6 +8313,11 @@ function onFileMenuExportAsLatex() {
 
 async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
   try {
+    if (score.value.footnotes.length > 0) {
+      throw new Error(
+        t(($) => $.menu.footnotes.unsupportedExport, { ns: 'menu' }),
+      );
+    }
     prepareWorkspaceForSerialization(selectedWorkspace.value);
 
     const reply = await ipcService.exportWorkspaceAsMusicXml(
@@ -8115,6 +8355,11 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
 
 async function exportAsLatex(args: ExportAsLatexSettings) {
   try {
+    if (score.value.footnotes.length > 0) {
+      throw new Error(
+        t(($) => $.menu.footnotes.unsupportedExport, { ns: 'menu' }),
+      );
+    }
     prepareWorkspaceForSerialization(selectedWorkspace.value);
 
     const reply = await ipcService.exportWorkspaceAsLatex(
@@ -8419,6 +8664,7 @@ async function onFileMenuSaveAs() {
 }
 
 function onFileMenuUndo() {
+  flushLyricsAssignment(selectedWorkspace.value);
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
@@ -8445,6 +8691,7 @@ function onFileMenuUndo() {
 }
 
 function onFileMenuRedo() {
+  flushLyricsAssignment(selectedWorkspace.value);
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
@@ -9427,6 +9674,7 @@ function renderTabLabel(tab: Tab) {
       :zoom-fit-mode="zoomFitMode"
     />
     <ToolbarMain
+      :can-insert-page-break="activeStaff === score.staff"
       :entry-mode="entryMode"
       :zoom="zoom"
       :zoom-fit-mode="zoomFitMode"
@@ -9520,6 +9768,7 @@ function renderTabLabel(tab: Tab) {
 
         <template #lyrics>
           <LyricsPane
+            :context-label="activeLyricsLabel"
             :locked="lyricsLocked"
             :lyrics="lyrics"
             @activate-staff-lyrics="
@@ -9667,7 +9916,7 @@ function renderTabLabel(tab: Tab) {
                       intersection: pageVisibilityIntersection,
                     }"
                     class="page"
-                    :style="pageStyle"
+                    :style="getPageStyle(page)"
                     :class="{ print: printMode }"
                   >
                     <ScorePageContent
@@ -9839,6 +10088,34 @@ function renderTabLabel(tab: Tab) {
                   <PhBookmarkSimple />
                   {{ $t(($) => $.menu.edit.saveAsCombo, { ns: 'menu' }) }}
                 </ContextMenuItem>
+                <template
+                  v-if="
+                    contextMenuNote != null &&
+                    score.staff.elements.includes(contextMenuNote)
+                  "
+                >
+                  <ContextMenuItem
+                    v-if="contextMenuNote.footnoteId === null"
+                    @select="insertFootnote(contextMenuNote)"
+                    >{{
+                      $t(($) => $.menu.footnotes.insert, { ns: 'menu' })
+                    }}</ContextMenuItem
+                  >
+                  <template v-else>
+                    <ContextMenuItem @select="openFootnote(contextMenuNote)">{{
+                      $t(($) => $.menu.footnotes.edit, {
+                        ns: 'menu',
+                        number: contextMenuNote.footnoteNumber,
+                      })
+                    }}</ContextMenuItem>
+                    <ContextMenuItem
+                      @select="removeFootnote(contextMenuNote)"
+                      >{{
+                        $t(($) => $.menu.footnotes.remove, { ns: 'menu' })
+                      }}</ContextMenuItem
+                    >
+                  </template>
+                </template>
                 <ContextMenuItem
                   v-if="contextMenuNote != null"
                   @select="openContextMenuPositioning(contextMenuNote)"

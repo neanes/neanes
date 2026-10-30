@@ -24,7 +24,13 @@ export const selectionSchema = z.discriminatedUnion('kind', [
   }),
   z.strictObject({
     kind: z.literal('range'),
-    collection: z.strictObject({ kind: z.literal('staff') }),
+    collection: z.union([
+      z.strictObject({ kind: z.literal('staff') }),
+      z.strictObject({
+        kind: z.literal('footnote'),
+        footnoteId: z.string().uuid(),
+      }),
+    ]),
     start: index,
     end: index,
     anchorRef: z.string().uuid(),

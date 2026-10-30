@@ -38,6 +38,9 @@ export class PageSetup {
   public showFooter: boolean | undefined = undefined;
   public richHeaderFooter: boolean | undefined = undefined;
   public firstPageNumber = 1;
+  public firstFootnoteNumber: number | undefined = undefined;
+  public showFootnoteHorizontalRule: boolean | undefined = undefined;
+  public footnoteHorizontalRuleLength: number | undefined = undefined;
   public numerals: 'westernArabic' | 'easternArabic' | undefined = undefined;
 
   public showHeaderHorizontalRule: boolean | undefined = undefined;

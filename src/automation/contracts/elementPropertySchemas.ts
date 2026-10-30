@@ -58,6 +58,8 @@ const plainTextContent = z
 
 export const elementPropertySchemas = {
   [ElementType.Note]: z.strictObject({
+    footnoteId: z.string().uuid().optional(),
+    footnoteNumber: z.number().int().positive().optional(),
     ...breaks,
     lyrics: z.string(),
     isHyphen: z.boolean(),

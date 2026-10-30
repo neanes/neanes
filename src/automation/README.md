@@ -39,3 +39,26 @@ use the Electron debugging endpoint as their test driver.
 
 Future automation jobs and export transformations belong in this feature area
 (and its Electron counterpart), reusing shared document and rendering behavior.
+
+## Footnotes (proof of concept)
+
+`edit_elements` supports `insert_footnote` with a main-score Note `elementRef`
+(and optional body `elements`) and `remove_footnote` with that reference.
+Each reference owns a separate body; nested and shared references are unsupported.
+Read the Note's read-only `footnoteId` and calculated `footnoteNumber`, then use
+`collection: { kind: "footnote", footnoteId }` with normal element readers/edits.
+The body retains its terminal Empty element, independent musical state, and lyrics.
+Removing its main-score reference removes the body in the same history operation;
+copying the reference copies the body with a new identity.
+
+`get_page_setup` / `update_page_setup` expose `firstFootnoteNumber`,
+`showFootnoteHorizontalRule`, and `footnoteHorizontalRuleLength` (percent).
+Page occurrence readers include the `footnote` region; page line counts include
+main and footnote lines. Range selections can identify the active footnote
+collection. Footnote numbering follows document reference order across pages.
+`get_staff_lyrics` and the `set_staff_lyrics` edit action also accept this
+collection selector for independent authoritative footnote lyrics.
+Whole-footnote pagination is used initially. An oversized body remains editable
+and saveable, but settled page discovery/visual export fails explicitly until it
+fits. Run the self-launching `footnotes` integration scenario for both document
+scopes and real editor/rendering behavior.

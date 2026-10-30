@@ -352,6 +352,29 @@ describe.each([true, false])(
 );
 
 describe('LayoutService.applyRuntPenalty', () => {
+  it('keeps the tail-note penalty when a footnote marker follows its owner', () => {
+    const { items, notes, breakPenalties } = getRuntPenaltyItems(3);
+    notes[2].quantitativeNeume = restNeumes[0];
+    const marker = {
+      type: 'box' as const,
+      width: 12,
+      footnoteReference: notes[1],
+    };
+    items.splice(
+      items.indexOf(breakPenalties[1]),
+      0,
+      penaltyItem(MAX_COST),
+      glueItem(5, 5, 5),
+      marker,
+    );
+    LayoutService.applyRuntPenalty(items, null);
+    expect(breakPenalties.map((penalty) => penalty.cost)).toEqual([
+      0,
+      MAX_COST * 0.15,
+      0,
+    ]);
+  });
+
   it.each(restNeumes)(
     'discourages a break that leaves one %s rest',
     (restNeume) => {

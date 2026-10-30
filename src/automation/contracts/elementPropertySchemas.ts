@@ -17,9 +17,22 @@ import { dropCapLyricsDescription } from './lyricSyntax';
 // Unset values are omitted, except lineHeight: null explicitly resets to normal.
 // False, zero and empty strings remain.
 const breaks = {
-  lineBreak: z.boolean(),
-  lineBreakType: z.enum(LineBreakType).optional(),
-  pageBreak: z.boolean(),
+  lineBreak: z
+    .boolean()
+    .describe(
+      'Force a line break after this element. For a break before a passage, set this on its preceding element.',
+    ),
+  lineBreakType: z
+    .enum(LineBreakType)
+    .optional()
+    .describe(
+      'Center centers the line ending at this element; also set lineBreak:true or pageBreak:true. Unset means a left-aligned break; clear with null to restore that alignment.',
+    ),
+  pageBreak: z
+    .boolean()
+    .describe(
+      'Force a page break after this element, also ending its line. For a new page before a passage, set this on its preceding element.',
+    ),
 };
 const lineHeightSchema = z
   .number()
@@ -249,17 +262,47 @@ export const elementPropertySchemas = {
   }),
   [ElementType.Martyria]: z.strictObject({
     ...breaks,
-    auto: z.boolean(),
-    note: z.enum(Neumes.Note),
-    rootSign: z.enum(Neumes.RootSign),
-    rootSignOverride: z.enum(Neumes.RootSign).optional(),
-    scale: z.enum(Scale),
-    alignRight: z.boolean(),
+    auto: z
+      .boolean()
+      .describe(
+        'True derives note and scale from preceding music. Set false to assign note and scale manually; rootSign is still recomputed by layout.',
+      ),
+    note: z
+      .enum(Neumes.Note)
+      .describe(
+        'Martyria pitch; derived from preceding music when auto:true. Set auto:false for a manual pitch.',
+      ),
+    rootSign: z
+      .enum(Neumes.RootSign)
+      .describe(
+        'Layout-computed root sign, including rootSignOverride. Use rootSignOverride for a persistent display override.',
+      ),
+    rootSignOverride: z
+      .enum(Neumes.RootSign)
+      .optional()
+      .describe(
+        'Override the displayed root sign without changing pitch or scale. Null clears the override and restores calculation.',
+      ),
+    scale: z
+      .enum(Scale)
+      .describe(
+        'Martyria scale; derived from preceding music when auto:true. Set auto:false for a manual scale.',
+      ),
+    alignRight: z
+      .boolean()
+      .describe(
+        'Place at the end of the line. Changing this clears quantitativeNeume unless the same patch explicitly supplies it; an unchanged value preserves it.',
+      ),
     measureBarLeft: z.enum(Neumes.MeasureBar).optional(),
     measureBarRight: z.enum(Neumes.MeasureBar).optional(),
     fthora: z.enum(Neumes.Fthora).optional(),
     chromaticFthoraNote: z.enum(ScaleNote).optional(),
-    quantitativeNeume: z.enum(Neumes.QuantitativeNeume).optional(),
+    quantitativeNeume: z
+      .enum(Neumes.QuantitativeNeume)
+      .optional()
+      .describe(
+        'Attached neume, active when alignRight:true; changes the pitch for subsequent music. When changing alignment, explicitly supply this field to retain or replace it.',
+      ),
     quantitativeNeumeFthora: z.enum(Neumes.Fthora).optional(),
     quantitativeNeumeChromaticFthoraNote: z.enum(ScaleNote).optional(),
     tempo: z.enum(Neumes.TempoSign).optional(),
@@ -329,13 +372,40 @@ export const elementPropertySchemas = {
     marginTop: z.number(),
     offsetYBottom: z.number(),
     offsetYTop: z.number(),
-    modeChange: z.boolean(),
-    modeChangePhysicalNote: z.enum(ScaleNote),
-    modeChangeScale: z.enum(Scale),
-    modeChangeVirtualNote: z.enum(ScaleNote).optional(),
-    modeChangeIgnoreAttractions: z.boolean(),
-    modeChangePermanentEnharmonicZo: z.boolean(),
-    modeChangeBpm: z.number(),
+    modeChange: z
+      .boolean()
+      .describe(
+        'When true, this text box also resets the musical context for subsequent music using modeChange* fields; when false, those fields are inactive.',
+      ),
+    modeChangePhysicalNote: z
+      .enum(ScaleNote)
+      .describe(
+        'Starting physical pitch, including octave, for subsequent music when modeChange:true.',
+      ),
+    modeChangeScale: z
+      .enum(Scale)
+      .describe('Scale for subsequent music when modeChange:true.'),
+    modeChangeVirtualNote: z
+      .enum(ScaleNote)
+      .optional()
+      .describe(
+        'Virtual pitch corresponding to modeChangePhysicalNote; establishes the scale shift when modeChange:true. Unset means no shift. Null clears it.',
+      ),
+    modeChangeIgnoreAttractions: z
+      .boolean()
+      .describe(
+        'Disable automatic pitch attractions in the new musical context when modeChange:true.',
+      ),
+    modeChangePermanentEnharmonicZo: z
+      .boolean()
+      .describe(
+        'Enable permanent enharmonic Zo in the new musical context when modeChange:true.',
+      ),
+    modeChangeBpm: z
+      .number()
+      .describe(
+        'Playback tempo in beats per minute for subsequent music when modeChange:true.',
+      ),
     runningMarkerRole: z.enum(['chapter', 'section']).optional(),
     runningMarkerText: z.string().optional(),
   }),

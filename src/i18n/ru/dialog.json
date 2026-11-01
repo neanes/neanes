@@ -97,7 +97,10 @@
       "header": "Верхний колонтитул",
       "footer": "Нижний колонтитул",
       "lyrics": "Текст песнопения",
-      "dropCap": "Буквица"
+      "dropCap": "Буквица",
+      "footnoteText": "Текст сноски",
+      "footnoteBodyMarker": "Метка перед текстом сноски",
+      "footnoteReference": "Знак сноски"
     }
   },
   "neumePositioning": {

@@ -25,6 +25,9 @@ export const BUILT_IN_PARAGRAPH_STYLE_IDS = {
   Footer: 'footer',
   Lyrics: 'lyrics',
   DropCap: 'drop-cap',
+  FootnoteText: 'footnote-text',
+  FootnoteBodyMarker: 'footnote-body-marker',
+  FootnoteReference: 'footnote-reference',
 } as const;
 
 export type BuiltInParagraphStyleId =
@@ -38,6 +41,12 @@ const BUILT_IN_PARAGRAPH_STYLE_NAME_SELECTORS: Record<
 > = {
   [BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText]: ($) =>
     $.dialog.paragraphStyles.builtIn.defaultText,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText]: ($) =>
+    $.dialog.paragraphStyles.builtIn.footnoteText,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker]: ($) =>
+    $.dialog.paragraphStyles.builtIn.footnoteBodyMarker,
+  [BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference]: ($) =>
+    $.dialog.paragraphStyles.builtIn.footnoteReference,
   [BUILT_IN_PARAGRAPH_STYLE_IDS.Annotation]: ($) =>
     $.dialog.paragraphStyles.builtIn.annotation,
   [BUILT_IN_PARAGRAPH_STYLE_IDS.Title]: ($) =>
@@ -391,6 +400,23 @@ export function createDefaultParagraphStyles() {
     footer,
     lyrics,
     dropCap,
+    createBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+      'Footnote Text',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+      { fontSize: Unit.fromPt(10) },
+    ),
+    createBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
+      'Footnote Body Marker',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+      { fontSize: Unit.fromPt(7.5) },
+    ),
+    createBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
+      'Footnote Reference',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+    ),
   ];
 }
 

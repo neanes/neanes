@@ -174,17 +174,15 @@
     :data-footnote-id="footnote.id"
     class="footnote-label"
     type="button"
-    :style="{
-      left: withZoom(footnote.labelX),
-      top: withZoom(footnote.top),
-      fontSize: withZoom(footnoteMarkerFontSize(score.pageSetup)),
-    }"
+    :style="footnoteBodyStyles.get(footnote.id)"
     :title="
       i18next.t(($) => $.menu.footnotes.returnToReference, { ns: 'menu' })
     "
     @click="!printMode && emit('selectElement', footnote.reference)"
   >
-    {{ footnote.marker }}
+    <sup class="footnote-body-marker" :style="bodyMarkerCss"
+      ><span>{{ footnote.marker }}</span></sup
+    >
   </button>
   <div
     v-if="page.footnoteOverflow && !printMode"
@@ -213,6 +211,25 @@
       :style="getElementStyle(element)"
       @contextmenu="emit('onScoreElementContextMenu', element)"
     >
+      <button
+        v-if="
+          element instanceof FootnoteAnchorElement &&
+          element.footnoteMarker !== null
+        "
+        class="footnote-reference"
+        :data-footnote-id="element.footnoteId"
+        type="button"
+        :style="footnoteReferenceStyle(element)"
+        :title="
+          i18next.t(($) => $.menu.footnotes.edit, {
+            ns: 'menu',
+            number: element.footnoteMarker,
+          })
+        "
+        @click.stop="!printMode && emit('selectFootnote', element)"
+      >
+        {{ footnoteMarkerText(element.footnoteMarker!) }}
+      </button>
       <template v-if="isSyllableElement(element)">
         <div
           :ref="setTemplateRef(`element-${getElementKey(element)}`)"
@@ -293,24 +310,6 @@
             @select-range="emit('setSelectionRange', element)"
             @dblclick="emit('openSyllablePositioningDialog')"
           />
-          <button
-            v-if="(element as NoteElement).footnoteMarker !== null"
-            class="footnote-reference"
-            :data-footnote-id="(element as NoteElement).footnoteId"
-            type="button"
-            :style="footnoteReferenceStyle(element as NoteElement)"
-            :title="
-              i18next.t(($) => $.menu.footnotes.edit, {
-                ns: 'menu',
-                number: (element as NoteElement).footnoteMarker,
-              })
-            "
-            @click.stop="
-              !printMode && emit('selectFootnote', element as NoteElement)
-            "
-          >
-            {{ footnoteMarkerText((element as NoteElement).footnoteMarker!) }}
-          </button>
           <span
             v-if="(element as NoteElement).showLeadingLyricHyphen"
             class="leading-lyric-hyphen"
@@ -677,6 +676,7 @@ import {
   PhTextAlignCenter,
 } from '@phosphor-icons/vue';
 import i18next from 'i18next';
+import type { CSSProperties } from 'vue';
 import { computed, nextTick, type StyleValue, toRaw, toRef } from 'vue';
 
 import AlternateLine from '@/components/AlternateLine.vue';
@@ -697,6 +697,7 @@ import {
   type DropCapElement,
   ElementType,
   type EmptyElement,
+  FootnoteAnchorElement,
   type ImageBoxElement,
   isKeepWithNextActive,
   LineBreakType,
@@ -710,11 +711,16 @@ import {
 } from '@/models/Element';
 import type { BoxOverlayDiagnostics } from '@/models/LayoutDiagnostics';
 import type { Line, Page } from '@/models/Page';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
 import {
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
   FOOTNOTE_RULE_THICKNESS,
-  footnoteMarkerFontSize,
+  footnoteMarkerStyle,
   footnoteMarkerText,
 } from '@/services/FootnoteLayout';
 import { LayoutService } from '@/services/LayoutService';
@@ -734,8 +740,11 @@ import {
   isTempoElement,
   isTextBoxElement,
 } from '@/utils/elementTypeGuards';
+import { resolveFontStyle } from '@/utils/fontStyle';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import type { resolvePageMargins } from '@/utils/PageMargins';
 import type { TokenMetadata } from '@/utils/replaceTokens';
+import { richTextParagraphStyleIdFromClassName } from '@/utils/richTextParagraphStyleClasses';
 import { withZoom, withZoomOffset } from '@/utils/withZoom';
 
 import type {
@@ -832,11 +841,90 @@ const footnoteRuleStyle = computed(() => {
     borderTopWidth: withZoom(FOOTNOTE_RULE_THICKNESS),
   };
 });
-function footnoteReferenceStyle(element: NoteElement) {
+const bodyMarkerTypography = computed(() =>
+  footnoteMarkerStyle(props.score.paragraphStyles, 'body'),
+);
+const referenceMarkerTypography = computed(() =>
+  footnoteMarkerStyle(props.score.paragraphStyles),
+);
+function markerCss(style: ReturnType<typeof footnoteMarkerStyle>) {
+  const font = resolveFontStyle(style.fontFamily, style.fontStyle);
   return {
+    fontSize: withZoom(style.fontSize),
+    fontFamily: getFontFamilyWithFallback(font.cssFontFamily),
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+    color: style.color,
+    textDecoration: style.textDecoration ?? undefined,
+    WebkitTextStrokeWidth: withZoom(style.strokeWidth),
+    WebkitTextStrokeColor: style.strokeColor,
+    fontVariantCaps: style.fontVariantCaps ?? undefined,
+    fontVariantNumeric: style.fontVariantNumeric ?? undefined,
+    fontVariantLigatures: style.fontVariantLigatures ?? undefined,
+    fontVariantAlternates: style.fontVariantAlternates ?? undefined,
+  } as CSSProperties;
+}
+const bodyMarkerCss = computed(() => markerCss(bodyMarkerTypography.value));
+const footnoteBodyStyles = computed(() => {
+  return new Map(
+    props.page.footnotes.map((footnote) => {
+      const first = footnote.lines[0]?.elements[0];
+      let style = resolveParagraphStyle(
+        props.score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+      );
+      if (first && isRichTextBoxElement(first)) {
+        const template = document.createElement('template');
+        template.innerHTML = first.multipanel
+          ? first.contentLeft
+          : first.content;
+        const paragraph = template.content.querySelector('p');
+        const styleId = Array.from(paragraph?.classList ?? [])
+          .map(richTextParagraphStyleIdFromClassName)
+          .find((id) => id !== null);
+        style = resolveParagraphStyle(
+          props.score.paragraphStyles,
+          styleId ?? getTextBoxParagraphStyleFallbackId(first.inline),
+        );
+      }
+      const contextCss: CSSProperties = {
+        ...markerCss(style),
+        lineHeight: style.lineHeight ?? 'normal',
+      };
+      // Superscripts need the first line's font and baseline as their context.
+      // Applying the small marker font to the button itself raises it too far.
+      if (
+        first &&
+        (isSyllableElement(first) ||
+          isMartyriaElement(first) ||
+          isTempoElement(first) ||
+          isEmptyElement(first))
+      ) {
+        contextCss.lineHeight = 'inherit';
+        contextCss.fontFamily = props.score.pageSetup.neumeDefaultFontFamily;
+        contextCss.fontSize = withZoom(
+          props.score.pageSetup.neumeDefaultFontSize,
+        );
+      }
+      return [
+        footnote.id,
+        {
+          ...contextCss,
+          left: withZoom(footnote.labelX),
+          top: withZoom(first?.y ?? footnote.top),
+        },
+      ] as const;
+    }),
+  );
+});
+const referenceMarkerCss = computed(() =>
+  markerCss(referenceMarkerTypography.value),
+);
+function footnoteReferenceStyle(element: FootnoteAnchorElement) {
+  return {
+    ...referenceMarkerCss.value,
     left: !rtl.value ? withZoom(element.footnoteMarkerOffset) : undefined,
     right: rtl.value ? withZoom(element.footnoteMarkerOffset) : undefined,
-    fontSize: withZoom(footnoteMarkerFontSize(props.score.pageSetup)),
   };
 }
 
@@ -1359,6 +1447,13 @@ defineExpose({
 }
 .footnote-reference {
   top: 0;
+}
+.footnote-label {
+  white-space: nowrap;
+}
+.footnote-body-marker > span {
+  display: inline-block;
+  line-height: 1;
 }
 .footnote-overflow-area {
   position: absolute;

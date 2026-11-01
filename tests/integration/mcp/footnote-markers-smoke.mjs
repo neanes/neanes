@@ -178,6 +178,18 @@ try {
   await choose('Asterisk');
   assert.equal(await text('[data-testid="footnote-marker-preview"]'), '(*)');
   assert.equal(await text('[data-testid="footnote-body-preview"]'), '*');
+  assert.equal(
+    await evaluate(
+      'document.querySelector(\'[data-testid="footnote-marker-preview"]\').tagName',
+    ),
+    'SPAN',
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelector(\'[data-testid="footnote-body-preview"]\').tagName',
+    ),
+    'SUP',
+  );
   await update();
   await eventually(async () => assert.equal(await text(marker(ids[1])), '(*)'));
   assert.equal(await text(label(ids[1])), '*');

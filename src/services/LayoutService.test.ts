@@ -11,6 +11,7 @@ import type { ScoreElement } from '../models/Element';
 import {
   DropCapElement,
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   TempoElement,
   TextBoxElement,
@@ -19,18 +20,104 @@ import type { MeasureBar } from '../models/Neumes';
 import {
   Fthora,
   GorgonNeume,
+  Note,
   QuantitativeNeume,
   restNeumes,
 } from '../models/Neumes';
 import { Line, Page } from '../models/Page';
 import { PageSetup } from '../models/PageSetup';
-import { Scale } from '../models/Scales';
+import {
+  getNoteValue,
+  getScaleNoteFromValue,
+  Scale,
+  ScaleNote,
+} from '../models/Scales';
 import { resolvePageMargins } from '../utils/PageMargins';
 import { LayoutService } from './LayoutService';
 
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
 describe('LayoutService.calculateMartyriae', () => {
+  it('forks the pitch after a note and updates it without changing the main melody', () => {
+    const setup = new PageSetup();
+    const key = new ModeKeyElement();
+    key.scaleNote = ScaleNote.Ga;
+    const anchor = new NoteElement();
+    anchor.footnoteId = 'body';
+    const mainMartyria = new MartyriaElement();
+    const bodyMartyria = new MartyriaElement();
+    let contexts = LayoutService.calculateMartyriae(
+      [key, anchor, mainMartyria],
+      setup,
+    );
+    LayoutService.calculateMartyriae(
+      [bodyMartyria],
+      setup,
+      contexts.get(anchor),
+    );
+    expect(bodyMartyria.note).toBe(Note.Ga);
+    anchor.quantitativeNeume = QuantitativeNeume.Oligon;
+    contexts = LayoutService.calculateMartyriae(
+      [key, anchor, mainMartyria],
+      setup,
+    );
+    LayoutService.calculateMartyriae(
+      [bodyMartyria],
+      setup,
+      contexts.get(anchor),
+    );
+    expect(bodyMartyria.note).toBe(Note.Thi);
+    const bodyNote = new NoteElement();
+    bodyNote.quantitativeNeume = QuantitativeNeume.Oligon;
+    LayoutService.calculateMartyriae(
+      [bodyNote, bodyMartyria],
+      setup,
+      contexts.get(anchor),
+    );
+    expect(bodyMartyria.note).toBe(Note.Ke);
+    expect(mainMartyria.note).toBe(Note.Thi);
+  });
+
+  it('inherits scale and virtual pitch, while a manual body martyria can reset them', () => {
+    const setup = new PageSetup();
+    const note = new NoteElement();
+    const automatic = new MartyriaElement();
+    const initial = {
+      note: getNoteValue(Note.Ga),
+      scale: Scale.SoftChromatic,
+      shift: 2,
+    };
+    LayoutService.calculateMartyriae([note, automatic], setup, initial);
+    expect(automatic.note).toBe(Note.Ga);
+    expect(automatic.scale).toBe(Scale.SoftChromatic);
+    expect(note.scaleNotesVirtual).toEqual([
+      getScaleNoteFromValue(initial.note + 2),
+    ]);
+    const manual = new MartyriaElement();
+    manual.auto = false;
+    manual.note = Note.Pa;
+    LayoutService.calculateMartyriae([manual, automatic], setup, initial);
+    expect(automatic.note).toBe(Note.Pa);
+    expect(automatic.scale).toBe(Scale.Diatonic);
+  });
+
+  it('captures a martyria anchor after its attached interval and fthora', () => {
+    const anchor = new MartyriaElement();
+    anchor.auto = false;
+    anchor.alignRight = true;
+    anchor.footnoteId = 'body';
+    anchor.quantitativeNeume = QuantitativeNeume.OligonPlusKentimaAbove;
+    anchor.quantitativeNeumeFthora = Fthora.Zygos_Top;
+    const setup = new PageSetup();
+    const main = new MartyriaElement();
+    const contexts = LayoutService.calculateMartyriae([anchor, main], setup);
+    const body = new MartyriaElement();
+    LayoutService.calculateMartyriae([body], setup, contexts.get(anchor));
+    expect(body.note).toBe(main.note);
+    expect(body.scale).toBe(Scale.Zygos);
+    expect(body.rootSign).toBe(main.rootSign);
+  });
+
   it('normalizes all fthora slots in one layout pass', () => {
     const note = new NoteElement();
     note.quantitativeNeume =

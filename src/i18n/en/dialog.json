@@ -97,7 +97,10 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lyrics",
-      "dropCap": "Drop Cap"
+      "dropCap": "Drop Cap",
+      "footnoteText": "Footnote Text",
+      "footnoteBodyMarker": "Footnote Body Marker",
+      "footnoteReference": "Footnote Reference"
     }
   },
   "neumePositioning": {

@@ -270,9 +270,9 @@ try {
           'Edited footnote text',
         );
       });
-      // Use the real empty-neume click and keyboard handlers in the footnote.
+      // Use keyboard end navigation and append without a visible empty staff.
       await evaluate(
-        `document.querySelector('[data-footnote-id="${bodySelector.footnoteId}"] .empty-neume-box').click()`,
+        `document.activeElement?.blur(); document.dispatchEvent(new KeyboardEvent('keydown', {code:'End', key:'End', bubbles:true}));`,
       );
       await evaluate(
         `document.activeElement?.blur(); document.dispatchEvent(new KeyboardEvent('keydown', {code:'KeyJ', key:'j', bubbles:true})); document.dispatchEvent(new KeyboardEvent('keyup', {code:'KeyJ', key:'j', bubbles:true}));`,

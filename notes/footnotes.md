@@ -1,20 +1,21 @@
 # Footnotes implementation plan
 
 Status: the main-score and rich-textbox reference proofs of concept, custom
-markers, and shared Undo/Redo routing are implemented. Remaining styling,
-continuation, and exporter completion work is planned.
+markers, shared Undo/Redo routing, paragraph-style typography, martyria references,
+and inherited musical context are implemented. Continuation, additional spacing
+controls, and exporter completion remain planned.
 
 ## Proof-of-concept usage and limits
 
-- Right-click a main-score neume and choose Insert Footnote. Use the existing
+- Right-click a main-score neume or martyria and choose Insert Footnote. Use the existing
   score tools to insert textboxes and neumes directly in the footnote area.
-- Click a superscript reference to edit its body. Click the body number to return
+- Click a reference to edit its body. Click the body number to return
   to the reference. Rich textboxes also support references at the caret through
   the Minimal divider icon beside Link in their formatting toolbar's insert tools.
   The icon combines a raised 1, separator, and short note line. It has a translated
   Insert Footnote tooltip and accessible label. Plain textboxes do not support references;
   headers, footers, annotations, and footnote bodies cannot receive references.
-- Neume references use parentheses, with ordinary music spacing on both sides.
+- Neume and martyria references use parentheses, with ordinary music spacing on both sides.
   The gaps participate in justification; the marker stays with its owning neume.
   Rich textbox references and body labels omit parentheses. Right-click a reference
   or body label and choose Footnote Properties to select an automatic number, a
@@ -28,8 +29,20 @@ continuation, and exporter completion work is planned.
 - A footnote stays whole with its reference line. Oversized content is flagged
   and displayed in an editable overflow area below the physical page. Settled
   PDF/PNG/print output is blocked until the content fits.
-- The proof of concept uses the existing score typography for body content.
-  Separate footnote typography and continuation remain later stages. Plain textbox references remain excluded.
+- Footnote Text inherits Default Text and defaults to 10pt. Footnote Body Marker
+  inherits Footnote Text and defaults to 7.5pt. Footnote Reference inherits
+  Default Text. These styles configure typography,
+  including font size, without superscript properties or automatic scaling.
+  Body labels use native `<sup>` at the configured marker font size. Parenthesized
+  references among neumes keep their existing placement and use the configured
+  Footnote Reference size directly. Rich textbox references inherit surrounding
+  inline formatting and use CKEditor superscript.
+- A reference inserted in a rich textbox starts with an empty rich textbox in
+  the body, styled with Footnote Text and focused for typing. Musical references
+  start with an empty staff. Explicit MCP body elements replace this default.
+- Body music starts from the musical context immediately after its reference,
+  including pitch, octave, scale, and fthora shift. It follows anchor edits. Body
+  changes remain local; a manual martyria or mode key can establish new context.
 - PDF, PNG, and printing include footnotes. HTML, LaTeX, and MusicXML export are
   explicitly blocked for documents with footnotes until those exporters support
   them, so these exports cannot silently discard content.
@@ -40,6 +53,39 @@ continuation, and exporter completion work is planned.
   documents, keyboard and textbox editing, context-menu insertion, numbering across
   a digit boundary, footer placement, copying, undo/redo, both save formats, and
   rendered PNG/PDF output. See the stages below for the complete feature scope.
+
+## End-of-content editing
+
+Implemented: every body retains its terminal `EmptyElement` for insertion,
+serialization, MCP discovery, and existing history commands. A body with any
+content element omits the terminal from prepared layout lines entirely: it owns
+no box, width, height, lyric reservation, or trailing paragraph. A completely
+empty body still lays out and displays the familiar empty neume box. Main-score
+layout and rendering are unchanged. `ScorePageContent` renders the prepared lines,
+so populated bodies have no empty box in the editor or print/export renderers.
+
+Reference clicks select the last content element (or the empty target), focusing
+a rich textbox through the existing editor focus path. Rich-text reference
+creation still initializes and focuses a Footnote Text textbox. Existing textbox,
+mode-key, and image insertion commands insert after the selected body element;
+music Auto and Insert modes continue to append through their existing endpoint
+semantics. Explicit before/after drop-cap commands retain their meaning.
+
+Arrow navigation can reach the internal endpoint without displaying a staff.
+Footnote rich textboxes participate in body arrow navigation. Escape leaves rich
+textbox editing; End selects the internal endpoint, and ordinary music keys append
+there. Selecting the endpoint copies the final content's page/line position only;
+it never expands the body or changes pagination. Deleting final content selects
+remaining content, restoring the visible empty target when the body becomes empty.
+The existing command service owns all insertions/deletions and undo/redo; no extra
+layout pass or new history operation is needed.
+
+`footnote-end-content` runs a real disposable Electron regression for text-only,
+music-only, both mixed orders, and empty bodies; reference focus; Auto/Insert
+appending; textbox insertion; arrow/End navigation; deletion and undo/redo; stable
+pagination; and PDF/PNG export. The existing `footnotes` and `rich-text-footnotes`
+scenarios cover ownership, lyrics, numbering, context, serialization, and newly
+created rich-text body focus.
 
 ## Intended behavior
 
@@ -52,7 +98,7 @@ of the footnote area's width, including 100% for a full-width rule. The proposed
 default is 40%, aligned to the reading-direction start edge.
 
 The complete feature should support references after neumes and at the caret
-inside rich textboxes. References inside plain textboxes are out of scope; plain
+inside rich textboxes, and after martyrias. References inside plain textboxes are out of scope; plain
 textboxes remain supported as footnote body content. Clicking a reference should focus its footnote
 for editing with the usual score tools. Provide a way to return to the reference.
 Each inserted reference initially creates a separate footnote; shared references
@@ -66,11 +112,12 @@ musical state and does not affect the main score's pitch calculations or playbac
 Nested footnotes are excluded. Headers, footers, and running-marker metadata
 remain document-level features rather than features of footnote content.
 
-Automatic markers are parenthesized superscript numbers in document reference order. Numbering
+Automatic markers follow document reference order. Musical references have
+parentheses and use Footnote Reference; rich references have no parentheses and
+use native rich-text superscript. Body labels use Footnote Body Marker. Numbering
 continues across pages. A document setting, **First footnote number**, defaults to
 1 and allows a document excerpt to continue an earlier document's numbering.
-For example, a starting value of 12 produces markers 12, 13, 14. Custom markers
-are a later stage.
+For example, a starting value of 12 produces markers 12, 13, 14. Custom markers are implemented.
 
 ## Layout approach and constraints
 
@@ -85,7 +132,7 @@ The proposed flow is:
 1. Resolve reference order and automatic marker labels before line breaking.
 2. Include reference-marker geometry in the owning neume's or textbox's layout.
 3. Lay out main content and each footnote into lines at known widths, with
-   independent musical state for each footnote. Do not paginate footnotes by
+   musical state forked from the anchor for each footnote. Do not paginate footnotes by
    recursively calling `processPages` with a synthetic score.
 4. For each candidate main-content line, gather all its references before testing
    page fit. Include any lines that must stay together, such as multiline drop
@@ -139,14 +186,14 @@ concept, without changing existing document behavior.
 - Represent candidate lines with their elements, positions, height, paragraph
   boundaries, and keep-together requirements before assigning page coordinates.
 - Separate musical context per content sequence. Give footnotes their own lyric
-  setup and initial musical context using existing defaults.
+  setup and initial musical context copied from immediately after the anchor.
 - Ensure postprocessing does not transfer bars, melismas, ison alignment, or
   musical state between the main score and footnotes, or between footnotes.
 - Keep raw-object layout writes and existing change detection behavior intact.
 
 Exit criteria: existing layout tests pass, representative documents have unchanged
 pagination, and a second independent sequence can be laid out at a specified width
-without creating a second document or inheriting the main score's musical state.
+without creating a second document or writing its musical state back to the main score.
 
 ## Stage 2: initial end-to-end proof of concept
 
@@ -177,7 +224,7 @@ This stage must include editable neumes, not just textual footnotes.
 - Route selection, keyboard input, properties, and deletion through the active
   content sequence rather than assuming every editable element is in the main
   staff. Keep document settings and undo history on the same workspace.
-- Clicking the superscript selects/focuses its footnote; provide return navigation.
+- Clicking the reference selects/focuses its footnote; provide return navigation.
 - Add First footnote number to document/page setup following the existing First
   page number interaction. Accept positive integers, persist the value, and make
   changes undoable. Changing it updates both references and body labels and
@@ -368,3 +415,25 @@ The main architectural acceptance condition is that page ownership is decided
 from precomputed line geometry and reference data. Existing font/textbox
 measurement reconciliation may rerun layout; footnotes must not introduce a
 second iterative loop that alternates page assignment and footnote discovery.
+
+## Implemented typography and musical context follow-up
+
+- Superscript is not a paragraph-style property. No font-size multiplier or
+  calculated baseline offset is applied to paragraph typography.
+- Footnote Text defaults to 10pt. Body labels use `<sup>` with the configured
+  Footnote Body Marker font size, which defaults to 7.5pt and inherits other
+  typography from Footnote Text. Footnote Reference styles parenthesized
+  references among neumes and martyrias at their existing position, without
+  superscript markup or scaling.
+- Rich references retain surrounding font, color, and other inline formatting and
+  use the editor's superscript feature. Legacy unformatted references migrate on
+  load; explicitly normal references saved with the new styles remain normal.
+- New rich-reference bodies contain a focused rich textbox using Footnote Text.
+  Main-score note and martyria references keep an empty musical staff by default.
+- The existing music traversal captures context after each anchor. Each body
+  begins from that context and computes locally. Main-score ambitus and playback
+  remain independent. No additional layout settling pass is introduced.
+- Martyria references support normal and right-aligned placement, including RTL,
+  with ordinary music spacing and the marker kept with its anchor.
+- The `footnote-styles-context` Electron scenario covers context inheritance,
+  anchor changes, local body calculations, style sizing, and LTR/RTL margins.

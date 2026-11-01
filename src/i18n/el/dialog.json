@@ -97,7 +97,10 @@
       "header": "Κεφαλίδα",
       "footer": "Υποσέλιδο",
       "lyrics": "Στίχοι",
-      "dropCap": "Αρχίγραμμα"
+      "dropCap": "Αρχίγραμμα",
+      "footnoteText": "Κείμενο υποσημείωσης",
+      "footnoteBodyMarker": "Δείκτης σώματος υποσημείωσης",
+      "footnoteReference": "Παραπομπή υποσημείωσης"
     }
   },
   "neumePositioning": {

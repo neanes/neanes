@@ -78,7 +78,15 @@ export function rewriteRichTextFootnoteIds(
           replacements.push({
             start: parser.startIndex,
             end: parser.endIndex + 1,
-            text: `<span class="${FOOTNOTE_CLASS}" ${FOOTNOTE_ATTRIBUTE}="${id}">`,
+            text: `<span ${Object.entries({
+              ...attributes,
+              [FOOTNOTE_ATTRIBUTE]: id,
+            })
+              .map(
+                ([key, value]) =>
+                  `${key}="${value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')}"`,
+              )
+              .join(' ')}>`,
           });
         }
       }
@@ -104,7 +112,7 @@ export function remapRichTextBoxFootnotes(
 }
 
 export function richTextFootnoteHtml(id: string) {
-  return `<span class="${FOOTNOTE_CLASS}" ${FOOTNOTE_ATTRIBUTE}="${id}"></span>`;
+  return `<sup><span class="${FOOTNOTE_CLASS}" ${FOOTNOTE_ATTRIBUTE}="${id}"></span></sup>`;
 }
 
 // Automation inserts at a source HTML boundary, never inside a tag or entity.
@@ -166,4 +174,33 @@ export function insertRichTextFootnote(
     throw new Error('INVALID_ELEMENT_EDIT');
   }
   return html.slice(0, offset) + richTextFootnoteHtml(id) + html.slice(offset);
+}
+
+// Legacy references were always superscript through a global CSS rule. Upgrade
+// them to ordinary rich-text markup when loading scores without footnote styles.
+export function superscriptLegacyFootnoteMarkers(html: string) {
+  const stack: { name: string; wrap: boolean }[] = [];
+  const inserts: { at: number; text: string }[] = [];
+  const parser = new Parser({
+    onopentag(name, attributes) {
+      const wrap =
+        name === 'span' &&
+        attributes.class?.split(/\s+/).includes(FOOTNOTE_CLASS) === true &&
+        !stack.some((parent) => parent.name === 'sup');
+      if (wrap) {
+        inserts.push({ at: parser.startIndex, text: '<sup>' });
+      }
+      stack.push({ name, wrap });
+    },
+    onclosetag() {
+      if (stack.pop()?.wrap) {
+        inserts.push({ at: parser.endIndex + 1, text: '</sup>' });
+      }
+    },
+  });
+  parser.end(html);
+  for (const insert of inserts.sort((a, b) => b.at - a.at)) {
+    html = html.slice(0, insert.at) + insert.text + html.slice(insert.at);
+  }
+  return html;
 }

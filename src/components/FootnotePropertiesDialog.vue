@@ -82,17 +82,26 @@
                   ns: 'dialog',
                 })
               }}:
-              <sup data-testid="footnote-marker-preview">{{
-                referencePreview
-              }}</sup></span
+              <component
+                :is="richTextReference ? 'sup' : 'span'"
+                data-testid="footnote-marker-preview"
+                :style="
+                  richTextReference
+                    ? undefined
+                    : { fontSize: `${referenceTypography.fontSize}px` }
+                "
+                >{{ referencePreview }}</component
+              ></span
             >
             <span
               >{{
                 $t(($) => $.dialog.footnoteProperties.body, { ns: 'dialog' })
               }}:
-              <span data-testid="footnote-body-preview">{{
-                markerPreview
-              }}</span></span
+              <sup
+                data-testid="footnote-body-preview"
+                :style="{ fontSize: `${bodyTypography.fontSize}px` }"
+                >{{ markerPreview }}</sup
+              ></span
             >
           </div>
         </FieldGroup>
@@ -137,11 +146,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { Footnote } from '@/models/Footnote';
-import { footnoteMarkerText } from '@/services/FootnoteLayout';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  footnoteMarkerStyle,
+  footnoteMarkerText,
+} from '@/services/FootnoteLayout';
 import { normalizeFootnoteMarker } from '@/services/FootnoteMarker';
 
 const props = defineProps<{
   footnote: Footnote;
+  paragraphStyles: ParagraphStyle[];
   automaticNumber: number;
   richTextReference: boolean;
 }>();
@@ -189,6 +203,12 @@ const markerPreview = computed(() =>
   valid.value
     ? (normalizeFootnoteMarker(value.value) ?? String(props.automaticNumber))
     : '',
+);
+const bodyTypography = computed(() =>
+  footnoteMarkerStyle(props.paragraphStyles, 'body'),
+);
+const referenceTypography = computed(() =>
+  footnoteMarkerStyle(props.paragraphStyles),
 );
 const referencePreview = computed(() =>
   props.richTextReference

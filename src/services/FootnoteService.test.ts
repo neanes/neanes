@@ -18,6 +18,7 @@ import { SaveService } from '@/services/SaveService';
 import { normalizeFootnoteMarker } from './FootnoteMarker';
 import {
   captureFootnotes,
+  createFootnote,
   footnoteMarkerUpdateCommand,
   footnoteRemovalCommands,
   orderedFootnotes,
@@ -39,6 +40,76 @@ function fixture() {
 }
 
 describe('footnote ownership', () => {
+  it('loads legacy rich markers as superscript while preserving modern normal markers', () => {
+    const workspace = new Workspace();
+    const body = new Footnote();
+    const box = new RichTextBoxElement();
+    box.content = `<p>A<span class="neanes-footnote" data-footnote-id="${body.id}"></span>B</p>`;
+    workspace.score.staff.elements.unshift(box);
+    workspace.score.footnotes.push(body);
+    const saved = SaveService.SaveScoreToJson(workspace.score);
+    expect(
+      SaveService.LoadScoreFromJson(saved).staff.elements[0],
+    ).toHaveProperty('content', box.content);
+    saved.paragraphStyles = saved.paragraphStyles?.filter(
+      (style) => !style.id.startsWith('footnote-'),
+    );
+    const loaded = SaveService.LoadScoreFromJson(saved);
+    expect(loaded.staff.elements[0]).toHaveProperty(
+      'content',
+      box.content
+        .replace('<span', '<sup><span')
+        .replace('</span>', '</span></sup>'),
+    );
+    const roundTrip = SaveService.LoadScoreFromJson(
+      SaveService.SaveScoreToJson(loaded),
+    );
+    expect(roundTrip.staff.elements[0]).toHaveProperty(
+      'content',
+      (loaded.staff.elements[0] as RichTextBoxElement).content,
+    );
+  });
+
+  it('creates a styled rich-text body only for rich-text anchors', () => {
+    const source = new RichTextBoxElement();
+    source.languageCode = 'el';
+    source.textDirection = 'ltr';
+    const body = createFootnote(source);
+    expect(body.staff.elements[0]).toBeInstanceOf(RichTextBoxElement);
+    expect(body.staff.elements[0]).toMatchObject({
+      content: '<p class="neanes-paragraph-style-footnote-text"></p>',
+      languageCode: 'el',
+    });
+    expect(createFootnote(new NoteElement()).staff.elements).toHaveLength(1);
+    expect(createFootnote(source, false).staff.elements).toHaveLength(1);
+  });
+
+  it('persists, copies, and undoes martyria anchors with their bodies', () => {
+    const workspace = new Workspace();
+    const anchor = new MartyriaElement();
+    workspace.score.staff.elements.unshift(anchor);
+    const plan = planFootnoteInsertion(workspace, anchor);
+    workspace.commandService.executeAsBatch(plan.commands);
+    const loaded = SaveService.LoadScoreFromJson(
+      JSON.parse(JSON.stringify(SaveService.SaveScoreToJson(workspace.score))),
+    );
+    expect(loaded.staff.elements[0]).toHaveProperty(
+      'footnoteId',
+      plan.footnote.id,
+    );
+    const clone = anchor.clone();
+    const bodies = prepareFootnotePaste(
+      [clone],
+      captureFootnotes(workspace.score, [anchor]),
+    );
+    expect(clone.footnoteId).toBe(bodies[0].id);
+    expect(clone.footnoteId).not.toBe(anchor.footnoteId);
+    workspace.commandService.undo();
+    expect(anchor.footnoteId).toBeNull();
+    workspace.commandService.redo();
+    expect(orderedFootnotes(workspace.score)[0].reference).toBe(anchor);
+  });
+
   it('creates and removes a reference and its body in one undo step', () => {
     const { workspace, reference, footnote } = fixture();
     expect(reference.footnoteId).toBe(footnote.id);

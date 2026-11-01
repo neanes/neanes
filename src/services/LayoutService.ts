@@ -24,6 +24,7 @@ import type {
 import {
   ElementType,
   EmptyElement,
+  FootnoteAnchorElement,
   isAutomaticBreakProhibited,
   isBlockElement,
   isKeepWithNextActive,
@@ -89,6 +90,7 @@ import {
   FOOTNOTE_RULE_THICKNESS,
   FOOTNOTE_SPACING,
   footnoteMarkerFont,
+  footnoteMarkerStyle,
   footnoteMarkerText,
   footnotePageSetup,
   footnoteSectionHeight,
@@ -275,8 +277,14 @@ interface ElementBox extends Box {
   element: ScoreElement;
 }
 
+export interface MusicalContext {
+  note: number;
+  scale: Scale;
+  shift: number;
+}
+
 interface FootnoteMarkerBox extends Box {
-  footnoteReference: NoteElement;
+  footnoteReference: FootnoteAnchorElement;
 }
 
 interface CompletedParagraph {
@@ -416,11 +424,11 @@ export class LayoutService {
         }
 
         this.saveElementState(element);
-        if (element.elementType === ElementType.Note) {
-          (element as NoteElement).footnoteNumber = null;
-          (element as NoteElement).footnoteMarker = null;
-          (element as NoteElement).footnoteMarkerWidth = 0;
-          (element as NoteElement).footnoteMarkerOffset = 0;
+        if (element instanceof FootnoteAnchorElement) {
+          element.footnoteNumber = null;
+          element.footnoteMarker = null;
+          element.footnoteMarkerWidth = 0;
+          element.footnoteMarkerOffset = 0;
         }
       }),
     );
@@ -429,7 +437,12 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
-    const footnotes = this.prepareFootnotes(workspace, options);
+    const musicalContexts = this.calculateMartyriae(elements, pageSetup);
+    const footnotes = this.prepareFootnotes(
+      workspace,
+      musicalContexts,
+      options,
+    );
     const content = this.prepareContentLines(
       elements,
       pageSetup,
@@ -740,6 +753,17 @@ export class LayoutService {
           line.footnoteId = body.id;
           top += candidate.height;
         }
+        const staff = score.footnotes.find(
+          (footnote) => footnote.id === body.id,
+        )!.staff;
+        if (staff.elements.length > 1) {
+          const last = staff.elements.at(-2)!;
+          const terminal = staff.elements.at(-1)!;
+          terminal.page = last.page;
+          terminal.line = last.line;
+          terminal.x = last.x + last.width;
+          terminal.y = last.y;
+        }
         const bodyPage = new Page();
         bodyPage.physicalPageNumber = physicalPage.physicalPageNumber;
         bodyPage.lines = body.lines;
@@ -787,6 +811,7 @@ export class LayoutService {
 
   private static prepareFootnotes(
     workspace: Workspace,
+    musicalContexts: Map<ScoreElement, MusicalContext>,
     options?: LayoutDiagnosticsOptions,
   ) {
     const score = workspace.score;
@@ -801,21 +826,28 @@ export class LayoutService {
         }
       }
     }
-    const markerFont = footnoteMarkerFont(score.pageSetup);
+    const markerFont = footnoteMarkerFont(score.paragraphStyles);
+    const bodyMarkerFont = footnoteMarkerFont(score.paragraphStyles, 'body');
+    const markerStyle = footnoteMarkerStyle(score.paragraphStyles);
+    const bodyMarkerStyle = footnoteMarkerStyle(score.paragraphStyles, 'body');
     const labelWidths = ordered.map(({ marker }) =>
-      TextMeasurementService.getTextWidth(marker, markerFont),
+      TextMeasurementService.getTextWidth(
+        marker,
+        bodyMarkerFont,
+        bodyMarkerStyle.fontVariantCaps ?? 'normal',
+      ),
     );
     const gutter = Math.max(0, ...labelWidths) + 6;
     return new Map(
       ordered.map(({ footnote, reference, number, marker }) => {
-        if (reference.elementType === ElementType.Note) {
-          (reference as NoteElement).footnoteNumber = number;
-          (reference as NoteElement).footnoteMarker = marker;
-          (reference as NoteElement).footnoteMarkerWidth =
-            TextMeasurementService.getTextWidth(
-              footnoteMarkerText(marker),
-              markerFont,
-            );
+        if (reference instanceof FootnoteAnchorElement) {
+          reference.footnoteNumber = number;
+          reference.footnoteMarker = marker;
+          reference.footnoteMarkerWidth = TextMeasurementService.getTextWidth(
+            footnoteMarkerText(marker),
+            markerFont,
+            markerStyle.fontVariantCaps ?? 'normal',
+          );
         }
         if (
           footnote.staff.elements.some(
@@ -825,11 +857,17 @@ export class LayoutService {
           throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
         }
         const setup = footnotePageSetup(score.pageSetup, gutter, 1);
+        this.calculateMartyriae(
+          footnote.staff.elements,
+          setup,
+          musicalContexts.get(reference),
+        );
         const content = this.prepareContentLines(
           footnote.staff.elements,
           setup,
           score.paragraphStyles,
           options,
+          true,
         );
         const lines = this.getContentLines(
           content.layoutWorkspace.completedParagraphs,
@@ -906,13 +944,28 @@ export class LayoutService {
         : resolvedMargins.contentLeft;
       if (this.isFootnoteMarkerBox(item)) {
         const reference = item.footnoteReference;
-        reference.footnoteMarkerOffset =
-          contentStart +
-          position.xOffset +
-          currentLine.indentation +
-          centerOffsetPx -
-          reference.x;
-        reference.width = reference.footnoteMarkerOffset + position.width;
+        if (isRightAlignedMartyria(reference)) {
+          const martyria = reference as MartyriaElement;
+          const baseWidth = this.getMartyriaWidth(martyria, pageSetup);
+          const spacing = this.getInlineSpacing(pageSetup);
+          reference.footnoteMarkerOffset = baseWidth + spacing;
+          reference.width = reference.footnoteMarkerOffset + position.width;
+          const ink =
+            this.getVisibleMeasureBarRight(martyria) == null
+              ? this.getMartyriaRightInkOverhang(martyria, pageSetup)
+              : 0;
+          reference.x = pageSetup.melkiteRtl
+            ? resolvedMargins.right + ink
+            : resolvedMargins.contentRight - reference.width - ink;
+        } else {
+          reference.footnoteMarkerOffset =
+            contentStart +
+            position.xOffset +
+            currentLine.indentation +
+            centerOffsetPx -
+            reference.x;
+          reference.width = reference.footnoteMarkerOffset + position.width;
+        }
         continue;
       }
       if (!('element' in item)) {
@@ -1119,9 +1172,8 @@ export class LayoutService {
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
     options?: LayoutDiagnosticsOptions,
+    hidePopulatedTerminator = false,
   ) {
-    this.calculateMartyriae(elements, pageSetup);
-
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
     // users corrupting their score.
@@ -1577,23 +1629,7 @@ export class LayoutService {
 
           // The note box width (unchanged by the bar transfer).
           this.addBox(noteElement.neumeWidth, noteElement, layoutWorkspace);
-          if (noteElement.footnoteMarker !== null) {
-            // Keep the reference with its neume, while its leading gap uses the
-            // same stretch and shrink budget as ordinary music spacing.
-            this.preventBreak(layoutWorkspace);
-            this.addGlue(standardGlue, layoutWorkspace, 'footnote-spacing');
-            const marker: FootnoteMarkerBox = {
-              type: 'box',
-              width: noteElement.footnoteMarkerWidth,
-              footnoteReference: noteElement,
-            };
-            this.pushAnonymousParagraphItem(
-              marker,
-              layoutWorkspace,
-              'footnote-marker',
-            );
-            layoutWorkspace.neumesEndPx += marker.width;
-          }
+          this.addFootnoteMarker(noteElement, standardGlue, layoutWorkspace);
 
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
@@ -1784,10 +1820,16 @@ export class LayoutService {
           // PROCESS MARTYRIA
           const martyriaElement = elements[i] as MartyriaElement;
           const previousElement = this.getElementAt(elements, i - 1);
-          const elementWidthPx = this.getMartyriaWidth(
+          const martyriaWidth = this.getMartyriaWidth(
             martyriaElement,
             pageSetup,
           );
+          const hasMarker = martyriaElement.footnoteMarker !== null;
+          const elementWidthPx =
+            martyriaWidth +
+            (hasMarker
+              ? standardGlue.width + martyriaElement.footnoteMarkerWidth
+              : 0);
           const isParagraphStartMartyria =
             layoutWorkspace.pendingParagraph.length === 0;
           const lineStartMartyriaShift = martyriaElement.alignRight
@@ -1804,9 +1846,8 @@ export class LayoutService {
           const leadingGlueWidth = useStandardLeadingGlue
             ? standardGlue.width
             : martyriaGlue.width;
-          const trailingGlue = useStandardTrailingGlue
-            ? standardGlue
-            : martyriaGlue;
+          const trailingGlue =
+            hasMarker || useStandardTrailingGlue ? standardGlue : martyriaGlue;
           const trailingVisualSpacing = this.getVisualGlueSpacing(
             martyriaElement,
             nextElement,
@@ -1836,6 +1877,7 @@ export class LayoutService {
           // sides of the boundary glue and no inline measure bars or side
           // tempo signs need their existing special-case spacing rules.
           const balancedMartyriaNeighbors =
+            !hasMarker &&
             !martyriaElement.alignRight &&
             previousNote != null &&
             nextNote != null &&
@@ -2054,7 +2096,12 @@ export class LayoutService {
               trailingGlue.width,
             );
           }
-          this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
+          this.addBox(martyriaWidth, martyriaElement, layoutWorkspace);
+          this.addFootnoteMarker(
+            martyriaElement,
+            standardGlue,
+            layoutWorkspace,
+          );
 
           // Compute the measure bar width that would transfer from this
           // martyria to the next line's first note at an automatic break in the
@@ -2228,6 +2275,21 @@ export class LayoutService {
           }
 
           const emptyElement = elements[i] as EmptyElement;
+          if (hidePopulatedTerminator && elements.length > 1) {
+            // The sentinel remains in the model for editing, but owns no layout.
+            emptyElement.width = 0;
+            emptyElement.height = 0;
+            if (layoutWorkspace.pendingParagraph.length > 0) {
+              this.endParagraph(
+                false,
+                layoutWorkspace,
+                measureBarWidthMap,
+                neumeLineHeight,
+                neumeHeight,
+              );
+            }
+            continue;
+          }
           const previousElement = this.getElementAt(elements, i - 1);
           const followsNonRightAlignedMartyria =
             previousElement?.elementType === ElementType.Martyria &&
@@ -5208,6 +5270,25 @@ export class LayoutService {
     );
   }
 
+  private static addFootnoteMarker(
+    reference: FootnoteAnchorElement,
+    spacing: Glue,
+    layoutWorkspace: LayoutWorkspace,
+  ) {
+    if (reference.footnoteMarker === null) {
+      return;
+    }
+    this.preventBreak(layoutWorkspace);
+    this.addGlue(spacing, layoutWorkspace, 'footnote-spacing');
+    const marker: FootnoteMarkerBox = {
+      type: 'box',
+      width: reference.footnoteMarkerWidth,
+      footnoteReference: reference,
+    };
+    this.pushAnonymousParagraphItem(marker, layoutWorkspace, 'footnote-marker');
+    layoutWorkspace.neumesEndPx += marker.width;
+  }
+
   private static isFootnoteMarkerBox(
     item: InputItem,
   ): item is FootnoteMarkerBox {
@@ -7754,11 +7835,13 @@ export class LayoutService {
   public static calculateMartyriae(
     elements: ScoreElement[],
     pageSetup: PageSetup,
+    initialContext?: MusicalContext,
   ) {
-    let currentNote = 0;
-    let currentNoteVirtual = 0;
-    let currentScale = Scale.Diatonic;
-    let currentShift = 0;
+    let currentNote = initialContext?.note ?? 0;
+    let currentShift = initialContext?.shift ?? 0;
+    let currentNoteVirtual = currentNote + currentShift;
+    let currentScale = initialContext?.scale ?? Scale.Diatonic;
+    const contexts = new Map<ScoreElement, MusicalContext>();
 
     let ambitusLow: number = Number.MAX_SAFE_INTEGER;
     let ambitusHigh: number = Number.MIN_SAFE_INTEGER;
@@ -8037,6 +8120,13 @@ export class LayoutService {
           );
         }
       }
+      if (elementFootnoteIds(element).length > 0) {
+        contexts.set(element, {
+          note: currentNote,
+          scale: currentScale,
+          shift: currentShift,
+        });
+      }
     }
 
     if (currentModeKey) {
@@ -8050,6 +8140,7 @@ export class LayoutService {
         ambitusHighShift,
       });
     }
+    return contexts;
   }
 
   public static assignAmbitus({

@@ -42,23 +42,32 @@ Future automation jobs and export transformations belong in this feature area
 
 ## Footnotes (proof of concept)
 
-`edit_elements` supports `insert_footnote` with a main-score Note `elementRef`
-(and optional body `elements`) and `remove_footnote` with that Note reference.
+`edit_elements` supports `insert_footnote` with a main-score Note or Martyria `elementRef`
+(and optional body `elements`) and `remove_footnote` with that musical reference.
 For a main-score RichTextBox, `insert_footnote` also requires `contentKey` and
 `htmlOffset`: a UTF-16 offset in the stored panel HTML, within paragraph text or
 immediately after a paragraph opening tag. Insertion inside tags, entities, or
 surrogate pairs is rejected. The panel must be active for the box's layout.
 Rich markers serialize as atomic `span.neanes-footnote` objects with a
-`data-footnote-id` attribute; displayed numbers are generated. To remove a rich
+`data-footnote-id` attribute; displayed numbers are generated. Native superscript
+and surrounding inline formatting wrap the marker. These wrappers must be
+preserved when editing HTML. To remove a rich
 reference, update that panel's HTML to remove its span, or remove the owning box.
 The same transaction removes the body; undo restores both. Unknown or duplicate
 references and references outside main-score rich textboxes are rejected.
 Panel reference order is left/center/right for multipanel boxes and top/bottom
 for inline boxes, in document order. Plain textbox references are unsupported.
 Each reference owns a separate body; nested and shared references are unsupported.
-Read the Note's read-only `footnoteId`, calculated `footnoteNumber` (automatic references only), and `footnoteMarker` (the displayed label), then use
+Read the musical anchor's read-only `footnoteId`, calculated `footnoteNumber` (automatic references only), and `footnoteMarker` (the displayed label), then use
 `collection: { kind: "footnote", footnoteId }` with normal element readers/edits.
-The body retains its terminal Empty element, independent musical state, and lyrics.
+The body retains its terminal Empty element and its own lyrics. In populated
+bodies the terminal has no layout box, reservation, or page occurrence; completely
+empty bodies retain the visible insertion target and its page occurrence.
+Collection readers and edits continue to include the terminal. Musical state
+starts from immediately after the anchor and then evolves independently. Rich
+references use the context at their textbox. With no explicit body elements, a
+rich reference creates an empty RichTextBox styled with Footnote Text; musical
+references create an empty staff.
 Removing its main-score reference removes the body in the same history operation;
 copying the reference copies the body with a new identity.
 
@@ -70,7 +79,7 @@ without control characters, and do not consume an automatic number. `get_element
 for a footnote collection includes `footnote: {id, marker, label, number}`: `marker`
 is the stored override or null, `label` is the displayed string, and `number` is
 null for custom markers. Rich textbox references display the label directly;
-neume references surround it with parentheses. Body labels have no parentheses.
+neume and martyria references surround it with parentheses. Body labels have no parentheses.
 
 Page occurrence readers include the `footnote` region; page line counts include
 main and footnote lines. Range selections can identify the active footnote
@@ -81,3 +90,11 @@ Whole-footnote pagination is used initially. An oversized body remains editable
 and saveable, but settled page discovery/visual export fails explicitly until it
 fits. Run the self-launching `footnotes` integration scenario for both document
 scopes and real editor/rendering behavior.
+
+Footnote typography uses the built-in `footnote-text`, `footnote-body-marker`,
+and `footnote-reference` paragraph styles. Superscript is not a paragraph-style
+property. The body-marker style inherits Footnote Text with a 7.5pt font-size
+override. Body labels use native `<sup>` at the configured body-marker font size;
+parenthesized musical references retain their existing position and configured
+reference font size without scaling. Rich references use native inline formatting
+rather than the musical reference style.

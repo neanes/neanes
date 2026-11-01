@@ -129,6 +129,9 @@ try {
     await evaluate(
       `(() => {const e=${e}; e.model.change(w=>w.setSelection(e.model.document.getRoot().getChild(0),6));})()`,
     );
+    await evaluate(
+      `${e}.execute('fontSize', {value:'24pt'});${e}.execute('fontColor', {value:'#112233'})`,
+    );
     try {
       await click('[data-testid="insert-rich-text-footnote"]');
     } catch (error) {
@@ -143,6 +146,30 @@ try {
       assert.equal(await evaluate(`${ws}.score.footnotes.length`), 1),
     );
     const id = await evaluate(`${ws}.score.footnotes[0].id`);
+    const markerAttributes = await evaluate(
+      `(() => {const e=${e};const n=[...e.model.createRangeIn(e.model.document.getRoot()).getItems()].find(n=>n.is('element','footnoteReference'));return Object.fromEntries(n.getAttributes());})()`,
+    );
+    assert.equal(markerAttributes.superscript, true);
+    assert.equal(markerAttributes.fontSize, '24pt');
+    assert.equal(markerAttributes.fontColor, '#112233');
+
+    assert.equal(
+      await evaluate(`${ws}.score.footnotes[0].staff.elements[0].elementType`),
+      'RichTextBox',
+    );
+    assert.match(
+      await evaluate(`${ws}.score.footnotes[0].staff.elements[0].content`),
+      /neanes-paragraph-style-footnote-text/,
+    );
+    await eventually(async () =>
+      assert.equal(
+        await evaluate(
+          `document.querySelector('.page [data-footnote-id="${id}"] .rich-text-editor')?.ckeditorInstance?.ui.focusTracker.isFocused`,
+        ),
+        true,
+      ),
+    );
+
     assert.equal(
       await evaluate(`${ws}.activeFootnoteId`),
       id,
@@ -150,7 +177,7 @@ try {
     );
     assert.match(
       await evaluate(`${ws}.score.staff.elements[0][${JSON.stringify(key)}]`),
-      /Before<span[^>]*data-footnote-id=/,
+      /Before[\s\S]*data-footnote-id=/,
     );
     await menu('FileMenuUndo');
     await eventually(async () =>
@@ -271,12 +298,14 @@ try {
       assert.equal(await evaluate(`${ws}.score.footnotes[0]?.id`), id),
     );
     assert.equal(
-      await evaluate(`${ws}.score.footnotes[0].staff.elements[0].spaceAfter`),
+      await evaluate(
+        `${ws}.score.footnotes[0].staff.elements.find(e=>e.elementType==='Note').spaceAfter`,
+      ),
       37,
     );
     assert.equal(
       await evaluate(
-        `${ws}.score.footnotes[0].staff.elements[0].lyricsParagraphStyleId`,
+        `${ws}.score.footnotes[0].staff.elements.find(e=>e.elementType==='Note').lyricsParagraphStyleId`,
       ),
       'footnote-lyrics',
     );
@@ -312,7 +341,11 @@ try {
     });
     const saved = JSON.parse(await readFile(filePath, 'utf8'));
     assert.match(saved.staff.elements[0][key], new RegExp(id));
-    assert.equal(saved.footnotes[0].staff.elements[0].spaceAfter, 37);
+    assert.equal(
+      saved.footnotes[0].staff.elements.find((e) => e.elementType === 'Note')
+        .spaceAfter,
+      37,
+    );
     const reopened = await call('open_document', {
       documentScope: 'private',
       filePath,
@@ -353,7 +386,11 @@ try {
       documentId: destination.documentId,
       collection: { kind: 'footnote', footnoteId: copiedId },
     });
-    assert.equal(body.elements[0].properties.spaceAfter, 37);
+    assert.equal(
+      body.elements.find((element) => element.elementType === 'Note').properties
+        .spaceAfter,
+      37,
+    );
     await call('get_pages', reopenedArgs);
     const setupRevision = (await call('get_document_properties', reopenedArgs))
       .revision;
@@ -465,7 +502,9 @@ try {
       assert.notEqual(pastedId, id);
       assert.equal(await evaluate(`${ws}.score.footnotes[0].marker`), '\u2020');
       assert.equal(
-        await evaluate(`${ws}.score.footnotes[0].staff.elements[0].spaceAfter`),
+        await evaluate(
+          `${ws}.score.footnotes[0].staff.elements.find(e=>e.elementType==='Note').spaceAfter`,
+        ),
         37,
       );
       const importedStyle = await evaluate(
@@ -474,7 +513,7 @@ try {
       assert.ok(importedStyle);
       assert.equal(
         await evaluate(
-          `${ws}.score.footnotes[0].staff.elements[0].lyricsParagraphStyleId`,
+          `${ws}.score.footnotes[0].staff.elements.find(e=>e.elementType==='Note').lyricsParagraphStyleId`,
         ),
         importedStyle,
       );
@@ -514,7 +553,7 @@ try {
           ],
         },
       ]);
-      const bodyEditor = `document.querySelector('[data-footnote-id="${pastedId}"] .rich-text-editor.single')?.ckeditorInstance`;
+      const bodyEditor = `[...document.querySelectorAll('[data-footnote-id="${pastedId}"] .rich-text-editor.single')].at(-1)?.ckeditorInstance`;
       await focus(bodyEditor);
       assert.equal(
         await evaluate(

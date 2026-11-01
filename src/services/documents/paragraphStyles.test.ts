@@ -5,8 +5,15 @@ import { ParagraphStyle } from '@/models/ParagraphStyle';
 import { Workspace } from '@/models/Workspace';
 
 import { replaceParagraphStyles } from './paragraphStyles';
+import { paragraphStyleOverridesSchema } from './paragraphStyleSchema';
 
 describe('shared paragraph style edits', () => {
+  it('rejects superscript as a paragraph-style override', () => {
+    expect(
+      paragraphStyleOverridesSchema.safeParse({ superscript: true }).success,
+    ).toBe(false);
+  });
+
   it('remaps deleted styles to their surviving parent and undoes both changes together', () => {
     const workspace = new Workspace();
     const custom = new ParagraphStyle();

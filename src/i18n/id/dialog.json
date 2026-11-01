@@ -97,7 +97,10 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lirik",
-      "dropCap": "Huruf Awal Besar"
+      "dropCap": "Huruf Awal Besar",
+      "footnoteText": "Teks Catatan Kaki",
+      "footnoteBodyMarker": "Penanda Isi Catatan Kaki",
+      "footnoteReference": "Referensi Catatan Kaki"
     }
   },
   "neumePositioning": {

@@ -157,6 +157,7 @@ export class NoteElement extends ScoreElement {
 }
 
 export class MartyriaElement extends ScoreElement {
+  public footnoteId: string | undefined = undefined;
   public readonly elementType: ElementType = ElementType.Martyria;
   public auto: boolean | undefined = undefined;
   public note: Note = Note.Pa;

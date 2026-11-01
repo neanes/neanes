@@ -30,6 +30,9 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.Footer,
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
       BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
     ]);
     expect(styles[0].overrides).toEqual({});
     expect(styles[0].parentStyleId).toBeNull();
@@ -49,6 +52,27 @@ describe('ParagraphStyle', () => {
     expect(styles[5].overrides.alignment).toBeUndefined();
     expect(styles[8].overrides).toEqual({});
     expect(styles[9].overrides).toEqual({ fontSize: Unit.fromPt(60) });
+  });
+
+  it('inherits footnote text typography while retaining the body marker size', () => {
+    const styles = createDefaultParagraphStyles();
+    styles[0].overrides = { fontSize: 24, color: '#123456' };
+    styles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+    )!.overrides = { fontSize: Unit.fromPt(12), color: '#654321' };
+
+    expect(
+      resolveParagraphStyle(
+        styles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
+      ),
+    ).toMatchObject({ fontSize: Unit.fromPt(7.5), color: '#654321' });
+    expect(
+      resolveParagraphStyle(
+        styles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
+      ),
+    ).toMatchObject({ fontSize: 24, color: '#123456' });
   });
 
   it('resolves inheritance through parent styles and element overrides', () => {

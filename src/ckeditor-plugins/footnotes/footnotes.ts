@@ -48,9 +48,14 @@ export class Footnotes extends Plugin {
       isObject: true,
       allowWhere: '$text',
       allowAttributes: ['footnoteId'],
+      allowAttributesOf: '$text',
     });
     editor.conversion.for('upcast').elementToElement({
-      view: { name: 'span', classes: FOOTNOTE_CLASS },
+      view: {
+        name: 'span',
+        classes: FOOTNOTE_CLASS,
+        attributes: [FOOTNOTE_ATTRIBUTE],
+      },
       model: (element, { writer }) =>
         writer.createElement(FOOTNOTE_ELEMENT, {
           footnoteId: element.getAttribute(FOOTNOTE_ATTRIBUTE),

@@ -264,6 +264,9 @@ export const elementPropertySchemas = {
     ignoreAttractions: z.boolean(),
   }),
   [ElementType.Martyria]: z.strictObject({
+    footnoteId: z.string().uuid().optional(),
+    footnoteNumber: z.number().int().positive().optional(),
+    footnoteMarker: z.string().optional(),
     ...breaks,
     auto: z
       .boolean()

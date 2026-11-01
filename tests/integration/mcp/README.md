@@ -92,7 +92,12 @@ Marker geometry checks cover natural and justified spacing on both sides, a
 narrow line that must move the neume and marker together, centered line endings,
 and RTL placement. Rendered examples are retained with the footnote artifacts.
 
-`rich-text-footnotes` tests caret insertion, atomic marker deletion, click navigation,
+`footnote-styles-context` checks pitch/scale inheritance from musical anchors,
+local body music, anchor edits, paragraph-style superscript and normal baseline
+markers, martyria save data, and ordinary/right-aligned LTR/RTL marker bounds.
+
+`rich-text-footnotes` tests caret insertion with surrounding inline formatting,
+focused default rich-body creation, atomic marker deletion, click navigation,
 native text Undo/Redo before flush and score-level body reconciliation, save/reopen, and copying for ordinary, inline top/bottom,
 and left/center/right multipanel rich textboxes. It also uses the real system
 clipboard to copy a marker across documents, checking fresh body identities,
@@ -136,3 +141,11 @@ and toolbar clicks without footnotes: commit A's edit, type and undo in B, undo 
 A must be restored before B's native typing. Blurring B between the two Redos must
 not change history; after restoring and committing B, both edits must still be
 undoable.
+
+The `footnote-end-content` scenario checks hidden populated-body terminators,
+visible empty-body targets, reference focus, appending after text and music,
+keyboard end navigation, deletion/undo/redo, stable pagination, and PDF/PNG output.
+It launches a real disposable Electron app; use unsandboxed execution on macOS.
+
+`footnote-body-alignment` compares body markers with real inline superscripts in
+text and neume font contexts at multiple zoom levels, and retains a screenshot.

@@ -1,4 +1,10 @@
 import { PageSetup } from '@/models/PageSetup';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
+import { resolveFontCss } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
@@ -7,12 +13,23 @@ export const FOOTNOTE_SECTION_SPACING = Unit.fromPt(8);
 export const FOOTNOTE_RULE_THICKNESS = Unit.fromPt(0.5);
 export const FOOTNOTE_OVERFLOW_NOTICE_HEIGHT = 64;
 
-export function footnoteMarkerFontSize(pageSetup: PageSetup) {
-  return pageSetup.neumeDefaultFontSize * 0.65;
+export function footnoteMarkerStyle(
+  styles: ParagraphStyle[],
+  role: 'reference' | 'body' = 'reference',
+) {
+  return resolveParagraphStyle(
+    styles,
+    role === 'body'
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
+  );
 }
 
-export function footnoteMarkerFont(pageSetup: PageSetup) {
-  return `${footnoteMarkerFontSize(pageSetup)}px serif`;
+export function footnoteMarkerFont(
+  styles: ParagraphStyle[],
+  role: 'reference' | 'body' = 'reference',
+) {
+  return resolveFontCss(footnoteMarkerStyle(styles, role));
 }
 
 export function footnoteMarkerText(marker: string | number) {

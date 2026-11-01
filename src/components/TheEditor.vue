@@ -147,6 +147,7 @@ import {
   canKeepWithNext,
   DropCapElement,
   ElementType,
+  FootnoteAnchorElement,
   ImageBoxElement,
   MartyriaElement,
   ModeKeyElement,
@@ -156,7 +157,7 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
-import { Footnote } from '@/models/Footnote';
+import type { Footnote } from '@/models/Footnote';
 import type {
   ElementOverlayBox,
   ElementOverlayDiagnostics,
@@ -241,6 +242,7 @@ import { fontCatalog } from '@/services/FontCatalog';
 import {
   captureFootnotes,
   cloneFootnote,
+  createFootnote,
   elementFootnoteIds,
   footnoteMarkerUpdateCommand,
   footnoteRemovalCommands,
@@ -3418,7 +3420,12 @@ function openFootnote(
     clearActiveEditor();
   }
   pages.value[reference.page - 1].isVisible = true;
-  selectedElement.value = footnote.staff.elements[0];
+  selectedElement.value = footnote.staff.elements.at(
+    footnote.staff.elements.length > 1 ? -2 : -1,
+  )!;
+  if (selectedElement.value instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(selectedElement.value);
+  }
   nextTick(() =>
     document
       .getElementById(`footnote-${footnote.id}`)
@@ -3440,12 +3447,22 @@ provide(richTextFootnoteControllerKey, {
   },
   insert(owner, editor: Editor) {
     flushPendingRichTextEditors(selectedWorkspace.value);
-    const body = new Footnote();
+    const body = createFootnote(owner);
     pendingRichTextFootnotes.set(owner, [body]);
+    const attributes = Object.fromEntries(
+      editor.model.document.selection.getAttributes(),
+    );
     editor.model.change((writer) => {
       editor.model.insertContent(
-        writer.createElement(FOOTNOTE_ELEMENT, { footnoteId: body.id }),
+        writer.createElement(FOOTNOTE_ELEMENT, {
+          ...attributes,
+          footnoteId: body.id,
+          superscript: true,
+        }),
       );
+      if (attributes.superscript !== true) {
+        writer.removeSelectionAttribute('superscript');
+      }
     });
     // Insertion is flushed before navigating to the newly created body.
     flushPendingRichTextEditors(selectedWorkspace.value);
@@ -3534,7 +3551,7 @@ provide(richTextFootnoteControllerKey, {
   },
 });
 
-function insertFootnote(reference: NoteElement) {
+function insertFootnote(reference: FootnoteAnchorElement) {
   flushPendingRichTextEditors(selectedWorkspace.value);
   const plan = planFootnoteInsertion(selectedWorkspace.value, reference);
   commandService.value.executeAsBatch(plan.commands);
@@ -3542,7 +3559,7 @@ function insertFootnote(reference: NoteElement) {
   openFootnote(reference);
 }
 
-function removeFootnote(reference: NoteElement) {
+function removeFootnote(reference: FootnoteAnchorElement) {
   flushPendingRichTextEditors(selectedWorkspace.value);
   selectedElement.value = reference;
   commandService.value.executeAsBatch(
@@ -4020,6 +4037,18 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
+  if (
+    event.code === 'Escape' &&
+    selectedWorkspace.value.activeFootnoteId !== null &&
+    selectedElement.value instanceof RichTextBoxElement &&
+    isTextInputFocused()
+  ) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    blurActiveElement();
+    event.preventDefault();
+    return;
+  }
+
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
   if (platformService.isMac && isTextInputFocused()) {
@@ -4130,6 +4159,12 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
   } else {
     switch (event.code) {
+      case 'End':
+        if (selectedWorkspace.value.activeFootnoteId !== null) {
+          selectedElement.value = elements.value.at(-1)!;
+          handled = true;
+        }
+        break;
       case 'ArrowLeft':
         if (!rtl.value) {
           throttled.moveLeft();
@@ -5103,8 +5138,8 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   for (const clipboardElement of pastedElements) {
     const currentElement = elements.value[currentIndex];
     if (
-      currentElement instanceof NoteElement &&
-      clipboardElement instanceof NoteElement &&
+      currentElement instanceof FootnoteAnchorElement &&
+      clipboardElement instanceof FootnoteAnchorElement &&
       clipboardElement.footnoteId === null
     ) {
       clipboardElement.footnoteId = currentElement.footnoteId;
@@ -5278,6 +5313,14 @@ function getNextScoreElement(element: ScoreElement) {
   return elements.value[element.index + 1] ?? null;
 }
 
+function isNavigableElement(element: ScoreElement) {
+  return (
+    navigableElements.includes(element.elementType) ||
+    (selectedWorkspace.value.activeFootnoteId !== null &&
+      element.elementType === ElementType.RichTextBox)
+  );
+}
+
 function moveLeft() {
   let index = -1;
 
@@ -5287,10 +5330,7 @@ function moveLeft() {
     index = selectionRange.value.end;
   }
 
-  if (
-    index - 1 >= 0 &&
-    navigableElements.includes(elements.value[index - 1].elementType)
-  ) {
+  if (index - 1 >= 0 && isNavigableElement(elements.value[index - 1])) {
     // If the currently selected element is a drop cap or text box, blur it first
     if (selectedElement.value?.elementType === ElementType.DropCap) {
       getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
@@ -5305,6 +5345,8 @@ function moveLeft() {
       getElementComponent<InstanceType<typeof DropCap>>(index - 1)!.focus();
     } else if (selectedElement.value.elementType === ElementType.TextBox) {
       getElementComponent<InstanceType<typeof TextBox>>(index - 1)!.focus();
+    } else if (selectedElement.value instanceof RichTextBoxElement) {
+      focusSelectedRichTextBoxEditor(selectedElement.value);
     }
 
     return true;
@@ -5325,7 +5367,7 @@ function moveRight() {
   if (
     index >= 0 &&
     index + 1 < elements.value.length &&
-    navigableElements.includes(elements.value[index + 1].elementType)
+    isNavigableElement(elements.value[index + 1])
   ) {
     // If the currently selected element is a drop cap, blur it first
     if (selectedElement.value?.elementType === ElementType.DropCap) {
@@ -5341,6 +5383,8 @@ function moveRight() {
       getElementComponent<InstanceType<typeof DropCap>>(index + 1)!.focus();
     } else if (selectedElement.value.elementType === ElementType.TextBox) {
       getElementComponent<InstanceType<typeof TextBox>>(index + 1)!.focus();
+    } else if (selectedElement.value instanceof RichTextBoxElement) {
+      focusSelectedRichTextBoxEditor(selectedElement.value);
     }
 
     return true;
@@ -6364,8 +6408,8 @@ function replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
   const previousElement = elements.value[replaceAtIndex];
   const commands: Command[] = [];
   if (
-    previousElement instanceof NoteElement &&
-    element instanceof NoteElement
+    previousElement instanceof FootnoteAnchorElement &&
+    element instanceof FootnoteAnchorElement
   ) {
     element.footnoteId = previousElement.footnoteId;
   } else {
@@ -7204,7 +7248,13 @@ function deleteSelectedElement() {
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value = elements.value[index];
+    selectedElement.value =
+      elements.value[
+        selectedWorkspace.value.activeFootnoteId !== null &&
+        elements.value.length > 1
+          ? Math.min(index, elements.value.length - 2)
+          : index
+      ];
 
     save();
   } else if (selectionRange.value != null) {
@@ -7241,9 +7291,7 @@ function deletePreviousElement() {
   if (
     selectedElement.value &&
     selectedElementIndex.value > 0 &&
-    navigableElements.includes(
-      elements.value[selectedElementIndex.value - 1].elementType,
-    )
+    isNavigableElement(elements.value[selectedElementIndex.value - 1])
   ) {
     removeScoreElement(elements.value[selectedElementIndex.value - 1]);
 
@@ -8665,12 +8713,26 @@ function onFileMenuInsertAlternateLine() {
   }
 }
 
+function contentInsertionIndex() {
+  return (
+    selectedElementIndex.value +
+    (selectedWorkspace.value.activeFootnoteId !== null &&
+    selectedElement.value !== null &&
+    !isLastElement(selectedElement.value)
+      ? 1
+      : 0)
+  );
+}
+
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
-  element.paragraphStyleId = getTextBoxParagraphStyleFallbackId(element.inline);
+  element.paragraphStyleId =
+    selectedWorkspace.value.activeFootnoteId !== null
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
+      : getTextBoxParagraphStyleFallbackId(element.inline);
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
@@ -8685,7 +8747,11 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
 function onFileMenuInsertRichTextBox() {
   const element = new RichTextBoxElement();
-  element.content = `<p class="${richTextParagraphStyleClassName(BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText)}"></p>`;
+  const styleId =
+    selectedWorkspace.value.activeFootnoteId !== null
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  element.content = `<p class="${richTextParagraphStyleClassName(styleId)}"></p>`;
   if (
     score.value.pageSetup.melkiteRtl ||
     score.value.pageSetup.numerals === 'easternArabic'
@@ -8693,7 +8759,7 @@ function onFileMenuInsertRichTextBox() {
     setRichTextLanguage(element, 'ar', 'rtl');
   }
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
@@ -8703,7 +8769,7 @@ function onFileMenuInsertRichTextBox() {
 function onFileMenuInsertModeKey() {
   const element = createDefaultModeKey(score.value.pageSetup);
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
@@ -8727,7 +8793,7 @@ function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
   element.imageWidth = args.imageWidth;
   element.imageHeight = args.imageHeight;
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
@@ -9811,6 +9877,13 @@ const contextMenuNote = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isSyllableElement);
 });
 
+const contextMenuFootnoteAnchor = computed(() =>
+  getContextMenuTargetForHomogeneousSelection(
+    (element): element is FootnoteAnchorElement =>
+      element instanceof FootnoteAnchorElement,
+  ),
+);
+
 const contextMenuMartyria = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isMartyriaElement);
 });
@@ -10376,13 +10449,13 @@ function renderTabLabel(tab: Tab) {
                   </ContextMenuItem>
                   <template
                     v-if="
-                      contextMenuNote != null &&
-                      score.staff.elements.includes(contextMenuNote)
+                      contextMenuFootnoteAnchor != null &&
+                      score.staff.elements.includes(contextMenuFootnoteAnchor)
                     "
                   >
                     <ContextMenuItem
-                      v-if="contextMenuNote.footnoteId === null"
-                      @select="insertFootnote(contextMenuNote)"
+                      v-if="contextMenuFootnoteAnchor.footnoteId === null"
+                      @select="insertFootnote(contextMenuFootnoteAnchor)"
                       >{{
                         $t(($) => $.menu.footnotes.insert, { ns: 'menu' })
                       }}</ContextMenuItem
@@ -10390,23 +10463,25 @@ function renderTabLabel(tab: Tab) {
                     <template v-else>
                       <ContextMenuItem
                         @select="
-                          openFootnoteProperties(contextMenuNote.footnoteId!)
+                          openFootnoteProperties(
+                            contextMenuFootnoteAnchor.footnoteId!,
+                          )
                         "
                         >{{
                           $t(($) => $.menu.footnotes.properties, { ns: 'menu' })
                         }}</ContextMenuItem
                       >
                       <ContextMenuItem
-                        @select="openFootnote(contextMenuNote)"
+                        @select="openFootnote(contextMenuFootnoteAnchor)"
                         >{{
                           $t(($) => $.menu.footnotes.edit, {
                             ns: 'menu',
-                            number: contextMenuNote.footnoteMarker,
+                            number: contextMenuFootnoteAnchor.footnoteMarker,
                           })
                         }}</ContextMenuItem
                       >
                       <ContextMenuItem
-                        @select="removeFootnote(contextMenuNote)"
+                        @select="removeFootnote(contextMenuFootnoteAnchor)"
                         >{{
                           $t(($) => $.menu.footnotes.remove, { ns: 'menu' })
                         }}</ContextMenuItem
@@ -10648,6 +10723,7 @@ function renderTabLabel(tab: Tab) {
       v-if="footnotePropertiesDialogIsOpen && editedFootnote !== undefined"
       v-model:open="footnotePropertiesDialogIsOpen"
       :footnote="editedFootnote.footnote"
+      :paragraph-styles="score.paragraphStyles"
       :automatic-number="editedFootnote.automaticNumber"
       :rich-text-reference="
         editedFootnote.reference instanceof RichTextBoxElement

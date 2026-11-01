@@ -97,7 +97,10 @@
       "header": "Antet",
       "footer": "Subsol",
       "lyrics": "Versuri",
-      "dropCap": "Majusculă decorativă"
+      "dropCap": "Majusculă decorativă",
+      "footnoteText": "Text de notă de subsol",
+      "footnoteBodyMarker": "Marcaj în corpul notei de subsol",
+      "footnoteReference": "Referință la nota de subsol"
     }
   },
   "neumePositioning": {

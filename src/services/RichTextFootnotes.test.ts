@@ -16,6 +16,7 @@ import {
   richTextBoxFootnoteIds,
   richTextFootnoteHtml,
   richTextFootnoteIds,
+  superscriptLegacyFootnoteMarkers,
 } from './RichTextFootnotes';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
@@ -141,5 +142,16 @@ describe('rich textbox footnotes', () => {
         'INVALID_ELEMENT_EDIT',
       );
     }
+  });
+});
+
+describe('legacy rich-text footnote formatting', () => {
+  it('upgrades old references once while preserving formatting and identity', () => {
+    const marker =
+      '<span class="neanes-footnote" data-footnote-id="id"></span>';
+    const html = `<p><span style="font-size:20px">Before${marker}after</span></p>`;
+    const migrated = superscriptLegacyFootnoteMarkers(html);
+    expect(migrated).toBe(html.replace(marker, `<sup>${marker}</sup>`));
+    expect(superscriptLegacyFootnoteMarkers(migrated)).toBe(migrated);
   });
 });

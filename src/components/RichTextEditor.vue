@@ -422,8 +422,6 @@ defineExpose({
 <style>
 .neanes-footnote {
   display: inline-block;
-  vertical-align: super;
-  font-size: 65%;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;

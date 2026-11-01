@@ -48,7 +48,7 @@ function editPropertySchema(type: ElementType) {
     elementPropertySchemas[type].shape,
   )) {
     if (
-      type === ElementType.Note &&
+      [ElementType.Note, ElementType.Martyria].includes(type) &&
       [
         'scaleNotes',
         'scaleNotesVirtual',

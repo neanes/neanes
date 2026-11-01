@@ -6,6 +6,7 @@ import {
   AnnotationElement,
   DropCapElement,
   ElementType,
+  FootnoteAnchorElement,
   ImageBoxElement,
   MartyriaElement,
   ModeKeyElement,
@@ -16,7 +17,7 @@ import {
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
-import { Footnote } from '@/models/Footnote';
+import type { Footnote } from '@/models/Footnote';
 import type { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
@@ -35,6 +36,7 @@ import {
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
 import {
+  createFootnote,
   elementFootnoteIds,
   footnoteMarkerUpdateCommand,
 } from '@/services/FootnoteService';
@@ -477,7 +479,7 @@ export function planElementEdits(
       const reference = resolve(action.elementRef);
       if (
         !(
-          reference instanceof NoteElement ||
+          reference instanceof FootnoteAnchorElement ||
           (reference instanceof RichTextBoxElement &&
             action.action === 'insert_footnote')
         ) ||
@@ -487,7 +489,7 @@ export function planElementEdits(
       }
       if (
         action.action === 'remove_footnote' &&
-        reference instanceof NoteElement
+        reference instanceof FootnoteAnchorElement
       ) {
         if (reference.footnoteId === null) {
           throw new Error('INVALID_ELEMENT_EDIT');
@@ -498,14 +500,14 @@ export function planElementEdits(
           throw new Error('INVALID_ELEMENT_EDIT');
         }
         if (
-          reference instanceof NoteElement &&
+          reference instanceof FootnoteAnchorElement &&
           (reference.footnoteId !== null ||
             action.contentKey !== undefined ||
             action.htmlOffset !== undefined)
         ) {
           throw new Error('INVALID_ELEMENT_EDIT');
         }
-        const body = new Footnote();
+        const body = createFootnote(reference, action.elements.length === 0);
         footnotes.push(body);
         const elements = cloneCollection(body.staff.elements);
         const setup = { ...body.staff.lyrics };
@@ -517,7 +519,7 @@ export function planElementEdits(
           ),
         );
         roots.set(`footnotes.${body.id}`, elements);
-        if (reference instanceof NoteElement) {
+        if (reference instanceof FootnoteAnchorElement) {
           reference.footnoteId = body.id;
         } else if (
           reference instanceof RichTextBoxElement &&
@@ -572,8 +574,8 @@ export function planElementEdits(
           ? create(action.element, element, collection)
           : null;
       if (
-        element instanceof NoteElement &&
-        replacement instanceof NoteElement
+        element instanceof FootnoteAnchorElement &&
+        replacement instanceof FootnoteAnchorElement
       ) {
         replacement.footnoteId = element.footnoteId;
       }

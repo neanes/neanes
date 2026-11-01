@@ -1,16 +1,18 @@
 import { v4 as uuid } from 'uuid';
 
 import {
-  NoteElement,
+  FootnoteAnchorElement,
   RICH_TEXT_BOX_CONTENT_KEYS,
   RichTextBoxElement,
   ScoreElement,
 } from '@/models/Element';
 import { Footnote } from '@/models/Footnote';
+import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { CommandFactory } from '@/services/history/CommandService';
 import { cloneModel } from '@/utils/cloneModel';
+import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 
 import {
   activeRichTextContentKeys,
@@ -23,11 +25,26 @@ import { normalizeFootnoteMarker } from './FootnoteMarker';
 import { elementFootnoteIds } from './FootnoteReferences';
 
 const footnoteFactory = new CommandFactory<Footnote>();
-const noteFactory = new CommandFactory<NoteElement>();
+const anchorFactory = new CommandFactory<FootnoteAnchorElement>();
+
+export function createFootnote(
+  reference: ScoreElement,
+  initializeRichTextBody = true,
+) {
+  const footnote = new Footnote();
+  if (initializeRichTextBody && reference instanceof RichTextBoxElement) {
+    const text = new RichTextBoxElement();
+    text.content = `<p class="${richTextParagraphStyleClassName(BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText)}"></p>`;
+    text.languageCode = reference.languageCode;
+    text.textDirection = reference.textDirection;
+    footnote.staff.elements.unshift(text);
+  }
+  return footnote;
+}
 
 export function planFootnoteInsertion(
   workspace: Workspace,
-  reference: NoteElement,
+  reference: FootnoteAnchorElement,
 ) {
   if (
     !workspace.score.staff.elements.includes(reference) ||
@@ -35,7 +52,7 @@ export function planFootnoteInsertion(
   ) {
     throw new Error('INVALID_FOOTNOTE_ANCHOR');
   }
-  const footnote = new Footnote();
+  const footnote = createFootnote(reference);
   return {
     footnote,
     commands: [
@@ -43,7 +60,7 @@ export function planFootnoteInsertion(
         collection: workspace.score.footnotes,
         elements: [footnote],
       }),
-      noteFactory.create('update-properties', {
+      anchorFactory.create('update-properties', {
         target: reference,
         newValues: { footnoteId: footnote.id },
       }),
@@ -66,9 +83,12 @@ export function footnoteRemovalCommands(
     );
 }
 
-export function planFootnoteRemoval(score: Score, reference: NoteElement) {
+export function planFootnoteRemoval(
+  score: Score,
+  reference: FootnoteAnchorElement,
+) {
   return [
-    noteFactory.create('update-properties', {
+    anchorFactory.create('update-properties', {
       target: reference,
       newValues: { footnoteId: null },
     }),
@@ -118,7 +138,10 @@ export function prepareFootnotePaste(
       remap.set(id, copy.id);
       copies.push(copy);
     }
-    if (element instanceof NoteElement && element.footnoteId !== null) {
+    if (
+      element instanceof FootnoteAnchorElement &&
+      element.footnoteId !== null
+    ) {
       element.footnoteId = remap.get(element.footnoteId)!;
     }
     if (element instanceof RichTextBoxElement) {

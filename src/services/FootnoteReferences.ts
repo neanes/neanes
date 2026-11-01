@@ -1,5 +1,5 @@
 import {
-  NoteElement,
+  FootnoteAnchorElement,
   RichTextBoxElement,
   type ScoreElement,
 } from '@/models/Element';
@@ -9,7 +9,7 @@ import type { Score } from '@/models/Score';
 import { richTextBoxFootnoteIds } from './RichTextFootnotes';
 
 export function elementFootnoteIds(element: ScoreElement): string[] {
-  return element instanceof NoteElement
+  return element instanceof FootnoteAnchorElement
     ? element.footnoteId === null
       ? []
       : [element.footnoteId]

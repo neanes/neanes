@@ -25,21 +25,6 @@
           <PhArrowClockwise class="size-4" />
         </ToolbarButton>
       </AppTooltip>
-      <AppTooltip
-        v-if="isCommandEnabled('insertFootnote')"
-        :tooltip="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
-      >
-        <ToolbarButton
-          variant="secondary"
-          class="chrome-button"
-          data-testid="insert-rich-text-footnote"
-          :aria-label="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
-          @mousedown.prevent
-          @click="runCommand('insertFootnote')"
-        >
-          <PhTextSuperscript class="size-4" aria-hidden="true" />
-        </ToolbarButton>
-      </AppTooltip>
       <ToolbarSeparator />
       <ParagraphStyleSelect
         trigger-class="w-48"
@@ -362,6 +347,33 @@
       <RichTextToolbarItem name="bulletedList" :owner="element" />
       <RichTextToolbarItem name="numberedList" :owner="element" />
       <RichTextToolbarItem name="link" :owner="element" />
+      <AppTooltip
+        v-if="isCommandEnabled('insertFootnote')"
+        :tooltip="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          data-testid="insert-rich-text-footnote"
+          :aria-label="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
+          @mousedown.prevent
+          @click="runCommand('insertFootnote')"
+        >
+          <svg
+            class="size-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.65"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M10 4l2-2v8m-2 0h4M3 14h18M3 19h12" />
+          </svg>
+        </ToolbarButton>
+      </AppTooltip>
       <RichTextToolbarItem name="horizontalLine" :owner="element" />
       <RichTextToolbarItem name="uploadImage" :owner="element" />
       <RichTextToolbarItem name="insertTable" :owner="element" />
@@ -383,7 +395,6 @@ import {
   PhTextIndent,
   PhTextItalic,
   PhTextOutdent,
-  PhTextSuperscript,
   PhTextTSlash,
   PhTextUnderline,
 } from '@phosphor-icons/vue';

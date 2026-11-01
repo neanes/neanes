@@ -10,8 +10,9 @@ continuation, and exporter completion work is planned.
   score tools to insert textboxes and neumes directly in the footnote area.
 - Click a superscript reference to edit its body. Click the body number to return
   to the reference. Rich textboxes also support references at the caret through
-  the superscript icon in their formatting toolbar. It has a translated Insert
-  Footnote tooltip and accessible label. Plain textboxes do not support references;
+  the Minimal divider icon beside Link in their formatting toolbar's insert tools.
+  The icon combines a raised 1, separator, and short note line. It has a translated
+  Insert Footnote tooltip and accessible label. Plain textboxes do not support references;
   headers, footers, annotations, and footnote bodies cannot receive references.
 - Neume references use parentheses, with ordinary music spacing on both sides.
   The gaps participate in justification; the marker stays with its owning neume.
@@ -249,9 +250,11 @@ including ordinary/scrollable boxes, top/bottom inline panels, and left/center/r
 multipanel boxes. Panels are numbered in that order, then by position within each
 panel. A whole rich textbox remains on its reference page with all its footnotes.
 
-The formatting toolbar uses a superscript icon for Insert Footnote, with a
-translated tooltip and accessible button label. The action is available only in
-main-score rich textboxes. Insertion and pasted references are rejected in
+The formatting toolbar uses the custom Minimal divider SVG for Insert Footnote:
+a raised 1 above a separator and short note line, drawn at 16px using currentColor.
+It sits beside Link with the insert tools, separate from history and text
+formatting. It retains a translated tooltip and accessible button label. The
+action is available only in main-score rich textboxes. Insertion and pasted references are rejected in
 headers, footers, annotations, and footnote bodies.
 
 Markers are CKEditor inline objects with persistent IDs and generated labels.

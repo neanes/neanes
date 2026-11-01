@@ -7,18 +7,23 @@ import {
   EmptyElement,
   MartyriaElement,
   NoteElement,
+  RichTextBoxElement,
   TextBoxElement,
 } from '@/models/Element';
+import { Footnote } from '@/models/Footnote';
 import { TempoSign } from '@/models/Neumes';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
 
+import { normalizeFootnoteMarker } from './FootnoteMarker';
 import {
   captureFootnotes,
+  footnoteMarkerUpdateCommand,
   footnoteRemovalCommands,
   orderedFootnotes,
   planFootnoteInsertion,
   planFootnoteRemoval,
+  planRichTextFootnoteUpdate,
   prepareFootnotePaste,
 } from './FootnoteService';
 
@@ -51,6 +56,46 @@ describe('footnote ownership', () => {
     expect(workspace.score.footnotes[0].id).toBe(footnote.id);
   });
 
+  it('restores a flushed marker and its complete body together through score history', () => {
+    const workspace = reactive(new Workspace()) as Workspace;
+    const box = new RichTextBoxElement();
+    workspace.score.staff.elements.unshift(box);
+    const body = new Footnote();
+    const note = new NoteElement();
+    note.spaceAfter = 37;
+    note.lyrics = 'Remember me';
+    body.staff.elements.unshift(note);
+    const html = `<p>A<span class="neanes-footnote" data-footnote-id="${body.id}"></span>B</p>`;
+    const flush = (content: string, added: Footnote[] = []) =>
+      workspace.commandService.executeAsBatch(
+        planRichTextFootnoteUpdate(
+          workspace.score,
+          workspace.score.staff.elements[0] as RichTextBoxElement,
+          { content },
+          added,
+        ),
+      );
+    flush(html, [body]);
+    flush('<p>AB</p>');
+    expect(workspace.score.footnotes).toHaveLength(0);
+    expect(
+      SaveService.SaveScoreToJson(workspace.score).footnotes ?? [],
+    ).toHaveLength(0);
+    workspace.commandService.undo();
+    expect(workspace.score.footnotes[0].id).toBe(body.id);
+    expect(workspace.score.staff.elements[0]).toHaveProperty('content', html);
+    expect(workspace.score.footnotes[0].staff.elements[0]).toMatchObject({
+      spaceAfter: 37,
+      lyrics: 'Remember me',
+    });
+    workspace.commandService.redo();
+    expect(workspace.score.footnotes).toHaveLength(0);
+    expect(workspace.score.staff.elements[0]).toHaveProperty(
+      'content',
+      '<p>AB</p>',
+    );
+  });
+
   it('numbers in reference order using the document starting number', () => {
     const { workspace, reference } = fixture();
     const earlier = new NoteElement();
@@ -72,6 +117,66 @@ describe('footnote ownership', () => {
     );
     workspace.score.staff.elements.splice(0, 1);
     expect(orderedFootnotes(workspace.score)[0].number).toBe(98);
+  });
+
+  it('custom markers skip automatic numbers and survive undo, saving and copying', () => {
+    const { workspace, reference } = fixture();
+    const anchors = [reference, new NoteElement(), new NoteElement()];
+    const bodies = [workspace.score.footnotes[0]];
+    for (const anchor of anchors.slice(1)) {
+      workspace.score.staff.elements.splice(-1, 0, anchor);
+      const plan = planFootnoteInsertion(workspace, anchor);
+      workspace.commandService.executeAsBatch(plan.commands);
+      bodies.push(plan.footnote);
+    }
+    workspace.score.pageSetup.firstFootnoteNumber = 98;
+    workspace.commandService.execute(
+      footnoteMarkerUpdateCommand(bodies[1], '*'),
+    );
+    expect(
+      orderedFootnotes(workspace.score).map(({ number, marker }) => [
+        number,
+        marker,
+      ]),
+    ).toEqual([
+      [98, '98'],
+      [null, '*'],
+      [99, '99'],
+    ]);
+    workspace.commandService.undo();
+    expect(
+      orderedFootnotes(workspace.score).map(({ number }) => number),
+    ).toEqual([98, 99, 100]);
+    workspace.commandService.redo();
+    const loaded = SaveService.LoadScoreFromJson(
+      JSON.parse(JSON.stringify(SaveService.SaveScoreToJson(workspace.score))),
+    );
+    expect(orderedFootnotes(loaded)[1].marker).toBe('*');
+    expect(orderedFootnotes(loaded)[2].number).toBe(99);
+    const [copy] = prepareFootnotePaste(
+      [anchors[1].clone()],
+      captureFootnotes(workspace.score, [anchors[1]]),
+    );
+    expect(copy.marker).toBe('*');
+    expect(copy.id).not.toBe(bodies[1].id);
+    workspace.commandService.execute(
+      footnoteMarkerUpdateCommand(bodies[1], null),
+    );
+    expect(
+      orderedFootnotes(workspace.score).map(({ marker }) => marker),
+    ).toEqual(['98', '99', '100']);
+    expect(SaveService.SaveFootnote(bodies[1]).marker).toBeUndefined();
+  });
+
+  it('validates short custom markers without rejecting Unicode symbols', () => {
+    expect(normalizeFootnoteMarker(null)).toBeNull();
+    expect(normalizeFootnoteMarker(' \u2020 ')).toBe('\u2020');
+    expect(normalizeFootnoteMarker('a'.repeat(16))).toHaveLength(16);
+    for (const marker of ['', ' ', 'a\nb', 'a\tb', 'a'.repeat(17)]) {
+      expect(() => normalizeFootnoteMarker(marker)).toThrow(
+        'INVALID_FOOTNOTE_MARKER',
+      );
+    }
   });
 
   it('does not allow nested or duplicate references', () => {

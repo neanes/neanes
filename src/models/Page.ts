@@ -4,7 +4,8 @@ import type { LineLayoutDiagnostics } from '@/models/LayoutDiagnostics';
 
 export interface PageFootnote {
   id: string;
-  number: number;
+  number: number | null;
+  marker: string;
   reference: ScoreElement;
   lines: Line[];
   top: number;

@@ -5,9 +5,10 @@
         <ToolbarButton
           variant="secondary"
           class="chrome-button"
-          :disabled="!isCommandEnabled('undo')"
+          :disabled="!canUndo"
+          data-testid="rich-text-undo"
           @mousedown.prevent
-          @click="runCommand('undo')"
+          @click="historyActions.undo()"
         >
           <PhArrowCounterClockwise class="size-4" />
         </ToolbarButton>
@@ -16,11 +17,27 @@
         <ToolbarButton
           variant="secondary"
           class="chrome-button"
-          :disabled="!isCommandEnabled('redo')"
+          :disabled="!canRedo"
+          data-testid="rich-text-redo"
           @mousedown.prevent
-          @click="runCommand('redo')"
+          @click="historyActions.redo()"
         >
           <PhArrowClockwise class="size-4" />
+        </ToolbarButton>
+      </AppTooltip>
+      <AppTooltip
+        v-if="isCommandEnabled('insertFootnote')"
+        :tooltip="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          data-testid="insert-rich-text-footnote"
+          :aria-label="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
+          @mousedown.prevent
+          @click="runCommand('insertFootnote')"
+        >
+          <PhTextSuperscript class="size-4" aria-hidden="true" />
         </ToolbarButton>
       </AppTooltip>
       <ToolbarSeparator />
@@ -366,11 +383,12 @@ import {
   PhTextIndent,
   PhTextItalic,
   PhTextOutdent,
+  PhTextSuperscript,
   PhTextTSlash,
   PhTextUnderline,
 } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
-import { computed, ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 
 import {
   INSERT_NEUME_COMMAND,
@@ -417,6 +435,7 @@ import {
   PARAGRAPH_STYLE_MIXED_VALUE,
   useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
+import { richTextHistoryActionsKey } from '@/injectionKeys';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import { Note, RootSign } from '@/models/Neumes';
@@ -429,13 +448,15 @@ import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 
+const historyActions = inject(richTextHistoryActionsKey)!;
+const { canUndo, canRedo } = historyActions;
+
 const EXTRA_COMMAND_NAMES = [
   'outdent',
   'indent',
-  'undo',
-  'redo',
   'removeFormat',
   INSERT_NEUME_COMMAND,
+  'insertFootnote',
 ];
 
 const props = defineProps({

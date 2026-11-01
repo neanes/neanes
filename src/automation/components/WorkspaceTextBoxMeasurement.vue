@@ -11,6 +11,7 @@
         v-if="element.elementType === ElementType.RichTextBox"
         :ref="(instance) => setMeasurer(element, instance)"
         :element="element as RichTextBoxElement"
+        :footnote-markers="footnoteMarkers"
         :page-setup="workspace.score.pageSetup"
         :paragraph-styles="workspace.score.paragraphStyles"
         :fonts="fonts"
@@ -40,6 +41,7 @@ import {
   type TextBoxElement,
 } from '@/models/Element';
 import type { Workspace } from '@/models/Workspace';
+import { orderedFootnotes } from '@/services/FootnoteService';
 import {
   getResizableTextBoxes,
   type MeasuredTextBox,
@@ -56,6 +58,12 @@ const emit = defineEmits<{
   complete: [heights: TextBoxHeightMeasurement[]];
   failed: [error: Error];
 }>();
+const footnoteMarkers = Object.fromEntries(
+  orderedFootnotes(props.workspace.score).map(({ footnote, marker }) => [
+    footnote.id,
+    marker,
+  ]),
+);
 const elements = getResizableTextBoxes(props.workspace.score);
 const paragraphStyleCss = computed(() =>
   buildRichTextParagraphStyleCss(

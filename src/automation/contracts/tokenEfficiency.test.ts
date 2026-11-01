@@ -56,7 +56,7 @@ describe('MCP token efficiency contracts', () => {
     expect(sizes.inputs).toBeLessThan(52000);
     expect(sizes.outputs).toBeLessThan(81000);
     expect(sizes.inputView).toBeLessThan(73000);
-    expect(sizes.elementOutput).toBeLessThan(4500);
+    expect(sizes.elementOutput).toBeLessThan(4800);
   });
 
   it('keeps style ID discovery smaller than complete definitions', () => {

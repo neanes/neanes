@@ -106,6 +106,8 @@
     "overflow": "Nota de subsol și referința sa nu încap pe această pagină. Scurtați nota sau măriți pagina. Exportul nu este disponibil până la rezolvarea problemei.",
     "nested": "Notele de subsol nu pot conține referințe la note de subsol.",
     "unsupportedExport": "Acest format de export nu acceptă încă note de subsol. Folosiți PDF sau PNG pentru a le păstra.",
-    "lyrics": "Versurile notei de subsol {{number}}"
+    "lyrics": "Versurile notei de subsol {{number}}",
+    "pasteUnavailable": "Referințele la note de subsol pot fi lipite doar din Neanes într-o casetă de text îmbogățit din partitura principală.",
+    "properties": "Proprietățile notei de subsol…"
   }
 }

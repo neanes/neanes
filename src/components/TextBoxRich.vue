@@ -17,7 +17,10 @@
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentLeft"
+        content-key="contentLeft"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
@@ -28,7 +31,10 @@
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentCenter"
+        content-key="contentCenter"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReady"
@@ -39,7 +45,10 @@
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentRight"
+        content-key="contentRight"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
@@ -58,7 +67,10 @@
             class="rich-text-editor inline-top"
             :style="textBoxStyleTop"
             :owner="element"
+            :footnote-markers="footnoteMarkers"
+            :footnotes-editable="editMode && !recalc"
             :model-value="content"
+            content-key="content"
             :config="editorConfig"
             @blur="onBlur"
             @ready="onEditorReadyInline"
@@ -73,7 +85,10 @@
           class="rich-text-editor inline-bottom"
           :style="textBoxStyleBottom"
           :owner="element"
+          :footnote-markers="footnoteMarkers"
+          :footnotes-editable="editMode && !recalc"
           :model-value="contentBottom"
+          content-key="contentBottom"
           :config="editorConfig"
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
@@ -87,7 +102,10 @@
       ref="editor"
       class="rich-text-editor single scrollable"
       :owner="element"
+      :footnote-markers="footnoteMarkers"
+      :footnotes-editable="editMode && !recalc"
       :model-value="content"
+      content-key="content"
       :config="editorConfig"
       :style="textBoxStyle"
       @blur="onBlur"
@@ -100,7 +118,10 @@
       ref="editor"
       class="rich-text-editor single"
       :owner="element"
+      :footnote-markers="footnoteMarkers"
+      :footnotes-editable="editMode && !recalc"
       :model-value="content"
+      content-key="content"
       :config="editorConfig"
       :style="textBoxStyle"
       @blur="onBlur"
@@ -162,6 +183,10 @@ const emit = defineEmits([
   'select-neume',
 ]);
 const props = defineProps({
+  footnoteMarkers: {
+    type: Object as PropType<Readonly<Record<string, string>>>,
+    default: () => ({}),
+  },
   element: {
     type: Object as PropType<RichTextBoxElement>,
     required: true,
@@ -830,8 +855,8 @@ function getPendingUpdates() {
       hasStaleContent = true;
       continue;
     }
-    const content = component.instance.getData();
-    if (props.element[property] !== content) {
+    const content = component.getPendingData();
+    if (content !== null) {
       updates[property] = content;
       updated = true;
     }

@@ -358,5 +358,19 @@
     "accessTitle": "Ce poate accesa?",
     "accessDescription": "Instrumentele conectate pot citi, edita, salva și exporta partituri folosind permisiunile de fișiere ale sistemului de operare. Implicit, lucrează cu documente private separate și pot citi și edita filele deschise când vizează explicit editorul. Ciornele private sunt eliminate la încheierea conexiunii dacă nu sunt salvate.",
     "documentation": "Documentație"
+  },
+  "footnoteProperties": {
+    "title": "Proprietățile notei de subsol",
+    "description": "Alegeți un marcaj pentru această notă de subsol. Marcajele personalizate nu consumă un număr automat.",
+    "marker": "Marcaj",
+    "automatic": "Număr automat",
+    "asterisk": "Asterisc",
+    "dagger": "Cruce",
+    "doubleDagger": "Cruce dublă",
+    "custom": "Personalizat",
+    "customText": "Text personalizat",
+    "reference": "Referință",
+    "body": "Eticheta notei de subsol",
+    "invalid": "Introduceți 1–16 caractere fără întreruperi de rând."
   }
 }

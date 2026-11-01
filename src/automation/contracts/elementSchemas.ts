@@ -79,6 +79,14 @@ export const discoveredElementSchema = z.discriminatedUnion('elementType', [
   elementResult(ElementType.AlternateLine),
 ]);
 export const elementPageShape = {
+  footnote: z
+    .strictObject({
+      id: z.string().uuid(),
+      marker: z.string().nullable(),
+      label: z.string(),
+      number: z.number().int().positive().nullable(),
+    })
+    .optional(),
   collection: elementCollectionSchema,
   collectionSize: index,
   start: index,

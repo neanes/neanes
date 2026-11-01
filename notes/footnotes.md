@@ -1,16 +1,24 @@
 # Footnotes implementation plan
 
-Status: initial proof of concept implemented; the remaining stages are planned.
+Status: the main-score and rich-textbox reference proofs of concept, custom
+markers, and shared Undo/Redo routing are implemented. Remaining styling,
+continuation, and exporter completion work is planned.
 
 ## Proof-of-concept usage and limits
 
 - Right-click a main-score neume and choose Insert Footnote. Use the existing
   score tools to insert textboxes and neumes directly in the footnote area.
 - Click a superscript reference to edit its body. Click the body number to return
-  to the reference. References inside textboxes are not part of this stage.
-- Inline references use parentheses, with ordinary music spacing on both sides.
+  to the reference. Rich textboxes also support references at the caret through
+  the superscript icon in their formatting toolbar. It has a translated Insert
+  Footnote tooltip and accessible label. Plain textboxes do not support references;
+  headers, footers, annotations, and footnote bodies cannot receive references.
+- Neume references use parentheses, with ordinary music spacing on both sides.
   The gaps participate in justification; the marker stays with its owning neume.
-  Footnote body labels remain plain numbers.
+  Rich textbox references and body labels omit parentheses. Right-click a reference
+  or body label and choose Footnote Properties to select an automatic number, a
+  preset symbol, or short custom text. Custom markers do not consume an automatic
+  number; marker changes and renumbering are undoable together.
 - Page Setup has a Footnotes section for First Footnote Number, separator
   visibility, and separator length as a percentage of the content width.
 - Footnote content has its own staff, lyrics, and musical state, with one shared
@@ -20,8 +28,7 @@ Status: initial proof of concept implemented; the remaining stages are planned.
   and displayed in an editable overflow area below the physical page. Settled
   PDF/PNG/print output is blocked until the content fits.
 - The proof of concept uses the existing score typography for body content.
-  Separate footnote typography, rich-text references, custom markers, and
-  continuation remain later stages. Plain textbox references remain excluded.
+  Separate footnote typography and continuation remain later stages. Plain textbox references remain excluded.
 - PDF, PNG, and printing include footnotes. HTML, LaTeX, and MusicXML export are
   explicitly blocked for documents with footnotes until those exporters support
   them, so these exports cannot silently discard content.
@@ -237,6 +244,49 @@ with consistent styling and no cross-sequence musical or layout effects.
 
 ## Stage 4: references inside rich textboxes
 
+The reference proof of concept is implemented for main-score rich textboxes,
+including ordinary/scrollable boxes, top/bottom inline panels, and left/center/right
+multipanel boxes. Panels are numbered in that order, then by position within each
+panel. A whole rich textbox remains on its reference page with all its footnotes.
+
+The formatting toolbar uses a superscript icon for Insert Footnote, with a
+translated tooltip and accessible button label. The action is available only in
+main-score rich textboxes. Insertion and pasted references are rejected in
+headers, footers, annotations, and footnote bodies.
+
+Markers are CKEditor inline objects with persistent IDs and generated labels.
+Rich textboxes retain CKEditor's native typing, deletion, and Undo/Redo, including
+caret restoration. Keyboard shortcuts, the rich-text toolbar, and the Edit menu
+share the same routing and combined history availability.
+Undo first uses the focused rich editor's native history, then score history.
+Redo replays any outstanding score redo branch before restoring native typing,
+so another textbox's undone text cannot replace that branch. The existing score
+history availability supplies this state; no additional history tracker is used.
+Blur, serialization, copying, navigation, and workspace changes flush pending
+text. Each flush records the resulting HTML and added/removed footnote bodies
+together in one score-history transaction.
+Marker insertion and paste flush immediately so the new body is available.
+Deleting a marker leaves its body and numbering unchanged until the next flush.
+Committing changed HTML clears that editor's native Undo/Redo stacks without
+changing its caret. Native history covers edits since the last flush; score
+history owns committed textbox updates and restores removed bodies together with
+their markers. No session body cache or caret snapshots are needed. Score history
+does not move focus or restore a rich-text caret. Rich text dirty checks use
+CKEditor's normalized baseline, so serialization-only HTML differences do not
+create edits. Text editors update through props without forced history-time
+remounts. Changing editor configuration
+(for example, importing new paragraph-style definitions) still rebuilds CKEditor
+and resets its local history; the flushed paste remains a score-level undo step.
+Clipboard copies include detached body snapshots and style definitions; pasted
+references receive new IDs. Clipboard metadata is not stored in textbox content. Headers, footers, annotations, and footnote bodies
+cannot receive references. Panel layout changes that would hide a reference are
+rejected, and the inline toggle is disabled while a box contains references.
+
+Real Electron tests cover insertion, deletion, navigation, Undo/Redo, save/reopen,
+whole-element copying, inline clipboard copying across documents, and custom
+footnote lyric style imports. The original stage criteria remain below for the
+broader feature; conversion workflows are not introduced by this proof of concept.
+
 - Add caret-position references in rich textboxes, including supported panels,
   using a CKEditor inline model object and serialization conversions. Plain
   textboxes do not support references and retain their existing content model.
@@ -283,10 +333,18 @@ bounded local fit decisions, without whole-document fixed-point pagination.
 
 ## Stage 6: custom markers and output completion
 
-- Add per-footnote custom markers while keeping stable IDs independent of labels.
-  Permit symbols or short text and measure their actual geometry.
-- Proposed default: custom-marked footnotes do not consume automatic numbers.
-  Confirm this policy and duplicate-marker behavior before implementation.
+Marker properties are implemented. A nullable per-footnote string stores the
+override independently of reference IDs. Footnote Properties offers automatic,
+asterisk, dagger, double dagger, and custom text, with reference/body previews.
+Custom text is limited to 1-16 Unicode characters without control characters.
+Custom markers do not consume automatic numbers. The marker's location determines
+parentheses: neume references have them; rich text references and body labels do
+not. Symbol and custom overrides survive saving, copying, and Undo/Redo. Duplicate
+custom labels are permitted. Per-page numbering and exporter completion remain
+future work.
+
+- Implemented: per-footnote symbols and short text with stable IDs and measured
+  geometry. Custom markers do not consume automatic numbers; duplicates are allowed.
 - Page-restarting numbering and shared references are separate optional extensions;
   neither is required for the agreed document-wide numbering feature.
 - Audit HTML, LaTeX, and MusicXML export paths. Implement native footnote semantics

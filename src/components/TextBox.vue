@@ -312,6 +312,13 @@ function onEditorReady() {
 }
 
 function update() {
+  const updates = getPendingUpdates();
+  if (updates !== null) {
+    emit('update', updates);
+  }
+}
+
+function getPendingUpdates() {
   const updates: Partial<TextBoxElement> = {};
 
   let updated = false;
@@ -327,7 +334,7 @@ function update() {
   // This should never happen, but if it does, we don't want
   // to save garbage values.
   if (height == null) {
-    return;
+    return null;
   }
 
   // Nothing actually changed, so do nothing
@@ -364,9 +371,7 @@ function update() {
     updated = true;
   }
 
-  if (updated) {
-    emit('update', updates);
-  }
+  return updated ? updates : null;
 }
 
 function blur() {
@@ -466,6 +471,7 @@ async function measureHeight() {
 }
 
 defineExpose({
+  getPendingUpdates,
   measureHeight,
   blur,
   focus,

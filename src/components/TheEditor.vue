@@ -15,6 +15,7 @@ import {
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
+import type { Editor } from 'ckeditor5';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { useTranslation } from 'i18next-vue';
@@ -53,6 +54,7 @@ import type {
 import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
+import FootnotePropertiesDialog from '@/components/FootnotePropertiesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
 import McpSetupDialog from '@/components/McpSetupDialog.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
@@ -97,11 +99,17 @@ import {
   clearActiveEditor,
   focusLastActiveEditorForOwner,
   isActiveEditorForOwner,
+  useActiveEditorForOwner,
+  useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
+import { richTextFootnoteControllerKey } from '@/composables/useRichTextFootnotes';
 import { useScoreRendering } from '@/composables/useScoreRendering';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
-import { editorPreferencesKey } from '@/injectionKeys';
+import {
+  editorPreferencesKey,
+  richTextHistoryActionsKey,
+} from '@/injectionKeys';
 import type {
   CloseWorkspacesArgs,
   ExportWorkspaceAsImageReplyArgs,
@@ -148,7 +156,7 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
-import type { Footnote } from '@/models/Footnote';
+import { Footnote } from '@/models/Footnote';
 import type {
   ElementOverlayBox,
   ElementOverlayDiagnostics,
@@ -232,10 +240,14 @@ import {
 import { fontCatalog } from '@/services/FontCatalog';
 import {
   captureFootnotes,
+  cloneFootnote,
+  elementFootnoteIds,
+  footnoteMarkerUpdateCommand,
   footnoteRemovalCommands,
   orderedFootnotes,
   planFootnoteInsertion,
   planFootnoteRemoval,
+  planRichTextFootnoteUpdate,
   prepareFootnotePaste,
 } from '@/services/FootnoteService';
 import type { Command, HistoryState } from '@/services/history/CommandService';
@@ -258,6 +270,7 @@ import {
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
+import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -330,9 +343,6 @@ const alternateLineCommandFactory: CommandFactory<AlternateLineElement> =
 
 const textBoxCommandFactory: CommandFactory<TextBoxElement> =
   new CommandFactory<TextBoxElement>();
-
-const richTextBoxCommandFactory: CommandFactory<RichTextBoxElement> =
-  new CommandFactory<RichTextBoxElement>();
 
 const imageBoxCommandFactory: CommandFactory<ImageBoxElement> =
   new CommandFactory<ImageBoxElement>();
@@ -494,6 +504,7 @@ const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
+const scoreHistoryState = ref<HistoryState>({ canUndo: false, canRedo: false });
 let unsubscribeHistory: (() => void) | undefined;
 const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
@@ -527,6 +538,9 @@ const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
 const documentPropertiesDialogIsOpen = ref(false);
+const footnotePropertiesDialogIsOpen = ref(false);
+const editedFootnoteId = ref<string | null>(null);
+const contextMenuFootnoteId = ref<string | null>(null);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
 const mcpSetupDialogIsOpen = ref(false);
@@ -798,7 +812,7 @@ const activeLyricsLabel = computed(() => {
     ? t(($) => $.menu.view.lyrics, { ns: 'menu' })
     : t(($) => $.menu.footnotes.lyrics, {
         ns: 'menu',
-        number: footnote.number,
+        number: footnote.marker,
       });
 });
 
@@ -1298,10 +1312,8 @@ const statusSectionNumber = computed(() => {
   const anchor =
     footnote === undefined
       ? element
-      : score.value.staff.elements.find(
-          (candidate) =>
-            isSyllableElement(candidate) &&
-            candidate.footnoteId === footnote.id,
+      : score.value.staff.elements.find((candidate) =>
+          elementFootnoteIds(candidate).includes(footnote.id),
         );
   return anchor?.page === statusPageNumber.value
     ? getSectionNumberForElementIndex(anchor.index)
@@ -1423,6 +1435,10 @@ const activeDialog = computed(
       {
         name: 'syllable_positioning',
         open: syllablePositioningDialogIsOpen.value,
+      },
+      {
+        name: 'footnote_properties',
+        open: footnotePropertiesDialogIsOpen.value,
       },
       { name: 'export', open: exportDialogIsOpen.value },
       { name: 'preferences', open: editorPreferencesDialogIsOpen.value },
@@ -2821,6 +2837,38 @@ function getSelectedRichTextOwner() {
   );
 }
 
+provide(richTextHistoryActionsKey, {
+  canUndo,
+  canRedo,
+  undo: () => {
+    void onFileMenuUndo();
+  },
+  redo: () => {
+    void onFileMenuRedo();
+  },
+});
+
+const focusedRichTextEditor = useActiveEditorForOwner(getSelectedRichTextOwner);
+const richTextHistoryState = useEditorCommandStates(focusedRichTextEditor, [
+  'undo',
+  'redo',
+]);
+watch(
+  () => ({
+    canUndo:
+      richTextHistoryState.undo.isEnabled || scoreHistoryState.value.canUndo,
+    canRedo:
+      richTextHistoryState.redo.isEnabled || scoreHistoryState.value.canRedo,
+  }),
+  (state) => {
+    canUndo.value = state.canUndo;
+    canRedo.value = state.canRedo;
+    EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
+    EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
+  },
+  { immediate: true },
+);
+
 function refocusSelectedRichTextEditorAfterShowingPane(
   paneId: WorkspacePaneId,
   isVisible: boolean,
@@ -3328,18 +3376,46 @@ function publishHistoryState(state: HistoryState) {
     workspace.selectedAlternateLineElement = null;
     workspace.selectionRange = null;
   }
-  canUndo.value = state.canUndo;
-  canRedo.value = state.canRedo;
-  EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
-  EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
+  scoreHistoryState.value = state;
 }
 
-function openFootnote(reference: NoteElement) {
-  const footnote = score.value.footnotes.find(
-    (body) => body.id === reference.footnoteId,
+const editedFootnote = computed(() =>
+  orderedFootnotes(score.value).find(
+    ({ footnote }) => footnote.id === editedFootnoteId.value,
+  ),
+);
+watch(editedFootnote, (entry) => {
+  if (entry === undefined) {
+    footnotePropertiesDialogIsOpen.value = false;
+  }
+});
+
+function openFootnoteProperties(id: string) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  editedFootnoteId.value = id;
+  footnotePropertiesDialogIsOpen.value = true;
+}
+
+function updateFootnoteMarker(marker: string | null) {
+  const entry = editedFootnote.value!;
+  commandService.value.execute(
+    footnoteMarkerUpdateCommand(entry.footnote, marker),
   );
+  save();
+}
+
+function openFootnote(
+  reference: ScoreElement,
+  id = elementFootnoteIds(reference)[0],
+) {
+  const footnote = score.value.footnotes.find((body) => body.id === id);
   if (footnote === undefined) {
     return;
+  }
+  const editor = focusedRichTextEditor.value;
+  if (editor !== null) {
+    editor.ui.getEditableElement()!.blur();
+    clearActiveEditor();
   }
   pages.value[reference.page - 1].isVisible = true;
   selectedElement.value = footnote.staff.elements[0];
@@ -3349,6 +3425,114 @@ function openFootnote(reference: NoteElement) {
       ?.scrollIntoView({ block: 'nearest' }),
   );
 }
+
+const pendingRichTextStyles = new WeakMap<
+  RichTextBoxElement,
+  ParagraphStyle[]
+>();
+const pendingRichTextFootnotes = new WeakMap<RichTextBoxElement, Footnote[]>();
+provide(richTextFootnoteControllerKey, {
+  supports(owner): owner is RichTextBoxElement {
+    return (
+      owner instanceof RichTextBoxElement &&
+      score.value.staff.elements.includes(owner)
+    );
+  },
+  insert(owner, editor: Editor) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    const body = new Footnote();
+    pendingRichTextFootnotes.set(owner, [body]);
+    editor.model.change((writer) => {
+      editor.model.insertContent(
+        writer.createElement(FOOTNOTE_ELEMENT, { footnoteId: body.id }),
+      );
+    });
+    // Insertion is flushed before navigating to the newly created body.
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    openFootnote(owner, body.id);
+  },
+  changed(owner, key, html) {
+    // Only insertion/paste needs an immediate body. Ordinary editing and marker
+    // deletion stay in CKEditor's history until the normal flush boundary.
+    if (pendingRichTextFootnotes.has(owner)) {
+      updateRichTextBox(owner, { [key]: html });
+    }
+  },
+  navigate(id) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    const reference = orderedFootnotes(score.value).find(
+      ({ footnote }) => footnote.id === id,
+    )?.reference;
+    if (reference !== undefined) {
+      openFootnote(reference, id);
+    }
+  },
+  copy(id) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    const body = score.value.footnotes.find((candidate) => candidate.id === id);
+    if (body === undefined) {
+      throw new Error('INVALID_FOOTNOTE_REFERENCE');
+    }
+    return JSON.stringify({
+      body: SaveService.SaveFootnote(body),
+      paragraphStyles: score.value.paragraphStyles.map((style) =>
+        SaveService.SaveParagraphStyle(style),
+      ),
+    });
+  },
+  paste(owner, payload) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    const saved = JSON.parse(payload) as {
+      body: ReturnType<typeof SaveService.SaveFootnote>;
+      paragraphStyles: ReturnType<typeof SaveService.SaveParagraphStyle>[];
+    };
+    const sourceStyles = saved.paragraphStyles.map((style) =>
+      SaveService.LoadParagraphStyle_v1(style),
+    );
+    const copy = cloneFootnote(
+      SaveService.LoadFootnote_v1(saved.body, score.value.pageSetup),
+    );
+    if (
+      copy.staff.elements.some(
+        (element) => elementFootnoteIds(element).length > 0,
+      )
+    ) {
+      throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
+    }
+    const currentStyles =
+      pendingRichTextStyles.get(owner) ?? score.value.paragraphStyles;
+    const { importedParagraphStyles, styleIdRemap } =
+      resolveClipboardParagraphStyles(
+        collectClipboardParagraphStylesFromElements(
+          copy.staff.elements,
+          sourceStyles,
+        ),
+        currentStyles,
+        collectClipboardParagraphStyleIdsFromElements(copy.staff.elements),
+      );
+    const paragraphStyles = [...currentStyles, ...importedParagraphStyles];
+    copy.staff.elements.forEach((element) =>
+      rewriteClipboardElementParagraphStyleIds(
+        element,
+        paragraphStyles,
+        styleIdRemap,
+      ),
+    );
+    pendingRichTextStyles.set(owner, paragraphStyles);
+    pendingRichTextFootnotes.set(owner, [
+      ...(pendingRichTextFootnotes.get(owner) ?? []),
+      copy,
+    ]);
+    return copy.id;
+  },
+  reject(owner) {
+    if (owner instanceof RichTextBoxElement) {
+      pendingRichTextFootnotes.delete(owner);
+      pendingRichTextStyles.delete(owner);
+    }
+    toast.error(t(($) => $.menu.footnotes.pasteUnavailable, { ns: 'menu' }));
+  },
+});
 
 function insertFootnote(reference: NoteElement) {
   flushPendingRichTextEditors(selectedWorkspace.value);
@@ -3501,9 +3685,14 @@ function getRichTextBoxComponentRef(element: RichTextBoxElement) {
 }
 
 function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
-  const components: RichTextBoxComponent[] = [];
-  const component =
-    getElementComponentForElement<RichTextBoxComponent>(element);
+  return getTextBoxComponentRefs<RichTextBoxComponent>(element);
+}
+
+function getTextBoxComponentRefs<T>(
+  element: TextBoxElement | RichTextBoxElement,
+) {
+  const components: T[] = [];
+  const component = getElementComponentForElement<T>(element);
   if (component != null) {
     components.push(component);
   }
@@ -3517,8 +3706,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
       score.value.pageSetup.showHeader &&
       getHeaderForPageIndex(pageIndex) === element
     ) {
-      const component =
-        pageContent.getHeaderFooterRef<RichTextBoxComponent>('header');
+      const component = pageContent.getHeaderFooterRef<T>('header');
       if (component != null) {
         components.push(component);
       }
@@ -3527,8 +3715,7 @@ function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
       score.value.pageSetup.showFooter &&
       getFooterForPageIndex(pageIndex) === element
     ) {
-      const component =
-        pageContent.getHeaderFooterRef<RichTextBoxComponent>('footer');
+      const component = pageContent.getHeaderFooterRef<T>('footer');
       if (component != null) {
         components.push(component);
       }
@@ -6614,12 +6801,24 @@ function updateRichTextBox(
     return;
   }
 
-  commandService.value.execute(
-    richTextBoxCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
+  const commands = planRichTextFootnoteUpdate(
+    score.value,
+    element,
+    newValues,
+    pendingRichTextFootnotes.get(element) ?? [],
   );
+  const paragraphStyles = pendingRichTextStyles.get(element);
+  if (paragraphStyles !== undefined) {
+    commands.unshift(
+      new CommandFactory<Score>().create('update-properties', {
+        target: score.value,
+        newValues: { paragraphStyles },
+      }),
+    );
+  }
+  commandService.value.executeAsBatch(commands);
+  pendingRichTextFootnotes.delete(element);
+  pendingRichTextStyles.delete(element);
 
   const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
 
@@ -8663,8 +8862,38 @@ async function onFileMenuSaveAs() {
   }
 }
 
-function onFileMenuUndo() {
-  flushLyricsAssignment(selectedWorkspace.value);
+async function prepareForScoreHistoryReplay() {
+  const workspace = selectedWorkspace.value;
+  const plainTextBox = selectedTextBoxElement.value;
+  if (plainTextBox !== null) {
+    const updates: Partial<TextBoxElement> = {};
+    for (const component of getTextBoxComponentRefs<
+      InstanceType<typeof TextBox>
+    >(plainTextBox)) {
+      Object.assign(updates, component.getPendingUpdates() ?? {});
+    }
+    if (Object.keys(updates).length > 0) {
+      updateTextBox(plainTextBox, updates);
+    }
+  }
+  flushPendingRichTextEditors(workspace);
+  flushLyricsAssignment(workspace);
+  // Let editors acknowledge the committed values before replay. Otherwise a
+  // flush followed by Undo in the same Vue tick can hide the round trip from
+  // model watchers, leaving stale DOM to be committed on a later blur.
+  await nextTick();
+  return selectedWorkspace.value === workspace;
+}
+
+async function onFileMenuUndo() {
+  const editor = focusedRichTextEditor.value;
+  if (editor !== null && editor.commands.get('undo')!.isEnabled) {
+    editor.execute('undo');
+    return;
+  }
+  if (!(await prepareForScoreHistoryReplay())) {
+    return;
+  }
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
@@ -8683,15 +8912,35 @@ function onFileMenuUndo() {
       }
 
       // Undo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
+      // Text editors synchronize through props. Teardown here could flush
+      // stale DOM after replay and would discard their local editing history.
+      if (
+        !isTextBoxElement(selectedElement.value) &&
+        !isRichTextBoxElement(selectedElement.value)
+      ) {
+        selectedElement.value.keyHelper++;
+      }
     }
   });
 
   save();
 }
 
-function onFileMenuRedo() {
-  flushLyricsAssignment(selectedWorkspace.value);
+async function onFileMenuRedo() {
+  const editor = focusedRichTextEditor.value;
+  // Reverse score Undo before restoring another textbox's locally undone text.
+  // Flushing that text first would otherwise discard the score redo branch.
+  if (
+    !scoreHistoryState.value.canRedo &&
+    editor !== null &&
+    editor.commands.get('redo')!.isEnabled
+  ) {
+    editor.execute('redo');
+    return;
+  }
+  if (!(await prepareForScoreHistoryReplay())) {
+    return;
+  }
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
@@ -8710,7 +8959,14 @@ function onFileMenuRedo() {
       }
 
       // Redo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
+      // Text editors synchronize through props. Teardown here could flush
+      // stale DOM after replay and would discard their local editing history.
+      if (
+        !isTextBoxElement(selectedElement.value) &&
+        !isRichTextBoxElement(selectedElement.value)
+      ) {
+        selectedElement.value.keyHelper++;
+      }
     }
   });
 
@@ -9492,10 +9748,28 @@ function resetScoreContextMenu(event: MouseEvent) {
   scoreContextMenuTarget.value = null;
   scoreMenuPointerDownInside.value = false;
 
+  const target =
+    event.target instanceof Element
+      ? event.target.closest(
+          '.footnote-reference, .footnote-label, .neanes-footnote',
+        )
+      : null;
+  contextMenuFootnoteId.value =
+    target?.getAttribute('data-footnote-id') ?? null;
+  if (contextMenuFootnoteId.value !== null) {
+    scoreContextMenuTarget.value =
+      orderedFootnotes(score.value).find(
+        ({ footnote }) => footnote.id === contextMenuFootnoteId.value,
+      )?.reference ?? null;
+  }
+
   // Right-clicks inside editable text keep the native context menu: stop the
   // event in the capture phase so reka's trigger on .page-background never opens
   // the score menu, and do NOT preventDefault so the browser's own menu shows.
-  if (isEditableContextMenuTarget(event)) {
+  if (
+    contextMenuFootnoteId.value === null &&
+    isEditableContextMenuTarget(event)
+  ) {
     event.stopImmediatePropagation();
   }
 }
@@ -9512,6 +9786,7 @@ function onScoreContextMenu(event: MouseEvent) {
 function onScoreContextMenuOpenChange(open: boolean) {
   if (!open) {
     scoreContextMenuTarget.value = null;
+    contextMenuFootnoteId.value = null;
     scoreMenuPointerDownInside.value = false;
   }
 }
@@ -9982,171 +10257,197 @@ function renderTabLabel(tab: Tab) {
                 @pointerup.capture="onScoreMenuContentPointerUp"
               >
                 <ContextMenuItem
-                  :disabled="!canCutCopySelected"
-                  @select="onCutScoreElements"
+                  v-if="contextMenuFootnoteId !== null"
+                  data-testid="footnote-properties-menu"
+                  @select="openFootnoteProperties(contextMenuFootnoteId)"
+                  >{{
+                    $t(($) => $.menu.footnotes.properties, { ns: 'menu' })
+                  }}</ContextMenuItem
                 >
-                  <PhScissors />
-                  {{ $t(($) => $.menu.edit.cut, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  :disabled="!canCutCopySelected"
-                  @select="onCopyScoreElements"
-                >
-                  <PhCopy />
-                  {{ $t(($) => $.menu.edit.copy, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  :disabled="!canPasteSelected"
-                  @select="onPasteScoreElements(false)"
-                >
-                  <PhClipboardText />
-                  {{ $t(($) => $.menu.edit.paste, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  :disabled="!canPasteSelected"
-                  @select="onPasteScoreElements(true)"
-                >
-                  <PhClipboardText />
-                  {{ $t(($) => $.menu.edit.pasteWithLyrics, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  :disabled="!canSelectAllElements"
-                  @select="onSelectAllScoreElements"
-                >
-                  <PhSelectionAll />
-                  {{ $t(($) => $.menu.edit.selectAll, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <template v-if="contextMenuHasElementProperties">
-                  <ContextMenuSeparator />
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuMartyria != null"
-                    :model-value="contextMenuMartyria.alignRight"
-                    @update:model-value="
-                      updateMartyria(contextMenuMartyria, {
-                        alignRight: $event === true,
-                      })
-                    "
-                  >
-                    <PhAlignRight class="h-4 w-4" weight="duotone" />
-                    {{
-                      $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })
-                    }}
-                  </ContextMenuCheckboxItem>
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuModeKey != null"
-                    :model-value="contextMenuModeKey.useDefaultStyle"
-                    @update:model-value="
-                      setContextMenuUseDefaultStyle(
-                        contextMenuModeKey,
-                        $event === true,
-                      )
-                    "
-                  >
-                    {{
-                      $t(($) => $.toolbar.common.useDefaultStyle, {
-                        ns: 'toolbar',
-                      })
-                    }}
-                  </ContextMenuCheckboxItem>
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuModeKey != null"
-                    :model-value="contextMenuModeKey.showAmbitus"
-                    @update:model-value="
-                      updateModeKey(contextMenuModeKey, {
-                        showAmbitus: $event === true,
-                      })
-                    "
-                  >
-                    {{
-                      $t(($) => $.toolbar.initialMartyria.showAmbitus, {
-                        ns: 'toolbar',
-                      })
-                    }}
-                  </ContextMenuCheckboxItem>
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuImageBox != null"
-                    :model-value="contextMenuImageBox.lockAspectRatio"
-                    @update:model-value="
-                      updateImageBox(contextMenuImageBox, {
-                        lockAspectRatio: $event === true,
-                      })
-                    "
-                  >
-                    {{
-                      $t(($) => $.toolbar.imageBox.maintainAspectRatio, {
-                        ns: 'toolbar',
-                      })
-                    }}
-                  </ContextMenuCheckboxItem>
-                </template>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  v-if="canSaveContextMenuSelectionAsCombo"
-                  @select="saveContextMenuSelectionAsCombo"
-                >
-                  <PhBookmarkSimple />
-                  {{ $t(($) => $.menu.edit.saveAsCombo, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <template
-                  v-if="
-                    contextMenuNote != null &&
-                    score.staff.elements.includes(contextMenuNote)
-                  "
-                >
+                <template v-else>
                   <ContextMenuItem
-                    v-if="contextMenuNote.footnoteId === null"
-                    @select="insertFootnote(contextMenuNote)"
-                    >{{
-                      $t(($) => $.menu.footnotes.insert, { ns: 'menu' })
-                    }}</ContextMenuItem
+                    :disabled="!canCutCopySelected"
+                    @select="onCutScoreElements"
                   >
-                  <template v-else>
-                    <ContextMenuItem @select="openFootnote(contextMenuNote)">{{
-                      $t(($) => $.menu.footnotes.edit, {
-                        ns: 'menu',
-                        number: contextMenuNote.footnoteNumber,
-                      })
-                    }}</ContextMenuItem>
+                    <PhScissors />
+                    {{ $t(($) => $.menu.edit.cut, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    :disabled="!canCutCopySelected"
+                    @select="onCopyScoreElements"
+                  >
+                    <PhCopy />
+                    {{ $t(($) => $.menu.edit.copy, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    :disabled="!canPasteSelected"
+                    @select="onPasteScoreElements(false)"
+                  >
+                    <PhClipboardText />
+                    {{ $t(($) => $.menu.edit.paste, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    :disabled="!canPasteSelected"
+                    @select="onPasteScoreElements(true)"
+                  >
+                    <PhClipboardText />
+                    {{ $t(($) => $.menu.edit.pasteWithLyrics, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    :disabled="!canSelectAllElements"
+                    @select="onSelectAllScoreElements"
+                  >
+                    <PhSelectionAll />
+                    {{ $t(($) => $.menu.edit.selectAll, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <template v-if="contextMenuHasElementProperties">
+                    <ContextMenuSeparator />
+                    <ContextMenuCheckboxItem
+                      v-if="contextMenuMartyria != null"
+                      :model-value="contextMenuMartyria.alignRight"
+                      @update:model-value="
+                        updateMartyria(contextMenuMartyria, {
+                          alignRight: $event === true,
+                        })
+                      "
+                    >
+                      <PhAlignRight class="h-4 w-4" weight="duotone" />
+                      {{
+                        $t(($) => $.toolbar.common.alignRight, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </ContextMenuCheckboxItem>
+                    <ContextMenuCheckboxItem
+                      v-if="contextMenuModeKey != null"
+                      :model-value="contextMenuModeKey.useDefaultStyle"
+                      @update:model-value="
+                        setContextMenuUseDefaultStyle(
+                          contextMenuModeKey,
+                          $event === true,
+                        )
+                      "
+                    >
+                      {{
+                        $t(($) => $.toolbar.common.useDefaultStyle, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </ContextMenuCheckboxItem>
+                    <ContextMenuCheckboxItem
+                      v-if="contextMenuModeKey != null"
+                      :model-value="contextMenuModeKey.showAmbitus"
+                      @update:model-value="
+                        updateModeKey(contextMenuModeKey, {
+                          showAmbitus: $event === true,
+                        })
+                      "
+                    >
+                      {{
+                        $t(($) => $.toolbar.initialMartyria.showAmbitus, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </ContextMenuCheckboxItem>
+                    <ContextMenuCheckboxItem
+                      v-if="contextMenuImageBox != null"
+                      :model-value="contextMenuImageBox.lockAspectRatio"
+                      @update:model-value="
+                        updateImageBox(contextMenuImageBox, {
+                          lockAspectRatio: $event === true,
+                        })
+                      "
+                    >
+                      {{
+                        $t(($) => $.toolbar.imageBox.maintainAspectRatio, {
+                          ns: 'toolbar',
+                        })
+                      }}
+                    </ContextMenuCheckboxItem>
+                  </template>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    v-if="canSaveContextMenuSelectionAsCombo"
+                    @select="saveContextMenuSelectionAsCombo"
+                  >
+                    <PhBookmarkSimple />
+                    {{ $t(($) => $.menu.edit.saveAsCombo, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                  <template
+                    v-if="
+                      contextMenuNote != null &&
+                      score.staff.elements.includes(contextMenuNote)
+                    "
+                  >
                     <ContextMenuItem
-                      @select="removeFootnote(contextMenuNote)"
+                      v-if="contextMenuNote.footnoteId === null"
+                      @select="insertFootnote(contextMenuNote)"
                       >{{
-                        $t(($) => $.menu.footnotes.remove, { ns: 'menu' })
+                        $t(($) => $.menu.footnotes.insert, { ns: 'menu' })
                       }}</ContextMenuItem
                     >
+                    <template v-else>
+                      <ContextMenuItem
+                        @select="
+                          openFootnoteProperties(contextMenuNote.footnoteId!)
+                        "
+                        >{{
+                          $t(($) => $.menu.footnotes.properties, { ns: 'menu' })
+                        }}</ContextMenuItem
+                      >
+                      <ContextMenuItem
+                        @select="openFootnote(contextMenuNote)"
+                        >{{
+                          $t(($) => $.menu.footnotes.edit, {
+                            ns: 'menu',
+                            number: contextMenuNote.footnoteMarker,
+                          })
+                        }}</ContextMenuItem
+                      >
+                      <ContextMenuItem
+                        @select="removeFootnote(contextMenuNote)"
+                        >{{
+                          $t(($) => $.menu.footnotes.remove, { ns: 'menu' })
+                        }}</ContextMenuItem
+                      >
+                    </template>
                   </template>
-                </template>
-                <ContextMenuItem
-                  v-if="contextMenuNote != null"
-                  @select="openContextMenuPositioning(contextMenuNote)"
-                >
-                  <PhCrosshair />
-                  {{
-                    $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })
-                  }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  v-if="contextMenuModeKey != null"
-                  @select="openContextMenuChangeKey(contextMenuModeKey)"
-                >
-                  <span
-                    class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
-                    aria-hidden="true"
+                  <ContextMenuItem
+                    v-if="contextMenuNote != null"
+                    @select="openContextMenuPositioning(contextMenuNote)"
                   >
-                    Ηχ
-                  </span>
-                  {{
-                    $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
-                      ns: 'toolbar',
-                    })
-                  }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  @select="setPaneVisibility('properties', true)"
-                >
-                  <PhSlidersHorizontal />
-                  {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
-                </ContextMenuItem>
+                    <PhCrosshair />
+                    {{
+                      $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })
+                    }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    v-if="contextMenuModeKey != null"
+                    @select="openContextMenuChangeKey(contextMenuModeKey)"
+                  >
+                    <span
+                      class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
+                      aria-hidden="true"
+                    >
+                      Ηχ
+                    </span>
+                    {{
+                      $t(
+                        ($) => $.toolbar.initialMartyria.changeInitialMartyria,
+                        {
+                          ns: 'toolbar',
+                        },
+                      )
+                    }}
+                  </ContextMenuItem>
+                  <ContextMenuItem
+                    @select="setPaneVisibility('properties', true)"
+                  >
+                    <PhSlidersHorizontal />
+                    {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
+                  </ContextMenuItem>
+                </template>
               </ContextMenuContent>
             </ContextMenu>
           </div>
@@ -10343,6 +10644,16 @@ function renderTabLabel(tab: Tab) {
         </ButtonGroupText>
       </ButtonGroup>
     </div>
+    <FootnotePropertiesDialog
+      v-if="footnotePropertiesDialogIsOpen && editedFootnote !== undefined"
+      v-model:open="footnotePropertiesDialogIsOpen"
+      :footnote="editedFootnote.footnote"
+      :automatic-number="editedFootnote.automaticNumber"
+      :rich-text-reference="
+        editedFootnote.reference instanceof RichTextBoxElement
+      "
+      @update="updateFootnoteMarker"
+    />
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen"
       v-model:open="modeKeyDialogIsOpen"
@@ -10432,6 +10743,7 @@ function renderTabLabel(tab: Tab) {
         :key="element.id!"
         class="richTextBoxCalculation"
         :element="element as RichTextBoxElement"
+        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
         :page-setup="score.pageSetup"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"

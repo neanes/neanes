@@ -106,6 +106,8 @@
     "overflow": "A footnote and its reference cannot fit on this page. Shorten the footnote or increase the page size. Export is unavailable until this is resolved.",
     "nested": "Footnotes cannot contain footnote references.",
     "unsupportedExport": "This export format does not yet support footnotes. Use PDF or PNG to preserve them.",
-    "lyrics": "Footnote {{number}} Lyrics"
+    "lyrics": "Footnote {{number}} Lyrics",
+    "pasteUnavailable": "Footnote references can only be pasted from Neanes into a rich textbox in the main score.",
+    "properties": "Footnote Properties…"
   }
 }

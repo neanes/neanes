@@ -156,6 +156,7 @@ export class NoteElement extends ScoreElement {
   public footnoteId: string | null = null;
   // Derived before line breaking; identity is independent of the displayed number.
   public footnoteNumber: number | null = null;
+  public footnoteMarker: string | null = null;
   public footnoteMarkerWidth = 0;
   public footnoteMarkerOffset = 0;
   public keepWithNext: boolean = false;
@@ -1224,6 +1225,7 @@ export class RichTextBoxElement extends ScoreElement {
   public runningMarkerText: string | null = null;
 
   // Values computed by the layout service
+  public footnoteMarkers: Record<string, string> = {};
   public defaultLyricsFontHeight: number = 0;
   public defaultNeumeFontAscent: number = 0;
   public oligonMidpoint: number = 0;

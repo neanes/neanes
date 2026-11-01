@@ -93,7 +93,10 @@ import {
   footnotePageSetup,
   footnoteSectionHeight,
 } from '@/services/FootnoteLayout';
-import { orderedFootnotes } from '@/services/FootnoteService';
+import {
+  elementFootnoteIds,
+  orderedFootnotes,
+} from '@/services/FootnoteService';
 import {
   NeumeMappingService,
   type SbmuflGlyphName,
@@ -415,6 +418,7 @@ export class LayoutService {
         this.saveElementState(element);
         if (element.elementType === ElementType.Note) {
           (element as NoteElement).footnoteNumber = null;
+          (element as NoteElement).footnoteMarker = null;
           (element as NoteElement).footnoteMarkerWidth = 0;
           (element as NoteElement).footnoteMarkerOffset = 0;
         }
@@ -570,10 +574,7 @@ export class LayoutService {
             return [];
           }
           const element = (item as ElementBox).element;
-          return element.elementType === ElementType.Note &&
-            (element as NoteElement).footnoteId !== null
-            ? [(element as NoteElement).footnoteId!]
-            : [];
+          return elementFootnoteIds(element);
         }),
       );
     for (const [candidateIndex, candidate] of contentLines.entries()) {
@@ -648,6 +649,7 @@ export class LayoutService {
         return {
           id,
           number: prepared.number,
+          marker: prepared.marker,
           reference: prepared.reference,
           lines: [],
           top: 0,
@@ -789,23 +791,35 @@ export class LayoutService {
   ) {
     const score = workspace.score;
     const ordered = orderedFootnotes(score);
+    const markers = Object.fromEntries(
+      ordered.map(({ footnote, marker }) => [footnote.id, marker]),
+    );
+    for (const staff of score.staves) {
+      for (const element of staff.elements) {
+        if (element.elementType === ElementType.RichTextBox) {
+          (element as RichTextBoxElement).footnoteMarkers = markers;
+        }
+      }
+    }
     const markerFont = footnoteMarkerFont(score.pageSetup);
-    const labelWidths = ordered.map(({ number }) =>
-      TextMeasurementService.getTextWidth(String(number), markerFont),
+    const labelWidths = ordered.map(({ marker }) =>
+      TextMeasurementService.getTextWidth(marker, markerFont),
     );
     const gutter = Math.max(0, ...labelWidths) + 6;
     return new Map(
-      ordered.map(({ footnote, reference, number }) => {
-        reference.footnoteNumber = number;
-        reference.footnoteMarkerWidth = TextMeasurementService.getTextWidth(
-          footnoteMarkerText(number),
-          markerFont,
-        );
+      ordered.map(({ footnote, reference, number, marker }) => {
+        if (reference.elementType === ElementType.Note) {
+          (reference as NoteElement).footnoteNumber = number;
+          (reference as NoteElement).footnoteMarker = marker;
+          (reference as NoteElement).footnoteMarkerWidth =
+            TextMeasurementService.getTextWidth(
+              footnoteMarkerText(marker),
+              markerFont,
+            );
+        }
         if (
           footnote.staff.elements.some(
-            (element) =>
-              element.elementType === ElementType.Note &&
-              (element as NoteElement).footnoteId !== null,
+            (element) => elementFootnoteIds(element).length > 0,
           )
         ) {
           throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
@@ -825,6 +839,7 @@ export class LayoutService {
           {
             reference,
             number,
+            marker,
             content,
             lines,
             gutter,
@@ -1379,7 +1394,7 @@ export class LayoutService {
           const elementWidthPx =
             noteElement.neumeWidth +
             noteElement.footnoteMarkerWidth +
-            (noteElement.footnoteNumber === null ? 0 : standardGlue.width);
+            (noteElement.footnoteMarker === null ? 0 : standardGlue.width);
 
           // Consume any pending martyria bar transfer width.
           const martyriaBarTransferWidth =
@@ -1562,7 +1577,7 @@ export class LayoutService {
 
           // The note box width (unchanged by the bar transfer).
           this.addBox(noteElement.neumeWidth, noteElement, layoutWorkspace);
-          if (noteElement.footnoteNumber !== null) {
+          if (noteElement.footnoteMarker !== null) {
             // Keep the reference with its neume, while its leading gap uses the
             // same stretch and shrink budget as ordinary music spacing.
             this.preventBreak(layoutWorkspace);
@@ -2594,9 +2609,18 @@ export class LayoutService {
   private static measureRichTextWidth(
     html: string,
     defaultLyricsFontCss: string,
+    markers: Readonly<Record<string, string>>,
   ) {
     const template = document.createElement('template');
     template.innerHTML = html;
+    // Inline fill-width reservations must include the generated marker label.
+    // As with other rich text, this is a conservative plain-text minimum.
+    for (const marker of template.content.querySelectorAll(
+      '.neanes-footnote',
+    )) {
+      marker.textContent =
+        markers[marker.getAttribute('data-footnote-id')!] ?? '?';
+    }
     const plainText = template.content.textContent ?? '';
 
     return this.measurePlainTextWidth(plainText, defaultLyricsFontCss);
@@ -2634,10 +2658,12 @@ export class LayoutService {
         this.measureRichTextWidth(
           richTextBoxElement.content,
           defaultLyricsFontCss,
+          richTextBoxElement.footnoteMarkers,
         ),
         this.measureRichTextWidth(
           richTextBoxElement.contentBottom,
           defaultLyricsFontCss,
+          richTextBoxElement.footnoteMarkers,
         ),
       );
     }

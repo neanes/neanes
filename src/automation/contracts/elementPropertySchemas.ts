@@ -60,6 +60,7 @@ export const elementPropertySchemas = {
   [ElementType.Note]: z.strictObject({
     footnoteId: z.string().uuid().optional(),
     footnoteNumber: z.number().int().positive().optional(),
+    footnoteMarker: z.string().optional(),
     ...breaks,
     lyrics: z.string(),
     isHyphen: z.boolean(),

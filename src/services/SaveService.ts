@@ -937,14 +937,16 @@ export class SaveService {
     score.footnotes =
       s.footnotes.length === 0
         ? undefined
-        : s.footnotes.map((footnote) => {
-            const staff = new Staff_v1();
-            staff.elements = this.SaveElements(footnote.staff.elements);
-            this.SaveLyricSetup(staff.lyrics, footnote.staff.lyrics);
-            return { id: footnote.id, staff };
-          });
+        : s.footnotes.map((footnote) => this.SaveFootnote(footnote));
 
     return score;
+  }
+
+  public static SaveFootnote(footnote: Footnote) {
+    const staff = new Staff_v1();
+    staff.elements = this.SaveElements(footnote.staff.elements);
+    this.SaveLyricSetup(staff.lyrics, footnote.staff.lyrics);
+    return { id: footnote.id, marker: footnote.marker ?? undefined, staff };
   }
 
   public static SaveElements(elements: ScoreElement[]): ScoreElement_v1[] {
@@ -1694,18 +1696,26 @@ export class SaveService {
       s.staff.elements,
       score.pageSetup,
     );
-    score.footnotes = (s.footnotes ?? []).map((saved) => {
-      const footnote = new Footnote();
-      footnote.id = saved.id;
-      footnote.staff.elements = this.LoadElements_v1(
-        saved.staff.elements,
-        score.pageSetup,
-      );
-      this.LoadLyricSetup_v1(footnote.staff.lyrics, saved.staff.lyrics);
-      return footnote;
-    });
+    score.footnotes = (s.footnotes ?? []).map((saved) =>
+      this.LoadFootnote_v1(saved, score.pageSetup),
+    );
 
     return score;
+  }
+
+  public static LoadFootnote_v1(
+    saved: NonNullable<Score_v1['footnotes']>[number],
+    pageSetup: PageSetup,
+  ) {
+    const footnote = new Footnote();
+    footnote.id = saved.id;
+    footnote.marker = saved.marker ?? null;
+    footnote.staff.elements = this.LoadElements_v1(
+      saved.staff.elements,
+      pageSetup,
+    );
+    this.LoadLyricSetup_v1(footnote.staff.lyrics, saved.staff.lyrics);
+    return footnote;
   }
 
   public static LoadElements_v1(

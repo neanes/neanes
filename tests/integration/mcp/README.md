@@ -91,3 +91,48 @@ PNG/PDF rendering. Its disposable output directory retains visual artifacts.
 Marker geometry checks cover natural and justified spacing on both sides, a
 narrow line that must move the neume and marker together, centered line endings,
 and RTL placement. Rendered examples are retained with the footnote artifacts.
+
+`rich-text-footnotes` tests caret insertion, atomic marker deletion, click navigation,
+native text Undo/Redo before flush and score-level body reconciliation, save/reopen, and copying for ordinary, inline top/bottom,
+and left/center/right multipanel rich textboxes. It also uses the real system
+clipboard to copy a marker across documents, checking fresh body identities,
+custom lyric style imports, and a single undo step for the complete paste.
+
+`footnote-markers` exercises Footnote Properties through real context menus on
+neume references, rich text widgets, and footnote body labels. It checks preset
+symbols, custom-text validation, previews, cancel, automatic-number restoration,
+number skipping, Undo/Redo, plain rich-text labels versus parenthesized neume
+labels, MCP marker metadata, BYZ/BYZX persistence, PNG rendering, and navigation.
+
+Rich text history checks type in paragraph two, undo/redo a merged typing batch,
+and type again after Undo. They verify the caret, backward selection ranges, and
+panel focus across all six textbox layouts. Marker
+checks also verify that MCP rejects annotation references without advancing the
+document revision; pure transaction tests cover annotations nested in main notes,
+alternate-line notes, and footnote notes.
+
+`rich-text-history-boundary` types into a footnote-bearing rich textbox, then into
+an ordinary rich, multipanel rich, or plain textbox without flushing it. Native
+Edit menu Undo prefers the focused CKEditor's native history and falls back to
+score history when the native command has no entry. Redo completes any outstanding
+score redo branch before restoring native typing.
+After blur, score Undo/Redo replays whole flushed textbox transactions without
+moving focus or discarding the redo branch. New pending typing before a score
+Redo must branch history before replay and remain undoable. The checks avoid MCP
+reads while typing is pending, since read settlement would otherwise hide the
+regression.
+
+The history-boundary scenario also saves pending typing in a rich textbox without
+footnotes, then sends real Undo/Redo keyboard events and toolbar clicks after Save and
+blur/refocus. The toolbar must remain enabled for committed score history even
+when native history is empty.
+It checks both native typing history and score fallback without double handling.
+It verifies that committed edits leave CKEditor's stacks, the live editor and caret survive
+Save, and earlier document edits remain reachable. The disposable Electron window
+is activated with native show/focus before selecting rich text.
+
+The two-textbox Redo regression runs through menu actions, real keyboard events,
+and toolbar clicks without footnotes: commit A's edit, type and undo in B, undo A, then Redo.
+A must be restored before B's native typing. Blurring B between the two Redos must
+not change history; after restoring and committing B, both edits must still be
+undoable.

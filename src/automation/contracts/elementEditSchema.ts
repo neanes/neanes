@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { ElementType } from '@/models/Element';
+import { normalizeFootnoteMarker } from '@/services/FootnoteMarker';
 
 import { paragraphStyleOverridesSchema } from '../../services/documents/paragraphStyleSchema';
 import { headerFooterVariants } from '../documents/elementDiscovery';
@@ -53,6 +54,7 @@ function editPropertySchema(type: ElementType) {
         'scaleNotesVirtual',
         'footnoteId',
         'footnoteNumber',
+        'footnoteMarker',
       ].includes(key)
     ) {
       continue;
@@ -274,8 +276,43 @@ const elementDefinitionSchema = z
   );
 const elementEditActionSchema = z.discriminatedUnion('action', [
   z.strictObject({
+    action: z.literal('update_footnote'),
+    footnoteId: z.string().uuid(),
+    marker: z
+      .string()
+      .nullable()
+      .refine((value) => {
+        try {
+          normalizeFootnoteMarker(value);
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'Footnote markers require 1-16 characters without control characters.')
+      .describe(
+        'Null uses automatic numbering. A custom marker does not consume an automatic number.',
+      ),
+  }),
+  z.strictObject({
     action: z.literal('insert_footnote'),
     elementRef: editReferenceSchema,
+    contentKey: z
+      .enum([
+        'content',
+        'contentBottom',
+        'contentLeft',
+        'contentCenter',
+        'contentRight',
+      ])
+      .optional(),
+    htmlOffset: z
+      .number()
+      .int()
+      .nonnegative()
+      .optional()
+      .describe(
+        'RichTextBox only: UTF-16 offset in stored HTML, within paragraph text or just after its opening tag.',
+      ),
     elements: z.array(elementDefinitionSchema).max(1000).default([]),
   }),
   z.strictObject({

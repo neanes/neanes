@@ -171,6 +171,7 @@
     v-for="footnote in page.footnotes"
     :id="`footnote-${footnote.id}`"
     :key="`footnote-label-${footnote.id}`"
+    :data-footnote-id="footnote.id"
     class="footnote-label"
     type="button"
     :style="{
@@ -183,7 +184,7 @@
     "
     @click="!printMode && emit('selectElement', footnote.reference)"
   >
-    {{ footnote.number }}
+    {{ footnote.marker }}
   </button>
   <div
     v-if="page.footnoteOverflow && !printMode"
@@ -293,21 +294,22 @@
             @dblclick="emit('openSyllablePositioningDialog')"
           />
           <button
-            v-if="(element as NoteElement).footnoteNumber !== null"
+            v-if="(element as NoteElement).footnoteMarker !== null"
             class="footnote-reference"
+            :data-footnote-id="(element as NoteElement).footnoteId"
             type="button"
             :style="footnoteReferenceStyle(element as NoteElement)"
             :title="
               i18next.t(($) => $.menu.footnotes.edit, {
                 ns: 'menu',
-                number: (element as NoteElement).footnoteNumber,
+                number: (element as NoteElement).footnoteMarker,
               })
             "
             @click.stop="
               !printMode && emit('selectFootnote', element as NoteElement)
             "
           >
-            {{ footnoteMarkerText((element as NoteElement).footnoteNumber!) }}
+            {{ footnoteMarkerText((element as NoteElement).footnoteMarker!) }}
           </button>
           <span
             v-if="(element as NoteElement).showLeadingLyricHyphen"
@@ -503,6 +505,7 @@
           :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :edit-mode="!printMode"
           :element="element as RichTextBoxElement"
+          :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
           :page-setup="score.pageSetup"
           :fonts="fonts"
           :paragraph-styles="score.paragraphStyles"

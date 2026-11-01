@@ -106,6 +106,8 @@
     "overflow": "Catatan kaki dan penandanya tidak muat di halaman ini. Persingkat catatan kaki atau perbesar ukuran halaman. Ekspor tidak tersedia sampai masalah ini diselesaikan.",
     "nested": "Catatan kaki tidak dapat memuat penanda catatan kaki.",
     "unsupportedExport": "Format ekspor ini belum mendukung catatan kaki. Gunakan PDF atau PNG untuk mempertahankannya.",
-    "lyrics": "Lirik Catatan Kaki {{number}}"
+    "lyrics": "Lirik Catatan Kaki {{number}}",
+    "pasteUnavailable": "Referensi catatan kaki hanya dapat ditempel dari Neanes ke kotak teks kaya di partitur utama.",
+    "properties": "Properti Catatan Kaki…"
   }
 }

@@ -43,9 +43,20 @@ Future automation jobs and export transformations belong in this feature area
 ## Footnotes (proof of concept)
 
 `edit_elements` supports `insert_footnote` with a main-score Note `elementRef`
-(and optional body `elements`) and `remove_footnote` with that reference.
+(and optional body `elements`) and `remove_footnote` with that Note reference.
+For a main-score RichTextBox, `insert_footnote` also requires `contentKey` and
+`htmlOffset`: a UTF-16 offset in the stored panel HTML, within paragraph text or
+immediately after a paragraph opening tag. Insertion inside tags, entities, or
+surrogate pairs is rejected. The panel must be active for the box's layout.
+Rich markers serialize as atomic `span.neanes-footnote` objects with a
+`data-footnote-id` attribute; displayed numbers are generated. To remove a rich
+reference, update that panel's HTML to remove its span, or remove the owning box.
+The same transaction removes the body; undo restores both. Unknown or duplicate
+references and references outside main-score rich textboxes are rejected.
+Panel reference order is left/center/right for multipanel boxes and top/bottom
+for inline boxes, in document order. Plain textbox references are unsupported.
 Each reference owns a separate body; nested and shared references are unsupported.
-Read the Note's read-only `footnoteId` and calculated `footnoteNumber`, then use
+Read the Note's read-only `footnoteId`, calculated `footnoteNumber` (automatic references only), and `footnoteMarker` (the displayed label), then use
 `collection: { kind: "footnote", footnoteId }` with normal element readers/edits.
 The body retains its terminal Empty element, independent musical state, and lyrics.
 Removing its main-score reference removes the body in the same history operation;
@@ -53,6 +64,14 @@ copying the reference copies the body with a new identity.
 
 `get_page_setup` / `update_page_setup` expose `firstFootnoteNumber`,
 `showFootnoteHorizontalRule`, and `footnoteHorizontalRuleLength` (percent).
+Use `update_footnote` with `footnoteId` and `marker` to change a marker. Null restores
+automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters
+without control characters, and do not consume an automatic number. `get_elements`
+for a footnote collection includes `footnote: {id, marker, label, number}`: `marker`
+is the stored override or null, `label` is the displayed string, and `number` is
+null for custom markers. Rich textbox references display the label directly;
+neume references surround it with parentheses. Body labels have no parentheses.
+
 Page occurrence readers include the `footnote` region; page line counts include
 main and footnote lines. Range selections can identify the active footnote
 collection. Footnote numbering follows document reference order across pages.

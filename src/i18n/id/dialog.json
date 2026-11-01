@@ -358,5 +358,19 @@
     "accessTitle": "Apa yang dapat diakses?",
     "accessDescription": "Alat yang terhubung dapat membaca, mengedit, menyimpan, dan mengekspor partitur sesuai izin berkas sistem operasi Anda. Secara bawaan, alat menggunakan dokumen pribadi terpisah dan juga dapat membaca serta mengedit tab editor yang terbuka jika secara eksplisit menargetkan editor. Draf pribadi akan dibuang saat koneksi berakhir kecuali sudah disimpan.",
     "documentation": "Dokumentasi"
+  },
+  "footnoteProperties": {
+    "title": "Properti Catatan Kaki",
+    "description": "Pilih penanda untuk catatan kaki ini. Penanda khusus tidak menggunakan nomor otomatis.",
+    "marker": "Penanda",
+    "automatic": "Nomor otomatis",
+    "asterisk": "Asterisk",
+    "dagger": "Belati",
+    "doubleDagger": "Belati ganda",
+    "custom": "Khusus",
+    "customText": "Teks khusus",
+    "reference": "Referensi",
+    "body": "Label catatan kaki",
+    "invalid": "Masukkan 1–16 karakter tanpa baris baru."
   }
 }

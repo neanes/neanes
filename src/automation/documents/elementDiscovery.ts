@@ -14,6 +14,7 @@ import {
   type ScoreElement,
 } from '@/models/Element';
 import type { Score } from '@/models/Score';
+import { orderedFootnotes } from '@/services/FootnoteReferences';
 
 import type { ElementContentQuery } from '../contracts/elementContentSchema';
 import { matchesElement } from '../contracts/elementPredicates';
@@ -486,7 +487,25 @@ export class ElementDiscovery {
       (index) => this.project(collection[index], index, query),
       elementPageEntrySize,
     );
+    const footnoteId =
+      query.collection.kind === 'footnote' ? query.collection.footnoteId : null;
+    const entry =
+      footnoteId === null
+        ? undefined
+        : orderedFootnotes(score).find(
+            ({ footnote }) => footnote.id === footnoteId,
+          );
     return {
+      ...(entry === undefined
+        ? {}
+        : {
+            footnote: {
+              id: entry.footnote.id,
+              marker: entry.footnote.marker,
+              label: entry.marker,
+              number: entry.number,
+            },
+          }),
       collection: query.collection,
       collectionSize: collection.length,
       start: query.start,

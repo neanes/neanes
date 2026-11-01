@@ -15,8 +15,8 @@ export function footnoteMarkerFont(pageSetup: PageSetup) {
   return `${footnoteMarkerFontSize(pageSetup)}px serif`;
 }
 
-export function footnoteMarkerText(number: number) {
-  return `(${number})`;
+export function footnoteMarkerText(marker: string | number) {
+  return `(${marker})`;
 }
 
 export function footnoteSectionHeight(heights: number[], showRule: boolean) {

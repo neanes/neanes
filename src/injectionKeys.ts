@@ -1,4 +1,4 @@
-import type { ComputedRef, InjectionKey } from 'vue';
+import type { ComputedRef, InjectionKey, Ref } from 'vue';
 
 import type { EditorPreferences } from './models/EditorPreferences';
 import type { AudioService } from './services/audio/AudioService';
@@ -25,3 +25,11 @@ export const ocrImporterKey: InjectionKey<OcrImporter> = Symbol();
 export const platformServiceKey: InjectionKey<IPlatformService> = Symbol();
 export const playbackServiceKey: InjectionKey<PlaybackService> = Symbol();
 export const textSearchServiceKey: InjectionKey<TextSearchService> = Symbol();
+
+// Rich-text shortcuts and toolbar share the editor menu's history state and actions.
+export const richTextHistoryActionsKey: InjectionKey<{
+  canUndo: Readonly<Ref<boolean>>;
+  canRedo: Readonly<Ref<boolean>>;
+  undo(): void;
+  redo(): void;
+}> = Symbol('richTextHistoryActions');

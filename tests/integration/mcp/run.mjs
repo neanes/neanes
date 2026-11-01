@@ -11,7 +11,10 @@ const scenarios = [
   'text-search',
   'element-copy',
   'footnotes',
+  'footnote-markers',
   'rich-text-update',
+  'rich-text-footnotes',
+  'rich-text-history-boundary',
   'preview',
 ];
 const requested = process.argv.slice(2);

@@ -358,5 +358,19 @@
     "accessTitle": "What can it access?",
     "accessDescription": "Connected tools can read, edit, save, and export score files using your operating system’s file permissions. They work with separate private documents by default and can also read and edit open editor tabs when explicitly targeting the editor. Private drafts are discarded when the connection ends unless saved.",
     "documentation": "Documentation"
+  },
+  "footnoteProperties": {
+    "title": "Footnote Properties",
+    "description": "Choose a marker for this footnote. Custom markers do not use an automatic number.",
+    "marker": "Marker",
+    "automatic": "Automatic number",
+    "asterisk": "Asterisk",
+    "dagger": "Dagger",
+    "doubleDagger": "Double dagger",
+    "custom": "Custom",
+    "customText": "Custom text",
+    "reference": "Reference",
+    "body": "Footnote label",
+    "invalid": "Enter 1–16 characters without line breaks."
   }
 }

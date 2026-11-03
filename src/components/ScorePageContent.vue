@@ -228,7 +228,12 @@
         "
         @click.stop="!printMode && emit('selectFootnote', element)"
       >
-        {{ footnoteMarkerText(element.footnoteMarker!) }}
+        {{
+          footnoteMarkerText(
+            element.footnoteMarker!,
+            score.pageSetup.footnoteReferenceParentheses,
+          )
+        }}
       </button>
       <template v-if="isSyllableElement(element)">
         <div
@@ -922,6 +927,7 @@ const referenceMarkerCss = computed(() =>
 function footnoteReferenceStyle(element: FootnoteAnchorElement) {
   return {
     ...referenceMarkerCss.value,
+    top: withZoom(element.footnoteMarkerTop),
     left: !rtl.value ? withZoom(element.footnoteMarkerOffset) : undefined,
     right: rtl.value ? withZoom(element.footnoteMarkerOffset) : undefined,
   };
@@ -1445,7 +1451,8 @@ defineExpose({
   cursor: pointer;
 }
 .footnote-reference {
-  top: 0;
+  z-index: 1;
+  white-space: nowrap;
 }
 .footnote-label {
   white-space: nowrap;

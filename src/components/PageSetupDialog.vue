@@ -583,6 +583,21 @@
                   </Field>
                   <Field orientation="horizontal">
                     <Checkbox
+                      id="page-setup-footnote-parentheses"
+                      :model-value="form.footnoteReferenceParentheses"
+                      @update:model-value="
+                        setBoolean('footnoteReferenceParentheses', $event)
+                      "
+                    />
+                    <FieldLabel for="page-setup-footnote-parentheses">{{
+                      $t(
+                        ($) => $.dialog.pageSetup.footnoteReferenceParentheses,
+                        { ns: 'dialog' },
+                      )
+                    }}</FieldLabel>
+                  </Field>
+                  <Field orientation="horizontal">
+                    <Checkbox
                       id="page-setup-footnote-rule"
                       :model-value="form.showFootnoteHorizontalRule"
                       @update:model-value="

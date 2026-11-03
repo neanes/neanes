@@ -22,6 +22,7 @@ export const pageSetupSchema = z.strictObject({
   facingPages: z.boolean(),
   direction: z.enum(['ltr', 'rtl']),
   firstFootnoteNumber: z.number().int().min(1).max(1000000),
+  footnoteReferenceParentheses: z.boolean(),
   showFootnoteHorizontalRule: z.boolean(),
   footnoteHorizontalRuleLength: z.number().min(1).max(100),
   lineHeight: z.number().positive(),

@@ -251,6 +251,7 @@ import {
   planFootnoteRemoval,
   planRichTextFootnoteUpdate,
   prepareFootnotePaste,
+  transferFootnoteReference,
 } from '@/services/FootnoteService';
 import type { Command, HistoryState } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
@@ -3398,11 +3399,21 @@ function openFootnoteProperties(id: string) {
   footnotePropertiesDialogIsOpen.value = true;
 }
 
-function updateFootnoteMarker(marker: string | null) {
+function updateFootnoteMarker(
+  marker: string | null,
+  offsets: Pick<FootnoteAnchorElement, 'footnoteOffsetX' | 'footnoteOffsetY'>,
+) {
   const entry = editedFootnote.value!;
-  commandService.value.execute(
-    footnoteMarkerUpdateCommand(entry.footnote, marker),
-  );
+  const commands = [footnoteMarkerUpdateCommand(entry.footnote, marker)];
+  if (entry.reference instanceof FootnoteAnchorElement) {
+    commands.push(
+      new CommandFactory<FootnoteAnchorElement>().create('update-properties', {
+        target: entry.reference,
+        newValues: offsets,
+      }),
+    );
+  }
+  commandService.value.executeAsBatch(commands);
   save();
 }
 
@@ -5142,7 +5153,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
       clipboardElement instanceof FootnoteAnchorElement &&
       clipboardElement.footnoteId === null
     ) {
-      clipboardElement.footnoteId = currentElement.footnoteId;
+      transferFootnoteReference(currentElement, clipboardElement);
     } else if (currentElement !== undefined) {
       commands.push(...footnoteRemovalCommands(score.value, [currentElement]));
     }
@@ -6411,7 +6422,7 @@ function replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
     previousElement instanceof FootnoteAnchorElement &&
     element instanceof FootnoteAnchorElement
   ) {
-    element.footnoteId = previousElement.footnoteId;
+    transferFootnoteReference(previousElement, element);
   } else {
     commands.push(...footnoteRemovalCommands(score.value, [previousElement]));
   }
@@ -10723,6 +10734,12 @@ function renderTabLabel(tab: Tab) {
       v-if="footnotePropertiesDialogIsOpen && editedFootnote !== undefined"
       v-model:open="footnotePropertiesDialogIsOpen"
       :footnote="editedFootnote.footnote"
+      :anchor="
+        editedFootnote.reference instanceof FootnoteAnchorElement
+          ? editedFootnote.reference
+          : null
+      "
+      :page-setup="score.pageSetup"
       :paragraph-styles="score.paragraphStyles"
       :automatic-number="editedFootnote.automaticNumber"
       :rich-text-reference="

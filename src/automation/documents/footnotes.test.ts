@@ -8,6 +8,174 @@ import { ElementDiscovery } from './elementDiscovery';
 import { applyElementEdits, planElementEdits } from './elementEdits';
 
 describe('footnote transactions', () => {
+  it('rejects tempo footnotes and omits footnote properties from tempo discovery', () => {
+    const workspace = new Workspace();
+    const discovery = new ElementDiscovery();
+    const edit = (actions: unknown) =>
+      applyElementEdits(
+        workspace,
+        planElementEdits(
+          workspace,
+          discovery,
+          elementEditBatchSchema.parse(actions),
+          [],
+        ),
+      );
+    edit([{ action: 'insert', elements: [{ elementType: 'Tempo' }] }]);
+    const tempo = workspace.score.staff.elements[0];
+    const revision = workspace.contentRevision;
+    for (const action of ['insert_footnote', 'remove_footnote']) {
+      expect(() =>
+        edit([{ action, elementRef: discovery.reference(tempo) }]),
+      ).toThrow('INVALID_ELEMENT_EDIT');
+    }
+    expect(workspace.contentRevision).toBe(revision);
+    expect(workspace.score.footnotes).toHaveLength(0);
+    const result = discovery.read(workspace.score, {
+      collection: { kind: 'staff' },
+      start: 0,
+      offset: 0,
+      limit: 10,
+    });
+    for (const [key, value] of Object.entries({
+      footnoteId: '00000000-0000-4000-8000-000000000001',
+      footnoteNumber: 1,
+      footnoteMarker: '*',
+      footnoteOffsetX: 0.3,
+      footnoteOffsetY: -0.5,
+    })) {
+      expect(result.elements[0].properties).not.toHaveProperty(key);
+      expect(() =>
+        elementEditBatchSchema.parse([
+          {
+            action: 'update',
+            elementType: 'Tempo',
+            elementRef: discovery.reference(tempo),
+            properties: { [key]: value },
+          },
+        ]),
+      ).toThrow();
+    }
+  });
+
+  it.each(['Note', 'Martyria'])(
+    'removes the footnote when replacing %s with a tempo and restores it on undo',
+    (elementType) => {
+      const workspace = new Workspace();
+      const discovery = new ElementDiscovery();
+      const edit = (actions: unknown) =>
+        applyElementEdits(
+          workspace,
+          planElementEdits(
+            workspace,
+            discovery,
+            elementEditBatchSchema.parse(actions),
+            [],
+          ),
+        );
+      edit([
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType,
+              clientId: 'anchor',
+              properties: { footnoteOffsetX: 0.3, footnoteOffsetY: -0.5 },
+            },
+          ],
+        },
+        { action: 'insert_footnote', elementRef: '@anchor' },
+      ]);
+      const original = workspace.score.staff.elements[0];
+      const body = workspace.score.footnotes[0];
+      edit([
+        {
+          action: 'replace',
+          elementRef: discovery.reference(original),
+          element: { elementType: 'Tempo' },
+        },
+      ]);
+      expect(workspace.score.staff.elements[0].elementType).toBe('Tempo');
+      expect(workspace.score.staff.elements[0]).not.toHaveProperty(
+        'footnoteId',
+      );
+      expect(workspace.score.footnotes).toHaveLength(0);
+      workspace.commandService.undo();
+      expect(workspace.score.staff.elements[0]).toBe(original);
+      expect(original).toMatchObject({
+        footnoteId: body.id,
+        footnoteOffsetX: 0.3,
+        footnoteOffsetY: -0.5,
+      });
+      expect(workspace.score.footnotes).toEqual([body]);
+      workspace.commandService.redo();
+      expect(workspace.score.footnotes).toHaveLength(0);
+    },
+  );
+
+  it.each([
+    {},
+    { footnoteOffsetX: 0 },
+    { footnoteOffsetY: 0 },
+    { footnoteOffsetX: -0.2, footnoteOffsetY: 0.4 },
+  ])(
+    'preserves inherited and explicit marker offsets during replacement: %j',
+    (properties) => {
+      const workspace = new Workspace();
+      const discovery = new ElementDiscovery();
+      const edit = (actions: unknown) =>
+        applyElementEdits(
+          workspace,
+          planElementEdits(
+            workspace,
+            discovery,
+            elementEditBatchSchema.parse(actions),
+            [],
+          ),
+        );
+      edit([
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'Martyria',
+              clientId: 'anchor',
+              properties: { footnoteOffsetX: 0.3, footnoteOffsetY: -0.5 },
+            },
+          ],
+        },
+        { action: 'insert_footnote', elementRef: '@anchor' },
+      ]);
+      const original = workspace.score.staff.elements[0];
+      const footnote = workspace.score.footnotes[0];
+      edit([
+        {
+          action: 'replace',
+          elementRef: discovery.reference(original),
+          element: { elementType: 'Note', properties },
+        },
+      ]);
+      const expected = {
+        elementType: 'Note',
+        footnoteId: footnote.id,
+        footnoteOffsetX: 0.3,
+        footnoteOffsetY: -0.5,
+        ...properties,
+      };
+      expect(workspace.score.staff.elements[0]).toMatchObject(expected);
+      expect(workspace.score.footnotes).toEqual([footnote]);
+      workspace.commandService.undo();
+      expect(workspace.score.staff.elements[0]).toBe(original);
+      expect(original).toMatchObject({
+        footnoteOffsetX: 0.3,
+        footnoteOffsetY: -0.5,
+      });
+      workspace.commandService.redo();
+      expect(workspace.score.staff.elements[0]).toMatchObject(expected);
+      expect(workspace.score.footnotes).toEqual([footnote]);
+    },
+  );
+
   it.each(['staff', 'alternate', 'footnote'])(
     'rejects annotation references recursively in %s without changing the document',
     (location) => {
@@ -111,6 +279,51 @@ describe('footnote transactions', () => {
       ).toThrow('INVALID_ELEMENT_EDIT');
       expect(note.annotations).toHaveLength(1);
       expect(workspace.contentRevision).toBe(revision);
+    },
+  );
+
+  it.each(['Note', 'Martyria'])(
+    'supports footnote insertion and offset edits on %s through MCP',
+    (elementType) => {
+      const workspace = new Workspace();
+      const discovery = new ElementDiscovery();
+      applyElementEdits(
+        workspace,
+        planElementEdits(
+          workspace,
+          discovery,
+          elementEditBatchSchema.parse([
+            {
+              action: 'insert',
+              elements: [{ elementType, clientId: 'anchor' }],
+            },
+            { action: 'insert_footnote', elementRef: '@anchor' },
+            {
+              action: 'update',
+              elementType,
+              elementRef: '@anchor',
+              properties: { footnoteOffsetX: 0.3, footnoteOffsetY: -0.2 },
+            },
+          ]),
+          [],
+        ),
+      );
+      const anchor = workspace.score.staff.elements[0];
+      expect(anchor).toMatchObject({
+        footnoteId: workspace.score.footnotes[0].id,
+        footnoteOffsetX: 0.3,
+        footnoteOffsetY: -0.2,
+      });
+      expect(() =>
+        elementEditBatchSchema.parse([
+          {
+            action: 'update',
+            elementType,
+            elementRef: discovery.reference(anchor),
+            properties: { footnoteId: null },
+          },
+        ]),
+      ).toThrow();
     },
   );
 

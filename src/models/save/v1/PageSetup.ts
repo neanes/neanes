@@ -39,6 +39,7 @@ export class PageSetup {
   public richHeaderFooter: boolean | undefined = undefined;
   public firstPageNumber = 1;
   public firstFootnoteNumber: number | undefined = undefined;
+  public footnoteReferenceParentheses: boolean | undefined = undefined;
   public showFootnoteHorizontalRule: boolean | undefined = undefined;
   public footnoteHorizontalRuleLength: number | undefined = undefined;
   public numerals: 'westernArabic' | 'easternArabic' | undefined = undefined;

@@ -1116,6 +1116,7 @@ export class SaveService {
     pageSetup.firstPageNumber = p.firstPageNumber;
     pageSetup.firstFootnoteNumber =
       p.firstFootnoteNumber !== 1 ? p.firstFootnoteNumber : undefined;
+    pageSetup.footnoteReferenceParentheses = p.footnoteReferenceParentheses;
     pageSetup.showFootnoteHorizontalRule = p.showFootnoteHorizontalRule;
     pageSetup.footnoteHorizontalRuleLength = p.footnoteHorizontalRuleLength;
     pageSetup.numerals =
@@ -1281,6 +1282,8 @@ export class SaveService {
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
     element.footnoteId = e.footnoteId ?? undefined;
+    element.footnoteOffsetX = e.footnoteOffsetX || undefined;
+    element.footnoteOffsetY = e.footnoteOffsetY || undefined;
     element.auto = e.auto || undefined;
     element.note = e.note;
     element.rootSign = e.rootSign;
@@ -1315,6 +1318,8 @@ export class SaveService {
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
     element.footnoteId = e.footnoteId ?? undefined;
+    element.footnoteOffsetX = e.footnoteOffsetX || undefined;
+    element.footnoteOffsetY = e.footnoteOffsetY || undefined;
     if (e.lyricsParagraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics) {
       element.lyricsParagraphStyleId = e.lyricsParagraphStyleId;
     }
@@ -1876,6 +1881,8 @@ export class SaveService {
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
     pageSetup.firstFootnoteNumber = p.firstFootnoteNumber ?? 1;
+    pageSetup.footnoteReferenceParentheses =
+      p.footnoteReferenceParentheses ?? true;
     pageSetup.showFootnoteHorizontalRule = p.showFootnoteHorizontalRule ?? true;
     pageSetup.footnoteHorizontalRuleLength =
       p.footnoteHorizontalRuleLength ?? 40;
@@ -2242,6 +2249,8 @@ export class SaveService {
     e: MartyriaElement_v1,
   ) {
     element.footnoteId = e.footnoteId ?? null;
+    element.footnoteOffsetX = e.footnoteOffsetX ?? 0;
+    element.footnoteOffsetY = e.footnoteOffsetY ?? 0;
     element.auto = e.auto === true;
     element.alignRight = e.alignRight === true;
     element.note = e.note;
@@ -2306,6 +2315,8 @@ export class SaveService {
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
     element.footnoteId = e.footnoteId ?? null;
+    element.footnoteOffsetX = e.footnoteOffsetX ?? 0;
+    element.footnoteOffsetY = e.footnoteOffsetY ?? 0;
     element.lyricsParagraphStyleId =
       e.lyricsParagraphStyleId ?? BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics;
     element.quantitativeNeume = Object.values(QuantitativeNeume).includes(

@@ -256,6 +256,7 @@
     "footnotes": "Footnotes",
     "firstFootnoteNumber": "First Footnote Number",
     "firstFootnoteNumberDescription": "The starting number for footnotes. Numbering continues throughout the document.",
+    "footnoteReferenceParentheses": "Wrap musical footnote markers in parentheses",
     "showFootnoteHorizontalRule": "Show separator above footnotes",
     "footnoteHorizontalRuleLength": "Separator Length (%)"
   },
@@ -363,6 +364,10 @@
     "documentation": "Documentation"
   },
   "footnoteProperties": {
+    "offsetX": "Horizontal offset (em)",
+    "offsetY": "Vertical offset (em)",
+    "positionHint": "Offsets apply before automatic collision clearance. Positive values move right or down.",
+    "resetPosition": "Reset position",
     "title": "Footnote Properties",
     "description": "Choose a marker for this footnote. Custom markers do not use an automatic number.",
     "marker": "Marker",

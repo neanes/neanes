@@ -154,11 +154,19 @@ export type NoteNotationState = Pick<
 // Musical anchors share stable footnote identity and derived marker geometry.
 export abstract class FootnoteAnchorElement extends ScoreElement {
   public footnoteId: string | null = null;
+  public footnoteOffsetX = 0;
+  public footnoteOffsetY = 0;
   // Derived before line breaking; identity is independent of the displayed number.
   public footnoteNumber: number | null = null;
   public footnoteMarker: string | null = null;
-  public footnoteMarkerWidth = 0;
   public footnoteMarkerOffset = 0;
+  public footnoteMarkerTop = 0;
+  // Measured before line breaking; used by neume and barline collision spacing.
+  public footnoteMarkerMetrics: {
+    width: number;
+    height: number;
+    strokeWidth: number;
+  } | null = null;
 }
 
 export class NoteElement extends FootnoteAnchorElement {
@@ -273,6 +281,8 @@ export class NoteElement extends FootnoteAnchorElement {
   public getClipboardProperties(includeLyrics: boolean) {
     return {
       footnoteId: this.footnoteId,
+      footnoteOffsetX: this.footnoteOffsetX,
+      footnoteOffsetY: this.footnoteOffsetY,
       ...(includeLyrics
         ? {
             lyrics: this.lyrics,
@@ -966,6 +976,8 @@ export class MartyriaElement extends FootnoteAnchorElement {
   public getClipboardProperties() {
     return {
       footnoteId: this.footnoteId,
+      footnoteOffsetX: this.footnoteOffsetX,
+      footnoteOffsetY: this.footnoteOffsetY,
       auto: this.auto,
       note: this.note,
       rootSign: this.rootSign,

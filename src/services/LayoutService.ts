@@ -95,6 +95,7 @@ import {
   footnoteMarkerText,
   footnotePageSetup,
   footnoteSectionHeight,
+  positionFootnoteMarker,
 } from '@/services/FootnoteLayout';
 import {
   elementFootnoteIds,
@@ -284,10 +285,6 @@ export interface MusicalContext {
   shift: number;
 }
 
-interface FootnoteMarkerBox extends Box {
-  footnoteReference: FootnoteAnchorElement;
-}
-
 interface CompletedParagraph {
   diagnostics: LineLayoutDiagnostics[] | null;
   paragraph: InputItem[];
@@ -428,8 +425,8 @@ export class LayoutService {
         if (element instanceof FootnoteAnchorElement) {
           element.footnoteNumber = null;
           element.footnoteMarker = null;
-          element.footnoteMarkerWidth = 0;
           element.footnoteMarkerOffset = 0;
+          element.footnoteMarkerMetrics = null;
         }
       }),
     );
@@ -787,6 +784,21 @@ export class LayoutService {
       }
     }
 
+    for (const element of elements) {
+      if (
+        element instanceof FootnoteAnchorElement &&
+        element.footnoteMarker !== null
+      ) {
+        const position = this.getFootnoteMarkerPosition(
+          element,
+          pageSetup,
+          score.paragraphStyles,
+        );
+        element.footnoteMarkerOffset = position.left;
+        element.footnoteMarkerTop = position.top;
+      }
+    }
+
     // Record element updates
     score.staves.forEach((staff) =>
       staff.elements.forEach((element) => {
@@ -827,9 +839,7 @@ export class LayoutService {
         }
       }
     }
-    const markerFont = footnoteMarkerFont(score.paragraphStyles);
     const bodyMarkerFont = footnoteMarkerFont(score.paragraphStyles, 'body');
-    const markerStyle = footnoteMarkerStyle(score.paragraphStyles);
     const bodyMarkerStyle = footnoteMarkerStyle(score.paragraphStyles, 'body');
     const labelWidths = ordered.map(({ marker }) =>
       TextMeasurementService.getTextWidth(
@@ -844,11 +854,6 @@ export class LayoutService {
         if (reference instanceof FootnoteAnchorElement) {
           reference.footnoteNumber = number;
           reference.footnoteMarker = marker;
-          reference.footnoteMarkerWidth = TextMeasurementService.getTextWidth(
-            footnoteMarkerText(marker),
-            markerFont,
-            markerStyle.fontVariantCaps ?? 'normal',
-          );
         }
         if (
           footnote.staff.elements.some(
@@ -943,32 +948,6 @@ export class LayoutService {
       const contentStart = pageSetup.melkiteRtl
         ? resolvedMargins.right
         : resolvedMargins.contentLeft;
-      if (this.isFootnoteMarkerBox(item)) {
-        const reference = item.footnoteReference;
-        if (isRightAlignedMartyria(reference)) {
-          const martyria = reference as MartyriaElement;
-          const baseWidth = this.getMartyriaWidth(martyria, pageSetup);
-          const spacing = this.getInlineSpacing(pageSetup);
-          reference.footnoteMarkerOffset = baseWidth + spacing;
-          reference.width = reference.footnoteMarkerOffset + position.width;
-          const ink =
-            this.getVisibleMeasureBarRight(martyria) == null
-              ? this.getMartyriaRightInkOverhang(martyria, pageSetup)
-              : 0;
-          reference.x = pageSetup.melkiteRtl
-            ? resolvedMargins.right + ink
-            : resolvedMargins.contentRight - reference.width - ink;
-        } else {
-          reference.footnoteMarkerOffset =
-            contentStart +
-            position.xOffset +
-            currentLine.indentation +
-            centerOffsetPx -
-            reference.x;
-          reference.width = reference.footnoteMarkerOffset + position.width;
-        }
-        continue;
-      }
       if (!('element' in item)) {
         continue;
       }
@@ -1133,20 +1112,7 @@ export class LayoutService {
 
       // Special logic for centered lines
       if (element.lineBreakType === LineBreakType.Center) {
-        let endPosition = position;
-        let nextPositionIndex = posIndex + 1;
-        const possibleMarker = positions[nextPositionIndex];
-        if (possibleMarker !== undefined) {
-          const marker = paragraph[possibleMarker.item];
-          if (
-            this.isFootnoteMarkerBox(marker) &&
-            marker.footnoteReference === element
-          ) {
-            endPosition = possibleMarker;
-            nextPositionIndex++;
-          }
-        }
-        const nextPosition = positions[nextPositionIndex];
+        const nextPosition = positions[posIndex + 1];
         if (nextPosition?.line === position.line) {
           throw new Error(
             `Centered element must terminate its line: ${element.id ?? element.index}`,
@@ -1156,7 +1122,7 @@ export class LayoutService {
         centerOffsetPx =
           (resolvedMargins.contentWidth -
             currentLine.indentation -
-            (endPosition.xOffset + endPosition.width)) /
+            (position.xOffset + position.width)) /
           2;
         for (const lineElement of currentLine.elements) {
           lineElement.x += centerOffsetPx;
@@ -1245,6 +1211,23 @@ export class LayoutService {
       paragraphStyles: paragraphStyles,
     };
 
+    for (const element of elements) {
+      if (element instanceof FootnoteAnchorElement) {
+        element.footnoteMarkerMetrics = null;
+        if (element.footnoteMarker !== null) {
+          const { ink, style } = this.measureFootnoteMarker(
+            element.footnoteMarker,
+            pageSetup,
+            paragraphStyles,
+          );
+          element.footnoteMarkerMetrics = {
+            width: ink.inkWidth,
+            height: ink.inkAscent + ink.inkDescent,
+            strokeWidth: style.strokeWidth,
+          };
+        }
+      }
+    }
     this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
     const greekMelismaPairs = this.prepareGreekMelismaPairs(
       elements,
@@ -1444,10 +1427,7 @@ export class LayoutService {
         case ElementType.Note: {
           // PROCESS NOTE
           const noteElement = elements[i] as NoteElement;
-          const elementWidthPx =
-            noteElement.neumeWidth +
-            noteElement.footnoteMarkerWidth +
-            (noteElement.footnoteMarker === null ? 0 : standardGlue.width);
+          const elementWidthPx = noteElement.neumeWidth;
 
           // Consume any pending martyria bar transfer width.
           const martyriaBarTransferWidth =
@@ -1483,9 +1463,6 @@ export class LayoutService {
           //   penalty(cost, w_i)   candidate breakpoint
           //   glue(m_i, s^+, s^-)  same-line spacing that vanishes at breaks
           //   glue(a_i, 0, 0)      fixed spaceAfter that also vanishes at breaks
-          //
-          // A footnote adds protected standard glue and its marker box before
-          // the note's boundary penalty, keeping both on the same line.
           //
           // This is the ordinary note-to-note form. Before a martyria, the
           // note's post-break glue is fixed because the martyria path replaces
@@ -1630,7 +1607,6 @@ export class LayoutService {
 
           // The note box width (unchanged by the bar transfer).
           this.addBox(noteElement.neumeWidth, noteElement, layoutWorkspace);
-          this.addFootnoteMarker(noteElement, standardGlue, layoutWorkspace);
 
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
@@ -1825,12 +1801,7 @@ export class LayoutService {
             martyriaElement,
             pageSetup,
           );
-          const hasMarker = martyriaElement.footnoteMarker !== null;
-          const elementWidthPx =
-            martyriaWidth +
-            (hasMarker
-              ? standardGlue.width + martyriaElement.footnoteMarkerWidth
-              : 0);
+          const elementWidthPx = martyriaWidth;
           const isParagraphStartMartyria =
             layoutWorkspace.pendingParagraph.length === 0;
           const lineStartMartyriaShift = martyriaElement.alignRight
@@ -1847,8 +1818,9 @@ export class LayoutService {
           const leadingGlueWidth = useStandardLeadingGlue
             ? standardGlue.width
             : martyriaGlue.width;
-          const trailingGlue =
-            hasMarker || useStandardTrailingGlue ? standardGlue : martyriaGlue;
+          const trailingGlue = useStandardTrailingGlue
+            ? standardGlue
+            : martyriaGlue;
           const trailingVisualSpacing = this.getVisualGlueSpacing(
             martyriaElement,
             nextElement,
@@ -1878,7 +1850,6 @@ export class LayoutService {
           // sides of the boundary glue and no inline measure bars or side
           // tempo signs need their existing special-case spacing rules.
           const balancedMartyriaNeighbors =
-            !hasMarker &&
             !martyriaElement.alignRight &&
             previousNote != null &&
             nextNote != null &&
@@ -2098,11 +2069,6 @@ export class LayoutService {
             );
           }
           this.addBox(martyriaWidth, martyriaElement, layoutWorkspace);
-          this.addFootnoteMarker(
-            martyriaElement,
-            standardGlue,
-            layoutWorkspace,
-          );
 
           // Compute the measure bar width that would transfer from this
           // martyria to the next line's first note at an automatic break in the
@@ -2551,6 +2517,110 @@ export class LayoutService {
       rightProjection: null,
       rightTuck: null,
       rootNeume: null,
+    };
+  }
+
+  public static getFootnoteMarkerPosition(
+    element: FootnoteAnchorElement,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    marker = element.footnoteMarker!,
+  ) {
+    const context = this.createOverlayDiagnosticsContext(pageSetup);
+    const size = pageSetup.neumeDefaultFontSize;
+    let boxes: NoteGlyphBox[];
+    let base: NoteGlyphBox[];
+    if (element.elementType === ElementType.Note) {
+      const noteBoxes = this.getNoteCollisionGlyphBoxes(
+        element as NoteElement,
+        pageSetup,
+        context.measureBarWidthMap,
+        null,
+        false,
+      );
+      boxes = noteBoxes;
+      base = noteBoxes.filter((box) => box.collisionKind === 'base');
+    } else {
+      boxes = this.getMartyriaCollisionGlyphBoxes(
+        element as MartyriaElement,
+        pageSetup,
+        false,
+      );
+      base = boxes;
+    }
+    const { ink, style } = this.measureFootnoteMarker(
+      marker,
+      pageSetup,
+      paragraphStyles,
+    );
+    const position = this.getFootnoteMarkerInkBox(
+      element,
+      pageSetup,
+      base,
+      boxes,
+      {
+        width: ink.inkWidth,
+        height: ink.inkAscent + ink.inkDescent,
+        strokeWidth: style.strokeWidth,
+      },
+    );
+    // Convert ink coordinates to the CSS text box (line-height: 1).
+    const textLeft = position.left - ink.inkLeft;
+    const markerBaseline =
+      ink.fontAscent + (style.fontSize - ink.fontAscent - ink.fontDescent) / 2;
+    return {
+      // Collision geometry is physical LTR; score elements use logical offsets.
+      left: pageSetup.melkiteRtl
+        ? (element as NoteElement | MartyriaElement).neumeWidth -
+          textLeft -
+          ink.advanceWidth
+        : textLeft,
+      top:
+        position.top +
+        ink.inkAscent -
+        markerBaseline +
+        context.neumeFontAscent +
+        (context.neumeFontHeight - size) / 2,
+    };
+  }
+
+  private static measureFootnoteMarker(
+    marker: string,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+  ) {
+    const style = footnoteMarkerStyle(paragraphStyles);
+    const ink = TextMeasurementService.getInkBounds(
+      footnoteMarkerText(marker, pageSetup.footnoteReferenceParentheses),
+      footnoteMarkerFont(paragraphStyles),
+      style.fontVariantCaps ?? 'normal',
+    );
+    return { ink, style };
+  }
+
+  private static getFootnoteMarkerInkBox(
+    element: FootnoteAnchorElement,
+    pageSetup: PageSetup,
+    base: NoteGlyphBox[],
+    boxes: NoteGlyphBox[],
+    metrics: NonNullable<FootnoteAnchorElement['footnoteMarkerMetrics']>,
+  ): NoteGlyphBox {
+    const size = pageSetup.neumeDefaultFontSize;
+    const { left, top } = positionFootnoteMarker(
+      base,
+      boxes,
+      metrics.width,
+      metrics.height,
+      -size * 0.75,
+      element.footnoteOffsetX * size,
+      element.footnoteOffsetY * size,
+      size * 0.08 + metrics.strokeWidth / 2,
+    );
+    return {
+      left,
+      right: left + metrics.width,
+      top,
+      bottom: top + metrics.height,
     };
   }
 
@@ -4227,6 +4297,7 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
     leftBarReserveOverride: number | null = null,
+    includeFootnoteMarker = true,
   ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
@@ -4244,7 +4315,7 @@ export class LayoutService {
     const baseIndex = glyphs.findIndex((glyph) => glyph.kind === 'base');
     const baseGlyphName = resolvedGlyphNames[baseIndex];
 
-    return glyphs.flatMap((glyph, index) => {
+    const boxes = glyphs.flatMap((glyph, index) => {
       const glyphName = resolvedGlyphNames[index];
       let x = glyph.x;
       let y = glyph.y;
@@ -4268,6 +4339,44 @@ export class LayoutService {
         fontSize,
       ).map((box) => ({ ...box, collisionKind: glyph.kind }));
     });
+    return includeFootnoteMarker
+      ? this.withFootnoteMarkerCollisionBox(
+          noteElement,
+          pageSetup,
+          boxes.filter((box) => box.collisionKind === 'base'),
+          boxes,
+        )
+      : boxes;
+  }
+
+  private static withFootnoteMarkerCollisionBox(
+    element: FootnoteAnchorElement,
+    pageSetup: PageSetup,
+    base: NoteGlyphBox[],
+    boxes: NoteGlyphBox[],
+  ): NoteGlyphBox[] {
+    const metrics = element.footnoteMarkerMetrics;
+    if (metrics === null) {
+      return boxes;
+    }
+    const marker = this.getFootnoteMarkerInkBox(
+      element,
+      pageSetup,
+      base,
+      boxes,
+      metrics,
+    );
+    const stroke = metrics.strokeWidth / 2;
+    return [
+      ...boxes,
+      {
+        left: marker.left - stroke,
+        right: marker.right + stroke,
+        top: marker.top - stroke,
+        bottom: marker.bottom + stroke,
+        collisionKind: 'mark',
+      },
+    ];
   }
 
   private static getNoteCollisionGlyphs(
@@ -4469,6 +4578,7 @@ export class LayoutService {
   private static getMartyriaCollisionGlyphBoxes(
     martyriaElement: MartyriaElement,
     pageSetup: PageSetup,
+    includeFootnoteMarker = true,
   ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
@@ -4476,7 +4586,7 @@ export class LayoutService {
       pageSetup.martyriaVerticalOffset + martyriaElement.verticalOffset;
     const glyphs = this.getMartyriaCollisionGlyphs(martyriaElement, pageSetup);
 
-    return glyphs.flatMap((glyph) =>
+    const boxes = glyphs.flatMap((glyph) =>
       this.getGlyphCollisionBoxes(
         fontFamily,
         glyph.glyphName,
@@ -4485,6 +4595,14 @@ export class LayoutService {
         fontSize,
       ),
     );
+    return includeFootnoteMarker
+      ? this.withFootnoteMarkerCollisionBox(
+          martyriaElement,
+          pageSetup,
+          boxes,
+          boxes,
+        )
+      : boxes;
   }
 
   private static getMartyriaCollisionGlyphs(
@@ -5271,31 +5389,6 @@ export class LayoutService {
     );
   }
 
-  private static addFootnoteMarker(
-    reference: FootnoteAnchorElement,
-    spacing: Glue,
-    layoutWorkspace: LayoutWorkspace,
-  ) {
-    if (reference.footnoteMarker === null) {
-      return;
-    }
-    this.preventBreak(layoutWorkspace);
-    this.addGlue(spacing, layoutWorkspace, 'footnote-spacing');
-    const marker: FootnoteMarkerBox = {
-      type: 'box',
-      width: reference.footnoteMarkerWidth,
-      footnoteReference: reference,
-    };
-    this.pushAnonymousParagraphItem(marker, layoutWorkspace, 'footnote-marker');
-    layoutWorkspace.neumesEndPx += marker.width;
-  }
-
-  private static isFootnoteMarkerBox(
-    item: InputItem,
-  ): item is FootnoteMarkerBox {
-    return item.type === 'box' && 'footnoteReference' in item;
-  }
-
   private static isRuntPenaltyNote(
     noteElement: NoteElement,
     nextNoteElement: NoteElement | null,
@@ -5356,9 +5449,7 @@ export class LayoutService {
         tailNote == null ||
         item.type !== 'penalty' ||
         item.cost >= MAX_COST ||
-        !(
-          this.isNoteBox(items[i - 1]) || this.isFootnoteMarkerBox(items[i - 1])
-        ) ||
+        !this.isNoteBox(items[i - 1]) ||
         !this.isRuntPenaltyNote(tailNote, nextTailNote)
       ) {
         continue;
@@ -5380,7 +5471,7 @@ export class LayoutService {
       }
 
       if (diagnosticItems != null) {
-        // The penalty after a note or its footnote marker is the unlabeled
+        // The penalty after a note is the unlabeled
         // boundary opportunity, so there is no existing label to preserve.
         const diagnosticItem = diagnosticItems[i];
         diagnosticItem.cost = item.cost;

@@ -39,6 +39,7 @@ import {
   createFootnote,
   elementFootnoteIds,
   footnoteMarkerUpdateCommand,
+  transferFootnoteReference,
 } from '@/services/FootnoteService';
 import {
   UpdatePropertiesCommand,
@@ -574,10 +575,15 @@ export function planElementEdits(
           ? create(action.element, element, collection)
           : null;
       if (
+        action.action === 'replace' &&
         element instanceof FootnoteAnchorElement &&
         replacement instanceof FootnoteAnchorElement
       ) {
-        replacement.footnoteId = element.footnoteId;
+        transferFootnoteReference(
+          element,
+          replacement,
+          action.element.properties,
+        );
       }
       collection.splice(
         index,

@@ -84,17 +84,22 @@ On macOS, agents must launch Electron outside the command sandbox as described i
 
 `footnotes` checks independent footnote text/music editing in private and editor
 scopes, real context-menu insertion and keyboard input, numbering and marker
-widths, same-page ownership, footer placement, stable page discovery, oversized
+placement, same-page ownership, footer placement, stable page discovery, oversized
 body recovery, copying with new identities, undo/redo, BYZ/BYZX save/reopen, and
 PNG/PDF rendering. Its disposable output directory retains visual artifacts.
 
-Marker geometry checks cover natural and justified spacing on both sides, a
-narrow line that must move the neume and marker together, centered line endings,
-and RTL placement. Rendered examples are retained with the footnote artifacts.
+Marker geometry checks cover centered markers, unchanged natural and justified
+spacing when markers do not collide, tight lines, centered line endings, and RTL
+placement. Marker ink participates in horizontal spacing and barline clearance
+when it overlaps neighboring ink. `footnote-markers` checks single, short, and
+centered barline spacing on both sides, neighboring neumes, and marker-to-marker
+spacing in LTR and RTL. Rendered barline ink gaps are checked in LTR; RTL barline offsets have a separate
+existing coordinate mismatch. Rendered examples are retained with the footnote
+artifacts.
 
 `footnote-styles-context` checks pitch/scale inheritance from musical anchors,
-local body music, anchor edits, paragraph-style superscript and normal baseline
-markers, martyria save data, and ordinary/right-aligned LTR/RTL marker bounds.
+local body music, anchor edits, paragraph-style marker typography, martyria save
+data, and centered ordinary/right-aligned LTR/RTL musical markers.
 
 `rich-text-footnotes` tests caret insertion with surrounding inline formatting,
 focused default rich-body creation, atomic marker deletion, click navigation,
@@ -108,6 +113,12 @@ neume references, rich text widgets, and footnote body labels. It checks preset
 symbols, custom-text validation, previews, cancel, automatic-number restoration,
 number skipping, Undo/Redo, plain rich-text labels versus parenthesized neume
 labels, MCP marker metadata, BYZ/BYZX persistence, PNG rendering, and navigation.
+It also checks gorgon clearance after mark and reference offsets, musical-anchor
+position controls and previews, reset, undo/redo, and martyria footnote persistence.
+Tempo elements reject footnote insertion and offer no footnote context-menu actions.
+Page Setup parentheses are checked for pending edits, preview/rendering, and
+persistence; marker ink clearance is compared across glyphs with different ink
+heights.
 
 Rich text history checks type in paragraph two, undo/redo a merged typing batch,
 and type again after Undo. They verify the caret, backward selection ranges, and

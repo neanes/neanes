@@ -37,6 +37,86 @@ import { LayoutService } from './LayoutService';
 
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
+describe('footnote marker horizontal collision geometry', () => {
+  const base = { left: 0, right: 20, top: -10, bottom: 0 };
+  const bar = { left: 0, right: 2, top: -35, bottom: 0 };
+
+  function geometry() {
+    const note = new NoteElement();
+    note.footnoteMarkerMetrics = { width: 60, height: 10, strokeWidth: 2 };
+    const setup = new PageSetup();
+    setup.neumeDefaultFontSize = 40;
+    const boxes = () =>
+      LayoutService['withFootnoteMarkerCollisionBox'](
+        note,
+        setup,
+        [base],
+        [base],
+      );
+    return { note, boxes };
+  }
+
+  it('reserves barline clearance on either side of visible marker ink, including stroke', () => {
+    const { boxes } = geometry();
+    expect(
+      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
+        20,
+        boxes(),
+        [bar],
+        2,
+      ),
+    ).toBe(23);
+    expect(
+      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](2, [bar], boxes(), 2),
+    ).toBe(23);
+  });
+
+  it('adds space between overlapping markers while leaving vertically clear ink alone', () => {
+    const { note, boxes } = geometry();
+    const first = boxes();
+    expect(
+      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
+        20,
+        first,
+        boxes(),
+        2,
+      ),
+    ).toBe(44);
+    note.footnoteOffsetY = -1;
+    expect(
+      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
+        20,
+        boxes(),
+        [bar],
+        2,
+      ),
+    ).toBe(2);
+    expect(
+      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
+        20,
+        first,
+        boxes(),
+        2,
+      ),
+    ).toBe(2);
+  });
+
+  it('uses horizontal offsets and removes the reservation when the marker is removed', () => {
+    const { note, boxes } = geometry();
+    note.footnoteOffsetX = 0.5;
+    expect(
+      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
+        20,
+        boxes(),
+        [bar],
+        2,
+      ),
+    ).toBe(43);
+    note.footnoteMarkerMetrics = null;
+    expect(boxes()).toEqual([base]);
+  });
+});
+
 describe('LayoutService.calculateMartyriae', () => {
   it('forks the pitch after a note and updates it without changing the main melody', () => {
     const setup = new PageSetup();
@@ -439,29 +519,6 @@ describe.each([true, false])(
 );
 
 describe('LayoutService.applyRuntPenalty', () => {
-  it('keeps the tail-note penalty when a footnote marker follows its owner', () => {
-    const { items, notes, breakPenalties } = getRuntPenaltyItems(3);
-    notes[2].quantitativeNeume = restNeumes[0];
-    const marker = {
-      type: 'box' as const,
-      width: 12,
-      footnoteReference: notes[1],
-    };
-    items.splice(
-      items.indexOf(breakPenalties[1]),
-      0,
-      penaltyItem(MAX_COST),
-      glueItem(5, 5, 5),
-      marker,
-    );
-    LayoutService.applyRuntPenalty(items, null);
-    expect(breakPenalties.map((penalty) => penalty.cost)).toEqual([
-      0,
-      MAX_COST * 0.15,
-      0,
-    ]);
-  });
-
   it.each(restNeumes)(
     'discourages a break that leaves one %s rest',
     (restNeume) => {

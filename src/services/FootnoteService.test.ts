@@ -5,9 +5,11 @@ import {
   AlternateLineElement,
   AnnotationElement,
   EmptyElement,
+  FootnoteAnchorElement,
   MartyriaElement,
   NoteElement,
   RichTextBoxElement,
+  TempoElement,
   TextBoxElement,
 } from '@/models/Element';
 import { Footnote } from '@/models/Footnote';
@@ -26,6 +28,7 @@ import {
   planFootnoteRemoval,
   planRichTextFootnoteUpdate,
   prepareFootnotePaste,
+  transferFootnoteReference,
 } from './FootnoteService';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
@@ -40,6 +43,99 @@ function fixture() {
 }
 
 describe('footnote ownership', () => {
+  it('does not treat tempos as footnote anchors or save footnote properties on them', () => {
+    const workspace = new Workspace();
+    const tempo = new TempoElement();
+    workspace.score.staff.elements.unshift(tempo);
+    const saved = SaveService.SaveScoreToJson(workspace.score);
+    const loaded = SaveService.LoadScoreFromJson(saved);
+    for (const element of [
+      tempo,
+      tempo.clone(),
+      saved.staff.elements[0],
+      loaded.staff.elements[0],
+    ]) {
+      expect(element).not.toBeInstanceOf(FootnoteAnchorElement);
+      for (const key of ['footnoteId', 'footnoteOffsetX', 'footnoteOffsetY']) {
+        expect(element).not.toHaveProperty(key);
+      }
+    }
+  });
+
+  it.each([NoteElement, MartyriaElement])(
+    'transfers footnote identity and marker offsets to a replacement %s',
+    (Replacement) => {
+      const source = new MartyriaElement();
+      source.footnoteId = 'body';
+      source.footnoteOffsetX = 0.3;
+      source.footnoteOffsetY = -0.5;
+      const replacement = new Replacement();
+      transferFootnoteReference(source, replacement);
+      expect(replacement).toMatchObject({
+        footnoteId: 'body',
+        footnoteOffsetX: 0.3,
+        footnoteOffsetY: -0.5,
+      });
+      expect(source.footnoteOffsetX).toBe(0.3);
+      expect(source.footnoteOffsetY).toBe(-0.5);
+    },
+  );
+
+  it('keeps explicit replacement offsets, including zero, independently for each axis', () => {
+    const source = new MartyriaElement();
+    source.footnoteId = 'body';
+    source.footnoteOffsetX = 0.3;
+    source.footnoteOffsetY = -0.5;
+    const replacement = new NoteElement();
+    transferFootnoteReference(source, replacement, { footnoteOffsetX: 0 });
+    expect(replacement.footnoteOffsetX).toBe(0);
+    expect(replacement.footnoteOffsetY).toBe(-0.5);
+  });
+
+  it('keeps replacement offsets when the source has no footnote to transfer', () => {
+    const replacement = new NoteElement();
+    replacement.footnoteOffsetY = -0.2;
+    transferFootnoteReference(new MartyriaElement(), replacement);
+    expect(replacement.footnoteId).toBeNull();
+    expect(replacement.footnoteOffsetY).toBe(-0.2);
+  });
+
+  it.each([NoteElement, MartyriaElement])(
+    'preserves marker offsets and ownership when saving and copying %s',
+    (Anchor) => {
+      const workspace = new Workspace();
+      const reference = new Anchor();
+      reference.footnoteOffsetX = 0.25;
+      reference.footnoteOffsetY = -0.5;
+      workspace.score.staff.elements.unshift(reference);
+      const insertion = planFootnoteInsertion(workspace, reference);
+      workspace.commandService.executeAsBatch(insertion.commands);
+      const loaded = SaveService.LoadScoreFromJson(
+        SaveService.SaveScoreToJson(workspace.score),
+      );
+      expect(loaded.staff.elements[0]).toMatchObject({
+        footnoteId: insertion.footnote.id,
+        footnoteOffsetX: 0.25,
+        footnoteOffsetY: -0.5,
+      });
+      const clone = reference.clone();
+      expect(clone).toMatchObject({
+        footnoteId: insertion.footnote.id,
+        footnoteOffsetX: 0.25,
+        footnoteOffsetY: -0.5,
+      });
+      const copies = prepareFootnotePaste(
+        [clone],
+        captureFootnotes(workspace.score, [reference]),
+      );
+      expect(clone.footnoteId).toBe(copies[0].id);
+      expect(clone.footnoteId).not.toBe(reference.footnoteId);
+      workspace.commandService.undo();
+      expect(reference.footnoteId).toBeNull();
+      expect(workspace.score.footnotes).toHaveLength(0);
+    },
+  );
+
   it('loads legacy rich markers as superscript while preserving modern normal markers', () => {
     const workspace = new Workspace();
     const body = new Footnote();
@@ -362,6 +458,7 @@ describe('footnote ownership', () => {
     workspace.score.pageSetup.firstFootnoteNumber = 12;
     workspace.score.pageSetup.footnoteHorizontalRuleLength = 75;
     workspace.score.pageSetup.showFootnoteHorizontalRule = false;
+    workspace.score.pageSetup.footnoteReferenceParentheses = false;
     reference.footnoteNumber = 12;
     const saved = SaveService.SaveScoreToJson(workspace.score);
     const loaded = SaveService.LoadScoreFromJson(
@@ -372,6 +469,12 @@ describe('footnote ownership', () => {
     expect(loaded.pageSetup.firstFootnoteNumber).toBe(12);
     expect(loaded.pageSetup.footnoteHorizontalRuleLength).toBe(75);
     expect(loaded.pageSetup.showFootnoteHorizontalRule).toBe(false);
+    expect(loaded.pageSetup.footnoteReferenceParentheses).toBe(false);
+    delete saved.pageSetup.footnoteReferenceParentheses;
+    expect(
+      SaveService.LoadScoreFromJson(saved).pageSetup
+        .footnoteReferenceParentheses,
+    ).toBe(true);
     expect(loaded.staff.elements[0]).toHaveProperty('footnoteId', footnote.id);
     expect(saved.staff.elements[0]).not.toHaveProperty('footnoteNumber');
     delete saved.footnotes;

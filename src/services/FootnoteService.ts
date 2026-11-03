@@ -27,6 +27,22 @@ import { elementFootnoteIds } from './FootnoteReferences';
 const footnoteFactory = new CommandFactory<Footnote>();
 const anchorFactory = new CommandFactory<FootnoteAnchorElement>();
 
+// Explicit properties have already been applied to the replacement.
+export function transferFootnoteReference(
+  source: FootnoteAnchorElement,
+  replacement: FootnoteAnchorElement,
+  explicitProperties: object = {},
+) {
+  replacement.footnoteId = source.footnoteId;
+  if (source.footnoteId !== null) {
+    for (const key of ['footnoteOffsetX', 'footnoteOffsetY'] as const) {
+      if (!Object.hasOwn(explicitProperties, key)) {
+        replacement[key] = source[key];
+      }
+    }
+  }
+}
+
 export function createFootnote(
   reference: ScoreElement,
   initializeRichTextBody = true,

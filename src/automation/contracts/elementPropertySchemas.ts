@@ -61,6 +61,8 @@ export const elementPropertySchemas = {
     footnoteId: z.string().uuid().optional(),
     footnoteNumber: z.number().int().positive().optional(),
     footnoteMarker: z.string().optional(),
+    footnoteOffsetX: z.number(),
+    footnoteOffsetY: z.number(),
     ...breaks,
     lyrics: z.string(),
     isHyphen: z.boolean(),
@@ -267,6 +269,8 @@ export const elementPropertySchemas = {
     footnoteId: z.string().uuid().optional(),
     footnoteNumber: z.number().int().positive().optional(),
     footnoteMarker: z.string().optional(),
+    footnoteOffsetX: z.number(),
+    footnoteOffsetY: z.number(),
     ...breaks,
     auto: z
       .boolean()

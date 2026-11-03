@@ -44,6 +44,7 @@ Future automation jobs and export transformations belong in this feature area
 
 `edit_elements` supports `insert_footnote` with a main-score Note or Martyria `elementRef`
 (and optional body `elements`) and `remove_footnote` with that musical reference.
+Tempo elements cannot own footnotes and expose no footnote properties.
 For a main-score RichTextBox, `insert_footnote` also requires `contentKey` and
 `htmlOffset`: a UTF-16 offset in the stored panel HTML, within paragraph text or
 immediately after a paragraph opening tag. Insertion inside tags, entities, or
@@ -72,14 +73,28 @@ Removing its main-score reference removes the body in the same history operation
 copying the reference copies the body with a new identity.
 
 `get_page_setup` / `update_page_setup` expose `firstFootnoteNumber`,
-`showFootnoteHorizontalRule`, and `footnoteHorizontalRuleLength` (percent).
+`showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent), and
+`footnoteReferenceParentheses` (defaults to true; applies to Note and Martyria
+reference markers). Placement and collision clearance use measured marker
+ink bounds.
 Use `update_footnote` with `footnoteId` and `marker` to change a marker. Null restores
 automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters
 without control characters, and do not consume an automatic number. `get_elements`
 for a footnote collection includes `footnote: {id, marker, label, number}`: `marker`
 is the stored override or null, `label` is the displayed string, and `number` is
 null for custom markers. Rich textbox references display the label directly;
-neume and martyria references surround it with parentheses. Body labels have no parentheses.
+musical references surround it with parentheses when
+`footnoteReferenceParentheses` is enabled. Body labels have no parentheses.
+Musical markers are centered above their anchor. Note and Martyria markers participate
+in horizontal collision spacing, including barline clearance, alongside neumes
+and attached marks. Their ink starts with its bottom 0.75 neume-font em above
+the musical baseline, rising only as needed for collision clearance.
+Replacing a musical anchor preserves its footnote and marker offsets; explicit
+replacement offsets override the inherited value independently for each axis.
+Edit `footnoteOffsetX` / `footnoteOffsetY` on Note or Martyria elements (in neume-font em units; positive means right/down). Collision
+clearance raises the marker after applying these offsets and accounts for the
+attached marks' own offsets. The Footnote Properties dialog exposes these same
+values with a preview and reset control.
 
 Page occurrence readers include the `footnote` region; page line counts include
 main and footnote lines. Range selections can identify the active footnote

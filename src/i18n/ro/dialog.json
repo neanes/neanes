@@ -256,6 +256,7 @@
     "footnotes": "Note de subsol",
     "firstFootnoteNumber": "Numărul primei note de subsol",
     "firstFootnoteNumberDescription": "Numărul de început al notelor de subsol. Numerotarea continuă în întregul document.",
+    "footnoteReferenceParentheses": "Încadrează în paranteze marcajele notelor de subsol muzicale",
     "showFootnoteHorizontalRule": "Afișează linia separatoare deasupra notelor de subsol",
     "footnoteHorizontalRuleLength": "Lungimea liniei separatoare (%)"
   },
@@ -363,6 +364,10 @@
     "documentation": "Documentație"
   },
   "footnoteProperties": {
+    "offsetX": "Deplasare orizontală (em)",
+    "offsetY": "Deplasare verticală (em)",
+    "positionHint": "Deplasările se aplică înainte de evitarea automată a suprapunerilor. Valorile pozitive deplasează spre dreapta sau în jos.",
+    "resetPosition": "Resetare poziție",
     "title": "Proprietățile notei de subsol",
     "description": "Alegeți un marcaj pentru această notă de subsol. Marcajele personalizate nu consumă un număr automat.",
     "marker": "Marcaj",

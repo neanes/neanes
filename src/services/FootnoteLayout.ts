@@ -38,8 +38,11 @@ export function footnoteBodyMarkerText(marker: string | number) {
     : String(marker);
 }
 
-export function footnoteMarkerText(marker: string | number) {
-  return `(${marker})`;
+export function footnoteMarkerText(
+  marker: string | number,
+  parentheses = true,
+) {
+  return parentheses ? `(${marker})` : String(marker);
 }
 
 export function footnoteSectionHeight(heights: number[], showRule: boolean) {
@@ -65,4 +68,43 @@ export function footnotePageSetup(
     leftMargin: margins.left + (base.melkiteRtl ? 0 : gutter),
     rightMargin: margins.right + (base.melkiteRtl ? gutter : 0),
   });
+}
+
+interface MarkerObstacle {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+// Coordinates are physical pixels relative to the musical baseline.
+export function positionFootnoteMarker(
+  base: Pick<MarkerObstacle, 'left' | 'right'>[],
+  obstacles: MarkerObstacle[],
+  width: number,
+  height: number,
+  defaultBottom: number,
+  offsetX: number,
+  offsetY: number,
+  clearance: number,
+) {
+  const left =
+    (Math.min(...base.map((box) => box.left)) +
+      Math.max(...base.map((box) => box.right)) -
+      width) /
+      2 +
+    offsetX;
+  let top = defaultBottom - height + offsetY;
+  // Visit lower obstacles first so raising past one can reveal another above it.
+  for (const box of [...obstacles].sort((a, b) => b.bottom - a.bottom)) {
+    if (
+      left < box.right + clearance &&
+      left + width > box.left - clearance &&
+      top < box.bottom + clearance &&
+      top + height > box.top - clearance
+    ) {
+      top = box.top - clearance - height;
+    }
+  }
+  return { left, top };
 }

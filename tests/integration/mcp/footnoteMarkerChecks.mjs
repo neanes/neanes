@@ -17,10 +17,7 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
   ]) {
     const width =
       scenario.name === 'tight-break'
-        ? 100 +
-          naturalMetrics.neumeWidth * 4 +
-          naturalGap * 4 +
-          naturalMetrics.markerWidth * 0.1
+        ? 100 + naturalMetrics.neumeWidth * 4 + naturalGap * 3 + 1
         : scenario.width;
     let doc = await call('create_document', {
       documentScope: 'editor',
@@ -61,9 +58,23 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
             },
           })),
         },
+      ],
+    });
+    const notePositions = () =>
+      evaluate(
+        `window._editor.selectedWorkspace.value.score.staff.elements.filter(n => n.elementType === 'Note').map(n => ({x:n.x,width:n.width,line:n.line}))`,
+      );
+    const beforePositions = await notePositions();
+    const readyBefore = await call('get_document_properties', args);
+    await call('edit_elements', {
+      ...args,
+      expectedRevision: readyBefore.revision,
+      actions: [
         {
           action: 'insert_footnote',
-          elementRef: `@n${scenario.anchor}`,
+          elementRef: (await call('get_elements', args)).elements[
+            scenario.anchor
+          ].elementRef,
           elements: [
             {
               elementType: 'TextBox',
@@ -102,7 +113,7 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
       return { bodyLabel: body.textContent.trim(), bodyTag: body.tagName,
         bodyVerticalAlign: bodyStyle.verticalAlign,
         bodyFontSize: parseFloat(bodyStyle.fontSize) / zoom,
-        neumeWidth: reference.neumeWidth, markerWidth: reference.footnoteMarkerWidth, referenceLine: reference.line, firstLine: notes[0].line, label: marker.textContent.trim(), ordinary, before: rtl ? end - rect.right : rect.left - end, after, zoom,
+        neumeWidth: reference.neumeWidth, markerWidth: rect.width / zoom, referenceLine: reference.line, firstLine: notes[0].line, markerTop: reference.footnoteMarkerTop, markerCenter: (rect.left+rect.right)/2, neumeCenter: rtl ? page.right-(reference.x+reference.neumeWidth/2)*zoom : page.left+(reference.x+reference.neumeWidth/2)*zoom, label: marker.textContent.trim(), ordinary, before: rtl ? end - rect.right : rect.left - end, after, zoom,
         center: (notes[0].x + reference.x + reference.width) / 2,
         pageCenter: w.score.pageSetup.pageWidth / 2,
         markerEnd: reference.x + reference.width,
@@ -114,30 +125,23 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
     assert.equal(geometry.bodyVerticalAlign, 'baseline');
     assert.ok(Math.abs(geometry.bodyFontSize - (10 * 96) / 72) < 0.01);
     assert.ok(
-      Math.abs(geometry.before - geometry.ordinary) < 0.15,
-      `${scenario.name}: ${JSON.stringify(geometry)}`,
+      Math.abs(geometry.markerCenter - geometry.neumeCenter) < 1,
+      `${scenario.name}: marker centered above neume`,
     );
-    if (geometry.after !== null) {
-      assert.ok(
-        Math.abs(geometry.after - geometry.ordinary) < 0.15,
-        `${scenario.name}: ${JSON.stringify(geometry)}`,
-      );
-    }
-    assert.ok(geometry.markerEnd <= geometry.contentEnd + 0.1);
+    assert.deepEqual(
+      await notePositions(),
+      beforePositions,
+      `${scenario.name}: unobstructed footnote must not affect horizontal layout`,
+    );
     if (scenario.name === 'natural') {
       naturalGap = geometry.ordinary / geometry.zoom;
       naturalMetrics = geometry;
     }
-    if (scenario.name === 'justified') {
-      assert.ok(
-        Math.abs(geometry.ordinary / geometry.zoom - naturalGap) > 0.05,
-        'The marker gaps must participate in justification.',
-      );
-    }
     if (scenario.name === 'tight-break') {
-      assert.ok(
-        geometry.referenceLine > geometry.firstLine,
-        'Move the neume and marker together when only the neume would fit.',
+      assert.equal(
+        geometry.referenceLine,
+        geometry.firstLine,
+        'The marker does not force a fitting note onto another line',
       );
     }
     if (scenario.centered) {
@@ -155,6 +159,195 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
     );
   }
   console.log(
-    'PASS: parenthesized markers, ordinary gaps, justification, line endings, centered lines, and RTL',
+    'PASS: centered unobstructed markers without extra horizontal spacing, natural/justified spacing, tight lines, centered lines, and RTL',
+  );
+}
+
+export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
+  for (const rtl of [false, true]) {
+    for (const scenario of [
+      {
+        bar: 'MeasureBarRight',
+        edge: 'measureBarRight',
+        anchor: 0,
+        offsetY: 0.1,
+      },
+      { bar: 'MeasureBarShortDouble', edge: 'measureBarRight', anchor: 0 },
+      { bar: 'MeasureBarShortDouble', edge: 'measureBarLeft', anchor: 1 },
+      { bar: 'MeasureBarShortTheseos', edge: 'measureBarRight', anchor: 0 },
+      { bar: 'MeasureBarShortTheseos', edge: 'measureBarRight', anchor: 1 },
+    ]) {
+      const doc = await call('create_document', {
+        documentScope: 'editor',
+        title: `Marker barline clearance: ${scenario.edge}, ${scenario.anchor}, RTL=${rtl}`,
+      });
+      const args = { documentScope: 'editor', documentId: doc.documentId };
+      const edit = async (actions) =>
+        call('edit_elements', {
+          ...args,
+          expectedRevision: (await call('get_document_properties', args))
+            .revision,
+          actions,
+        });
+      await call('update_page_setup', {
+        ...args,
+        expectedRevision: doc.revision,
+        changes: {
+          melkiteRtl: rtl,
+          neumeDefaultFontFamily: rtl ? 'NeanesRTL' : 'Neanes',
+        },
+      });
+      const initial = await call('get_elements', args);
+      await edit([
+        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        {
+          action: 'insert',
+          elements: [0, 1].map((index) => ({
+            elementType: 'Note',
+            clientId: `n${index}`,
+            properties: {
+              quantitativeNeume: 'Apostrophos',
+              ...(index === scenario.anchor
+                ? { footnoteOffsetY: scenario.offsetY ?? 0 }
+                : {}),
+              ...(index === (scenario.edge === 'measureBarRight' ? 0 : 1)
+                ? { [scenario.edge]: scenario.bar }
+                : {}),
+            },
+          })),
+        },
+        {
+          action: 'insert_footnote',
+          elementRef: `@n${scenario.anchor}`,
+        },
+      ]);
+      const notes = (await call('get_elements', args)).elements;
+      const anchor = notes[scenario.anchor];
+      await edit([
+        {
+          action: 'update_footnote',
+          footnoteId: anchor.properties.footnoteId,
+          marker: 'MMMMMMMMMMMM',
+        },
+      ]);
+      const distance = () =>
+        evaluate(`(() => {
+          const n=window._editor.selectedWorkspace.value.score.staff.elements;
+          return n[1].x-n[0].x;
+        })()`);
+      const collidingDistance = await distance();
+      await edit([
+        {
+          action: 'update',
+          elementType: 'Note',
+          elementRef: anchor.elementRef,
+          properties: { footnoteOffsetY: -2 },
+        },
+      ]);
+      const clearDistance = await distance();
+      assert.ok(
+        collidingDistance > clearDistance + 1,
+        `${scenario.bar}, ${scenario.edge}, anchor ${scenario.anchor}, RTL=${rtl}: marker ink reserves barline clearance (${collidingDistance} > ${clearDistance})`,
+      );
+      await edit([
+        {
+          action: 'update',
+          elementType: 'Note',
+          elementRef: anchor.elementRef,
+          properties: { footnoteOffsetY: scenario.offsetY ?? 0 },
+        },
+      ]);
+      assert.ok(
+        Math.abs((await distance()) - collidingDistance) < 0.01,
+        'Restoring the marker restores its collision spacing without accumulating space',
+      );
+
+      // Rendered RTL barline offsets have a separate existing coordinate mismatch.
+      if (!rtl) {
+        const inkGap = await evaluate(`(() => {
+        const inkBounds = (selector) => {
+          const element=document.querySelector(selector), style=getComputedStyle(element);
+          const rect=element.getBoundingClientRect(), context=document.createElement('canvas').getContext('2d');
+          context.font=style.fontStyle+' '+style.fontWeight+' '+style.fontSize+' '+style.fontFamily;
+          context.fontVariantCaps=style.fontVariantCaps;
+          const ink=context.measureText(element.textContent.trim()), stroke=parseFloat(style.webkitTextStrokeWidth)/2;
+          return {left:rect.left-ink.actualBoundingBoxLeft-stroke, right:rect.left+ink.actualBoundingBoxRight+stroke};
+        };
+        const marker=inkBounds('.page .footnote-reference'), bar=inkBounds('.page .measure-bar');
+        return Math.max(bar.left-marker.right, marker.left-bar.right);
+      })()`);
+        assert.ok(
+          inkGap >= -0.5,
+          `${scenario.bar}, ${scenario.edge}, anchor ${scenario.anchor}, RTL=${rtl}: rendered marker clears barline ink (${inkGap})`,
+        );
+      }
+
+      // The same shared geometry handles neighboring neumes and other markers.
+      if (scenario.bar === 'MeasureBarShortDouble' && scenario.anchor === 0) {
+        await edit([
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: notes[0].elementRef,
+            properties: { measureBarRight: null },
+          },
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: notes[1].elementRef,
+            properties: { quantitativeNeume: 'OligonPlusHypsiliRight' },
+          },
+        ]);
+        const neumeDistance = await distance();
+        await edit([
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: anchor.elementRef,
+            properties: { footnoteOffsetY: -2 },
+          },
+        ]);
+        assert.ok(neumeDistance > (await distance()) + 1);
+        await edit([
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: notes[1].elementRef,
+            properties: { quantitativeNeume: 'Apostrophos' },
+          },
+          {
+            action: 'insert_footnote',
+            elementRef: notes[1].elementRef,
+          },
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: anchor.elementRef,
+            properties: { footnoteOffsetY: 0 },
+          },
+        ]);
+        const secondAnchor = (await call('get_elements', args)).elements[1];
+        await edit([
+          {
+            action: 'update_footnote',
+            footnoteId: secondAnchor.properties.footnoteId,
+            marker: 'MMMMMMMMMMMM',
+          },
+        ]);
+        const markerDistance = await distance();
+        await edit([
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: anchor.elementRef,
+            properties: { footnoteOffsetY: -2 },
+          },
+        ]);
+        assert.ok(markerDistance > (await distance()) + 1);
+      }
+    }
+  }
+  console.log(
+    'PASS: marker ink reserves horizontal space for barlines, neighboring neumes, and other markers in LTR and RTL',
   );
 }

@@ -115,10 +115,10 @@ try {
       `(() => {const n=document.querySelector(${JSON.stringify(labelSelector)}), marker=n.firstElementChild, s=getComputedStyle(marker),w=${workspace};return {size:parseFloat(s.fontSize)/w.zoom,top:marker.getBoundingClientRect().top/w.zoom,color:s.color,tag:marker.tagName};})()`,
     );
   assert.ok(
-    Math.abs((await labelMetrics()).size - 10) < 0.1,
-    'Default body marker retains its configured 7.5pt (10px) size',
+    Math.abs((await labelMetrics()).size - (10 * 96) / 72) < 0.1,
+    'Default body marker inherits the 10pt footnote text size',
   );
-  assert.equal((await labelMetrics()).tag, 'SUP');
+  assert.equal((await labelMetrics()).tag, 'SPAN');
   async function styles(changes) {
     await call('edit_paragraph_styles', {
       ...args,
@@ -144,7 +144,7 @@ try {
     const actual = await labelMetrics();
     assert.ok(Math.abs(actual.size - 32) < 0.1);
     assert.equal(actual.color, 'rgb(18, 52, 86)');
-    assert.equal(actual.tag, 'SUP');
+    assert.equal(actual.tag, 'SPAN');
   });
   for (const alignRight of [false, true]) {
     await edit([
@@ -164,25 +164,24 @@ try {
       await properties();
       await eventually(async () => {
         const metrics = await evaluate(
-          `(() => {const w=${workspace},anchor=w.score.staff.elements[3],n=document.getElementById('element-'+anchor.id),m=n.querySelector('.footnote-reference'),r=m.getBoundingClientRect(),p=n.closest('.page').getBoundingClientRect();return {top:parseFloat(getComputedStyle(m).top),sup:m.querySelector('sup')!==null,size:parseFloat(getComputedStyle(m).fontSize)/w.zoom,left:r.left,right:r.right,contentLeft:p.left+w.score.pageSetup.leftMargin*w.zoom,contentRight:p.right-w.score.pageSetup.rightMargin*w.zoom};})()`,
+          `(() => {const w=${workspace},anchor=w.score.staff.elements[3],n=document.getElementById('element-'+anchor.id),m=n.querySelector('.footnote-reference'),r=m.getBoundingClientRect(),p=n.closest('.page').getBoundingClientRect();return {top:parseFloat(getComputedStyle(m).top),sup:m.querySelector('sup')!==null,size:parseFloat(getComputedStyle(m).fontSize)/w.zoom,left:r.left,right:r.right,anchorCenter:w.score.pageSetup.melkiteRtl ? p.right-(anchor.x+anchor.neumeWidth/2)*w.zoom : p.left+(anchor.x+anchor.neumeWidth/2)*w.zoom,zoom:w.zoom};})()`,
         );
         assert.ok(
           Math.abs(metrics.size - 26) < 0.1,
           'Music reference uses the configured size without superscript scaling',
         );
         assert.equal(
-          metrics.top,
-          0,
-          'Music references retain their current top: 0 position',
+          Number.isFinite(metrics.top),
+          true,
+          'Music references have a calculated vertical position',
         );
         assert.equal(metrics.sup, false);
+        // A wide marker may overhang a margin: it is centered on the martyria
+        // and does not reserve any horizontal line-breaking space.
         assert.ok(
-          metrics.left >= metrics.contentLeft - 1,
-          `RTL=${rtl}: marker crosses the left margin`,
-        );
-        assert.ok(
-          metrics.right <= metrics.contentRight + 1,
-          `RTL=${rtl}: marker crosses the right margin`,
+          Math.abs((metrics.left + metrics.right) / 2 - metrics.anchorCenter) <
+            metrics.zoom * 2,
+          `RTL=${rtl}: marker is centered over the martyria`,
         );
       });
     }

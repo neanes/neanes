@@ -410,7 +410,6 @@ export function createDefaultParagraphStyles() {
       BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
       'Footnote Body Marker',
       BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
-      { fontSize: Unit.fromPt(7.5) },
     ),
     createBuiltInStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,

@@ -180,9 +180,9 @@
     "
     @click="!printMode && emit('selectElement', footnote.reference)"
   >
-    <sup class="footnote-body-marker" :style="bodyMarkerCss"
-      ><span>{{ footnote.marker }}</span></sup
-    >
+    <span class="footnote-body-marker" :style="bodyMarkerCss">{{
+      footnoteBodyMarkerText(footnote.marker)
+    }}</span>
   </button>
   <div
     v-if="page.footnoteOverflow && !printMode"
@@ -720,6 +720,7 @@ import type { Score } from '@/models/Score';
 import {
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
   FOOTNOTE_RULE_THICKNESS,
+  footnoteBodyMarkerText,
   footnoteMarkerStyle,
   footnoteMarkerText,
 } from '@/services/FootnoteLayout';
@@ -891,8 +892,6 @@ const footnoteBodyStyles = computed(() => {
         ...markerCss(style),
         lineHeight: style.lineHeight ?? 'normal',
       };
-      // Superscripts need the first line's font and baseline as their context.
-      // Applying the small marker font to the button itself raises it too far.
       if (
         first &&
         (isSyllableElement(first) ||
@@ -1451,7 +1450,7 @@ defineExpose({
 .footnote-label {
   white-space: nowrap;
 }
-.footnote-body-marker > span {
+.footnote-body-marker {
   display: inline-block;
   line-height: 1;
 }

@@ -93,8 +93,8 @@ scopes and real editor/rendering behavior.
 
 Footnote typography uses the built-in `footnote-text`, `footnote-body-marker`,
 and `footnote-reference` paragraph styles. Superscript is not a paragraph-style
-property. The body-marker style inherits Footnote Text with a 7.5pt font-size
-override. Body labels use native `<sup>` at the configured body-marker font size;
-parenthesized musical references retain their existing position and configured
+property. The body-marker style inherits Footnote Text, including its font size.
+Body labels render on the baseline, with a period after numeric markers and no
+period after symbols. Parenthesized musical references retain their existing position and configured
 reference font size without scaling. Rich references use native inline formatting
 rather than the musical reference style.

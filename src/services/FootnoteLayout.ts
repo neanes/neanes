@@ -32,6 +32,12 @@ export function footnoteMarkerFont(
   return resolveFontCss(footnoteMarkerStyle(styles, role));
 }
 
+export function footnoteBodyMarkerText(marker: string | number) {
+  return /^\p{Decimal_Number}+$/u.test(String(marker))
+    ? `${marker}.`
+    : String(marker);
+}
+
 export function footnoteMarkerText(marker: string | number) {
   return `(${marker})`;
 }

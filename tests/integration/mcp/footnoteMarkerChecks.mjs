@@ -90,6 +90,8 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
       const marker = document.getElementById('element-' + reference.id).querySelector('.footnote-reference');
       const page = marker.closest('.page').getBoundingClientRect();
       const rect = marker.getBoundingClientRect();
+      const body = document.querySelector('.footnote-body-marker');
+      const bodyStyle = getComputedStyle(body);
       const zoom = w.zoom;
       const rtl = w.score.pageSetup.melkiteRtl;
       const pairIndex = notes.findIndex((note, i) => note !== reference && notes[i + 1] && note.line === reference.line && notes[i + 1].line === reference.line && note.page === reference.page && notes[i + 1].page === reference.page);
@@ -97,13 +99,20 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
       const end = rtl ? page.right - (reference.x + reference.neumeWidth) * zoom : page.left + (reference.x + reference.neumeWidth) * zoom;
       const next = notes[${scenario.anchor + 1}];
       const after = next && next.line === reference.line && next.page === reference.page ? (rtl ? rect.left - (page.right - next.x * zoom) : page.left + next.x * zoom - rect.right) : null;
-      return { neumeWidth: reference.neumeWidth, markerWidth: reference.footnoteMarkerWidth, referenceLine: reference.line, firstLine: notes[0].line, label: marker.textContent.trim(), ordinary, before: rtl ? end - rect.right : rect.left - end, after, zoom,
+      return { bodyLabel: body.textContent.trim(), bodyTag: body.tagName,
+        bodyVerticalAlign: bodyStyle.verticalAlign,
+        bodyFontSize: parseFloat(bodyStyle.fontSize) / zoom,
+        neumeWidth: reference.neumeWidth, markerWidth: reference.footnoteMarkerWidth, referenceLine: reference.line, firstLine: notes[0].line, label: marker.textContent.trim(), ordinary, before: rtl ? end - rect.right : rect.left - end, after, zoom,
         center: (notes[0].x + reference.x + reference.width) / 2,
         pageCenter: w.score.pageSetup.pageWidth / 2,
         markerEnd: reference.x + reference.width,
         contentEnd: w.score.pageSetup.pageWidth - w.score.pageSetup.rightMargin };
     })()`);
     assert.equal(geometry.label, '(1)');
+    assert.equal(geometry.bodyLabel, '1.');
+    assert.equal(geometry.bodyTag, 'SPAN');
+    assert.equal(geometry.bodyVerticalAlign, 'baseline');
+    assert.ok(Math.abs(geometry.bodyFontSize - (10 * 96) / 72) < 0.01);
     assert.ok(
       Math.abs(geometry.before - geometry.ordinary) < 0.15,
       `${scenario.name}: ${JSON.stringify(geometry)}`,

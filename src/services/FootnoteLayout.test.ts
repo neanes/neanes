@@ -7,11 +7,19 @@ import {
   FOOTNOTE_RULE_THICKNESS,
   FOOTNOTE_SECTION_SPACING,
   FOOTNOTE_SPACING,
+  footnoteBodyMarkerText,
   footnotePageSetup,
   footnoteSectionHeight,
 } from './FootnoteLayout';
 
 describe('footnote area geometry', () => {
+  it('adds a period to numeric body markers and leaves symbols unchanged', () => {
+    expect(footnoteBodyMarkerText(1)).toBe('1.');
+    expect(footnoteBodyMarkerText('123')).toBe('123.');
+    expect(footnoteBodyMarkerText('*')).toBe('*');
+    expect(footnoteBodyMarkerText('**')).toBe('**');
+  });
+
   it('reserves the separator once and no space on pages without footnotes', () => {
     expect(footnoteSectionHeight([], true)).toBe(0);
     expect(footnoteSectionHeight([100, 50], false)).toBe(

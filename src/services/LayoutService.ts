@@ -89,6 +89,7 @@ import {
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
   FOOTNOTE_RULE_THICKNESS,
   FOOTNOTE_SPACING,
+  footnoteBodyMarkerText,
   footnoteMarkerFont,
   footnoteMarkerStyle,
   footnoteMarkerText,
@@ -832,7 +833,7 @@ export class LayoutService {
     const bodyMarkerStyle = footnoteMarkerStyle(score.paragraphStyles, 'body');
     const labelWidths = ordered.map(({ marker }) =>
       TextMeasurementService.getTextWidth(
-        marker,
+        footnoteBodyMarkerText(marker),
         bodyMarkerFont,
         bodyMarkerStyle.fontVariantCaps ?? 'normal',
       ),

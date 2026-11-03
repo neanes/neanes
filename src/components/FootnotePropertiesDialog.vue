@@ -97,10 +97,10 @@
               >{{
                 $t(($) => $.dialog.footnoteProperties.body, { ns: 'dialog' })
               }}:
-              <sup
+              <span
                 data-testid="footnote-body-preview"
                 :style="{ fontSize: `${bodyTypography.fontSize}px` }"
-                >{{ markerPreview }}</sup
+                >{{ footnoteBodyMarkerText(markerPreview) }}</span
               ></span
             >
           </div>
@@ -148,6 +148,7 @@ import {
 import type { Footnote } from '@/models/Footnote';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import {
+  footnoteBodyMarkerText,
   footnoteMarkerStyle,
   footnoteMarkerText,
 } from '@/services/FootnoteLayout';

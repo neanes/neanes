@@ -54,7 +54,7 @@ describe('ParagraphStyle', () => {
     expect(styles[9].overrides).toEqual({ fontSize: Unit.fromPt(60) });
   });
 
-  it('inherits footnote text typography while retaining the body marker size', () => {
+  it('inherits footnote text typography for body markers', () => {
     const styles = createDefaultParagraphStyles();
     styles[0].overrides = { fontSize: 24, color: '#123456' };
     styles.find(
@@ -66,7 +66,7 @@ describe('ParagraphStyle', () => {
         styles,
         BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
       ),
-    ).toMatchObject({ fontSize: Unit.fromPt(7.5), color: '#654321' });
+    ).toMatchObject({ fontSize: Unit.fromPt(12), color: '#654321' });
     expect(
       resolveParagraphStyle(
         styles,

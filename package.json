@@ -71,7 +71,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dockview-vue": "^8.7.1",
-    "electron": "^45.0.0",
+    "electron": "^45.2.2",
     "electron-builder": "^26.18.0",
     "eslint": "^10.13.0",
     "eslint-plugin-prettier": "^5.5.7",

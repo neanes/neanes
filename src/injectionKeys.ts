@@ -32,4 +32,5 @@ export const richTextHistoryActionsKey: InjectionKey<{
   canRedo: Readonly<Ref<boolean>>;
   undo(): void;
   redo(): void;
+  edited(owner: object): void;
 }> = Symbol('richTextHistoryActions');

@@ -71,3 +71,14 @@ The editor observes only the selected workspace's history and owns toolbar and
 native-menu publication. Background and private histories need no UI suppression
 or compensating publication. Selection changes flush pending edits before
 switching the subscription; editor teardown removes the subscription.
+
+Buffered rich-text edits discard the score redo branch as soon as a fresh local,
+undoable CKEditor change occurs. Native Undo/Redo and incoming model updates do
+not discard it: replay across editors still restores score history before local
+redo. `discardRedo()` publishes availability without changing score content or
+state identity; the buffered content enters score history at its normal flush.
+
+Only interactive editors for the selected workspace's selected rich-text owner
+can invalidate its score redo branch. Hidden measurement and read-only editors,
+parent ready-handler language initialization, and model synchronization must not
+invalidate redo during layout or other read-only operations.

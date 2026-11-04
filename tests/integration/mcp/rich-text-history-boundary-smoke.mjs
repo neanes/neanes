@@ -291,6 +291,194 @@ try {
       `PASS: ${savedRoute} Undo/Redo uses shared history after Save and blur/refocus.`,
     );
   }
+  // Layout creates hidden editors whose language initialization must not branch
+  // the interactive workspace's history.
+  {
+    const doc = await call('create_document', {
+      documentScope: 'editor',
+      title: 'Measurement preserves Redo',
+    });
+    const args = { documentScope: 'editor', documentId: doc.documentId };
+    const initial = await call('get_elements', args);
+    await call('edit_elements', {
+      ...args,
+      expectedRevision: initial.revision,
+      actions: [
+        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              properties: {
+                content: '<p>A</p>',
+                languageCode: 'en',
+                textDirection: 'ltr',
+              },
+            },
+            { elementType: 'Note' },
+          ],
+        },
+      ],
+    });
+    const elements = await call('get_elements', args);
+    await call('edit_elements', {
+      ...args,
+      expectedRevision: elements.revision,
+      actions: [
+        {
+          action: 'update',
+          elementRef: elements.elements[1].elementRef,
+          elementType: 'Note',
+          properties: { quantitativeNeume: 'Oligon' },
+        },
+      ],
+    });
+    await menu('FileMenuUndo');
+    await eventually(async () =>
+      assert.equal(
+        await evaluate(
+          `${workspace}.score.staff.elements[1].quantitativeNeume`,
+        ),
+        'Ison',
+      ),
+    );
+    const before = await evaluate(
+      `JSON.stringify({index:${history}.index,entries:${history}.commandHistory.length})`,
+    );
+    assert.equal(
+      await evaluate(`${history}.index < ${history}.commandHistory.length - 1`),
+      true,
+    );
+    const snapshot = await call('get_elements', args);
+    const sourceContent = () =>
+      evaluate(`(() => {
+      const [box, note] = ${workspace}.score.staff.elements;
+      return {content: box.content, languageCode: box.languageCode,
+        textDirection: box.textDirection, neume: note.quantitativeNeume};
+    })()`);
+    const contentBefore = await sourceContent();
+    assert.deepEqual(contentBefore, {
+      content: '<p>A</p>',
+      languageCode: 'en',
+      textDirection: 'ltr',
+      neume: 'Ison',
+    });
+    await call('get_pages', { ...args, expectedRevision: snapshot.revision });
+    assert.equal(
+      await evaluate(
+        `JSON.stringify({index:${history}.index,entries:${history}.commandHistory.length})`,
+      ),
+      before,
+      'Hidden measurement editors must preserve the score redo branch',
+    );
+    const after = await call('get_elements', args);
+    assert.equal(after.revision, snapshot.revision);
+    assert.deepEqual(await sourceContent(), contentBefore);
+    await menu('FileMenuRedo');
+    await eventually(async () =>
+      assert.equal(
+        await evaluate(
+          `${workspace}.score.staff.elements[1].quantitativeNeume`,
+        ),
+        'Oligon',
+      ),
+    );
+    await call('close_document', {
+      ...args,
+      expectedRevision: (await call('get_document_properties', args)).revision,
+      discardUnsavedChanges: true,
+    });
+    console.log('PASS: measurement preserves score Redo and content.');
+  }
+  // Fresh native typing after score Undo creates a new branch, even if that
+  // typing is locally undone before the next flush.
+  for (const route of ['menu', 'keyboard', 'toolbar']) {
+    const doc = await call('create_document', {
+      documentScope: 'editor',
+      title: `Native history branch: ${route}`,
+    });
+    const args = { documentScope: 'editor', documentId: doc.documentId };
+    const initial = await call('get_elements', args);
+    await call('edit_elements', {
+      ...args,
+      expectedRevision: initial.revision,
+      actions: [
+        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        {
+          action: 'insert',
+          elements: [
+            { elementType: 'RichTextBox', properties: { content: '<p>A</p>' } },
+          ],
+        },
+      ],
+    });
+    const elements = await call('get_elements', args);
+    await call('edit_elements', {
+      ...args,
+      expectedRevision: elements.revision,
+      actions: [
+        {
+          action: 'update',
+          elementRef: elements.elements[0].elementRef,
+          elementType: 'RichTextBox',
+          properties: { content: '<p>B</p>' },
+        },
+      ],
+    });
+    const replay = (action) =>
+      route === 'keyboard'
+        ? shortcut(action)
+        : route === 'toolbar'
+          ? toolbar(action)
+          : menu(action === 'undo' ? 'FileMenuUndo' : 'FileMenuRedo');
+    await focusRich(firstEditor, 1);
+    await replay('undo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>A</p>'),
+    );
+    assert.equal(
+      await evaluate(`${history}.index < ${history}.commandHistory.length - 1`),
+      true,
+    );
+    await focusRich(firstEditor, 1);
+    await socket.send('Input.insertText', { text: 'Y' });
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>AY</p>'),
+    );
+    await replay('undo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>A</p>'),
+    );
+    assert.equal(
+      await evaluate(`${firstEditor}.commands.get('redo').isEnabled`),
+      true,
+    );
+    await replay('redo');
+    await eventually(async () =>
+      assert.equal(
+        await evaluate(`${firstEditor}.getData()`),
+        '<p>AY</p>',
+        'Redo must restore newer native typing instead of the obsolete score branch',
+      ),
+    );
+    assert.equal(
+      await evaluate(`${workspace}.score.staff.elements[0].content`),
+      '<p>A</p>',
+    );
+    assert.equal(
+      await evaluate(`${history}.index < ${history}.commandHistory.length - 1`),
+      false,
+    );
+    await call('close_document', {
+      ...args,
+      expectedRevision: (await call('get_document_properties', args)).revision,
+      discardUnsavedChanges: true,
+    });
+    console.log(
+      `PASS: ${route} fresh native typing invalidates obsolete score Redo.`,
+    );
+  }
   // Crossing from B's native Undo into A's committed history must reverse
   // in the same order: score Redo first, then B's native Redo.
   for (const route of ['menu', 'keyboard', 'toolbar']) {

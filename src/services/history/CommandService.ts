@@ -159,6 +159,14 @@ export class CommandService {
     }
   }
 
+  // A buffered editor can start a new branch before committing a command.
+  public discardRedo() {
+    if (this.canRedo) {
+      this.commandHistory.splice(this.index + 1);
+      this.notify();
+    }
+  }
+
   public clearHistory() {
     this.commandHistory.splice(0, this.commandHistory.length);
     this.index = -1;

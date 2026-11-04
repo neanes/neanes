@@ -38,6 +38,7 @@ const props = defineProps<{
   config: EditorConfig;
   modelValue: string;
   owner: object;
+  historyEnabled?: boolean;
   contentKey?: RichTextBoxContentKey;
   footnotesEditable?: boolean;
   footnoteMarkers?: Readonly<Record<string, string>>;
@@ -172,8 +173,10 @@ function onReady(editor: InlineEditor) {
       editor.keystrokes.set(
         shortcut,
         (_data, cancel) => {
-          cancel();
-          historyActions[action]();
+          if (props.historyEnabled) {
+            cancel();
+            historyActions[action]();
+          }
         },
         { priority: 'high' },
       );
@@ -267,6 +270,23 @@ function onReady(editor: InlineEditor) {
   };
 
   emit('ready', editor);
+
+  // Parent ready handlers initialize language synchronously. Subscribe after
+  // that initialization, and exclude measurement and read-only editors.
+  if (historyActions !== null) {
+    editor.model.document.on('change:data', (_event, batch) => {
+      if (
+        props.historyEnabled &&
+        !editor.isReadOnly &&
+        !applyingModel &&
+        batch.isLocal &&
+        batch.isUndoable &&
+        !batch.isUndo
+      ) {
+        historyActions.edited(props.owner);
+      }
+    });
+  }
 }
 
 function onDestroy(editor: InlineEditor) {

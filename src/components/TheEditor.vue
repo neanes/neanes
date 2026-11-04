@@ -2850,6 +2850,11 @@ provide(richTextHistoryActionsKey, {
   redo: () => {
     void onFileMenuRedo();
   },
+  edited: (owner) => {
+    if (toRaw(owner) === toRaw(getSelectedRichTextOwner())) {
+      commandService.value.discardRedo();
+    }
+  },
 });
 
 const focusedRichTextEditor = useActiveEditorForOwner(getSelectedRichTextOwner);

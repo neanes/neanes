@@ -12,6 +12,7 @@
       ref="editor"
       class="rich-text-editor"
       :owner="element"
+      :history-enabled="true"
       :model-value="element.text"
       :config="editorConfig"
       @ready="onEditorReady"

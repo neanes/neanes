@@ -211,22 +211,14 @@
       :style="getElementStyle(element)"
       @contextmenu="emit('onScoreElementContextMenu', element)"
     >
-      <button
+      <span
         v-if="
           element instanceof FootnoteAnchorElement &&
           element.footnoteMarker !== null
         "
         class="footnote-reference"
         :data-footnote-id="element.footnoteId"
-        type="button"
         :style="footnoteReferenceStyle(element)"
-        :title="
-          i18next.t(($) => $.menu.footnotes.edit, {
-            ns: 'menu',
-            number: element.footnoteMarker,
-          })
-        "
-        @click.stop="!printMode && emit('selectFootnote', element)"
       >
         {{
           footnoteMarkerText(
@@ -234,7 +226,7 @@
             score.pageSetup.footnoteReferenceParentheses,
           )
         }}
-      </button>
+      </span>
       <template v-if="isSyllableElement(element)">
         <div
           :ref="setTemplateRef(`element-${getElementKey(element)}`)"
@@ -1445,13 +1437,16 @@ defineExpose({
   font-family: serif;
   font-weight: normal;
   line-height: 1;
-  cursor: pointer;
 }
 .footnote-reference {
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
   z-index: 1;
   white-space: nowrap;
 }
 .footnote-label {
+  cursor: pointer;
   white-space: nowrap;
 }
 .footnote-body-marker {

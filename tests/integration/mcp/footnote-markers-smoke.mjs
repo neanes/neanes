@@ -79,6 +79,8 @@ try {
     );
   const marker = (id, rich = false) =>
     `.page ${rich ? '.neanes-footnote' : '.footnote-reference'}[data-footnote-id="${id}"]`;
+  const anchorSelector = (id) =>
+    `.page .element-box:has(> .footnote-reference[data-footnote-id="${id}"])`;
   const label = (id) => `.page .footnote-label[data-footnote-id="${id}"]`;
   async function text(selector) {
     return evaluate(
@@ -191,7 +193,7 @@ try {
     '100',
     'Rich text automatic numbers have no parentheses',
   );
-  await open(marker(ids[1]));
+  await open(anchorSelector(ids[1]));
   await choose('*');
   assert.equal(await text('[data-testid="footnote-marker-preview"]'), '(*)');
   assert.equal(await text('[data-testid="footnote-body-preview"]'), '*');
@@ -249,7 +251,7 @@ try {
   );
   assert.equal(await text(label(ids[2])), '\u2020');
   assert.equal(await text(marker(ids[3])), '(99)');
-  await open(marker(ids[1]));
+  await open(anchorSelector(ids[1]));
   await choose(null);
   assert.equal(await text('[data-testid="footnote-marker-preview"]'), '(99)');
   await update();
@@ -473,7 +475,7 @@ try {
     },
   ]);
   for (const anchor of anchors) {
-    await open(marker(anchor.properties.footnoteId));
+    await open(anchorSelector(anchor.properties.footnoteId));
     assert.ok(await evaluate(`!!document.querySelector('#footnote-offset-x')`));
     await evaluate(
       `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Cancel').click()`,
@@ -485,7 +487,7 @@ try {
       ),
     );
   }
-  await open(marker(anchors[2].properties.footnoteId));
+  await open(anchorSelector(anchors[2].properties.footnoteId));
   await evaluate(
     `(() => {const n=document.querySelector('#footnote-offset-x');n.focus();n.select();})()`,
   );
@@ -510,7 +512,7 @@ try {
   await eventually(async () => assert.equal((await positions())[2].x, 0));
   await undo('FileMenuRedo');
   await eventually(async () => assert.equal((await positions())[2].x, 0.25));
-  await open(marker(anchors[2].properties.footnoteId));
+  await open(anchorSelector(anchors[2].properties.footnoteId));
   await evaluate(
     `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Reset position').click()`,
   );
@@ -583,7 +585,7 @@ try {
       index === 0 ? '*' : String(index),
     );
   }
-  await open(marker(anchors[0].properties.footnoteId));
+  await open(anchorSelector(anchors[0].properties.footnoteId));
   assert.equal(await text('[data-testid="footnote-position-preview"]'), '*');
   await evaluate(
     `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Cancel').click()`,

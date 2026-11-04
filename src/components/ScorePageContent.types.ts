@@ -21,7 +21,6 @@ export interface ScorePageInteraction {
 // Explicit events preserve the editor's existing mutation and focus operations.
 export interface ScorePageEvents {
   selectElement: [element: ScoreElement];
-  selectFootnote: [reference: ScoreElement];
   selectLyrics: [element: NoteElement];
   selectHeaderFooter: [element: ScoreElement];
   selectHeaderRichTextBox: [pageIndex: number];

@@ -2020,7 +2020,6 @@ const pageInteraction = computed(() => ({
     score.value.getStaffForElement(element)?.lyrics.locked ?? true,
 }));
 const pageHandlers: ScorePageHandlers = {
-  selectFootnote: (reference) => openFootnote(reference),
   selectElement: (element) => {
     selectedElement.value = element;
   },
@@ -9833,9 +9832,7 @@ function resetScoreContextMenu(event: MouseEvent) {
 
   const target =
     event.target instanceof Element
-      ? event.target.closest(
-          '.footnote-reference, .footnote-label, .neanes-footnote',
-        )
+      ? event.target.closest('.footnote-label, .neanes-footnote')
       : null;
   contextMenuFootnoteId.value =
     target?.getAttribute('data-footnote-id') ?? null;
@@ -9871,6 +9868,15 @@ function onScoreContextMenuOpenChange(open: boolean) {
     scoreContextMenuTarget.value = null;
     contextMenuFootnoteId.value = null;
     scoreMenuPointerDownInside.value = false;
+  }
+}
+
+function onScoreMenuCloseAutoFocus(event: Event) {
+  if (
+    selectedWorkspace.value.activeFootnoteId !== null &&
+    selectedRichTextBoxElement.value !== null
+  ) {
+    event.preventDefault();
   }
 }
 
@@ -10343,6 +10349,7 @@ function renderTabLabel(tab: Tab) {
               </ContextMenuTrigger>
               <ContextMenuContent
                 class="chrome-menu"
+                @close-auto-focus="onScoreMenuCloseAutoFocus"
                 @pointerdown.capture="onScoreMenuContentPointerDown"
                 @pointerup.capture="onScoreMenuContentPointerUp"
               >

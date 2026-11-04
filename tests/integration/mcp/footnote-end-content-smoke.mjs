@@ -101,8 +101,34 @@ try {
   );
   async function open(index) {
     await evaluate(
-      `document.querySelectorAll('.footnote-reference')[${index}].click(); true`,
+      `document.querySelectorAll('.footnote-reference')[${index}].parentElement.dispatchEvent(new MouseEvent('contextmenu', {bubbles:true, button:2, clientX:200, clientY:150}))`,
     );
+    await eventually(async () =>
+      assert.equal(
+        await evaluate(
+          `!![...document.querySelectorAll('[role="menuitem"]')].find(item => item.textContent.includes('Edit footnote'))`,
+        ),
+        true,
+      ),
+    );
+    const point = await eventually(async () => {
+      const result = await evaluate(`(() => {
+        const item = [...document.querySelectorAll('[role="menuitem"]')].find(item => item.textContent.includes('Edit footnote'));
+        const r = item.getBoundingClientRect();
+        const x = r.x + r.width / 2, y = r.y + r.height / 2;
+        return {x, y, hit: item.contains(document.elementFromPoint(x, y))};
+      })()`);
+      assert.ok(result.hit, 'Waiting for the edit menu item to receive clicks');
+      return { x: result.x, y: result.y };
+    });
+    for (const type of ['mousePressed', 'mouseReleased']) {
+      await socket.send('Input.dispatchMouseEvent', {
+        type,
+        ...point,
+        button: 'left',
+        clickCount: 1,
+      });
+    }
     await eventually(async () =>
       assert.equal(
         await evaluate(

@@ -197,7 +197,35 @@ try {
       const mainLyricsLabel = await evaluate(
         `document.querySelector('label[for="lyrics-pane-text"]').textContent.trim()`,
       );
-      await evaluate(`document.querySelector('.footnote-reference').click()`);
+      assert.equal(
+        await evaluate(`(() => {
+          const marker = document.querySelector('.footnote-reference');
+          marker.click();
+          const style = getComputedStyle(marker);
+          const rect = marker.getBoundingClientRect();
+          return style.pointerEvents === 'none' && style.userSelect === 'none' && style.cursor === 'default'
+            && document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) !== marker
+            && !document.querySelector('[role="menu"][data-state="open"]')
+            && marker.tagName === 'SPAN' && marker.tabIndex === -1
+            && window._editor.selectedWorkspace.value.activeFootnoteId === null;
+        })()`),
+        true,
+        'Neume footnote markers are non-interactive',
+      );
+      await evaluate(
+        `document.querySelector('.footnote-reference').parentElement.dispatchEvent(new MouseEvent('contextmenu', {bubbles:true, button:2, clientX:200, clientY:150}))`,
+      );
+      await eventually(async () =>
+        assert.equal(
+          await evaluate(
+            `!![...document.querySelectorAll('[role="menuitem"]')].find(item => item.textContent.includes('Edit footnote'))`,
+          ),
+          true,
+        ),
+      );
+      await evaluate(
+        `[...document.querySelectorAll('[role="menuitem"]')].find(item => item.textContent.includes('Edit footnote')).click()`,
+      );
       assert.equal(
         await evaluate(
           `window._editor.selectedWorkspace.value.activeFootnoteId`,

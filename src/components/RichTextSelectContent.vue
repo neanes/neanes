@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { SelectContentEmits, SelectContentProps } from 'reka-ui';
 import {
   SelectContent,
@@ -12,7 +13,6 @@ import type { HTMLAttributes } from 'vue';
 import SelectScrollDownButton from '@/components/ui/select/SelectScrollDownButton.vue';
 import SelectScrollUpButton from '@/components/ui/select/SelectScrollUpButton.vue';
 import { useRichTextPortalRoot } from '@/composables/useRichTextPortalRoot';
-import { cn } from '@/lib/utils';
 
 defineOptions({
   inheritAttrs: false,

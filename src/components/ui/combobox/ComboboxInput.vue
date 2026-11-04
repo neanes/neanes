@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { PhMagnifyingGlass } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { ComboboxInputEmits, ComboboxInputProps } from 'reka-ui';
 import { ComboboxInput, useForwardPropsEmits } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group';
-import { cn } from '@/lib/utils';
 
 defineOptions({
   inheritAttrs: false,
@@ -26,7 +26,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
 
 <template>
-  <InputGroup>
+  <InputGroup class="w-auto">
     <InputGroupAddon>
       <PhMagnifyingGlass class="size-4 shrink-0 opacity-50" />
     </InputGroupAddon>

@@ -8,10 +8,9 @@ import {
   PhXCircle,
 } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { ToasterProps } from 'vue-sonner';
 import { Toaster as Sonner } from 'vue-sonner';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<ToasterProps>();
 const delegatedProps = reactiveOmit(props, 'class', 'toastOptions');

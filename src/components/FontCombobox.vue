@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import { PhCaretUpDown, PhCheck } from '@phosphor-icons/vue';
+import { cn } from 'cn';
 import { ComboboxVirtualizer } from 'reka-ui';
 import type { HTMLAttributes, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
@@ -81,7 +82,6 @@ import {
   ComboboxTrigger,
   ComboboxViewport,
 } from '@/components/ui/combobox';
-import { cn } from '@/lib/utils';
 
 export type FontComboboxOption = string | { label: string; value: string };
 

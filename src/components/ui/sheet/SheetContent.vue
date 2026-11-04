@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PhX } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { DialogContentEmits, DialogContentProps } from 'reka-ui';
 import {
   DialogClose,
@@ -11,7 +12,6 @@ import {
 import type { HTMLAttributes } from 'vue';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 import SheetOverlay from './SheetOverlay.vue';
 

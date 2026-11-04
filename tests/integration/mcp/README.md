@@ -85,7 +85,8 @@ On macOS, agents must launch Electron outside the command sandbox as described i
 `footnotes` checks independent footnote text/music editing in private and editor
 scopes, real context-menu insertion and keyboard input, numbering and marker
 placement, same-page ownership, footer placement, stable page discovery, oversized
-body recovery, copying with new identities, undo/redo, BYZ/BYZX save/reopen, and
+body recovery with offscreen page unmount/remount, copying with new identities,
+undo/redo, BYZ/BYZX save/reopen, and
 PNG/PDF rendering. Its disposable output directory retains visual artifacts.
 
 Marker geometry checks cover centered markers, unchanged natural and justified

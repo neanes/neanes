@@ -525,16 +525,48 @@ try {
     ]);
     await call('get_pages', args, 'LAYOUT_SETTLEMENT_FAILED');
     if (documentScope === 'editor') {
-      const overflow = await evaluate(`(() => {
-        const box = document.querySelector('[data-footnote-id="${bodySelector.footnoteId}"] .text-box');
-        const page = box.closest('.page');
-        return { overflow: getComputedStyle(page).overflow, editable: box.isContentEditable, belowPage: box.getBoundingClientRect().top >= page.getBoundingClientRect().bottom };
+      const selector = `.page [data-footnote-id="${bodySelector.footnoteId}"] .text-box`;
+      // Exercise lazy page mounting independently of the host screen size.
+      const previousMaxHeight = await evaluate(`(() => {
+        const viewport = document.querySelector('.page-background');
+        const previous = viewport.style.maxHeight;
+        viewport.style.maxHeight = '180px';
+        [...viewport.querySelectorAll('.page')].at(-1).scrollIntoView({block:'start'});
+        return previous;
       })()`);
-      assert.deepEqual(overflow, {
-        overflow: 'visible',
-        editable: true,
-        belowPage: true,
+      await eventually(async () =>
+        assert.equal(
+          await evaluate(
+            `document.querySelector(${JSON.stringify(selector)}) === null`,
+          ),
+          true,
+          'Offscreen footnote content is unmounted',
+        ),
+      );
+      // Detached page discovery does not bring the editor's source page into view.
+      await evaluate(
+        `document.querySelector('.page-background .page').scrollIntoView({block:'start'})`,
+      );
+      await eventually(async () => {
+        const overflow = await evaluate(`(() => {
+          const box = document.querySelector(${JSON.stringify(selector)});
+          if (box === null) return null;
+          const page = box.closest('.page');
+          return { overflow: getComputedStyle(page).overflow, editable: box.isContentEditable, belowPage: box.getBoundingClientRect().top >= page.getBoundingClientRect().bottom };
+        })()`);
+        assert.deepEqual(
+          overflow,
+          {
+            overflow: 'visible',
+            editable: true,
+            belowPage: true,
+          },
+          'Oversized footnote content mounts below its page and stays editable',
+        );
       });
+      await evaluate(
+        `document.querySelector('.page-background').style.maxHeight = ${JSON.stringify(previousMaxHeight)}`,
+      );
     }
 
     await edit([

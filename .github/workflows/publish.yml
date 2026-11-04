@@ -39,6 +39,7 @@ jobs:
 
       - name: Build Windows
         if: runner.os == 'Windows'
+        shell: bash
         run: npm run release -- --win
         env:
           GH_TOKEN: ${{ github.token }}

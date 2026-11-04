@@ -72,6 +72,24 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
   const entries = (
     await call('get_elements', { ...args, includeContent: true })
   ).elements;
+  const heightLimits = await evaluate(`(() => {
+    const limits = selector => [...document.querySelectorAll(selector)]
+      .map(element => getComputedStyle(element).maxHeight);
+    return {
+      main: limits('.page .line:not([data-footnote-id]) .ck-content.single'),
+      footnotes: limits('.page .line[data-footnote-id] .ck-content.single'),
+    };
+  })()`);
+  assert.ok(heightLimits.main.length > 0);
+  assert.ok(heightLimits.footnotes.length > 0);
+  assert.ok(
+    heightLimits.main.every((height) => height !== 'none'),
+    'Main rich-text boxes retain their page-position height limits',
+  );
+  assert.ok(
+    heightLimits.footnotes.every((height) => height === 'none'),
+    'Whole footnote bodies are measured at their natural height',
+  );
   const ids = entries
     .slice(0, 6)
     .map(

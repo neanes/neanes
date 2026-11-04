@@ -40,7 +40,7 @@ describe('detached layout reconciliation', () => {
         { element: body, width: body.width, height: 70 },
       ]),
     ).toBe(true);
-    expect(body.height).toBe(80);
+    expect(body.height).toBe(70);
   });
 
   it('bounds oscillating layout passes and accepts convergence within the limit', () => {
@@ -94,8 +94,34 @@ describe('detached layout reconciliation', () => {
     expect(body.height).toBe(12);
     expect(
       state.apply(workspace.score, [{ element: body, width: 400, height: 10 }]),
-    ).toBe(false);
-    expect(body.height).toBe(12);
+    ).toBe(true);
+    expect(body.height).toBe(10);
+  });
+
+  it('preserves header and footer maxima across width changes without retaining body maxima', () => {
+    const workspace = new Workspace();
+    const score = workspace.score;
+    const body = new TextBoxElement();
+    const header = score.headers.default.elements[0] as TextBoxElement;
+    const footer = score.footers.default.elements[0] as TextBoxElement;
+    score.staff.elements.unshift(body);
+    beginLayoutOperation(workspace);
+    const state = new LayoutReconciliation();
+    state.apply(score, [
+      { element: header, width: header.width, height: 100 },
+      { element: footer, width: footer.width, height: 90 },
+      { element: body, width: body.width, height: 80 },
+    ]);
+    header.width += 20;
+    footer.width += 20;
+    state.apply(score, [
+      { element: header, width: header.width, height: 50 },
+      { element: footer, width: footer.width, height: 40 },
+      { element: body, width: body.width, height: 30 },
+    ]);
+    expect(header.height).toBe(100);
+    expect(footer.height).toBe(90);
+    expect(body.height).toBe(30);
   });
 });
 

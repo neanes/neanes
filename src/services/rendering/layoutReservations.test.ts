@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { RichTextBoxElement, type TextBoxElement } from '@/models/Element';
+import { Footnote } from '@/models/Footnote';
 import { Workspace } from '@/models/Workspace';
+import { planRichTextFootnoteUpdate } from '@/services/FootnoteService';
 import { CommandFactory } from '@/services/history/CommandService';
+import { richTextFootnoteHtml } from '@/services/RichTextFootnotes';
 import { SaveService } from '@/services/SaveService';
 
 import { LayoutReconciliation } from './layoutReconciliation';
@@ -21,9 +24,57 @@ describe('layout operation reservations', () => {
   function fixture() {
     const workspace = new Workspace();
     const box = new RichTextBoxElement();
+    const footnote = new Footnote();
+    workspace.score.footnotes.push(footnote);
+    box.content = `<p>${richTextFootnoteHtml(footnote.id)}</p>`;
     workspace.score.staff.elements.unshift(box);
     return { workspace, box };
   }
+
+  it('accepts shrinking live heights without footnotes, including headers', () => {
+    const workspace = new Workspace();
+    const box = new RichTextBoxElement();
+    workspace.score.staff.elements.unshift(box);
+    const header = workspace.score.headers.default.elements[0];
+    beginLayoutOperation(workspace);
+    expect(reserveTextBoxHeight(box, 80)).toBe(80);
+    expect(reserveTextBoxHeight(box, 40)).toBe(40);
+    expect(reserveTextBoxHeight(header, 100)).toBe(100);
+    expect(reserveTextBoxHeight(header, 50)).toBe(50);
+  });
+
+  it('reserves inline widths only for boxes containing references', () => {
+    const { workspace, box } = fixture();
+    const unrelated = new RichTextBoxElement();
+    unrelated.content = '<p>No references</p>';
+    workspace.score.staff.elements.unshift(unrelated);
+    beginLayoutOperation(workspace);
+    expect(reserveInlineWidth(box, 90)).toBe(90);
+    expect(reserveInlineWidth(box, 50)).toBe(90);
+    expect(reserveInlineWidth(unrelated, 90)).toBe(90);
+    expect(reserveInlineWidth(unrelated, 50)).toBe(50);
+    expect(layoutReservations(workspace.score)!.widths.has(unrelated)).toBe(
+      false,
+    );
+  });
+
+  it('releases broad height reservations after the last footnote is removed', () => {
+    const { workspace, box } = fixture();
+    beginLayoutOperation(workspace);
+    expect(reserveTextBoxHeight(box, 80)).toBe(80);
+    expect(reserveTextBoxHeight(box, 40)).toBe(80);
+    workspace.commandService.executeAsBatch(
+      planRichTextFootnoteUpdate(workspace.score, box, {
+        content: '<p>No references</p>',
+      }),
+    );
+    beginLayoutOperation(workspace);
+    expect(reserveTextBoxHeight(box, 40)).toBe(40);
+    workspace.commandService.undo();
+    beginLayoutOperation(workspace);
+    expect(reserveTextBoxHeight(box, 60)).toBe(60);
+    expect(reserveTextBoxHeight(box, 40)).toBe(60);
+  });
 
   it('retains fresh height and inline width maxima but excludes obsolete saved heights', () => {
     const { workspace, box } = fixture();

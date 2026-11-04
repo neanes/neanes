@@ -501,6 +501,7 @@
           :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :edit-mode="!printMode"
           :element="element as RichTextBoxElement"
+          :footnote-body="line.footnoteId !== null"
           :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
           :page-setup="score.pageSetup"
           :fonts="fonts"

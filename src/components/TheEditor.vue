@@ -792,6 +792,9 @@ const elements = computed(() => activeStaff.value.elements);
 const allElements = computed(() =>
   score.value.staves.flatMap((staff) => staff.elements),
 );
+const footnoteBodyElements = computed(
+  () => new Set(score.value.footnotes.flatMap((body) => body.staff.elements)),
+);
 
 const resizableRichTextBoxElements = computed(() => {
   return allElements.value.filter(
@@ -10872,6 +10875,7 @@ function renderTabLabel(tab: Tab) {
         :key="element.id!"
         class="richTextBoxCalculation"
         :element="element as RichTextBoxElement"
+        :footnote-body="footnoteBodyElements.has(element)"
         :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
         :page-setup="score.pageSetup"
         :fonts="fonts"

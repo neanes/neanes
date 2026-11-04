@@ -14,8 +14,10 @@ import type {
 // Reconcile detached page layout with measured text-box heights.
 export class LayoutReconciliation {
   private pass = 0;
+  private readonly headerFooterHeights = new Map<MeasuredTextBox, number>();
 
   apply(score: Score, heights: TextBoxHeightMeasurement[]) {
+    const headersAndFooters = new Set(score.headersAndFooters);
     const measured = new Map<MeasuredTextBox, number>();
     const reservations = layoutReservations(score);
     let changed = reservations?.pending ?? false;
@@ -31,8 +33,15 @@ export class LayoutReconciliation {
       }
     }
     for (const [element, measuredHeight] of measured) {
-      if (Math.abs(element.height - measuredHeight) > 0.01) {
-        element.height = measuredHeight;
+      // Without footnotes, retain the original policy: only repeated header
+      // and footer templates keep maxima across passes, regardless of width.
+      let height = measuredHeight;
+      if (score.footnotes.length === 0 && headersAndFooters.has(element)) {
+        height = Math.max(this.headerFooterHeights.get(element) ?? 0, height);
+        this.headerFooterHeights.set(element, height);
+      }
+      if (Math.abs(element.height - height) > 0.01) {
+        element.height = height;
         changed = true;
       }
     }

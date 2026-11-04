@@ -21,10 +21,13 @@ pages. This refactor does not change that limitation.
 
 # Measurement and retries
 
-`layoutReservations` owns operation-scoped maximum widths, measured heights at
-matching widths, and the footnote gutter. Content, font, page setup, and paragraph
-style changes invalidate those reservations. Live typing can release an owner's
-height maximum so content can shrink.
+`layoutReservations` owns operation-scoped maximum inline widths for boxes with
+footnote references, measured heights at matching widths in documents with
+footnotes, and the footnote gutter. Content, font, page setup, and paragraph style
+changes invalidate those reservations. Live typing can release an owner's
+height maximum so content can shrink. Documents without footnotes accept shrinking
+body measurements; explicit settlement retains only header/footer template maxima,
+as before footnote support.
 
 `WorkspaceLayoutSettlement` starts a fresh explicit operation and shares
 supersession checks and `LayoutReconciliation` between `settleWorkspace` (workers

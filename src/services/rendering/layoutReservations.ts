@@ -7,11 +7,14 @@ import type {
 } from '@/models/Element';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
+import { elementFootnoteIds } from '@/services/FootnoteReferences';
 
 import type { TextBoxHeightMeasurement } from './textBoxMeasurement';
 
 // Transient dimensions belong to one content/font revision, never to the score file.
 export class LayoutReservations {
+  constructor(readonly hasFootnotes: boolean) {}
+
   gutter = 0;
   pending = false;
   private readonly heights = new Map<
@@ -25,6 +28,9 @@ export class LayoutReservations {
   }
 
   reserveHeight(element: ScoreElement, measured: number) {
+    if (!this.hasFootnotes) {
+      return measured;
+    }
     element = toRaw(element);
     const previous = this.heights.get(element);
     // A height maximum is valid only at the width where it was measured.
@@ -52,15 +58,17 @@ export function invalidateLayoutFonts() {
 
 export function beginLayoutOperation(workspace: Workspace, fresh = false) {
   const score = toRaw(workspace.score);
+  const hasFootnotes = score.footnotes.length > 0;
   const key = JSON.stringify([
     workspace.contentRevision,
     fontRevision,
     score.pageSetup,
     score.paragraphStyles,
+    hasFootnotes,
   ]);
   let entry = states.get(score);
   if (fresh || entry?.key !== key) {
-    entry = { key, state: new LayoutReservations() };
+    entry = { key, state: new LayoutReservations(hasFootnotes) };
     states.set(score, entry);
     for (const element of [
       ...score.staves.flatMap((staff) => staff.elements),
@@ -77,6 +85,9 @@ export function layoutReservations(score: Score) {
 }
 
 export function reserveInlineWidth(element: ScoreElement, width: number) {
+  if (elementFootnoteIds(element).length === 0) {
+    return width;
+  }
   return (
     owners.get(toRaw(element))?.reserveWidth(toRaw(element), width) ?? width
   );

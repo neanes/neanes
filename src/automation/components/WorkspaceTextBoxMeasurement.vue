@@ -11,6 +11,7 @@
         v-if="element.elementType === ElementType.RichTextBox"
         :ref="(instance) => setMeasurer(element, instance)"
         :element="element as RichTextBoxElement"
+        :footnote-body="footnoteBodyElements.has(element)"
         :footnote-markers="footnoteMarkers"
         :page-setup="workspace.score.pageSetup"
         :paragraph-styles="workspace.score.paragraphStyles"
@@ -65,6 +66,9 @@ const footnoteMarkers = Object.fromEntries(
   ]),
 );
 const elements = getResizableTextBoxes(props.workspace.score);
+const footnoteBodyElements = new Set(
+  props.workspace.score.footnotes.flatMap((body) => body.staff.elements),
+);
 const paragraphStyleCss = computed(() =>
   buildRichTextParagraphStyleCss(
     props.workspace.score.paragraphStyles,

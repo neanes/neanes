@@ -184,6 +184,10 @@ const emit = defineEmits([
   'select-neume',
 ]);
 const props = defineProps({
+  footnoteBody: {
+    type: Boolean,
+    default: false,
+  },
   footnoteMarkers: {
     type: Object as PropType<Readonly<Record<string, string>>>,
     default: () => ({}),
@@ -474,15 +478,16 @@ const containerStyle = computed(() => {
 const textBoxStyle = computed(() => {
   const style: StyleValue = {
     width: `${props.element.width}px`, // no zoom because we scale with the transform
-    // Scrollable boxes must use the same clipped height during measurement.
-    // Ordinary boxes are measured naturally, independently of page position.
-    maxHeight: props.element.scrollable
-      ? withZoom(
-          props.pageSetup.pageHeight -
-            props.element.y -
-            props.pageSetup.bottomMargin,
-        )
-      : undefined,
+    // Whole-footnote pagination needs natural body heights. Other boxes retain
+    // their existing page-position limit, including scrollable footnote boxes.
+    maxHeight:
+      props.footnoteBody && !props.element.scrollable
+        ? undefined
+        : withZoom(
+            props.pageSetup.pageHeight -
+              props.element.y -
+              props.pageSetup.bottomMargin,
+          ),
   };
 
   return style;

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PhX } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { DialogContentEmits, DialogContentProps } from 'reka-ui';
 import {
   DialogClose,
@@ -10,8 +11,6 @@ import {
   useForwardPropsEmits,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 defineOptions({
   inheritAttrs: false,

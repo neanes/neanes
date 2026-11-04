@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PhCheck } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { SelectItemProps } from 'reka-ui';
 import {
   SelectItem,
@@ -9,8 +10,6 @@ import {
   useForwardProps,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   SelectItemProps & { class?: HTMLAttributes['class'] }

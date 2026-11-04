@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { MenubarSubContentEmits, MenubarSubContentProps } from 'reka-ui';
 import {
   MenubarPortal,
@@ -7,8 +8,6 @@ import {
   useForwardPropsEmits,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 defineOptions({
   inheritAttrs: false,

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { AccordionItemProps } from 'reka-ui';
 import { AccordionItem, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   AccordionItemProps & { class?: HTMLAttributes['class'] }

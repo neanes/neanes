@@ -37,84 +37,70 @@ import { LayoutService } from './LayoutService';
 
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
-describe('footnote marker horizontal collision geometry', () => {
-  const base = { left: 0, right: 20, top: -10, bottom: 0 };
-  const bar = { left: 0, right: 2, top: -35, bottom: 0 };
+describe('reference marker layout geometry', () => {
+  it.each([false, true])(
+    'excludes markers and their offsets from musical collision geometry (RTL=%s)',
+    (rtl) => {
+      const setup = new PageSetup();
+      setup.melkiteRtl = rtl;
+      setup.neumeDefaultFontFamily = rtl ? 'NeanesRTL' : 'Neanes';
+      const note = new NoteElement();
+      const bars = new Map<MeasureBar, number>();
+      const boxes = () =>
+        LayoutService['getNoteCollisionGlyphBoxes'](note, setup, bars);
+      const original = boxes();
+      note.footnoteMarker = '††';
+      note.footnoteOffsetX = 0.5;
+      note.footnoteOffsetY = 0.4;
+      expect(boxes()).toEqual(original);
+      note.footnoteMarker = null;
+      expect(boxes()).toEqual(original);
+    },
+  );
 
-  function geometry() {
-    const note = new NoteElement();
-    note.footnoteMarkerMetrics = { width: 60, height: 10, strokeWidth: 2 };
-    const setup = new PageSetup();
-    setup.neumeDefaultFontSize = 40;
-    const boxes = () =>
-      LayoutService['withFootnoteMarkerCollisionBox'](
+  it.each([false, true])(
+    'includes finished barline positions without adding them to musical collision geometry (RTL=%s)',
+    (rtl) => {
+      const setup = new PageSetup();
+      setup.melkiteRtl = rtl;
+      setup.neumeDefaultFontFamily = rtl ? 'NeanesRTL' : 'Neanes';
+      const note = new NoteElement();
+      note.x = 80;
+      note.y = 100;
+      note.neumeWidth = 35;
+      note.measureBarRight = 'MeasureBarRight' as MeasureBar;
+      note.computedMeasureBarRightOffsetX = 12;
+      const bars = new Map<MeasureBar, number>([[note.measureBarRight, 5]]);
+      const musical = LayoutService['getNoteCollisionGlyphBoxes'](
         note,
         setup,
-        [base],
-        [base],
+        bars,
       );
-    return { note, boxes };
-  }
-
-  it('reserves barline clearance on either side of visible marker ink, including stroke', () => {
-    const { boxes } = geometry();
-    expect(
-      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
-        20,
-        boxes(),
-        [bar],
-        2,
-      ),
-    ).toBe(23);
-    expect(
-      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](2, [bar], boxes(), 2),
-    ).toBe(23);
-  });
-
-  it('adds space between overlapping markers while leaving vertically clear ink alone', () => {
-    const { note, boxes } = geometry();
-    const first = boxes();
-    expect(
-      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
-        20,
-        first,
-        boxes(),
-        2,
-      ),
-    ).toBe(44);
-    note.footnoteOffsetY = -1;
-    expect(
-      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
-        20,
-        boxes(),
-        [bar],
-        2,
-      ),
-    ).toBe(2);
-    expect(
-      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
-        20,
-        first,
-        boxes(),
-        2,
-      ),
-    ).toBe(2);
-  });
-
-  it('uses horizontal offsets and removes the reservation when the marker is removed', () => {
-    const { note, boxes } = geometry();
-    note.footnoteOffsetX = 0.5;
-    expect(
-      LayoutService['getMinimumSpacingForNoteGlyphBoxes'](
-        20,
-        boxes(),
-        [bar],
-        2,
-      ),
-    ).toBe(43);
-    note.footnoteMarkerMetrics = null;
-    expect(boxes()).toEqual([base]);
-  });
+      const finished = LayoutService['getReferenceMarkerObstacles'](
+        note,
+        setup,
+        bars,
+      );
+      expect(finished.length).toBeGreaterThan(musical.length);
+      const before = finished.at(-1)!;
+      note.measureBarRightOffsetX = 0.25;
+      note.measureBarRightOffsetY = -0.5;
+      const after = LayoutService['getReferenceMarkerObstacles'](
+        note,
+        setup,
+        bars,
+      ).at(-1)!;
+      expect(after.left - before.left).toBeCloseTo(
+        setup.neumeDefaultFontSize * 0.25,
+      );
+      expect(after.top - before.top).toBeCloseTo(
+        setup.neumeDefaultFontSize * -0.5,
+      );
+      expect(
+        LayoutService['getNoteCollisionGlyphBoxes'](note, setup, bars),
+      ).toEqual(musical);
+    },
+  );
 });
 
 describe('LayoutService.calculateMartyriae', () => {

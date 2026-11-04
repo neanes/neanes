@@ -1,3 +1,8 @@
+import type {
+  FootnoteFormat,
+  FootnoteNumbering,
+  FootnoteSymbolSequence,
+} from '@/models/FootnoteNumbering';
 import { Unit } from '@/utils/Unit';
 
 export type PageSize =
@@ -38,6 +43,9 @@ export class PageSetup {
   public showFooter: boolean | undefined = undefined;
   public richHeaderFooter: boolean | undefined = undefined;
   public firstPageNumber = 1;
+  public footnoteFormat: FootnoteFormat | undefined = undefined;
+  public footnoteNumbering: FootnoteNumbering | undefined = undefined;
+  public footnoteSymbolSequence: FootnoteSymbolSequence | undefined = undefined;
   public firstFootnoteNumber: number | undefined = undefined;
   public footnoteReferenceParentheses: boolean | undefined = undefined;
   public showFootnoteHorizontalRule: boolean | undefined = undefined;

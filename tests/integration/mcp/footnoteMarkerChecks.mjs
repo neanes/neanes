@@ -227,7 +227,7 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
         {
           action: 'update_footnote',
           footnoteId: anchor.properties.footnoteId,
-          marker: 'MMMMMMMMMMMM',
+          marker: '††',
         },
       ]);
       const distance = () =>
@@ -246,8 +246,8 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
       ]);
       const clearDistance = await distance();
       assert.ok(
-        collidingDistance > clearDistance + 1,
-        `${scenario.bar}, ${scenario.edge}, anchor ${scenario.anchor}, RTL=${rtl}: marker ink reserves barline clearance (${collidingDistance} > ${clearDistance})`,
+        Math.abs(collidingDistance - clearDistance) < 0.01,
+        `${scenario.bar}, ${scenario.edge}, anchor ${scenario.anchor}, RTL=${rtl}: marker placement preserves horizontal spacing (${collidingDistance}, ${clearDistance})`,
       );
       await edit([
         {
@@ -259,28 +259,36 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
       ]);
       assert.ok(
         Math.abs((await distance()) - collidingDistance) < 0.01,
-        'Restoring the marker restores its collision spacing without accumulating space',
+        'Restoring the marker preserves horizontal spacing',
       );
 
-      // Rendered RTL barline offsets have a separate existing coordinate mismatch.
-      if (!rtl) {
-        const inkGap = await evaluate(`(() => {
-        const inkBounds = (selector) => {
-          const element=document.querySelector(selector), style=getComputedStyle(element);
-          const rect=element.getBoundingClientRect(), context=document.createElement('canvas').getContext('2d');
+      const markerClearance = () =>
+        evaluate(`(() => {
+        const bounds = element => {
+          const style=getComputedStyle(element), rect=element.getBoundingClientRect();
+          const context=document.createElement('canvas').getContext('2d');
           context.font=style.fontStyle+' '+style.fontWeight+' '+style.fontSize+' '+style.fontFamily;
           context.fontVariantCaps=style.fontVariantCaps;
           const ink=context.measureText(element.textContent.trim()), stroke=parseFloat(style.webkitTextStrokeWidth)/2;
-          return {left:rect.left-ink.actualBoundingBoxLeft-stroke, right:rect.left+ink.actualBoundingBoxRight+stroke};
+          const probe=document.createElement('span');
+          probe.style.cssText='display:inline-block;width:0;height:0;padding:0;margin:0;border:0;vertical-align:baseline';
+          element.appendChild(probe);
+          const baseline=probe.getBoundingClientRect().top;
+          probe.remove();
+          return {left:rect.left-ink.actualBoundingBoxLeft-stroke, right:rect.left+ink.actualBoundingBoxRight+stroke, top:baseline-ink.actualBoundingBoxAscent-stroke, bottom:baseline+ink.actualBoundingBoxDescent+stroke};
         };
-        const marker=inkBounds('.page .footnote-reference'), bar=inkBounds('.page .measure-bar');
-        return Math.max(bar.left-marker.right, marker.left-bar.right);
+        const markers=[...document.querySelectorAll('.page .footnote-reference')].map(bounds);
+        const glyphs=[...document.querySelectorAll('.page .neume-box span.neume')].map(bounds);
+        const overlap=(a,b)=>Math.min(a.right,b.right)-Math.max(a.left,b.left)>0.5 && Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>0.5;
+        return markers.flatMap((marker,i)=>[...glyphs, ...markers.slice(i+1)].filter(other=>overlap(marker,other)).map(other=>({marker,other})));
       })()`);
-        assert.ok(
-          inkGap >= -0.5,
-          `${scenario.bar}, ${scenario.edge}, anchor ${scenario.anchor}, RTL=${rtl}: rendered marker clears barline ink (${inkGap})`,
-        );
-      }
+      await eventually(async () =>
+        assert.deepEqual(
+          await markerClearance(),
+          [],
+          `Markers clear neighboring glyphs and other markers: ${JSON.stringify(scenario)}, RTL=${rtl}`,
+        ),
+      );
 
       // The same shared geometry handles neighboring neumes and other markers.
       if (scenario.bar === 'MeasureBarShortDouble' && scenario.anchor === 0) {
@@ -298,6 +306,31 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
             properties: { quantitativeNeume: 'OligonPlusHypsiliRight' },
           },
         ]);
+        // A normal manual offset places this short marker over the next note.
+        const neighborOffset = await evaluate(`(() => {
+          const w=window._editor.selectedWorkspace.value, n=w.score.staff.elements;
+          return (${rtl ? -1 : 1})*(n[1].x-n[0].x)/w.score.pageSetup.neumeDefaultFontSize;
+        })()`);
+        const tallOffset = await evaluate(`(() => {
+          const w=window._editor.selectedWorkspace.value, n=w.score.staff.elements;
+          const marker=document.querySelector('.footnote-reference').getBoundingClientRect();
+          const glyph=document.querySelector('#element-'+n[1].id+' .neume-box span.neume').getBoundingClientRect();
+          return (glyph.right-2-(marker.left+marker.right)/2)/w.score.pageSetup.neumeDefaultFontSize;
+        })()`);
+        await edit([
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: anchor.elementRef,
+            properties: {
+              footnoteOffsetX: tallOffset,
+              footnoteOffsetY: 0.4,
+            },
+          },
+        ]);
+        await eventually(async () =>
+          assert.deepEqual(await markerClearance(), []),
+        );
         const neumeDistance = await distance();
         await edit([
           {
@@ -307,7 +340,10 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
             properties: { footnoteOffsetY: -2 },
           },
         ]);
-        assert.ok(neumeDistance > (await distance()) + 1);
+        assert.ok(Math.abs(neumeDistance - (await distance())) < 0.01);
+        await eventually(async () =>
+          assert.deepEqual(await markerClearance(), []),
+        );
         await edit([
           {
             action: 'update',
@@ -331,9 +367,33 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
           {
             action: 'update_footnote',
             footnoteId: secondAnchor.properties.footnoteId,
-            marker: 'MMMMMMMMMMMM',
+            marker: '††',
           },
         ]);
+        // Place two realistic reference markers at the same horizontal center.
+        await edit([
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: anchor.elementRef,
+            properties: {
+              footnoteOffsetX: neighborOffset / 2,
+              footnoteOffsetY: 0,
+            },
+          },
+          {
+            action: 'update',
+            elementType: 'Note',
+            elementRef: secondAnchor.elementRef,
+            properties: {
+              footnoteOffsetX: -neighborOffset / 2,
+              footnoteOffsetY: 0,
+            },
+          },
+        ]);
+        await eventually(async () =>
+          assert.deepEqual(await markerClearance(), []),
+        );
         const markerDistance = await distance();
         await edit([
           {
@@ -343,11 +403,14 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
             properties: { footnoteOffsetY: -2 },
           },
         ]);
-        assert.ok(markerDistance > (await distance()) + 1);
+        assert.ok(Math.abs(markerDistance - (await distance())) < 0.01);
+        await eventually(async () =>
+          assert.deepEqual(await markerClearance(), []),
+        );
       }
     }
   }
   console.log(
-    'PASS: marker ink reserves horizontal space for barlines, neighboring neumes, and other markers in LTR and RTL',
+    'PASS: markers clear barlines, neighboring neumes, and other markers without changing horizontal layout in LTR and RTL',
   );
 }

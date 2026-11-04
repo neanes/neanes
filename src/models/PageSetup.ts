@@ -1,4 +1,9 @@
 import { Unit } from '../utils/Unit';
+import type {
+  FootnoteFormat,
+  FootnoteNumbering,
+  FootnoteSymbolSequence,
+} from './FootnoteNumbering';
 
 export type PageSize =
   | 'A3'
@@ -113,6 +118,9 @@ export class PageSetup {
   public showFooter = false;
   public richHeaderFooter = false;
   public firstPageNumber = 1;
+  public footnoteFormat: FootnoteFormat = 'numbers';
+  public footnoteNumbering: FootnoteNumbering = 'continuous';
+  public footnoteSymbolSequence: FootnoteSymbolSequence = 'standard';
   public firstFootnoteNumber = 1;
   public footnoteReferenceParentheses = true;
   public showFootnoteHorizontalRule = true;

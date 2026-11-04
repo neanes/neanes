@@ -8,6 +8,8 @@ import type { Score } from '@/models/Score';
 export type MeasuredTextBox = TextBoxElement | RichTextBoxElement;
 export interface TextBoxHeightMeasurement {
   element: MeasuredTextBox;
+  // Assigned layout width used to render this measurement.
+  width: number;
   height: number;
 }
 

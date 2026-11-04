@@ -73,7 +73,7 @@ const paragraphStyleCss = computed(() =>
 );
 const measurers = new Map<
   MeasuredTextBox,
-  { measureHeight(): Promise<number> }
+  { measureTextBox(): Promise<TextBoxHeightMeasurement> }
 >();
 let disposed = false;
 const timer = setTimeout(() => {
@@ -86,7 +86,10 @@ function setMeasurer(element: MeasuredTextBox, instance: unknown) {
   if (instance == null) {
     measurers.delete(element);
   } else {
-    measurers.set(element, instance as { measureHeight(): Promise<number> });
+    measurers.set(
+      element,
+      instance as { measureTextBox(): Promise<TextBoxHeightMeasurement> },
+    );
   }
 }
 
@@ -97,10 +100,7 @@ onMounted(async () => {
       throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
     }
     const heights = await Promise.all(
-      elements.map(async (element) => ({
-        element,
-        height: await measurers.get(element)!.measureHeight(),
-      })),
+      elements.map((element) => measurers.get(element)!.measureTextBox()),
     );
     if (!disposed) {
       clearTimeout(timer);

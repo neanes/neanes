@@ -1,54 +1,97 @@
 import { describe, expect, it } from 'vitest';
 
 import { TextBoxElement } from '@/models/Element';
-import { Score } from '@/models/Score';
+import { Workspace } from '@/models/Workspace';
 
 import { LayoutReconciliation } from './layoutReconciliation';
+import { beginLayoutOperation } from './layoutReservations';
 
 describe('detached layout reconciliation', () => {
   it('aggregates repeated template heights and retains their maximum across passes', () => {
-    const score = new Score();
+    const workspace = new Workspace();
+    const score = workspace.score;
     const header = score.headers.default.elements[0] as TextBoxElement;
     const body = new TextBoxElement();
     score.staff.elements.unshift(body);
+    beginLayoutOperation(workspace);
     const state = new LayoutReconciliation();
     expect(
       state.apply(score, [
-        { element: header, height: 60 },
-        { element: header, height: 100 },
-        { element: body, height: 80 },
+        { element: header, width: header.width, height: 60 },
+        { element: header, width: header.width, height: 100 },
+        { element: body, width: body.width, height: 80 },
       ]),
     ).toBe(true);
     expect(header.height).toBe(100);
     expect(body.height).toBe(80);
     expect(
       state.apply(score, [
-        { element: header, height: 50 },
-        { element: body, height: 80.001 },
+        { element: header, width: header.width, height: 50 },
+        { element: body, width: body.width, height: 80.001 },
       ]),
     ).toBe(false);
     expect(header.height).toBe(100);
     expect(
       state.apply(score, [
-        { element: header, height: 110 },
-        { element: body, height: 70 },
+        { element: header, width: header.width, height: 110 },
+        { element: body, width: body.width, height: 70 },
       ]),
     ).toBe(true);
-    expect(body.height).toBe(70);
+    expect(body.height).toBe(80);
   });
 
   it('bounds oscillating layout passes and accepts convergence within the limit', () => {
-    const score = new Score();
+    const workspace = new Workspace();
+    const score = workspace.score;
     const body = new TextBoxElement();
+    score.staff.elements.unshift(body);
+    beginLayoutOperation(workspace);
     const state = new LayoutReconciliation();
     for (let i = 0; i < 11; i++) {
-      expect(state.apply(score, [{ element: body, height: 100 + i }])).toBe(
-        true,
-      );
+      expect(
+        state.apply(score, [
+          { element: body, width: body.width, height: 100 + i },
+        ]),
+      ).toBe(true);
     }
-    expect(state.apply(score, [{ element: body, height: 110 }])).toBe(false);
-    expect(() => state.apply(score, [{ element: body, height: 111 }])).toThrow(
-      'LAYOUT_DID_NOT_SETTLE',
-    );
+    expect(
+      state.apply(score, [{ element: body, width: body.width, height: 110 }]),
+    ).toBe(false);
+    expect(() =>
+      state.apply(score, [{ element: body, width: body.width, height: 111 }]),
+    ).toThrow('LAYOUT_DID_NOT_SETTLE');
+  });
+
+  it('rejects delayed measurements at an obsolete width without poisoning current reservations', () => {
+    const workspace = new Workspace();
+    const body = new TextBoxElement();
+    workspace.score.staff.elements.unshift(body);
+    body.width = 300;
+    body.height = 22;
+    beginLayoutOperation(workspace);
+    const state = new LayoutReconciliation();
+    expect(
+      state.apply(workspace.score, [
+        { element: body, width: 200, height: 100 },
+        { element: body, width: 300, height: 22 },
+        { element: body, width: 400, height: 10 },
+      ]),
+    ).toBe(true);
+    expect(body.height).toBe(22);
+    expect(
+      state.apply(workspace.score, [{ element: body, width: 300, height: 22 }]),
+    ).toBe(false);
+    body.width = 400;
+    expect(
+      state.apply(workspace.score, [
+        { element: body, width: 400, height: 12 },
+        { element: body, width: 300, height: 100 },
+      ]),
+    ).toBe(true);
+    expect(body.height).toBe(12);
+    expect(
+      state.apply(workspace.score, [{ element: body, width: 400, height: 10 }]),
+    ).toBe(false);
+    expect(body.height).toBe(12);
   });
 });

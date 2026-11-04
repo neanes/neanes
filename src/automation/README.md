@@ -72,11 +72,25 @@ references create an empty staff.
 Removing its main-score reference removes the body in the same history operation;
 copying the reference copies the body with a new identity.
 
-`get_page_setup` / `update_page_setup` expose `firstFootnoteNumber`,
+`get_page_setup` / `update_page_setup` expose `footnoteFormat` (`numbers` or
+`symbols`), `footnoteNumbering` (`continuous`, `page`, or `section`),
+`footnoteSymbolSequence` (currently `standard`), `firstFootnoteNumber`,
 `showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent), and
 `footnoteReferenceParentheses` (defaults to true; applies to Note and Martyria
 reference markers). Placement and collision clearance use measured marker
-ink bounds.
+ink bounds. Symbol positions use the same 1-based `firstFootnoteNumber`:
+`U+002A`, `U+2020`, `U+2021`, `U+00A7`, `U+00B6`, `U+2016`, then each symbol
+twice, three times, and so on. Starting values are limited to 1,000,000 for
+numbers or a label of at most 64 repeated symbols (positions 1-384 in the
+standard sequence). Invalid starts are rejected before applying settings; the
+automatic sequence itself can continue beyond this starting-value limit.
+Changing format resets the start to 1 and selects continuous numbering for
+numbers or page restarts for symbols, unless the request explicitly supplies
+those settings. Resending the current format preserves the start and numbering.
+Page restarts follow physical pages, independent of displayed page numbers.
+Section restarts use the same nonempty section running markers as the editor;
+content before the first marker belongs to the initial section. Neither page
+nor section restarts consume sequence entries for custom markers.
 Use `update_footnote` with `footnoteId` and `marker` to change a marker. Null restores
 automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters
 without control characters, and do not consume an automatic number. `get_elements`
@@ -92,8 +106,10 @@ the musical baseline, rising only as needed for collision clearance.
 Replacing a musical anchor preserves its footnote and marker offsets; explicit
 replacement offsets override the inherited value independently for each axis.
 Edit `footnoteOffsetX` / `footnoteOffsetY` on Note or Martyria elements (in neume-font em units; positive means right/down). Collision
-clearance raises the marker after applying these offsets and accounts for the
-attached marks' own offsets. The Footnote Properties dialog exposes these same
+clearance raises the marker after applying these offsets and accounts for
+collision regions across the finished musical line, including neighboring
+neumes, barlines, and other reference markers. Musical references do not reserve
+horizontal space or change line/page breaks. The Footnote Properties dialog exposes these same
 values with a preview and reset control.
 
 Page occurrence readers include the `footnote` region; page line counts include
@@ -101,6 +117,13 @@ main and footnote lines. Range selections can identify the active footnote
 collection. Footnote numbering follows document reference order across pages.
 `get_staff_lyrics` and the `set_staff_lyrics` edit action also accept this
 collection selector for independent authoritative footnote lyrics.
+Layout settlement retains the largest measured rich-text heights at the current
+body width, intrinsic inline widths, and displayed-label gutter within each operation. These
+reservations are transient and reset for content, settings, and font changes;
+fresh natural measurements replace saved height caches. Width changes discard
+the previous height maximum, and delayed measurements at an obsolete width
+request another measurement pass. Editor automation, private workers, and
+detached exports use the same reservation rules.
 Whole-footnote pagination is used initially. An oversized body remains editable
 and saveable, but settled page discovery/visual export fails explicitly until it
 fits. Run the self-launching `footnotes` integration scenario for both document

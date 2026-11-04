@@ -31,6 +31,7 @@ import {
   getScoreFontLoadDescriptors,
 } from '@/services/rendering/fontReadiness';
 import { LayoutReconciliation } from '@/services/rendering/layoutReconciliation';
+import { beginLayoutOperation } from '@/services/rendering/layoutReservations';
 import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { SaveService } from '@/services/SaveService';
@@ -91,6 +92,7 @@ onMounted(async () => {
     );
     await document.fonts.ready;
     if (!stopped) {
+      beginLayoutOperation(props.workspace, true);
       pages.value = processPages();
     }
   } catch (error) {

@@ -254,11 +254,20 @@
     "neumeBulkColor": "Change Color of Multiple Neumes",
     "neumeBulkColorDescription": "To change the color of multiple neumes at once, select the neume types above, choose a color, and click the button to apply the color to all selected neumes.",
     "footnotes": "Footnotes",
-    "firstFootnoteNumber": "First Footnote Number",
-    "firstFootnoteNumberDescription": "The starting number for footnotes. Numbering continues throughout the document.",
+    "firstFootnoteNumber": "Starts at",
     "footnoteReferenceParentheses": "Wrap musical footnote markers in parentheses",
     "showFootnoteHorizontalRule": "Show separator above footnotes",
-    "footnoteHorizontalRuleLength": "Separator Length (%)"
+    "footnoteHorizontalRuleLength": "Separator Length (%)",
+    "footnoteFormat": "Format",
+    "footnoteNumbering": "Numbering",
+    "footnoteContinuous": "Continuous",
+    "footnoteRestartPage": "Restart each page",
+    "footnoteRestartSection": "Restart each section",
+    "nextFootnoteSymbol": "Next symbol",
+    "previousFootnoteSymbol": "Previous symbol",
+    "invalidFootnoteSymbol": "Enter a symbol from the sequence, repeated up to {{count}} times.",
+    "footnoteNumbers": "1, 2, 3, …",
+    "footnoteSymbols": "*, †, ‡, …"
   },
   "playbackSettings": {
     "root": "Playback Settings",
@@ -369,16 +378,11 @@
     "positionHint": "Offsets apply before automatic collision clearance. Positive values move right or down.",
     "resetPosition": "Reset position",
     "title": "Footnote Properties",
-    "description": "Choose a marker for this footnote. Custom markers do not use an automatic number.",
-    "marker": "Marker",
-    "automatic": "Automatic number",
-    "asterisk": "Asterisk",
-    "dagger": "Dagger",
-    "doubleDagger": "Double dagger",
-    "custom": "Custom",
+    "description": "Automatic markers follow Page Setup. Custom markers do not advance the automatic sequence.",
     "customText": "Custom text",
     "reference": "Reference",
     "body": "Footnote label",
-    "invalid": "Enter 1–16 characters without line breaks."
+    "invalid": "Enter 1–16 characters without line breaks.",
+    "useCustomMarker": "Use custom marker"
   }
 }

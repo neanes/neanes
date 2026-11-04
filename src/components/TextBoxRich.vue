@@ -157,6 +157,7 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { elementLayoutOperation } from '@/services/rendering/layoutReservations';
 import {
   getFontFamilyWithFallback,
   getLegacyNeumeFontFamily,
@@ -473,11 +474,15 @@ const containerStyle = computed(() => {
 const textBoxStyle = computed(() => {
   const style: StyleValue = {
     width: `${props.element.width}px`, // no zoom because we scale with the transform
-    maxHeight: withZoom(
-      props.pageSetup.pageHeight -
-        props.element.y -
-        props.pageSetup.bottomMargin,
-    ),
+    // Scrollable boxes must use the same clipped height during measurement.
+    // Ordinary boxes are measured naturally, independently of page position.
+    maxHeight: props.element.scrollable
+      ? withZoom(
+          props.pageSetup.pageHeight -
+            props.element.y -
+            props.pageSetup.bottomMargin,
+        )
+      : undefined,
   };
 
   return style;
@@ -562,6 +567,7 @@ watch(
 
 onBeforeUnmount(() => {
   unmounting.value = true;
+  debouncedPhoneHome.cancel();
   update();
   // Observers are disconnected automatically by useResizeObserver's own
   // onBeforeUnmount hook.
@@ -606,7 +612,7 @@ async function whenReady() {
   await nextTick();
 }
 
-async function measureHeight() {
+async function measureTextBox() {
   await whenReady();
   await document.fonts.ready;
   refreshCkContentFontSize();
@@ -615,7 +621,7 @@ async function measureHeight() {
   if (height == null || !Number.isFinite(height)) {
     throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
   }
-  return height;
+  return { element: props.element, width: props.element.width, height };
 }
 
 function getActiveEditorInstances() {
@@ -634,7 +640,13 @@ function getActiveEditorInstances() {
   return [getEditorInstance()];
 }
 
-function phoneHome(height: number) {
+function phoneHome(
+  height: number,
+  operation = elementLayoutOperation(props.element),
+) {
+  if (unmounting.value || operation !== elementLayoutOperation(props.element)) {
+    return;
+  }
   emit('update:height', height);
 }
 
@@ -673,7 +685,7 @@ function emitRecalculatedHeightIfNeeded() {
   const height = getHeight();
 
   if (height != null && Math.abs(props.element.height - height) > 0.001) {
-    debouncedPhoneHome(height);
+    debouncedPhoneHome(height, elementLayoutOperation(props.element));
   }
 }
 
@@ -717,7 +729,10 @@ function observeBlockHeight() {
         Math.abs(props.element.height - resizedHeight) > 0.001
       ) {
         if (props.recalc) {
-          debouncedPhoneHome(resizedHeight);
+          debouncedPhoneHome(
+            resizedHeight,
+            elementLayoutOperation(props.element),
+          );
         } else {
           // A resize is pure geometry -- there is no pending edit to persist. Route
           // through `update:height` (-> updateRichTextBoxHeight, which only sets
@@ -996,7 +1011,7 @@ function focus() {
 
 defineExpose({
   whenReady,
-  measureHeight,
+  measureTextBox,
   focus,
   getPendingUpdates,
   htmlElement,

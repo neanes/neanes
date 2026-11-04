@@ -271,6 +271,12 @@ import {
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
+import {
+  applyLiveTextBoxHeight,
+  invalidateLayoutFonts,
+  layoutReservations,
+  reserveTextBoxHeight,
+} from '@/services/rendering/layoutReservations';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
@@ -315,8 +321,8 @@ import {
 import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import {
+  isSectionMarker,
   resolveRunningMarkerPageMetadata,
-  resolveRunningMarkerText,
 } from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
@@ -1696,7 +1702,17 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
   }
 });
 
+function onLayoutFontsChanged() {
+  invalidateLayoutFonts();
+  saveDebounced();
+}
+onBeforeUnmount(() => {
+  document.fonts.removeEventListener('loadingdone', onLayoutFontsChanged);
+  document.fonts.removeEventListener('loadingerror', onLayoutFontsChanged);
+});
 onMounted(() => {
+  document.fonts.addEventListener('loadingdone', onLayoutFontsChanged);
+  document.fonts.addEventListener('loadingerror', onLayoutFontsChanged);
   const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
 
   if (savedAudioOptions != null) {
@@ -2635,23 +2651,6 @@ function getSectionCount() {
     sectionMarkers.length +
     (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
   );
-}
-
-function isSectionMarker(element: ScoreElement) {
-  if (
-    element.elementType !== ElementType.TextBox &&
-    element.elementType !== ElementType.RichTextBox
-  ) {
-    return false;
-  }
-
-  const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
-
-  if (runningMarkerElement.runningMarkerRole !== 'section') {
-    return false;
-  }
-
-  return resolveRunningMarkerText(runningMarkerElement) != null;
 }
 
 function activateContent(element: ScoreElement) {
@@ -5597,6 +5596,9 @@ function save() {
     });
 
   pages.value = processedPages;
+  if (layoutReservations(score.value)?.pending) {
+    saveDebounced();
+  }
 
   if (lyricSelection != null) {
     nextTick(() => {
@@ -6851,7 +6853,7 @@ function updateRichTextBox(
 
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
-    element.height = newValues.height;
+    element.height = reserveTextBoxHeight(element, newValues.height);
     save();
     return;
   }
@@ -6953,7 +6955,11 @@ function flushPendingAnnotationEditor() {
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
-  element.height = height;
+  if (isActiveEditorForOwner(element)) {
+    applyLiveTextBoxHeight(element, height);
+  } else {
+    element.height = reserveTextBoxHeight(element, height);
+  }
   richTextBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -6964,7 +6970,7 @@ function updateTextBox(
 ) {
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
-    element.height = newValues.height;
+    element.height = reserveTextBoxHeight(element, newValues.height);
     save();
     return;
   }
@@ -6982,7 +6988,7 @@ function updateTextBox(
 function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
-  element.height = height;
+  element.height = reserveTextBoxHeight(element, height);
   textBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -10741,7 +10747,7 @@ function renderTabLabel(tab: Tab) {
       "
       :page-setup="score.pageSetup"
       :paragraph-styles="score.paragraphStyles"
-      :automatic-number="editedFootnote.automaticNumber"
+      :automatic-marker="editedFootnote.automaticMarker"
       :rich-text-reference="
         editedFootnote.reference instanceof RichTextBoxElement
       "

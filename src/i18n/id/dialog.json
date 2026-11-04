@@ -254,11 +254,20 @@
     "neumeBulkColor": "Ubah Warna Beberapa Neuma",
     "neumeBulkColorDescription": "Untuk mengubah warna beberapa neuma sekaligus, pilih jenis neuma di atas, pilih warna, dan klik tombol untuk menerapkan warna ke semua neuma yang dipilih.",
     "footnotes": "Catatan Kaki",
-    "firstFootnoteNumber": "Nomor Catatan Kaki Pertama",
-    "firstFootnoteNumberDescription": "Nomor awal catatan kaki. Penomoran berlanjut di seluruh dokumen.",
+    "firstFootnoteNumber": "Mulai dari",
     "footnoteReferenceParentheses": "Apit penanda catatan kaki musik dengan tanda kurung",
     "showFootnoteHorizontalRule": "Tampilkan garis pemisah di atas catatan kaki",
-    "footnoteHorizontalRuleLength": "Panjang Garis Pemisah (%)"
+    "footnoteHorizontalRuleLength": "Panjang Garis Pemisah (%)",
+    "footnoteFormat": "Format",
+    "footnoteNumbering": "Penomoran",
+    "footnoteContinuous": "Berkelanjutan",
+    "footnoteRestartPage": "Mulai ulang setiap halaman",
+    "footnoteRestartSection": "Mulai ulang setiap bagian",
+    "nextFootnoteSymbol": "Simbol berikutnya",
+    "previousFootnoteSymbol": "Simbol sebelumnya",
+    "invalidFootnoteSymbol": "Masukkan simbol dari urutan, diulang hingga {{count}} kali.",
+    "footnoteNumbers": "1, 2, 3, …",
+    "footnoteSymbols": "*, †, ‡, …"
   },
   "playbackSettings": {
     "root": "Pengaturan Pemutaran",
@@ -369,16 +378,11 @@
     "positionHint": "Pergeseran diterapkan sebelum penyesuaian otomatis untuk menghindari tumpang tindih. Nilai positif menggeser ke kanan atau ke bawah.",
     "resetPosition": "Atur ulang posisi",
     "title": "Properti Catatan Kaki",
-    "description": "Pilih penanda untuk catatan kaki ini. Penanda khusus tidak menggunakan nomor otomatis.",
-    "marker": "Penanda",
-    "automatic": "Nomor otomatis",
-    "asterisk": "Asterisk",
-    "dagger": "Belati",
-    "doubleDagger": "Belati ganda",
-    "custom": "Khusus",
+    "description": "Penanda otomatis mengikuti Pengaturan Halaman. Penanda khusus tidak memajukan urutan otomatis.",
     "customText": "Teks khusus",
     "reference": "Referensi",
     "body": "Label catatan kaki",
-    "invalid": "Masukkan 1–16 karakter tanpa baris baru."
+    "invalid": "Masukkan 1–16 karakter tanpa baris baru.",
+    "useCustomMarker": "Gunakan penanda khusus"
   }
 }

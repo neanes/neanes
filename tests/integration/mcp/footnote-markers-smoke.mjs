@@ -4,6 +4,11 @@ import { copyFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { checkFootnoteMarkerCollisionSpacing } from './footnoteMarkerChecks.mjs';
+import { checkFootnoteNumbering } from './footnoteNumberingChecks.mjs';
+import {
+  checkFootnoteColdGutter,
+  checkFootnoteSettlement,
+} from './footnoteSettlementChecks.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
 import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
@@ -88,7 +93,7 @@ try {
     );
     const point = await eventually(async () => {
       const result = await evaluate(
-        `(() => {const n=document.querySelector(${JSON.stringify(selector)}); n.scrollIntoView({block:'center'}); const r=n.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2; return {x,y,hit:n.contains(document.elementFromPoint(x,y))};})()`,
+        `(() => {const n=document.querySelector(${JSON.stringify(selector)}); n.scrollIntoView({block:'center'}); const r=n.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2; let settled=true;for(let p=n;p;p=p.parentElement){if(p.getAnimations().some(a=>a.playState==='running')) settled=false;}return {x,y,hit:settled&&n.contains(document.elementFromPoint(x,y))};})()`,
       );
       assert.ok(
         result.hit,
@@ -115,12 +120,16 @@ try {
     );
   }
   async function choose(value) {
-    await click('#footnote-marker-type');
-    const index = await evaluate(
-      `[...document.querySelectorAll('[role="option"]')].findIndex(n=>n.textContent.includes(${JSON.stringify(value)}))`,
+    const custom = value !== null;
+    const enabled = await evaluate(
+      "!document.querySelector('#footnote-custom-marker').disabled",
     );
-    assert.ok(index >= 0);
-    await click(`[role="option"]:nth-child(${index + 1})`);
+    if (enabled !== custom) {
+      await click('#footnote-custom-enabled');
+    }
+    if (custom) {
+      await input(value);
+    }
   }
   async function input(value) {
     await evaluate(
@@ -183,7 +192,7 @@ try {
     'Rich text automatic numbers have no parentheses',
   );
   await open(marker(ids[1]));
-  await choose('Asterisk');
+  await choose('*');
   assert.equal(await text('[data-testid="footnote-marker-preview"]'), '(*)');
   assert.equal(await text('[data-testid="footnote-body-preview"]'), '*');
   assert.equal(
@@ -212,7 +221,7 @@ try {
   await eventually(async () => assert.equal(await text(marker(ids[1])), '(*)'));
   // Body labels open the same dialog without replacing element properties.
   await open(label(ids[1]));
-  await choose('Custom');
+  await choose('Ref A');
   await input('x'.repeat(17));
   assert.equal(
     await evaluate(
@@ -232,7 +241,7 @@ try {
   assert.equal(await text(label(ids[1])), 'Ref A');
   // Right-click a rich text widget, keeping ordinary rich text context menus intact.
   await open(marker(ids[2], true));
-  await choose('Dagger');
+  await choose('\u2020');
   assert.equal(await text('[data-testid="footnote-marker-preview"]'), '\u2020');
   await update();
   await eventually(async () =>
@@ -241,7 +250,7 @@ try {
   assert.equal(await text(label(ids[2])), '\u2020');
   assert.equal(await text(marker(ids[3])), '(99)');
   await open(marker(ids[1]));
-  await choose('Automatic');
+  await choose(null);
   assert.equal(await text('[data-testid="footnote-marker-preview"]'), '(99)');
   await update();
   await eventually(async () =>
@@ -250,7 +259,7 @@ try {
   assert.equal(await text(marker(ids[3])), '(100)');
   // Cancel must leave the existing marker untouched.
   await open(label(ids[1]));
-  await choose('Double dagger');
+  await choose('\u2021');
   await evaluate(
     `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Cancel').click()`,
   );
@@ -673,6 +682,16 @@ try {
     path.join(app.directory, 'positioned-markers.png'),
   );
   await checkFootnoteMarkerCollisionSpacing(call, evaluate);
+  await checkFootnoteNumbering({
+    call,
+    evaluate,
+    click,
+    dispatch: undo,
+    socket,
+    directory: app.directory,
+  });
+  await checkFootnoteSettlement(call, evaluate, app.directory);
+  await checkFootnoteColdGutter(call, evaluate, app.directory);
   console.log(
     `PASS: marker properties, context menus, numbering, previews, Undo/Redo, save/reopen, rendering. Artifacts: ${app.directory}`,
   );

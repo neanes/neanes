@@ -1409,16 +1409,13 @@ async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
       .filter(({ element }) =>
         resizable.has(element as TextBoxElement | RichTextBoxElement),
       )
-      .map(async ({ element, name }) => {
+      .map(async ({ name }) => {
         const component = localRefs.get(name) as
           InstanceType<typeof TextBox | typeof TextBoxRich> | undefined;
         if (component == null) {
           throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
         }
-        return {
-          element: element as TextBoxElement | RichTextBoxElement,
-          height: await component.measureHeight(),
-        };
+        return component.measureTextBox();
       }),
   );
 }

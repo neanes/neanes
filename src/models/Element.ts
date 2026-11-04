@@ -156,17 +156,11 @@ export abstract class FootnoteAnchorElement extends ScoreElement {
   public footnoteId: string | null = null;
   public footnoteOffsetX = 0;
   public footnoteOffsetY = 0;
-  // Derived before line breaking; identity is independent of the displayed number.
+  // Derived after pagination; identity is independent of the displayed number.
   public footnoteNumber: number | null = null;
   public footnoteMarker: string | null = null;
   public footnoteMarkerOffset = 0;
   public footnoteMarkerTop = 0;
-  // Measured before line breaking; used by neume and barline collision spacing.
-  public footnoteMarkerMetrics: {
-    width: number;
-    height: number;
-    strokeWidth: number;
-  } | null = null;
 }
 
 export class NoteElement extends FootnoteAnchorElement {

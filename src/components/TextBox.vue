@@ -404,6 +404,9 @@ function setupResizeObserver() {
     observeResize(
       elements,
       throttle(100, () => {
+        if (unmounting.value) {
+          return;
+        }
         const resizedHeight = getHeight();
 
         if (
@@ -459,7 +462,7 @@ function onBlur() {
   }
 }
 
-async function measureHeight() {
+async function measureTextBox() {
   await nextTick();
   await document.fonts.ready;
   await nextTick();
@@ -467,12 +470,12 @@ async function measureHeight() {
   if (height == null || !Number.isFinite(height)) {
     throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
   }
-  return height;
+  return { element: props.element, width: props.element.width, height };
 }
 
 defineExpose({
   getPendingUpdates,
-  measureHeight,
+  measureTextBox,
   blur,
   focus,
   getTextElement,

@@ -1114,6 +1114,9 @@ export class SaveService {
     }
 
     pageSetup.firstPageNumber = p.firstPageNumber;
+    pageSetup.footnoteFormat = p.footnoteFormat;
+    pageSetup.footnoteNumbering = p.footnoteNumbering;
+    pageSetup.footnoteSymbolSequence = p.footnoteSymbolSequence;
     pageSetup.firstFootnoteNumber =
       p.firstFootnoteNumber !== 1 ? p.firstFootnoteNumber : undefined;
     pageSetup.footnoteReferenceParentheses = p.footnoteReferenceParentheses;
@@ -1880,6 +1883,9 @@ export class SaveService {
     pageSetup.showFooter = p.showFooter === true;
     pageSetup.richHeaderFooter = p.richHeaderFooter === true;
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
+    pageSetup.footnoteFormat = p.footnoteFormat ?? 'numbers';
+    pageSetup.footnoteNumbering = p.footnoteNumbering ?? 'continuous';
+    pageSetup.footnoteSymbolSequence = p.footnoteSymbolSequence ?? 'standard';
     pageSetup.firstFootnoteNumber = p.firstFootnoteNumber ?? 1;
     pageSetup.footnoteReferenceParentheses =
       p.footnoteReferenceParentheses ?? true;

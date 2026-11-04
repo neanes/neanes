@@ -30,13 +30,13 @@ import { EditorPreferences } from '@/models/EditorPreferences';
 import { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { fontCatalog } from '@/services/FontCatalog';
-import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
 import {
   getBundledFontLoadDescriptors,
   loadFontFamilies,
   loadScoreFonts,
 } from '@/services/rendering/fontReadiness';
+import { settleWorkspace } from '@/services/rendering/settleWorkspace';
 import { SaveService } from '@/services/SaveService';
 
 const language = 'en';
@@ -76,10 +76,10 @@ async function settle(workspace: Workspace) {
   }
   const complete = settlements.begin(workspace);
   await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
-  LayoutService.processPages(workspace);
-  await textBoxes.start(workspace);
-  await nextTick();
-  LayoutService.processPages(workspace);
+  await settleWorkspace(workspace, async () => {
+    await nextTick();
+    return textBoxes.start(workspace);
+  });
   complete();
 }
 const hooks = {

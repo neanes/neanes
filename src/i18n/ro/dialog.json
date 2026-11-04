@@ -254,11 +254,20 @@
     "neumeBulkColor": "Schimbă culoarea mai multor neume",
     "neumeBulkColorDescription": "Pentru a schimba culoarea mai multor neume simultan, selectați tipurile de neume de mai sus, alegeți o culoare și apăsați butonul pentru a aplica culoarea tuturor neumelor selectate.",
     "footnotes": "Note de subsol",
-    "firstFootnoteNumber": "Numărul primei note de subsol",
-    "firstFootnoteNumberDescription": "Numărul de început al notelor de subsol. Numerotarea continuă în întregul document.",
+    "firstFootnoteNumber": "Începe de la",
     "footnoteReferenceParentheses": "Încadrează în paranteze marcajele notelor de subsol muzicale",
     "showFootnoteHorizontalRule": "Afișează linia separatoare deasupra notelor de subsol",
-    "footnoteHorizontalRuleLength": "Lungimea liniei separatoare (%)"
+    "footnoteHorizontalRuleLength": "Lungimea liniei separatoare (%)",
+    "footnoteFormat": "Format",
+    "footnoteNumbering": "Numerotare",
+    "footnoteContinuous": "Continuă",
+    "footnoteRestartPage": "Reîncepe la fiecare pagină",
+    "footnoteRestartSection": "Reîncepe la fiecare secțiune",
+    "nextFootnoteSymbol": "Simbolul următor",
+    "previousFootnoteSymbol": "Simbolul anterior",
+    "invalidFootnoteSymbol": "Introduceți un simbol din secvență, repetat de cel mult {{count}} ori.",
+    "footnoteNumbers": "1, 2, 3, …",
+    "footnoteSymbols": "*, †, ‡, …"
   },
   "playbackSettings": {
     "root": "Setări de redare",
@@ -369,16 +378,11 @@
     "positionHint": "Deplasările se aplică înainte de evitarea automată a suprapunerilor. Valorile pozitive deplasează spre dreapta sau în jos.",
     "resetPosition": "Resetare poziție",
     "title": "Proprietățile notei de subsol",
-    "description": "Alegeți un marcaj pentru această notă de subsol. Marcajele personalizate nu consumă un număr automat.",
-    "marker": "Marcaj",
-    "automatic": "Număr automat",
-    "asterisk": "Asterisc",
-    "dagger": "Cruce",
-    "doubleDagger": "Cruce dublă",
-    "custom": "Personalizat",
+    "description": "Marcajele automate respectă Configurarea paginii. Marcajele personalizate nu avansează secvența automată.",
     "customText": "Text personalizat",
     "reference": "Referință",
     "body": "Eticheta notei de subsol",
-    "invalid": "Introduceți 1–16 caractere fără întreruperi de rând."
+    "invalid": "Introduceți 1–16 caractere fără întreruperi de rând.",
+    "useCustomMarker": "Folosește un marcaj personalizat"
   }
 }

@@ -89,13 +89,11 @@ body recovery, copying with new identities, undo/redo, BYZ/BYZX save/reopen, and
 PNG/PDF rendering. Its disposable output directory retains visual artifacts.
 
 Marker geometry checks cover centered markers, unchanged natural and justified
-spacing when markers do not collide, tight lines, centered line endings, and RTL
-placement. Marker ink participates in horizontal spacing and barline clearance
-when it overlaps neighboring ink. `footnote-markers` checks single, short, and
-centered barline spacing on both sides, neighboring neumes, and marker-to-marker
-spacing in LTR and RTL. Rendered barline ink gaps are checked in LTR; RTL barline offsets have a separate
-existing coordinate mismatch. Rendered examples are retained with the footnote
-artifacts.
+spacing, tight lines, centered line endings, and RTL placement. Collision
+clearance raises markers above overlapping ink without changing horizontal
+layout. `footnote-markers` checks clearance from single, short, and centered
+barlines on both sides, neighboring neumes, and other reference markers in LTR
+and RTL. Rendered examples are retained with the footnote artifacts.
 
 `footnote-styles-context` checks pitch/scale inheritance from musical anchors,
 local body music, anchor edits, paragraph-style marker typography, martyria save
@@ -109,10 +107,11 @@ clipboard to copy a marker across documents, checking fresh body identities,
 custom lyric style imports, and a single undo step for the complete paste.
 
 `footnote-markers` exercises Footnote Properties through real context menus on
-neume references, rich text widgets, and footnote body labels. It checks preset
-symbols, custom-text validation, previews, cancel, automatic-number restoration,
-number skipping, Undo/Redo, plain rich-text labels versus parenthesized neume
-labels, MCP marker metadata, BYZ/BYZX persistence, PNG rendering, and navigation.
+neume references, rich text widgets, and footnote body labels. It checks the
+custom-marker checkbox, custom-text validation, previews, cancel,
+automatic-marker restoration, number skipping, Undo/Redo, plain rich-text labels
+versus parenthesized neume labels, MCP marker metadata, BYZ/BYZX persistence, PNG
+rendering, and navigation.
 It also checks gorgon clearance after mark and reference offsets, musical-anchor
 position controls and previews, reset, undo/redo, and martyria footnote persistence.
 Tempo elements reject footnote insertion and offer no footnote context-menu actions.

@@ -1,4 +1,8 @@
-import type { RichTextBoxElement, RunningMarkerRole } from '@/models/Element';
+import type {
+  RichTextBoxElement,
+  RunningMarkerRole,
+  ScoreElement,
+} from '@/models/Element';
 import { ElementType, TextBoxElement } from '@/models/Element';
 import type { Page } from '@/models/Page';
 
@@ -203,4 +207,18 @@ function normalizeRunningMarkerText(value: string | null | undefined) {
   const normalized = value?.replace(/\s+/g, ' ').trim();
 
   return normalized ? normalized : null;
+}
+
+export function isSectionMarker(element: ScoreElement) {
+  if (
+    element.elementType !== ElementType.TextBox &&
+    element.elementType !== ElementType.RichTextBox
+  ) {
+    return false;
+  }
+  const marker = element as TextBoxElement | RichTextBoxElement;
+  return (
+    marker.runningMarkerRole === 'section' &&
+    resolveRunningMarkerText(marker) !== null
+  );
 }

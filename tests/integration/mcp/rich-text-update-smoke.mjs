@@ -226,6 +226,89 @@ try {
         (await content(field)).content.includes('USER_BLUR'),
         'Blur must preserve genuine typing',
       );
+
+      const beforeTyping = await content(field);
+      const beforeHeight = await evaluate(
+        `${workspace}.score.staff.elements.find(e=>e.id===${id}).height`,
+      );
+      const beforeHistory = await historyLength();
+      await typeInReadyEditor(
+        selector,
+        beforeTyping.content,
+        'Long editing paragraph with words that wrap. '.repeat(50),
+      );
+      await eventually(async () => {
+        assert.ok(
+          (await evaluate(
+            `${workspace}.score.staff.elements.find(e=>e.id===${id}).height`,
+          )) > beforeHeight,
+          'Pending typing must grow the layout height',
+        );
+      });
+      const grownHeight = await evaluate(
+        `${workspace}.score.staff.elements.find(e=>e.id===${id}).height`,
+      );
+      await evaluate(`(() => {
+        const editor=document.querySelector(${JSON.stringify(selector)}).ckeditorInstance;
+        editor.execute('selectAll');
+        editor.execute('delete');
+      })()`);
+      await eventually(async () => {
+        const state = await evaluate(`(() => {
+          const node=document.querySelector(${JSON.stringify(selector)});
+          const w=${workspace}, element=w.score.staff.elements.find(e=>e.id===${id});
+          const zoom=Number(getComputedStyle(node).getPropertyValue('--zoom'));
+          return {
+            focused:node.ckeditorInstance.ui.focusTracker.isFocused,
+            content:node.ckeditorInstance.getData(),
+            height:element.height,
+            naturalHeight:node.getBoundingClientRect().height/zoom,
+            revision:w.contentRevision,
+          };
+        })()`);
+        assert.equal(state.focused, true);
+        assert.equal(state.content, '');
+        assert.ok(state.height < grownHeight);
+        assert.ok(Math.abs(state.height - state.naturalHeight) < 0.01);
+        assert.equal(state.revision, beforeTyping.revision);
+        assert.equal(await historyLength(), beforeHistory);
+      });
+    }
+    if (name === 'scrollable') {
+      const before = await content(field);
+      await call('edit_elements', {
+        ...args,
+        expectedRevision: before.revision,
+        actions: [
+          {
+            action: 'update',
+            elementRef: ref,
+            elementType: 'RichTextBox',
+            properties: {
+              content: paragraph('Wrapping content here. '.repeat(250).trim()),
+            },
+          },
+        ],
+      });
+      await eventually(async () => {
+        const geometry = await evaluate(`(() => {
+          const w=${workspace};
+          const element=w.score.staff.elements.find(e=>e.elementType==='RichTextBox');
+          const node=document.querySelector('#element-'+element.id+' .ck-content');
+          return {
+            height:element.height,
+            renderedHeight:node.getBoundingClientRect().height/w.zoom,
+            overflowing:node.scrollHeight>node.clientHeight,
+            footnotes:w.score.footnotes.length,
+          };
+        })()`);
+        assert.equal(geometry.footnotes, 0);
+        assert.equal(geometry.overflowing, true);
+        assert.ok(
+          Math.abs(geometry.height - geometry.renderedHeight) < 0.01,
+          'Scrollable layout height must match its clipped rendering after settlement',
+        );
+      });
     }
     const expected = await content(field);
     const filePath = path.join(directory, `${name}.byzx`);

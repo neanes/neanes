@@ -29,7 +29,13 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, nextTick, onMounted, useTemplateRef } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  useTemplateRef,
+} from 'vue';
 
 import ScorePageContent from '@/components/ScorePageContent.vue';
 import type { ScoreOverlaySettings } from '@/models/EditorPreferences';
@@ -97,6 +103,10 @@ function getTokenMetadata(index: number): TokenMetadata {
 defineExpose({
   getPages: () => [...root.value!.querySelectorAll<HTMLElement>('.page')],
 });
+let disposed = false;
+onBeforeUnmount(() => {
+  disposed = true;
+});
 onMounted(async () => {
   try {
     await nextTick();
@@ -109,8 +119,13 @@ onMounted(async () => {
     const heights = await Promise.all(
       [...pageContents].map((page) => page.measureTextBoxes()),
     );
-    emit('measured', heights.flat());
+    if (!disposed) {
+      emit('measured', heights.flat());
+    }
   } catch (error) {
+    if (disposed) {
+      return;
+    }
     emit(
       'failed',
       error instanceof Error ? error : new Error('EXPORT_RENDER_FAILED'),

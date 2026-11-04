@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
+import { footnoteSymbolSequences } from '@/models/FootnoteNumbering';
 import { type PageSize, pageSizes, pageSizeUnits } from '@/models/PageSetup';
+import { MAX_FOOTNOTE_START_NUMBER } from '@/services/FootnoteMarker';
 
 import { NEUME_FONT_FAMILIES } from '../../utils/fontConstants';
 
@@ -21,7 +23,15 @@ export const pageSetupSchema = z.strictObject({
   rightMargin: z.number().nonnegative(),
   facingPages: z.boolean(),
   direction: z.enum(['ltr', 'rtl']),
-  firstFootnoteNumber: z.number().int().min(1).max(1000000),
+  footnoteFormat: z.enum(['numbers', 'symbols']),
+  footnoteNumbering: z.enum(['continuous', 'page', 'section']),
+  footnoteSymbolSequence: z.enum(
+    Object.keys(footnoteSymbolSequences) as [
+      keyof typeof footnoteSymbolSequences,
+      ...Array<keyof typeof footnoteSymbolSequences>,
+    ],
+  ),
+  firstFootnoteNumber: z.number().int().min(1).max(MAX_FOOTNOTE_START_NUMBER),
   footnoteReferenceParentheses: z.boolean(),
   showFootnoteHorizontalRule: z.boolean(),
   footnoteHorizontalRuleLength: z.number().min(1).max(100),

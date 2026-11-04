@@ -4,7 +4,7 @@ import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
 import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
 
-function useMeasurement<Result>(apply?: (result: Result) => void) {
+function useMeasurement<Result>() {
   let sequence = 0;
   const pending = shallowRef<{
     id: number;
@@ -38,7 +38,6 @@ function useMeasurement<Result>(apply?: (result: Result) => void) {
       const request = pending.value;
       // Disposal can cancel a request before its measuring component unmounts.
       if (request !== null) {
-        apply?.(result);
         pending.value = null;
         request.resolve(result);
       }
@@ -50,11 +49,7 @@ function useMeasurement<Result>(apply?: (result: Result) => void) {
 
 export function useWorkspaceMeasurements() {
   return {
-    textBoxes: useMeasurement<TextBoxHeightMeasurement[]>((heights) => {
-      for (const { element, height } of heights) {
-        element.height = height;
-      }
-    }),
+    textBoxes: useMeasurement<TextBoxHeightMeasurement[]>(),
     pages: useMeasurement<Page[]>(),
   };
 }

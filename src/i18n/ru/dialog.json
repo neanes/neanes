@@ -254,11 +254,20 @@
     "neumeBulkColor": "Изменение цвета нескольких типов невм",
     "neumeBulkColorDescription": "Чтобы изменить цвет сразу у нескольких типов невм, выберите их выше, задайте цвет и нажмите кнопку применения.",
     "footnotes": "Сноски",
-    "firstFootnoteNumber": "Номер первой сноски",
-    "firstFootnoteNumberDescription": "Начальный номер сносок. Нумерация продолжается во всём документе.",
+    "firstFootnoteNumber": "Начать с",
     "footnoteReferenceParentheses": "Заключать маркеры музыкальных сносок в скобки",
     "showFootnoteHorizontalRule": "Показывать разделительную линию над сносками",
-    "footnoteHorizontalRuleLength": "Длина разделительной линии (%)"
+    "footnoteHorizontalRuleLength": "Длина разделительной линии (%)",
+    "footnoteFormat": "Формат",
+    "footnoteNumbering": "Нумерация",
+    "footnoteContinuous": "Непрерывная",
+    "footnoteRestartPage": "Заново на каждой странице",
+    "footnoteRestartSection": "Заново в каждом разделе",
+    "nextFootnoteSymbol": "Следующий символ",
+    "previousFootnoteSymbol": "Предыдущий символ",
+    "invalidFootnoteSymbol": "Введите символ из последовательности, повторённый не более {{count}} раз.",
+    "footnoteNumbers": "1, 2, 3, …",
+    "footnoteSymbols": "*, †, ‡, …"
   },
   "playbackSettings": {
     "root": "Настройки воспроизведения",
@@ -369,16 +378,11 @@
     "positionHint": "Смещения применяются перед автоматическим устранением наложений. Положительные значения сдвигают вправо или вниз.",
     "resetPosition": "Сбросить положение",
     "title": "Свойства сноски",
-    "description": "Выберите знак для этой сноски. Пользовательские знаки не занимают автоматический номер.",
-    "marker": "Знак",
-    "automatic": "Автоматический номер",
-    "asterisk": "Звёздочка",
-    "dagger": "Крестик",
-    "doubleDagger": "Двойной крестик",
-    "custom": "Другой",
+    "description": "Автоматические знаки задаются в параметрах страницы. Свои знаки не продвигают автоматическую последовательность.",
     "customText": "Свой текст",
     "reference": "Ссылка",
     "body": "Обозначение сноски",
-    "invalid": "Введите от 1 до 16 символов без переносов строки."
+    "invalid": "Введите от 1 до 16 символов без переносов строки.",
+    "useCustomMarker": "Использовать свой знак"
   }
 }

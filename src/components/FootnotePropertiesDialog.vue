@@ -17,53 +17,15 @@
         @submit.prevent="submit"
       >
         <FieldGroup>
-          <Field>
-            <FieldLabel for="footnote-marker-type">{{
-              $t(($) => $.dialog.footnoteProperties.marker, { ns: 'dialog' })
+          <Field orientation="horizontal">
+            <Checkbox id="footnote-custom-enabled" v-model="useCustomMarker" />
+            <FieldLabel for="footnote-custom-enabled">{{
+              $t(($) => $.dialog.footnoteProperties.useCustomMarker, {
+                ns: 'dialog',
+              })
             }}</FieldLabel>
-            <Select v-model="type">
-              <SelectTrigger id="footnote-marker-type"
-                ><SelectValue
-              /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="automatic">{{
-                  $t(($) => $.dialog.footnoteProperties.automatic, {
-                    ns: 'dialog',
-                  })
-                }}</SelectItem>
-                <SelectItem value="asterisk"
-                  >{{
-                    $t(($) => $.dialog.footnoteProperties.asterisk, {
-                      ns: 'dialog',
-                    })
-                  }}
-                  (*)</SelectItem
-                >
-                <SelectItem value="dagger"
-                  >{{
-                    $t(($) => $.dialog.footnoteProperties.dagger, {
-                      ns: 'dialog',
-                    })
-                  }}
-                  (†)</SelectItem
-                >
-                <SelectItem value="doubleDagger"
-                  >{{
-                    $t(($) => $.dialog.footnoteProperties.doubleDagger, {
-                      ns: 'dialog',
-                    })
-                  }}
-                  (‡)</SelectItem
-                >
-                <SelectItem value="custom">{{
-                  $t(($) => $.dialog.footnoteProperties.custom, {
-                    ns: 'dialog',
-                  })
-                }}</SelectItem>
-              </SelectContent>
-            </Select>
           </Field>
-          <Field v-if="type === 'custom'">
+          <Field>
             <FieldLabel for="footnote-custom-marker">{{
               $t(($) => $.dialog.footnoteProperties.customText, {
                 ns: 'dialog',
@@ -72,6 +34,7 @@
             <Input
               id="footnote-custom-marker"
               v-model="customText"
+              :disabled="!useCustomMarker"
               autocomplete="off"
               :aria-invalid="!valid"
             />
@@ -210,6 +173,7 @@ import InputUnit from '@/components/InputUnit.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogClose,
@@ -221,13 +185,6 @@ import {
 } from '@/components/ui/dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import type { FootnoteAnchorElement } from '@/models/Element';
 import { MartyriaElement, NoteElement } from '@/models/Element';
 import type { Footnote } from '@/models/Footnote';
@@ -249,7 +206,7 @@ const props = defineProps<{
   anchor: FootnoteAnchorElement | null;
   pageSetup: PageSetup;
   paragraphStyles: ParagraphStyle[];
-  automaticNumber: number;
+  automaticMarker: string;
   richTextReference: boolean;
 }>();
 const emit = defineEmits<{
@@ -261,13 +218,8 @@ const emit = defineEmits<{
 const open = defineModel<boolean>('open', { required: true });
 const offsetX = ref(0);
 const offsetY = ref(0);
-const type = ref('automatic');
+const useCustomMarker = ref(false);
 const customText = ref('');
-const symbols: Record<string, string> = {
-  asterisk: '*',
-  dagger: '†',
-  doubleDagger: '‡',
-};
 watch(
   [open, () => props.footnote],
   () => {
@@ -277,22 +229,12 @@ watch(
     offsetX.value = props.anchor?.footnoteOffsetX ?? 0;
     offsetY.value = props.anchor?.footnoteOffsetY ?? 0;
     const marker = props.footnote.marker;
-    type.value =
-      marker === null
-        ? 'automatic'
-        : (Object.keys(symbols).find((key) => symbols[key] === marker) ??
-          'custom');
+    useCustomMarker.value = marker !== null;
     customText.value = marker ?? '';
   },
   { immediate: true },
 );
-const value = computed(() =>
-  type.value === 'automatic'
-    ? null
-    : type.value === 'custom'
-      ? customText.value
-      : symbols[type.value],
-);
+const value = computed(() => (useCustomMarker.value ? customText.value : null));
 const valid = computed(() => {
   try {
     normalizeFootnoteMarker(value.value);
@@ -303,7 +245,7 @@ const valid = computed(() => {
 });
 const markerPreview = computed(() =>
   valid.value
-    ? (normalizeFootnoteMarker(value.value) ?? String(props.automaticNumber))
+    ? (normalizeFootnoteMarker(value.value) ?? props.automaticMarker)
     : '',
 );
 const bodyTypography = computed(() =>

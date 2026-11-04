@@ -5,13 +5,12 @@ import {
   type DocumentEditor,
   DocumentService,
 } from '@/services/documents/DocumentService';
-import { LayoutService } from '@/services/LayoutService';
 import {
   loadFontFamilies,
   loadScoreFonts,
 } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
-import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
+import { settleWorkspace } from '@/services/rendering/settleWorkspace';
 import { SaveService } from '@/services/SaveService';
 
 import type { EditorBusyState } from '../contracts/editorBusy';
@@ -46,16 +45,13 @@ export function useEditorDocumentAutomation(
     if (editorUnmounted || !isActive(workspace)) {
       return;
     }
-    // Compute target widths and inherited legacy text styles before mounting measurements.
-    LayoutService.processPages(toRaw(workspace));
-    if (getResizableTextBoxes(workspace.score).length > 0) {
-      await textBoxes.start(workspace);
+    await settleWorkspace(toRaw(workspace), async () => {
       await nextTick();
       if (editorUnmounted || !isActive(workspace)) {
-        return;
+        throw new Error('DOCUMENT_NOT_FOUND');
       }
-      LayoutService.processPages(toRaw(workspace));
-    }
+      return textBoxes.start(workspace);
+    });
     if (
       workspace.id === options.selectedWorkspace()?.id ||
       !automation.ownsPrivateWorkspace(workspace)

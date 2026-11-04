@@ -641,12 +641,10 @@ export class LayoutService {
       const footerReservation =
         decisions[physicalPage.physicalPageNumber - 1].reservation
           .extraFooterHeightPx;
-      const bodiesHeight =
-        physicalPage.footnotes.reduce(
-          (sum, footnote) => sum + footnote.height,
-          0,
-        ) +
-        (physicalPage.footnotes.length - 1) * FOOTNOTE_SPACING;
+      const bodiesHeight = physicalPage.footnotes.reduce(
+        (sum, footnote) => sum + footnote.height,
+        0,
+      );
       let top =
         pageSetup.pageHeight -
         pageSetup.bottomMargin -
@@ -726,7 +724,6 @@ export class LayoutService {
         if (setup.alignIsonIndicators) {
           this.alignIsonIndicators([bodyPage], setup);
         }
-        top += FOOTNOTE_SPACING;
       }
     }
 

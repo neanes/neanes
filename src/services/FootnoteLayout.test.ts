@@ -31,7 +31,7 @@ describe('footnote area geometry', () => {
   it('reserves the separator once and no space on pages without footnotes', () => {
     expect(footnoteSectionHeight([], true)).toBe(0);
     expect(footnoteSectionHeight([100, 50], false)).toBe(
-      150 + FOOTNOTE_SPACING + FOOTNOTE_SECTION_SPACING,
+      150 + FOOTNOTE_SECTION_SPACING,
     );
     expect(
       footnoteSectionHeight([100, 50], true) -

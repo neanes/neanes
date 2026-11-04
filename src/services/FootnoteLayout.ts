@@ -51,7 +51,6 @@ export function footnoteSectionHeight(heights: number[], showRule: boolean) {
   }
   return (
     heights.reduce((sum, height) => sum + height, 0) +
-    (heights.length - 1) * FOOTNOTE_SPACING +
     FOOTNOTE_SECTION_SPACING +
     (showRule ? FOOTNOTE_RULE_THICKNESS + FOOTNOTE_SPACING : 0)
   );

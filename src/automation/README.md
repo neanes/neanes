@@ -40,7 +40,7 @@ use the Electron debugging endpoint as their test driver.
 Future automation jobs and export transformations belong in this feature area
 (and its Electron counterpart), reusing shared document and rendering behavior.
 
-## Footnotes (proof of concept)
+## Footnotes
 
 `edit_elements` supports `insert_footnote` with a main-score Note or Martyria `elementRef`
 (and optional body `elements`) and `remove_footnote` with that musical reference.

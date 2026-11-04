@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
 import type { VariantProps } from 'class-variance-authority';
+import { cn } from 'cn';
 import type { ToggleGroupItemProps } from 'reka-ui';
 import { ToggleGroupItem, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 import { inject } from 'vue';
 
 import { toggleVariants } from '@/components/ui/toggle';
-import { cn } from '@/lib/utils';
 
 type ToggleGroupVariants = VariantProps<typeof toggleVariants> & {
   spacing?: number;

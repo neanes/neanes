@@ -15,12 +15,12 @@
 </template>
 
 <script setup lang="ts">
+import { cn } from 'cn';
 import type { HTMLAttributes } from 'vue';
 import { provide } from 'vue';
 
 import { Accordion } from '@/components/ui/accordion';
 import { FieldLegend, FieldSet } from '@/components/ui/field';
-import { cn } from '@/lib/utils';
 
 import { paneSectionRegistrationKey } from './PaneSectionRegistration';
 

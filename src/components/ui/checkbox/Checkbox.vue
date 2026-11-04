@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { PhCheck } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { CheckboxRootEmits, CheckboxRootProps } from 'reka-ui';
 import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   CheckboxRootProps & { class?: HTMLAttributes['class'] }

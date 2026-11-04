@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { PhSidebarSimple } from '@phosphor-icons/vue';
+import { cn } from 'cn';
 import type { HTMLAttributes } from 'vue';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 import { useSidebar } from './utils';
 

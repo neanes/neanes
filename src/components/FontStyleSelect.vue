@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import { cn } from 'cn';
 import { useTranslation } from 'i18next-vue';
 import type { HTMLAttributes, PropType } from 'vue';
 import { computed } from 'vue';
@@ -40,7 +41,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import { fontCatalog } from '@/services/FontCatalog';
 
 const props = defineProps({

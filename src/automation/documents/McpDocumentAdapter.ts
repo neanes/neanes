@@ -604,6 +604,7 @@ export class McpDocumentAdapter {
           plan.created,
           discovery,
           request.arguments.includeCreated,
+          plan.createdFootnotes,
         ),
       };
     }

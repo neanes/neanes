@@ -12,6 +12,7 @@ import {
   ModeKeyElement,
   NoteElement,
   RICH_TEXT_BOX_CONTENT_KEYS,
+  type RichTextBoxContentKey,
   RichTextBoxElement,
   type ScoreElement,
   TempoElement,
@@ -69,6 +70,7 @@ import {
   headerFooterVariants,
   reachableElements,
 } from './elementDiscovery';
+import { richFootnoteReferences } from './elementProperties';
 
 const constructors = {
   [ElementType.Note]: NoteElement,
@@ -102,12 +104,18 @@ export interface ElementEditPlan {
   updated: ScoreElement[];
   staffStructureChanged: boolean;
   created: { clientId: string | null; element: ScoreElement }[];
+  createdFootnotes?: {
+    footnoteId: string;
+    reference: ScoreElement;
+    contentKey?: RichTextBoxContentKey;
+  }[];
 }
 
 export function createdElementResult(
   created: ElementEditPlan['created'],
   discovery: ElementDiscovery,
   includeCreated: boolean,
+  footnotes: NonNullable<ElementEditPlan['createdFootnotes']> = [],
 ) {
   return {
     createdCount: created.length,
@@ -118,6 +126,16 @@ export function createdElementResult(
             elementRef: discovery.reference(element),
             elementType: element.elementType,
           })),
+          ...(footnotes.length === 0
+            ? {}
+            : {
+                createdFootnotes: footnotes.map(
+                  ({ reference, ...footnote }) => ({
+                    ...footnote,
+                    elementRef: discovery.reference(reference),
+                  }),
+                ),
+              }),
         }
       : {}),
   };
@@ -878,6 +896,11 @@ export function planElementEdits(
     }
   }
   const finalElements = reachable();
+  const newFootnoteIds = new Set(
+    finalFootnotes
+      .filter((body) => !workspace.score.footnotes.includes(body))
+      .map((body) => body.id),
+  );
   return {
     commands,
     fontFamilies: [...fontFamilies],
@@ -889,6 +912,20 @@ export function planElementEdits(
           toRaw(live(element)) !== toRaw(workspace.score.staff.elements[index]),
       ),
     created: created.filter((item) => finalElements.has(item.element)),
+    createdFootnotes:
+      newFootnoteIds.size === 0
+        ? []
+        : staff.flatMap((reference) => {
+            const references =
+              reference instanceof RichTextBoxElement
+                ? richFootnoteReferences(reference)
+                : elementFootnoteIds(reference).map((footnoteId) => ({
+                    footnoteId,
+                  }));
+            return references
+              .filter(({ footnoteId }) => newFootnoteIds.has(footnoteId))
+              .map((footnote) => ({ ...footnote, reference: live(reference) }));
+          }),
   };
 }
 

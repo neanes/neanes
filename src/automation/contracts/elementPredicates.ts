@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import type { ScoreElement } from '@/models/Element';
 
+import { readElementProperty } from '../documents/elementProperties';
 import { elementPropertySchemas } from './elementPropertySchemas';
 
 const valueSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
@@ -141,7 +142,7 @@ export function matchesElement(
   ) {
     return false;
   }
-  const value: unknown = Reflect.get(element, predicate.field);
+  const value: unknown = readElementProperty(element, predicate.field);
   switch (predicate.op) {
     case 'eq':
       return value === predicate.value;

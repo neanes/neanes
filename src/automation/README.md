@@ -63,6 +63,16 @@ references and references outside main-score rich textboxes are rejected.
 Panel reference order is left/center/right for multipanel boxes and top/bottom
 for inline boxes, in document order. Plain textbox references are unsupported.
 Each reference owns a separate body; nested and shared references are unsupported.
+Read RichTextBox `footnoteReferences` with `properties: ["footnoteReferences"]`
+to get `{footnoteId, contentKey}` entries in active panel/source order without
+fetching HTML. The property is omitted when there are no active references.
+It is read-only; `isNotNull` predicates locate boxes with references.
+`insert_footnote` returns `createdFootnotes: [{footnoteId, elementRef, contentKey?}]`
+for new bodies surviving the transaction. `elementRef` identifies their final
+main-score owner; `contentKey` is present for rich references.
+Use these IDs directly in body/marker edits; `includeCreated: false` suppresses
+this list as well as created element references.
+
 Read the musical anchor's read-only `footnoteId`, calculated `footnoteNumber` (automatic references only), and `footnoteMarker` (the displayed label), then use
 `collection: { kind: "footnote", footnoteId }` with normal element readers/edits.
 The body retains its terminal Empty element and its own lyrics. In populated

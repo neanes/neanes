@@ -13,7 +13,7 @@ import { dropCapLyricsDescription } from './lyricSyntax';
 
 // Read-only live content projections. These are not edit validation schemas.
 // Layout caches are excluded except the explicitly exposed calculated pitches.
-// Rendering state, saved IDs and nested objects are excluded.
+// Rendering state and saved IDs are excluded; rich reference identities are computed.
 // Unset values are omitted, except lineHeight: null explicitly resets to normal.
 // False, zero and empty strings remain.
 const breaks = {
@@ -56,14 +56,30 @@ const plainTextContent = z
   .string()
   .describe('Plain text, not HTML or Markdown.');
 
+const footnotePosition = {
+  footnotePositionOverride: z
+    .boolean()
+    .describe(
+      'True disables automatic collision clearance and uses the offsets from the default marker position directly.',
+    ),
+  footnoteOffsetX: z
+    .number()
+    .describe(
+      'Neume-font em units, not CSS pixels; positive moves right. Automatic clearance may still raise the marker unless footnotePositionOverride is true.',
+    ),
+  footnoteOffsetY: z
+    .number()
+    .describe(
+      'Neume-font em units, not CSS pixels; positive moves down. Automatic clearance may still raise the marker unless footnotePositionOverride is true.',
+    ),
+};
+
 export const elementPropertySchemas = {
   [ElementType.Note]: z.strictObject({
     footnoteId: z.string().uuid().optional(),
     footnoteNumber: z.number().int().positive().optional(),
     footnoteMarker: z.string().optional(),
-    footnotePositionOverride: z.boolean(),
-    footnoteOffsetX: z.number(),
-    footnoteOffsetY: z.number(),
+    ...footnotePosition,
     ...breaks,
     lyrics: z.string(),
     isHyphen: z.boolean(),
@@ -270,9 +286,7 @@ export const elementPropertySchemas = {
     footnoteId: z.string().uuid().optional(),
     footnoteNumber: z.number().int().positive().optional(),
     footnoteMarker: z.string().optional(),
-    footnotePositionOverride: z.boolean(),
-    footnoteOffsetX: z.number(),
-    footnoteOffsetY: z.number(),
+    ...footnotePosition,
     ...breaks,
     auto: z
       .boolean()
@@ -366,6 +380,24 @@ export const elementPropertySchemas = {
     height: z.number(),
   }),
   [ElementType.RichTextBox]: z.strictObject({
+    footnoteReferences: z
+      .array(
+        z.strictObject({
+          footnoteId: z.string().uuid(),
+          contentKey: z.enum([
+            'content',
+            'contentBottom',
+            'contentLeft',
+            'contentCenter',
+            'contentRight',
+          ]),
+        }),
+      )
+      .min(1)
+      .optional()
+      .describe(
+        'Read-only references in active panel and source order, without HTML. Omitted when none. Use footnoteId as the footnote collection selector.',
+      ),
     ...breaks,
     content: richTextContent,
     contentBottom: richTextContent,

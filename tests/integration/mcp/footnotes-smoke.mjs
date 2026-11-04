@@ -29,6 +29,84 @@ try {
   assert.ok(guide.includes('insert_footnote'));
   assert.ok(guide.includes('footnotePositionOverride:true'));
   for (const documentScope of ['private', 'editor']) {
+    const probe = await call('create_document', {
+      documentScope,
+      title: 'Compact footnote references',
+    });
+    const probeArgs = { documentScope, documentId: probe.documentId };
+    const created = await call('edit_elements', {
+      ...probeArgs,
+      expectedRevision: probe.revision,
+      actions: [
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              clientId: 'box',
+              properties: {
+                inline: true,
+                content: '<p>Top</p>',
+                contentBottom: '<p>Bottom</p>',
+              },
+            },
+          ],
+        },
+        {
+          action: 'insert_footnote',
+          elementRef: '@box',
+          contentKey: 'content',
+          htmlOffset: 3,
+        },
+        {
+          action: 'insert_footnote',
+          elementRef: '@box',
+          contentKey: 'contentBottom',
+          htmlOffset: 3,
+        },
+      ],
+    });
+    assert.deepEqual(
+      created.createdFootnotes.map((reference) => reference.contentKey),
+      ['content', 'contentBottom'],
+    );
+    const projected = await call('find_elements', {
+      ...probeArgs,
+      properties: ['footnoteReferences'],
+      where: { field: 'footnoteReferences', op: 'isNotNull' },
+    });
+    assert.equal(projected.elements.length, 1);
+    assert.deepEqual(projected.elements[0].properties, {
+      footnoteReferences: created.createdFootnotes.map(
+        ({ footnoteId, contentKey }) => ({ footnoteId, contentKey }),
+      ),
+    });
+    for (const reference of created.createdFootnotes) {
+      assert.equal(reference.elementRef, projected.elements[0].elementRef);
+    }
+    const marked = await call('edit_elements', {
+      ...probeArgs,
+      expectedRevision: projected.revision,
+      includeCreated: false,
+      actions: [
+        {
+          action: 'update_footnote',
+          footnoteId: created.createdFootnotes[0].footnoteId,
+          marker: '*',
+        },
+      ],
+    });
+    assert.equal(marked.createdFootnotes, undefined);
+    const probeBody = await call('get_elements', {
+      ...probeArgs,
+      collection: {
+        kind: 'footnote',
+        footnoteId: created.createdFootnotes[0].footnoteId,
+      },
+      properties: [],
+    });
+    assert.equal(probeBody.footnote.marker, '*');
+    await closeDocument(call, probeArgs);
     let doc = await call('create_document', {
       documentScope,
       title: 'Footnote proof of concept',
@@ -159,6 +237,13 @@ try {
     });
     let main = await call('get_elements', args);
     const anchors = main.elements.slice(0, 2);
+    assert.deepEqual(
+      inserted.createdFootnotes,
+      anchors.map((anchor) => ({
+        footnoteId: anchor.properties.footnoteId,
+        elementRef: anchor.elementRef,
+      })),
+    );
     assert.deepEqual(
       anchors.map((entry) => entry.properties.footnoteNumber),
       [98, 99],

@@ -1,13 +1,235 @@
 import { describe, expect, it } from 'vitest';
 
 import { elementEditBatchSchema } from '@/automation/contracts/elementEditSchema';
-import type { NoteElement } from '@/models/Element';
+import type { RichTextBoxElement } from '@/models/Element';
+import { ElementType, type NoteElement } from '@/models/Element';
 import { Workspace } from '@/models/Workspace';
+import { SaveService } from '@/services/SaveService';
 
 import { ElementDiscovery } from './elementDiscovery';
-import { applyElementEdits, planElementEdits } from './elementEdits';
+import {
+  applyElementEdits,
+  createdElementResult,
+  planElementEdits,
+} from './elementEdits';
+
+(globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 
 describe('footnote transactions', () => {
+  it.each([
+    { inline: false, multipanel: false, keys: ['content'] },
+    { inline: true, multipanel: false, keys: ['content', 'contentBottom'] },
+    {
+      inline: false,
+      multipanel: true,
+      keys: ['contentLeft', 'contentCenter', 'contentRight'],
+    },
+  ])(
+    'discovers rich references without HTML and returns new body identities: %j',
+    ({ inline, multipanel, keys }) => {
+      const workspace = new Workspace();
+      const discovery = new ElementDiscovery();
+      const edit = (actions: unknown) => {
+        const plan = planElementEdits(
+          workspace,
+          discovery,
+          elementEditBatchSchema.parse(actions),
+          [],
+        );
+        applyElementEdits(workspace, plan);
+        return plan;
+      };
+      const html = '<p>' + 'Long panel content '.repeat(3000) + '</p>';
+      const plan = edit([
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              clientId: 'box',
+              properties: {
+                inline,
+                multipanel,
+                ...Object.fromEntries(keys.map((key) => [key, html])),
+              },
+            },
+          ],
+        },
+        ...[...keys].reverse().map((contentKey) => ({
+          action: 'insert_footnote',
+          elementRef: '@box',
+          contentKey,
+          htmlOffset: 3,
+        })),
+      ]);
+      const result = createdElementResult(
+        plan.created,
+        discovery,
+        true,
+        plan.createdFootnotes,
+      );
+      const references = result.createdFootnotes!;
+      expect(references.map((reference) => reference.contentKey)).toEqual(keys);
+      const box = workspace.score.staff.elements[0] as RichTextBoxElement;
+      for (const reference of references) {
+        expect(reference.elementRef).toBe(discovery.reference(box));
+        expect(box[reference.contentKey!]).toContain(
+          `data-footnote-id="${reference.footnoteId}"`,
+        );
+      }
+      expect(
+        createdElementResult(
+          plan.created,
+          discovery,
+          false,
+          plan.createdFootnotes,
+        ),
+      ).not.toHaveProperty('createdFootnotes');
+      const projected = discovery.lookup(workspace.score, {
+        elementRef: discovery.reference(box),
+        before: 0,
+        after: 0,
+        properties: ['footnoteReferences'],
+        includeContent: false,
+      });
+      expect(projected.elements[0].properties).toEqual({
+        footnoteReferences: references.map(({ footnoteId, contentKey }) => ({
+          footnoteId,
+          contentKey,
+        })),
+      });
+      expect(JSON.stringify(projected).length).toBeLessThan(1000);
+      const found = discovery.find(workspace.score, {
+        scope: { kind: 'document' },
+        where: { field: 'footnoteReferences', op: 'isNotNull' },
+        properties: ['footnoteReferences'],
+        includeContent: false,
+        offset: 0,
+        limit: 100,
+      });
+      expect(found.elements.map((element) => element.elementRef)).toEqual([
+        discovery.reference(box),
+      ]);
+      edit([
+        {
+          action: 'update_footnote',
+          footnoteId: references[0].footnoteId,
+          marker: '*',
+        },
+      ]);
+      expect(
+        workspace.score.footnotes.find(
+          (body) => body.id === references[0].footnoteId,
+        )!.marker,
+      ).toBe('*');
+      for (const reference of references) {
+        const body = discovery.read(workspace.score, {
+          collection: { kind: 'footnote', footnoteId: reference.footnoteId },
+          start: 0,
+          offset: 0,
+          limit: 10,
+          includeContent: false,
+        });
+        expect(body.elements.map((element) => element.elementType)).toEqual([
+          ElementType.RichTextBox,
+          ElementType.Empty,
+        ]);
+        expect(body.elements[0].properties).not.toHaveProperty(
+          'footnoteReferences',
+        );
+      }
+      expect(
+        JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+      ).not.toContain('footnoteReferences');
+      expect(() =>
+        edit([
+          {
+            action: 'update',
+            elementRef: discovery.reference(box),
+            elementType: 'RichTextBox',
+            properties: { footnoteReferences: null },
+          },
+        ]),
+      ).toThrow();
+      expect(() =>
+        edit([
+          {
+            action: 'update',
+            elementRef: discovery.reference(box),
+            elementType: 'RichTextBox',
+            reset: ['footnoteReferences'],
+          },
+        ]),
+      ).toThrow('INVALID_ELEMENT_EDIT');
+      edit([
+        {
+          action: 'update',
+          elementRef: discovery.reference(box),
+          elementType: 'RichTextBox',
+          properties: Object.fromEntries(
+            keys.map((key) => [key, '<p>No references</p>']),
+          ),
+        },
+      ]);
+      expect(
+        discovery.lookup(workspace.score, {
+          elementRef: discovery.reference(box),
+          before: 0,
+          after: 0,
+          properties: ['footnoteReferences'],
+          includeContent: false,
+        }).elements[0].properties,
+      ).toEqual({});
+      expect(workspace.score.footnotes).toHaveLength(0);
+      workspace.commandService.undo();
+      expect(
+        discovery.lookup(workspace.score, {
+          elementRef: discovery.reference(box),
+          before: 0,
+          after: 0,
+          properties: ['footnoteReferences'],
+          includeContent: false,
+        }).elements[0].properties,
+      ).toEqual(projected.elements[0].properties);
+    },
+  );
+
+  it('returns only surviving footnote creations with their final musical owner', () => {
+    const workspace = new Workspace();
+    const discovery = new ElementDiscovery();
+    const plan = planElementEdits(
+      workspace,
+      discovery,
+      elementEditBatchSchema.parse([
+        {
+          action: 'insert',
+          elements: [
+            { elementType: 'Note', clientId: 'kept' },
+            { elementType: 'Note', clientId: 'removed' },
+          ],
+        },
+        { action: 'insert_footnote', elementRef: '@kept' },
+        { action: 'insert_footnote', elementRef: '@removed' },
+        {
+          action: 'replace',
+          elementRef: '@kept',
+          element: { elementType: 'Martyria' },
+        },
+        { action: 'remove', elementRef: '@removed' },
+      ]),
+      [],
+    );
+    applyElementEdits(workspace, plan);
+    expect(
+      createdElementResult(plan.created, discovery, true, plan.createdFootnotes)
+        .createdFootnotes,
+    ).toEqual([
+      {
+        footnoteId: workspace.score.footnotes[0].id,
+        elementRef: discovery.reference(workspace.score.staff.elements[0]),
+      },
+    ]);
+  });
   it('rejects tempo footnotes and omits footnote properties from tempo discovery', () => {
     const workspace = new Workspace();
     const discovery = new ElementDiscovery();

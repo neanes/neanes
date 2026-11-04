@@ -47,6 +47,9 @@ function editPropertySchema(type: ElementType) {
   for (const [key, inspected] of Object.entries(
     elementPropertySchemas[type].shape,
   )) {
+    if (type === ElementType.RichTextBox && key === 'footnoteReferences') {
+      continue;
+    }
     if (
       [ElementType.Note, ElementType.Martyria].includes(type) &&
       [

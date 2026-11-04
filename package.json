@@ -110,8 +110,8 @@
     "yaml": "^2.9.1"
   },
   "license": "GPL-3.0-only",
-  "packageManager": "npm@11.12.1",
+  "packageManager": "npm@12.2.0",
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   }
 }

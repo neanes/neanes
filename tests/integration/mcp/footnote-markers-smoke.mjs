@@ -87,12 +87,17 @@ try {
       `document.querySelector(${JSON.stringify(selector)})?.textContent.trim()`,
     );
   }
-  async function click(selector, button = 'left', labelPrefix = null) {
+  async function click(
+    selector,
+    button = 'left',
+    labelPrefix = null,
+    clickCount = 1,
+  ) {
     const target =
       labelPrefix === null
         ? `document.querySelector(${JSON.stringify(selector)})`
         : `[...document.querySelectorAll(${JSON.stringify(selector)})].find(n=>n.textContent.trim().startsWith(${JSON.stringify(labelPrefix)}))`;
-    await eventually(async () => assert.ok(await evaluate(target)));
+    await eventually(async () => assert.ok(await evaluate(`!!(${target})`)));
     const point = await eventually(async () => {
       const result = await evaluate(
         `(() => {const n=${target}; n.scrollIntoView({block:'center'}); const r=n.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2; let settled=true;for(let p=n;p;p=p.parentElement){if(p.getAnimations().some(a=>a.playState==='running')) settled=false;}return {x,y,hit:settled&&n.contains(document.elementFromPoint(x,y))};})()`,
@@ -108,7 +113,7 @@ try {
         type,
         ...point,
         button,
-        clickCount: 1,
+        clickCount,
       });
     }
   }
@@ -349,8 +354,33 @@ try {
       path.join(app.directory, `${extension}-markers.png`),
     );
   }
-  // Forward navigation is unchanged for numeric and symbolic references.
+  // A single click keeps the editing context; a double-click opens the body.
+  const ws = 'window._editor.selectedWorkspace.value';
+  await click('.page .rich-text-editor');
+  await eventually(async () =>
+    assert.equal(
+      await evaluate('document.activeElement?.isContentEditable'),
+      true,
+    ),
+  );
+  const editingContext = await evaluate(
+    `({footnoteId:${ws}.activeFootnoteId, elementId:${ws}.selectedElement.id})`,
+  );
   await click(marker(ids[2], true));
+  await evaluate('new Promise(resolve => setTimeout(resolve, 0))');
+  assert.deepEqual(
+    await evaluate(
+      `({footnoteId:${ws}.activeFootnoteId, elementId:${ws}.selectedElement.id})`,
+    ),
+    editingContext,
+    'A single click preserves the current editing context',
+  );
+  assert.equal(
+    await evaluate('document.activeElement?.isContentEditable'),
+    true,
+    'A single click keeps focus in rich text',
+  );
+  await click(marker(ids[2], true), 'left', null, 2);
   await eventually(async () =>
     assert.equal(
       await evaluate(`window._editor.selectedWorkspace.value.activeFootnoteId`),

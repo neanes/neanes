@@ -23,12 +23,37 @@ try {
     profile: app.profile,
   });
   const call = createToolCaller(client, (await client.listTools()).tools);
+  const { guide } = await call('get_rich_text_format', {
+    topics: ['footnotes'],
+  });
+  assert.ok(guide.includes('insert_footnote'));
+  assert.ok(guide.includes('footnotePositionOverride:true'));
   for (const documentScope of ['private', 'editor']) {
     let doc = await call('create_document', {
       documentScope,
       title: 'Footnote proof of concept',
     });
     const args = { documentScope, documentId: doc.documentId };
+    await call(
+      'edit_elements',
+      {
+        ...args,
+        expectedRevision: doc.revision,
+        actions: [
+          {
+            action: 'update_footnote',
+            footnoteId: '00000000-0000-4000-8000-000000000001',
+            marker: '*',
+          },
+        ],
+      },
+      'INVALID_FOOTNOTE_REFERENCE',
+    );
+    assert.equal(
+      (await call('get_document_properties', args)).revision,
+      doc.revision,
+      'Invalid footnote edits leave the document unchanged',
+    );
     const edit = async (actions) => {
       const current = await call('get_document_properties', args);
       return call('edit_elements', {

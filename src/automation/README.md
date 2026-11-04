@@ -42,6 +42,9 @@ Future automation jobs and export transformations belong in this feature area
 
 ## Footnotes
 
+Clients can request `get_rich_text_format` with `topics: ["footnotes"]` for the
+authoring workflow, constraints, and an executable rich-reference insertion example.
+
 `edit_elements` supports `insert_footnote` with a main-score Note or Martyria `elementRef`
 (and optional body `elements`) and `remove_footnote` with that musical reference.
 Tempo elements cannot own footnotes and expose no footnote properties.
@@ -100,9 +103,8 @@ is the stored override or null, `label` is the displayed string, and `number` is
 null for custom markers. Rich textbox references display the label directly;
 musical references surround it with parentheses when
 `footnoteReferenceParentheses` is enabled. Body labels have no parentheses.
-Musical markers are centered above their anchor. Note and Martyria markers participate
-in horizontal collision spacing, including barline clearance, alongside neumes
-and attached marks. Their ink starts with its bottom 0.75 neume-font em above
+Musical markers are centered above their anchor. Note and Martyria markers use vertical collision clearance from neumes,
+barlines, attached marks, and other reference markers. Their ink starts with its bottom 0.75 neume-font em above
 the musical baseline, rising only as needed for collision clearance.
 Replacing a musical anchor preserves its footnote and marker offsets; explicit
 replacement offsets override the inherited value independently for each axis.

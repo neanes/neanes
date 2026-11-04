@@ -52,7 +52,7 @@ describe('MCP token efficiency contracts', () => {
     // lose local input references. Detailed style/settings constraints stay shared.
     // Detailed authoring guides remain opt-in, outside tools/list.
     // Includes footnote actions, collection selectors, and reference projections.
-    expect(sizes.inventory).toBeLessThan(155000);
+    expect(sizes.inventory).toBeLessThan(156000);
     expect(sizes.inputs).toBeLessThan(52000);
     expect(sizes.outputs).toBeLessThan(81000);
     expect(sizes.inputView).toBeLessThan(73000);

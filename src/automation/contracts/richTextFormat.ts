@@ -5,9 +5,9 @@ import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleC
 
 export const richTextFormatQuerySchema = z.strictObject({
   topics: z
-    .array(z.enum(['basics', 'inline', 'opentype']))
+    .array(z.enum(['basics', 'inline', 'opentype', 'footnotes']))
     .min(1)
-    .max(3)
+    .max(4)
     .default(['basics', 'inline']),
 });
 
@@ -36,6 +36,44 @@ export function getRichTextFormat(
       arguments: { documentId: 'DOCUMENT_ID', expectedRevision: 0, actions },
     });
   const sections = {
+    footnotes: [
+      'FOOTNOTES',
+      'Use edit_elements insert_footnote with a main-score Note or Martyria elementRef, or a main-score RichTextBox elementRef with contentKey and htmlOffset. Tempo, plain TextBox, annotations, alternate lines, headers/footers and footnote bodies cannot own references. Each reference owns one body; nested/shared references are unsupported.',
+      'For rich text, contentKey must be an active panel for the box layout. htmlOffset is a UTF-16 offset in the exact stored HTML, within paragraph text or immediately after a p opening tag. Offsets inside tags, entities, surrogate pairs or atomic objects are invalid. Read exact HTML first; earlier actions can change offsets.',
+      'Optional elements supplies body element definitions. Omitted/empty elements creates an empty musical staff for Note/Martyria, or a RichTextBox using footnote-text for rich references. Bodies can mix music and text, retain a terminal Empty, and reject pageBreak:true. They inherit musical context at the anchor and then evolve independently.',
+      'Read Note/Martyria footnoteId from get_elements/get_element. Rich references serialize as <span class="neanes-footnote" data-footnote-id="BODY_UUID"></span> in panel HTML; read IDs there or find_elements in document scope to discover body collections. Preserve spans and surrounding formatting during HTML edits; do not invent IDs or display numbers.',
+      'Use collection:{kind:"footnote",footnoteId:BODY_UUID} with get_elements and normal element edits. get_elements returns footnote:{id,marker,label,number}; marker is the stored override or null, label is the displayed string, and number is null for custom markers. get_staff_lyrics and set_staff_lyrics accept the same collection; locks apply independently to each staff.',
+      'Use update_footnote with footnoteId and marker to change a label. Null restores automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters without control characters, and do not advance the automatic sequence. remove_footnote takes a musical anchor elementRef. Remove rich references by updating panel HTML without their spans. Removing any owning element removes its bodies atomically; undo restores both. copy_elements copies owned bodies with fresh IDs.',
+      'Page setup controls footnoteFormat:numbers|symbols, footnoteSymbolSequence:standard|asterisks, footnoteNumbering:continuous|page|section, firstFootnoteNumber, footnoteReferenceParentheses, showFootnoteHorizontalRule and footnoteHorizontalRuleLength (1-100 percent). Starts are 1-based, at most 1000000 for numbers, 384 for standard symbols or 64 for asterisks. Standard symbols cycle *, dagger, double dagger, section, pilcrow, double vertical line, repeating each twice, three times, etc. Page restarts follow physical pages; section restarts follow nonempty section running markers.',
+      'Musical reference labels optionally use parentheses; rich references use superscripts. Body labels use a period after numeric labels. Styles: footnote-text, footnote-body-marker, footnote-reference (musical references only). Note/Martyria footnoteOffsetX/Y use neume-font em, positive right/down. Automatic collision clearance raises markers; footnotePositionOverride:true disables clearance and uses offsets directly. Markers do not reserve horizontal space.',
+      'Footnotes stay on their anchor page as whole bodies. Oversized bodies remain editable/saveable but settled page discovery and visual export fail until they fit. Page occurrences include region:footnote and exclude the terminal Empty for populated bodies. Unknown or duplicate body IDs fail with INVALID_FOOTNOTE_REFERENCE before mutation.',
+      call([
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              clientId: 'box',
+              properties: {
+                content: paragraph(
+                  BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+                  'Hello',
+                ),
+              },
+            },
+          ],
+        },
+        {
+          action: 'insert_footnote',
+          elementRef: '@box',
+          contentKey: 'content',
+          htmlOffset: paragraph(
+            BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+            '',
+          ).indexOf('</p>'),
+        },
+      ]),
+    ],
     basics: [
       'BASICS',
       'Use get_paragraph_styles with documentId and includeResolved:false for existing IDs (not display names). Common IDs: default-text for ordinary text, annotation for annotations, lyrics for inline text boxes, header/footer for templates; title/subtitle/chapter/section for headings.',

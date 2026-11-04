@@ -3457,6 +3457,13 @@ function updateFootnoteMarker(
   save();
 }
 
+async function openFootnoteFromContextMenu(reference: ScoreElement) {
+  // Reka releases its focus scope in a timer during menu unmount. Wait for
+  // that unmount before queuing navigation so the menu cannot reclaim focus.
+  await nextTick();
+  setTimeout(() => openFootnote(reference), 0);
+}
+
 function openFootnote(
   reference: ScoreElement,
   id = elementFootnoteIds(reference)[0],
@@ -10534,7 +10541,9 @@ function renderTabLabel(tab: Tab) {
                         }}</ContextMenuItem
                       >
                       <ContextMenuItem
-                        @select="openFootnote(contextMenuFootnoteAnchor)"
+                        @select="
+                          openFootnoteFromContextMenu(contextMenuFootnoteAnchor)
+                        "
                         >{{
                           $t(($) => $.menu.footnotes.edit, {
                             ns: 'menu',

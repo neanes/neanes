@@ -118,6 +118,9 @@ describe('structured automation errors', () => {
     });
   });
   it('keeps named domain failures and normalizes unknown failures', () => {
+    expect(automationError(new Error('INVALID_FOOTNOTE_REFERENCE')).code).toBe(
+      'INVALID_FOOTNOTE_REFERENCE',
+    );
     expect(automationError(new Error('FONT_NOT_FOUND: Example')).code).toBe(
       'FONT_NOT_FOUND',
     );

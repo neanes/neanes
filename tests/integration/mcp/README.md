@@ -100,7 +100,7 @@ local body music, anchor edits, paragraph-style marker typography, martyria save
 data, and centered ordinary/right-aligned LTR/RTL musical markers.
 
 `rich-text-footnotes` tests caret insertion with surrounding inline formatting,
-focused default rich-body creation, atomic marker deletion, click navigation,
+focused default rich-body creation, atomic marker deletion, double-click navigation,
 native text Undo/Redo before flush and score-level body reconciliation, save/reopen, and copying for ordinary, inline top/bottom,
 and left/center/right multipanel rich textboxes. It also uses the real system
 clipboard to copy a marker across documents, checking fresh body identities,
@@ -157,5 +157,6 @@ visible empty-body targets, reference focus, appending after text and music,
 keyboard end navigation, deletion/undo/redo, stable pagination, and PDF/PNG output.
 It launches a real disposable Electron app; use unsandboxed execution on macOS.
 
-`footnote-body-alignment` compares body markers with real inline superscripts in
-text and neume font contexts at multiple zoom levels, and retains a screenshot.
+`footnote-body-alignment` compares body labels with baseline-aligned inline text in
+text and neume font contexts at multiple zoom levels, checks numeric punctuation,
+and retains a screenshot.

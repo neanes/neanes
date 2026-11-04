@@ -73,22 +73,22 @@ try {
       for (const key of ['fontFamily','fontSize','fontWeight','fontStyle','lineHeight']) probe.style[key] = css[key];
       Object.assign(probe.style, {position:'absolute',visibility:'hidden',whiteSpace:'nowrap',top:'0px',left:'0px'});
       probe.append(document.createTextNode('This is a test'));
-      const sup = document.createElement('sup');
-      sup.style.cssText = marker.style.cssText;
+      const run = document.createElement('span');
+      run.style.cssText = marker.style.cssText;
       // Rich editors scale their entire DOM; neumes use scaled font sizes.
       if (content.closest('.ck-content')) {
-        sup.style.fontSize = parseFloat(getComputedStyle(marker).fontSize) / window._editor.selectedWorkspace.value.zoom + 'px';
+        run.style.fontSize = parseFloat(getComputedStyle(marker).fontSize) / window._editor.selectedWorkspace.value.zoom + 'px';
       }
       const span = document.createElement('span');
       span.textContent = marker.textContent;
       span.style.display = 'inline-block';
       span.style.lineHeight = '1';
-      sup.append(span);
-      probe.append(sup);
+      run.append(span);
+      probe.append(run);
       content.parentElement.append(probe);
       const expected = content.getBoundingClientRect().top + span.getBoundingClientRect().top - probe.getBoundingClientRect().top;
-      const actual = marker.firstElementChild.getBoundingClientRect().top;
-      const result = {actual, expected, delta: actual-expected, font: css.fontFamily, size:css.fontSize, height:css.lineHeight, labelHeight:getComputedStyle(label).lineHeight};
+      const actual = marker.getBoundingClientRect().top;
+      const result = {text:marker.textContent, tag:marker.tagName, actual, expected, delta: actual-expected, font: css.fontFamily, size:css.fontSize, height:css.lineHeight, labelHeight:getComputedStyle(label).lineHeight};
       probe.remove();
       return result;
     });
@@ -98,8 +98,14 @@ try {
     await eventually(async () => {
       const result = await geometry();
       assert.equal(result.length, 2);
+      assert.deepEqual(
+        result.map((entry) => entry.text),
+        ['1.', '2.'],
+      );
       for (const entry of result) {
-        assert.ok(Math.abs(entry.delta) < 1, JSON.stringify(result));
+        assert.equal(entry.tag, 'SPAN');
+        // Independent line boxes can round to adjacent pixels under zoom.
+        assert.ok(Math.abs(entry.delta) <= 1, JSON.stringify(result));
       }
     });
   }
@@ -120,7 +126,7 @@ try {
     Buffer.from(screenshot.data, 'base64'),
   );
   console.log(
-    `PASS: footnote text and neume markers match inline superscript placement. Artifacts: ${app.directory}`,
+    `PASS: footnote text and neume body labels match baseline placement at multiple zoom levels. Artifacts: ${app.directory}`,
   );
 } catch (error) {
   console.error(app.log());

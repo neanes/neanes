@@ -198,7 +198,7 @@ try {
     assert.equal(Object.hasOwn(style, 'superscript'), false);
   }
   console.log(
-    'PASS: note and martyria musical context, configured marker sizes, native body superscript, and ordinary/right-aligned LTR/RTL marker bounds.',
+    'PASS: note and martyria musical context, configured marker sizes, baseline body labels, and ordinary/right-aligned LTR/RTL marker bounds.',
   );
 } catch (error) {
   console.error(app.log());

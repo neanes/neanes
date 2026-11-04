@@ -67,7 +67,7 @@ try {
       const label=id=>document.querySelector('.footnote-label[data-footnote-id="'+id+'"]');
       const top=f=>parseFloat(getComputedStyle(label(f.id)).top)/w.zoom;
       const lines=[...document.querySelectorAll('.line[data-footnote-id="'+f.id+'"]')];
-      return {height:i+1<all.length ? top(all[i+1])-top(f)-8 : f.staff.elements.at(-1).height,
+      return {height:i+1<all.length ? top(all[i+1])-top(f) : f.staff.elements.at(-1).height,
         lines:lines.length,
         emptyBoxes:lines.reduce((sum,l)=>sum+l.querySelectorAll('.empty-neume-box').length,0),
         terminal:f.staff.elements.at(-1).elementType,

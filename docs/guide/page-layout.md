@@ -133,6 +133,14 @@ Text fonts are controlled by paragraph styles rather than Page Setup. Neanes inc
 
 Modify the built-in styles when titles, lyrics, headers, footers, and other repeated text should use a consistent font.
 
+## Set up footnotes
+
+Use **Footnotes** in Page Setup to choose the automatic number or symbol format, when the sequence restarts, and its starting number or symbol. You can also wrap musical reference markers in parentheses and show a separator above the footnotes.
+
+Parentheses help footnote markers stand out from the notation, especially measure numbers that indicate beat counts. For alternate melodies and finales, consider the asterisk format (`*, **, ***, …`) with **Numbering** set to **Restart each page**.
+
+See [Footnotes](/guide/footnotes.html) for all footnote settings, recommendations for combining textual and musical footnotes, and instructions for creating, editing, and removing them.
+
 ## Add headers and footers
 
 Use `Insert > Headers and Footers > Header` or `Footer` to edit their contents. In the **Headers and Footers** section of Page Setup, enable **Include Header** or **Include Footer** to display them.

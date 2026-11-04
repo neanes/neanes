@@ -38,6 +38,33 @@ import { LayoutService } from './LayoutService';
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
 describe('reference marker layout geometry', () => {
+  it.each([NoteElement, MartyriaElement])(
+    'honors manual marker placement despite overlapping glyphs for %s',
+    (Anchor) => {
+      const anchor = new Anchor();
+      const setup = new PageSetup();
+      setup.neumeDefaultFontSize = 20;
+      const base = [{ left: 0, right: 40, top: -20, bottom: 0 }];
+      const obstacles = [{ left: 0, right: 40, top: -60, bottom: 0 }];
+      const metrics = { width: 10, height: 10, strokeWidth: 0 };
+      const position = () =>
+        LayoutService['getFootnoteMarkerInkBox'](
+          anchor,
+          setup,
+          base,
+          obstacles,
+          metrics,
+        );
+      const automatic = position();
+      anchor.footnotePositionOverride = true;
+      anchor.footnoteOffsetX = 0.25;
+      anchor.footnoteOffsetY = 0.5;
+      expect(position()).toEqual({ left: 20, right: 30, top: -15, bottom: -5 });
+      anchor.footnotePositionOverride = false;
+      expect(position().top).toBe(automatic.top);
+    },
+  );
+
   it.each([false, true])(
     'excludes markers and their offsets from musical collision geometry (RTL=%s)',
     (rtl) => {

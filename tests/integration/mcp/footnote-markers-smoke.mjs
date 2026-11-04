@@ -87,15 +87,15 @@ try {
       `document.querySelector(${JSON.stringify(selector)})?.textContent.trim()`,
     );
   }
-  async function click(selector, button = 'left') {
-    await eventually(async () =>
-      assert.ok(
-        await evaluate(`document.querySelector(${JSON.stringify(selector)})`),
-      ),
-    );
+  async function click(selector, button = 'left', labelPrefix = null) {
+    const target =
+      labelPrefix === null
+        ? `document.querySelector(${JSON.stringify(selector)})`
+        : `[...document.querySelectorAll(${JSON.stringify(selector)})].find(n=>n.textContent.trim().startsWith(${JSON.stringify(labelPrefix)}))`;
+    await eventually(async () => assert.ok(await evaluate(target)));
     const point = await eventually(async () => {
       const result = await evaluate(
-        `(() => {const n=document.querySelector(${JSON.stringify(selector)}); n.scrollIntoView({block:'center'}); const r=n.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2; let settled=true;for(let p=n;p;p=p.parentElement){if(p.getAnimations().some(a=>a.playState==='running')) settled=false;}return {x,y,hit:settled&&n.contains(document.elementFromPoint(x,y))};})()`,
+        `(() => {const n=${target}; n.scrollIntoView({block:'center'}); const r=n.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2; let settled=true;for(let p=n;p;p=p.parentElement){if(p.getAnimations().some(a=>a.playState==='running')) settled=false;}return {x,y,hit:settled&&n.contains(document.elementFromPoint(x,y))};})()`,
       );
       assert.ok(
         result.hit,
@@ -115,23 +115,53 @@ try {
   async function open(selector) {
     await click(selector, 'right');
     await click(
-      '[role="menu"][data-state="open"] [data-testid="footnote-properties-menu"]',
+      '[role="menu"][data-state="open"] [role="menuitem"]',
+      'left',
+      'Footnote Properties',
     );
     await eventually(async () =>
       assert.equal(await text('[role="dialog"] h2'), 'Footnote Properties'),
     );
   }
   async function choose(value) {
-    const custom = value !== null;
-    const enabled = await evaluate(
-      "!document.querySelector('#footnote-custom-marker').disabled",
+    await input(value ?? '');
+  }
+  async function expandPositioning() {
+    assert.equal(
+      await evaluate(
+        `document.querySelector('#footnote-positioning-trigger button').getAttribute('aria-expanded')`,
+      ),
+      'false',
     );
-    if (enabled !== custom) {
-      await click('#footnote-custom-enabled');
-    }
-    if (custom) {
-      await input(value);
-    }
+    await click('#footnote-positioning-trigger button');
+    await eventually(async () =>
+      assert.ok(
+        await evaluate(
+          `!!document.querySelector('#footnote-offset-x') && document.querySelector('[role="dialog"]').getAnimations({subtree:true}).every(a=>a.playState!=='running')`,
+        ),
+      ),
+    );
+  }
+  async function assertHandleCentered() {
+    const delta = await evaluate(`(() => {
+      const marker = document.querySelector('[data-testid="footnote-position-preview"]');
+      const handle = document.querySelector('[data-testid="footnote-drag-handle"]').getBoundingClientRect();
+      const rect = marker.getBoundingClientRect();
+      const style = getComputedStyle(marker);
+      const size = parseFloat(style.fontSize);
+      const context = document.createElement('canvas').getContext('2d');
+      context.font = style.fontStyle + ' ' + style.fontWeight + ' ' + style.fontSize + ' ' + style.fontFamily;
+      const metrics = context.measureText(marker.textContent);
+      const baseline = metrics.fontBoundingBoxAscent + (size - metrics.fontBoundingBoxAscent - metrics.fontBoundingBoxDescent) / 2;
+      return {
+        x: handle.x + handle.width / 2 - (rect.x + (metrics.actualBoundingBoxRight - metrics.actualBoundingBoxLeft) / 2),
+        y: handle.y + handle.height / 2 - (rect.y + baseline + (metrics.actualBoundingBoxDescent - metrics.actualBoundingBoxAscent) / 2),
+      };
+    })()`);
+    assert.ok(
+      Math.abs(delta.x) < 2 && Math.abs(delta.y) < 2,
+      `Handle should be centered on visible marker ink: ${JSON.stringify(delta)}`,
+    );
   }
   async function input(value) {
     await evaluate(
@@ -474,9 +504,47 @@ try {
       properties: { footnoteOffsetX: 0, footnoteOffsetY: 0 },
     },
   ]);
-  for (const anchor of anchors) {
+  await placementEdit([
+    {
+      action: 'update',
+      elementType: 'Note',
+      elementRef: anchors[1].elementRef,
+      properties: { measureBarRight: 'MeasureBarRight' },
+    },
+  ]);
+  for (const [index, anchor] of anchors.entries()) {
     await open(anchorSelector(anchor.properties.footnoteId));
-    assert.ok(await evaluate(`!!document.querySelector('#footnote-offset-x')`));
+    await expandPositioning();
+    assert.equal(
+      await evaluate(
+        `document.querySelectorAll('[data-testid="footnote-preview-neighbor"]').length`,
+      ),
+      index === 0 ? 1 : 2,
+    );
+    if (index === 1) {
+      const relativeBarPosition = (selector) =>
+        evaluate(
+          `(() => {const n=document.querySelector(${JSON.stringify(selector)}); const rect=(selector)=>{const range=document.createRange();range.selectNodeContents(n.querySelector(selector));return range.getBoundingClientRect();}; const bar=rect(':scope > .measure-bar'); const base=rect(':scope > span:not(.measure-bar)'); return {x:bar.x-base.x,y:bar.y-base.y};})()`,
+        );
+      const previewBar = await relativeBarPosition(
+        '[data-testid="footnote-preview-anchor"] > .neume',
+      );
+      const pageBar = await relativeBarPosition(
+        `${anchorSelector(anchor.properties.footnoteId)} .neume-box > .neume`,
+      );
+      assert.ok(
+        Math.abs(previewBar.x / 2 - pageBar.x) < 1,
+        'Preview measure bar matches page horizontal placement at 2x zoom',
+      );
+      assert.ok(
+        Math.abs(previewBar.y / 2 - pageBar.y) < 1,
+        `Preview measure bar matches page vertical placement: ${JSON.stringify({ previewBar, pageBar })}`,
+      );
+    }
+    assert.equal(
+      await evaluate(`document.querySelector('#footnote-offset-x').disabled`),
+      true,
+    );
     await evaluate(
       `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Cancel').click()`,
     );
@@ -487,7 +555,61 @@ try {
       ),
     );
   }
+  await placementEdit([
+    {
+      action: 'update',
+      elementType: 'Note',
+      elementRef: anchors[1].elementRef,
+      properties: { measureBarRight: null },
+    },
+  ]);
   await open(anchorSelector(anchors[2].properties.footnoteId));
+  await expandPositioning();
+  const previewTop = () =>
+    evaluate(
+      `parseFloat(document.querySelector('[data-testid="footnote-position-preview"]').style.top)`,
+    );
+  const autoPreviewTop = await previewTop();
+  await click('#footnote-position-override');
+  assert.ok(
+    Math.abs((await previewTop()) - autoPreviewTop) < 0.01,
+    'Enabling override preserves the preview position',
+  );
+  await assertHandleCentered();
+  await input('Wide 123');
+  await assertHandleCentered();
+  await input('');
+  const dragPoint = await evaluate(
+    `(() => {const r=document.querySelector('[data-testid="footnote-drag-handle"]').getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`,
+  );
+  await socket.send('Input.dispatchMouseEvent', {
+    type: 'mousePressed',
+    ...dragPoint,
+    button: 'left',
+    clickCount: 1,
+  });
+  await socket.send('Input.dispatchMouseEvent', {
+    type: 'mouseMoved',
+    x: dragPoint.x + 20,
+    y: dragPoint.y + 20,
+    button: 'left',
+    buttons: 1,
+  });
+  await socket.send('Input.dispatchMouseEvent', {
+    type: 'mouseReleased',
+    x: dragPoint.x + 20,
+    y: dragPoint.y + 20,
+    button: 'left',
+    clickCount: 1,
+  });
+  assert.ok(
+    Math.abs((await previewTop()) - autoPreviewTop - 20) < 1,
+    'Dragging down is honored without collision adjustment',
+  );
+  await assertHandleCentered();
+  await evaluate(
+    `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Reset position').click()`,
+  );
   await evaluate(
     `(() => {const n=document.querySelector('#footnote-offset-x');n.focus();n.select();})()`,
   );
@@ -513,6 +635,13 @@ try {
   await undo('FileMenuRedo');
   await eventually(async () => assert.equal((await positions())[2].x, 0.25));
   await open(anchorSelector(anchors[2].properties.footnoteId));
+  await expandPositioning();
+  assert.equal(
+    await evaluate(
+      `document.querySelector('#footnote-position-override').getAttribute('aria-checked')`,
+    ),
+    'true',
+  );
   await evaluate(
     `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Reset position').click()`,
   );
@@ -586,6 +715,7 @@ try {
     );
   }
   await open(anchorSelector(anchors[0].properties.footnoteId));
+  await expandPositioning();
   assert.equal(await text('[data-testid="footnote-position-preview"]'), '*');
   await evaluate(
     `[...document.querySelectorAll('[role="dialog"] button')].find(n=>n.textContent.trim()==='Cancel').click()`,
@@ -683,7 +813,68 @@ try {
     placementPreview.outputFilePath,
     path.join(app.directory, 'positioned-markers.png'),
   );
-  await checkFootnoteMarkerCollisionSpacing(call, evaluate);
+  await checkFootnoteMarkerCollisionSpacing(
+    call,
+    evaluate,
+    async (anchor, rtl) => {
+      const id = anchor.properties.footnoteId;
+      const pagePosition = () =>
+        evaluate(`(() => {
+      const n = document.querySelector(${JSON.stringify(marker(id))});
+      const style = getComputedStyle(n);
+      const zoom = Number(getComputedStyle(n.closest('.page')).getPropertyValue('--zoom'));
+      return {x: parseFloat(style.${rtl ? 'right' : 'left'}) / zoom, y: parseFloat(style.top) / zoom};
+    })()`);
+      const previewPosition = () =>
+        evaluate(`(() => {
+      const style = document.querySelector('[data-testid="footnote-position-preview"]').style;
+      return {x: parseFloat(style.${rtl ? 'right' : 'left'}) / 2, y: parseFloat(style.top) / 2};
+    })()`);
+      const manualOverride = () =>
+        evaluate(
+          `window._editor.selectedWorkspace.value.score.staff.elements.find(n=>n.footnoteId===${JSON.stringify(id)}).footnotePositionOverride`,
+        );
+      const assertSamePosition = (actual, expected, description) => {
+        assert.ok(
+          Math.abs(actual.x - expected.x) < 0.02 &&
+            Math.abs(actual.y - expected.y) < 0.02,
+          `${description}, RTL=${rtl}: ${JSON.stringify({ actual, expected })}`,
+        );
+      };
+      const automatic = await pagePosition();
+      await open(anchorSelector(id));
+      await expandPositioning();
+      assertSamePosition(
+        await previewPosition(),
+        automatic,
+        'Automatic preview matches the finished page',
+      );
+      await click('#footnote-position-override');
+      assertSamePosition(
+        await previewPosition(),
+        automatic,
+        'Enabling override preserves the finished page position',
+      );
+      await update();
+      await eventually(async () => {
+        assert.equal(await manualOverride(), true);
+        assertSamePosition(
+          await pagePosition(),
+          automatic,
+          'Updating manual override preserves the finished page position',
+        );
+      });
+      await undo('FileMenuUndo');
+      await eventually(async () => {
+        assert.equal(await manualOverride(), false);
+        assertSamePosition(
+          await pagePosition(),
+          automatic,
+          'Undo restores automatic placement',
+        );
+      });
+    },
+  );
   await checkFootnoteNumbering({
     call,
     evaluate,

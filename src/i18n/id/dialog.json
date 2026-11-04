@@ -373,9 +373,13 @@
     "documentation": "Dokumentasi"
   },
   "footnoteProperties": {
+    "positioning": "Penempatan",
+    "overridePosition": "Atur posisi secara manual",
+    "dragMarker": "Seret penanda catatan kaki",
+
     "offsetX": "Pergeseran horizontal (em)",
     "offsetY": "Pergeseran vertikal (em)",
-    "positionHint": "Pergeseran diterapkan sebelum penyesuaian otomatis untuk menghindari tumpang tindih. Nilai positif menggeser ke kanan atau ke bawah.",
+    "positionHint": "Aktifkan pengaturan posisi manual untuk menyeret penanda atau mengubah pergeseran tanpa penyesuaian otomatis untuk menghindari tumpang tindih. Nilai positif menggeser ke kanan atau ke bawah.",
     "resetPosition": "Atur ulang posisi",
     "title": "Properti Catatan Kaki",
     "description": "Penanda otomatis mengikuti Pengaturan Halaman. Penanda khusus tidak memajukan urutan otomatis.",

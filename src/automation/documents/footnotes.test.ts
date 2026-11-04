@@ -41,6 +41,7 @@ describe('footnote transactions', () => {
       footnoteId: '00000000-0000-4000-8000-000000000001',
       footnoteNumber: 1,
       footnoteMarker: '*',
+      footnotePositionOverride: true,
       footnoteOffsetX: 0.3,
       footnoteOffsetY: -0.5,
     })) {
@@ -80,7 +81,11 @@ describe('footnote transactions', () => {
             {
               elementType,
               clientId: 'anchor',
-              properties: { footnoteOffsetX: 0.3, footnoteOffsetY: -0.5 },
+              properties: {
+                footnoteOffsetX: 0.3,
+                footnoteOffsetY: -0.5,
+                footnotePositionOverride: true,
+              },
             },
           ],
         },
@@ -104,6 +109,7 @@ describe('footnote transactions', () => {
       expect(workspace.score.staff.elements[0]).toBe(original);
       expect(original).toMatchObject({
         footnoteId: body.id,
+        footnotePositionOverride: true,
         footnoteOffsetX: 0.3,
         footnoteOffsetY: -0.5,
       });
@@ -115,6 +121,7 @@ describe('footnote transactions', () => {
 
   it.each([
     {},
+    { footnotePositionOverride: false },
     { footnoteOffsetX: 0 },
     { footnoteOffsetY: 0 },
     { footnoteOffsetX: -0.2, footnoteOffsetY: 0.4 },
@@ -140,7 +147,11 @@ describe('footnote transactions', () => {
             {
               elementType: 'Martyria',
               clientId: 'anchor',
-              properties: { footnoteOffsetX: 0.3, footnoteOffsetY: -0.5 },
+              properties: {
+                footnoteOffsetX: 0.3,
+                footnoteOffsetY: -0.5,
+                footnotePositionOverride: true,
+              },
             },
           ],
         },
@@ -158,6 +169,7 @@ describe('footnote transactions', () => {
       const expected = {
         elementType: 'Note',
         footnoteId: footnote.id,
+        footnotePositionOverride: true,
         footnoteOffsetX: 0.3,
         footnoteOffsetY: -0.5,
         ...properties,
@@ -167,6 +179,7 @@ describe('footnote transactions', () => {
       workspace.commandService.undo();
       expect(workspace.score.staff.elements[0]).toBe(original);
       expect(original).toMatchObject({
+        footnotePositionOverride: true,
         footnoteOffsetX: 0.3,
         footnoteOffsetY: -0.5,
       });
@@ -302,7 +315,11 @@ describe('footnote transactions', () => {
               action: 'update',
               elementType,
               elementRef: '@anchor',
-              properties: { footnoteOffsetX: 0.3, footnoteOffsetY: -0.2 },
+              properties: {
+                footnoteOffsetX: 0.3,
+                footnoteOffsetY: -0.2,
+                footnotePositionOverride: true,
+              },
             },
           ]),
           [],
@@ -311,6 +328,7 @@ describe('footnote transactions', () => {
       const anchor = workspace.score.staff.elements[0];
       expect(anchor).toMatchObject({
         footnoteId: workspace.score.footnotes[0].id,
+        footnotePositionOverride: true,
         footnoteOffsetX: 0.3,
         footnoteOffsetY: -0.2,
       });

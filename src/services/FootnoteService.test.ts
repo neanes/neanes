@@ -56,7 +56,12 @@ describe('footnote ownership', () => {
       loaded.staff.elements[0],
     ]) {
       expect(element).not.toBeInstanceOf(FootnoteAnchorElement);
-      for (const key of ['footnoteId', 'footnoteOffsetX', 'footnoteOffsetY']) {
+      for (const key of [
+        'footnoteId',
+        'footnoteOffsetX',
+        'footnoteOffsetY',
+        'footnotePositionOverride',
+      ]) {
         expect(element).not.toHaveProperty(key);
       }
     }
@@ -67,12 +72,14 @@ describe('footnote ownership', () => {
     (Replacement) => {
       const source = new MartyriaElement();
       source.footnoteId = 'body';
+      source.footnotePositionOverride = true;
       source.footnoteOffsetX = 0.3;
       source.footnoteOffsetY = -0.5;
       const replacement = new Replacement();
       transferFootnoteReference(source, replacement);
       expect(replacement).toMatchObject({
         footnoteId: 'body',
+        footnotePositionOverride: true,
         footnoteOffsetX: 0.3,
         footnoteOffsetY: -0.5,
       });
@@ -92,6 +99,34 @@ describe('footnote ownership', () => {
     expect(replacement.footnoteOffsetY).toBe(-0.5);
   });
 
+  it('preserves an explicit false position override during replacement', () => {
+    const source = new MartyriaElement();
+    source.footnoteId = 'body';
+    source.footnotePositionOverride = true;
+    const replacement = new NoteElement();
+    transferFootnoteReference(source, replacement, {
+      footnotePositionOverride: false,
+    });
+    expect(replacement.footnotePositionOverride).toBe(false);
+  });
+
+  it('defaults older scores to automatic positioning', () => {
+    const workspace = new Workspace();
+    workspace.score.staff.elements.unshift(
+      new NoteElement(),
+      new MartyriaElement(),
+    );
+    const saved = SaveService.SaveScoreToJson(workspace.score);
+    expect(saved.staff.elements[0]).not.toHaveProperty(
+      'footnotePositionOverride',
+      true,
+    );
+    const loaded = SaveService.LoadScoreFromJson(saved);
+    for (const element of loaded.staff.elements.slice(0, 2)) {
+      expect(element).toHaveProperty('footnotePositionOverride', false);
+    }
+  });
+
   it('keeps replacement offsets when the source has no footnote to transfer', () => {
     const replacement = new NoteElement();
     replacement.footnoteOffsetY = -0.2;
@@ -105,6 +140,7 @@ describe('footnote ownership', () => {
     (Anchor) => {
       const workspace = new Workspace();
       const reference = new Anchor();
+      reference.footnotePositionOverride = true;
       reference.footnoteOffsetX = 0.25;
       reference.footnoteOffsetY = -0.5;
       workspace.score.staff.elements.unshift(reference);
@@ -115,12 +151,14 @@ describe('footnote ownership', () => {
       );
       expect(loaded.staff.elements[0]).toMatchObject({
         footnoteId: insertion.footnote.id,
+        footnotePositionOverride: true,
         footnoteOffsetX: 0.25,
         footnoteOffsetY: -0.5,
       });
       const clone = reference.clone();
       expect(clone).toMatchObject({
         footnoteId: insertion.footnote.id,
+        footnotePositionOverride: true,
         footnoteOffsetX: 0.25,
         footnoteOffsetY: -0.5,
       });

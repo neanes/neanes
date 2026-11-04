@@ -3385,6 +3385,28 @@ const editedFootnote = computed(() =>
     ({ footnote }) => footnote.id === editedFootnoteId.value,
   ),
 );
+const footnotePreviewLineElements = computed(() => {
+  const reference = editedFootnote.value?.reference;
+  if (!(reference instanceof FootnoteAnchorElement)) {
+    return [];
+  }
+  return (
+    pages.value[reference.page - 1]?.lines[reference.line - 1]?.elements ?? []
+  );
+});
+const footnotePreviewNeighbors = computed(() => {
+  const reference = editedFootnote.value?.reference;
+  const musicalElements = footnotePreviewLineElements.value.filter(
+    (element): element is NoteElement | MartyriaElement | TempoElement =>
+      element instanceof NoteElement ||
+      element instanceof MartyriaElement ||
+      element instanceof TempoElement,
+  );
+  const index = musicalElements.findIndex((element) => element === reference);
+  return [musicalElements[index - 1], musicalElements[index + 1]].filter(
+    (element) => element !== undefined,
+  );
+});
 watch(editedFootnote, (entry) => {
   if (entry === undefined) {
     footnotePropertiesDialogIsOpen.value = false;
@@ -3399,7 +3421,10 @@ function openFootnoteProperties(id: string) {
 
 function updateFootnoteMarker(
   marker: string | null,
-  offsets: Pick<FootnoteAnchorElement, 'footnoteOffsetX' | 'footnoteOffsetY'>,
+  offsets: Pick<
+    FootnoteAnchorElement,
+    'footnoteOffsetX' | 'footnoteOffsetY' | 'footnotePositionOverride'
+  >,
 ) {
   const entry = editedFootnote.value!;
   const commands = [footnoteMarkerUpdateCommand(entry.footnote, marker)];
@@ -10747,6 +10772,8 @@ function renderTabLabel(tab: Tab) {
       v-if="footnotePropertiesDialogIsOpen && editedFootnote !== undefined"
       v-model:open="footnotePropertiesDialogIsOpen"
       :footnote="editedFootnote.footnote"
+      :surrounding-elements="footnotePreviewNeighbors"
+      :line-elements="footnotePreviewLineElements"
       :anchor="
         editedFootnote.reference instanceof FootnoteAnchorElement
           ? editedFootnote.reference

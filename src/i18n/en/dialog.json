@@ -373,9 +373,13 @@
     "documentation": "Documentation"
   },
   "footnoteProperties": {
+    "positioning": "Positioning",
+    "overridePosition": "Override position",
+    "dragMarker": "Drag footnote marker",
+
     "offsetX": "Horizontal offset (em)",
     "offsetY": "Vertical offset (em)",
-    "positionHint": "Offsets apply before automatic collision clearance. Positive values move right or down.",
+    "positionHint": "Enable Override position to drag the marker or edit offsets without automatic collision adjustment. Positive values move right or down.",
     "resetPosition": "Reset position",
     "title": "Footnote Properties",
     "description": "Automatic markers follow Page Setup. Custom markers do not advance the automatic sequence.",

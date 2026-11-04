@@ -826,54 +826,17 @@ export class LayoutService {
 
     for (const page of pages) {
       for (const line of page.lines) {
-        if (
-          !line.elements.some(
-            (element) =>
-              element instanceof FootnoteAnchorElement &&
-              element.footnoteMarker !== null,
-          )
-        ) {
-          continue;
-        }
-        const obstacles = line.elements.flatMap((element) =>
-          this.getReferenceMarkerObstacles(
-            element,
-            pageSetup,
-            measureBarWidthMap,
-          ),
-        );
-        for (const element of line.elements) {
-          if (
-            element instanceof FootnoteAnchorElement &&
-            element.footnoteMarker !== null
-          ) {
-            const x = pageSetup.melkiteRtl
-              ? pageSetup.pageWidth -
-                element.x -
-                (element as NoteElement | MartyriaElement).neumeWidth
-              : element.x;
-            const position = this.getFootnoteMarkerPosition(
-              element,
-              pageSetup,
-              score.paragraphStyles,
-              element.footnoteMarker,
-              obstacles.map((box) => ({
-                ...box,
-                left: box.left - x,
-                right: box.right - x,
-                top: box.top - element.y,
-                bottom: box.bottom - element.y,
-              })),
-            );
-            element.footnoteMarkerOffset = position.left;
-            element.footnoteMarkerTop = position.top;
-            obstacles.push({
-              left: position.inkBox.left + x,
-              right: position.inkBox.right + x,
-              top: position.inkBox.top + element.y,
-              bottom: position.inkBox.bottom + element.y,
-            });
-          }
+        for (const [
+          element,
+          position,
+        ] of this.getFootnoteMarkerPositionsForLine(
+          line.elements,
+          pageSetup,
+          score.paragraphStyles,
+          measureBarWidthMap,
+        )) {
+          element.footnoteMarkerOffset = position.left;
+          element.footnoteMarkerTop = position.top;
         }
       }
     }
@@ -2701,6 +2664,64 @@ export class LayoutService {
     }));
   }
 
+  // Shared by page layout and the positioning preview. Does not mutate elements.
+  public static getFootnoteMarkerPositionsForLine(
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    measureBarWidthMap = this.getMeasureBarWidthMap(pageSetup),
+  ) {
+    const positions = new Map<
+      FootnoteAnchorElement,
+      ReturnType<typeof LayoutService.getFootnoteMarkerPosition>
+    >();
+    if (
+      !elements.some(
+        (element) =>
+          element instanceof FootnoteAnchorElement &&
+          element.footnoteMarker !== null,
+      )
+    ) {
+      return positions;
+    }
+    const obstacles = elements.flatMap((element) =>
+      this.getReferenceMarkerObstacles(element, pageSetup, measureBarWidthMap),
+    );
+    for (const element of elements) {
+      if (
+        element instanceof FootnoteAnchorElement &&
+        element.footnoteMarker !== null
+      ) {
+        const x = pageSetup.melkiteRtl
+          ? pageSetup.pageWidth -
+            element.x -
+            (element as NoteElement | MartyriaElement).neumeWidth
+          : element.x;
+        const position = this.getFootnoteMarkerPosition(
+          element,
+          pageSetup,
+          paragraphStyles,
+          element.footnoteMarker,
+          obstacles.map((box) => ({
+            ...box,
+            left: box.left - x,
+            right: box.right - x,
+            top: box.top - element.y,
+            bottom: box.bottom - element.y,
+          })),
+        );
+        positions.set(element, position);
+        obstacles.push({
+          left: position.inkBox.left + x,
+          right: position.inkBox.right + x,
+          top: position.inkBox.top + element.y,
+          bottom: position.inkBox.bottom + element.y,
+        });
+      }
+    }
+    return positions;
+  }
+
   public static getFootnoteMarkerPosition(
     element: FootnoteAnchorElement,
     pageSetup: PageSetup,
@@ -2794,7 +2815,7 @@ export class LayoutService {
     const size = pageSetup.neumeDefaultFontSize;
     const { left, top } = positionFootnoteMarker(
       base,
-      boxes,
+      element.footnotePositionOverride ? [] : boxes,
       metrics.width,
       metrics.height,
       -size * 0.75,

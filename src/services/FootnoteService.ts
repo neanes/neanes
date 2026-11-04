@@ -35,6 +35,9 @@ export function transferFootnoteReference(
 ) {
   replacement.footnoteId = source.footnoteId;
   if (source.footnoteId !== null) {
+    if (!Object.hasOwn(explicitProperties, 'footnotePositionOverride')) {
+      replacement.footnotePositionOverride = source.footnotePositionOverride;
+    }
     for (const key of ['footnoteOffsetX', 'footnoteOffsetY'] as const) {
       if (!Object.hasOwn(explicitProperties, key)) {
         replacement[key] = source[key];

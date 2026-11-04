@@ -163,7 +163,11 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
   );
 }
 
-export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
+export async function checkFootnoteMarkerCollisionSpacing(
+  call,
+  evaluate,
+  verifyOverride,
+) {
   for (const rtl of [false, true]) {
     for (const scenario of [
       {
@@ -290,6 +294,8 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
         ),
       );
 
+      await verifyOverride(anchor, rtl);
+
       // The same shared geometry handles neighboring neumes and other markers.
       if (scenario.bar === 'MeasureBarShortDouble' && scenario.anchor === 0) {
         await edit([
@@ -331,6 +337,7 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
         await eventually(async () =>
           assert.deepEqual(await markerClearance(), []),
         );
+        await verifyOverride(anchor, rtl);
         const neumeDistance = await distance();
         await edit([
           {
@@ -394,6 +401,7 @@ export async function checkFootnoteMarkerCollisionSpacing(call, evaluate) {
         await eventually(async () =>
           assert.deepEqual(await markerClearance(), []),
         );
+        await verifyOverride(secondAnchor, rtl);
         const markerDistance = await distance();
         await edit([
           {

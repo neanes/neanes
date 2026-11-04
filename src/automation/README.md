@@ -110,7 +110,17 @@ clearance raises the marker after applying these offsets and accounts for
 collision regions across the finished musical line, including neighboring
 neumes, barlines, and other reference markers. Musical references do not reserve
 horizontal space or change line/page breaks. The Footnote Properties dialog exposes these same
-values with a preview and reset control.
+values in a positioning section that starts collapsed, with a draggable preview and reset control.
+The preview includes the preceding and following musical elements on the same
+line, dimmed and positioned using their page coordinates. Automatic marker
+placement in the preview uses the same finished-line obstacles and preceding
+reference markers as page layout.
+Set `footnotePositionOverride: true` to disable automatic collision clearance for that
+marker and use the offsets directly from the default baseline-relative position.
+The dialog enables manual controls with an Override position checkbox; enabling it
+preserves the current page position, and disabling it resets offsets to zero.
+The override is saved, copied, and inherited when replacing musical anchors;
+explicit replacement values (including `false`) take precedence.
 
 Page occurrence readers include the `footnote` region; page line counts include
 main and footnote lines. Range selections can identify the active footnote

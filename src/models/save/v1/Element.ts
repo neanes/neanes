@@ -58,6 +58,7 @@ export enum AcceptsLyricsOption {
 
 export class NoteElement extends ScoreElement {
   public footnoteId: string | undefined = undefined;
+  public footnotePositionOverride: boolean | undefined = undefined;
   public footnoteOffsetX: number | undefined = undefined;
   public footnoteOffsetY: number | undefined = undefined;
   public readonly elementType: ElementType = ElementType.Note;
@@ -160,6 +161,7 @@ export class NoteElement extends ScoreElement {
 
 export class MartyriaElement extends ScoreElement {
   public footnoteId: string | undefined = undefined;
+  public footnotePositionOverride: boolean | undefined = undefined;
   public footnoteOffsetX: number | undefined = undefined;
   public footnoteOffsetY: number | undefined = undefined;
   public readonly elementType: ElementType = ElementType.Martyria;

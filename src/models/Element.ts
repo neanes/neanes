@@ -154,6 +154,7 @@ export type NoteNotationState = Pick<
 // Musical anchors share stable footnote identity and derived marker geometry.
 export abstract class FootnoteAnchorElement extends ScoreElement {
   public footnoteId: string | null = null;
+  public footnotePositionOverride = false;
   public footnoteOffsetX = 0;
   public footnoteOffsetY = 0;
   // Derived after pagination; identity is independent of the displayed number.
@@ -275,6 +276,7 @@ export class NoteElement extends FootnoteAnchorElement {
   public getClipboardProperties(includeLyrics: boolean) {
     return {
       footnoteId: this.footnoteId,
+      footnotePositionOverride: this.footnotePositionOverride,
       footnoteOffsetX: this.footnoteOffsetX,
       footnoteOffsetY: this.footnoteOffsetY,
       ...(includeLyrics
@@ -970,6 +972,7 @@ export class MartyriaElement extends FootnoteAnchorElement {
   public getClipboardProperties() {
     return {
       footnoteId: this.footnoteId,
+      footnotePositionOverride: this.footnotePositionOverride,
       footnoteOffsetX: this.footnoteOffsetX,
       footnoteOffsetY: this.footnoteOffsetY,
       auto: this.auto,

@@ -1285,6 +1285,7 @@ export class SaveService {
 
   public static SaveMartyria(element: MartyriaElement_v1, e: MartyriaElement) {
     element.footnoteId = e.footnoteId ?? undefined;
+    element.footnotePositionOverride = e.footnotePositionOverride || undefined;
     element.footnoteOffsetX = e.footnoteOffsetX || undefined;
     element.footnoteOffsetY = e.footnoteOffsetY || undefined;
     element.auto = e.auto || undefined;
@@ -1321,6 +1322,7 @@ export class SaveService {
 
   public static SaveNote(element: NoteElement_v1, e: NoteElement) {
     element.footnoteId = e.footnoteId ?? undefined;
+    element.footnotePositionOverride = e.footnotePositionOverride || undefined;
     element.footnoteOffsetX = e.footnoteOffsetX || undefined;
     element.footnoteOffsetY = e.footnoteOffsetY || undefined;
     if (e.lyricsParagraphStyleId !== BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics) {
@@ -2255,6 +2257,7 @@ export class SaveService {
     e: MartyriaElement_v1,
   ) {
     element.footnoteId = e.footnoteId ?? null;
+    element.footnotePositionOverride = e.footnotePositionOverride ?? false;
     element.footnoteOffsetX = e.footnoteOffsetX ?? 0;
     element.footnoteOffsetY = e.footnoteOffsetY ?? 0;
     element.auto = e.auto === true;
@@ -2321,6 +2324,7 @@ export class SaveService {
 
   public static LoadNote_v1(element: NoteElement, e: NoteElement_v1) {
     element.footnoteId = e.footnoteId ?? null;
+    element.footnotePositionOverride = e.footnotePositionOverride ?? false;
     element.footnoteOffsetX = e.footnoteOffsetX ?? 0;
     element.footnoteOffsetY = e.footnoteOffsetY ?? 0;
     element.lyricsParagraphStyleId =

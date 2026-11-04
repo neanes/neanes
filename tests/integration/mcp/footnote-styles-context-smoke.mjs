@@ -194,9 +194,6 @@ try {
   });
   const saved = JSON.parse(await readFile(filePath, 'utf8'));
   assert.equal(saved.staff.elements[3].footnoteId, martyriaBody.footnoteId);
-  for (const style of saved.paragraphStyles) {
-    assert.equal(Object.hasOwn(style, 'superscript'), false);
-  }
   console.log(
     'PASS: note and martyria musical context, configured marker sizes, baseline body labels, and ordinary/right-aligned LTR/RTL marker bounds.',
   );

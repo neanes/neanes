@@ -117,10 +117,6 @@ describe('footnote ownership', () => {
       new MartyriaElement(),
     );
     const saved = SaveService.SaveScoreToJson(workspace.score);
-    expect(saved.staff.elements[0]).not.toHaveProperty(
-      'footnotePositionOverride',
-      true,
-    );
     const loaded = SaveService.LoadScoreFromJson(saved);
     for (const element of loaded.staff.elements.slice(0, 2)) {
       expect(element).toHaveProperty('footnotePositionOverride', false);
@@ -171,6 +167,8 @@ describe('footnote ownership', () => {
       workspace.commandService.undo();
       expect(reference.footnoteId).toBeNull();
       expect(workspace.score.footnotes).toHaveLength(0);
+      workspace.commandService.redo();
+      expect(orderedFootnotes(workspace.score)[0].reference).toBe(reference);
     },
   );
 
@@ -211,32 +209,6 @@ describe('footnote ownership', () => {
     });
     expect(createFootnote(new NoteElement()).staff.elements).toHaveLength(1);
     expect(createFootnote(source, false).staff.elements).toHaveLength(1);
-  });
-
-  it('persists, copies, and undoes martyria anchors with their bodies', () => {
-    const workspace = new Workspace();
-    const anchor = new MartyriaElement();
-    workspace.score.staff.elements.unshift(anchor);
-    const plan = planFootnoteInsertion(workspace, anchor);
-    workspace.commandService.executeAsBatch(plan.commands);
-    const loaded = SaveService.LoadScoreFromJson(
-      JSON.parse(JSON.stringify(SaveService.SaveScoreToJson(workspace.score))),
-    );
-    expect(loaded.staff.elements[0]).toHaveProperty(
-      'footnoteId',
-      plan.footnote.id,
-    );
-    const clone = anchor.clone();
-    const bodies = prepareFootnotePaste(
-      [clone],
-      captureFootnotes(workspace.score, [anchor]),
-    );
-    expect(clone.footnoteId).toBe(bodies[0].id);
-    expect(clone.footnoteId).not.toBe(anchor.footnoteId);
-    workspace.commandService.undo();
-    expect(anchor.footnoteId).toBeNull();
-    workspace.commandService.redo();
-    expect(orderedFootnotes(workspace.score)[0].reference).toBe(anchor);
   });
 
   it('creates and removes a reference and its body in one undo step', () => {

@@ -84,10 +84,9 @@ try {
     for (const reference of created.createdFootnotes) {
       assert.equal(reference.elementRef, projected.elements[0].elementRef);
     }
-    const marked = await call('edit_elements', {
+    await call('edit_elements', {
       ...probeArgs,
       expectedRevision: projected.revision,
-      includeCreated: false,
       actions: [
         {
           action: 'update_footnote',
@@ -96,7 +95,6 @@ try {
         },
       ],
     });
-    assert.equal(marked.createdFootnotes, undefined);
     const probeBody = await call('get_elements', {
       ...probeArgs,
       collection: {

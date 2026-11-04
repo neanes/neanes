@@ -356,7 +356,17 @@ try {
   }
   // A single click keeps the editing context; a double-click opens the body.
   const ws = 'window._editor.selectedWorkspace.value';
-  await click('.page .rich-text-editor');
+  const richEditor = `document.querySelector(${JSON.stringify(marker(ids[2], true))})?.closest('.rich-text-editor')?.ckeditorInstance`;
+  await eventually(async () =>
+    assert.equal(await evaluate(`${richEditor}?.state`), 'ready'),
+  );
+  // Focus the marker's owner without aiming at the center of a full-width box,
+  // which can be clipped by the editor viewport on smaller displays.
+  await evaluate(`(() => {
+    const editor = ${richEditor};
+    editor.ui.getEditableElement().click();
+    editor.editing.view.focus();
+  })()`);
   await eventually(async () =>
     assert.equal(
       await evaluate('document.activeElement?.isContentEditable'),

@@ -36,7 +36,6 @@
   "main": "dist-electron/main/index.js",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
-    "cn": "^0.5.2",
     "electron-updater": "^6.8.11",
     "i18next": "^26.5.11",
     "i18next-pseudo": "^2.2.1",
@@ -70,6 +69,7 @@
     "@vueuse/core": "^15.0.0",
     "ckeditor5": "^49.0.1",
     "class-variance-authority": "^0.7.1",
+    "cn": "^0.5.2",
     "dockview-vue": "^8.7.1",
     "electron": "^45.2.2",
     "electron-builder": "^26.18.0",

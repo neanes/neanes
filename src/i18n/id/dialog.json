@@ -382,7 +382,6 @@
     "positionHint": "Aktifkan pengaturan posisi manual untuk menyeret penanda atau mengubah pergeseran tanpa penyesuaian otomatis untuk menghindari tumpang tindih. Nilai positif menggeser ke kanan atau ke bawah.",
     "resetPosition": "Atur ulang posisi",
     "title": "Properti Catatan Kaki",
-    "description": "Penanda otomatis mengikuti Pengaturan Halaman. Penanda khusus tidak memajukan urutan otomatis.",
     "customText": "Teks khusus",
     "reference": "Referensi",
     "body": "Label catatan kaki",

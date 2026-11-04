@@ -13,7 +13,7 @@
 
 <script setup lang="ts">
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import type { EditorConfig } from 'ckeditor5';
+import type { EditorConfig, ViewDocumentDomEventData } from 'ckeditor5';
 import { computed, inject, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
@@ -239,7 +239,11 @@ function onReady(editor: InlineEditor) {
     editor.ui.focusTracker.off('change:isFocused', onFocusChanged);
   };
 
-  const onViewClick = () => {
+  const onViewClick = (
+    _event: unknown,
+    data: ViewDocumentDomEventData<MouseEvent>,
+  ) => {
+    const isDoubleClick = data.domEvent.detail === 2;
     window.setTimeout(() => {
       if (registeredEditor !== editor) {
         return;
@@ -248,7 +252,7 @@ function onReady(editor: InlineEditor) {
       const selectedElement =
         editor.model.document.selection.getSelectedElement();
 
-      if (selectedElement?.name === FOOTNOTE_ELEMENT) {
+      if (isDoubleClick && selectedElement?.name === FOOTNOTE_ELEMENT) {
         footnotes?.navigate(String(selectedElement.getAttribute('footnoteId')));
       }
       if (selectedElement?.name === NEUME_ELEMENT) {

@@ -74,7 +74,7 @@ try {
       throw error;
     }
   }
-  async function click(selector) {
+  async function click(selector, clickCount = 1) {
     await eventually(async () =>
       assert.equal(
         await evaluate(
@@ -91,7 +91,7 @@ try {
         type,
         ...point,
         button: 'left',
-        clickCount: 1,
+        clickCount,
       });
     }
   }
@@ -201,6 +201,13 @@ try {
       ),
     );
     await click('.page .neanes-footnote');
+    await evaluate('new Promise(resolve => setTimeout(resolve, 0))');
+    assert.equal(
+      await evaluate(`${e}.ui.focusTracker.isFocused`),
+      true,
+      'A single click keeps focus in the rich text editor',
+    );
+    await click('.page .neanes-footnote', 2);
     await eventually(async () =>
       assert.equal(await evaluate(`${ws}.activeFootnoteId`), id),
     );

@@ -1,15 +1,13 @@
 <template>
   <Dialog v-model:open="open">
     <DialogContent
+      :aria-describedby="undefined"
       class="max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-md"
     >
       <DialogHeader>
         <DialogTitle>{{
           $t(($) => $.dialog.footnoteProperties.title, { ns: 'dialog' })
         }}</DialogTitle>
-        <DialogDescription>{{
-          $t(($) => $.dialog.footnoteProperties.description, { ns: 'dialog' })
-        }}</DialogDescription>
       </DialogHeader>
       <form
         id="footnote-properties-form"
@@ -256,7 +254,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,

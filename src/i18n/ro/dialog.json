@@ -382,7 +382,6 @@
     "positionHint": "Activați suprascrierea poziției pentru a trage marcajul sau a modifica deplasările fără ajustarea automată a suprapunerilor. Valorile pozitive deplasează spre dreapta sau în jos.",
     "resetPosition": "Resetare poziție",
     "title": "Proprietățile notei de subsol",
-    "description": "Marcajele automate respectă Configurarea paginii. Marcajele personalizate nu avansează secvența automată.",
     "customText": "Text personalizat",
     "reference": "Referință",
     "body": "Eticheta notei de subsol",

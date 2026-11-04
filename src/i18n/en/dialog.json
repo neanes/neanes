@@ -382,7 +382,6 @@
     "positionHint": "Enable Override position to drag the marker or edit offsets without automatic collision adjustment. Positive values move right or down.",
     "resetPosition": "Reset position",
     "title": "Footnote Properties",
-    "description": "Automatic markers follow Page Setup. Custom markers do not advance the automatic sequence.",
     "customText": "Custom text",
     "reference": "Reference",
     "body": "Footnote label",

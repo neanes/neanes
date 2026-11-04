@@ -267,7 +267,8 @@
     "previousFootnoteSymbol": "Simbolul anterior",
     "invalidFootnoteSymbol": "Introduceți un simbol din secvență, repetat de cel mult {{count}} ori.",
     "footnoteNumbers": "1, 2, 3, …",
-    "footnoteSymbols": "*, †, ‡, …"
+    "footnoteSymbols": "*, †, ‡, …",
+    "footnoteAsterisks": "*, **, ***, …"
   },
   "playbackSettings": {
     "root": "Setări de redare",

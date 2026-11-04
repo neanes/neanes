@@ -267,7 +267,8 @@
     "previousFootnoteSymbol": "Προηγούμενο σύμβολο",
     "invalidFootnoteSymbol": "Εισαγάγετε ένα σύμβολο από την ακολουθία, επαναλαμβανόμενο έως {{count}} φορές.",
     "footnoteNumbers": "1, 2, 3, …",
-    "footnoteSymbols": "*, †, ‡, …"
+    "footnoteSymbols": "*, †, ‡, …",
+    "footnoteAsterisks": "*, **, ***, …"
   },
   "playbackSettings": {
     "root": "Ρυθμίσεις Εκτέλεσης",

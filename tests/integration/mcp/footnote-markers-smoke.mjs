@@ -64,7 +64,7 @@ try {
   await call('update_page_setup', {
     ...args,
     expectedRevision: (await call('get_document_properties', args)).revision,
-    changes: { firstFootnoteNumber: 98 },
+    changes: { firstFootnoteNumber: 98, footnoteReferenceParentheses: true },
   });
   const elements = await call('get_elements', {
     ...args,
@@ -373,6 +373,12 @@ try {
         .revision,
       actions,
     });
+  await call('update_page_setup', {
+    ...placementArgs,
+    expectedRevision: (await call('get_document_properties', placementArgs))
+      .revision,
+    changes: { footnoteReferenceParentheses: true },
+  });
   const placementInitial = await call('get_elements', placementArgs);
   await placementEdit([
     {

@@ -82,7 +82,11 @@ export async function checkFootnoteNumbering({
       entry.properties.content.match(/data-footnote-id="([^"]+)"/)[1],
   );
   await edit([{ action: 'update_footnote', footnoteId: ids[4], marker: 'X' }]);
-  await settings({ footnoteFormat: 'symbols' });
+  await settings({
+    footnoteFormat: 'symbols',
+    footnoteNumbering: 'page',
+    footnoteReferenceParentheses: true,
+  });
   assert.equal(
     (await call('get_page_setup', args)).settings.footnoteNumbering,
     'page',
@@ -230,6 +234,7 @@ export async function checkFootnoteNumbering({
     const label = {
       numbers: '1, 2, 3, …',
       symbols: '*, †, ‡, …',
+      asterisks: '*, **, ***, …',
       section: 'Restart each section',
     }[value];
     const index = await evaluate(
@@ -250,7 +255,14 @@ export async function checkFootnoteNumbering({
     await evaluate(
       "document.querySelector('#page-setup-footnote-numbering').textContent.trim()",
     ),
-    'Continuous',
+    'Restart each page',
+  );
+  await select('#page-setup-footnote-format', 'asterisks');
+  assert.equal(
+    await evaluate(
+      "document.querySelector('#page-setup-first-footnote-number').value",
+    ),
+    '***',
   );
   await select('#page-setup-footnote-format', 'symbols');
   assert.equal(
@@ -263,14 +275,14 @@ export async function checkFootnoteNumbering({
     await evaluate(
       "document.querySelector('#page-setup-first-footnote-number').value",
     ),
-    '*',
+    '\u2021',
   );
   await click('[aria-label="Next symbol"]');
   assert.equal(
     await evaluate(
       "document.querySelector('#page-setup-first-footnote-number').value",
     ),
-    '\u2020',
+    '\u00a7',
   );
   await evaluate(
     "document.querySelector('#page-setup-first-footnote-number').focus();document.querySelector('#page-setup-first-footnote-number').select()",

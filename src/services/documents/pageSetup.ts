@@ -2,10 +2,7 @@ import type { z } from 'zod';
 
 import { type PageSetup, resolvePageDimensions } from '@/models/PageSetup';
 import type { Workspace } from '@/models/Workspace';
-import {
-  footnoteFormatDefaults,
-  isValidFootnoteStart,
-} from '@/services/FootnoteMarker';
+import { isValidFootnoteStart } from '@/services/FootnoteMarker';
 import { CommandFactory } from '@/services/history/CommandService';
 
 import {
@@ -43,18 +40,11 @@ export function updatePageSetup(
   input: PageSetupChanges | HeaderFooterChanges,
   kind: 'page' | 'headerFooter',
 ) {
-  let changes =
+  const changes =
     kind === 'page'
       ? pageSetupChangesSchema.parse(input)
       : headerFooterChangesSchema.parse(input);
   const setup = workspace.score.pageSetup;
-  if (
-    'footnoteFormat' in changes &&
-    changes.footnoteFormat !== undefined &&
-    changes.footnoteFormat !== setup.footnoteFormat
-  ) {
-    changes = { ...footnoteFormatDefaults(changes.footnoteFormat), ...changes };
-  }
   const next = { ...setup, ...changes };
   const values: Partial<PageSetup> = { ...changes };
   if (kind === 'page') {

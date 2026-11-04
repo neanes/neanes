@@ -75,7 +75,7 @@ copying the reference copies the body with a new identity.
 
 `get_page_setup` / `update_page_setup` expose `footnoteFormat` (`numbers` or
 `symbols`), `footnoteNumbering` (`continuous`, `page`, or `section`),
-`footnoteSymbolSequence` (currently `standard`), `firstFootnoteNumber`,
+`footnoteSymbolSequence` (`standard` or `asterisks`), `firstFootnoteNumber`,
 `showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent), and
 `footnoteReferenceParentheses` (defaults to true; applies to Note and Martyria
 reference markers). Placement and collision clearance use measured marker
@@ -83,11 +83,11 @@ ink bounds. Symbol positions use the same 1-based `firstFootnoteNumber`:
 `U+002A`, `U+2020`, `U+2021`, `U+00A7`, `U+00B6`, `U+2016`, then each symbol
 twice, three times, and so on. Starting values are limited to 1,000,000 for
 numbers or a label of at most 64 repeated symbols (positions 1-384 in the
-standard sequence). Invalid starts are rejected before applying settings; the
-automatic sequence itself can continue beyond this starting-value limit.
-Changing format resets the start to 1 and selects continuous numbering for
-numbers or page restarts for symbols, unless the request explicitly supplies
-those settings. Resending the current format preserves the start and numbering.
+standard sequence, 1-64 in the asterisks sequence). Invalid starts are rejected
+before applying settings; the automatic sequence itself can continue beyond this
+starting-value limit.
+The `asterisks` sequence uses `*`, `**`, `***`, and so on. Changing format or
+symbol sequence preserves the start and numbering.
 Page restarts follow physical pages, independent of displayed page numbers.
 Section restarts use the same nonempty section running markers as the editor;
 content before the first marker belongs to the initial section. Neither page

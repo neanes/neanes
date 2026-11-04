@@ -105,6 +105,30 @@ describe('automatic footnote sequences', () => {
     }
   });
 
+  it('repeats asterisks and persists the selected sequence', () => {
+    const { score } = fixture();
+    Object.assign(score.pageSetup, {
+      footnoteFormat: 'symbols',
+      footnoteSymbolSequence: 'asterisks',
+      firstFootnoteNumber: 2,
+    });
+    expect(labels(score)).toEqual(['**', '***', '****', '*****']);
+    const loaded = SaveService.LoadScoreFromJson(
+      JSON.parse(JSON.stringify(SaveService.SaveScoreToJson(score))),
+    );
+    expect(loaded.pageSetup.footnoteSymbolSequence).toBe('asterisks');
+    expect(labels(loaded)).toEqual(labels(score));
+    expect(footnoteStartMax('symbols', 'asterisks')).toBe(64);
+    expect(isValidFootnoteStart(65, 'symbols', 'asterisks')).toBe(false);
+    expect(footnoteSymbol(65, 'asterisks')).toBe('*'.repeat(65));
+    for (let position = 1; position <= 64; position++) {
+      expect(footnoteSymbolPosition('*'.repeat(position), 'asterisks')).toBe(
+        position,
+      );
+    }
+    expect(footnoteSymbolPosition('†', 'asterisks')).toBeNull();
+  });
+
   it('uses the configured start and skips custom markers', () => {
     const { score } = fixture();
     score.pageSetup.footnoteFormat = 'symbols';

@@ -572,8 +572,13 @@
                             ns: 'dialog',
                           })
                         }}</SelectItem>
-                        <SelectItem value="symbols">{{
+                        <SelectItem value="standard">{{
                           $t(($) => $.dialog.pageSetup.footnoteSymbols, {
+                            ns: 'dialog',
+                          })
+                        }}</SelectItem>
+                        <SelectItem value="asterisks">{{
+                          $t(($) => $.dialog.pageSetup.footnoteAsterisks, {
                             ns: 'dialog',
                           })
                         }}</SelectItem>
@@ -601,17 +606,11 @@
                     </Select>
                   </Field>
                   <Field orientation="horizontal">
-                    <FieldContent>
-                      <FieldLabel for="page-setup-first-footnote-number">{{
-                        $t(($) => $.dialog.pageSetup.firstFootnoteNumber, {
-                          ns: 'dialog',
-                        })
-                      }}</FieldLabel>
-                      <FieldDescription
-                        v-if="form.footnoteFormat === 'symbols'"
-                        >{{ symbolSequencePreview }}</FieldDescription
-                      >
-                    </FieldContent>
+                    <FieldLabel for="page-setup-first-footnote-number">{{
+                      $t(($) => $.dialog.pageSetup.firstFootnoteNumber, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
                     <FootnoteSymbolInput
                       v-if="form.footnoteFormat === 'symbols'"
                       id="page-setup-first-footnote-number"
@@ -1718,6 +1717,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { MartyriaElement, TempoElement } from '@/models/Element';
 import { ElementType, NoteElement } from '@/models/Element';
+import type { FootnoteSymbolSequence } from '@/models/FootnoteNumbering';
 import {
   Accidental,
   GorgonNeume,
@@ -1742,8 +1742,6 @@ import {
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { fontService } from '@/services/FontService';
 import {
-  footnoteFormatDefaults,
-  footnoteSymbol,
   isValidFootnoteStart,
   MAX_FOOTNOTE_START_NUMBER,
 } from '@/services/FootnoteMarker';
@@ -1997,11 +1995,14 @@ const footnoteStartValid = computed(
     (form.value.footnoteFormat !== 'symbols' || footnoteSymbolValid.value),
 );
 const footnoteFormat = computed({
-  get: () => form.value.footnoteFormat,
-  set: (value: PageSetup['footnoteFormat']) => {
-    if (value !== form.value.footnoteFormat) {
-      Object.assign(form.value, footnoteFormatDefaults(value));
-      footnoteSymbolValid.value = true;
+  get: () =>
+    form.value.footnoteFormat === 'numbers'
+      ? 'numbers'
+      : form.value.footnoteSymbolSequence,
+  set: (value: 'numbers' | FootnoteSymbolSequence) => {
+    form.value.footnoteFormat = value === 'numbers' ? 'numbers' : 'symbols';
+    if (value !== 'numbers') {
+      form.value.footnoteSymbolSequence = value;
     }
   },
 });
@@ -2013,12 +2014,6 @@ const footnoteNumberingOptions = new Map<
   ['page', ($) => $.dialog.pageSetup.footnoteRestartPage],
   ['section', ($) => $.dialog.pageSetup.footnoteRestartSection],
 ]);
-const symbolSequencePreview = computed(
-  () =>
-    Array.from({ length: 9 }, (_, index) =>
-      footnoteSymbol(index + 1, form.value.footnoteSymbolSequence),
-    ).join(' ') + ' …',
-);
 const neumeBulkColor = ref('#000000');
 
 const previewNeumes = computed(() => {

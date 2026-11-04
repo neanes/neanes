@@ -65,15 +65,6 @@ export function automaticFootnoteMarker(position: number, setup: PageSetup) {
     : String(position);
 }
 
-export function footnoteFormatDefaults(format: PageSetup['footnoteFormat']) {
-  return {
-    footnoteFormat: format,
-    footnoteNumbering:
-      format === 'symbols' ? ('page' as const) : ('continuous' as const),
-    firstFootnoteNumber: 1,
-  };
-}
-
 export function normalizeFootnoteMarker(marker: string | null) {
   if (marker === null) {
     return null;

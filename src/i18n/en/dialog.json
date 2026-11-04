@@ -267,7 +267,8 @@
     "previousFootnoteSymbol": "Previous symbol",
     "invalidFootnoteSymbol": "Enter a symbol from the sequence, repeated up to {{count}} times.",
     "footnoteNumbers": "1, 2, 3, …",
-    "footnoteSymbols": "*, †, ‡, …"
+    "footnoteSymbols": "*, †, ‡, …",
+    "footnoteAsterisks": "*, **, ***, …"
   },
   "playbackSettings": {
     "root": "Playback Settings",

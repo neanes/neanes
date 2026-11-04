@@ -267,7 +267,8 @@
     "previousFootnoteSymbol": "Simbol sebelumnya",
     "invalidFootnoteSymbol": "Masukkan simbol dari urutan, diulang hingga {{count}} kali.",
     "footnoteNumbers": "1, 2, 3, …",
-    "footnoteSymbols": "*, †, ‡, …"
+    "footnoteSymbols": "*, †, ‡, …",
+    "footnoteAsterisks": "*, **, ***, …"
   },
   "playbackSettings": {
     "root": "Pengaturan Pemutaran",

@@ -57,9 +57,11 @@ describe('focused page and header/footer settings', () => {
     workspace.commandService.undo();
     expect({ ...setup }).toEqual(original);
     updatePageSetup(workspace, { firstFootnoteNumber: 1_000_000 }, 'page');
-    // Switching format without an explicit start still resets to 1.
-    updatePageSetup(workspace, { footnoteFormat: 'symbols' }, 'page');
-    expect(setup.firstFootnoteNumber).toBe(1);
+    expect(() =>
+      updatePageSetup(workspace, { footnoteFormat: 'symbols' }, 'page'),
+    ).toThrow('INVALID_PAGE_SETUP');
+    expect(setup.footnoteFormat).toBe('numbers');
+    expect(setup.firstFootnoteNumber).toBe(1_000_000);
   });
 
   it('covers every persisted setting exactly once and excludes content, getters and transient settings', () => {
@@ -82,7 +84,7 @@ describe('focused page and header/footer settings', () => {
     );
   });
 
-  it('applies format defaults only on a format change, honors explicit overrides, and undoes them together', () => {
+  it('preserves numbering and start across format changes and undoes explicit changes together', () => {
     const workspace = new Workspace();
     const setup = workspace.score.pageSetup;
     updatePageSetup(workspace, { firstFootnoteNumber: 20 }, 'page');
@@ -91,7 +93,7 @@ describe('focused page and header/footer settings', () => {
       setup.footnoteFormat,
       setup.footnoteNumbering,
       setup.firstFootnoteNumber,
-    ]).toEqual(['symbols', 'page', 1]);
+    ]).toEqual(['symbols', 'continuous', 20]);
     workspace.commandService.undo();
     expect([
       setup.footnoteFormat,
@@ -130,9 +132,17 @@ describe('focused page and header/footer settings', () => {
     updatePageSetup(workspace, { footnoteFormat: 'symbols' }, 'page');
     updatePageSetup(workspace, { footnoteFormat: 'numbers' }, 'page');
     expect([setup.footnoteNumbering, setup.firstFootnoteNumber]).toEqual([
-      'continuous',
-      1,
+      'section',
+      3,
     ]);
+    updatePageSetup(workspace, { footnoteSymbolSequence: 'asterisks' }, 'page');
+    expect(readPageSetup(setup).footnoteSymbolSequence).toBe('asterisks');
+    expect([setup.footnoteNumbering, setup.firstFootnoteNumber]).toEqual([
+      'section',
+      3,
+    ]);
+    workspace.commandService.undo();
+    expect(setup.footnoteSymbolSequence).toBe('standard');
     expect(() =>
       updatePageSetup(
         workspace,

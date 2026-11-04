@@ -11,7 +11,6 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
-  RICH_TEXT_BOX_CONTENT_KEYS,
   RichTextBoxElement,
   supportsKeepWithNext,
   TempoElement,
@@ -66,7 +65,6 @@ import {
 import { DocumentProperties, Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 import { fontCatalog } from '@/services/FontCatalog';
-import { superscriptLegacyFootnoteMarkers } from '@/services/RichTextFootnotes';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { applyLegacyStyle, normalizeFontStyle } from '@/utils/fontStyle';
 import { applyAxes } from '@/utils/fontStyleAxes';
@@ -1712,19 +1710,6 @@ export class SaveService {
     score.footnotes = (s.footnotes ?? []).map((saved) =>
       this.LoadFootnote_v1(saved, score.pageSetup),
     );
-    if (
-      !s.paragraphStyles?.some(
-        (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
-      )
-    ) {
-      for (const element of score.staff.elements) {
-        if (element instanceof RichTextBoxElement) {
-          for (const key of RICH_TEXT_BOX_CONTENT_KEYS) {
-            element[key] = superscriptLegacyFootnoteMarkers(element[key]);
-          }
-        }
-      }
-    }
 
     return score;
   }

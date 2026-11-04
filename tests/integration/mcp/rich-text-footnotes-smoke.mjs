@@ -149,7 +149,7 @@ try {
     const markerAttributes = await evaluate(
       `(() => {const e=${e};const n=[...e.model.createRangeIn(e.model.document.getRoot()).getItems()].find(n=>n.is('element','footnoteReference'));return Object.fromEntries(n.getAttributes());})()`,
     );
-    assert.equal(markerAttributes.superscript, true);
+    assert.equal(markerAttributes.superscript, undefined);
     assert.equal(markerAttributes.fontSize, '24pt');
     assert.equal(markerAttributes.fontColor, '#112233');
 

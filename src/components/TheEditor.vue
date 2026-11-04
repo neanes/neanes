@@ -3491,12 +3491,8 @@ provide(richTextFootnoteControllerKey, {
         writer.createElement(FOOTNOTE_ELEMENT, {
           ...attributes,
           footnoteId: body.id,
-          superscript: true,
         }),
       );
-      if (attributes.superscript !== true) {
-        writer.removeSelectionAttribute('superscript');
-      }
     });
     // Insertion is flushed before navigating to the newly created body.
     flushPendingRichTextEditors(selectedWorkspace.value);

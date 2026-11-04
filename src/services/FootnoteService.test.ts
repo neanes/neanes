@@ -174,7 +174,7 @@ describe('footnote ownership', () => {
     },
   );
 
-  it('loads legacy rich markers as superscript while preserving modern normal markers', () => {
+  it('preserves rich marker HTML when loading scores without footnote styles', () => {
     const workspace = new Workspace();
     const body = new Footnote();
     const box = new RichTextBoxElement();
@@ -189,12 +189,7 @@ describe('footnote ownership', () => {
       (style) => !style.id.startsWith('footnote-'),
     );
     const loaded = SaveService.LoadScoreFromJson(saved);
-    expect(loaded.staff.elements[0]).toHaveProperty(
-      'content',
-      box.content
-        .replace('<span', '<sup><span')
-        .replace('</span>', '</span></sup>'),
-    );
+    expect(loaded.staff.elements[0]).toHaveProperty('content', box.content);
     const roundTrip = SaveService.LoadScoreFromJson(
       SaveService.SaveScoreToJson(loaded),
     );

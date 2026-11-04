@@ -50,9 +50,10 @@ For a main-score RichTextBox, `insert_footnote` also requires `contentKey` and
 immediately after a paragraph opening tag. Insertion inside tags, entities, or
 surrogate pairs is rejected. The panel must be active for the box's layout.
 Rich markers serialize as atomic `span.neanes-footnote` objects with a
-`data-footnote-id` attribute; displayed numbers are generated. Native superscript
-and surrounding inline formatting wrap the marker. These wrappers must be
-preserved when editing HTML. To remove a rich
+`data-footnote-id` attribute; displayed numbers are generated. Markers render
+with `font-variant-position: super`, using the font's superscript glyphs when
+available and browser-synthesized glyphs otherwise. Surrounding inline formatting
+wraps the marker and must be preserved when editing HTML. To remove a rich
 reference, update that panel's HTML to remove its span, or remove the owning box.
 The same transaction removes the body; undo restores both. Unknown or duplicate
 references and references outside main-score rich textboxes are rejected.

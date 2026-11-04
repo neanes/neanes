@@ -17,14 +17,6 @@
         @submit.prevent="submit"
       >
         <FieldGroup>
-          <Field orientation="horizontal">
-            <Checkbox id="footnote-custom-enabled" v-model="useCustomMarker" />
-            <FieldLabel for="footnote-custom-enabled">{{
-              $t(($) => $.dialog.footnoteProperties.useCustomMarker, {
-                ns: 'dialog',
-              })
-            }}</FieldLabel>
-          </Field>
           <Field>
             <FieldLabel for="footnote-custom-marker">{{
               $t(($) => $.dialog.footnoteProperties.customText, {
@@ -34,7 +26,6 @@
             <Input
               id="footnote-custom-marker"
               v-model="customText"
-              :disabled="!useCustomMarker"
               autocomplete="off"
               :aria-invalid="!valid"
             />
@@ -173,7 +164,6 @@ import InputUnit from '@/components/InputUnit.vue';
 import NeumeBoxMartyria from '@/components/NeumeBoxMartyria.vue';
 import NeumeBoxSyllable from '@/components/NeumeBoxSyllable.vue';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogClose,
@@ -218,7 +208,6 @@ const emit = defineEmits<{
 const open = defineModel<boolean>('open', { required: true });
 const offsetX = ref(0);
 const offsetY = ref(0);
-const useCustomMarker = ref(false);
 const customText = ref('');
 watch(
   [open, () => props.footnote],
@@ -229,12 +218,13 @@ watch(
     offsetX.value = props.anchor?.footnoteOffsetX ?? 0;
     offsetY.value = props.anchor?.footnoteOffsetY ?? 0;
     const marker = props.footnote.marker;
-    useCustomMarker.value = marker !== null;
     customText.value = marker ?? '';
   },
   { immediate: true },
 );
-const value = computed(() => (useCustomMarker.value ? customText.value : null));
+const value = computed(() =>
+  customText.value.trim() === '' ? null : customText.value,
+);
 const valid = computed(() => {
   try {
     normalizeFootnoteMarker(value.value);

@@ -382,7 +382,6 @@
     "customText": "Custom text",
     "reference": "Reference",
     "body": "Footnote label",
-    "invalid": "Enter 1–16 characters without line breaks.",
-    "useCustomMarker": "Use custom marker"
+    "invalid": "Enter 1–16 characters without line breaks."
   }
 }

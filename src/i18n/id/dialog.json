@@ -382,7 +382,6 @@
     "customText": "Teks khusus",
     "reference": "Referensi",
     "body": "Label catatan kaki",
-    "invalid": "Masukkan 1–16 karakter tanpa baris baru.",
-    "useCustomMarker": "Gunakan penanda khusus"
+    "invalid": "Masukkan 1–16 karakter tanpa baris baru."
   }
 }

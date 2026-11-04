@@ -382,7 +382,6 @@
     "customText": "Text personalizat",
     "reference": "Referință",
     "body": "Eticheta notei de subsol",
-    "invalid": "Introduceți 1–16 caractere fără întreruperi de rând.",
-    "useCustomMarker": "Folosește un marcaj personalizat"
+    "invalid": "Introduceți 1–16 caractere fără întreruperi de rând."
   }
 }

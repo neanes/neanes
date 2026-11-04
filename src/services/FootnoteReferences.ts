@@ -20,7 +20,24 @@ export function elementFootnoteIds(element: ScoreElement): string[] {
       : [];
 }
 
-export function orderedFootnotes(score: Score) {
+export type FootnotePageAssignments = ReadonlyMap<ScoreElement, number>;
+
+export function captureFootnotePageAssignments(
+  score: Score,
+): FootnotePageAssignments {
+  return new Map(
+    score.staff.elements.map((element) => [element, element.page]),
+  );
+}
+
+// Existing UI and discovery callers default to the current assignments. Layout
+// supplies a snapshot so preparation cannot observe partially updated pages.
+export function orderedFootnotes(
+  score: Score,
+  pageAssignments: FootnotePageAssignments = captureFootnotePageAssignments(
+    score,
+  ),
+) {
   const byId = new Map(
     score.footnotes.map((footnote) => [footnote.id, footnote]),
   );
@@ -49,11 +66,11 @@ export function orderedFootnotes(score: Score) {
       seen.add(footnote.id);
       if (
         score.pageSetup.footnoteNumbering === 'page' &&
-        element.page !== previousPage
+        pageAssignments.get(element)! !== previousPage
       ) {
         nextNumber = score.pageSetup.firstFootnoteNumber;
       }
-      previousPage = element.page;
+      previousPage = pageAssignments.get(element)!;
       const automaticMarker = automaticFootnoteMarker(
         nextNumber,
         score.pageSetup,

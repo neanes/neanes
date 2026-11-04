@@ -1,6 +1,8 @@
 import type { Score } from '@/models/Score';
+import type { Workspace } from '@/models/Workspace';
 
 import {
+  beginLayoutOperation,
   layoutReservations,
   reserveMeasuredTextBoxHeight,
 } from './layoutReservations';
@@ -38,5 +40,24 @@ export class LayoutReconciliation {
       throw new Error('LAYOUT_DID_NOT_SETTLE');
     }
     return changed;
+  }
+}
+
+// Both promise-driven workers and event-driven print renderers use the same
+// explicit operation boundary, supersession check, and bounded reconciliation.
+// Live editing retains its debounced callbacks and shares reservation storage.
+export class WorkspaceLayoutSettlement {
+  private readonly operation;
+  private readonly reconciliation = new LayoutReconciliation();
+
+  constructor(private readonly workspace: Workspace) {
+    this.operation = beginLayoutOperation(workspace, true);
+  }
+
+  apply(heights: TextBoxHeightMeasurement[]) {
+    if (beginLayoutOperation(this.workspace) !== this.operation) {
+      throw new Error('LAYOUT_OPERATION_SUPERSEDED');
+    }
+    return this.reconciliation.apply(this.workspace.score, heights);
   }
 }

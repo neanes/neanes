@@ -3,7 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { TextBoxElement } from '@/models/Element';
 import { Workspace } from '@/models/Workspace';
 
-import { LayoutReconciliation } from './layoutReconciliation';
+import {
+  LayoutReconciliation,
+  WorkspaceLayoutSettlement,
+} from './layoutReconciliation';
 import { beginLayoutOperation } from './layoutReservations';
 
 describe('detached layout reconciliation', () => {
@@ -93,5 +96,19 @@ describe('detached layout reconciliation', () => {
       state.apply(workspace.score, [{ element: body, width: 400, height: 10 }]),
     ).toBe(false);
     expect(body.height).toBe(12);
+  });
+});
+
+describe('explicit workspace layout settlement', () => {
+  it('shares pending-marker decisions and detects superseded operations', () => {
+    const workspace = new Workspace();
+    const settlement = new WorkspaceLayoutSettlement(workspace);
+    const reservations = beginLayoutOperation(workspace);
+    reservations.pending = true;
+    expect(settlement.apply([])).toBe(true);
+    reservations.pending = false;
+    expect(settlement.apply([])).toBe(false);
+    beginLayoutOperation(workspace, true);
+    expect(() => settlement.apply([])).toThrow('LAYOUT_OPERATION_SUPERSEDED');
   });
 });

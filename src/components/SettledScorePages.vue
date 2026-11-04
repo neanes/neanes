@@ -30,8 +30,7 @@ import {
   getBundledFontLoadDescriptors,
   getScoreFontLoadDescriptors,
 } from '@/services/rendering/fontReadiness';
-import { LayoutReconciliation } from '@/services/rendering/layoutReconciliation';
-import { beginLayoutOperation } from '@/services/rendering/layoutReservations';
+import { WorkspaceLayoutSettlement } from '@/services/rendering/layoutReconciliation';
 import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { SaveService } from '@/services/SaveService';
@@ -45,7 +44,7 @@ const props = defineProps<{
 const emit = defineEmits<{ ready: [pages: Page[]]; failed: [error: Error] }>();
 const pages = shallowRef<Page[] | null>(null);
 const renderPass = ref(0);
-const reconciliation = new LayoutReconciliation();
+let settlement: WorkspaceLayoutSettlement;
 const printPages =
   useTemplateRef<InstanceType<typeof ScorePrintPages>>('printPages');
 let stopped = false;
@@ -68,7 +67,7 @@ function measured(heights: TextBoxHeightMeasurement[]) {
     return;
   }
   try {
-    if (reconciliation.apply(props.workspace.score, heights)) {
+    if (settlement.apply(heights)) {
       renderPass.value++;
       pages.value = processPages();
     } else {
@@ -92,7 +91,7 @@ onMounted(async () => {
     );
     await document.fonts.ready;
     if (!stopped) {
-      beginLayoutOperation(props.workspace, true);
+      settlement = new WorkspaceLayoutSettlement(props.workspace);
       pages.value = processPages();
     }
   } catch (error) {

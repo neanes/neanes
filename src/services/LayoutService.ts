@@ -94,7 +94,6 @@ import {
   footnoteMarkerStyle,
   footnoteMarkerText,
   footnotePageSetup,
-  footnoteSectionHeight,
   positionFootnoteMarker,
 } from '@/services/FootnoteLayout';
 import {
@@ -115,11 +114,13 @@ import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
-import type { RunningMarkerPageMetadata } from '@/utils/runningMarkers';
-import { resolveNextRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
+import {
+  captureFootnotePageAssignments,
+  type FootnotePageAssignments,
+} from './FootnoteReferences';
 import {
   getLyricsBaseline,
   getLyricsTop,
@@ -127,6 +128,7 @@ import {
 } from './LyricsLayout';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
+import { buildContentPages } from './rendering/buildContentPages';
 import {
   type InkBounds,
   TextMeasurementService,
@@ -417,6 +419,7 @@ export class LayoutService {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
+    const previousPageAssignments = captureFootnotePageAssignments(score);
 
     score.staves.forEach((staff) =>
       staff.elements.forEach((element, index) => {
@@ -443,6 +446,7 @@ export class LayoutService {
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
+      previousPageAssignments,
       options,
     );
     const content = this.prepareContentLines(
@@ -488,178 +492,80 @@ export class LayoutService {
       }
     }
 
-    const pages: Page[] = [];
-
-    let page: Page = new Page();
-    page.physicalPageNumber = 1;
-
-    pages.push(page);
-
-    let currentPageHeightPx = 0;
-
-    let lastElementWasPageBreak = false;
-
-    // Phase 2: Place completed paragraphs onto pages
-    const extraHeaderFooterHeightCache = new Map<
-      number,
-      { extraHeaderHeightPx: number; extraFooterHeightPx: number }
-    >();
-
-    // Running-marker metadata is a left fold over pages: a page's metadata
-    // depends only on its own content and the previous page's metadata.
-    // Pages are appended in order, so fold each page exactly once when it
-    // has completed, and resolve the current, still-filling page on demand
-    // without folding it in.
-    let completedRunningMarkerPageCount = 0;
-    let completedRunningMarkerMetadata: RunningMarkerPageMetadata | null = null;
-    const resolveCurrentPageIsChapterOpening = () => {
-      while (completedRunningMarkerPageCount < pages.length - 1) {
-        completedRunningMarkerMetadata = resolveNextRunningMarkerPageMetadata(
-          pages[completedRunningMarkerPageCount],
-          completedRunningMarkerMetadata,
-        );
-        completedRunningMarkerPageCount++;
-      }
-
-      return resolveNextRunningMarkerPageMetadata(
-        page,
-        completedRunningMarkerMetadata,
-      ).isChapterOpening;
-    };
-
-    // Keep header/footer overflow reservation stable within a physical page.
-    // This mitigates intra-page drift when oversized headers/footers extend
-    // outside the margins, but it is not a predictive pagination fix and does
-    // not guarantee those out-of-margin layouts will behave correctly.
-    const getCachedExtraHeaderFooterHeight = () => {
-      const physicalPageNumber = page.physicalPageNumber;
-      const cachedHeights =
-        extraHeaderFooterHeightCache.get(physicalPageNumber);
-
-      if (cachedHeights != null) {
-        return cachedHeights;
-      }
-
-      // Running markers only affect header/footer selection, so skip the
-      // page scan entirely when neither is shown.
-      const isChapterOpening =
-        pageSetup.showHeader || pageSetup.showFooter
-          ? resolveCurrentPageIsChapterOpening()
-          : false;
-      const extraHeights = this.getExtraHeaderFooterHeight(
-        score,
-        pageSetup,
-        physicalPageNumber,
-        isChapterOpening,
-      );
-      extraHeaderFooterHeightCache.set(physicalPageNumber, extraHeights);
-
-      return extraHeights;
-    };
-
-    // Page margins depend only on the physical page number, so resolve them
-    // once per page instead of once per positioned element.
-    const resolvedPageMarginsCache = new Map<number, ResolvedPageMargins>();
-    const getCachedResolvedPageMargins = () => {
-      const physicalPageNumber = page.physicalPageNumber;
-      let resolvedMargins = resolvedPageMarginsCache.get(physicalPageNumber);
-
-      if (resolvedMargins == null) {
-        resolvedMargins = resolvePageMargins(pageSetup, physicalPageNumber);
-        resolvedPageMarginsCache.set(physicalPageNumber, resolvedMargins);
-      }
-
-      return resolvedMargins;
-    };
-
     const contentLines = this.getContentLines(
       layoutWorkspace.completedParagraphs,
     );
-    let pageFootnoteIds = new Set<string>();
-    const sectionHeight = (ids: Set<string>) =>
-      footnoteSectionHeight(
-        [...ids].map((id) => footnotes.get(id)!.height),
-        pageSetup.showFootnoteHorizontalRule,
-      );
-    const referencesForLines = (lines: ContentLine[]) =>
-      lines.flatMap((candidate) =>
-        candidate.positions.flatMap(({ position }) => {
-          const item = candidate.paragraph.paragraph[position.item];
-          if (item.type !== 'box' || !('element' in item)) {
-            return [];
-          }
-          const element = (item as ElementBox).element;
-          return elementFootnoteIds(element);
-        }),
-      );
-    for (const [candidateIndex, candidate] of contentLines.entries()) {
-      const { paragraph: completedParagraph, paragraphLineIndex } = candidate;
-      const { lineHeights, dropCapContinuationLines } = completedParagraph;
-      const additionalHeight =
-        paragraphLineIndex === 0
-          ? this.getLineSpanHeight(
-              lineHeights,
-              1,
-              dropCapContinuationLines,
-              neumeLineHeight,
-            )
-          : 0;
-      let { extraHeaderHeightPx, extraFooterHeightPx } =
-        getCachedExtraHeaderFooterHeight();
-      const innerPageHeight =
-        pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
-      const candidateIds = referencesForLines([candidate]);
-      const groupedIds =
-        paragraphLineIndex === 0
-          ? referencesForLines(
-              contentLines.slice(
-                candidateIndex,
-                candidateIndex + dropCapContinuationLines + 1,
-              ),
-            )
-          : candidateIds;
-      const requiredIds = new Set([...pageFootnoteIds, ...groupedIds]);
-      if (
-        (page.lines.length > 0 &&
-          currentPageHeightPx +
-            candidate.height +
-            additionalHeight +
-            sectionHeight(requiredIds) >
-            innerPageHeight) ||
-        lastElementWasPageBreak
-      ) {
-        page = new Page();
-        page.physicalPageNumber = pages.length + 1;
-        pages.push(page);
-        currentPageHeightPx = 0;
-        pageFootnoteIds = new Set();
-        ({ extraHeaderHeightPx, extraFooterHeightPx } =
-          getCachedExtraHeaderFooterHeight());
+    const paginationLines = contentLines.map((candidate) => {
+      const { paragraph, paragraphLineIndex } = candidate;
+      const elements = candidate.positions.flatMap(({ position }) => {
+        const item = paragraph.paragraph[position.item];
+        return item.type === 'box' && 'element' in item
+          ? [(item as ElementBox).element]
+          : [];
+      });
+      const continuationLines =
+        paragraphLineIndex === 0 ? paragraph.dropCapContinuationLines : 0;
+      return {
+        height: candidate.height,
+        elements,
+        footnoteIds: elements.flatMap(elementFootnoteIds),
+        pageBreak: elements.at(-1)?.pageBreak ?? false,
+        continuationLines,
+        additionalHeight: this.getLineSpanHeight(
+          paragraph.lineHeights,
+          1,
+          continuationLines,
+          neumeLineHeight,
+        ),
+      };
+    });
+    const decisions = buildContentPages(
+      paginationLines,
+      new Map([...footnotes].map(([id, body]) => [id, body.height])),
+      {
+        innerPageHeight: pageSetup.innerPageHeight,
+        showFootnoteHorizontalRule: pageSetup.showFootnoteHorizontalRule,
+        // The existing paginator freezes reservations before adding the first
+        // line to each page. Chapter-opening selection is therefore false at
+        // reservation time, even if the completed page later opens a chapter.
+        reservations: Array.from(
+          { length: contentLines.length + 1 },
+          (_, index) =>
+            this.getExtraHeaderFooterHeight(score, pageSetup, index + 1, false),
+        ),
+      },
+    );
+    const pages: Page[] = [];
+    const pageAssignments = new Map<ScoreElement, number>();
+    for (const [index, decision] of decisions.entries()) {
+      const page = new Page();
+      page.physicalPageNumber = index + 1;
+      page.footnoteOverflow = decision.footnoteOverflow;
+      const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
+      for (const placement of decision.lines) {
+        paginationLines[placement.index].elements.forEach((element) =>
+          pageAssignments.set(element, page.physicalPageNumber),
+        );
+        const previousLine =
+          page.lines.at(-1) ?? pages.at(-1)?.lines.at(-1) ?? null;
+        page.lines.push(
+          this.positionContentLine(
+            contentLines[placement.index],
+            pageSetup,
+            margins,
+            pageSetup.topMargin +
+              decision.reservation.extraHeaderHeightPx +
+              placement.top,
+            page.physicalPageNumber,
+            page.lines.length + 1,
+            previousLine,
+            neumeLineHeight,
+            lyricsBaseline,
+            measureBarWidthMap,
+          ),
+        );
       }
-      const previousPage = pages[pages.length - 2];
-      const previousLine =
-        page.lines.at(-1) ?? previousPage?.lines.at(-1) ?? null;
-      const line = this.positionContentLine(
-        candidate,
-        pageSetup,
-        getCachedResolvedPageMargins(),
-        pageSetup.topMargin + extraHeaderHeightPx + currentPageHeightPx,
-        page.physicalPageNumber,
-        page.lines.length + 1,
-        previousLine,
-        neumeLineHeight,
-        lyricsBaseline,
-        measureBarWidthMap,
-      );
-      page.lines.push(line);
-      candidateIds.forEach((id) => pageFootnoteIds.add(id));
-      currentPageHeightPx += candidate.height;
-      const reservedHeight = sectionHeight(pageFootnoteIds);
-      page.footnoteOverflow =
-        pageFootnoteIds.size > 0 &&
-        currentPageHeightPx + reservedHeight >
-          pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
-      page.footnotes = [...pageFootnoteIds].map((id) => {
+      page.footnotes = decision.footnoteIds.map((id) => {
         const prepared = footnotes.get(id)!;
         return {
           id,
@@ -672,10 +578,10 @@ export class LayoutService {
           labelX: 0,
         };
       });
-      lastElementWasPageBreak = line.elements.at(-1)?.pageBreak ?? false;
+      pages.push(page);
     }
 
-    const assigned = orderedFootnotes(score);
+    const assigned = orderedFootnotes(score, pageAssignments);
     const finalMarkers = Object.fromEntries(
       assigned.map(({ footnote, marker }) => [footnote.id, marker]),
     );
@@ -732,9 +638,9 @@ export class LayoutService {
         pageSetup,
         physicalPage.physicalPageNumber,
       );
-      const footerReservation = extraHeaderFooterHeightCache.get(
-        physicalPage.physicalPageNumber,
-      )!.extraFooterHeightPx;
+      const footerReservation =
+        decisions[physicalPage.physicalPageNumber - 1].reservation
+          .extraFooterHeightPx;
       const bodiesHeight =
         physicalPage.footnotes.reduce(
           (sum, footnote) => sum + footnote.height,
@@ -883,10 +789,11 @@ export class LayoutService {
   private static prepareFootnotes(
     workspace: Workspace,
     musicalContexts: Map<ScoreElement, MusicalContext>,
+    previousPageAssignments: FootnotePageAssignments,
     options?: LayoutDiagnosticsOptions,
   ) {
     const score = workspace.score;
-    const ordered = orderedFootnotes(score);
+    const ordered = orderedFootnotes(score, previousPageAssignments);
     const markers = Object.fromEntries(
       ordered.map(({ footnote, marker }) => [footnote.id, marker]),
     );

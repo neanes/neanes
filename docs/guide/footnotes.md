@@ -26,7 +26,7 @@ Click the music or text in a footnote to work with it using the usual editor con
 
 - To return to a musical footnote, right-click its note or martyria and choose **Edit footnote**, followed by its marker.
 - To open a footnote from rich text, double-click its superscript marker.
-- To return to the passage in the main score, click the footnote's label at the bottom of the page.
+- To return to the passage in the main score, double-click the footnote's label at the bottom of the page. Neanes selects the reference and scrolls it into view.
 
 To change the shared appearance of footnote text and markers, use `Format > Paragraph Styles`. The built-in **Footnote Text**, **Footnote Body Marker**, and **Footnote Reference** styles control the text, the labels beside footnote bodies, and the markers beside music, respectively. See [Paragraph Styles](/guide/text-and-styles.html).
 

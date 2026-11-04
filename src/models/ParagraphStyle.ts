@@ -415,6 +415,7 @@ export function createDefaultParagraphStyles() {
       BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
       'Footnote Reference',
       BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+      { color: '#ED0000' },
     ),
   ];
 }

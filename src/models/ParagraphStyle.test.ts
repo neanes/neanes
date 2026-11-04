@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { resources } from '@/i18n';
 import { Unit } from '@/utils/Unit';
 
+import { PageSetup } from './PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultBuiltInParagraphStyle,
@@ -72,7 +73,10 @@ describe('ParagraphStyle', () => {
         styles,
         BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
       ),
-    ).toMatchObject({ fontSize: 24, color: '#123456' });
+    ).toMatchObject({
+      fontSize: 24,
+      color: new PageSetup().gorgonDefaultColor,
+    });
   });
 
   it('resolves inheritance through parent styles and element overrides', () => {

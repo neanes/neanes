@@ -102,7 +102,7 @@
     "insert": "Inserează notă de subsol",
     "edit": "Editează nota de subsol {{number}}",
     "remove": "Elimină nota de subsol",
-    "returnToReference": "Revino la referință",
+    "returnToReference": "Dublu clic pentru a reveni la referință",
     "overflow": "Nota de subsol și referința sa nu încap pe această pagină. Scurtați nota sau măriți pagina. Exportul nu este disponibil până la rezolvarea problemei.",
     "nested": "Notele de subsol nu pot conține referințe la note de subsol.",
     "unsupportedExport": "Acest format de export nu acceptă încă note de subsol. Folosiți PDF sau PNG pentru a le păstra.",

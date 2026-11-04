@@ -2026,6 +2026,15 @@ const pageHandlers: ScorePageHandlers = {
   selectElement: (element) => {
     selectedElement.value = element;
   },
+  returnToFootnoteReference: (element) => {
+    selectedElement.value = element;
+    pages.value[element.page - 1].isVisible = true;
+    nextTick(() =>
+      document
+        .getElementById(`element-${element.id}`)
+        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
+    );
+  },
   selectLyrics: (element) => {
     selectedLyrics.value = element;
   },

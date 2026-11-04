@@ -318,7 +318,48 @@ try {
         ),
         beforeMain,
       );
+      const returnNavigation = await evaluate(`(() => {
+        const viewport = document.querySelector('.page-background');
+        const previousMaxHeight = viewport.style.maxHeight;
+        viewport.style.maxHeight = '180px';
+        document.querySelector('.footnote-label').scrollIntoView({block:'nearest'});
+        const reference = document.querySelector('.footnote-reference').parentElement;
+        const bounds = viewport.getBoundingClientRect();
+        const offscreen = reference.getBoundingClientRect().bottom < bounds.top;
+        return {previousMaxHeight, offscreen, scrollTop: viewport.scrollTop};
+      })()`);
+      assert.equal(returnNavigation.offscreen, true);
       await evaluate(`document.querySelector('.footnote-label').click()`);
+      assert.equal(
+        await evaluate(
+          `window._editor.selectedWorkspace.value.activeFootnoteId`,
+        ),
+        bodySelector.footnoteId,
+        'A single click does not return to the reference',
+      );
+      assert.equal(
+        await evaluate(`document.querySelector('.page-background').scrollTop`),
+        returnNavigation.scrollTop,
+      );
+      await evaluate(
+        `document.querySelector('.footnote-label').dispatchEvent(new MouseEvent('dblclick', {bubbles:true, detail:2}))`,
+      );
+      await eventually(async () => {
+        assert.equal(
+          await evaluate(`(() => {
+            const viewport = document.querySelector('.page-background').getBoundingClientRect();
+            const reference = document.querySelector('.footnote-reference').parentElement;
+            const bounds = reference.getBoundingClientRect();
+            return window._editor.selectedWorkspace.value.selectedElement.id === Number(reference.id.slice('element-'.length))
+              && bounds.top >= viewport.top && bounds.bottom <= viewport.bottom;
+          })()`),
+          true,
+          'Double-click selects the reference and scrolls it into view',
+        );
+      });
+      await evaluate(
+        `document.querySelector('.page-background').style.maxHeight = ${JSON.stringify(returnNavigation.previousMaxHeight)}`,
+      );
       assert.equal(
         await evaluate(
           `document.querySelector('label[for="lyrics-pane-text"]').textContent.trim()`,

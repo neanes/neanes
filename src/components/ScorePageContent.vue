@@ -178,7 +178,9 @@
     :title="
       i18next.t(($) => $.menu.footnotes.returnToReference, { ns: 'menu' })
     "
-    @click="!printMode && emit('selectElement', footnote.reference)"
+    @dblclick="
+      !printMode && emit('returnToFootnoteReference', footnote.reference)
+    "
   >
     <span class="footnote-body-marker" :style="bodyMarkerCss">{{
       footnoteBodyMarkerText(footnote.marker)

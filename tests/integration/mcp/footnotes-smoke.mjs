@@ -361,13 +361,23 @@ try {
         [false, true],
       );
       await evaluate(`document.getElementById('lyrics-pane-locked').click()`);
-      await evaluate(`(() => {
+      assert.deepEqual(
+        await evaluate(`(async () => {
         const text = document.getElementById('lyrics-pane-text');
         text.value = 'Changed words';
         text.dispatchEvent(new Event('input', {bubbles:true}));
-      })()`);
-      await evaluateMain(
-        `process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes('/index.html')).webContents.send('FileMenuUndo')`,
+        // Let the textarea's Vue model emit, before the assignment timer runs.
+        await Promise.resolve();
+        const typedLyrics = window._editor.selectedWorkspace.value.activeStaff.lyrics.text;
+        document.activeElement?.blur();
+        const shortcut = new KeyboardEvent('keydown', {
+          code: 'KeyZ', key: 'z', ctrlKey: true, metaKey: true,
+          bubbles: true, cancelable: true,
+        });
+        window.dispatchEvent(shortcut);
+        return { typedLyrics, handled: shortcut.defaultPrevented };
+      })()`),
+        { typedLyrics: 'Changed words', handled: true },
       );
       await eventually(async () => {
         assert.equal(
@@ -386,6 +396,32 @@ try {
         );
       });
 
+      await evaluateMain(
+        `process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes('/index.html')).webContents.send('FileMenuRedo')`,
+      );
+      await eventually(async () => {
+        assert.ok(
+          (
+            await call('get_staff_lyrics', {
+              ...args,
+              collection: bodySelector,
+            })
+          ).text.includes('Changed'),
+        );
+      });
+      await evaluateMain(
+        `process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes('/index.html')).webContents.send('FileMenuUndo')`,
+      );
+      await eventually(async () => {
+        assert.ok(
+          (
+            await call('get_staff_lyrics', {
+              ...args,
+              collection: bodySelector,
+            })
+          ).text.includes('First'),
+        );
+      });
       await evaluate(
         `document.querySelector('[data-footnote-id="${bodySelector.footnoteId}"] .text-box').focus()`,
       );

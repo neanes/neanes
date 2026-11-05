@@ -13,6 +13,7 @@
       class="rich-text-editor"
       :owner="element"
       :history-enabled="true"
+      :replay-history="replayHistory"
       :model-value="element.text"
       :config="editorConfig"
       @ready="onEditorReady"
@@ -62,6 +63,18 @@ import {
 import { withZoom } from '@/utils/withZoom';
 
 const ANNOTATION_LOCK_ID = 'ANNOTATION_LOCK_ID';
+
+function replayHistory(editor: InlineEditor, replay: () => void) {
+  const readOnly = editor.isReadOnly;
+  editor.disableReadOnlyMode(ANNOTATION_LOCK_ID);
+  try {
+    replay();
+  } finally {
+    if (readOnly) {
+      editor.enableReadOnlyMode(ANNOTATION_LOCK_ID);
+    }
+  }
+}
 
 const emit = defineEmits(['update', 'delete', 'select-neume']);
 const props = defineProps({

@@ -141,10 +141,19 @@ regression.
 The history-boundary scenario also saves pending typing in a rich textbox without
 footnotes, then sends real Undo/Redo keyboard events and toolbar clicks after Save and
 blur/refocus. The toolbar must remain enabled for committed score history even
-when native history is empty.
+when local Undo has no pending edit.
 It checks both native typing history and score fallback without double handling.
-It verifies that committed edits leave CKEditor's stacks, the live editor and caret survive
-Save, and earlier document edits remain reachable. The disposable Electron window
+It verifies that committed edits stop being available to local Undo, the live editor and caret survive
+Save, and earlier document edits remain reachable. Saving partially undone typing
+preserves native Redo through keyboard, toolbar, and menu actions; fresh typing
+still replaces that redo branch, and score Undo reaches the saved edit once.
+The same-textbox check crosses from native Undo to score Undo and redoes both
+edits. Paragraph-two carets and backward selections survive Save and score
+Undo/Redo across ordinary, inline top/bottom, and left/center/right panels;
+continued typing must stay at the restored caret.
+Blurred annotation replay retains its read-only state and focus, restores the
+selection, and preserves native Redo after refocusing the annotation.
+The disposable Electron window
 is activated with native show/focus before selecting rich text.
 
 The two-textbox Redo regression runs through menu actions, real keyboard events,

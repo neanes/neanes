@@ -222,9 +222,12 @@ try {
       );
       await typeInReadyEditor(selector, afterTeardown, 'USER_BLUR');
       await evaluate('document.activeElement.blur()');
-      assert.ok(
-        (await content(field)).content.includes('USER_BLUR'),
-        'Blur must preserve genuine typing',
+      // CKEditor's focus tracker reports blur asynchronously.
+      await eventually(async () =>
+        assert.ok(
+          (await content(field)).content.includes('USER_BLUR'),
+          'Blur must preserve genuine typing',
+        ),
       );
 
       const beforeTyping = await content(field);

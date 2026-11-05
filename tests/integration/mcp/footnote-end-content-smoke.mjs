@@ -129,14 +129,28 @@ try {
         clickCount: 1,
       });
     }
-    await eventually(async () =>
-      assert.equal(
-        await evaluate(
-          `${ws}.selectedElement === ${ws}.score.footnotes[${index}].staff.elements.at(${index === 4 ? -1 : -2})`,
-        ),
-        true,
-      ),
-    );
+    await eventually(async () => {
+      const state = await evaluate(`(() => {
+        const workspace = ${ws};
+        const target = workspace.score.footnotes[${index}].staff.elements.at(${index === 4 ? -1 : -2});
+        const active = document.activeElement;
+        const element = document.getElementById('element-' + target.id);
+        return {
+          selected: workspace.selectedElement === target,
+          // Selection changes before the menu's deferred navigation focuses
+          // the new editor. Focus in a previous footnote is not readiness.
+          focused: target.elementType === 'RichTextBox'
+            ? Boolean(element?.contains(active) && active?.isContentEditable)
+            : !active?.isContentEditable,
+          menuClosed: document.querySelector('[role="menu"][data-state="open"]') === null,
+        };
+      })()`);
+      assert.deepEqual(state, {
+        selected: true,
+        focused: true,
+        menuClosed: true,
+      });
+    });
   }
   async function key(key, code = key, windowsVirtualKeyCode = 0) {
     await socket.send('Input.dispatchKeyEvent', {
@@ -156,19 +170,7 @@ try {
     evaluate(`${ws}.activeStaff.elements.map(e=>e.elementType)`);
   await open(2);
   await open(3);
-  await eventually(async () =>
-    assert.equal(
-      await evaluate('document.activeElement?.isContentEditable'),
-      true,
-    ),
-  );
   await open(0);
-  await eventually(async () =>
-    assert.equal(
-      await evaluate('document.activeElement?.isContentEditable'),
-      true,
-    ),
-  );
   await key('Escape', 'Escape', 27);
   await key('End', 'End', 35);
   await eventually(async () =>

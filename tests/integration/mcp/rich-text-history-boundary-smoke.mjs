@@ -106,6 +106,380 @@ try {
       throw error;
     }
   }
+  async function selectParagraphTwo(editor, backward = false) {
+    await eventually(async () => {
+      await evaluate(`(() => {
+        const e=${editor};e.model.change(w=>{
+          const p=e.model.document.getRoot().getChild(1);
+          if(${backward}) w.setSelection(w.createRange(w.createPositionAt(p,0),w.createPositionAt(p,6)),{backward:true});
+          else w.setSelection(p,6);
+        });e.editing.view.focus();e.editing.view.forceRender();
+      })()`);
+      // Allow browser selectionchange from the preceding focus/click to settle.
+      await evaluate(
+        'new Promise(resolve => requestAnimationFrame(() => resolve()))',
+      );
+      assert.equal(
+        await evaluate(`(() => {
+        const e=${editor},s=e.model.document.selection,n=window.getSelection();
+        const dom=p=>e.editing.view.domConverter.viewPositionToDom(e.editing.mapper.toViewPosition(p));
+        const a=dom(s.anchor),f=dom(s.focus);
+        return s.anchor.path.join(',')==='1,6' && s.focus.path.join(',')==='1,${backward ? 0 : 6}' &&
+          s.isBackward===${backward} && n.anchorNode===a.parent && n.anchorOffset===a.offset &&
+          n.focusNode===f.parent && n.focusOffset===f.offset;
+      })()`),
+        true,
+      );
+    });
+  }
+  // Save acknowledges applied typing without discarding locally undone edits.
+  for (const route of ['keyboard', 'toolbar', 'menu']) {
+    const replay = (action) =>
+      route === 'keyboard'
+        ? shortcut(action)
+        : route === 'toolbar'
+          ? toolbar(action)
+          : menu(action === 'undo' ? 'FileMenuUndo' : 'FileMenuRedo');
+    const doc = await call('create_document', {
+      documentScope: 'editor',
+      title: `Save partially undone typing: ${route}`,
+    });
+    const args = { documentScope: 'editor', documentId: doc.documentId };
+    const initial = await call('get_elements', args);
+    await call('edit_elements', {
+      ...args,
+      expectedRevision: initial.revision,
+      actions: [
+        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        {
+          action: 'insert',
+          elements: [
+            { elementType: 'RichTextBox', properties: { content: '<p>B</p>' } },
+          ],
+        },
+      ],
+    });
+    const filePath = path.join(app.directory, `${route}-pending-redo.byzx`);
+    await call('save_document', {
+      ...args,
+      expectedRevision: (await call('get_document_properties', args)).revision,
+      filePath,
+    });
+    await focusRich(firstEditor, 1);
+    await socket.send('Input.insertText', { text: 'X' });
+    // End this typing group through the same public buffer API as the handoff.
+    await evaluate(`(() => {
+      const {buffer}=${firstEditor}.commands.get('insertText');
+      buffer.input(buffer.limit);
+    })()`);
+    await socket.send('Input.insertText', { text: 'Y' });
+    await replay('undo');
+    await eventually(async () => {
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>BX</p>');
+      assert.equal(
+        await evaluate(`${firstEditor}.commands.get('redo').isEnabled`),
+        true,
+      );
+    });
+    await menu('FileMenuSave');
+    await eventually(async () => {
+      assert.equal(
+        JSON.parse(await readFile(filePath, 'utf8')).staff.elements[0].content,
+        '<p>BX</p>',
+      );
+      assert.equal(
+        await evaluate(`${firstEditor}.commands.get('undo').isEnabled`),
+        false,
+        'Applied typing must leave native Undo after Save',
+      );
+      assert.equal(
+        await evaluate(`${firstEditor}.commands.get('redo').isEnabled`),
+        true,
+        'Save must preserve unapplied native Redo',
+      );
+    });
+    // Cross into this same textbox's committed history before restoring Y.
+    await replay('undo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>B</p>'),
+    );
+    await replay('redo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>BX</p>'),
+    );
+    await replay('redo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>BXY</p>'),
+    );
+    await replay('undo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>BX</p>'),
+    );
+    // A fresh edit still replaces the preserved native redo branch.
+    await socket.send('Input.insertText', { text: 'Z' });
+    await eventually(async () => {
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>BXZ</p>');
+      assert.equal(
+        await evaluate(`${firstEditor}.commands.get('redo').isEnabled`),
+        false,
+      );
+    });
+    await replay('undo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>BX</p>'),
+    );
+    // Falling back to committed history must still undo the saved X only once.
+    await replay('undo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>B</p>'),
+    );
+    await replay('redo');
+    await eventually(async () =>
+      assert.equal(await evaluate(`${firstEditor}.getData()`), '<p>BX</p>'),
+    );
+    await call('close_document', {
+      ...args,
+      expectedRevision: (await call('get_document_properties', args)).revision,
+      discardUnsavedChanges: true,
+    });
+    console.log(`PASS: ${route} Save preserves partially undone typing.`);
+  }
+  // Score replay must restore paragraph-two carets and backward selections.
+  for (const [name, properties, key, selector] of [
+    ['single', {}, 'content', '.single'],
+    ['inline-top', { inline: true }, 'content', '.inline-top'],
+    ['inline-bottom', { inline: true }, 'contentBottom', '.inline-bottom'],
+    ['left', { multipanel: true }, 'contentLeft', '.left'],
+    ['center', { multipanel: true }, 'contentCenter', '.center'],
+    ['right', { multipanel: true }, 'contentRight', '.right'],
+  ]) {
+    for (const backward of [false, true]) {
+      const original = '<p>B</p><p>Second paragraph</p>';
+      const doc = await call('create_document', {
+        documentScope: 'editor',
+        title: `Saved selection: ${name} ${backward}`,
+      });
+      const args = { documentScope: 'editor', documentId: doc.documentId };
+      const initial = await call('get_elements', args);
+      await call('edit_elements', {
+        ...args,
+        expectedRevision: initial.revision,
+        actions: [
+          { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+          {
+            action: 'insert',
+            elements: [
+              {
+                elementType: 'RichTextBox',
+                properties: { ...properties, [key]: original },
+              },
+            ],
+          },
+        ],
+      });
+      const filePath = path.join(
+        app.directory,
+        `${name}-${backward}-selection.byzx`,
+      );
+      await call('save_document', {
+        ...args,
+        expectedRevision: (await call('get_document_properties', args))
+          .revision,
+        filePath,
+      });
+      const editor = `document.querySelector('.page .rich-text-editor${selector}')?.ckeditorInstance`;
+      await focusRich(editor, 1);
+      await selectParagraphTwo(editor, backward);
+      const selection = () =>
+        evaluate(`(() => {
+        const s=${editor}.model.document.selection;
+        return {anchor:s.anchor.path,focus:s.focus.path,backward:s.isBackward};
+      })()`);
+      const before = await selection();
+      await socket.send('Input.insertText', { text: 'XY' });
+      const edited = backward
+        ? '<p>B</p><p>XY paragraph</p>'
+        : '<p>B</p><p>SecondXY paragraph</p>';
+      await eventually(async () =>
+        assert.equal(await evaluate(`${editor}.getData()`), edited),
+      );
+      const after = await selection();
+      await menu('FileMenuSave');
+      await eventually(async () => {
+        assert.equal(
+          JSON.parse(await readFile(filePath, 'utf8')).staff.elements[0][key],
+          edited,
+        );
+        assert.equal(
+          await evaluate(`${editor}.commands.get('undo').isEnabled`),
+          false,
+        );
+      });
+      await shortcut('undo');
+      await eventually(async () => {
+        assert.equal(await evaluate(`${editor}.getData()`), original);
+        assert.deepEqual(await selection(), before);
+      });
+      await shortcut('redo');
+      await eventually(async () => {
+        assert.equal(await evaluate(`${editor}.getData()`), edited);
+        assert.deepEqual(await selection(), after);
+        assert.equal(
+          await evaluate(`${editor}.ui.focusTracker.isFocused`),
+          true,
+        );
+      });
+      await socket.send('Input.insertText', { text: 'Z' });
+      await eventually(async () =>
+        assert.equal(
+          await evaluate(`${editor}.getData()`),
+          edited.replace('XY', 'XYZ'),
+        ),
+      );
+      await call('close_document', {
+        ...args,
+        expectedRevision: (await call('get_document_properties', args))
+          .revision,
+        discardUnsavedChanges: true,
+      });
+      console.log(
+        `PASS: ${name} saved ${backward ? 'backward selection' : 'caret'} survives Undo/Redo.`,
+      );
+    }
+  }
+  // Blurred annotations are read-only, but score replay must retain their redo.
+  {
+    const original = '<p>B</p><p>Second paragraph</p>';
+    const doc = await call('create_document', {
+      documentScope: 'editor',
+      title: 'Read-only annotation history',
+    });
+    const args = { documentScope: 'editor', documentId: doc.documentId };
+    const initial = await call('get_elements', args);
+    await call('edit_elements', {
+      ...args,
+      expectedRevision: initial.revision,
+      actions: [
+        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        {
+          action: 'insert',
+          elements: [{ clientId: 'note', elementType: 'Note' }],
+        },
+        {
+          action: 'insert',
+          collection: {
+            kind: 'children',
+            parentRef: '@note',
+            collection: 'annotations',
+          },
+          elements: [
+            { elementType: 'Annotation', properties: { text: original } },
+          ],
+        },
+      ],
+    });
+    const filePath = path.join(app.directory, 'annotation-history.byzx');
+    await call('save_document', {
+      ...args,
+      expectedRevision: (await call('get_document_properties', args)).revision,
+      filePath,
+    });
+    const editor = `document.querySelector('.page .annotation-container .rich-text-editor')?.ckeditorInstance`;
+    async function focusAnnotation() {
+      await eventually(async () =>
+        assert.equal(await evaluate(`${editor}?.state`), 'ready'),
+      );
+      const point = await evaluate(`(() => {
+        const n=${editor}.ui.getEditableElement();n.scrollIntoView({block:'nearest'});
+        const r=n.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};
+      })()`);
+      for (const type of ['mousePressed', 'mouseReleased']) {
+        await socket.send('Input.dispatchMouseEvent', {
+          type,
+          ...point,
+          button: 'left',
+          clickCount: 2,
+        });
+      }
+      await eventually(async () =>
+        assert.equal(await evaluate(`${editor}.isReadOnly`), false),
+      );
+      await focusRich(editor, 1);
+    }
+    await focusAnnotation();
+    await selectParagraphTwo(editor);
+    await socket.send('Input.insertText', { text: 'X' });
+    await evaluate(
+      `(() => {const {buffer}=${editor}.commands.get('insertText');buffer.input(buffer.limit);})()`,
+    );
+    await socket.send('Input.insertText', { text: 'Y' });
+    await shortcut('undo');
+    const saved = '<p>B</p><p>SecondX paragraph</p>';
+    await eventually(async () =>
+      assert.equal(await evaluate(`${editor}.getData()`), saved),
+    );
+    await menu('FileMenuSave');
+    await eventually(async () =>
+      assert.equal(
+        JSON.parse(await readFile(filePath, 'utf8')).staff.elements[0]
+          .annotations[0].text,
+        saved,
+      ),
+    );
+    await evaluate(`${editor}.ui.getEditableElement().blur()`);
+    await eventually(async () =>
+      assert.equal(await evaluate(`${editor}.isReadOnly`), true),
+    );
+    await menu('FileMenuUndo');
+    await eventually(async () => {
+      assert.equal(await evaluate(`${editor}.getData()`), original);
+      assert.equal(await evaluate(`${editor}.isReadOnly`), true);
+      assert.equal(
+        await evaluate(`${editor}.ui.focusTracker.isFocused`),
+        false,
+      );
+      assert.deepEqual(
+        await evaluate(`${editor}.model.document.selection.focus.path`),
+        [1, 6],
+      );
+    });
+    await menu('FileMenuRedo');
+    await eventually(async () => {
+      assert.equal(await evaluate(`${editor}.getData()`), saved);
+      assert.equal(await evaluate(`${editor}.isReadOnly`), true);
+      assert.equal(
+        await evaluate(`${editor}.ui.focusTracker.isFocused`),
+        false,
+      );
+      assert.deepEqual(
+        await evaluate(`${editor}.model.document.selection.focus.path`),
+        [1, 7],
+      );
+    });
+    await focusAnnotation();
+    await shortcut('redo');
+    await eventually(async () =>
+      assert.equal(
+        await evaluate(`${editor}.getData()`),
+        '<p>B</p><p>SecondXY paragraph</p>',
+      ),
+    );
+    await socket.send('Input.insertText', { text: 'Z' });
+    await eventually(async () =>
+      assert.equal(
+        await evaluate(`${editor}.getData()`),
+        '<p>B</p><p>SecondXYZ paragraph</p>',
+      ),
+    );
+    await call('close_document', {
+      ...args,
+      expectedRevision: (await call('get_document_properties', args)).revision,
+      discardUnsavedChanges: true,
+    });
+    console.log(
+      'PASS: read-only annotation replay preserves selection, Redo, and focus.',
+    );
+  }
   // No footnotes: Save must hand typing to score history without overlapping
   // native entries. Keep the same live editor and caret throughout Save.
   for (const savedRoute of ['keyboard', 'toolbar']) {

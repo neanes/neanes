@@ -28,6 +28,7 @@ import InlineEditor from '@/customEditor';
 import { richTextHistoryActionsKey } from '@/injectionKeys';
 import type { RichTextBoxContentKey } from '@/models/Element';
 import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
+import { RichTextHistory } from '@/services/RichTextHistory';
 import { inferRichTextEditorDirection } from '@/utils/richTextLanguage';
 
 defineOptions({
@@ -42,6 +43,7 @@ const props = defineProps<{
   contentKey?: RichTextBoxContentKey;
   footnotesEditable?: boolean;
   footnoteMarkers?: Readonly<Record<string, string>>;
+  replayHistory?: (editor: InlineEditor, replay: () => void) => void;
 }>();
 
 const emit = defineEmits<{
@@ -65,6 +67,7 @@ let loadedModelValue = initialData;
 let loadedEditor: InlineEditor | undefined;
 let loadedEditorData: string | null = null;
 let applyingModel = false;
+let history: RichTextHistory | undefined;
 const footnotes = inject(richTextFootnoteControllerKey, null);
 const historyActions = inject(richTextHistoryActionsKey, null);
 watch(
@@ -96,7 +99,8 @@ watch([() => props.modelValue, instance], ([next, editor]) => {
   if (editor != null) {
     if (editor !== loadedEditor || next !== loadedModelValue) {
       let data = editor.getData();
-      if (next !== data) {
+      const replaced = next !== data;
+      if (replaced) {
         applyingModel = true;
         try {
           editor.data.set(next);
@@ -105,16 +109,12 @@ watch([() => props.modelValue, instance], ([next, editor]) => {
           applyingModel = false;
         }
       }
-      // The score now owns this committed edit. Keeping it in native history
-      // would let a local Undo be flushed and undone again by score history.
-      // End the typing/deletion groups through their public size limit, so
-      // subsequent keys start fresh batches instead of reusing a cleared one.
-      for (const name of ['insertText', 'delete', 'deleteForward'] as const) {
-        const { buffer } = editor.commands.get(name)!;
-        buffer.input(buffer.limit);
+      if (history !== undefined) {
+        history.acknowledge(data, replaced);
+      } else {
+        editor.commands.get('undo')!.clearStack();
+        editor.commands.get('redo')!.clearStack();
       }
-      editor.commands.get('undo')!.clearStack();
-      editor.commands.get('redo')!.clearStack();
       loadedModelValue = next;
       loadedEditor = editor;
       loadedEditorData = data;
@@ -130,6 +130,9 @@ let editorIsFocused = false;
 watch(
   () => props.owner,
   (owner) => {
+    if (history !== undefined) {
+      history.owner = owner;
+    }
     if (registeredEditor != null) {
       registerEditor(registeredEditor, owner);
     }
@@ -210,6 +213,7 @@ function onReady(editor: InlineEditor) {
     editor.model.document.on('change:data', () => {
       if (
         !applyingModel &&
+        !history?.isReplaying &&
         props.contentKey !== undefined &&
         footnotes.supports(props.owner)
       ) {
@@ -271,6 +275,21 @@ function onReady(editor: InlineEditor) {
 
   emit('ready', editor);
 
+  if (props.historyEnabled) {
+    history = new RichTextHistory(
+      editor,
+      props.owner,
+      props.contentKey ?? 'text',
+      (replay) => {
+        if (props.replayHistory !== undefined) {
+          props.replayHistory(editor, replay);
+        } else {
+          replay();
+        }
+      },
+    );
+  }
+
   // Parent ready handlers initialize language synchronously. Subscribe after
   // that initialization, and exclude measurement and read-only editors.
   if (historyActions !== null) {
@@ -279,6 +298,7 @@ function onReady(editor: InlineEditor) {
         props.historyEnabled &&
         !editor.isReadOnly &&
         !applyingModel &&
+        !history?.isReplaying &&
         batch.isLocal &&
         batch.isUndoable &&
         !batch.isUndo

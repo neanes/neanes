@@ -83,9 +83,36 @@ try {
         true,
       ),
     );
-    const point = await evaluate(
-      `(() => {const n=document.querySelector(${JSON.stringify(selector)}); n.scrollIntoView({block:'center'}); const r=n.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2};})()`,
+    await evaluate(
+      `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center', inline:'center'})`,
     );
+    const point = await eventually(async () => {
+      const result = await evaluate(`(async () => {
+        // Wait for scrolling and layout to reach Chromium's rendered frame
+        // before sending pointer coordinates through the debugger connection.
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const n = document.querySelector(${JSON.stringify(selector)});
+        const before = n.getBoundingClientRect();
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        const r = n.getBoundingClientRect();
+        const x = r.x + r.width / 2, y = r.y + r.height / 2;
+        const hit = document.elementFromPoint(x, y);
+        let settled = true;
+        for (let p = n; p; p = p.parentElement) {
+          if (p.getAnimations().some(a => a.playState === 'running')) settled = false;
+        }
+        return {
+          x, y, hit: n.contains(hit), settled, disabled: n.matches(':disabled'),
+          stable: n.isConnected && ['x', 'y', 'width', 'height'].every(key => Math.abs(before[key] - r[key]) < 0.01),
+          hitElement: hit?.outerHTML.slice(0, 400),
+        };
+      })()`);
+      assert.ok(
+        result.hit && result.stable && result.settled && !result.disabled,
+        `Waiting for ${selector} to receive pointer events: ${JSON.stringify(result)}`,
+      );
+      return { x: result.x, y: result.y };
+    });
     for (const type of ['mousePressed', 'mouseReleased']) {
       await socket.send('Input.dispatchMouseEvent', {
         type,
@@ -134,17 +161,17 @@ try {
     );
     try {
       await click('[data-testid="insert-rich-text-footnote"]');
+      await eventually(async () =>
+        assert.equal(await evaluate(`${ws}.score.footnotes.length`), 1),
+      );
     } catch (error) {
       console.error(
         await evaluate(
-          `(() => {const e=${e};return {selected:${ws}.selectedElement?.elementType, active:${ws}.activeFootnoteId, focus:e.ui.focusTracker.isFocused, command:e.commands.get('insertFootnote').isEnabled, selection:e.model.document.selection.focus?.path, html:e.getData(), owner:${ws}.score.staff.elements[0].elementType, toolbar:document.querySelector('.rich-text-toolbar')?.outerHTML.slice(0,500)};})()`,
+          `(() => {const e=${e};return {selected:${ws}.selectedElement?.elementType, active:${ws}.activeFootnoteId, state:e.state, focus:e.ui.focusTracker.isFocused, focusedElement:document.activeElement?.outerHTML.slice(0,500), command:e.commands.get('insertFootnote').isEnabled, selection:e.model.document.selection.focus?.path, html:e.getData(), owner:${ws}.score.staff.elements[0].elementType};})()`,
         ),
       );
       throw error;
     }
-    await eventually(async () =>
-      assert.equal(await evaluate(`${ws}.score.footnotes.length`), 1),
-    );
     const id = await evaluate(`${ws}.score.footnotes[0].id`);
     const markerAttributes = await evaluate(
       `(() => {const e=${e};const n=[...e.model.createRangeIn(e.model.document.getRoot()).getItems()].find(n=>n.is('element','footnoteReference'));return Object.fromEntries(n.getAttributes());})()`,

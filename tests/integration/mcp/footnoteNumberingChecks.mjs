@@ -92,10 +92,36 @@ export async function checkFootnoteNumbering({
     'page',
   );
 
-  const rendered = () =>
-    evaluate(
-      "[...document.querySelectorAll('.page')].map(p=>[...p.querySelectorAll('.footnote-label')].map(n=>({id:n.dataset.footnoteId,marker:n.textContent.trim()}))).filter(p=>p.length)",
+  async function rendered() {
+    const pageCount = await evaluate(
+      "document.querySelectorAll('.page').length",
     );
+    const pages = [];
+    for (let index = 0; index < pageCount; index++) {
+      // Offscreen page contents are unmounted. Visit each page before reading
+      // its labels instead of relying on the host display's viewport height.
+      await evaluate(
+        `document.querySelectorAll('.page')[${index}].scrollIntoView({block:'start'})`,
+      );
+      const labels = await eventually(async () => {
+        const result = await evaluate(`(() => {
+          const page = document.querySelectorAll('.page')[${index}];
+          return {
+            mounted: page.querySelector('.line') !== null,
+            labels: [...page.querySelectorAll('.footnote-label')].map(n => ({
+              id: n.dataset.footnoteId, marker: n.textContent.trim(),
+            })),
+          };
+        })()`);
+        assert.ok(result.mounted, `Waiting for page ${index + 1} to mount`);
+        return result.labels;
+      });
+      if (labels.length) {
+        pages.push(labels);
+      }
+    }
+    return pages;
+  }
   await eventually(async () =>
     assert.deepEqual(
       (await rendered()).map((page) => page.map(({ marker }) => marker)),
@@ -190,6 +216,13 @@ export async function checkFootnoteNumbering({
     topMargin: 30,
     bottomMargin: 30,
   });
+  // Deliberately exercise page virtualization even on a large host display.
+  const previousMaxHeight = await evaluate(`(() => {
+    const viewport = document.querySelector('.page-background');
+    const previous = viewport.style.maxHeight;
+    viewport.style.maxHeight = '180px';
+    return previous;
+  })()`);
   const sequence = ['*', '\u2020', '\u2021', '\u00a7', '\u00b6', '\u2016'];
   await eventually(async () => {
     const actual = await rendered();
@@ -211,6 +244,9 @@ export async function checkFootnoteNumbering({
     }
     assert.equal(actual.flat().length, 13);
   });
+  await evaluate(
+    `document.querySelector('.page-background').style.maxHeight = ${JSON.stringify(previousMaxHeight)}`,
+  );
   const reflowPages = await call('get_pages', args);
   await call('preview_page', {
     ...args,

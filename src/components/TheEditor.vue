@@ -253,6 +253,7 @@ import {
   prepareFootnotePaste,
   transferFootnoteReference,
 } from '@/services/FootnoteService';
+import { CompositeCommand } from '@/services/history/commands/CompositeCommand';
 import type { Command, HistoryState } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
@@ -280,6 +281,7 @@ import {
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
+import { RichTextHistory } from '@/services/RichTextHistory';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -6819,10 +6821,14 @@ function updateAnnotation(
   }
 
   commandService.value.execute(
-    annotationCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
+    RichTextHistory.wrap(
+      element,
+      newValues,
+      annotationCommandFactory.create('update-properties', {
+        target: element,
+        newValues: newValues,
+      }),
+    ),
   );
 
   save();
@@ -6917,7 +6923,9 @@ function updateRichTextBox(
       }),
     );
   }
-  commandService.value.executeAsBatch(commands);
+  commandService.value.execute(
+    RichTextHistory.wrap(element, newValues, new CompositeCommand(commands)),
+  );
   pendingRichTextFootnotes.delete(element);
   pendingRichTextStyles.delete(element);
 
@@ -9042,6 +9050,7 @@ async function onFileMenuUndo() {
       // Text editors synchronize through props. Teardown here could flush
       // stale DOM after replay and would discard their local editing history.
       if (
+        selectedWorkspace.value.selectedAnnotationElement === null &&
         !isTextBoxElement(selectedElement.value) &&
         !isRichTextBoxElement(selectedElement.value)
       ) {
@@ -9089,6 +9098,7 @@ async function onFileMenuRedo() {
       // Text editors synchronize through props. Teardown here could flush
       // stale DOM after replay and would discard their local editing history.
       if (
+        selectedWorkspace.value.selectedAnnotationElement === null &&
         !isTextBoxElement(selectedElement.value) &&
         !isRichTextBoxElement(selectedElement.value)
       ) {

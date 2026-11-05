@@ -50,6 +50,7 @@ import {
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
+import { Footnote as Footnote_v1 } from '@/models/save/v1/Footnote';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import {
@@ -942,11 +943,13 @@ export class SaveService {
     return score;
   }
 
-  public static SaveFootnote(footnote: Footnote) {
-    const staff = new Staff_v1();
-    staff.elements = this.SaveElements(footnote.staff.elements);
-    this.SaveLyricSetup(staff.lyrics, footnote.staff.lyrics);
-    return { id: footnote.id, marker: footnote.marker ?? undefined, staff };
+  public static SaveFootnote(footnote: Footnote): Footnote_v1 {
+    const saved = new Footnote_v1();
+    saved.id = footnote.id;
+    saved.marker = footnote.marker ?? undefined;
+    saved.staff.elements = this.SaveElements(footnote.staff.elements);
+    this.SaveLyricSetup(saved.staff.lyrics, footnote.staff.lyrics);
+    return saved;
   }
 
   public static SaveElements(elements: ScoreElement[]): ScoreElement_v1[] {
@@ -1714,10 +1717,7 @@ export class SaveService {
     return score;
   }
 
-  public static LoadFootnote_v1(
-    saved: NonNullable<Score_v1['footnotes']>[number],
-    pageSetup: PageSetup,
-  ) {
+  public static LoadFootnote_v1(saved: Footnote_v1, pageSetup: PageSetup) {
     const footnote = new Footnote();
     footnote.id = saved.id;
     footnote.marker = saved.marker ?? null;

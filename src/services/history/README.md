@@ -77,6 +77,14 @@ undoable CKEditor change occurs. Native Undo/Redo and incoming model updates do
 not discard it: replay across editors still restores score history before local
 redo. `discardRedo()` publishes availability without changing score content or
 state identity; the buffered content enters score history at its normal flush.
+Acknowledging that flush moves the native Undo boundary to the committed state.
+CKEditor's batches remain available for score replay, including their selections
+and outstanding Redo entries. Rich-text content commands capture before/after
+checkpoints through `RichTextHistory.wrap`; replay synchronizes a surviving live
+editor using its native batches without moving focus. Local Undo stops at the
+committed boundary, so an edit is never undone twice. External content replacement
+invalidates native checkpoints and still clears both native stacks. Checkpoints
+do not keep destroyed editors alive or change the saved score format.
 
 Only interactive editors for the selected workspace's selected rich-text owner
 can invalidate its score redo branch. Hidden measurement and read-only editors,

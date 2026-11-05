@@ -5123,6 +5123,28 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
               );
             }
             break;
+          case ElementType.RichTextBox:
+            if (
+              !shallowEquals(
+                (currentElement as RichTextBoxElement).getClipboardProperties(),
+                (
+                  clipboardElement as RichTextBoxElement
+                ).getClipboardProperties(),
+              )
+            ) {
+              commands.push(
+                new CommandFactory<RichTextBoxElement>().create(
+                  'update-properties',
+                  {
+                    target: currentElement as RichTextBoxElement,
+                    newValues: (
+                      clipboardElement as RichTextBoxElement
+                    ).getClipboardProperties(),
+                  },
+                ),
+              );
+            }
+            break;
         }
       } else {
         commands.push(

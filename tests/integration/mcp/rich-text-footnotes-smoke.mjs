@@ -4,6 +4,7 @@ import { copyFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { checkRichTextHistory } from './richTextHistoryChecks.mjs';
+import { checkRichTextScorePaste } from './richTextScorePasteChecks.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
 import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
@@ -122,6 +123,7 @@ try {
       });
     }
   }
+  await checkRichTextScorePaste({ call, evaluate, menu });
   for (const [name, layout, panel, key] of [
     ['ordinary', {}, 'single', 'content'],
     ['inline-top', { inline: true }, 'inline-top', 'content'],

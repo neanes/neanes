@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid';
+import { toRaw } from 'vue';
 
 import {
   FootnoteAnchorElement,
@@ -26,6 +27,10 @@ import { elementFootnoteIds } from './FootnoteReferences';
 
 const footnoteFactory = new CommandFactory<Footnote>();
 const anchorFactory = new CommandFactory<FootnoteAnchorElement>();
+
+// Native text Undo can restore a marker after its body left the score. Retain
+// bodies for this score's lifetime, independently of either undo stack.
+const retainedFootnotes = new WeakMap<Score, Map<string, Footnote>>();
 
 // Explicit properties have already been applied to the replacement.
 export function transferFootnoteReference(
@@ -180,11 +185,22 @@ export function planRichTextFootnoteUpdate(
   const next = Object.assign(new RichTextBoxElement(), element, newValues);
   const nextIds = elementFootnoteIds(next);
   const beforeIds = elementFootnoteIds(element);
+  const retained =
+    retainedFootnotes.get(toRaw(score)) ?? new Map<string, Footnote>();
+  const available = new Map(
+    [...score.footnotes, ...added].map((body) => [body.id, body]),
+  );
+  const restored = nextIds
+    .filter((id) => !available.has(id) && retained.has(id))
+    .map((id) => retained.get(id)!);
+  const inserted = [...added, ...restored];
   const isMain = score.staff.elements.includes(element);
   if (!isMain && nextIds.length > 0) {
     throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
   }
-  const bodies = new Set([...score.footnotes, ...added].map((body) => body.id));
+  const bodies = new Set(
+    [...score.footnotes, ...inserted].map((body) => body.id),
+  );
   const allIds = score.staff.elements.flatMap((candidate) =>
     elementFootnoteIds(candidate === element ? next : candidate),
   );
@@ -204,8 +220,12 @@ export function planRichTextFootnoteUpdate(
   ) {
     throw new Error('INVALID_FOOTNOTE_REFERENCE');
   }
+  for (const body of [...score.footnotes, ...inserted]) {
+    retained.set(body.id, body);
+  }
+  retainedFootnotes.set(toRaw(score), retained);
   return [
-    ...added.map((body) =>
+    ...inserted.map((body) =>
       footnoteFactory.create('add-to-collection', {
         collection: score.footnotes,
         elements: [body],

@@ -298,8 +298,8 @@ try {
     );
     assert.equal(
       await evaluate(`${ws}.score.footnotes.length`),
-      1,
-      'Deletion stays local until flush',
+      0,
+      'Marker deletion removes its body immediately',
     );
     await evaluate(`${e}.execute('undo')`);
     await eventually(async () =>
@@ -314,10 +314,19 @@ try {
     await eventually(async () =>
       assert.equal(await evaluate(`${ws}.score.footnotes.length`), 0),
     );
-    // A flush hands ownership to score history, including the complete body.
+    // Blur preserves native history; reinstating the marker restores its retained body.
     await focus(e);
-    assert.equal(await evaluate(`${e}.commands.get('undo').isEnabled`), false);
+    assert.equal(await evaluate(`${e}.commands.get('undo').isEnabled`), true);
     assert.equal(await evaluate(`${e}.commands.get('redo').isEnabled`), false);
+    await evaluate(`${e}.execute('undo')`);
+    await eventually(async () => {
+      assert.equal(await evaluate(`${ws}.score.footnotes[0]?.id`), id);
+      assert.equal((await evaluate(`${e}.getData()`)).includes(id), true);
+    });
+    await evaluate(`${e}.execute('redo')`);
+    await eventually(async () =>
+      assert.equal(await evaluate(`${ws}.score.footnotes.length`), 0),
+    );
     await menu('FileMenuUndo');
     await eventually(async () => {
       assert.equal(await evaluate(`${ws}.score.footnotes[0]?.id`), id);

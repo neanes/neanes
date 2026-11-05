@@ -72,21 +72,44 @@ native-menu publication. Background and private histories need no UI suppression
 or compensating publication. Selection changes flush pending edits before
 switching the subscription; editor teardown removes the subscription.
 
-Buffered rich-text edits discard the score redo branch as soon as a fresh local,
-undoable CKEditor change occurs. Native Undo/Redo and incoming model updates do
-not discard it: replay across editors still restores score history before local
-redo. `discardRedo()` publishes availability without changing score content or
-state identity; the buffered content enters score history at its normal flush.
-Acknowledging that flush moves the native Undo boundary to the committed state.
-CKEditor's batches remain available for score replay, including their selections
-and outstanding Redo entries. Rich-text content commands capture before/after
-checkpoints through `RichTextHistory.wrap`; replay synchronizes a surviving live
-editor using its native batches without moving focus. Local Undo stops at the
-committed boundary, so an edit is never undone twice. External content replacement
-invalidates native checkpoints and still clears both native stacks. Checkpoints
-do not keep destroyed editors alive or change the saved score format.
+## Rich text and footnotes: intentional separate histories
 
-Only interactive editors for the selected workspace's selected rich-text owner
-can invalidate its score redo branch. Hidden measurement and read-only editors,
-parent ready-handler language initialization, and model synchronization must not
-invalidate redo during layout or other read-only operations.
+Decision: preserve master's separate-history behavior rather than merge CKEditor
+history with score history. These are accepted product compromises, not missing
+history coordination to reintroduce during review:
+
+- Rich-text keyboard shortcuts and toolbar Undo/Redo use CKEditor's native
+  history only. Exhausting it does not fall back to score history.
+- Clicking the application Undo/Redo menu uses score history, even when a text
+  editor is focused. Menu availability reflects score history only.
+- Flushed HTML remains in score history. Native and score histories are not a
+  single chronological timeline. Fresh buffered typing does not eagerly discard
+  score Redo; recording a score command discards it normally.
+- Save and blur do not clear native history for an echoed content commit.
+  External replacement and score replay can reset native history or remount the
+  editor. Historical caret/selection restoration and native Redo survival across
+  those replacements are not guaranteed.
+- There is no checkpoint graph, native batch replay, shared history action
+  injection, or commit boundary imposed on CKEditor's undo stack.
+
+Footnote consistency uses IDs instead. A score-scoped weak map retains complete
+footnote bodies, including deleted ones, for the score's lifetime. There is no
+expiry timer and retained bodies are not serialized. Closing/replacing the score
+allows the cache to be collected; native Undo across close/reopen is not supported.
+This deliberately trades memory for predictable restoration without searching
+undo history. Active bodies take precedence over retained versions.
+
+Interactive rich-text editors observe data changes. Plain text insertions,
+deletions, and formatting skip reference scanning; structural edits and changes
+to footnote IDs compare the marker IDs. A changed marker sequence commits the
+current HTML and body additions/removals together using ordinary score commands.
+Native Undo that reinstates a marker restores its retained body immediately.
+Marker edits can therefore also commit surrounding pending text and invalidate
+score Redo. Ordinary typing remains buffered. Programmatic model synchronization
+updates the marker baseline without creating another edit.
+
+Serialization, export, clipboard and navigation still flush pending text. The
+same footnote planner resolves retained IDs there, validates ownership, and
+rejects genuinely unknown, duplicate or unsupported nested references. Incoming
+model synchronization and stale-editor flush guards remain necessary independently
+of undo policy. Do not remove those safeguards when simplifying history.

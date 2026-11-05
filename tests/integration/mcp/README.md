@@ -127,40 +127,15 @@ checks also verify that MCP rejects annotation references without advancing the
 document revision; pure transaction tests cover annotations nested in main notes,
 alternate-line notes, and footnote notes.
 
-`rich-text-history-boundary` types into a footnote-bearing rich textbox, then into
-an ordinary rich, multipanel rich, or plain textbox without flushing it. Native
-Edit menu Undo prefers the focused CKEditor's native history and falls back to
-score history when the native command has no entry. Redo completes any outstanding
-score redo branch before restoring native typing.
-After blur, score Undo/Redo replays whole flushed textbox transactions without
-moving focus or discarding the redo branch. New pending typing before a score
-Redo must branch history before replay and remain undoable. The checks avoid MCP
-reads while typing is pending, since read settlement would otherwise hide the
-regression.
-
-The history-boundary scenario also saves pending typing in a rich textbox without
-footnotes, then sends real Undo/Redo keyboard events and toolbar clicks after Save and
-blur/refocus. The toolbar must remain enabled for committed score history even
-when local Undo has no pending edit.
-It checks both native typing history and score fallback without double handling.
-It verifies that committed edits stop being available to local Undo, the live editor and caret survive
-Save, and earlier document edits remain reachable. Saving partially undone typing
-preserves native Redo through keyboard, toolbar, and menu actions; fresh typing
-still replaces that redo branch, and score Undo reaches the saved edit once.
-The same-textbox check crosses from native Undo to score Undo and redoes both
-edits. Paragraph-two carets and backward selections survive Save and score
-Undo/Redo across ordinary, inline top/bottom, and left/center/right panels;
-continued typing must stay at the restored caret.
-Blurred annotation replay retains its read-only state and focus, restores the
-selection, and preserves native Redo after refocusing the annotation.
-The disposable Electron window
-is activated with native show/focus before selecting rich text.
-
-The two-textbox Redo regression runs through menu actions, real keyboard events,
-and toolbar clicks without footnotes: commit A's edit, type and undo in B, undo A, then Redo.
-A must be restored before B's native typing. Blurring B between the two Redos must
-not change history; after restoring and committing B, both edits must still be
-undoable.
+`rich-text-history-boundary` verifies the intentionally separate histories:
+keyboard shortcuts and the rich-text toolbar use native CKEditor Undo/Redo,
+while the application menu uses score history. Save and blur preserve native
+Undo/Redo on echoed commits, and exhausting native Undo does not fall back into
+score history. Footnote marker deletion and native restoration reconcile complete
+bodies immediately by ID. Ordinary typing does not create score history entries.
+See `src/services/history/README.md` for the accepted compromises; these tests do
+not require a unified history, historical selection replay, or native history
+survival across score-driven editor replacement.
 
 The `footnote-end-content` scenario checks hidden populated-body terminators,
 visible empty-body targets, reference focus, appending after text and music,

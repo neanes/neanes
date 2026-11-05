@@ -100,16 +100,12 @@ import {
   focusLastActiveEditorForOwner,
   isActiveEditorForOwner,
   useActiveEditorForOwner,
-  useEditorCommandStates,
 } from '@/composables/useRichTextEditorRegistry';
 import { richTextFootnoteControllerKey } from '@/composables/useRichTextFootnotes';
 import { useScoreRendering } from '@/composables/useScoreRendering';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
-import {
-  editorPreferencesKey,
-  richTextHistoryActionsKey,
-} from '@/injectionKeys';
+import { editorPreferencesKey } from '@/injectionKeys';
 import type {
   CloseWorkspacesArgs,
   ExportWorkspaceAsImageReplyArgs,
@@ -253,7 +249,6 @@ import {
   prepareFootnotePaste,
   transferFootnoteReference,
 } from '@/services/FootnoteService';
-import { CompositeCommand } from '@/services/history/commands/CompositeCommand';
 import type { Command, HistoryState } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
@@ -281,7 +276,6 @@ import {
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
-import { RichTextHistory } from '@/services/RichTextHistory';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -515,7 +509,6 @@ const isLoading = ref(true);
 const printMode = ref(false);
 const canUndo = ref(false);
 const canRedo = ref(false);
-const scoreHistoryState = ref<HistoryState>({ canUndo: false, canRedo: false });
 let unsubscribeHistory: (() => void) | undefined;
 const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
@@ -2852,41 +2845,8 @@ function getSelectedRichTextOwner() {
   );
 }
 
-provide(richTextHistoryActionsKey, {
-  canUndo,
-  canRedo,
-  undo: () => {
-    void onFileMenuUndo();
-  },
-  redo: () => {
-    void onFileMenuRedo();
-  },
-  edited: (owner) => {
-    if (toRaw(owner) === toRaw(getSelectedRichTextOwner())) {
-      commandService.value.discardRedo();
-    }
-  },
-});
-
-const focusedRichTextEditor = useActiveEditorForOwner(getSelectedRichTextOwner);
-const richTextHistoryState = useEditorCommandStates(focusedRichTextEditor, [
-  'undo',
-  'redo',
-]);
-watch(
-  () => ({
-    canUndo:
-      richTextHistoryState.undo.isEnabled || scoreHistoryState.value.canUndo,
-    canRedo:
-      richTextHistoryState.redo.isEnabled || scoreHistoryState.value.canRedo,
-  }),
-  (state) => {
-    canUndo.value = state.canUndo;
-    canRedo.value = state.canRedo;
-    EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
-    EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
-  },
-  { immediate: true },
+const selectedRichTextEditor = useActiveEditorForOwner(
+  getSelectedRichTextOwner,
 );
 
 function refocusSelectedRichTextEditorAfterShowingPane(
@@ -3396,7 +3356,10 @@ function publishHistoryState(state: HistoryState) {
     workspace.selectedAlternateLineElement = null;
     workspace.selectionRange = null;
   }
-  scoreHistoryState.value = state;
+  canUndo.value = state.canUndo;
+  canRedo.value = state.canRedo;
+  EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
+  EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
 }
 
 const editedFootnote = computed(() =>
@@ -3474,7 +3437,7 @@ function openFootnote(
   if (footnote === undefined) {
     return;
   }
-  const editor = focusedRichTextEditor.value;
+  const editor = selectedRichTextEditor.value;
   if (editor !== null) {
     editor.ui.getEditableElement()!.blur();
     clearActiveEditor();
@@ -3525,11 +3488,8 @@ provide(richTextFootnoteControllerKey, {
     openFootnote(owner, body.id);
   },
   changed(owner, key, html) {
-    // Only insertion/paste needs an immediate body. Ordinary editing and marker
-    // deletion stay in CKEditor's history until the normal flush boundary.
-    if (pendingRichTextFootnotes.has(owner)) {
-      updateRichTextBox(owner, { [key]: html });
-    }
+    // Marker changes commit HTML and bodies together; ordinary typing stays local.
+    updateRichTextBox(owner, { [key]: html });
   },
   navigate(id) {
     flushPendingRichTextEditors(selectedWorkspace.value);
@@ -6821,14 +6781,10 @@ function updateAnnotation(
   }
 
   commandService.value.execute(
-    RichTextHistory.wrap(
-      element,
-      newValues,
-      annotationCommandFactory.create('update-properties', {
-        target: element,
-        newValues: newValues,
-      }),
-    ),
+    annotationCommandFactory.create('update-properties', {
+      target: element,
+      newValues: newValues,
+    }),
   );
 
   save();
@@ -6923,9 +6879,7 @@ function updateRichTextBox(
       }),
     );
   }
-  commandService.value.execute(
-    RichTextHistory.wrap(element, newValues, new CompositeCommand(commands)),
-  );
+  commandService.value.executeAsBatch(commands);
   pendingRichTextFootnotes.delete(element);
   pendingRichTextStyles.delete(element);
 
@@ -8997,38 +8951,7 @@ async function onFileMenuSaveAs() {
   }
 }
 
-async function prepareForScoreHistoryReplay() {
-  const workspace = selectedWorkspace.value;
-  const plainTextBox = selectedTextBoxElement.value;
-  if (plainTextBox !== null) {
-    const updates: Partial<TextBoxElement> = {};
-    for (const component of getTextBoxComponentRefs<
-      InstanceType<typeof TextBox>
-    >(plainTextBox)) {
-      Object.assign(updates, component.getPendingUpdates() ?? {});
-    }
-    if (Object.keys(updates).length > 0) {
-      updateTextBox(plainTextBox, updates);
-    }
-  }
-  flushPendingRichTextEditors(workspace);
-  flushLyricsAssignment(workspace);
-  // Let editors acknowledge the committed values before replay. Otherwise a
-  // flush followed by Undo in the same Vue tick can hide the round trip from
-  // model watchers, leaving stale DOM to be committed on a later blur.
-  await nextTick();
-  return selectedWorkspace.value === workspace;
-}
-
-async function onFileMenuUndo() {
-  const editor = focusedRichTextEditor.value;
-  if (editor !== null && editor.commands.get('undo')!.isEnabled) {
-    editor.execute('undo');
-    return;
-  }
-  if (!(await prepareForScoreHistoryReplay())) {
-    return;
-  }
+function onFileMenuUndo() {
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
@@ -9047,36 +8970,14 @@ async function onFileMenuUndo() {
       }
 
       // Undo can affect the note display in the neume toolbar, so force a refresh here.
-      // Text editors synchronize through props. Teardown here could flush
-      // stale DOM after replay and would discard their local editing history.
-      if (
-        selectedWorkspace.value.selectedAnnotationElement === null &&
-        !isTextBoxElement(selectedElement.value) &&
-        !isRichTextBoxElement(selectedElement.value)
-      ) {
-        selectedElement.value.keyHelper++;
-      }
+      selectedElement.value.keyHelper++;
     }
   });
 
   save();
 }
 
-async function onFileMenuRedo() {
-  const editor = focusedRichTextEditor.value;
-  // Reverse score Undo before restoring another textbox's locally undone text.
-  // Flushing that text first would otherwise discard the score redo branch.
-  if (
-    !scoreHistoryState.value.canRedo &&
-    editor !== null &&
-    editor.commands.get('redo')!.isEnabled
-  ) {
-    editor.execute('redo');
-    return;
-  }
-  if (!(await prepareForScoreHistoryReplay())) {
-    return;
-  }
+function onFileMenuRedo() {
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
@@ -9095,15 +8996,7 @@ async function onFileMenuRedo() {
       }
 
       // Redo can affect the note display in the neume toolbar, so force a refresh here.
-      // Text editors synchronize through props. Teardown here could flush
-      // stale DOM after replay and would discard their local editing history.
-      if (
-        selectedWorkspace.value.selectedAnnotationElement === null &&
-        !isTextBoxElement(selectedElement.value) &&
-        !isRichTextBoxElement(selectedElement.value)
-      ) {
-        selectedElement.value.keyHelper++;
-      }
+      selectedElement.value.keyHelper++;
     }
   });
 

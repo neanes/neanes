@@ -47,6 +47,60 @@ describe('rich textbox footnotes', () => {
     expect(workspace.score.footnotes[0]).toBe(body);
   });
 
+  it('restores retained bodies by ID independently of undo history and serialization', () => {
+    const workspace = new Workspace();
+    const box = new RichTextBoxElement();
+    workspace.score.staff.elements.unshift(box);
+    const body = new Footnote();
+    const note = new NoteElement();
+    note.lyrics = 'Retained music';
+    note.spaceAfter = 37;
+    body.staff.elements.unshift(note);
+    const content = `<p>A${richTextFootnoteHtml(body.id)}B</p>`;
+    const commit = (html: string, added: Footnote[] = []) =>
+      workspace.commandService.executeAsBatch(
+        planRichTextFootnoteUpdate(
+          workspace.score,
+          box,
+          { content: html },
+          added,
+        ),
+      );
+    commit(content, [body]);
+    commit('<p>AB</p>');
+    workspace.commandService.clearHistory();
+    expect(workspace.score.footnotes).toEqual([]);
+    const loaded = SaveService.LoadScoreFromJson(
+      SaveService.SaveScoreToJson(workspace.score),
+    );
+    expect(loaded.footnotes).toEqual([]);
+    expect(() =>
+      planRichTextFootnoteUpdate(
+        loaded,
+        loaded.staff.elements[0] as RichTextBoxElement,
+        { content },
+      ),
+    ).toThrow('INVALID_FOOTNOTE_REFERENCE');
+    commit(content);
+    expect(workspace.score.footnotes).toEqual([body]);
+    expect(workspace.score.footnotes[0].staff.elements[0]).toMatchObject({
+      lyrics: 'Retained music',
+      spaceAfter: 37,
+    });
+    workspace.commandService.undo();
+    expect(workspace.score.footnotes).toEqual([]);
+    workspace.commandService.redo();
+    expect(workspace.score.footnotes).toEqual([body]);
+    // A subsequent native deletion/restoration cycle keeps the latest body.
+    note.lyrics = 'Updated music';
+    commit('<p>AB</p>');
+    commit(content);
+    expect(workspace.score.footnotes[0].staff.elements[0]).toHaveProperty(
+      'lyrics',
+      'Updated music',
+    );
+  });
+
   it('numbers references in document and panel order and copies independently', () => {
     const workspace = new Workspace();
     const bodies = Array.from({ length: 4 }, () => new Footnote());

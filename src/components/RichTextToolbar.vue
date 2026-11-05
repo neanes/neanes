@@ -5,10 +5,10 @@
         <ToolbarButton
           variant="secondary"
           class="chrome-button"
-          :disabled="!canUndo"
+          :disabled="!isCommandEnabled('undo')"
           data-testid="rich-text-undo"
           @mousedown.prevent
-          @click="historyActions.undo()"
+          @click="runCommand('undo')"
         >
           <PhArrowCounterClockwise class="size-4" />
         </ToolbarButton>
@@ -17,10 +17,10 @@
         <ToolbarButton
           variant="secondary"
           class="chrome-button"
-          :disabled="!canRedo"
+          :disabled="!isCommandEnabled('redo')"
           data-testid="rich-text-redo"
           @mousedown.prevent
-          @click="historyActions.redo()"
+          @click="runCommand('redo')"
         >
           <PhArrowClockwise class="size-4" />
         </ToolbarButton>
@@ -399,7 +399,7 @@ import {
   PhTextUnderline,
 } from '@phosphor-icons/vue';
 import type { PropType } from 'vue';
-import { computed, inject, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import {
   INSERT_NEUME_COMMAND,
@@ -446,7 +446,6 @@ import {
   PARAGRAPH_STYLE_MIXED_VALUE,
   useRichTextStyleCommands,
 } from '@/composables/useRichTextStyleCommands';
-import { richTextHistoryActionsKey } from '@/injectionKeys';
 import type { AnnotationElement, RichTextBoxElement } from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
 import { Note, RootSign } from '@/models/Neumes';
@@ -459,10 +458,9 @@ import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 
-const historyActions = inject(richTextHistoryActionsKey)!;
-const { canUndo, canRedo } = historyActions;
-
 const EXTRA_COMMAND_NAMES = [
+  'undo',
+  'redo',
   'outdent',
   'indent',
   'removeFormat',

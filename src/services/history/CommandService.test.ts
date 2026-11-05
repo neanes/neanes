@@ -52,32 +52,6 @@ describe('history subscriptions', () => {
     expect(target.title).toBe('Branch');
   });
 
-  it('discards only redo entries when an external editor starts a new branch', () => {
-    const history = new CommandService();
-    const target = { title: 'Original' };
-    for (const title of ['A', 'B']) {
-      history.execute(
-        new UpdatePropertiesCommand({ target, newValues: { title } }),
-      );
-    }
-    history.undo();
-    const states: HistoryState[] = [];
-    history.subscribe((state) => states.push(state));
-
-    history.discardRedo();
-    history.discardRedo();
-    history.redo();
-    expect(target.title).toBe('A');
-    expect(states).toEqual([
-      { canUndo: true, canRedo: true },
-      { canUndo: true, canRedo: false },
-    ]);
-    history.undo();
-    expect(target.title).toBe('Original');
-    history.redo();
-    expect(target.title).toBe('A');
-  });
-
   it('does not publish for empty operations or edits without history', () => {
     const history = new CommandService();
     const target = { title: '' };

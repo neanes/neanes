@@ -25,10 +25,11 @@ import {
 } from '@/composables/useRichTextEditorRegistry';
 import { richTextFootnoteControllerKey } from '@/composables/useRichTextFootnotes';
 import InlineEditor from '@/customEditor';
-import { richTextHistoryActionsKey } from '@/injectionKeys';
 import type { RichTextBoxContentKey } from '@/models/Element';
-import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
-import { RichTextHistory } from '@/services/RichTextHistory';
+import {
+  FOOTNOTE_ELEMENT,
+  richTextFootnoteIds,
+} from '@/services/RichTextFootnotes';
 import { inferRichTextEditorDirection } from '@/utils/richTextLanguage';
 
 defineOptions({
@@ -39,11 +40,9 @@ const props = defineProps<{
   config: EditorConfig;
   modelValue: string;
   owner: object;
-  historyEnabled?: boolean;
   contentKey?: RichTextBoxContentKey;
   footnotesEditable?: boolean;
   footnoteMarkers?: Readonly<Record<string, string>>;
-  replayHistory?: (editor: InlineEditor, replay: () => void) => void;
 }>();
 
 const emit = defineEmits<{
@@ -67,9 +66,7 @@ let loadedModelValue = initialData;
 let loadedEditor: InlineEditor | undefined;
 let loadedEditorData: string | null = null;
 let applyingModel = false;
-let history: RichTextHistory | undefined;
 const footnotes = inject(richTextFootnoteControllerKey, null);
-const historyActions = inject(richTextHistoryActionsKey, null);
 watch(
   () => props.footnoteMarkers,
   (markers) => {
@@ -99,8 +96,7 @@ watch([() => props.modelValue, instance], ([next, editor]) => {
   if (editor != null) {
     if (editor !== loadedEditor || next !== loadedModelValue) {
       let data = editor.getData();
-      const replaced = next !== data;
-      if (replaced) {
+      if (next !== data) {
         applyingModel = true;
         try {
           editor.data.set(next);
@@ -108,12 +104,6 @@ watch([() => props.modelValue, instance], ([next, editor]) => {
         } finally {
           applyingModel = false;
         }
-      }
-      if (history !== undefined) {
-        history.acknowledge(data, replaced);
-      } else {
-        editor.commands.get('undo')!.clearStack();
-        editor.commands.get('redo')!.clearStack();
       }
       loadedModelValue = next;
       loadedEditor = editor;
@@ -130,9 +120,6 @@ let editorIsFocused = false;
 watch(
   () => props.owner,
   (owner) => {
-    if (history !== undefined) {
-      history.owner = owner;
-    }
     if (registeredEditor != null) {
       registerEditor(registeredEditor, owner);
     }
@@ -167,24 +154,6 @@ function refreshBaseDirection(editor: InlineEditor) {
 }
 
 function onReady(editor: InlineEditor) {
-  if (historyActions !== null) {
-    for (const [shortcut, action] of [
-      ['CTRL+Z', 'undo'],
-      ['CTRL+SHIFT+Z', 'redo'],
-      ['CTRL+Y', 'redo'],
-    ] as const) {
-      editor.keystrokes.set(
-        shortcut,
-        (_data, cancel) => {
-          if (props.historyEnabled) {
-            cancel();
-            historyActions[action]();
-          }
-        },
-        { priority: 'high' },
-      );
-    }
-  }
   loadedEditorData ??= editor.getData();
   const plugin = editor.plugins.get(Footnotes);
   plugin.setMarkers(props.footnoteMarkers ?? {});
@@ -210,14 +179,32 @@ function onReady(editor: InlineEditor) {
         footnotes.insert(props.owner, editor);
       }
     });
+    let markerIds = richTextFootnoteIds(editor.getData()).join(',');
     editor.model.document.on('change:data', () => {
+      // Plain typing cannot change references. Structural edits can insert or
+      // remove whole paragraphs containing markers, so inspect those too.
       if (
+        !editor.model.document.differ
+          .getChanges()
+          .some((change) =>
+            change.type === 'attribute'
+              ? change.attributeKey === 'footnoteId'
+              : change.name !== '$text',
+          )
+      ) {
+        return;
+      }
+      const html = editor.getData();
+      const nextIds = richTextFootnoteIds(html).join(',');
+      const changed = nextIds !== markerIds;
+      markerIds = nextIds;
+      if (
+        changed &&
         !applyingModel &&
-        !history?.isReplaying &&
         props.contentKey !== undefined &&
         footnotes.supports(props.owner)
       ) {
-        footnotes.changed(props.owner, props.contentKey, editor.getData());
+        footnotes.changed(props.owner, props.contentKey, html);
       }
     });
   }
@@ -274,39 +261,6 @@ function onReady(editor: InlineEditor) {
   };
 
   emit('ready', editor);
-
-  if (props.historyEnabled) {
-    history = new RichTextHistory(
-      editor,
-      props.owner,
-      props.contentKey ?? 'text',
-      (replay) => {
-        if (props.replayHistory !== undefined) {
-          props.replayHistory(editor, replay);
-        } else {
-          replay();
-        }
-      },
-    );
-  }
-
-  // Parent ready handlers initialize language synchronously. Subscribe after
-  // that initialization, and exclude measurement and read-only editors.
-  if (historyActions !== null) {
-    editor.model.document.on('change:data', (_event, batch) => {
-      if (
-        props.historyEnabled &&
-        !editor.isReadOnly &&
-        !applyingModel &&
-        !history?.isReplaying &&
-        batch.isLocal &&
-        batch.isUndoable &&
-        !batch.isUndo
-      ) {
-        historyActions.edited(props.owner);
-      }
-    });
-  }
 }
 
 function onDestroy(editor: InlineEditor) {

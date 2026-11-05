@@ -76,6 +76,7 @@ async function settle(workspace: Workspace) {
   }
   const complete = settlements.begin(workspace);
   await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
+  await document.fonts.ready;
   await settleWorkspace(workspace, async () => {
     await nextTick();
     return textBoxes.start(workspace);
@@ -85,7 +86,11 @@ async function settle(workspace: Workspace) {
 const hooks = {
   createScore: () => new Score(),
   prepare,
-  dispose: (workspace: Workspace) => settlements.dispose(workspace),
+  dispose(workspace: Workspace) {
+    settlements.dispose(workspace);
+    textBoxes.cancel(workspace);
+    pages.cancel(workspace);
+  },
   settle,
 };
 // One private store lives until the worker shuts down or access is revoked.

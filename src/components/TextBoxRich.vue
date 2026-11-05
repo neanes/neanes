@@ -97,7 +97,7 @@
       </div>
     </div>
     <RichTextEditor
-      v-else-if="element.scrollable"
+      v-else-if="element.scrollable && !footnoteBody"
       :key="`scrollable-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor single scrollable"
@@ -149,7 +149,10 @@ import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
-import type { RichTextBoxElement } from '@/models/Element';
+import type {
+  RichTextBoxElement,
+  RichTextFootnoteMarker,
+} from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -157,7 +160,6 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { elementLayoutOperation } from '@/services/rendering/layoutReservations';
 import {
   getFontFamilyWithFallback,
   getLegacyNeumeFontFamily,
@@ -189,7 +191,7 @@ const props = defineProps({
     default: false,
   },
   footnoteMarkers: {
-    type: Object as PropType<Readonly<Record<string, string>>>,
+    type: Object as PropType<Readonly<Record<string, RichTextFootnoteMarker>>>,
     default: () => ({}),
   },
   element: {
@@ -468,6 +470,10 @@ const containerStyle = computed(() => {
     '--ck-content-font-size': props.element.inline
       ? `${resolvedParagraphStyle.value.fontSize}px`
       : ckContentFontSize.value, // no zoom because we will apply zooming on the whole editor
+    '--footnote-reference-family': getFontFamilyWithFallback(
+      resolvedParagraphStyle.value.fontFamily,
+    ),
+    '--footnote-reference-size': `${resolvedParagraphStyle.value.fontSize}px`,
     '--ck-content-font-color': resolvedParagraphStyle.value.color,
     '--ck-content-line-height': `${resolvedParagraphStyle.value.lineHeight ?? 'normal'}`,
   };
@@ -478,16 +484,13 @@ const containerStyle = computed(() => {
 const textBoxStyle = computed(() => {
   const style: StyleValue = {
     width: `${props.element.width}px`, // no zoom because we scale with the transform
-    // Whole-footnote pagination needs natural body heights. Other boxes retain
-    // their existing page-position limit, including scrollable footnote boxes.
-    maxHeight:
-      props.footnoteBody && !props.element.scrollable
-        ? undefined
-        : withZoom(
-            props.pageSetup.pageHeight -
-              props.element.y -
-              props.pageSetup.bottomMargin,
-          ),
+    maxHeight: props.footnoteBody
+      ? undefined
+      : withZoom(
+          props.pageSetup.pageHeight -
+            props.element.y -
+            props.pageSetup.bottomMargin,
+        ),
   };
 
   return style;
@@ -645,14 +648,14 @@ function getActiveEditorInstances() {
   return [getEditorInstance()];
 }
 
-function phoneHome(
-  height: number,
-  operation = elementLayoutOperation(props.element),
-) {
-  if (unmounting.value || operation !== elementLayoutOperation(props.element)) {
+function phoneHome() {
+  if (unmounting.value) {
     return;
   }
-  emit('update:height', height);
+  const height = getHeight();
+  if (height != null && Math.abs(props.element.height - height) > 0.001) {
+    emit('update:height', height);
+  }
 }
 
 const ckContentFontSize = ref(`${resolvedParagraphStyle.value.fontSize}px`);
@@ -683,14 +686,8 @@ async function initializeCkContentFontSize() {
 }
 
 function emitRecalculatedHeightIfNeeded() {
-  if (!props.recalc) {
-    return;
-  }
-
-  const height = getHeight();
-
-  if (height != null && Math.abs(props.element.height - height) > 0.001) {
-    debouncedPhoneHome(height, elementLayoutOperation(props.element));
+  if (props.recalc) {
+    debouncedPhoneHome();
   }
 }
 
@@ -734,10 +731,7 @@ function observeBlockHeight() {
         Math.abs(props.element.height - resizedHeight) > 0.001
       ) {
         if (props.recalc) {
-          debouncedPhoneHome(
-            resizedHeight,
-            elementLayoutOperation(props.element),
-          );
+          debouncedPhoneHome();
         } else {
           // A resize is pure geometry -- there is no pending edit to persist. Route
           // through `update:height` (-> updateRichTextBoxHeight, which only sets

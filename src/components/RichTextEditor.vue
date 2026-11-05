@@ -25,7 +25,10 @@ import {
 } from '@/composables/useRichTextEditorRegistry';
 import { richTextFootnoteControllerKey } from '@/composables/useRichTextFootnotes';
 import InlineEditor from '@/customEditor';
-import type { RichTextBoxContentKey } from '@/models/Element';
+import type {
+  RichTextBoxContentKey,
+  RichTextFootnoteMarker,
+} from '@/models/Element';
 import {
   FOOTNOTE_ELEMENT,
   richTextFootnoteIds,
@@ -42,7 +45,7 @@ const props = defineProps<{
   owner: object;
   contentKey?: RichTextBoxContentKey;
   footnotesEditable?: boolean;
-  footnoteMarkers?: Readonly<Record<string, string>>;
+  footnoteMarkers?: Readonly<Record<string, RichTextFootnoteMarker>>;
 }>();
 
 const emit = defineEmits<{
@@ -398,10 +401,16 @@ defineExpose({
 
 <style>
 .neanes-footnote {
+  font: normal var(--footnote-reference-size) / 1
+    var(--footnote-reference-family);
   font-variant-position: super;
+  height: 1em;
+  vertical-align: text-bottom;
+  text-align: left;
+  letter-spacing: normal;
+  word-spacing: normal;
   display: inline-block;
-  line-height: 1;
-  white-space: nowrap;
+  white-space: pre;
   cursor: pointer;
 }
 </style>

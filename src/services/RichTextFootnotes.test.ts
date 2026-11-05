@@ -21,6 +21,26 @@ import {
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 
 describe('rich textbox footnotes', () => {
+  it('loads legacy CKEditor fillers as empty footnote spans and preserves other spaces', () => {
+    const workspace = new Workspace();
+    const box = new RichTextBoxElement();
+    const body = new Footnote();
+    const marker = richTextFootnoteHtml(body.id);
+    box.inline = true;
+    box.contentBottom = `<p>A${marker.replace('</span>', '&nbsp;</span>')}<span>&nbsp;</span>B</p>`;
+    workspace.score.staff.elements.unshift(box);
+    workspace.score.footnotes.push(body);
+
+    const loaded = SaveService.LoadScoreFromJson(
+      SaveService.SaveScoreToJson(workspace.score),
+    );
+    const reopened = loaded.staff.elements[0] as RichTextBoxElement;
+    expect(reopened.contentBottom).toBe(
+      `<p>A${marker}<span>&nbsp;</span>B</p>`,
+    );
+    expect(richTextBoxFootnoteIds(reopened)).toEqual([body.id]);
+  });
+
   it('creates and deletes content with its body in the same undo step', () => {
     const workspace = new Workspace();
     const box = new RichTextBoxElement();

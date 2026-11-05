@@ -21,6 +21,7 @@ export type InspectorContext =
   | {
       kind: 'rich-text-box';
       element: RichTextBoxElement;
+      footnoteBody: boolean;
       source: 'score' | 'header-footer';
     }
   | { kind: 'drop-cap'; element: DropCapElement }

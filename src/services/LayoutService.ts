@@ -17,6 +17,7 @@ import type {
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
+  RichTextFootnoteMarker,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -73,6 +74,7 @@ import type {
 } from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import {
@@ -106,22 +108,20 @@ import {
   type SbmuflGlyphName,
 } from '@/services/NeumeMappingService';
 import {
-  beginLayoutOperation,
-  reserveInlineWidth,
-} from '@/services/rendering/layoutReservations';
+  FOOTNOTE_ATTRIBUTE,
+  FOOTNOTE_CLASS,
+} from '@/services/RichTextFootnotes';
 import { TATWEEL } from '@/utils/constants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
-import {
-  captureFootnotePageAssignments,
-  type FootnotePageAssignments,
-} from './FootnoteReferences';
+import { automaticFootnoteMarker } from './FootnoteMarker';
 import {
   getLyricsBaseline,
   getLyricsTop,
@@ -416,11 +416,9 @@ export class LayoutService {
     workspace: Workspace,
     options?: LayoutDiagnosticsOptions,
   ): Page[] {
-    const reservations = beginLayoutOperation(workspace);
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
-    const previousPageAssignments = captureFootnotePageAssignments(score);
 
     score.staves.forEach((staff) =>
       staff.elements.forEach((element, index) => {
@@ -444,10 +442,16 @@ export class LayoutService {
     });
 
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
+    const references = orderedFootnotes(score, null);
+    const markerWidths = this.measureRichTextFootnoteMarkers(
+      references,
+      pageSetup,
+      score.paragraphStyles,
+    );
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
-      previousPageAssignments,
+      references,
       options,
     );
     const content = this.prepareContentLines(
@@ -455,6 +459,8 @@ export class LayoutService {
       pageSetup,
       score.paragraphStyles,
       options,
+      false,
+      markerWidths,
     );
     const {
       layoutWorkspace,
@@ -566,46 +572,59 @@ export class LayoutService {
           ),
         );
       }
-      page.footnotes = decision.footnoteIds.map((id) => {
-        const prepared = footnotes.get(id)!;
-        return {
-          id,
-          number: prepared.number,
-          marker: prepared.marker,
-          reference: prepared.reference,
-          lines: [],
-          top: 0,
-          height: prepared.height,
-          labelX: 0,
-        };
-      });
       pages.push(page);
     }
 
     const assigned = orderedFootnotes(score, pageAssignments);
-    const finalMarkers = Object.fromEntries(
-      assigned.map(({ footnote, marker }) => [footnote.id, marker]),
+    const assignedById = new Map(
+      assigned.map((entry) => [entry.footnote.id, entry]),
     );
-    reservations.pending = assigned.some(
-      ({ footnote, marker }) => footnotes.get(footnote.id)!.marker !== marker,
-    );
-    for (const { reference, number, marker } of assigned) {
+    const markersByBox = new Map<
+      ScoreElement,
+      Record<string, RichTextFootnoteMarker>
+    >();
+    for (const { footnote, reference, number, marker } of assigned) {
       if (reference instanceof FootnoteAnchorElement) {
         reference.footnoteNumber = number;
         reference.footnoteMarker = marker;
+      } else {
+        let markers = markersByBox.get(reference);
+        if (markers === undefined) {
+          markers = {};
+          markersByBox.set(reference, markers);
+        }
+        markers[footnote.id] = {
+          label: marker,
+          width: markerWidths.get(footnote.id)!,
+        };
       }
     }
     for (const element of elements) {
       if (element.elementType === ElementType.RichTextBox) {
-        (element as RichTextBoxElement).footnoteMarkers = finalMarkers;
+        const box = element as RichTextBoxElement;
+        const markers = markersByBox.get(element);
+        if (
+          markers !== undefined ||
+          Object.keys(box.footnoteMarkers).length > 0
+        ) {
+          box.footnoteMarkers = markers ?? {};
+        }
       }
     }
-    for (const page of pages) {
-      for (const body of page.footnotes) {
-        const label = assigned.find(({ footnote }) => footnote.id === body.id)!;
-        body.number = label.number;
-        body.marker = label.marker;
-      }
+    for (const [index, decision] of decisions.entries()) {
+      pages[index].footnotes = decision.footnoteIds.map((id) => {
+        const { reference, number, marker } = assignedById.get(id)!;
+        return {
+          id,
+          number,
+          marker,
+          reference,
+          lines: [],
+          top: 0,
+          height: footnotes.get(id)!.height,
+          labelX: 0,
+        };
+      });
     }
 
     this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
@@ -762,28 +781,13 @@ export class LayoutService {
   private static prepareFootnotes(
     workspace: Workspace,
     musicalContexts: Map<ScoreElement, MusicalContext>,
-    previousPageAssignments: FootnotePageAssignments,
+    references: ReturnType<typeof orderedFootnotes>,
     options?: LayoutDiagnosticsOptions,
   ) {
     const score = workspace.score;
-    const ordered = orderedFootnotes(score, previousPageAssignments);
-    const markers = Object.fromEntries(
-      ordered.map(({ footnote, marker }) => [footnote.id, marker]),
-    );
-    for (const staff of score.staves) {
-      for (const element of staff.elements) {
-        if (element.elementType === ElementType.RichTextBox) {
-          (element as RichTextBoxElement).footnoteMarkers = markers;
-        }
-      }
-    }
     const gutter = footnoteBodyGutter(score.paragraphStyles);
     return new Map(
-      ordered.map(({ footnote, reference, number, marker }) => {
-        if (reference instanceof FootnoteAnchorElement) {
-          reference.footnoteNumber = number;
-          reference.footnoteMarker = marker;
-        }
+      references.map(({ footnote, reference }) => {
         if (
           footnote.staff.elements.some(
             (element) => elementFootnoteIds(element).length > 0,
@@ -810,9 +814,6 @@ export class LayoutService {
         return [
           footnote.id,
           {
-            reference,
-            number,
-            marker,
             content,
             lines,
             gutter,
@@ -1069,6 +1070,7 @@ export class LayoutService {
     paragraphStyles: ParagraphStyle[],
     options?: LayoutDiagnosticsOptions,
     hidePopulatedTerminator = false,
+    markerWidths?: ReadonlyMap<string, number>,
   ) {
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
@@ -1260,6 +1262,7 @@ export class LayoutService {
               ? this.getFillWidthPlaceholderWidth(
                   richTextBoxElement,
                   defaultLyricsFontCss,
+                  markerWidths,
                 )
               : richTextBoxElement.customWidth!;
             richTextBoxElement.height = neumeHeight;
@@ -2800,6 +2803,7 @@ export class LayoutService {
     text: string,
     font: string,
     fontVariantCaps: string = 'normal',
+    additionalWidth = 0,
   ) {
     const lines = text.split(/(?:\r\n|\r|\n)/g);
     let maxWidth = 0;
@@ -2817,34 +2821,110 @@ export class LayoutService {
 
     return Math.max(
       TextMeasurementService.getTextWidth(' ', font, fontVariantCaps),
-      maxWidth,
+      maxWidth + additionalWidth,
       1,
     );
+  }
+
+  private static measureRichTextFootnoteMarkers(
+    references: ReturnType<typeof orderedFootnotes>,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+  ) {
+    const widths = new Map<string, number>();
+    const richTextReferences = references.filter(
+      ({ reference }) => reference.elementType === ElementType.RichTextBox,
+    );
+    if (richTextReferences.length === 0) {
+      return widths;
+    }
+
+    // Use the same typography and browser shaping as the CKEditor widget.
+    const sample = document.createElement('span');
+    sample.className = FOOTNOTE_CLASS;
+    sample.dir = 'auto';
+    sample.style.position = 'absolute';
+    sample.style.visibility = 'hidden';
+    document.body.append(sample);
+    try {
+      const measure = (label: string) => {
+        sample.textContent = label;
+        return sample.getBoundingClientRect().width;
+      };
+      const prefixWidthsByStyle = new Map<string, number[]>();
+      for (const {
+        footnote,
+        reference,
+        number,
+        marker,
+      } of richTextReferences) {
+        const style = resolveParagraphStyle(
+          paragraphStyles,
+          getTextBoxParagraphStyleFallbackId(
+            (reference as RichTextBoxElement).inline,
+          ),
+        );
+        const family = getFontFamilyWithFallback(style.fontFamily);
+        sample.style.setProperty('--footnote-reference-family', family);
+        sample.style.setProperty(
+          '--footnote-reference-size',
+          `${style.fontSize}px`,
+        );
+
+        if (pageSetup.footnoteNumbering !== 'page' || number === null) {
+          widths.set(footnote.id, measure(marker));
+          continue;
+        }
+
+        const styleKey = JSON.stringify([family, style.fontSize]);
+        let prefixWidths = prefixWidthsByStyle.get(styleKey);
+        if (prefixWidths === undefined) {
+          prefixWidths = [];
+          prefixWidthsByStyle.set(styleKey, prefixWidths);
+        }
+        const index = number - pageSetup.firstFootnoteNumber;
+        while (prefixWidths.length <= index) {
+          const label = automaticFootnoteMarker(
+            pageSetup.firstFootnoteNumber + prefixWidths.length,
+            pageSetup,
+          );
+          prefixWidths.push(Math.max(prefixWidths.at(-1) ?? 0, measure(label)));
+        }
+        widths.set(footnote.id, prefixWidths[index]);
+      }
+    } finally {
+      sample.remove();
+    }
+    return widths;
   }
 
   private static measureRichTextWidth(
     html: string,
     defaultLyricsFontCss: string,
-    markers: Readonly<Record<string, string>>,
+    markerWidths?: ReadonlyMap<string, number>,
   ) {
     const template = document.createElement('template');
     template.innerHTML = html;
-    // Inline fill-width reservations must include the generated marker label.
-    // As with other rich text, this is a conservative plain-text minimum.
+    // The surrounding text still uses the existing plain-text approximation.
+    let width = 0;
     for (const marker of template.content.querySelectorAll(
-      '.neanes-footnote',
+      `.${FOOTNOTE_CLASS}`,
     )) {
-      marker.textContent =
-        markers[marker.getAttribute('data-footnote-id')!] ?? '?';
+      width += markerWidths?.get(marker.getAttribute(FOOTNOTE_ATTRIBUTE)!) ?? 0;
+      marker.remove();
     }
-    const plainText = template.content.textContent ?? '';
-
-    return this.measurePlainTextWidth(plainText, defaultLyricsFontCss);
+    return this.measurePlainTextWidth(
+      template.content.textContent ?? '',
+      defaultLyricsFontCss,
+      'normal',
+      width,
+    );
   }
 
   private static getFillWidthPlaceholderWidth(
     element: ScoreElement,
     defaultLyricsFontCss: string,
+    markerWidths?: ReadonlyMap<string, number>,
   ) {
     if (
       element.elementType === ElementType.TextBox &&
@@ -2870,19 +2950,16 @@ export class LayoutService {
       (element as RichTextBoxElement).inline
     ) {
       const richTextBoxElement = element as RichTextBoxElement;
-      return reserveInlineWidth(
-        element,
-        Math.max(
-          this.measureRichTextWidth(
-            richTextBoxElement.content,
-            defaultLyricsFontCss,
-            richTextBoxElement.footnoteMarkers,
-          ),
-          this.measureRichTextWidth(
-            richTextBoxElement.contentBottom,
-            defaultLyricsFontCss,
-            richTextBoxElement.footnoteMarkers,
-          ),
+      return Math.max(
+        this.measureRichTextWidth(
+          richTextBoxElement.content,
+          defaultLyricsFontCss,
+          markerWidths,
+        ),
+        this.measureRichTextWidth(
+          richTextBoxElement.contentBottom,
+          defaultLyricsFontCss,
+          markerWidths,
         ),
       );
     }

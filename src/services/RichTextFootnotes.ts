@@ -111,6 +111,34 @@ export function remapRichTextBoxFootnotes(
   }
 }
 
+// Older CKEditor output inserted a block filler into an empty marker span.
+export function removeRichTextFootnoteFillers(html: string) {
+  const filler = '&nbsp;';
+  if (!html.includes(`${filler}</span>`)) {
+    return html;
+  }
+
+  const parts: string[] = [];
+  let start = 0;
+  const parser = new Parser({
+    onopentag(name, attributes) {
+      const offset = parser.endIndex + 1;
+      if (
+        name === 'span' &&
+        attributes.class?.split(/\s+/).includes(FOOTNOTE_CLASS) &&
+        attributes[FOOTNOTE_ATTRIBUTE] !== undefined &&
+        html.startsWith(`${filler}</span>`, offset)
+      ) {
+        parts.push(html.slice(start, offset));
+        start = offset + filler.length;
+      }
+    },
+  });
+  parser.end(html);
+  parts.push(html.slice(start));
+  return parts.join('');
+}
+
 export function richTextFootnoteHtml(id: string) {
   return `<span class="${FOOTNOTE_CLASS}" ${FOOTNOTE_ATTRIBUTE}="${id}"></span>`;
 }

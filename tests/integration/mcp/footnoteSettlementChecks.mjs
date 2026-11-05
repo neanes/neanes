@@ -64,6 +64,7 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
           properties: {
             content:
               '<p>Footnote text fills the available width with several words and wraps according to the displayed label gutter.</p>',
+            scrollable: i === 1,
           },
         },
       ],
@@ -90,12 +91,143 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     heightLimits.footnotes.every((height) => height === 'none'),
     'Whole footnote bodies are measured at their natural height',
   );
+  assert.equal(
+    await evaluate(
+      "document.querySelectorAll('.page .line[data-footnote-id] .ck-content.scrollable').length",
+    ),
+    0,
+    'Footnote bodies ignore stored scrollability',
+  );
   const ids = entries
     .slice(0, 6)
     .map(
       (entry) =>
         entry.properties.content.match(/data-footnote-id="([^"]+)"/)[1],
     );
+  const markerGeometry = (id, candidates) =>
+    eventually(async () => {
+      const geometry = await evaluate(`(() => {
+      const id = ${JSON.stringify(id)};
+      const workspace = window._editor.selectedWorkspace.value;
+      const owner = workspace.score.staff.elements.find(element => element.footnoteMarkers?.[id]);
+      const page = document.querySelectorAll('.page-background .page')[owner.page - 1];
+      const widget = page?.querySelector('.neanes-footnote[data-footnote-id="' + id + '"]');
+      if (!widget || !widget.nextSibling) {
+        page?.scrollIntoView({block: 'start'});
+        return null;
+      }
+      const paragraph = widget.parentElement;
+      const origin = paragraph.getBoundingClientRect();
+      const box = widget.getBoundingClientRect();
+      const text = widget.nextSibling;
+      const range = document.createRange();
+      range.selectNode(text);
+      const wrapping = [...range.getClientRects()].map(
+        rect => [rect.x - origin.x, rect.y - origin.y, rect.width, rect.height]
+          .map(n => Number(n.toFixed(2))),
+      );
+      const label = widget.textContent;
+      const sample = widget.cloneNode(false);
+      sample.removeAttribute('id');
+      sample.style.position = 'absolute';
+      sample.style.width = 'auto';
+      sample.style.visibility = 'hidden';
+      widget.closest('.rich-text-box-container').append(sample);
+      const naturalWidths = ${JSON.stringify(candidates)}.map(label => {
+        sample.textContent = label;
+        return Number(getComputedStyle(sample).width.replace('px', ''));
+      });
+      sample.remove();
+      return {
+        label,
+        width: Number(getComputedStyle(widget).width.replace('px', '')),
+        height: box.height,
+        wrapping,
+        naturalWidths,
+      };
+      })()`);
+      assert.ok(geometry, `Marker ${id} is mounted`);
+      return geometry;
+    });
+  const marker = (candidates) => markerGeometry(ids[1], candidates);
+  const dimensions = ({ width, height, wrapping }) => ({
+    width,
+    height,
+    wrapping,
+  });
+  for (const [footnoteFormat, firstFootnoteNumber, candidates] of [
+    ['numbers', 9, ['9', '10']],
+    ['symbols', 5, ['¶', '‖']],
+    ['symbols', 6, ['‖', '**']],
+  ]) {
+    await settings({
+      pageHeightCustom: 900,
+      footnoteFormat,
+      firstFootnoteNumber,
+    });
+    const first = await markerGeometry(ids[0], candidates);
+    const uninterrupted = await marker(candidates);
+    assert.equal(
+      first.width,
+      first.naturalWidths[0],
+      'The first slot uses only the first label',
+    );
+    assert.equal(uninterrupted.label, candidates[1]);
+    if (firstFootnoteNumber === 5) {
+      assert.ok(
+        uninterrupted.naturalWidths[0] > uninterrupted.naturalWidths[1],
+        'The first symbol is wider than the last in this case',
+      );
+    }
+    assert.equal(uninterrupted.width, Math.max(...uninterrupted.naturalWidths));
+    await settings({ pageHeightCustom: 170 });
+    const restarted = await marker(candidates);
+    assert.equal(restarted.label, candidates[0]);
+    assert.deepEqual(
+      dimensions(restarted),
+      dimensions(uninterrupted),
+      `${footnoteFormat} restart preserves marker dimensions and surrounding wrapping`,
+    );
+    const toggleBreak = (pageBreak) =>
+      edit([
+        {
+          action: 'update',
+          elementType: 'RichTextBox',
+          elementRef: entries[0].elementRef,
+          properties: { pageBreak },
+        },
+      ]);
+    await toggleBreak(true);
+    const explicit = await marker(candidates);
+    assert.equal(explicit.label, candidates[0]);
+    assert.equal(explicit.width, explicit.naturalWidths[0]);
+    await toggleBreak(false);
+  }
+  for (const footnoteNumbering of ['continuous', 'section']) {
+    await settings({
+      pageHeightCustom: 390,
+      footnoteNumbering,
+      footnoteFormat: 'symbols',
+      firstFootnoteNumber: 5,
+    });
+    const natural = await marker(['‖']);
+    assert.equal(natural.label, '‖');
+    assert.equal(natural.width, natural.naturalWidths[0]);
+  }
+  await settings({
+    pageHeightCustom: 390,
+    footnoteNumbering: 'page',
+    footnoteFormat: 'numbers',
+    firstFootnoteNumber: 9,
+  });
+  await edit([
+    { action: 'update_footnote', footnoteId: ids[1], marker: 'Editorial note' },
+  ]);
+  const literal = await marker(['Editorial note']);
+  assert.equal(literal.label, 'Editorial note');
+  assert.equal(literal.width, literal.naturalWidths[0]);
+  await edit([{ action: 'update_footnote', footnoteId: ids[1], marker: null }]);
+
   const geometry = () =>
     evaluate(`(() => {
     const w=window._editor.selectedWorkspace.value;
@@ -180,7 +312,7 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
   );
   const numbering = await evaluate(`(() => {
     const w=window._editor.selectedWorkspace.value;
-    return w.score.staff.elements.filter(e=>e.elementType==='RichTextBox').map(e=>({page:e.page, marker:e.footnoteMarkers[Object.keys(e.footnoteMarkers).find(id=>e.content.includes(id))]}));
+    return w.score.staff.elements.filter(e=>e.elementType==='RichTextBox').map(e=>({page:e.page, marker:e.footnoteMarkers[Object.keys(e.footnoteMarkers).find(id=>e.content.includes(id))].label}));
   })()`);
   let previousPage, next;
   for (const entry of numbering) {

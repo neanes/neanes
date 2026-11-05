@@ -105,7 +105,14 @@ export async function checkRichTextScorePaste({ call, evaluate, menu }) {
         `${workspace}.score.staff.elements[0].content.match(/data-footnote-id="([^"]+)"/)[1]`,
       );
       assert.ok(!pasted.content.includes(sourceId));
-      assert.ok(pasted.bodies.some((body) => pasted.content.includes(body.id)));
+      const pastedBody = pasted.bodies.find((body) =>
+        pasted.content.includes(body.id),
+      );
+      assert.ok(pastedBody);
+      assert.equal(
+        pasted.content,
+        `<p><span class="neanes-footnote" data-footnote-id="${pastedBody.id}"></span>Source</p>`,
+      );
     }
     // Settled discovery also checks that every remaining reference has a body.
     await call('get_pages', args);

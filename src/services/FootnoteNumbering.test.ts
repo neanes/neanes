@@ -19,10 +19,7 @@ import {
   MAX_FOOTNOTE_START_NUMBER,
   MAX_FOOTNOTE_START_SYMBOL_REPETITIONS,
 } from './FootnoteMarker';
-import {
-  captureFootnotePageAssignments,
-  orderedFootnotes,
-} from './FootnoteReferences';
+import { orderedFootnotes } from './FootnoteReferences';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 
@@ -204,27 +201,29 @@ describe('automatic footnote sequences', () => {
     expect(labels(score)).toEqual(['7', '8', '9', '7']);
   });
 
-  it('numbers from explicit previous and new assignments without reading overwritten pages', () => {
+  it('uses final page assignments for labels and explicit breaks for pre-layout ordinals', () => {
     const { score, anchors } = fixture();
     score.pageSetup.footnoteNumbering = 'page';
-    anchors.forEach((anchor, index) => {
-      anchor.page = index < 2 ? 1 : 2;
-    });
-    const previous = captureFootnotePageAssignments(score);
-    const current = new Map(anchors.map((anchor) => [anchor, 1]));
+    const assignments = new Map(
+      anchors.map((anchor, index) => [anchor, index < 2 ? 1 : 2]),
+    );
     anchors.forEach((anchor) => {
       anchor.page = 99;
     });
     expect(
-      orderedFootnotes(score, previous).map((entry) => entry.number),
+      orderedFootnotes(score, assignments).map((entry) => entry.number),
     ).toEqual([1, 2, 1, 2]);
-    expect(
-      orderedFootnotes(score, current).map((entry) => entry.number),
-    ).toEqual([1, 2, 3, 4]);
+    expect(orderedFootnotes(score, null).map((entry) => entry.number)).toEqual([
+      1, 2, 3, 4,
+    ]);
     score.footnotes[1].marker = 'Custom';
-    expect(
-      orderedFootnotes(score, previous).map((entry) => entry.marker),
-    ).toEqual(['1', 'Custom', '1', '2']);
+    anchors[2].pageBreak = true;
+    expect(orderedFootnotes(score, null).map((entry) => entry.marker)).toEqual([
+      '1',
+      'Custom',
+      '2',
+      '1',
+    ]);
   });
 
   it('round trips all numbering settings and supplies the original defaults for older files', () => {

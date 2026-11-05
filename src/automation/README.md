@@ -140,16 +140,18 @@ main and footnote lines. Range selections can identify the active footnote
 collection. Footnote numbering follows document reference order across pages.
 `get_staff_lyrics` and the `set_staff_lyrics` edit action also accept this
 collection selector for independent authoritative footnote lyrics.
-In documents with footnotes, layout settlement retains the largest measured
-rich-text heights at the current body width within each operation. Footnote body
-gutters depend only on body marker font size, not displayed labels or numbering. Intrinsic inline widths are retained only for boxes containing
-footnote references. Documents without footnotes accept shrinking body heights;
-explicit settlement retains only header/footer template maxima. These
-reservations are transient and reset for content, settings, and font changes;
-fresh measurements replace saved height caches. Width changes discard
-the previous height maximum, and delayed measurements at an obsolete width
-request another measurement pass. Editor automation, private workers, and
-detached exports use the same reservation rules.
+Rich-text references use the box's default font family and size for superscript
+markers. Custom labels and automatic labels in continuous or section numbering
+use their rendered width. With page restart, each automatic slot fits the widest
+label through its ordinal since the last explicit page break, starting at the
+configured first number or symbol. Automatic page breaks can leave extra space
+after the left-aligned label. Custom markers do not advance the sequence.
+
+Editor automation and private workers lay out, measure text boxes, then lay out
+again. Footnote bodies use natural heights even if a stored rich-text box is
+scrollable. The fixed body gutter is 1.8em for the marker plus a 0.4em gap, both
+relative to the body marker font size. Visual exports reconcile measured heights
+with the existing pass limit and retain maxima for header/footer templates.
 Whole-footnote pagination is used initially. An oversized body remains editable
 and saveable, but settled page discovery/visual export fails explicitly until it
 fits. Run the self-launching `footnotes` integration scenario for both document
@@ -159,6 +161,5 @@ Footnote typography uses the built-in `footnote-text`, `footnote-body-marker`,
 and `footnote-reference` paragraph styles. Superscript is not a paragraph-style
 property. The body-marker style inherits Footnote Text, including its font size.
 Body labels render on the baseline, with a period after numeric markers and no
-period after symbols. Parenthesized musical references retain their existing position and configured
-reference font size without scaling. Rich references use native inline formatting
-rather than the musical reference style.
+period after symbols. Parenthesized musical references retain their existing
+position and configured reference font size without scaling.

@@ -12,7 +12,7 @@
         :ref="(instance) => setMeasurer(element, instance)"
         :element="element as RichTextBoxElement"
         :footnote-body="footnoteBodyElements.has(element)"
-        :footnote-markers="footnoteMarkers"
+        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
         :page-setup="workspace.score.pageSetup"
         :paragraph-styles="workspace.score.paragraphStyles"
         :fonts="fonts"
@@ -42,7 +42,6 @@ import {
   type TextBoxElement,
 } from '@/models/Element';
 import type { Workspace } from '@/models/Workspace';
-import { orderedFootnotes } from '@/services/FootnoteService';
 import {
   getResizableTextBoxes,
   type MeasuredTextBox,
@@ -59,12 +58,6 @@ const emit = defineEmits<{
   complete: [heights: TextBoxHeightMeasurement[]];
   failed: [error: Error];
 }>();
-const footnoteMarkers = Object.fromEntries(
-  orderedFootnotes(props.workspace.score).map(({ footnote, marker }) => [
-    footnote.id,
-    marker,
-  ]),
-);
 const elements = getResizableTextBoxes(props.workspace.score);
 const footnoteBodyElements = new Set(
   props.workspace.score.footnotes.flatMap((body) => body.staff.elements),

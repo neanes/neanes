@@ -408,7 +408,11 @@ export const elementPropertySchemas = {
     textDirection: z.enum(['ltr', 'rtl']).optional(),
     multipanel: z.boolean(),
     inline: z.boolean(),
-    scrollable: z.boolean(),
+    scrollable: z
+      .boolean()
+      .describe(
+        'Enables scrolling in main-score rich-text boxes. Footnote bodies always expand to their natural height.',
+      ),
     centerOnPage: z.boolean(),
     height: z.number(),
     customWidth: z.number().optional(),

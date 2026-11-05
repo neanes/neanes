@@ -3,10 +3,12 @@ import {
   Command,
   Plugin,
   toWidget,
+  type ViewDowncastWriter,
   type ViewElement,
   Widget,
 } from 'ckeditor5';
 
+import type { RichTextFootnoteMarker } from '@/models/Element';
 import {
   FOOTNOTE_ATTRIBUTE,
   FOOTNOTE_CLASS,
@@ -40,7 +42,7 @@ export class Footnotes extends Plugin {
     paste?: (payload: string) => string;
     reject(): void;
   };
-  private markers: Readonly<Record<string, string>> = {};
+  private markers: Readonly<Record<string, RichTextFootnoteMarker>> = {};
   init() {
     const editor = this.editor;
     editor.model.schema.register(FOOTNOTE_ELEMENT, {
@@ -63,28 +65,26 @@ export class Footnotes extends Plugin {
     });
     editor.conversion.for('dataDowncast').elementToElement({
       model: FOOTNOTE_ELEMENT,
+      // A data marker is empty. A container would serialize a block filler
+      // and make opening and blurring an untouched editor look like an edit.
       view: (element, { writer }) =>
-        writer.createContainerElement('span', {
+        writer.createEmptyElement('span', {
           class: FOOTNOTE_CLASS,
           [FOOTNOTE_ATTRIBUTE]: element.getAttribute('footnoteId'),
         }),
     });
     editor.conversion.for('editingDowncast').elementToElement({
       model: FOOTNOTE_ELEMENT,
-      view: (element, { writer }) =>
-        toWidget(
-          writer.createContainerElement(
-            'span',
-            {
-              class: FOOTNOTE_CLASS,
-              [FOOTNOTE_ATTRIBUTE]: element.getAttribute('footnoteId'),
-            },
-            writer.createText(
-              this.label(String(element.getAttribute('footnoteId'))),
-            ),
-          ),
-          writer,
-        ),
+      view: (element, { writer }) => {
+        const id = String(element.getAttribute('footnoteId'));
+        const view = writer.createContainerElement('span', {
+          class: FOOTNOTE_CLASS,
+          dir: 'auto',
+          [FOOTNOTE_ATTRIBUTE]: id,
+        });
+        this.renderMarker(writer, view, id);
+        return toWidget(view, writer);
+      },
     });
     const clipboard = editor.plugins.get(ClipboardPipeline);
     editor.editing.view.document.on('clipboardOutput', (_event, data) => {
@@ -145,10 +145,24 @@ export class Footnotes extends Plugin {
     command.insert = insert;
     command.refresh();
   }
-  private label(id: string) {
-    return this.markers[id] ?? '?';
+  private renderMarker(
+    writer: ViewDowncastWriter,
+    view: ViewElement,
+    id: string,
+  ) {
+    const marker = this.markers[id];
+    if (marker === undefined) {
+      writer.removeStyle('width', view);
+    } else {
+      writer.setStyle('width', `${marker.width}px`, view);
+    }
+    writer.insert(
+      writer.createPositionAt(view, 0),
+      writer.createText(marker?.label ?? '?'),
+    );
   }
-  public setMarkers(markers: Readonly<Record<string, string>>) {
+  public setMarkers(markers: Readonly<Record<string, RichTextFootnoteMarker>>) {
+    const previous = this.markers;
     this.markers = markers;
     const editor = this.editor;
     editor.editing.view.change((writer) => {
@@ -157,14 +171,16 @@ export class Footnotes extends Plugin {
           if (!item.is('element', FOOTNOTE_ELEMENT)) {
             continue;
           }
+          const id = String(item.getAttribute('footnoteId'));
+          if (
+            previous[id]?.label === markers[id]?.label &&
+            previous[id]?.width === markers[id]?.width
+          ) {
+            continue;
+          }
           const view = editor.editing.mapper.toViewElement(item) as ViewElement;
           writer.remove(writer.createRangeIn(view));
-          writer.insert(
-            writer.createPositionAt(view, 0),
-            writer.createText(
-              this.label(String(item.getAttribute('footnoteId'))),
-            ),
-          );
+          this.renderMarker(writer, view, id);
         }
       }
     });

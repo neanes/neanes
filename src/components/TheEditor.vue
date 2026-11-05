@@ -255,12 +255,6 @@ import {
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
-import {
-  applyLiveTextBoxHeight,
-  invalidateLayoutFonts,
-  layoutReservations,
-  reserveTextBoxHeight,
-} from '@/services/rendering/layoutReservations';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { SaveService } from '@/services/SaveService';
@@ -647,6 +641,9 @@ const inspectorContext = computed<InspectorContext>(() => {
     return {
       kind: 'rich-text-box',
       element: selectedRichTextBoxElement.value,
+      footnoteBody: footnoteBodyElements.value.has(
+        selectedRichTextBoxElement.value,
+      ),
       source:
         currentSelectedElement === selectedRichTextBoxElement.value
           ? 'score'
@@ -1725,7 +1722,6 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 });
 
 function onLayoutFontsChanged() {
-  invalidateLayoutFonts();
   saveDebounced();
 }
 onBeforeUnmount(() => {
@@ -5468,9 +5464,6 @@ function save() {
     });
 
   pages.value = processedPages;
-  if (layoutReservations(score.value)?.pending) {
-    saveDebounced();
-  }
 
   if (lyricSelection != null) {
     nextTick(() => {
@@ -6615,7 +6608,7 @@ function updateRichTextBox(
 
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
-    element.height = reserveTextBoxHeight(element, newValues.height);
+    element.height = newValues.height;
     save();
     return;
   }
@@ -6700,11 +6693,7 @@ function flushPendingAnnotationEditor() {
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
-  if (isActiveEditorForOwner(element)) {
-    applyLiveTextBoxHeight(element, height);
-  } else {
-    element.height = reserveTextBoxHeight(element, height);
-  }
+  element.height = height;
   richTextBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -6715,7 +6704,7 @@ function updateTextBox(
 ) {
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
-    element.height = reserveTextBoxHeight(element, newValues.height);
+    element.height = newValues.height;
     save();
     return;
   }
@@ -6733,7 +6722,7 @@ function updateTextBox(
 function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
-  element.height = reserveTextBoxHeight(element, height);
+  element.height = height;
   textBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -10422,6 +10411,7 @@ function renderTabLabel(tab: Tab) {
     />
     <WorkspaceTextBoxMeasurement
       v-if="workspaceTextBoxMeasurement"
+      :key="workspaceTextBoxMeasurement.id"
       :workspace="workspaceTextBoxMeasurement.workspace"
       :fonts="fonts"
       :editor-language="ckeditorLanguage"

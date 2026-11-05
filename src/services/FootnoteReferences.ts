@@ -22,21 +22,11 @@ export function elementFootnoteIds(element: ScoreElement): string[] {
 
 export type FootnotePageAssignments = ReadonlyMap<ScoreElement, number>;
 
-export function captureFootnotePageAssignments(
-  score: Score,
-): FootnotePageAssignments {
-  return new Map(
-    score.staff.elements.map((element) => [element, element.page]),
-  );
-}
-
-// Existing UI and discovery callers default to the current assignments. Layout
-// supplies a snapshot so preparation cannot observe partially updated pages.
+// With null assignments, count through each run between explicit page breaks.
+// This bounds the label ordinal before any automatic page breaks are known.
 export function orderedFootnotes(
   score: Score,
-  pageAssignments: FootnotePageAssignments = captureFootnotePageAssignments(
-    score,
-  ),
+  pageAssignments?: FootnotePageAssignments | null,
 ) {
   const byId = new Map(
     score.footnotes.map((footnote) => [footnote.id, footnote]),
@@ -58,6 +48,7 @@ export function orderedFootnotes(
     ) {
       nextNumber = score.pageSetup.firstFootnoteNumber;
     }
+    const page = pageAssignments?.get(element) ?? element.page;
     for (const id of elementFootnoteIds(element)) {
       const footnote = byId.get(id);
       if (footnote === undefined || seen.has(footnote.id)) {
@@ -66,11 +57,12 @@ export function orderedFootnotes(
       seen.add(footnote.id);
       if (
         score.pageSetup.footnoteNumbering === 'page' &&
-        pageAssignments.get(element)! !== previousPage
+        pageAssignments !== null &&
+        page !== previousPage
       ) {
         nextNumber = score.pageSetup.firstFootnoteNumber;
       }
-      previousPage = pageAssignments.get(element)!;
+      previousPage = page;
       const automaticMarker = automaticFootnoteMarker(
         nextNumber,
         score.pageSetup,
@@ -85,6 +77,13 @@ export function orderedFootnotes(
       if (footnote.marker === null) {
         nextNumber++;
       }
+    }
+    if (
+      pageAssignments === null &&
+      score.pageSetup.footnoteNumbering === 'page' &&
+      element.pageBreak
+    ) {
+      nextNumber = score.pageSetup.firstFootnoteNumber;
     }
   }
   return result;

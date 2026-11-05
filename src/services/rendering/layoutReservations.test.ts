@@ -108,13 +108,11 @@ describe('layout operation reservations', () => {
     const { workspace, box } = fixture();
     const reset = (change: () => void) => {
       const previous = beginLayoutOperation(workspace);
-      previous.gutter = 200;
       reserveTextBoxHeight(box, 300);
       reserveInlineWidth(box, 400);
       change();
       const current = beginLayoutOperation(workspace);
       expect(current).not.toBe(previous);
-      expect(current.gutter).toBe(0);
       expect(reserveTextBoxHeight(box, 20)).toBe(20);
       expect(reserveInlineWidth(box, 30)).toBe(30);
     };

@@ -89,7 +89,8 @@ import {
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
   FOOTNOTE_RULE_THICKNESS,
   FOOTNOTE_SPACING,
-  footnoteBodyMarkerText,
+  footnoteBodyGutter,
+  footnoteBodyMarkerGap,
   footnoteMarkerFont,
   footnoteMarkerStyle,
   footnoteMarkerText,
@@ -585,19 +586,9 @@ export class LayoutService {
     const finalMarkers = Object.fromEntries(
       assigned.map(({ footnote, marker }) => [footnote.id, marker]),
     );
-    // Retain only widths of labels assigned from this pass's actual pages.
-    // Labels used during preparation may still reflect obsolete pagination.
-    reservations.gutter = Math.max(
-      reservations.gutter,
-      this.measureFootnoteGutter(assigned, score.paragraphStyles),
+    reservations.pending = assigned.some(
+      ({ footnote, marker }) => footnotes.get(footnote.id)!.marker !== marker,
     );
-    reservations.pending = assigned.some(({ footnote, marker }) => {
-      const prepared = footnotes.get(footnote.id)!;
-      return (
-        prepared.marker !== marker ||
-        Math.abs(prepared.gutter - reservations.gutter) > 0.01
-      );
-    });
     for (const { reference, number, marker } of assigned) {
       if (reference instanceof FootnoteAnchorElement) {
         reference.footnoteNumber = number;
@@ -630,6 +621,7 @@ export class LayoutService {
       this.alignIsonIndicators(pages, pageSetup);
     }
 
+    const markerGap = footnoteBodyMarkerGap(score.paragraphStyles);
     for (const physicalPage of pages) {
       if (physicalPage.footnotes.length === 0) {
         continue;
@@ -676,8 +668,8 @@ export class LayoutService {
         );
         body.top = top;
         body.labelX = pageSetup.melkiteRtl
-          ? margins.contentRight - prepared.gutter
-          : margins.contentLeft;
+          ? margins.contentRight - prepared.gutter + markerGap
+          : margins.contentLeft + prepared.gutter - markerGap;
         for (const candidate of prepared.lines) {
           const line = this.positionContentLine(
             candidate,
@@ -767,22 +759,6 @@ export class LayoutService {
     return pages;
   }
 
-  private static measureFootnoteGutter(
-    footnotes: readonly { marker: string }[],
-    paragraphStyles: ParagraphStyle[],
-  ) {
-    const font = footnoteMarkerFont(paragraphStyles, 'body');
-    const style = footnoteMarkerStyle(paragraphStyles, 'body');
-    const labelWidths = footnotes.map(({ marker }) =>
-      TextMeasurementService.getTextWidth(
-        footnoteBodyMarkerText(marker),
-        font,
-        style.fontVariantCaps ?? 'normal',
-      ),
-    );
-    return Math.max(0, ...labelWidths) + 6;
-  }
-
   private static prepareFootnotes(
     workspace: Workspace,
     musicalContexts: Map<ScoreElement, MusicalContext>,
@@ -801,11 +777,7 @@ export class LayoutService {
         }
       }
     }
-    const reservations = beginLayoutOperation(workspace);
-    const gutter = Math.max(
-      reservations.gutter,
-      this.measureFootnoteGutter(ordered, score.paragraphStyles),
-    );
+    const gutter = footnoteBodyGutter(score.paragraphStyles);
     return new Map(
       ordered.map(({ footnote, reference, number, marker }) => {
         if (reference instanceof FootnoteAnchorElement) {

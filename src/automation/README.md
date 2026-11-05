@@ -141,8 +141,8 @@ collection. Footnote numbering follows document reference order across pages.
 `get_staff_lyrics` and the `set_staff_lyrics` edit action also accept this
 collection selector for independent authoritative footnote lyrics.
 In documents with footnotes, layout settlement retains the largest measured
-rich-text heights at the current body width and the displayed-label gutter within
-each operation. Intrinsic inline widths are retained only for boxes containing
+rich-text heights at the current body width within each operation. Footnote body
+gutters depend only on body marker font size, not displayed labels or numbering. Intrinsic inline widths are retained only for boxes containing
 footnote references. Documents without footnotes accept shrinking body heights;
 explicit settlement retains only header/footer template maxima. These
 reservations are transient and reset for content, settings, and font changes;

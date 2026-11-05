@@ -910,6 +910,7 @@ const footnoteBodyStyles = computed(() => {
         {
           ...contextCss,
           left: withZoom(footnote.labelX),
+          transform: rtl.value ? undefined : 'translateX(-100%)',
           top: withZoom(first?.y ?? footnote.top),
         },
       ] as const;

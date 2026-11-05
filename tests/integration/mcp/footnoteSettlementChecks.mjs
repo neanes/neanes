@@ -103,16 +103,11 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
   })()`);
   let baseline = await geometry();
   const baselineWidth = baseline.bodies[0].elements[0].width;
-  // A short, ordinary custom label widens the shared gutter enough to rewrap bodies.
-  await edit([
-    { action: 'update_footnote', footnoteId: ids[0], marker: '[Note]' },
-  ]);
-  const sample = await geometry();
   const wrappingText = await evaluate(`(() => {
     const p=document.querySelector('.line[data-footnote-id] .ck-content p');
     const style=getComputedStyle(p), context=document.createElement('canvas').getContext('2d');
     context.font=style.fontStyle+' '+style.fontWeight+' '+style.fontSize+' '+style.fontFamily;
-    const target=(${baselineWidth}+${sample.bodies[0].elements[0].width})/2;
+    const target=${baselineWidth};
     let text='Footnote';
     while(context.measureText(text).width<target) text+=' a';
     return '<p>'+text+'</p>';
@@ -129,7 +124,6 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     ),
   );
   await edit([
-    { action: 'update_footnote', footnoteId: ids[0], marker: null },
     ...bodyRefs.map((elementRef) => ({
       action: 'update',
       elementType: 'RichTextBox',
@@ -141,46 +135,48 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
   await edit([
     { action: 'update_footnote', footnoteId: ids[0], marker: '[Note]' },
   ]);
-  const widened = await geometry();
-  assert.ok(
-    widened.bodies[0].elements[0].width < baselineWidth,
-    'Displayed custom labels widen the gutter',
+  const custom = await geometry();
+  assert.equal(
+    custom.bodies[0].elements[0].width,
+    baselineWidth,
+    'Custom labels retain the fixed gutter',
   );
-  assert.ok(
-    widened.bodies.some(
-      (body, i) =>
-        body.elements[0].height > baseline.bodies[i].elements[0].height,
+  assert.deepEqual(
+    custom.bodies.map((body) =>
+      body.elements.map(({ width, height }) => ({ width, height })),
     ),
-    'The changed gutter rewraps at least one footnote body',
+    baseline.bodies.map((body) =>
+      body.elements.map(({ width, height }) => ({ width, height })),
+    ),
+    'Custom labels do not rewrap footnote bodies',
   );
   const stable = await call('get_pages', args);
-  await eventually(async () => assert.deepEqual(await geometry(), widened));
+  await eventually(async () => assert.deepEqual(await geometry(), custom));
   assert.equal((await call('get_pages', args)).layoutId, stable.layoutId);
   await edit([{ action: 'update_footnote', footnoteId: ids[0], marker: null }]);
   const restored = await geometry();
-  assert.ok(
-    restored.bodies[0].elements[0].width > widened.bodies[0].elements[0].width,
-    'A new content operation can reclaim the gutter',
-  );
-  assert.ok(
-    restored.bodies.some(
-      (body, i) =>
-        body.elements[0].height < widened.bodies[i].elements[0].height,
-    ),
-    'A new operation can reclaim body height',
+  const bodySizes = (geometry) =>
+    geometry.bodies.map((body) =>
+      body.elements.map(({ width, height }) => ({ width, height })),
+    );
+  assert.deepEqual(
+    bodySizes(restored),
+    bodySizes(custom),
+    'Removing custom labels retains body geometry',
   );
 
   await settings({ firstFootnoteNumber: 1000 });
-  const settingsWide = await geometry();
-  assert.ok(
-    settingsWide.bodies[0].elements[0].width <
-      restored.bodies[0].elements[0].width,
+  const largeNumbers = await geometry();
+  assert.deepEqual(
+    bodySizes(largeNumbers),
+    bodySizes(restored),
+    'Large numbers retain body geometry',
   );
   await settings({ firstFootnoteNumber: 9 });
-  assert.ok(
-    (await geometry()).bodies[0].elements[0].width >
-      settingsWide.bodies[0].elements[0].width,
-    'Settings changes release reservations',
+  assert.deepEqual(
+    bodySizes(await geometry()),
+    bodySizes(restored),
+    'Numbering changes retain body geometry',
   );
   const numbering = await evaluate(`(() => {
     const w=window._editor.selectedWorkspace.value;
@@ -279,7 +275,7 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     );
   }
   console.log(
-    'PASS: page numbering and rich-text wrapping, actual-label gutters, reservation reset, editor/private-worker/export agreement',
+    'PASS: page numbering and rich-text wrapping, fixed gutters, label-independent body geometry, editor/private-worker/export agreement',
   );
 }
 
@@ -330,7 +326,7 @@ export async function checkFootnoteColdGutter(call, evaluate, directory) {
       })),
     ],
   });
-  // Fit at the final '*' gutter, but wrap at the provisional '***' gutter.
+  // Put text near a wrapping boundary to detect any numbering-dependent body width.
   const wrappingText = await evaluate(`(() => {
     const w=window._editor.selectedWorkspace.value;
     const p=document.querySelector('.line[data-footnote-id] .ck-content p');

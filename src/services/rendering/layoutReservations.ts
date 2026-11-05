@@ -15,7 +15,6 @@ import type { TextBoxHeightMeasurement } from './textBoxMeasurement';
 export class LayoutReservations {
   constructor(readonly hasFootnotes: boolean) {}
 
-  gutter = 0;
   pending = false;
   private readonly heights = new Map<
     ScoreElement,

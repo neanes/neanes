@@ -8,6 +8,8 @@ import { resolveFontCss } from '@/utils/fontStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
+const FOOTNOTE_MARKER_GAP_EM = 0.4;
+
 export const FOOTNOTE_SPACING = Unit.fromPt(6);
 export const FOOTNOTE_SECTION_SPACING = Unit.fromPt(8);
 export const FOOTNOTE_RULE_THICKNESS = Unit.fromPt(0.5);
@@ -30,6 +32,18 @@ export function footnoteMarkerFont(
   role: 'reference' | 'body' = 'reference',
 ) {
   return resolveFontCss(footnoteMarkerStyle(styles, role));
+}
+
+export function footnoteBodyMarkerGap(styles: ParagraphStyle[]) {
+  return FOOTNOTE_MARKER_GAP_EM * footnoteMarkerStyle(styles, 'body').fontSize;
+}
+
+// Body width depends on typography, never on the current marker or pagination.
+export function footnoteBodyGutter(styles: ParagraphStyle[]) {
+  return (
+    (1.8 + FOOTNOTE_MARKER_GAP_EM) *
+    footnoteMarkerStyle(styles, 'body').fontSize
+  );
 }
 
 export function footnoteBodyMarkerText(marker: string | number) {

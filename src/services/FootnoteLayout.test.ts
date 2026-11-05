@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import { PageSetup } from '@/models/PageSetup';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  createDefaultParagraphStyles,
+} from '@/models/ParagraphStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
 
 import {
   FOOTNOTE_RULE_THICKNESS,
   FOOTNOTE_SECTION_SPACING,
   FOOTNOTE_SPACING,
+  footnoteBodyGutter,
+  footnoteBodyMarkerGap,
   footnoteBodyMarkerText,
   footnoteMarkerText,
   footnotePageSetup,
@@ -37,6 +43,19 @@ describe('footnote area geometry', () => {
       footnoteSectionHeight([100, 50], true) -
         footnoteSectionHeight([100, 50], false),
     ).toBeCloseTo(FOOTNOTE_RULE_THICKNESS + FOOTNOTE_SPACING);
+  });
+
+  it('scales the fixed gutter with body marker typography', () => {
+    const styles = createDefaultParagraphStyles();
+    const markerStyle = styles.find(
+      ({ id }) => id === BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
+    )!;
+    markerStyle.overrides.fontSize = 20;
+    expect(footnoteBodyGutter(styles)).toBeCloseTo(44);
+    expect(footnoteBodyMarkerGap(styles)).toBe(8);
+    markerStyle.overrides.fontSize = 10;
+    expect(footnoteBodyGutter(styles)).toBeCloseTo(22);
+    expect(footnoteBodyMarkerGap(styles)).toBe(4);
   });
 
   it('keeps body width stable while respecting facing pages and RTL label gutters', () => {

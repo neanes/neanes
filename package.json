@@ -55,7 +55,7 @@
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/vue-table": "^9.3.1",
     "@types/mime-types": "^3.0.1",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@types/semver": "^7.8.0",
     "@types/throttle-debounce": "^5.0.2",
     "@types/web-bluetooth": "^0.0.22",

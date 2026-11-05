@@ -27,7 +27,10 @@ export class LayoutReconciliation {
     }
 
     const headersAndFooters = new Set(score.headersAndFooters.map(toRaw));
-    const mainScoreElements = new Set(score.staff.elements.map(toRaw));
+    const mainScoreElements =
+      score.footnotes.length > 0
+        ? new Set(score.staff.elements.map(toRaw))
+        : null;
     const measured = new Map<MeasuredTextBox, number>();
     for (const { element, height } of heights) {
       measured.set(element, Math.max(measured.get(element) ?? 0, height));
@@ -41,7 +44,7 @@ export class LayoutReconciliation {
         height = Math.max(this.headerFooterHeights.get(key) ?? 0, height);
         this.headerFooterHeights.set(key, height);
       } else if (
-        mainScoreElements.has(key) &&
+        mainScoreElements?.has(key) &&
         element.elementType === ElementType.RichTextBox &&
         !(element as RichTextBoxElement).inline &&
         !(element as RichTextBoxElement).multipanel

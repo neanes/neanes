@@ -26,10 +26,12 @@ pages. This refactor does not change that limitation.
 Editor automation, private workers, and visual exports use
 `LayoutReconciliation` to repeat layout and DOM measurement until the measured
 heights settle. Each operation retains the largest height for repeated
-header/footer templates and for page-capped main-score rich-text boxes at their
-current width. This lets a box grow after moving to a page with a larger cap and
-prevents a smaller cap from moving it back. Footnote bodies use natural height,
-including rich-text boxes with a stored scrollable setting.
+header/footer templates. In scores with footnotes, it also retains the largest
+height for page-capped main-score rich-text boxes at their current width. This
+lets a box grow after moving to a page with a larger cap and prevents a smaller
+cap from moving it back. In footnote-free scores, main-score boxes can shrink
+between passes. Footnote bodies use natural height, including rich-text boxes
+with a stored scrollable setting.
 
 Settlement rejects stale measurements and fails on the twelfth changed pass.
 The measurement and rendering lifecycles handle cancellation. Overflow remains

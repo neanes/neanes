@@ -57,14 +57,10 @@ const instance = computed(
   () => editorRef.value?.instance as InlineEditor | undefined,
 );
 
-// Seed CKEditor once, then acknowledge model changes ourselves. Compare incoming
-// HTML with live getData() to avoid resetting the caret on an echoed edit. Keep
-// both the stored HTML and CKEditor's normalized baseline: normalization alone
-// is not a pending user edit.
+// Seed CKEditor once. Apply incoming HTML only when it differs from live data,
+// so committing the current content does not reset the caret or native history.
 const initialData = props.modelValue;
 let loadedModelValue = initialData;
-let loadedEditor: InlineEditor | undefined;
-let loadedEditorData: string | null = null;
 let applyingModel = false;
 const footnotes = inject(richTextFootnoteControllerKey, null);
 watch(
@@ -83,32 +79,17 @@ function canFlush(modelValue: string) {
   return modelValue === loadedModelValue;
 }
 
-function getPendingData() {
-  const editor = instance.value;
-  if (editor === undefined || loadedEditorData === null) {
-    return null;
-  }
-  const data = editor.getData();
-  return data === loadedEditorData ? null : data;
-}
-
 watch([() => props.modelValue, instance], ([next, editor]) => {
   if (editor != null) {
-    if (editor !== loadedEditor || next !== loadedModelValue) {
-      let data = editor.getData();
-      if (next !== data) {
-        applyingModel = true;
-        try {
-          editor.data.set(next);
-          data = editor.getData();
-        } finally {
-          applyingModel = false;
-        }
+    if (next !== editor.getData()) {
+      applyingModel = true;
+      try {
+        editor.data.set(next);
+      } finally {
+        applyingModel = false;
       }
-      loadedModelValue = next;
-      loadedEditor = editor;
-      loadedEditorData = data;
     }
+    loadedModelValue = next;
   }
 });
 
@@ -154,7 +135,6 @@ function refreshBaseDirection(editor: InlineEditor) {
 }
 
 function onReady(editor: InlineEditor) {
-  loadedEditorData ??= editor.getData();
   const plugin = editor.plugins.get(Footnotes);
   plugin.setMarkers(props.footnoteMarkers ?? {});
   if (footnotes !== null) {
@@ -285,7 +265,6 @@ function unregisterRichTextEditor() {
 defineExpose({
   instance,
   canFlush,
-  getPendingData,
 });
 </script>
 

@@ -286,9 +286,9 @@ function getPendingUpdates() {
 
   Object.assign(updates, getRichTextLanguageUpdates(editor));
 
-  const text = editorRef.value.getPendingData();
+  const text = editor.getData();
 
-  if (text !== null) {
+  if (props.element.text !== text) {
     updates.text = text;
   }
 

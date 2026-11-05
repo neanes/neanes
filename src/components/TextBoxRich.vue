@@ -875,8 +875,8 @@ function getPendingUpdates() {
       hasStaleContent = true;
       continue;
     }
-    const content = component.getPendingData();
-    if (content !== null) {
+    const content = component.instance.getData();
+    if (props.element[property] !== content) {
       updates[property] = content;
       updated = true;
     }

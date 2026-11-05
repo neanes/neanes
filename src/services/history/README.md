@@ -89,6 +89,11 @@ history coordination to reintroduce during review:
   External replacement and score replay can reset native history or remount the
   editor. Historical caret/selection restoration and native Redo survival across
   those replacements are not guaranteed.
+- Pending text detection compares stored HTML directly with CKEditor's output,
+  as on master. CKEditor normalization alone can therefore produce a content
+  command on blur or flush (for example, imported `<b>` markup). This pre-existing
+  behavior is intentionally outside the footnote feature's scope; no separate
+  normalized-data baseline is maintained here.
 - There is no checkpoint graph, native batch replay, shared history action
   injection, or commit boundary imposed on CKEditor's undo stack.
 

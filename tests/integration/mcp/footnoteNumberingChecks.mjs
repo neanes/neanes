@@ -247,12 +247,19 @@ export async function checkFootnoteNumbering({
   await evaluate(
     `document.querySelector('.page-background').style.maxHeight = ${JSON.stringify(previousMaxHeight)}`,
   );
-  const reflowPages = await call('get_pages', args);
-  await call('preview_page', {
-    ...args,
-    expectedRevision: reflowPages.revision,
-    pageNumber: 2,
-  });
+  // Remounting rich text after restoring the viewport can update measurements.
+  // Retry only this read-only pair, discovering a fresh revision each time.
+  await eventually(
+    async () => {
+      const reflowPages = await call('get_pages', args);
+      await call('preview_page', {
+        ...args,
+        expectedRevision: reflowPages.revision,
+        pageNumber: 2,
+      });
+    },
+    { retry: (error) => error.message.includes('REVISION_CONFLICT') },
+  );
 
   async function openSetup() {
     await dispatch('FileMenuPageSetup');

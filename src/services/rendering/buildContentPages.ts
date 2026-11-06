@@ -1,5 +1,3 @@
-import { footnoteSectionHeight } from '@/services/FootnoteLayout';
-
 export interface PaginationLine {
   height: number;
   pageBreak: boolean;
@@ -28,7 +26,7 @@ export function buildContentPages(
   footnoteHeights: ReadonlyMap<string, number>,
   constraints: {
     innerPageHeight: number;
-    showFootnoteHorizontalRule: boolean;
+    footnoteSpacing: number;
     // Indexed by physical page minus one, with enough entries for every line
     // to start a page (and the initial empty page when there are no lines).
     reservations: readonly PageReservation[];
@@ -47,10 +45,10 @@ export function buildContentPages(
   let ids = new Set<string>();
   let explicitBreak = false;
   const sectionHeight = (ids: Set<string>) =>
-    footnoteSectionHeight(
-      [...ids].map((id) => footnoteHeights.get(id)!),
-      constraints.showFootnoteHorizontalRule,
-    );
+    ids.size === 0
+      ? 0
+      : [...ids].reduce((sum, id) => sum + footnoteHeights.get(id)!, 0) +
+        constraints.footnoteSpacing;
   for (const [index, candidate] of lines.entries()) {
     const groupedIds = lines
       .slice(index, index + candidate.continuationLines + 1)

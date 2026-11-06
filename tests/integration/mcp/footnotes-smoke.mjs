@@ -16,7 +16,7 @@ const app = await createSmokeApp('neanes-footnotes-', { keepArtifacts: true });
 let client;
 try {
   app.start({ args: ['--remote-debugging-port=0', '--inspect=0'] });
-  const { evaluate } = await app.debugger();
+  const { evaluate, send } = await app.debugger();
   const { evaluate: evaluateMain } = await app.debugger('main');
   await app.ready();
   client = await connectStdioClient('footnotes-smoke', {
@@ -138,10 +138,17 @@ try {
         actions,
       });
     };
+    const spacing = {
+      footnoteSpaceAboveRule: 10,
+      footnoteSpaceBelowRule: 4,
+      footnoteRuleThickness: 1,
+      footnoteRuleColor: '#800000',
+    };
     doc = await call('update_page_setup', {
       ...args,
       expectedRevision: doc.revision,
       changes: {
+        ...spacing,
         pageSize: 'Custom',
         pageWidthCustom: 600,
         pageHeightCustom: 900,
@@ -154,6 +161,10 @@ try {
         footnoteHorizontalRuleLength: 40,
       },
     });
+    const { settings } = await call('get_page_setup', args);
+    for (const [key, value] of Object.entries(spacing)) {
+      assert.equal(settings[key], value);
+    }
     const existing = await call('get_elements', args);
     const notes = Array.from({ length: 15 }, (_, index) => ({
       elementType: 'Note',
@@ -292,7 +303,35 @@ try {
           ),
           2,
         );
+        assert.equal(
+          await evaluate(
+            `getComputedStyle(document.querySelector('.footnote-rule')).borderTopColor`,
+          ),
+          'rgb(128, 0, 0)',
+        );
       });
+      await send('Emulation.setEmulatedMedia', {
+        features: [{ name: 'forced-colors', value: 'active' }],
+      });
+      try {
+        await eventually(async () => {
+          const colors = await evaluate(`(() => {
+            const rule = document.querySelector('.footnote-rule');
+            const probe = document.createElement('span');
+            probe.style.cssText = 'forced-color-adjust:none;color:CanvasText;background:Canvas';
+            rule.append(probe);
+            const { color: text, backgroundColor: canvas } = getComputedStyle(probe);
+            const { borderTopColor: separator, borderTopWidth: width } = getComputedStyle(rule);
+            probe.remove();
+            return { text, canvas, separator, width };
+          })()`);
+          assert.equal(colors.separator, colors.text);
+          assert.notEqual(colors.separator, colors.canvas);
+          assert.ok(parseFloat(colors.width) > 0);
+        });
+      } finally {
+        await send('Emulation.setEmulatedMedia', { features: [] });
+      }
       await evaluateMain(
         `process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes('/index.html')).webContents.send('FileMenuViewPaneVisibility', {paneId:'lyrics', visible:true})`,
       );

@@ -17,6 +17,7 @@ export class Page {
   public lines: Line[] = [];
   public footnotes: PageFootnote[] = [];
   public footnoteRuleTop: number | null = null;
+  public footnoteRuleThickness = 0;
   public footnoteOverflow = false;
   public footnoteOverflowBottom = 0;
 

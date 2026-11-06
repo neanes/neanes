@@ -1124,6 +1124,10 @@ export class SaveService {
     pageSetup.footnoteReferenceParentheses = p.footnoteReferenceParentheses;
     pageSetup.showFootnoteHorizontalRule = p.showFootnoteHorizontalRule;
     pageSetup.footnoteHorizontalRuleLength = p.footnoteHorizontalRuleLength;
+    pageSetup.footnoteSpaceAboveRule = p.footnoteSpaceAboveRule;
+    pageSetup.footnoteSpaceBelowRule = p.footnoteSpaceBelowRule;
+    pageSetup.footnoteRuleThickness = p.footnoteRuleThickness;
+    pageSetup.footnoteRuleColor = p.footnoteRuleColor;
     pageSetup.numerals =
       p.numerals !== 'westernArabic' ? p.numerals : undefined;
 
@@ -1880,6 +1884,14 @@ export class SaveService {
     pageSetup.showFootnoteHorizontalRule = p.showFootnoteHorizontalRule ?? true;
     pageSetup.footnoteHorizontalRuleLength =
       p.footnoteHorizontalRuleLength ?? 40;
+    pageSetup.footnoteSpaceAboveRule =
+      p.footnoteSpaceAboveRule ?? pageSetup.footnoteSpaceAboveRule;
+    pageSetup.footnoteSpaceBelowRule =
+      p.footnoteSpaceBelowRule ?? pageSetup.footnoteSpaceBelowRule;
+    pageSetup.footnoteRuleThickness =
+      p.footnoteRuleThickness ?? pageSetup.footnoteRuleThickness;
+    pageSetup.footnoteRuleColor =
+      p.footnoteRuleColor ?? pageSetup.footnoteRuleColor;
     pageSetup.numerals =
       p.numerals === 'easternArabic' ? 'easternArabic' : 'westernArabic';
 

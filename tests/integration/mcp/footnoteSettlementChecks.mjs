@@ -799,7 +799,8 @@ export async function checkSparseAndDenseSlots(call, evaluate) {
     await call('get_elements', { ...args, includeContent: true })
   ).elements;
   await settings({
-    pageHeightCustom: 60 + 32 / 3 + 8.25 * wrap2.delta,
+    // The default space above the footnotes is 6 pt (8 px).
+    pageHeightCustom: 60 + 8 + 8.25 * wrap2.delta,
     showFootnoteHorizontalRule: false,
   });
   await evaluate('window.slotMeasurementPasses = 0');

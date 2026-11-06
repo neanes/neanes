@@ -89,10 +89,15 @@ copying the reference copies the body with a new identity.
 `get_page_setup` / `update_page_setup` expose `footnoteFormat` (`numbers` or
 `symbols`), `footnoteNumbering` (`continuous`, `page`, or `section`),
 `footnoteSymbolSequence` (`standard` or `asterisks`), `firstFootnoteNumber`,
-`showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent), and
+`showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent),
+`footnoteSpaceAboveRule`, `footnoteSpaceBelowRule`, `footnoteRuleThickness`,
+`footnoteRuleColor`, and
 `footnoteReferenceParentheses` (defaults to true; applies to Note and Martyria
-reference markers). Placement and collision clearance use measured marker
-ink bounds. Symbol positions use the same 1-based `firstFootnoteNumber`:
+reference markers). The API uses pixels for spacing and thickness. Page Setup
+displays them in points (6 pt, 2.6 pt, and 1 pt by default). Only the space
+above applies when the rule is hidden. Placement and collision clearance use
+measured marker ink bounds. Symbol positions use the same 1-based
+`firstFootnoteNumber`:
 `U+002A`, `U+2020`, `U+2021`, `U+00A7`, `U+00B6`, `U+2016`, then each symbol
 twice, three times, and so on. Starting values are limited to 1,000,000 for
 numbers or a label of at most 64 repeated symbols (positions 1-384 in the

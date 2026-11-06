@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { footnoteSectionHeight } from '@/services/FootnoteLayout';
-
 import { buildContentPages, type PaginationLine } from './buildContentPages';
 
 function line(height: number, footnoteIds: string[] = []): PaginationLine {
@@ -14,6 +12,8 @@ function line(height: number, footnoteIds: string[] = []): PaginationLine {
   };
 }
 
+const footnoteSpacing = 19;
+
 function paginate(
   lines: PaginationLine[],
   heights = new Map<string, number>(),
@@ -21,7 +21,7 @@ function paginate(
 ) {
   return buildContentPages(lines, heights, {
     innerPageHeight,
-    showFootnoteHorizontalRule: true,
+    footnoteSpacing,
     reservations: Array.from({ length: lines.length + 1 }, () => ({
       extraHeaderHeightPx: 0,
       extraFooterHeightPx: 0,
@@ -72,7 +72,7 @@ describe('whole-footnote page selection', () => {
 
   it('counts a referenced body once and accepts an exact fit including separators', () => {
     const heights = new Map([['a', 10]]);
-    const total = 50 + footnoteSectionHeight([10], true);
+    const total = 50 + 10 + footnoteSpacing;
     const pages = paginate([line(25, ['a']), line(25, ['a'])], heights, total);
     expect(membership(pages)).toEqual([[0, 1]]);
     expect(pages[0].footnoteIds).toEqual(['a']);
@@ -114,7 +114,7 @@ describe('whole-footnote page selection', () => {
   it('subtracts measured header and footer reservations on each physical page', () => {
     const pages = buildContentPages([line(60), line(30)], new Map(), {
       innerPageHeight: 100,
-      showFootnoteHorizontalRule: false,
+      footnoteSpacing: 8,
       reservations: Array.from({ length: 3 }, () => ({
         extraHeaderHeightPx: 10,
         extraFooterHeightPx: 10,

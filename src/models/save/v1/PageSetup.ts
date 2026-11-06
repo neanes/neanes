@@ -50,6 +50,10 @@ export class PageSetup {
   public footnoteReferenceParentheses: boolean | undefined = undefined;
   public showFootnoteHorizontalRule: boolean | undefined = undefined;
   public footnoteHorizontalRuleLength: number | undefined = undefined;
+  public footnoteSpaceAboveRule: number | undefined = undefined;
+  public footnoteSpaceBelowRule: number | undefined = undefined;
+  public footnoteRuleThickness: number | undefined = undefined;
+  public footnoteRuleColor: string | undefined = undefined;
   public numerals: 'westernArabic' | 'easternArabic' | undefined = undefined;
 
   public showHeaderHorizontalRule: boolean | undefined = undefined;

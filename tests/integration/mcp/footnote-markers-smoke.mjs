@@ -740,6 +740,14 @@ try {
   await click(
     `[role="dialog"] [role="tab"]:nth-child(${footnotesTabIndex + 1})`,
   );
+  assert.deepEqual(
+    await evaluate(`[
+      '#page-setup-footnote-space-above-rule',
+      '#page-setup-footnote-space-below-rule',
+      '#page-setup-footnote-rule-thickness',
+    ].map(selector => Number(document.querySelector(selector).value))`),
+    [6, 2.6, 1],
+  );
   await click('#page-setup-footnote-parentheses');
   assert.equal(
     await evaluate(

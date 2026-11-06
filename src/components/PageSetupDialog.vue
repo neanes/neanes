@@ -675,6 +675,64 @@
                       :format-options="fraction0FormatOptions"
                     />
                   </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-space-above-rule">{{
+                      $t(($) => $.dialog.pageSetup.footnoteSpaceAboveRule, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-space-above-rule"
+                      v-model="form.footnoteSpaceAboveRule"
+                      unit="pt"
+                      :min="0"
+                      :step="0.01"
+                      :format-options="fraction2FormatOptions"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-space-below-rule">{{
+                      $t(($) => $.dialog.pageSetup.footnoteSpaceBelowRule, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-space-below-rule"
+                      v-model="form.footnoteSpaceBelowRule"
+                      unit="pt"
+                      :min="0"
+                      :step="0.01"
+                      :format-options="fraction2FormatOptions"
+                      :disabled="!form.showFootnoteHorizontalRule"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-rule-thickness">{{
+                      $t(($) => $.dialog.pageSetup.footnoteRuleThickness, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-rule-thickness"
+                      v-model="form.footnoteRuleThickness"
+                      unit="pt"
+                      :min="0"
+                      :max="100"
+                      :step="0.5"
+                      :format-options="fraction1FormatOptions"
+                      :disabled="!form.showFootnoteHorizontalRule"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-rule-color">{{
+                      $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+                    }}</FieldLabel>
+                    <ColorPicker
+                      id="page-setup-footnote-rule-color"
+                      v-model="form.footnoteRuleColor"
+                      :disabled="!form.showFootnoteHorizontalRule"
+                    />
+                  </Field>
                 </template>
 
                 <template v-else-if="section.value === 'headersAndFooters'">

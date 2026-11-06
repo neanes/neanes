@@ -135,7 +135,7 @@ Modify the built-in styles when titles, lyrics, headers, footers, and other repe
 
 ## Set up footnotes
 
-Use **Footnotes** in Page Setup to choose the automatic number or symbol format, when the sequence restarts, and its starting number or symbol. You can also wrap musical reference markers in parentheses and show a separator above the footnotes.
+Use **Footnotes** in Page Setup to choose the automatic number or symbol format, when the sequence restarts, and its starting number or symbol. You can also wrap musical reference markers in parentheses and adjust the visibility, length, thickness, color, and spacing of the separator above the footnotes.
 
 Parentheses help footnote markers stand out from the notation, especially measure numbers that indicate beat counts. For alternate melodies and finales, consider the asterisk format (`*, **, ***, …`) with **Numbering** set to **Restart each page**.
 

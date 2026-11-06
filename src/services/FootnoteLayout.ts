@@ -10,9 +10,7 @@ import { Unit } from '@/utils/Unit';
 
 const FOOTNOTE_MARKER_GAP_EM = 0.4;
 
-export const FOOTNOTE_SPACING = Unit.fromPt(6);
-export const FOOTNOTE_SECTION_SPACING = Unit.fromPt(8);
-export const FOOTNOTE_RULE_THICKNESS = Unit.fromPt(0.5);
+export const FOOTNOTE_OVERFLOW_BOTTOM_PADDING = Unit.fromPt(6);
 export const FOOTNOTE_OVERFLOW_NOTICE_HEIGHT = 64;
 
 export function footnoteMarkerStyle(
@@ -59,15 +57,14 @@ export function footnoteMarkerText(
   return parentheses ? `(${marker})` : String(marker);
 }
 
-export function footnoteSectionHeight(heights: number[], showRule: boolean) {
-  if (heights.length === 0) {
-    return 0;
-  }
-  return (
-    heights.reduce((sum, height) => sum + height, 0) +
-    FOOTNOTE_SECTION_SPACING +
-    (showRule ? FOOTNOTE_RULE_THICKNESS + FOOTNOTE_SPACING : 0)
-  );
+export function resolveFootnoteSpacing(setup: PageSetup) {
+  return {
+    above: setup.footnoteSpaceAboveRule,
+    below: setup.showFootnoteHorizontalRule ? setup.footnoteSpaceBelowRule : 0,
+    thickness: setup.showFootnoteHorizontalRule
+      ? setup.footnoteRuleThickness
+      : 0,
+  };
 }
 
 export function footnotePageSetup(

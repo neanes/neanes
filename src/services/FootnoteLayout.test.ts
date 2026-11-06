@@ -6,18 +6,16 @@ import {
   createDefaultParagraphStyles,
 } from '@/models/ParagraphStyle';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { Unit } from '@/utils/Unit';
 
 import {
-  FOOTNOTE_RULE_THICKNESS,
-  FOOTNOTE_SECTION_SPACING,
-  FOOTNOTE_SPACING,
   footnoteBodyGutter,
   footnoteBodyMarkerGap,
   footnoteBodyMarkerText,
   footnoteMarkerText,
   footnotePageSetup,
-  footnoteSectionHeight,
   positionFootnoteMarker,
+  resolveFootnoteSpacing,
 } from './FootnoteLayout';
 
 describe('footnote area geometry', () => {
@@ -34,15 +32,29 @@ describe('footnote area geometry', () => {
     expect(footnoteMarkerText(12, false)).toBe('12');
   });
 
-  it('reserves the separator once and no space on pages without footnotes', () => {
-    expect(footnoteSectionHeight([], true)).toBe(0);
-    expect(footnoteSectionHeight([100, 50], false)).toBe(
-      150 + FOOTNOTE_SECTION_SPACING,
-    );
-    expect(
-      footnoteSectionHeight([100, 50], true) -
-        footnoteSectionHeight([100, 50], false),
-    ).toBeCloseTo(FOOTNOTE_RULE_THICKNESS + FOOTNOTE_SPACING);
+  it('uses the configured spacing and omits hidden rule dimensions', () => {
+    const setup = new PageSetup();
+    expect(resolveFootnoteSpacing(setup)).toEqual({
+      above: Unit.fromPt(6),
+      below: Unit.fromPt(2.6),
+      thickness: Unit.fromPt(1),
+    });
+
+    setup.footnoteSpaceAboveRule = 10;
+    setup.footnoteSpaceBelowRule = 5;
+    setup.footnoteRuleThickness = 2;
+    expect(resolveFootnoteSpacing(setup)).toEqual({
+      above: 10,
+      below: 5,
+      thickness: 2,
+    });
+
+    setup.showFootnoteHorizontalRule = false;
+    expect(resolveFootnoteSpacing(setup)).toEqual({
+      above: 10,
+      below: 0,
+      thickness: 0,
+    });
   });
 
   it('scales the fixed gutter with body marker typography', () => {

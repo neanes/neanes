@@ -16,6 +16,7 @@ import { Footnote } from '@/models/Footnote';
 import { TempoSign } from '@/models/Neumes';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
+import { Unit } from '@/utils/Unit';
 
 import { normalizeFootnoteMarker } from './FootnoteMarker';
 import {
@@ -462,6 +463,10 @@ describe('footnote ownership', () => {
     footnote.staff.elements.unshift(text, new NoteElement());
     workspace.score.pageSetup.firstFootnoteNumber = 12;
     workspace.score.pageSetup.footnoteHorizontalRuleLength = 75;
+    workspace.score.pageSetup.footnoteSpaceAboveRule = 0;
+    workspace.score.pageSetup.footnoteSpaceBelowRule = 0.3;
+    workspace.score.pageSetup.footnoteRuleThickness = 0.05;
+    workspace.score.pageSetup.footnoteRuleColor = '#800000';
     workspace.score.pageSetup.showFootnoteHorizontalRule = false;
     workspace.score.pageSetup.footnoteReferenceParentheses = false;
     reference.footnoteNumber = 12;
@@ -473,6 +478,20 @@ describe('footnote ownership', () => {
     expect(loaded.footnotes[0].id).toBe(footnote.id);
     expect(loaded.pageSetup.firstFootnoteNumber).toBe(12);
     expect(loaded.pageSetup.footnoteHorizontalRuleLength).toBe(75);
+    expect(loaded.pageSetup.footnoteSpaceAboveRule).toBe(0);
+    expect(loaded.pageSetup.footnoteSpaceBelowRule).toBe(0.3);
+    expect(loaded.pageSetup.footnoteRuleThickness).toBe(0.05);
+    expect(loaded.pageSetup.footnoteRuleColor).toBe('#800000');
+
+    delete saved.pageSetup.footnoteSpaceAboveRule;
+    delete saved.pageSetup.footnoteSpaceBelowRule;
+    delete saved.pageSetup.footnoteRuleThickness;
+    delete saved.pageSetup.footnoteRuleColor;
+    const defaults = SaveService.LoadScoreFromJson(saved).pageSetup;
+    expect(defaults.footnoteSpaceAboveRule).toBe(Unit.fromPt(6));
+    expect(defaults.footnoteSpaceBelowRule).toBe(Unit.fromPt(2.6));
+    expect(defaults.footnoteRuleThickness).toBe(Unit.fromPt(1));
+    expect(defaults.footnoteRuleColor).toBe('#000000');
     expect(loaded.pageSetup.showFootnoteHorizontalRule).toBe(false);
     expect(loaded.pageSetup.footnoteReferenceParentheses).toBe(false);
     delete saved.pageSetup.footnoteReferenceParentheses;

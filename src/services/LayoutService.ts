@@ -89,9 +89,8 @@ import {
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import {
+  FOOTNOTE_OVERFLOW_BOTTOM_PADDING,
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
-  FOOTNOTE_RULE_THICKNESS,
-  FOOTNOTE_SPACING,
   footnoteBodyGutter,
   footnoteBodyMarkerGap,
   footnoteMarkerFont,
@@ -99,6 +98,7 @@ import {
   footnoteMarkerText,
   footnotePageSetup,
   positionFootnoteMarker,
+  resolveFootnoteSpacing,
 } from '@/services/FootnoteLayout';
 import {
   elementFootnoteIds,
@@ -533,12 +533,13 @@ export class LayoutService {
         ),
       };
     });
+    const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
     const decisions = buildContentPages(
       paginationLines,
       new Map([...footnotes].map(([id, body]) => [id, body.height])),
       {
         innerPageHeight: pageSetup.innerPageHeight,
-        showFootnoteHorizontalRule: pageSetup.showFootnoteHorizontalRule,
+        footnoteSpacing: above + below + thickness,
         // The existing paginator freezes reservations before adding the first
         // line to each page. Chapter-opening selection is therefore false at
         // reservation time, even if the completed page later opens a chapter.
@@ -673,14 +674,15 @@ export class LayoutService {
         top =
           pageSetup.pageHeight +
           FOOTNOTE_OVERFLOW_NOTICE_HEIGHT +
-          FOOTNOTE_SPACING +
-          FOOTNOTE_RULE_THICKNESS;
+          below +
+          thickness;
         physicalPage.footnoteOverflowBottom =
-          top + bodiesHeight + FOOTNOTE_SPACING;
+          top + bodiesHeight + FOOTNOTE_OVERFLOW_BOTTOM_PADDING;
       }
       physicalPage.footnoteRuleTop = pageSetup.showFootnoteHorizontalRule
-        ? top - FOOTNOTE_SPACING - FOOTNOTE_RULE_THICKNESS
+        ? top - below - thickness
         : null;
+      physicalPage.footnoteRuleThickness = thickness;
       for (const body of physicalPage.footnotes) {
         const prepared = footnotes.get(body.id)!;
         const setup = footnotePageSetup(

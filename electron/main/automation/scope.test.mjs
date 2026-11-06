@@ -109,6 +109,6 @@ describe('stdio scope publication', () => {
           inputSchema,
         })),
       ).length,
-    ).toBeLessThan(76000);
+    ).toBeLessThan(76500);
   });
 });

@@ -722,7 +722,6 @@ import {
 import type { Score } from '@/models/Score';
 import {
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
-  FOOTNOTE_RULE_THICKNESS,
   footnoteBodyMarkerText,
   footnoteMarkerStyle,
   footnoteMarkerText,
@@ -843,7 +842,8 @@ const footnoteRuleStyle = computed(() => {
     ),
     top: withZoom(props.page.footnoteRuleTop ?? 0),
     width: withZoom(width),
-    borderTopWidth: withZoom(FOOTNOTE_RULE_THICKNESS),
+    borderTopWidth: withZoom(props.page.footnoteRuleThickness),
+    borderColor: props.score.pageSetup.footnoteRuleColor,
   };
 });
 const bodyMarkerTypography = computed(() =>
@@ -1439,7 +1439,6 @@ defineExpose({
 .footnote-rule {
   position: absolute;
   border-top-style: solid;
-  border-top-color: black;
 }
 .footnote-label,
 .footnote-reference {

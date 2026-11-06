@@ -494,13 +494,14 @@ const containerStyle = computed(() => {
 const textBoxStyle = computed(() => {
   const style: StyleValue = {
     width: `${layout.value.width}px`, // no zoom because we scale with the transform
-    maxHeight: props.footnoteBody
-      ? undefined
-      : withZoom(
-          props.pageSetup.pageHeight -
-            layout.value.y -
-            props.pageSetup.bottomMargin,
-        ),
+    maxHeight:
+      props.element.scrollable && !props.footnoteBody
+        ? withZoom(
+            props.pageSetup.pageHeight -
+              layout.value.y -
+              props.pageSetup.bottomMargin,
+          )
+        : undefined,
   };
 
   return style;

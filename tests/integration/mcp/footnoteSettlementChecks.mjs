@@ -49,6 +49,7 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
         clientId: `box${i}`,
         properties: {
           content: i === 2 ? inlineContent : content,
+          scrollable: i === 0,
           ...(i === 2 ? { inline: true } : {}),
         },
       })),
@@ -78,15 +79,22 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     const limits = selector => [...document.querySelectorAll(selector)]
       .map(element => getComputedStyle(element).maxHeight);
     return {
-      main: limits('.page .line:not([data-footnote-id]) .ck-content.single'),
+      main: limits('.page .line:not([data-footnote-id]) .ck-content.single:not(.scrollable)'),
+      scrollableMain: limits('.page .line:not([data-footnote-id]) .ck-content.single.scrollable'),
       footnotes: limits('.page .line[data-footnote-id] .ck-content.single'),
     };
   })()`);
   assert.ok(heightLimits.main.length > 0);
   assert.ok(heightLimits.footnotes.length > 0);
   assert.ok(
-    heightLimits.main.every((height) => height !== 'none'),
-    'Main rich-text boxes retain their page-position height limits',
+    heightLimits.main.every((height) => height === 'none'),
+    'Ordinary main rich-text boxes are measured at their natural height',
+  );
+  assert.equal(heightLimits.scrollableMain.length, 1);
+  assert.notEqual(
+    heightLimits.scrollableMain[0],
+    'none',
+    'Scrollable main rich-text boxes retain their page-position height limits',
   );
   assert.ok(
     heightLimits.footnotes.every((height) => height === 'none'),

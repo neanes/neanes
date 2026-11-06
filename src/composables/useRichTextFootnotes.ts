@@ -16,7 +16,12 @@ import {
   planRichTextFootnoteUpdate,
 } from '@/services/FootnoteService';
 import { CommandFactory } from '@/services/history/CommandService';
-import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
+import { needsFootnoteSlotSettlement } from '@/services/rendering/workspaceLayoutSettlement';
+import {
+  activeRichTextContentKeys,
+  FOOTNOTE_ELEMENT,
+  richTextFootnoteIds,
+} from '@/services/RichTextFootnotes';
 import { SaveService } from '@/services/SaveService';
 import {
   collectClipboardParagraphStyleIdsFromElements,
@@ -60,6 +65,26 @@ export function useRichTextFootnotes(
     RichTextBoxElement,
     Footnote[]
   >();
+  function hasPendingFootnotePaste(
+    owner: RichTextBoxElement,
+    updates: Partial<RichTextBoxElement>,
+  ) {
+    if (!pendingRichTextStyles.has(owner)) {
+      return false;
+    }
+    const staged = pendingRichTextFootnotes.get(owner)!;
+    return activeRichTextContentKeys(owner).some((key) =>
+      richTextFootnoteIds(updates[key] ?? owner[key]).some((id) =>
+        staged.some((body) => body.id === id),
+      ),
+    );
+  }
+
+  function clearPendingFootnotes(owner: RichTextBoxElement) {
+    pendingRichTextFootnotes.delete(owner);
+    pendingRichTextStyles.delete(owner);
+  }
+
   const controller: RichTextFootnoteController = {
     supports(owner): owner is RichTextBoxElement {
       return (
@@ -70,7 +95,10 @@ export function useRichTextFootnotes(
     insert(owner, editor: Editor) {
       flush(workspace.value);
       const body = createFootnote(owner);
-      pendingRichTextFootnotes.set(owner, [body]);
+      pendingRichTextFootnotes.set(owner, [
+        ...(pendingRichTextFootnotes.get(owner) ?? []),
+        body,
+      ]);
       const attributes = Object.fromEntries(
         editor.model.document.selection.getAttributes(),
       );
@@ -88,7 +116,14 @@ export function useRichTextFootnotes(
     },
     changed(owner, key, html) {
       // Marker changes commit HTML and bodies together; ordinary typing stays local.
-      updateRichTextBox(owner, { [key]: html });
+      const updates = { [key]: html };
+      if (
+        pendingRichTextStyles.has(owner) &&
+        needsFootnoteSlotSettlement(workspace.value.score)
+      ) {
+        return;
+      }
+      updateRichTextBox(owner, updates);
     },
     navigate(id) {
       flush(workspace.value);
@@ -115,7 +150,11 @@ export function useRichTextFootnotes(
       });
     },
     paste(owner, payload) {
-      flush(workspace.value);
+      // Publishing the old HTML during a deferred paste can echo it back
+      // into CKEditor after insertion and overwrite the staged marker.
+      if (!needsFootnoteSlotSettlement(workspace.value.score)) {
+        flush(workspace.value);
+      }
       const saved = JSON.parse(payload) as {
         body: ReturnType<typeof SaveService.SaveFootnote>;
         paragraphStyles: ReturnType<typeof SaveService.SaveParagraphStyle>[];
@@ -136,9 +175,11 @@ export function useRichTextFootnotes(
       ) {
         throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
       }
-      const currentStyles =
-        pendingRichTextStyles.get(owner) ??
-        workspace.value.score.paragraphStyles;
+      const stagedStyles = pendingRichTextStyles.get(owner) ?? [];
+      const currentStyles = [
+        ...workspace.value.score.paragraphStyles,
+        ...stagedStyles,
+      ];
       const { importedParagraphStyles, styleIdRemap } =
         resolveClipboardParagraphStyles(
           collectClipboardParagraphStylesFromElements(
@@ -156,7 +197,10 @@ export function useRichTextFootnotes(
           styleIdRemap,
         ),
       );
-      pendingRichTextStyles.set(owner, paragraphStyles);
+      pendingRichTextStyles.set(owner, [
+        ...stagedStyles,
+        ...importedParagraphStyles,
+      ]);
       pendingRichTextFootnotes.set(owner, [
         ...(pendingRichTextFootnotes.get(owner) ?? []),
         copy,
@@ -164,9 +208,11 @@ export function useRichTextFootnotes(
       return copy.id;
     },
     reject(owner) {
-      if (owner instanceof RichTextBoxElement) {
-        pendingRichTextFootnotes.delete(owner);
-        pendingRichTextStyles.delete(owner);
+      if (
+        owner instanceof RichTextBoxElement &&
+        !needsFootnoteSlotSettlement(workspace.value.score)
+      ) {
+        clearPendingFootnotes(owner);
       }
       rejectPaste();
     },
@@ -177,24 +223,43 @@ export function useRichTextFootnotes(
     element: RichTextBoxElement,
     newValues: Partial<RichTextBoxElement>,
   ) {
+    const stagedStyles = pendingRichTextStyles.get(element) ?? [];
+    const staged = pendingRichTextFootnotes.get(element) ?? [];
+    let added: Footnote[] = [];
+    let remaining: Footnote[] = [];
+    if (staged.length > 0) {
+      const next = Object.assign(new RichTextBoxElement(), element, newValues);
+      const referenced = new Set(elementFootnoteIds(next));
+      added = staged.filter((body) => referenced.has(body.id));
+      remaining = staged.filter((body) => !referenced.has(body.id));
+    }
     const commands = planRichTextFootnoteUpdate(
       workspace.value.score,
       element,
       newValues,
-      pendingRichTextFootnotes.get(element) ?? [],
+      added,
     );
-    const paragraphStyles = pendingRichTextStyles.get(element);
-    if (paragraphStyles !== undefined) {
+    const score = workspace.value.score;
+    const importedStyles = stagedStyles.filter(
+      (style) => !score.paragraphStyles.some(({ id }) => id === style.id),
+    );
+    if (importedStyles.length > 0 && added.length > 0) {
       commands.unshift(
         new CommandFactory<Score>().create('update-properties', {
-          target: workspace.value.score,
-          newValues: { paragraphStyles },
+          target: score,
+          newValues: {
+            paragraphStyles: [...score.paragraphStyles, ...importedStyles],
+          },
         }),
       );
     }
     workspace.value.commandService.executeAsBatch(commands);
-    pendingRichTextFootnotes.delete(element);
-    pendingRichTextStyles.delete(element);
+    // CKEditor can still redo a paste after blur commits unrelated edits.
+    if (remaining.length > 0) {
+      pendingRichTextFootnotes.set(element, remaining);
+    } else {
+      clearPendingFootnotes(element);
+    }
   }
-  return { commitRichTextFootnotes };
+  return { commitRichTextFootnotes, hasPendingFootnotePaste };
 }

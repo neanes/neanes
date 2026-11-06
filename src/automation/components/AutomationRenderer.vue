@@ -3,6 +3,7 @@
     v-if="measurement"
     :key="measurement.id"
     :workspace="measurement.workspace"
+    :template-pages="measurement.templatePages"
     :fonts="fonts"
     :editor-language="language"
     @complete="textBoxes.complete"
@@ -77,9 +78,9 @@ async function settle(workspace: Workspace) {
   const complete = settlements.begin(workspace);
   await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
   await document.fonts.ready;
-  await settleWorkspace(workspace, async () => {
+  await settleWorkspace(workspace, async (templatePages) => {
     await nextTick();
-    return textBoxes.start(workspace);
+    return textBoxes.start(workspace, templatePages);
   });
   complete();
 }

@@ -70,9 +70,3 @@ Open `File > Page Setup` and select **Footnotes**. These settings control the au
 Parentheses make a musical footnote marker easier to notice and distinguish it from a measure number indicating a beat count. Enable them when a bare number or symbol could be mistaken for part of the notation.
 
 Choose **Update** to apply the settings to the score. See [Page Layout and Books](/guide/page-layout.html) for saving Page Setup defaults and using running markers.
-
-### Recommended settings
-
-- **Alternate melodies, finales, and other musical footnotes only:** Consider the asterisk format (`*, **, ***, …`) and set **Numbering** to **Restart each page**. Choose whether to wrap musical markers in parentheses according to how prominently you want them to stand out and whether they could be confused with beat counts.
-- **A mixture of textual and musical footnotes:** Set Page Setup to the format and numbering you want for the textual footnotes. If you prefer different symbols for the musical footnotes, override those markers individually with **Custom text** in Footnote Properties. For example, textual footnotes can keep automatic numbers while musical alternatives use custom asterisks.
-- **Textual footnotes only:** Choose whichever format and numbering convention best suits the document.

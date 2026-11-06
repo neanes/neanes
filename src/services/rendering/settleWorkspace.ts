@@ -1,33 +1,41 @@
+import type { LayoutDiagnosticsOptions } from '@/models/LayoutDiagnostics';
+import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
-import { LayoutService } from '@/services/LayoutService';
 
-import { LayoutReconciliation } from './layoutReconciliation';
 import {
   getResizableTextBoxes,
   type TextBoxHeightMeasurement,
 } from './textBoxMeasurement';
+import { WorkspaceLayoutSettlement } from './workspaceLayoutSettlement';
+
+export type LiveLayoutOutcome = 'published' | 'deferred' | 'superseded';
 
 export async function settleWorkspace(
   workspace: Workspace,
-  measure: () => Promise<TextBoxHeightMeasurement[]>,
+  measure: (templatePages?: Page[]) => Promise<TextBoxHeightMeasurement[]>,
+  options?: LayoutDiagnosticsOptions,
 ) {
   const { score, contentRevision } = workspace;
-  LayoutService.processPages(workspace);
-  if (getResizableTextBoxes(score).length === 0) {
-    return;
-  }
-  const reconciliation = new LayoutReconciliation();
+  const settlement = new WorkspaceLayoutSettlement(workspace);
+  const needsMeasurement = getResizableTextBoxes(score).length > 0;
+  let pages = settlement.paginate(options);
   while (true) {
-    const heights = await measure();
+    // Repeated templates need page-specific tokens, just as in export.
+    const templatePages =
+      settlement.usesFootnoteTrials &&
+      (score.pageSetup.showHeader || score.pageSetup.showFooter)
+        ? pages.filter((page) => !page.isEmpty)
+        : undefined;
+    const heights = needsMeasurement ? await measure(templatePages) : [];
     if (
       workspace.score !== score ||
       workspace.contentRevision !== contentRevision
     ) {
       throw new Error('LAYOUT_MEASUREMENT_STALE');
     }
-    if (!reconciliation.apply(score, heights)) {
-      return;
+    if (!settlement.advance(heights)) {
+      return { pages, footnoteSlots: settlement.footnoteSlots };
     }
-    LayoutService.processPages(workspace);
+    pages = settlement.paginate(options);
   }
 }

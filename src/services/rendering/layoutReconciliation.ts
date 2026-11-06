@@ -17,6 +17,16 @@ export class LayoutReconciliation {
     { width: number; height: number }
   >();
 
+  resetPageCaps(boxes?: MeasuredTextBox[]) {
+    if (boxes === undefined) {
+      this.pageCappedHeights.clear();
+    } else {
+      for (const box of boxes) {
+        this.pageCappedHeights.delete(toRaw(box));
+      }
+    }
+  }
+
   apply(score: Score, heights: TextBoxHeightMeasurement[]) {
     if (
       heights.some(

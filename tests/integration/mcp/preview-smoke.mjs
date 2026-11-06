@@ -428,6 +428,16 @@ try {
   const opened = await call('open_document', { filePath: landscapePath });
   const argsSaved = { documentId: opened.documentId };
   const savedBefore = await readScoreSnapshot(call, argsSaved);
+  for (const box of [
+    savedBefore.score.staff.elements[0],
+    savedBefore.score.headers.default.elements[0],
+    savedBefore.score.footers.default.elements[0],
+  ]) {
+    assert.ok(
+      box.height > 1,
+      'Private MCP settles stale heights without footnotes',
+    );
+  }
   const layoutSaved = await call('get_pages', argsSaved);
   const landscapePreview = await call('preview_page', {
     ...argsSaved,

@@ -10,10 +10,14 @@ import {
   loadScoreFonts,
 } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
-import { settleWorkspace } from '@/services/rendering/settleWorkspace';
+import {
+  type LiveLayoutOutcome,
+  settleWorkspace,
+} from '@/services/rendering/settleWorkspace';
+import { needsFootnoteSlotSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
 
-import type { EditorBusyState } from '../contracts/editorBusy';
+import { editorBusyError, type EditorBusyState } from '../contracts/editorBusy';
 import { useEditorAutomation } from './useEditorAutomation';
 import { useWorkspaceMeasurements } from './useWorkspaceMeasurements';
 
@@ -27,46 +31,98 @@ export function useEditorDocumentAutomation(
     enabled: boolean;
     busyState(): EditorBusyState | null;
     snapshot(workspace: Workspace): ScoreRenderSnapshot;
+    awaitCurrentFootnoteLayout(
+      workspace: Workspace,
+    ): Promise<LiveLayoutOutcome>;
   },
 ) {
   const dirtyTextBoxWorkspaces = new Set<string>();
   let editorUnmounted = false;
   const { textBoxes, pages } = useWorkspaceMeasurements();
+  const selectedDuringMeasurement = new Error('WORKSPACE_BECAME_SELECTED');
+
+  async function settleSelectedFootnoteLayout(workspace: Workspace) {
+    const outcome = await options.awaitCurrentFootnoteLayout(workspace);
+    if (outcome === 'deferred') {
+      throw editorBusyError({ reason: 'layout_deferred' });
+    }
+    if (outcome === 'superseded') {
+      throw new Error(
+        'LAYOUT_CONFLICT: The selected document changed while settling its layout. Read it again before retrying.',
+      );
+    }
+    return true;
+  }
 
   // Automation requests await settlement serially, including private batch documents.
   async function measureWorkspaceTextBoxes(workspace: Workspace) {
     // Let the previous measurement's component unmount before mounting the next.
     await nextTick();
     if (editorUnmounted || !isActive(workspace)) {
-      return;
+      throw new Error('DOCUMENT_NOT_FOUND');
     }
     await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
     await document.fonts.ready;
     if (editorUnmounted || !isActive(workspace)) {
-      return;
+      throw new Error('DOCUMENT_NOT_FOUND');
     }
-    await settleWorkspace(toRaw(workspace), async () => {
-      await nextTick();
-      if (editorUnmounted || !isActive(workspace)) {
-        throw new Error('DOCUMENT_NOT_FOUND');
+    if (isSelectedFootnoteLayout(workspace)) {
+      return settleSelectedFootnoteLayout(workspace);
+    }
+    try {
+      await settleWorkspace(toRaw(workspace), async (templatePages) => {
+        await nextTick();
+        if (editorUnmounted || !isActive(workspace)) {
+          throw new Error('DOCUMENT_NOT_FOUND');
+        }
+        if (isSelectedFootnoteLayout(workspace)) {
+          throw selectedDuringMeasurement;
+        }
+        const heights = await textBoxes.start(workspace, templatePages);
+        if (isSelectedFootnoteLayout(workspace)) {
+          throw selectedDuringMeasurement;
+        }
+        return heights;
+      });
+    } catch (error) {
+      if (error === selectedDuringMeasurement) {
+        return settleSelectedFootnoteLayout(workspace);
       }
-      return textBoxes.start(workspace);
-    });
+      throw error;
+    }
+    if (isSelectedFootnoteLayout(workspace)) {
+      return settleSelectedFootnoteLayout(workspace);
+    }
     if (
       workspace.id === options.selectedWorkspace()?.id ||
       !automation.ownsPrivateWorkspace(workspace)
     ) {
       options.changed(workspace);
     }
+    return false;
+  }
+
+  function isSelectedFootnoteLayout(workspace: Workspace) {
+    return (
+      workspace.id === options.selectedWorkspace()?.id &&
+      needsFootnoteSlotSettlement(workspace.score)
+    );
   }
 
   const documents = new DocumentService({
     ...options,
     async settle(workspace) {
-      if (dirtyTextBoxWorkspaces.has(workspace.id)) {
-        await measureWorkspaceTextBoxes(workspace);
+      const selectedFootnotes = isSelectedFootnoteLayout(workspace);
+      if (selectedFootnotes || dirtyTextBoxWorkspaces.has(workspace.id)) {
+        const published = await measureWorkspaceTextBoxes(workspace);
         // A failed measurement leaves the workspace dirty so the next save retries.
         dirtyTextBoxWorkspaces.delete(workspace.id);
+        if (published) {
+          return;
+        }
+      }
+      if (selectedFootnotes) {
+        return;
       }
       await nextTick();
       await document.fonts.ready;
@@ -97,7 +153,9 @@ export function useEditorDocumentAutomation(
       createScore: options.createScore,
       prepare: options.prepare,
       dispose: disposeWorkspace,
-      settle: measureWorkspaceTextBoxes,
+      async settle(workspace) {
+        await measureWorkspaceTextBoxes(workspace);
+      },
     },
     snapshot: options.snapshot,
     renderPages: pages.start,

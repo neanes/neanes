@@ -32,6 +32,7 @@ import Vue3TabsChrome from 'vue3-tabs-chrome';
 import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
+import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
 import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
@@ -141,6 +142,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RICH_TEXT_BOX_CONTENT_KEYS,
   RichTextBoxElement,
   TempoElement,
   TextBoxElement,
@@ -254,9 +256,15 @@ import {
   getRecoveryCandidateGroupRecoveryIds,
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
+import { detachLayout } from '@/services/rendering/detachLayout';
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
+import {
+  type LiveLayoutOutcome,
+  settleWorkspace,
+} from '@/services/rendering/settleWorkspace';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
+import { needsFootnoteSlotSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -508,6 +516,17 @@ const tabs = ref<Tab[]>([]);
 const contextMenuWorkspaceId = ref<string | null>(null);
 const scoreContextMenuTarget = ref<ScoreElement | null>(null);
 const scoreMenuPointerDownInside = ref(false);
+const { textBoxes: liveLayoutMeasurement } = useWorkspaceMeasurements();
+const liveTextBoxMeasurement = liveLayoutMeasurement.pending;
+let liveLayoutRequest = 0;
+let layoutWaitingForBlur = false;
+let liveLayoutDisposed = false;
+let liveSettlement: {
+  workspace: Workspace;
+  revision: number;
+  promise: Promise<LiveLayoutOutcome>;
+} | null = null;
+let displayedScore: Score | undefined;
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
@@ -759,6 +778,9 @@ const selectedWorkspace = computed({
 const score = computed(() => {
   return selectedWorkspace.value.score;
 });
+const settleFootnoteSlots = computed(() =>
+  needsFootnoteSlotSettlement(score.value),
+);
 
 const {
   updateLyricsLocked,
@@ -800,14 +822,15 @@ const {
   flushPendingRichTextEditors,
   save,
 );
-const { commitRichTextFootnotes } = useRichTextFootnotes(
-  selectedWorkspace,
-  flushPendingRichTextEditors,
-  openFootnote,
-  updateRichTextBox,
-  () =>
-    toast.error(t(($) => $.menu.footnotes.pasteUnavailable, { ns: 'menu' })),
-);
+const { commitRichTextFootnotes, hasPendingFootnotePaste } =
+  useRichTextFootnotes(
+    selectedWorkspace,
+    flushPendingRichTextEditors,
+    openFootnote,
+    updateRichTextBox,
+    () =>
+      toast.error(t(($) => $.menu.footnotes.pasteUnavailable, { ns: 'menu' })),
+  );
 const footnoteBodyElements = computed(
   () => new Set(score.value.footnotes.flatMap((body) => body.staff.elements)),
 );
@@ -1722,9 +1745,15 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 });
 
 function onLayoutFontsChanged() {
+  if (settleFootnoteSlots.value) {
+    invalidateLiveLayout();
+  }
   saveDebounced();
 }
 onBeforeUnmount(() => {
+  liveLayoutDisposed = true;
+  invalidateLiveLayout();
+  saveDebounced.cancel();
   document.fonts.removeEventListener('loadingdone', onLayoutFontsChanged);
   document.fonts.removeEventListener('loadingerror', onLayoutFontsChanged);
 });
@@ -2045,8 +2074,8 @@ const pageHandlers: ScorePageHandlers = {
     selectedElement.value = element;
     pages.value[element.page - 1].isVisible = true;
     nextTick(() =>
-      document
-        .getElementById(`element-${element.id}`)
+      pageBackgroundRef.value
+        ?.querySelector(`#element-${element.id}`)
         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
     );
   },
@@ -2130,6 +2159,7 @@ const {
     return await discardRecoverySnapshot(workspace.id);
   },
   snapshot: createScoreRenderSnapshot,
+  awaitCurrentFootnoteLayout,
   busyState() {
     if (isLoading.value) {
       return { reason: 'loading' };
@@ -2856,6 +2886,31 @@ const selectedRichTextEditor = useActiveEditorForOwner(
   getSelectedRichTextOwner,
 );
 
+watch(
+  selectedRichTextEditor,
+  (editor, _, onCleanup) => {
+    if (layoutWaitingForBlur) {
+      invalidateLiveLayout();
+      saveDebounced();
+    }
+    if (
+      editor == null ||
+      getSelectedRichTextOwner() !== selectedRichTextBoxElement.value
+    ) {
+      return;
+    }
+    const changed = () => {
+      if (settleFootnoteSlots.value) {
+        invalidateLiveLayout();
+        saveDebounced();
+      }
+    };
+    editor.model.document.on('change:data', changed);
+    onCleanup(() => editor.model.document.off('change:data', changed));
+  },
+  { flush: 'sync' },
+);
+
 function refocusSelectedRichTextEditorAfterShowingPane(
   paneId: WorkspacePaneId,
   isVisible: boolean,
@@ -3313,10 +3368,21 @@ function addDropCap(after: boolean) {
   selectedElement.value = element;
   save();
 
-  nextTick(() => {
-    const index = activeElements.value.indexOf(element);
+  focusInsertedTextElement(element);
+}
 
-    getElementComponent<any>(index)!.focus();
+function focusInsertedTextElement(element: DropCapElement | TextBoxElement) {
+  nextTick(async () => {
+    if (settleFootnoteSlots.value) {
+      await awaitCurrentFootnoteLayout(selectedWorkspace.value).catch(
+        console.error,
+      );
+    }
+    if (toRaw(selectedElement.value) === element) {
+      getElementComponentForElement<
+        InstanceType<typeof DropCap | typeof TextBox>
+      >(element)?.focus();
+    }
   });
 }
 
@@ -3333,6 +3399,10 @@ function onClickPrintScore() {
     return;
   }
 
+  if (!isBrowser.value && settleFootnoteSlots.value) {
+    void onFileMenuPrint();
+    return;
+  }
   if (pages.value.some((page) => page.footnoteOverflow)) {
     toast.error(t(($) => $.menu.footnotes.overflow, { ns: 'menu' }));
     return;
@@ -3378,11 +3448,12 @@ async function openFootnoteFromContextMenu(reference: ScoreElement) {
   setTimeout(() => openFootnote(reference), 0);
 }
 
-function openFootnote(
+async function openFootnote(
   reference: ScoreElement,
   id = elementFootnoteIds(reference)[0],
 ) {
-  const footnote = score.value.footnotes.find((body) => body.id === id);
+  const workspace = selectedWorkspace.value;
+  const footnote = workspace.score.footnotes.find((body) => body.id === id);
   if (footnote === undefined) {
     return;
   }
@@ -3391,7 +3462,24 @@ function openFootnote(
     editor.ui.getEditableElement()!.blur();
     clearActiveEditor();
   }
-  pages.value[reference.page - 1].isVisible = true;
+  if (settleFootnoteSlots.value) {
+    const selection = selectedElement.value;
+    const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
+      console.error,
+    );
+    if (
+      outcome !== 'published' ||
+      selectedElement.value !== selection ||
+      !workspace.score.footnotes.includes(footnote)
+    ) {
+      return;
+    }
+  }
+  const page = pages.value[reference.page - 1];
+  if (page === undefined) {
+    return;
+  }
+  page.isVisible = true;
   selectedElement.value = footnote.staff.elements.at(
     footnote.staff.elements.length > 1 ? -2 : -1,
   )!;
@@ -3399,8 +3487,8 @@ function openFootnote(
     focusSelectedRichTextBoxEditor(selectedElement.value);
   }
   nextTick(() =>
-    document
-      .getElementById(`footnote-${footnote.id}`)
+    pageBackgroundRef.value
+      ?.querySelector(`#${CSS.escape(`footnote-${footnote.id}`)}`)
       ?.scrollIntoView({ block: 'nearest' }),
   );
 }
@@ -3533,7 +3621,15 @@ function selectHeaderFooterRichTextBox(
 }
 
 function focusSelectedRichTextBoxEditor(element: RichTextBoxElement) {
-  nextTick(() => {
+  nextTick(async () => {
+    if (
+      settleFootnoteSlots.value &&
+      getRichTextBoxComponentRef(element) == null
+    ) {
+      await awaitCurrentFootnoteLayout(selectedWorkspace.value).catch(
+        console.error,
+      );
+    }
     if (
       selectedRichTextBoxElement.value !== element ||
       isActiveEditorForOwner(element)
@@ -5416,20 +5512,280 @@ function calculatePageNumber() {
   }
 }
 
-function save() {
-  const lyricSelection = captureSelectedLyricSelection();
+function layoutOptions() {
+  return { collectDiagnostics: shouldCollectLayoutDiagnostics.value };
+}
 
-  // Save the indexes of the visible pages
+function invalidateLiveLayout() {
+  liveLayoutRequest++;
+  liveSettlement = null;
+  layoutWaitingForBlur = false;
+  liveLayoutMeasurement.cancel();
+}
+
+function settleSelectedFootnoteLayout(workspace: Workspace) {
+  const source = toRaw(workspace);
+  const score = source.score;
+  const revision = source.contentRevision;
+  if (
+    liveSettlement?.workspace === source &&
+    liveSettlement.revision === revision
+  ) {
+    return liveSettlement.promise;
+  }
+  invalidateLiveLayout();
+  const promise = runLiveSettlement(workspace).catch((error: unknown) => {
+    if (liveSettlement?.promise === promise) {
+      liveSettlement = null;
+      publishFirstLayoutFallback(source, score);
+    }
+    throw error;
+  });
+  liveSettlement = { workspace: source, revision, promise };
+  return promise;
+}
+
+async function awaitCurrentFootnoteLayout(
+  workspace: Workspace,
+): Promise<LiveLayoutOutcome> {
+  const source = toRaw(workspace);
+  const score = source.score;
+  // A mutation can settle before and after applying edits. Keep each wait
+  // below half of the MCP host's 60-second operation timeout.
+  const failSettlement = (message: string) => {
+    if (liveSettlement?.workspace === source && source.score === score) {
+      invalidateLiveLayout();
+      publishFirstLayoutFallback(source, score);
+    }
+    return new Error(`LAYOUT_SETTLEMENT_FAILED: ${message}`);
+  };
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(failSettlement('The layout did not settle within 20 seconds.'));
+    }, 20_000);
+  });
+  let attempts = 0;
+  try {
+    while (
+      !liveLayoutDisposed &&
+      toRaw(selectedWorkspace.value) === source &&
+      source.score === score &&
+      settleFootnoteSlots.value
+    ) {
+      if (attempts++ === 12) {
+        throw failSettlement('The layout was superseded too many times.');
+      }
+      const revision = source.contentRevision;
+      const pending = settleSelectedFootnoteLayout(workspace);
+      const outcome = await Promise.race([pending, deadline]);
+      // Include the DOM update in the check. A newer request can supersede a
+      // published result before the caller gets to read the rendered pages.
+      await nextTick();
+      if (
+        outcome !== 'superseded' &&
+        pending === liveSettlement?.promise &&
+        toRaw(selectedWorkspace.value) === source &&
+        source.score === score &&
+        source.contentRevision === revision
+      ) {
+        return outcome;
+      }
+      if (pending === liveSettlement?.promise) {
+        invalidateLiveLayout();
+      }
+    }
+    return 'superseded';
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function runLiveSettlement(
+  workspace: Workspace,
+): Promise<LiveLayoutOutcome> {
+  const request = liveLayoutRequest;
+  const source = toRaw(workspace);
+  const { score, contentRevision } = source;
+  const isCurrent = () =>
+    request === liveLayoutRequest &&
+    source === toRaw(selectedWorkspace.value) &&
+    score === source.score &&
+    contentRevision === source.contentRevision;
+
+  // Let canceled measurement components unmount before starting another.
+  await nextTick();
+  await document.fonts.ready;
+  if (!isCurrent()) {
+    return 'superseded';
+  }
+  const owner = selectedRichTextBoxElement.value;
+  // Include in-progress typing without committing it into score history.
+  const liveContent = owner == null ? {} : getPendingRichTextBoxUpdates(owner);
+  if (
+    owner !== null &&
+    isActiveEditorForOwner(owner) &&
+    hasPendingFootnotePaste(owner, liveContent)
+  ) {
+    layoutWaitingForBlur = true;
+    return 'deferred';
+  }
+  const detached = detachLayout(source);
+  const rawOwner = owner == null ? null : toRaw(owner);
+  const trialOwner =
+    rawOwner == null
+      ? undefined
+      : (detached.copies.get(rawOwner) as RichTextBoxElement | undefined);
+  const contentKeys = RICH_TEXT_BOX_CONTENT_KEYS.filter(
+    (key) => liveContent[key] !== undefined,
+  );
+  if (trialOwner !== undefined) {
+    for (const key of contentKeys) {
+      trialOwner[key] = liveContent[key] ?? trialOwner[key];
+    }
+  }
+  try {
+    const options = layoutOptions();
+    const result = await settleWorkspace(
+      detached.workspace,
+      async (templatePages) => {
+        await nextTick();
+        if (!isCurrent()) {
+          throw new Error('LAYOUT_MEASUREMENT_STALE');
+        }
+        return liveLayoutMeasurement.start(detached.workspace, templatePages);
+      },
+      options,
+    );
+    if (!isCurrent()) {
+      return 'superseded';
+    }
+
+    const activeBox = selectedRichTextBoxElement.value;
+    if (
+      !printMode.value &&
+      activeBox != null &&
+      isActiveEditorForOwner(activeBox)
+    ) {
+      const activeRaw = toRaw(activeBox);
+      const trialBox = detached.copies.get(activeRaw);
+      // The live component is keyed under its page and line. Defer moves
+      // until blur so publishing cannot destroy the active CKEditor.
+      const pageIndex = activeRaw.page - 1;
+      const lineIndex =
+        pages.value[pageIndex]?.allLines.findIndex((line) =>
+          line.elements.some((element) => toRaw(element) === activeRaw),
+        ) ?? -1;
+      if (
+        score.headersAndFooters.includes(activeRaw) ||
+        (lineIndex >= 0 &&
+          (trialBox === undefined ||
+            !result.pages[pageIndex]?.allLines[lineIndex]?.elements.includes(
+              trialBox,
+            )))
+      ) {
+        layoutWaitingForBlur = true;
+        return 'deferred';
+      }
+    }
+
+    const lyricSelection = captureSelectedLyricSelection();
+    const resized = detached.applyHeights();
+    // Replay only the settled pass on the original elements. Preserve their
+    // identities and compare update flags with the last published geometry.
+    const previousContent =
+      rawOwner == null ? [] : contentKeys.map((key) => rawOwner[key]);
+    let processedPages: Page[];
+    try {
+      if (rawOwner !== null && trialOwner !== undefined) {
+        for (const key of contentKeys) {
+          rawOwner[key] = trialOwner[key];
+        }
+      }
+      processedPages = LayoutService.processPages(source, {
+        ...options,
+        footnoteSlots: result.footnoteSlots,
+      });
+    } finally {
+      if (rawOwner !== null) {
+        contentKeys.forEach((key, index) => {
+          rawOwner[key] = previousContent[index];
+        });
+      }
+    }
+    for (const box of resized) {
+      box.updated = true;
+    }
+    const firstLayout = displayedScore !== score;
+    publishLayout(processedPages, activeBox, lyricSelection);
+    if (firstLayout) {
+      await nextTick();
+      if (isCurrent()) {
+        pageBackgroundRef.value?.scrollTo(
+          workspace.scrollLeft,
+          workspace.scrollTop,
+        );
+        calculatePageNumber();
+      }
+    }
+    return 'published';
+  } catch (error) {
+    if (isCurrent()) {
+      throw error;
+    }
+    return 'superseded';
+  }
+}
+
+function save() {
+  invalidateLiveLayout();
+  if (settleFootnoteSlots.value) {
+    if (displayedScore !== toRaw(score.value)) {
+      displayedScore = undefined;
+      pages.value = [];
+    }
+    void settleSelectedFootnoteLayout(selectedWorkspace.value).catch(
+      console.error,
+    );
+  } else {
+    publishSynchronousLayout(toRaw(selectedWorkspace.value));
+  }
+
+  persistLayoutRecovery();
+}
+
+function publishSynchronousLayout(workspace: Workspace) {
+  const lyricSelection = captureSelectedLyricSelection();
+  publishLayout(
+    LayoutService.processPages(workspace, layoutOptions()),
+    null,
+    lyricSelection,
+  );
+}
+
+function publishFirstLayoutFallback(workspace: Workspace, score: Score) {
+  if (
+    workspace === toRaw(selectedWorkspace.value) &&
+    workspace.score === score &&
+    displayedScore !== score
+  ) {
+    try {
+      publishSynchronousLayout(workspace);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+function publishLayout(
+  processedPages: Page[],
+  activeBox: RichTextBoxElement | null,
+  lyricSelection: ReturnType<typeof captureSelectedLyricSelection>,
+) {
   const visiblePages = pages.value
     .map((_, i) => i)
     .filter((i) => pages.value[i].isVisible);
-
-  const processedPages = LayoutService.processPages(
-    toRaw(selectedWorkspace.value),
-    shouldCollectLayoutDiagnostics.value
-      ? { collectDiagnostics: true }
-      : undefined,
-  );
+  const activeRaw = activeBox === null ? null : toRaw(activeBox);
 
   if (
     inspectorContext.value.kind === 'martyria' &&
@@ -5449,7 +5805,7 @@ function save() {
     .forEach((page) => {
       page.allLines.forEach((line) =>
         line.elements
-          .filter((x) => x.updated)
+          .filter((x) => x.updated && x !== activeRaw)
           .forEach((element) => {
             element.keyHelper++;
           }),
@@ -5458,11 +5814,12 @@ function save() {
 
   // Re-render headers and footers if they changed
   score.value.headersAndFooters
-    .filter((x) => x.updated)
+    .filter((x) => x.updated && toRaw(x) !== activeRaw)
     .forEach((element) => {
       element.keyHelper++;
     });
 
+  displayedScore = toRaw(score.value);
   pages.value = processedPages;
 
   if (lyricSelection != null) {
@@ -5470,7 +5827,9 @@ function save() {
       restoreLyricSelection(lyricSelection);
     });
   }
+}
 
+function persistLayoutRecovery() {
   // Persist a background recovery snapshot. This deliberately serializes
   // WITHOUT flushing the live rich-text editors: `save()` runs frequently --
   // often via the 250 ms-debounced `saveDebounced` (e.g. on every height change
@@ -5563,18 +5922,21 @@ async function load() {
         openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
       openScore(file);
       await nextTick();
+      const workspace = selectedWorkspace.value;
       await ipcService.exportWorkspaceAsLatex(
-        selectedWorkspace.value,
-        JSON.stringify(
-          latexExporter.export(
-            pages.value,
-            score.value.pageSetup,
-            score.value.paragraphStyles,
-            options,
-          ),
-          null,
-          2,
-        ),
+        workspace,
+        workspace.score.footnotes.length > 0
+          ? null
+          : JSON.stringify(
+              latexExporter.export(
+                pages.value,
+                workspace.score.pageSetup,
+                workspace.score.paragraphStyles,
+                options,
+              ),
+              null,
+              2,
+            ),
       );
       removeWorkspace(selectedWorkspace.value);
     }
@@ -6606,6 +6968,13 @@ function updateRichTextBox(
     ...newValues,
   };
 
+  if (settleFootnoteSlots.value) {
+    delete newValues.height;
+    if (Object.keys(newValues).length === 0) {
+      return;
+    }
+  }
+
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
     element.height = newValues.height;
@@ -6691,6 +7060,9 @@ function flushPendingAnnotationEditor() {
 }
 
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
+  if (settleFootnoteSlots.value) {
+    return;
+  }
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
@@ -6704,6 +7076,9 @@ function updateTextBox(
 ) {
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
+    if (settleFootnoteSlots.value) {
+      return;
+    }
     element.height = newValues.height;
     save();
     return;
@@ -6720,6 +7095,9 @@ function updateTextBox(
 }
 
 function updateTextBoxHeight(element: TextBoxElement, height: number) {
+  if (settleFootnoteSlots.value) {
+    return;
+  }
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
@@ -7846,6 +8224,9 @@ function onAudioServiceStop() {
 }
 
 function recalculateRichTextBoxHeights() {
+  if (settleFootnoteSlots.value) {
+    return;
+  }
   if (richTextBoxCalculation.value) {
     richTextBoxCalculation.value = false;
   }
@@ -7882,6 +8263,9 @@ function recalculateRichTextBoxHeights() {
 }
 
 function recalculateTextBoxHeights() {
+  if (settleFootnoteSlots.value) {
+    return;
+  }
   if (textBoxCalculation.value) {
     textBoxCalculation.value = false;
   }
@@ -7979,6 +8363,26 @@ function onFileMenuParagraphStyles() {
 
 function onFileMenuDocumentProperties() {
   documentPropertiesDialogIsOpen.value = true;
+}
+
+async function awaitBrowserOutputLayout(workspace: Workspace) {
+  const source = toRaw(workspace);
+  const score = source.score;
+  if (source !== toRaw(selectedWorkspace.value)) {
+    throw new Error('LAYOUT_CONFLICT');
+  }
+  if (settleFootnoteSlots.value) {
+    invalidateLiveLayout();
+    const outcome = await awaitCurrentFootnoteLayout(workspace);
+    if (outcome !== 'published') {
+      throw new Error('LAYOUT_CONFLICT');
+    }
+  } else {
+    await nextTick();
+  }
+  if (source !== toRaw(selectedWorkspace.value) || source.score !== score) {
+    throw new Error('LAYOUT_CONFLICT');
+  }
 }
 
 async function onFileMenuPrint() {
@@ -8147,7 +8551,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
           options: args,
         }));
     } else {
-      await nextTick();
+      await awaitBrowserOutputLayout(workspace);
 
       assertVisualExportFits(pages.value as Page[]);
 
@@ -8487,11 +8891,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
   save();
 
-  nextTick(() => {
-    const index = activeElements.value.indexOf(element);
-
-    getElementComponent<any>(index)!.focus();
-  });
+  focusInsertedTextElement(element);
 }
 
 function onFileMenuInsertRichTextBox() {
@@ -9093,7 +9493,8 @@ function onFileMenuGenerateTestFile(testFileType: TestFileType) {
   save();
 }
 
-function onSearchText(args: { query: string; reverse?: boolean }) {
+async function onSearchText(args: { query: string; reverse?: boolean }) {
+  const workspace = selectedWorkspace.value;
   const result = textSearchService.findTextInElements(
     args.query,
     activeElements.value,
@@ -9101,36 +9502,31 @@ function onSearchText(args: { query: string; reverse?: boolean }) {
     args.reverse ?? false,
   );
 
-  if (result != null) {
-    selectedElement.value = result;
-
-    (pagesRef.value as HTMLElement[])[
-      selectedElement.value.page - 1
-    ].scrollIntoView();
-
-    pages.value[selectedElement.value.page - 1].isVisible = true;
-
-    nextTick(() => {
-      if (selectedElement.value?.elementType === ElementType.Note) {
-        getElementComponent<HTMLElement>(
-          selectedElementIndex.value,
-        )!.scrollIntoView();
-      } else if (selectedElement.value?.elementType === ElementType.DropCap) {
-        getElementComponent<InstanceType<typeof DropCap>>(
-          selectedElementIndex.value,
-        )!.htmlElement.scrollIntoView();
-      } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-        getElementComponent<InstanceType<typeof TextBox>>(
-          selectedElementIndex.value,
-        )!.htmlElement.scrollIntoView();
-      } else if (
-        selectedElement.value?.elementType === ElementType.RichTextBox
-      ) {
-        getElementComponent<InstanceType<typeof TextBoxRich>>(
-          selectedElementIndex.value,
-        )!.htmlElement.scrollIntoView();
-      }
-    });
+  if (result == null) {
+    return;
+  }
+  selectedElement.value = result;
+  const isCurrent = () =>
+    workspace === selectedWorkspace.value && selectedElement.value === result;
+  if (settleFootnoteSlots.value) {
+    const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
+      console.error,
+    );
+    if (outcome !== 'published' || !isCurrent()) {
+      return;
+    }
+  }
+  const pageIndex = result.page - 1;
+  const page = pages.value[pageIndex];
+  const pageElement = pagesRef.value?.[pageIndex];
+  if (page === undefined || pageElement === undefined) {
+    return;
+  }
+  pageElement.scrollIntoView();
+  page.isVisible = true;
+  await nextTick();
+  if (isCurrent()) {
+    pageElement.querySelector(`#element-${result.id}`)?.scrollIntoView();
   }
 }
 
@@ -9995,6 +10391,7 @@ function renderTabLabel(tab: Tab) {
                       :zoom="zoom"
                       :print-mode="printMode"
                       :interaction="pageInteraction"
+                      :settled-text-boxes="settleFootnoteSlots"
                       :overlays="pageOverlaySettings"
                       v-on="pageHandlers"
                     >
@@ -10372,7 +10769,7 @@ function renderTabLabel(tab: Tab) {
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
     />
-    <template v-if="richTextBoxCalculation">
+    <template v-if="richTextBoxCalculation && !settleFootnoteSlots">
       <TextBoxRich
         v-for="element in resizableRichTextBoxElements"
         :key="element.id!"
@@ -10390,7 +10787,7 @@ function renderTabLabel(tab: Tab) {
         "
       />
     </template>
-    <template v-if="textBoxCalculation">
+    <template v-if="textBoxCalculation && !settleFootnoteSlots">
       <TextBox
         v-for="element in resizableTextBoxElements"
         :key="element.id!"
@@ -10401,6 +10798,16 @@ function renderTabLabel(tab: Tab) {
         @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
       />
     </template>
+    <WorkspaceTextBoxMeasurement
+      v-if="liveTextBoxMeasurement"
+      :key="liveTextBoxMeasurement.id"
+      :workspace="liveTextBoxMeasurement.workspace"
+      :template-pages="liveTextBoxMeasurement.templatePages"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="liveLayoutMeasurement.complete"
+      @failed="liveLayoutMeasurement.fail"
+    />
     <WorkspacePageMeasurement
       v-if="workspacePageMeasurement"
       :workspace="workspacePageMeasurement.workspace"
@@ -10413,6 +10820,7 @@ function renderTabLabel(tab: Tab) {
       v-if="workspaceTextBoxMeasurement"
       :key="workspaceTextBoxMeasurement.id"
       :workspace="workspaceTextBoxMeasurement.workspace"
+      :template-pages="workspaceTextBoxMeasurement.templatePages"
       :fonts="fonts"
       :editor-language="ckeditorLanguage"
       @complete="completeWorkspaceTextBoxMeasurement"

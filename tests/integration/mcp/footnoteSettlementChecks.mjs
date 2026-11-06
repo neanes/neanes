@@ -150,11 +150,6 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
       return geometry;
     });
   const marker = (candidates) => markerGeometry(ids[1], candidates);
-  const dimensions = ({ width, height, wrapping }) => ({
-    width,
-    height,
-    wrapping,
-  });
   for (const [footnoteFormat, firstFootnoteNumber, candidates] of [
     ['numbers', 9, ['9', '10']],
     ['symbols', 5, ['¶', '‖']],
@@ -183,10 +178,10 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     await settings({ pageHeightCustom: 170 });
     const restarted = await marker(candidates);
     assert.equal(restarted.label, candidates[0]);
-    assert.deepEqual(
-      dimensions(restarted),
-      dimensions(uninterrupted),
-      `${footnoteFormat} restart preserves marker dimensions and surrounding wrapping`,
+    assert.equal(
+      restarted.width,
+      restarted.naturalWidths[0],
+      `${footnoteFormat} restart uses the starting mark's slot`,
     );
     const toggleBreak = (pageBreak) =>
       edit([
@@ -327,6 +322,12 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     previousPage = entry.page;
   }
 
+  // Repeated footer templates exercise token-aware settlement in each path.
+  await call('update_header_footer_settings', {
+    ...args,
+    expectedRevision: await revision(),
+    changes: { showFooter: true },
+  });
   // Save/reopen in the private worker, then compare independently settled exports.
   const filePath = path.join(directory, 'footnote-wrapping.byzx');
   await call('save_document', {
@@ -358,7 +359,42 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     documentScope: 'private',
     documentId: privateDoc.documentId,
   };
+  await evaluate(`(() => {
+    const observer = new MutationObserver(() => {
+      const pages = document.querySelectorAll('.workspace-page-measurement .page');
+      if (!pages.length) return;
+      window.detachedStaffGeometry = [...pages].flatMap((page, index) =>
+        [...page.querySelectorAll('.line:not([data-footnote-id]) > .element-box .rich-text-box-container')]
+          .map(box => {
+            const position = getComputedStyle(box.closest('.element-box'));
+            const size = getComputedStyle(box);
+            return [index + 1, ...[position.left, position.top, size.width, size.height].map(parseFloat)];
+          }),
+      );
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.detachedGeometryObserver = observer;
+  })()`);
   const editorPages = await call('get_pages', args);
+  const comparison = await evaluate(`(() => {
+    window.detachedGeometryObserver.disconnect();
+    return {
+      detached: window.detachedStaffGeometry,
+      live: window._editor.score.value.staff.elements
+        .filter(element => element.elementType === 'RichTextBox')
+        .map(({ page, x, y, width, height }) => [page, x, y, width, height]),
+    };
+  })()`);
+  assert.equal(comparison.detached.length, comparison.live.length);
+  for (const [index, layout] of comparison.detached.entries()) {
+    assert.ok(
+      layout.every(
+        (value, field) =>
+          Math.abs(value - comparison.live[index][field]) < 0.05,
+      ),
+      JSON.stringify(comparison),
+    );
+  }
   const privatePages = await call('get_pages', privateArgs);
   assert.equal(
     privatePages.pageCount,
@@ -600,5 +636,434 @@ export async function checkFootnoteColdGutter(call, evaluate, directory) {
   );
   console.log(
     'PASS: 13 page-restarted symbol footnotes have identical cold/warm gutters, rich-text heights, and exports',
+  );
+}
+export async function checkSparseAndDenseSlots(call, evaluate, bringToFront) {
+  const doc = await call('create_document', {
+    documentScope: 'editor',
+    title: 'Sparse and dense asterisk slots',
+  });
+  const args = { documentScope: 'editor', documentId: doc.documentId };
+  const revision = async () =>
+    (await call('get_document_properties', args)).revision;
+  const settings = async (changes) =>
+    call('update_page_setup', {
+      ...args,
+      expectedRevision: await revision(),
+      changes,
+    });
+  const edit = async (actions) =>
+    call('edit_elements', {
+      ...args,
+      expectedRevision: await revision(),
+      actions,
+    });
+  await settings({
+    pageSize: 'Custom',
+    pageWidthCustom: 400,
+    pageHeightCustom: 110,
+    leftMargin: 35,
+    rightMargin: 35,
+    topMargin: 30,
+    bottomMargin: 30,
+    footnoteFormat: 'symbols',
+    footnoteSymbolSequence: 'asterisks',
+    footnoteNumbering: 'page',
+  });
+  const initial = await call('get_elements', args);
+  await evaluate(`(() => {
+    window.slotMeasurementPasses = 0;
+    window.slotMeasurementObserver = new MutationObserver(records => {
+      for (const record of records) {
+        for (const node of record.addedNodes) {
+          if (node.matches?.('.workspace-text-box-measurement')) {
+            window.slotMeasurementPasses++;
+          }
+        }
+      }
+    });
+    window.slotMeasurementObserver.observe(document.body, { childList: true, subtree: true });
+  })()`);
+  async function assertLiveFastPath() {
+    await evaluate(`(() => {
+      window.slotMeasurementPasses = 0;
+      window._editor.score.value.staff.elements[0].page = 0;
+      document.fonts.dispatchEvent(new Event('loadingdone'));
+    })()`);
+    await eventually(async () =>
+      assert.equal(
+        await evaluate('window._editor.score.value.staff.elements[0].page'),
+        1,
+      ),
+    );
+    assert.equal(await evaluate('window.slotMeasurementPasses'), 0);
+  }
+  await assertLiveFastPath();
+  const content = '<p>Reference</p>';
+  await edit([
+    { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+    {
+      action: 'insert',
+      elements: Array.from({ length: 10 }, (_, index) => ({
+        elementType: 'RichTextBox',
+        clientId: `box${index}`,
+        properties: { content },
+      })),
+    },
+    ...Array.from({ length: 10 }, (_, index) => ({
+      action: 'insert_footnote',
+      elementRef: `@box${index}`,
+      contentKey: 'content',
+      htmlOffset: content.indexOf('</p>'),
+      elements: [
+        { elementType: 'RichTextBox', properties: { content: '<p>Body</p>' } },
+      ],
+    })),
+  ]);
+  const slots = () =>
+    evaluate(`window._editor.score.value.staff.elements
+      .filter(element => element.elementType === 'RichTextBox')
+      .map(element => ({
+        page: element.page, height: element.height, ...Object.values(element.footnoteMarkers)[0],
+      }))`);
+  const readPasses = () => evaluate('window.slotMeasurementPasses');
+  const sparse = await slots();
+  assert.equal(sparse.length, 10);
+  for (const [index, slot] of sparse.entries()) {
+    assert.equal(slot.page, index + 1, 'Page breaks are automatic');
+    assert.equal(slot.label, '*');
+    assert.equal(slot.width, sparse[0].width);
+  }
+  const sparsePasses = await readPasses();
+  assert.ok(
+    sparsePasses >= 2 && sparsePasses <= 4,
+    `Sparse passes: ${sparsePasses}`,
+  );
+
+  await evaluate('window.slotMeasurementPasses = 0');
+  await settings({ pageHeightCustom: 900 });
+  const dense = await slots();
+  for (const [index, slot] of dense.slice(0, 3).entries()) {
+    assert.equal(slot.page, 1);
+    assert.equal(slot.label, '*'.repeat(index + 1));
+    assert.ok(Math.abs(slot.width - sparse[0].width * (index + 1)) < 0.05);
+  }
+  const densePasses = await readPasses();
+  assert.ok(
+    densePasses >= 3 && densePasses <= 6,
+    `Dense passes: ${densePasses}`,
+  );
+
+  // Give six boxes line-wrap thresholds that propagate through three trials:
+  // 1: [0 1 2] [3 4] [5]; 2: [0 1] [2 3 4] [5];
+  // 3: [0 1] [2 3] [4 5]. Box 5 newly needs a second asterisk
+  // in trial 3, so the fallback reserves its conservative sixth slot.
+  const wrapping = await evaluate(`(() => {
+    const widget = document.querySelector('.page .line:not([data-footnote-id]) .neanes-footnote');
+    const editable = widget.closest('.ck-content');
+    const probe = editable.cloneNode(false);
+    Object.assign(probe.style, { position: 'absolute', visibility: 'hidden', maxHeight: 'none', transform: 'none' });
+    editable.parentElement.append(probe);
+    const paragraph = document.createElement('p');
+    const marker = widget.cloneNode(false);
+    const text = document.createTextNode('');
+    paragraph.append(text, marker);
+    probe.append(paragraph);
+    const widths = ${JSON.stringify(dense.slice(0, 4).map((slot) => slot.width))};
+    const height = (value, ordinal) => {
+      text.data = value;
+      marker.textContent = '*'.repeat(ordinal);
+      marker.style.width = widths[ordinal - 1] + 'px';
+      return probe.getBoundingClientRect().height;
+    };
+    const baseline = height('Reference', 1);
+    const thresholds = [2, 3, 4].map(ordinal => {
+      for (let length = 1; length < 120; length++) {
+        const value = 'Reference ' + 'i'.repeat(length);
+        const grown = height(value, ordinal);
+        if (grown > baseline && height(value, ordinal - 1) === baseline) {
+          return { value, delta: grown - baseline };
+        }
+      }
+      return null;
+    });
+    probe.remove();
+    return { baseline, thresholds, bodyHeight: window._editor.score.value.footnotes[0].staff.elements[0].height };
+  })()`);
+  const [wrap2, wrap3, wrap4] = wrapping.thresholds;
+  assert.ok(wrap2 && wrap3 && wrap4, JSON.stringify(wrapping));
+  assert.equal(wrap2.delta, wrap3.delta);
+  assert.equal(wrap2.delta, wrap4.delta);
+  const entries = (
+    await call('get_elements', { ...args, includeContent: true })
+  ).elements;
+  await settings({
+    pageHeightCustom: 60 + 32 / 3 + 8.25 * wrap2.delta,
+    showFootnoteHorizontalRule: false,
+  });
+  await evaluate('window.slotMeasurementPasses = 0');
+  await edit([
+    { action: 'remove_range', start: 6, end: 10 },
+    ...[wrap3, wrap4, wrap3, wrap2, wrap4, wrap2].map(({ value }, index) => ({
+      action: 'update',
+      elementType: 'RichTextBox',
+      elementRef: entries[index].elementRef,
+      properties: {
+        content: entries[index].properties.content.replace('Reference', value),
+        marginBottom:
+          [4, 2, 2, 2, 3, 4][index] * wrap2.delta -
+          wrapping.baseline -
+          wrapping.bodyHeight,
+      },
+    })),
+  ]);
+  const fallback = await slots();
+  assert.equal(fallback.length, 6);
+  assert.deepEqual(
+    fallback.map(({ page, label }) => [page, label]),
+    [
+      [1, '*'],
+      [1, '**'],
+      [2, '*'],
+      [2, '**'],
+      [3, '*'],
+      [4, '*'],
+    ],
+    JSON.stringify({ fallback, wrapping }),
+  );
+  assert.ok(
+    Math.abs(fallback[5].width - sparse[0].width * 6) < 0.1,
+    JSON.stringify(fallback),
+  );
+  assert.equal(fallback[2].height, wrapping.baseline + wrap2.delta);
+  const fallbackPasses = await readPasses();
+  assert.ok(
+    fallbackPasses >= 7 && fallbackPasses <= 15,
+    `Fallback passes: ${fallbackPasses}`,
+  );
+
+  await bringToFront();
+  const editable =
+    "document.querySelector('.page .line:not([data-footnote-id]) .ck-content.single')";
+  await eventually(async () => {
+    assert.equal(
+      await evaluate(`${editable}?.ckeditorInstance?.state`),
+      'ready',
+    );
+    assert.equal(await evaluate('document.hasFocus()'), true);
+  });
+  await evaluate(`(() => {
+    const root = ${editable};
+    const editor = root.ckeditorInstance;
+    root.click();
+    editor.editing.view.focus();
+    window.slotTestEditor = editor;
+  })()`);
+  await eventually(async () =>
+    assert.equal(
+      await evaluate(`document.activeElement === ${editable}`),
+      true,
+    ),
+  );
+  await evaluate(`(() => {
+    const editor = window.slotTestEditor;
+    const geometry = () => window._editor.score.value.staff.elements
+      .filter(element => element.elementType === 'RichTextBox')
+      .map(({ page, line, height }) => [page, line, height]);
+    const addParagraphs = count => {
+      editor.model.change(writer => {
+        const root = editor.model.document.getRoot();
+        for (let i = 0; i < count; i++) {
+          const paragraph = writer.createElement('paragraph');
+          writer.insert(paragraph, root, 'end');
+          writer.insertText('New text', paragraph, 0);
+          writer.setSelection(paragraph, 'end');
+        }
+      });
+      editor.editing.view.forceRender();
+    };
+    window.slotTest = { old: geometry(), trial: [], originalHtml: editor.getData() };
+    const observer = new MutationObserver(records => {
+      const newTrial = records.some(record => [...record.addedNodes].some(
+        node => node.matches?.('.workspace-text-box-measurement'),
+      ));
+      if (!newTrial) return;
+      window.slotTest.trial.push(geometry());
+      if (window.slotTest.trial.length === 1) {
+        // Supersede a request after its offscreen component has mounted.
+        editor.execute('undo');
+        addParagraphs(3);
+        window.slotTest.caret = editor.model.document.selection.focus.path;
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.slotTestObserver = observer;
+    addParagraphs(20);
+  })()`);
+  const awaitedLayout = await call('get_elements', args);
+  assert.ok(
+    Math.abs(
+      awaitedLayout.elements[0].properties.height -
+        fallback[0].height -
+        3 * wrap2.delta,
+    ) < 0.05,
+    'MCP waits for the replacement layout before reading geometry',
+  );
+  await eventually(async () => {
+    const state = await evaluate(`(() => {
+      const editor = window.slotTestEditor;
+      const current = ${editable}?.ckeditorInstance;
+      const trial = window.slotTest;
+      return {
+        old: trial.old, trial: trial.trial, same: current === editor,
+        final: window._editor.score.value.staff.elements
+          .filter(element => element.elementType === 'RichTextBox')
+          .map(({ page, line, height }) => [page, line, height]),
+        caret: editor.model.document.selection.focus.path, expectedCaret: trial.caret,
+        focused: document.activeElement === editor.ui.getEditableElement(),
+      };
+    })()`);
+    const final = await slots();
+    assert.ok(state.trial.length >= 2);
+    assert.deepEqual(state.trial[0], state.old);
+    for (const geometry of state.trial) {
+      // Flushing the latest HTML can start another settlement after publication.
+      assert.ok(
+        [state.old, state.final].some(
+          (layout) => JSON.stringify(layout) === JSON.stringify(geometry),
+        ),
+        'Offscreen trials expose only the original or final geometry',
+      );
+    }
+    assert.equal(state.same, true);
+    assert.equal(state.focused, true);
+    assert.deepEqual(state.caret, state.expectedCaret);
+    assert.ok(
+      Math.abs(final[0].height - fallback[0].height - 3 * wrap2.delta) < 0.05,
+      JSON.stringify(final),
+    );
+    assert.notEqual(
+      final[1].page,
+      fallback[1].page,
+      'Only final geometry moves the next box',
+    );
+  });
+  await evaluate(`(() => {
+    window.slotTestObserver.disconnect();
+    window.slotTestEditor.execute('undo');
+  })()`);
+  assert.equal(
+    await evaluate(
+      'window.slotTestEditor.getData() === window.slotTest.originalHtml',
+    ),
+    true,
+  );
+  assert.equal(
+    await evaluate(`${editable}.ckeditorInstance === window.slotTestEditor`),
+    true,
+  );
+  await evaluate(`${editable}.blur()`);
+
+  await call('get_elements', args);
+  const secondEditable =
+    "document.querySelectorAll('.page .line:not([data-footnote-id]) .ck-content.single')[1]";
+  await eventually(async () => {
+    assert.equal(
+      await evaluate(`${secondEditable}?.ckeditorInstance?.state`),
+      'ready',
+    );
+  });
+  await evaluate(`(() => {
+    const root = ${secondEditable};
+    root.click();
+    const editor = root.ckeditorInstance;
+    editor.editing.view.focus();
+    window.deferredSlotEditor = editor;
+    editor.model.change(writer => {
+      for (let i = 0; i < 4; i++) {
+        const paragraph = writer.createElement('paragraph');
+        writer.insert(paragraph, editor.model.document.getRoot(), 'end');
+        writer.insertText('Moves the focused box', paragraph, 0);
+      }
+    });
+  })()`);
+  await call('get_elements', args, 'EDITOR_BUSY');
+  assert.equal((await slots())[1].page, 1);
+  assert.equal(
+    await evaluate(
+      `${secondEditable}.ckeditorInstance === window.deferredSlotEditor && document.activeElement === ${secondEditable}`,
+    ),
+    true,
+  );
+  await evaluate(`${secondEditable}.blur()`);
+  await call('get_elements', args);
+  assert.equal((await slots())[1].page, 2);
+
+  await evaluate(`(() => {
+    const invalidate = () => document.fonts.dispatchEvent(new Event('loadingdone'));
+    const observer = new MutationObserver(records => {
+      if (records.some(record => [...record.addedNodes].some(
+        node => node.matches?.('.workspace-text-box-measurement'),
+      ))) {
+        invalidate();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.slotRetryObserver = observer;
+    invalidate();
+  })()`);
+  try {
+    await call('get_elements', args, 'LAYOUT_SETTLEMENT_FAILED');
+  } finally {
+    await evaluate(`(() => {
+      window.slotRetryObserver.disconnect();
+    })()`);
+  }
+  assert.equal(
+    await evaluate(
+      "document.querySelector('.workspace-text-box-measurement') === null",
+    ),
+    true,
+    'Retry limit cancels the in-flight offscreen measurement',
+  );
+  await call('get_elements', args);
+  console.log(
+    'PASS: repeated supersession hits the retry limit and releases the MCP queue',
+  );
+
+  await call('create_document', {
+    documentScope: 'editor',
+    title: 'Background measurement handoff',
+  });
+  await evaluate(`(() => {
+    const observer = new MutationObserver(records => {
+      if (records.some(record => [...record.addedNodes].some(
+        node => node.matches?.('.workspace-text-box-measurement'),
+      ))) {
+        observer.disconnect();
+        const { selectedWorkspace, workspaces } = window._editor;
+        selectedWorkspace.value = workspaces.value.find(
+          workspace => workspace.id === ${JSON.stringify(doc.documentId)},
+        );
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  })()`);
+  await settings({ pageHeightCustom: 900 });
+  assert.deepEqual(
+    await evaluate(`({
+      selected: window._editor.selectedWorkspace.value.id,
+      measuring: !!document.querySelector('.workspace-text-box-measurement'),
+      pagesPublished: !!document.querySelector('.page-background .page'),
+    })`),
+    { selected: doc.documentId, measuring: false, pagesPublished: true },
+    'MCP waits for the selected editor to publish after a tab switch',
+  );
+
+  await settings({ footnoteNumbering: 'continuous' });
+  await assertLiveFastPath();
+  await evaluate('window.slotMeasurementObserver.disconnect()');
+  console.log(
+    `PASS: ten automatic pages reserve one asterisk, dense slots grow (**/***), superseded live trials preserve CKEditor, caret, and Undo; MCP retries after focused layout deferral; footnote-free and continuous live layout skip measurement. Measurement passes: sparse ${sparsePasses}, dense ${densePasses}, fallback ${fallbackPasses}`,
   );
 }

@@ -102,6 +102,7 @@
         :ref="setTemplateRef(`header-${pageIndex}`)"
         class="element-box"
         :element="header as RichTextBoxElement"
+        :layout-geometry="richTextGeometry(header as RichTextBoxElement)"
         :edit-mode="!printMode && header == selectedHeaderFooterElement"
         :metadata="metadata"
         token-scope="header"
@@ -504,6 +505,7 @@
           :edit-mode="!printMode"
           :element="element as RichTextBoxElement"
           :footnote-body="line.footnoteId !== null"
+          :layout-geometry="richTextGeometry(element as RichTextBoxElement)"
           :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
           :page-setup="score.pageSetup"
           :fonts="fonts"
@@ -624,6 +626,7 @@
         :ref="setTemplateRef(`footer-${pageIndex}`)"
         class="element-box"
         :element="footer as RichTextBoxElement"
+        :layout-geometry="richTextGeometry(footer as RichTextBoxElement)"
         :edit-mode="!printMode && footer == selectedHeaderFooterElement"
         :metadata="metadata"
         token-scope="footer"
@@ -765,6 +768,7 @@ const props = withDefaults(
     editorLanguage: string;
     zoom?: number;
     printMode?: boolean;
+    settledTextBoxes?: boolean;
     interaction?: ScorePageInteraction;
     overlays?: ScoreOverlaySettings;
   }>(),
@@ -1300,6 +1304,12 @@ function getAdjustmentRatioStyle(line: Line, page: Page) {
 const overlayDiagnosticsContext = computed(() =>
   LayoutService.createOverlayDiagnosticsContext(score.value.pageSetup),
 );
+
+function richTextGeometry({ width, height, y }: RichTextBoxElement) {
+  if (props.settledTextBoxes) {
+    return { width, height, y };
+  }
+}
 
 function isSelected(element: ScoreElement) {
   return props.interaction?.isSelected(element) ?? false;

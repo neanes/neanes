@@ -128,8 +128,11 @@ export class BrowserIpcService implements IIpcService {
 
   public async exportWorkspaceAsLatex(
     workspace: Workspace,
-    data: string,
+    data: string | null,
   ): Promise<ExportWorkspaceReplyArgs> {
+    if (data === null) {
+      return { success: false };
+    }
     const file = new Blob([data], { type: 'application/json' });
 
     const downloadFileName = getExportDownloadFileName(

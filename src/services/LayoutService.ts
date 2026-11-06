@@ -86,6 +86,7 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
+import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import {
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
@@ -411,10 +412,15 @@ interface AtomicMelismaLayout {
   potentiallyCenteredGroupEndNotes: Set<NoteElement>;
 }
 
+type LayoutInput = Pick<Workspace, 'score' | 'nextId'>;
+type LayoutOptions = LayoutDiagnosticsOptions & {
+  footnoteSlots?: ReadonlyMap<string, number>;
+};
+
 export class LayoutService {
   public static processPages(
-    workspace: Workspace,
-    options?: LayoutDiagnosticsOptions,
+    workspace: LayoutInput,
+    options?: LayoutOptions,
   ): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
@@ -447,6 +453,7 @@ export class LayoutService {
       references,
       pageSetup,
       score.paragraphStyles,
+      options?.footnoteSlots,
     );
     const footnotes = this.prepareFootnotes(
       workspace,
@@ -779,7 +786,7 @@ export class LayoutService {
   }
 
   private static prepareFootnotes(
-    workspace: Workspace,
+    workspace: LayoutInput,
     musicalContexts: Map<ScoreElement, MusicalContext>,
     references: ReturnType<typeof orderedFootnotes>,
     options?: LayoutDiagnosticsOptions,
@@ -2826,10 +2833,22 @@ export class LayoutService {
     );
   }
 
+  public static requiredFootnoteSlots(score: Score) {
+    return this.measureRichTextFootnoteMarkers(
+      orderedFootnotes(score),
+      score.pageSetup,
+      score.paragraphStyles,
+      undefined,
+      true,
+    );
+  }
+
   private static measureRichTextFootnoteMarkers(
     references: ReturnType<typeof orderedFootnotes>,
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
+    slots?: ReadonlyMap<string, number>,
+    useAssignedLabels = false,
   ) {
     const widths = new Map<string, number>();
     const richTextReferences = references.filter(
@@ -2847,10 +2866,7 @@ export class LayoutService {
     sample.style.visibility = 'hidden';
     document.body.append(sample);
     try {
-      const measure = (label: string) => {
-        sample.textContent = label;
-        return sample.getBoundingClientRect().width;
-      };
+      const measured = new Map<string, number>();
       const prefixWidthsByStyle = new Map<string, number[]>();
       for (const {
         footnote,
@@ -2865,18 +2881,46 @@ export class LayoutService {
           ),
         );
         const family = getFontFamilyWithFallback(style.fontFamily);
+        const styleKey = JSON.stringify([family, style.fontSize]);
+        const measure = (label: string) => {
+          const key = JSON.stringify([styleKey, label]);
+          let width = measured.get(key);
+          if (width === undefined) {
+            sample.textContent = label;
+            width = sample.getBoundingClientRect().width;
+            measured.set(key, width);
+          }
+          return width;
+        };
         sample.style.setProperty('--footnote-reference-family', family);
         sample.style.setProperty(
           '--footnote-reference-size',
           `${style.fontSize}px`,
         );
 
-        if (pageSetup.footnoteNumbering !== 'page' || number === null) {
+        if (
+          useAssignedLabels ||
+          pageSetup.footnoteNumbering !== 'page' ||
+          number === null
+        ) {
           widths.set(footnote.id, measure(marker));
           continue;
         }
 
-        const styleKey = JSON.stringify([family, style.fontSize]);
+        if (slots !== undefined) {
+          widths.set(
+            footnote.id,
+            slots.get(footnote.id) ??
+              measure(
+                automaticFootnoteMarker(
+                  pageSetup.firstFootnoteNumber,
+                  pageSetup,
+                ),
+              ),
+          );
+          continue;
+        }
+
         let prefixWidths = prefixWidthsByStyle.get(styleKey);
         if (prefixWidths === undefined) {
           prefixWidths = [];

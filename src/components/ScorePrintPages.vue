@@ -1,6 +1,7 @@
 <template>
   <div
     ref="root"
+    :id="styleScopeId"
     class="score-print-pages foreground-workspace"
     :style="{ '--zoom': 1, '--zoom-residue': 0 }"
     inert
@@ -34,6 +35,7 @@ import {
   nextTick,
   onBeforeUnmount,
   onMounted,
+  useId,
   useTemplateRef,
 } from 'vue';
 
@@ -53,17 +55,19 @@ const props = defineProps<{
   fonts: string[];
   editorLanguage: string;
   overlays: ScoreOverlaySettings;
+  measureTextOnly?: boolean;
 }>();
 const emit = defineEmits<{
   measured: [heights: TextBoxHeightMeasurement[]];
   failed: [error: Error];
 }>();
 const score = computed(() => props.workspace.score);
+const styleScopeId = `score-print-${useId()}`;
 const root = useTemplateRef<HTMLElement>('root');
 const paragraphStyleCss = computed(() =>
   buildRichTextParagraphStyleCss(
     score.value.paragraphStyles,
-    '.score-print-pages .ck-content',
+    `#${styleScopeId} .ck-content`,
   ),
 );
 const pageStyle = computed(() => ({
@@ -113,9 +117,11 @@ onMounted(async () => {
     await Promise.all([...pageContents].map((page) => page.whenReady()));
     await document.fonts.ready;
     await nextTick();
-    await Promise.all(
-      [...root.value!.querySelectorAll('img')].map((image) => image.decode()),
-    );
+    if (!props.measureTextOnly) {
+      await Promise.all(
+        [...root.value!.querySelectorAll('img')].map((image) => image.decode()),
+      );
+    }
     const heights = await Promise.all(
       [...pageContents].map((page) => page.measureTextBoxes()),
     );

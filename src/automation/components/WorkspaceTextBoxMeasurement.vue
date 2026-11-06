@@ -1,46 +1,63 @@
 <template>
   <div
+    :id="styleScopeId"
     class="workspace-text-box-measurement"
     :style="{ '--zoom': 1, '--zoom-residue': 1 }"
     inert
     aria-hidden="true"
   >
-    <component :is="'style'">{{ paragraphStyleCss }}</component>
-    <template v-for="(element, index) in elements" :key="index">
-      <TextBoxRich
-        v-if="element.elementType === ElementType.RichTextBox"
-        :ref="(instance) => setMeasurer(element, instance)"
-        :element="element as RichTextBoxElement"
-        :footnote-body="footnoteBodyElements.has(element)"
-        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
-        :page-setup="workspace.score.pageSetup"
-        :paragraph-styles="workspace.score.paragraphStyles"
-        :fonts="fonts"
-        :editor-language="editorLanguage"
-        :edit-mode="false"
-        :recalc="true"
-      />
-      <TextBox
-        v-else
-        :ref="(instance) => setMeasurer(element, instance)"
-        :element="element as TextBoxElement"
-        :page-setup="workspace.score.pageSetup"
-        :edit-mode="false"
-      />
+    <ScorePrintPages
+      v-if="templatePages"
+      :workspace="workspace"
+      :pages="templatePages"
+      :fonts="fonts"
+      :editor-language="editorLanguage"
+      :overlays="overlays"
+      measure-text-only
+      @measured="complete"
+      @failed="failed"
+    />
+    <template v-else>
+      <component :is="'style'">{{ paragraphStyleCss }}</component>
+      <template v-for="(element, index) in elements" :key="index">
+        <TextBoxRich
+          v-if="element.elementType === ElementType.RichTextBox"
+          :ref="(instance) => setMeasurer(element, instance)"
+          :element="element as RichTextBoxElement"
+          :footnote-body="footnoteBodyElements.has(element)"
+          :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
+          :page-setup="workspace.score.pageSetup"
+          :paragraph-styles="workspace.score.paragraphStyles"
+          :fonts="fonts"
+          :editor-language="editorLanguage"
+          :edit-mode="false"
+          :recalc="true"
+        />
+        <TextBox
+          v-else
+          :ref="(instance) => setMeasurer(element, instance)"
+          :element="element as TextBoxElement"
+          :page-setup="workspace.score.pageSetup"
+          :edit-mode="false"
+        />
+      </template>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, useId } from 'vue';
 
+import ScorePrintPages from '@/components/ScorePrintPages.vue';
 import TextBox from '@/components/TextBox.vue';
 import TextBoxRich from '@/components/TextBoxRich.vue';
+import { EditorPreferences } from '@/models/EditorPreferences';
 import {
   ElementType,
   type RichTextBoxElement,
   type TextBoxElement,
 } from '@/models/Element';
+import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
 import {
   getResizableTextBoxes,
@@ -51,6 +68,7 @@ import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCs
 
 const props = defineProps<{
   workspace: Workspace;
+  templatePages?: Page[];
   fonts: string[];
   editorLanguage: string;
 }>();
@@ -58,6 +76,8 @@ const emit = defineEmits<{
   complete: [heights: TextBoxHeightMeasurement[]];
   failed: [error: Error];
 }>();
+const overlays = new EditorPreferences();
+const styleScopeId = `text-box-measurement-${useId()}`;
 const elements = getResizableTextBoxes(props.workspace.score);
 const footnoteBodyElements = new Set(
   props.workspace.score.footnotes.flatMap((body) => body.staff.elements),
@@ -65,7 +85,7 @@ const footnoteBodyElements = new Set(
 const paragraphStyleCss = computed(() =>
   buildRichTextParagraphStyleCss(
     props.workspace.score.paragraphStyles,
-    '.workspace-text-box-measurement .ck-content',
+    `#${styleScopeId} .ck-content`,
   ),
 );
 const measurers = new Map<
@@ -90,7 +110,24 @@ function setMeasurer(element: MeasuredTextBox, instance: unknown) {
   }
 }
 
+function complete(heights: TextBoxHeightMeasurement[]) {
+  if (!disposed) {
+    clearTimeout(timer);
+    emit('complete', heights);
+  }
+}
+
+function failed(error: Error) {
+  if (!disposed) {
+    clearTimeout(timer);
+    emit('failed', error);
+  }
+}
+
 onMounted(async () => {
+  if (props.templatePages !== undefined) {
+    return;
+  }
   try {
     await nextTick();
     if (measurers.size !== elements.length) {
@@ -99,20 +136,11 @@ onMounted(async () => {
     const heights = await Promise.all(
       elements.map((element) => measurers.get(element)!.measureTextBox()),
     );
-    if (!disposed) {
-      clearTimeout(timer);
-      emit('complete', heights);
-    }
+    complete(heights);
   } catch (error) {
-    if (!disposed) {
-      clearTimeout(timer);
-      emit(
-        'failed',
-        error instanceof Error
-          ? error
-          : new Error('TEXT_BOX_MEASUREMENT_FAILED'),
-      );
-    }
+    failed(
+      error instanceof Error ? error : new Error('TEXT_BOX_MEASUREMENT_FAILED'),
+    );
   }
 });
 onBeforeUnmount(() => {

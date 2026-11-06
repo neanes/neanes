@@ -1057,6 +1057,7 @@ defineExpose({
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
   border: none !important;
+  --ck-editor-frame-border-radius: 0;
 }
 
 .rich-text-box-container {
@@ -1145,8 +1146,9 @@ defineExpose({
   overflow: visible;
 }
 
-:deep(.ck-editor__editable.ck-focused) {
+.rich-text-editor.ck.ck-editor__editable.ck-focused {
   border: none !important;
+  box-shadow: none;
   outline: var(--ck-focus-ring) !important;
 }
 

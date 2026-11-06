@@ -85,6 +85,10 @@ import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
 import { useFootnoteProperties } from '@/composables/useFootnoteProperties';
+import {
+  type LiveLayoutTrial,
+  useLiveWorkspaceLayout,
+} from '@/composables/useLiveWorkspaceLayout';
 import { useNeumeCombinations } from '@/composables/useNeumeCombinations';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import {
@@ -256,13 +260,9 @@ import {
   getRecoveryCandidateGroupRecoveryIds,
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
-import { detachLayout } from '@/services/rendering/detachLayout';
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
-import {
-  type LiveLayoutOutcome,
-  settleWorkspace,
-} from '@/services/rendering/settleWorkspace';
+import type { LiveLayoutOutcome } from '@/services/rendering/settleWorkspace';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { needsFootnoteSlotSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
@@ -516,16 +516,6 @@ const tabs = ref<Tab[]>([]);
 const contextMenuWorkspaceId = ref<string | null>(null);
 const scoreContextMenuTarget = ref<ScoreElement | null>(null);
 const scoreMenuPointerDownInside = ref(false);
-const { textBoxes: liveLayoutMeasurement } = useWorkspaceMeasurements();
-const liveTextBoxMeasurement = liveLayoutMeasurement.pending;
-let liveLayoutRequest = 0;
-let layoutWaitingForBlur = false;
-let liveLayoutDisposed = false;
-let liveSettlement: {
-  workspace: Workspace;
-  revision: number;
-  promise: Promise<LiveLayoutOutcome>;
-} | null = null;
 let displayedScore: Score | undefined;
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
@@ -781,6 +771,18 @@ const score = computed(() => {
 const settleFootnoteSlots = computed(() =>
   needsFootnoteSlotSettlement(score.value),
 );
+const { textBoxes: liveLayoutMeasurement } = useWorkspaceMeasurements();
+const liveTextBoxMeasurement = liveLayoutMeasurement.pending;
+const liveLayout = useLiveWorkspaceLayout({
+  selectedWorkspace: () => selectedWorkspace.value,
+  enabled: () => settleFootnoteSlots.value,
+  settle: runLiveSettlement,
+  measureTextBoxes: liveLayoutMeasurement.start,
+  cancelMeasurement: liveLayoutMeasurement.cancel,
+  onFailure: publishFirstLayoutFallback,
+});
+const { invalidate: invalidateLiveLayout, wait: awaitCurrentFootnoteLayout } =
+  liveLayout;
 
 const {
   updateLyricsLocked,
@@ -1751,8 +1753,7 @@ function onLayoutFontsChanged() {
   saveDebounced();
 }
 onBeforeUnmount(() => {
-  liveLayoutDisposed = true;
-  invalidateLiveLayout();
+  pendingLyricFocus?.abort();
   saveDebounced.cancel();
   document.fonts.removeEventListener('loadingdone', onLayoutFontsChanged);
   document.fonts.removeEventListener('loadingerror', onLayoutFontsChanged);
@@ -2470,9 +2471,12 @@ type LyricSelectionSnapshot = {
   startOffset: number;
   endOffset: number;
   wasFocused: boolean;
+  draft?: string;
 };
 
-function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
+function captureSelectedLyricSelection(
+  preserveDraft = false,
+): LyricSelectionSnapshot | null {
   const element = selectedLyrics.value;
 
   if (element == null) {
@@ -2496,6 +2500,7 @@ function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
     return null;
   }
 
+  const wasFocused = document.activeElement === htmlElement;
   return {
     element,
     startOffset: getTextOffset(
@@ -2504,7 +2509,8 @@ function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
       range.startOffset,
     ),
     endOffset: getTextOffset(htmlElement, range.endContainer, range.endOffset),
-    wasFocused: document.activeElement === htmlElement,
+    wasFocused,
+    draft: preserveDraft && wasFocused ? htmlElement.innerText : undefined,
   };
 }
 
@@ -2531,6 +2537,23 @@ function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
     return;
   }
 
+  if (lyricSelection.wasFocused) {
+    if (
+      !document.hasFocus() ||
+      (document.activeElement !== document.body &&
+        document.activeElement !== htmlElement)
+    ) {
+      return;
+    }
+    if (
+      lyricSelection.draft !== undefined &&
+      htmlElement.innerText !== lyricSelection.draft
+    ) {
+      htmlElement.innerText = lyricSelection.draft;
+    }
+    htmlElement.focus();
+  }
+
   const textLength = htmlElement.textContent?.length ?? 0;
   const clampedStartOffset = clamp(lyricSelection.startOffset, 0, textLength);
   const clampedEndOffset = clamp(lyricSelection.endOffset, 0, textLength);
@@ -2538,10 +2561,6 @@ function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
 
   setTextRangeBoundary(htmlElement, range, clampedStartOffset, true);
   setTextRangeBoundary(htmlElement, range, clampedEndOffset, false);
-
-  if (lyricSelection.wasFocused && document.hasFocus()) {
-    htmlElement.focus();
-  }
 
   selection.removeAllRanges();
   selection.addRange(range);
@@ -2889,7 +2908,7 @@ const selectedRichTextEditor = useActiveEditorForOwner(
 watch(
   selectedRichTextEditor,
   (editor, _, onCleanup) => {
-    if (layoutWaitingForBlur) {
+    if (liveLayout.waitingForBlur) {
       invalidateLiveLayout();
       saveDebounced();
     }
@@ -4474,6 +4493,10 @@ function onKeydownNeume(event: KeyboardEvent) {
 }
 
 function onKeydownLyrics(event: KeyboardEvent) {
+  if (pendingLyricFocus?.signal.aborted === false) {
+    return;
+  }
+
   let handled = false;
 
   // Do not allow enter key in lyrics
@@ -5424,31 +5447,84 @@ function getNextLyricBoxIndex() {
   return -1;
 }
 
+let pendingLyricFocus: AbortController | undefined;
+
 function moveToNextLyricBox(clearMelisma: boolean = false) {
   const nextIndex = getNextLyricBoxIndex();
 
   if (nextIndex >= 0) {
-    // If the lyrics for the last neume on the line have been updated to be so long
-    // that the neume is moved to the next line by processPages(), then focusLyrics()
-    // will fail if called on its own. This is because the order of events would
-    // be the following:
-    // focus next element => blur previous element => updateLyrics => processPages
-    // and finally the newly selected element would lose focus because processPages
-    // moves the element to the next line.
-
-    // To prevent this we, preemptively call updateLyrics and then use nextTick
-    // to only focus the next lyrics after the UI has been redrawn.
-
+    // Commit the current lyrics first. Repagination can remount the next
+    // lyric box, so resolve its component after the new layout is rendered.
+    const workspace = selectedWorkspace.value;
     const noteElement = selectedLyrics.value!;
+    const nextNote = activeElements.value[nextIndex];
 
-    const text = getLyricsComponent(
+    const currentBox = getLyricsComponent(
       activeElements.value.indexOf(noteElement),
-    )!.getInnerText();
+    )!;
+    const source = currentBox.htmlElement;
+    const initialFocus = document.activeElement;
+    updateLyrics(noteElement, currentBox.getInnerText(), clearMelisma);
 
-    updateLyrics(noteElement, text, clearMelisma);
+    const isCurrent = () =>
+      workspace === selectedWorkspace.value &&
+      selectedLyrics.value === noteElement;
+    const canMoveFocus = () =>
+      isCurrent() &&
+      document.hasFocus() &&
+      (document.activeElement === initialFocus ||
+        (document.activeElement === document.body && !source.isConnected));
+    const focusNext = () => {
+      const component = getLyricsComponentForElement(nextNote);
+      component?.focus(true);
+      return component !== undefined;
+    };
+    const revealNextPage = async () => {
+      const page = pages.value[nextNote.page - 1];
+      if (page !== undefined && !page.isVisible) {
+        page.isVisible = true;
+        await nextTick();
+      }
+    };
+    nextTick(async () => {
+      if (!canMoveFocus() || focusNext() || !settleFootnoteSlots.value) {
+        return;
+      }
+      await revealNextPage();
+      if (!canMoveFocus() || focusNext()) {
+        return;
+      }
 
-    nextTick(() => {
-      focusLyrics(nextIndex, true);
+      // The destination has no mounted box yet. Leave the old box so input
+      // cannot change the committed syllable while waiting for pagination.
+      source.blur();
+      const pending = new AbortController();
+      pendingLyricFocus?.abort();
+      pendingLyricFocus = pending;
+      const cancel = () => pending.abort();
+      const listenerOptions = { capture: true, signal: pending.signal };
+      window.addEventListener('focusin', cancel, listenerOptions);
+      window.addEventListener('pointerdown', cancel, listenerOptions);
+      window.addEventListener('blur', cancel, { signal: pending.signal });
+      const canFinish = () =>
+        !pending.signal.aborted && isCurrent() && document.hasFocus();
+      try {
+        const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
+          console.error,
+        );
+        if (outcome !== 'published' || !canFinish()) {
+          return;
+        }
+        await revealNextPage();
+        if (canFinish()) {
+          focusNext();
+        }
+      } finally {
+        pending.abort();
+        if (pendingLyricFocus === pending) {
+          pendingLyricFocus = undefined;
+        }
+      }
     });
 
     return true;
@@ -5516,109 +5592,12 @@ function layoutOptions() {
   return { collectDiagnostics: shouldCollectLayoutDiagnostics.value };
 }
 
-function invalidateLiveLayout() {
-  liveLayoutRequest++;
-  liveSettlement = null;
-  layoutWaitingForBlur = false;
-  liveLayoutMeasurement.cancel();
-}
-
-function settleSelectedFootnoteLayout(workspace: Workspace) {
-  const source = toRaw(workspace);
-  const score = source.score;
-  const revision = source.contentRevision;
-  if (
-    liveSettlement?.workspace === source &&
-    liveSettlement.revision === revision
-  ) {
-    return liveSettlement.promise;
-  }
-  invalidateLiveLayout();
-  const promise = runLiveSettlement(workspace).catch((error: unknown) => {
-    if (liveSettlement?.promise === promise) {
-      liveSettlement = null;
-      publishFirstLayoutFallback(source, score);
-    }
-    throw error;
-  });
-  liveSettlement = { workspace: source, revision, promise };
-  return promise;
-}
-
-async function awaitCurrentFootnoteLayout(
-  workspace: Workspace,
-): Promise<LiveLayoutOutcome> {
-  const source = toRaw(workspace);
-  const score = source.score;
-  // A mutation can settle before and after applying edits. Keep each wait
-  // below half of the MCP host's 60-second operation timeout.
-  const failSettlement = (message: string) => {
-    if (liveSettlement?.workspace === source && source.score === score) {
-      invalidateLiveLayout();
-      publishFirstLayoutFallback(source, score);
-    }
-    return new Error(`LAYOUT_SETTLEMENT_FAILED: ${message}`);
-  };
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const deadline = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      reject(failSettlement('The layout did not settle within 20 seconds.'));
-    }, 20_000);
-  });
-  let attempts = 0;
-  try {
-    while (
-      !liveLayoutDisposed &&
-      toRaw(selectedWorkspace.value) === source &&
-      source.score === score &&
-      settleFootnoteSlots.value
-    ) {
-      if (attempts++ === 12) {
-        throw failSettlement('The layout was superseded too many times.');
-      }
-      const revision = source.contentRevision;
-      const pending = settleSelectedFootnoteLayout(workspace);
-      const outcome = await Promise.race([pending, deadline]);
-      // Include the DOM update in the check. A newer request can supersede a
-      // published result before the caller gets to read the rendered pages.
-      await nextTick();
-      if (
-        outcome !== 'superseded' &&
-        pending === liveSettlement?.promise &&
-        toRaw(selectedWorkspace.value) === source &&
-        source.score === score &&
-        source.contentRevision === revision
-      ) {
-        return outcome;
-      }
-      if (pending === liveSettlement?.promise) {
-        invalidateLiveLayout();
-      }
-    }
-    return 'superseded';
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function runLiveSettlement(
   workspace: Workspace,
+  { isCurrent, measure }: LiveLayoutTrial,
 ): Promise<LiveLayoutOutcome> {
-  const request = liveLayoutRequest;
   const source = toRaw(workspace);
-  const { score, contentRevision } = source;
-  const isCurrent = () =>
-    request === liveLayoutRequest &&
-    source === toRaw(selectedWorkspace.value) &&
-    score === source.score &&
-    contentRevision === source.contentRevision;
-
-  // Let canceled measurement components unmount before starting another.
-  await nextTick();
-  await document.fonts.ready;
-  if (!isCurrent()) {
-    return 'superseded';
-  }
+  const { score } = source;
   const owner = selectedRichTextBoxElement.value;
   // Include in-progress typing without committing it into score history.
   const liveContent = owner == null ? {} : getPendingRichTextBoxUpdates(owner);
@@ -5627,114 +5606,93 @@ async function runLiveSettlement(
     isActiveEditorForOwner(owner) &&
     hasPendingFootnotePaste(owner, liveContent)
   ) {
-    layoutWaitingForBlur = true;
     return 'deferred';
   }
-  const detached = detachLayout(source);
   const rawOwner = owner == null ? null : toRaw(owner);
-  const trialOwner =
-    rawOwner == null
-      ? undefined
-      : (detached.copies.get(rawOwner) as RichTextBoxElement | undefined);
   const contentKeys = RICH_TEXT_BOX_CONTENT_KEYS.filter(
     (key) => liveContent[key] !== undefined,
   );
-  if (trialOwner !== undefined) {
-    for (const key of contentKeys) {
-      trialOwner[key] = liveContent[key] ?? trialOwner[key];
-    }
-  }
-  try {
-    const options = layoutOptions();
-    const result = await settleWorkspace(
-      detached.workspace,
-      async (templatePages) => {
-        await nextTick();
-        if (!isCurrent()) {
-          throw new Error('LAYOUT_MEASUREMENT_STALE');
-        }
-        return liveLayoutMeasurement.start(detached.workspace, templatePages);
-      },
-      options,
-    );
-    if (!isCurrent()) {
-      return 'superseded';
-    }
-
-    const activeBox = selectedRichTextBoxElement.value;
-    if (
-      !printMode.value &&
-      activeBox != null &&
-      isActiveEditorForOwner(activeBox)
-    ) {
-      const activeRaw = toRaw(activeBox);
-      const trialBox = detached.copies.get(activeRaw);
-      // The live component is keyed under its page and line. Defer moves
-      // until blur so publishing cannot destroy the active CKEditor.
-      const pageIndex = activeRaw.page - 1;
-      const lineIndex =
-        pages.value[pageIndex]?.allLines.findIndex((line) =>
-          line.elements.some((element) => toRaw(element) === activeRaw),
-        ) ?? -1;
-      if (
-        score.headersAndFooters.includes(activeRaw) ||
-        (lineIndex >= 0 &&
-          (trialBox === undefined ||
-            !result.pages[pageIndex]?.allLines[lineIndex]?.elements.includes(
-              trialBox,
-            )))
-      ) {
-        layoutWaitingForBlur = true;
-        return 'deferred';
+  const options = layoutOptions();
+  const result = await measure(options, (copies) => {
+    const trialOwner = rawOwner == null ? undefined : copies.get(rawOwner);
+    if (trialOwner instanceof RichTextBoxElement) {
+      for (const key of contentKeys) {
+        trialOwner[key] = liveContent[key] ?? trialOwner[key];
       }
     }
-
-    const lyricSelection = captureSelectedLyricSelection();
-    const resized = detached.applyHeights();
-    // Replay only the settled pass on the original elements. Preserve their
-    // identities and compare update flags with the last published geometry.
-    const previousContent =
-      rawOwner == null ? [] : contentKeys.map((key) => rawOwner[key]);
-    let processedPages: Page[];
-    try {
-      if (rawOwner !== null && trialOwner !== undefined) {
-        for (const key of contentKeys) {
-          rawOwner[key] = trialOwner[key];
-        }
-      }
-      processedPages = LayoutService.processPages(source, {
-        ...options,
-        footnoteSlots: result.footnoteSlots,
-      });
-    } finally {
-      if (rawOwner !== null) {
-        contentKeys.forEach((key, index) => {
-          rawOwner[key] = previousContent[index];
-        });
-      }
-    }
-    for (const box of resized) {
-      box.updated = true;
-    }
-    const firstLayout = displayedScore !== score;
-    publishLayout(processedPages, activeBox, lyricSelection);
-    if (firstLayout) {
-      await nextTick();
-      if (isCurrent()) {
-        pageBackgroundRef.value?.scrollTo(
-          workspace.scrollLeft,
-          workspace.scrollTop,
-        );
-        calculatePageNumber();
-      }
-    }
-    return 'published';
-  } catch (error) {
-    if (isCurrent()) {
-      throw error;
-    }
+  });
+  if (!isCurrent()) {
     return 'superseded';
   }
+
+  const activeBox = selectedRichTextBoxElement.value;
+  if (
+    !printMode.value &&
+    activeBox != null &&
+    isActiveEditorForOwner(activeBox)
+  ) {
+    const activeRaw = toRaw(activeBox);
+    const trialBox = result.copies.get(activeRaw);
+    // The live component is keyed under its page and line. Defer moves
+    // until blur so publishing cannot destroy the active CKEditor.
+    const pageIndex = activeRaw.page - 1;
+    const lineIndex =
+      pages.value[pageIndex]?.allLines.findIndex((line) =>
+        line.elements.some((element) => toRaw(element) === activeRaw),
+      ) ?? -1;
+    if (
+      score.headersAndFooters.includes(activeRaw) ||
+      (lineIndex >= 0 &&
+        (trialBox === undefined ||
+          !result.pages[pageIndex]?.allLines[lineIndex]?.elements.includes(
+            trialBox,
+          )))
+    ) {
+      return 'deferred';
+    }
+  }
+
+  const lyricSelection = captureSelectedLyricSelection(true);
+  const resized = result.applyHeights();
+  // Replay only the settled pass on the original elements. Preserve their
+  // identities and compare update flags with the last published geometry.
+  const trialOwner = rawOwner == null ? undefined : result.copies.get(rawOwner);
+  const previousContent =
+    rawOwner == null ? [] : contentKeys.map((key) => rawOwner[key]);
+  let processedPages: Page[];
+  try {
+    if (rawOwner !== null && trialOwner instanceof RichTextBoxElement) {
+      for (const key of contentKeys) {
+        rawOwner[key] = trialOwner[key];
+      }
+    }
+    processedPages = LayoutService.processPages(source, {
+      ...options,
+      footnoteSlots: result.footnoteSlots,
+    });
+  } finally {
+    if (rawOwner !== null) {
+      contentKeys.forEach((key, index) => {
+        rawOwner[key] = previousContent[index];
+      });
+    }
+  }
+  for (const box of resized) {
+    box.updated = true;
+  }
+  const firstLayout = displayedScore !== score;
+  publishLayout(processedPages, activeBox, lyricSelection);
+  if (firstLayout) {
+    await nextTick();
+    if (isCurrent()) {
+      pageBackgroundRef.value?.scrollTo(
+        workspace.scrollLeft,
+        workspace.scrollTop,
+      );
+      calculatePageNumber();
+    }
+  }
+  return 'published';
 }
 
 function save() {
@@ -5744,9 +5702,7 @@ function save() {
       displayedScore = undefined;
       pages.value = [];
     }
-    void settleSelectedFootnoteLayout(selectedWorkspace.value).catch(
-      console.error,
-    );
+    void liveLayout.start(selectedWorkspace.value).catch(console.error);
   } else {
     publishSynchronousLayout(toRaw(selectedWorkspace.value));
   }
@@ -5798,6 +5754,12 @@ function publishLayout(
   processedPages.forEach(
     (x, index) => (x.isVisible = visiblePages.includes(index)),
   );
+  if (lyricSelection?.draft !== undefined) {
+    const lyricPage = processedPages[lyricSelection.element.page - 1];
+    if (lyricPage !== undefined) {
+      lyricPage.isVisible = true;
+    }
+  }
 
   // Only re-render elements that are visible and that have been updated by processPages
   processedPages

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
 import path from 'node:path';
 
 import { eventually } from './smokePolling.mjs';
@@ -638,7 +639,7 @@ export async function checkFootnoteColdGutter(call, evaluate, directory) {
     'PASS: 13 page-restarted symbol footnotes have identical cold/warm gutters, rich-text heights, and exports',
   );
 }
-export async function checkSparseAndDenseSlots(call, evaluate, bringToFront) {
+export async function checkSparseAndDenseSlots(call, evaluate) {
   const doc = await call('create_document', {
     documentScope: 'editor',
     title: 'Sparse and dense asterisk slots',
@@ -842,7 +843,6 @@ export async function checkSparseAndDenseSlots(call, evaluate, bringToFront) {
     `Fallback passes: ${fallbackPasses}`,
   );
 
-  await bringToFront();
   const editable =
     "document.querySelector('.page .line:not([data-footnote-id]) .ck-content.single')";
   await eventually(async () => {
@@ -965,20 +965,34 @@ export async function checkSparseAndDenseSlots(call, evaluate, bringToFront) {
   await evaluate(`${editable}.blur()`);
 
   await call('get_elements', args);
-  const secondEditable =
-    "document.querySelectorAll('.page .line:not([data-footnote-id]) .ck-content.single')[1]";
+  const secondBox =
+    "window._editor.score.value.staff.elements.filter(element => element.elementType === 'RichTextBox')[1]";
+  const secondEditable = `document.getElementById('element-' + ${secondBox}.id)?.querySelector('.ck-content.single')`;
   await eventually(async () => {
     assert.equal(
       await evaluate(`${secondEditable}?.ckeditorInstance?.state`),
       'ready',
     );
+    assert.equal(await evaluate('document.hasFocus()'), true);
   });
+  assert.equal((await slots())[1].page, 1);
   await evaluate(`(() => {
     const root = ${secondEditable};
     root.click();
     const editor = root.ckeditorInstance;
     editor.editing.view.focus();
     window.deferredSlotEditor = editor;
+  })()`);
+  await eventually(async () => {
+    assert.equal(
+      await evaluate(`document.activeElement === ${secondEditable} &&
+        window.deferredSlotEditor.ui.focusTracker.isFocused &&
+        window._editor.selectedElement.value === ${secondBox}`),
+      true,
+    );
+  });
+  await evaluate(`(() => {
+    const editor = window.deferredSlotEditor;
     editor.model.change(writer => {
       for (let i = 0; i < 4; i++) {
         const paragraph = writer.createElement('paragraph');
@@ -995,7 +1009,19 @@ export async function checkSparseAndDenseSlots(call, evaluate, bringToFront) {
     ),
     true,
   );
-  await evaluate(`${secondEditable}.blur()`);
+  // Transfer focus outside CKEditor so its focus tracker observes the exit.
+  await evaluate(
+    "document.querySelector('.main-toolbar button:not(:disabled)').focus()",
+  );
+  await eventually(async () =>
+    assert.equal(
+      await evaluate(
+        `${secondEditable}?.ckeditorInstance === window.deferredSlotEditor &&
+          window.deferredSlotEditor.ui.focusTracker.isFocused`,
+      ),
+      false,
+    ),
+  );
   await call('get_elements', args);
   assert.equal((await slots())[1].page, 2);
 
@@ -1024,7 +1050,7 @@ export async function checkSparseAndDenseSlots(call, evaluate, bringToFront) {
       "document.querySelector('.workspace-text-box-measurement') === null",
     ),
     true,
-    'Retry limit cancels the in-flight offscreen measurement',
+    'Superseded attempts leave no offscreen measurement mounted',
   );
   await call('get_elements', args);
   console.log(
@@ -1062,8 +1088,128 @@ export async function checkSparseAndDenseSlots(call, evaluate, bringToFront) {
 
   await settings({ footnoteNumbering: 'continuous' });
   await assertLiveFastPath();
+  await settings({ footnoteNumbering: 'page' });
+  await edit([
+    {
+      action: 'insert',
+      index: 0,
+      elements: [{ elementType: 'Note' }, { elementType: 'Note' }],
+    },
+  ]);
+  await call('get_elements', args);
+  const lyricBox = (index) =>
+    `document.getElementById('element-' + window._editor.score.value.staff.elements[${index}].id)?.querySelector('.lyrics')`;
+  await eventually(async () =>
+    assert.equal(await evaluate(`!!${lyricBox(0)} && !!${lyricBox(1)}`), true),
+  );
+  assert.equal(
+    await evaluate(`new Promise(resolve => {
+      const first = ${lyricBox(0)};
+      const second = ${lyricBox(1)};
+      first.focus();
+      document.execCommand('insertText', false, 'first');
+      const observer = new MutationObserver(records => {
+        if (!records.some(record => [...record.addedNodes].some(
+          node => node.matches?.('.workspace-text-box-measurement'),
+        ))) return;
+        observer.disconnect();
+        const advanced = document.activeElement === second;
+        if (advanced) document.execCommand('insertText', false, 'second');
+        resolve(advanced);
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+      first.dispatchEvent(new KeyboardEvent('keydown', {
+        code: 'Space', bubbles: true, cancelable: true,
+      }));
+    })`),
+    true,
+    'Lyric entry advances before offscreen measurement completes',
+  );
+  await call('get_elements', args);
+  assert.deepEqual(
+    await evaluate(`[${lyricBox(0)}.innerText, ${lyricBox(1)}.innerText]`),
+    ['first', 'second'],
+    'Publishing the layout preserves the next syllable being typed',
+  );
+  await evaluate(`${lyricBox(1)}.blur()`);
+  await call('get_elements', args);
+  await checkLiveMeasurementTimeout(call, evaluate, args);
   await evaluate('window.slotMeasurementObserver.disconnect()');
   console.log(
     `PASS: ten automatic pages reserve one asterisk, dense slots grow (**/***), superseded live trials preserve CKEditor, caret, and Undo; MCP retries after focused layout deferral; footnote-free and continuous live layout skip measurement. Measurement passes: sparse ${sparsePasses}, dense ${densePasses}, fallback ${fallbackPasses}`,
+  );
+}
+
+async function checkLiveMeasurementTimeout(call, evaluate, args) {
+  const font = await readFile(
+    new URL(
+      '../../../src/assets/fonts/SourceSerif4-Regular.otf',
+      import.meta.url,
+    ),
+  );
+  let fontResponse;
+  const server = createServer((_request, response) => {
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Content-Type', 'font/otf');
+    fontResponse = response;
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  try {
+    await evaluate(`(() => {
+      const face = new FontFace('LiveLayoutPendingFont', 'url(http://127.0.0.1:${server.address().port}/pending.otf)');
+      const state = window.slotTimeout = { face };
+      state.observer = new MutationObserver(records => {
+        const measurement = records.flatMap(record => [...record.addedNodes])
+          .find(node => node.matches?.('.workspace-text-box-measurement'));
+        if (!measurement) return;
+        state.observer.disconnect();
+        state.measurement = measurement;
+        document.fonts.add(face);
+        void face.load().catch(() => {});
+      });
+      state.observer.observe(document.body, { childList: true, subtree: true });
+      // Advance the revision so the read starts a new trial without scheduling
+      // a debounced save that would supersede it.
+      const workspace = window._editor.selectedWorkspace.value;
+      state.lyricsLocked = workspace.score.staff.lyrics.locked;
+      workspace.updateLyricsLocked(!state.lyricsLocked);
+    })()`);
+    await Promise.all([
+      call('get_elements', args, 'LAYOUT_SETTLEMENT_FAILED'),
+      eventually(async () => {
+        assert.ok(fontResponse);
+        assert.equal(
+          await evaluate(`window.slotTimeout.measurement?.isConnected &&
+            window.slotTimeout.face.status === 'loading'`),
+          true,
+          'A mounted measurement is waiting for the held font response',
+        );
+      }),
+    ]);
+    assert.deepEqual(
+      await evaluate(`({
+        mounted: window.slotTimeout.measurement.isConnected,
+        fontStatus: window.slotTimeout.face.status,
+      })`),
+      { mounted: false, fontStatus: 'loading' },
+      'The request deadline removes the measurement while the font is still pending',
+    );
+  } finally {
+    fontResponse?.end(font);
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+    await evaluate(`(async () => {
+      const state = window.slotTimeout;
+      if (!state) return;
+      state.observer.disconnect();
+      if (state.measurement) await state.face.loaded.catch(() => {});
+      document.fonts.delete(state.face);
+      window._editor.selectedWorkspace.value.updateLyricsLocked(state.lyricsLocked);
+      delete window.slotTimeout;
+    })()`);
+  }
+  await call('get_elements', args);
+  console.log(
+    'PASS: live layout timeout removes pending measurement and allows retry',
   );
 }

@@ -405,7 +405,6 @@ defineExpose({
     var(--footnote-reference-family);
   font-variant-position: super;
   height: 1em;
-  vertical-align: text-bottom;
   text-align: left;
   letter-spacing: normal;
   word-spacing: normal;

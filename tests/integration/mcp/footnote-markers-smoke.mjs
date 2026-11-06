@@ -930,16 +930,13 @@ try {
     socket,
     directory: app.directory,
   });
-  await checkSparseAndDenseSlots(call, evaluate, async () => {
-    await main(`(() => {
-      const { BrowserWindow } = process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron');
-      const window = BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes('/index.html'));
-      window.show();
-      window.focus();
-      window.webContents.focus();
-    })()`);
-    await socket.send('Page.bringToFront');
-  });
+  // Keep the inspected page focused even if macOS activates another window.
+  await socket.send('Emulation.setFocusEmulationEnabled', { enabled: true });
+  try {
+    await checkSparseAndDenseSlots(call, evaluate);
+  } finally {
+    await socket.send('Emulation.setFocusEmulationEnabled', { enabled: false });
+  }
   await checkFootnoteSettlement(call, evaluate, app.directory);
   await checkFootnoteColdGutter(call, evaluate, app.directory);
   console.log(

@@ -5,6 +5,7 @@ const scenarios = [
   'bridge-protocol',
   'message-size',
   'headless-launch',
+  'macos-reopen',
   'agent-access',
   'shutdown',
   'metadata',

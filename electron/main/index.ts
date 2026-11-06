@@ -1,5 +1,6 @@
 'use strict';
 
+import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 
 import type { Input, MenuItemConstructorOptions } from 'electron';
@@ -259,7 +260,7 @@ let loaded = false;
 
 const imageExportConflict = { choice: null as OnConflictChoice | null };
 
-let darwinPath: string | null = null;
+const pendingWindowFiles = filesFromArgs(process.argv);
 let autoUpdaterInitialized = false;
 
 // Scheme must be registered before the app is ready
@@ -563,32 +564,25 @@ async function openFile(filePath: string) {
   };
 }
 
-async function openFileFromArgs(argv: string[]) {
-  const result: FileMenuOpenScoreArgs[] = [];
-
+function filesFromArgs(argv: string[]) {
   // Check whether a file was passed to the app.
   // See https://github.com/electron/electron/issues/4690#issuecomment-422617581
   // for why the special case for isPackaged is needed.
-  if (app.isPackaged) {
-    // workaround for missing executable argument)
-    argv.unshift('');
-  }
+  return argv
+    .slice(app.isPackaged ? 1 : 2)
+    .filter((argument) => !argument.startsWith('--'));
+}
 
-  // parameters is now an array containing any files/folders that your OS will pass to your application
-  const parameters = argv.slice(2);
+async function openFiles(filePaths: string[]) {
+  const result: FileMenuOpenScoreArgs[] = [];
 
-  for (const parameter of parameters) {
-    // Ignore CLI paramters
-    if (parameter.startsWith('--')) {
-      continue;
-    }
-
+  for (const filePath of filePaths) {
     try {
-      const openedFile = await openFile(parameter);
+      const openedFile = await openFile(filePath);
 
       result.push({
         data: openedFile.data,
-        filePath: parameter,
+        filePath,
         sourceMtimeMs: openedFile.sourceMtimeMs,
         sourceSize: openedFile.sourceSize,
         success: true,
@@ -1509,7 +1503,7 @@ async function openScoresFromDialog() {
         continue;
       }
       if (!win) {
-        darwinPath = workspace.filePath;
+        pendingWindowFiles.push(workspace.filePath);
         createWindow();
       } else {
         win.webContents.send(IpcMainChannels.FileMenuOpenScore, workspace);
@@ -1878,7 +1872,7 @@ function createMenu() {
                   const openedFile = await openFile(x);
 
                   if (!win) {
-                    darwinPath = x;
+                    pendingWindowFiles.push(x);
                     createWindow();
                   } else {
                     win?.webContents.send(IpcMainChannels.FileMenuOpenScore, {
@@ -2550,7 +2544,7 @@ async function createWindow() {
 
     win = null;
     loaded = false;
-    darwinPath = null;
+    pendingWindowFiles.length = 0;
     clearFakeDownloadProgressTimer();
   });
 
@@ -2861,22 +2855,9 @@ ipcMain.handle(
   },
 );
 
-ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, async () => {
-  if (isMac && darwinPath != null) {
-    const openedFile = await openFile(darwinPath);
-    const result = {
-      data: openedFile.data,
-      filePath: darwinPath,
-      sourceMtimeMs: openedFile.sourceMtimeMs,
-      sourceSize: openedFile.sourceSize,
-      success: true,
-    };
-
-    return { files: [result], silent: false };
-  } else {
-    return await openFileFromArgs(process.argv);
-  }
-});
+ipcMain.handle(IpcRendererChannels.OpenWorkspaceFromArgv, () =>
+  openFiles(pendingWindowFiles.splice(0)),
+);
 
 ipcMain.handle(
   IpcRendererChannels.Paste,
@@ -2931,6 +2912,23 @@ ipcMain.handle(
   },
 );
 
+function launchEditorFromMcp(filePath?: string) {
+  // Launch Services can route a Finder open to the hidden worker because it
+  // shares the editor's app bundle. Start the executable directly so the
+  // interactive instance can handle it through the normal single-instance lock.
+  const child = spawn(
+    process.execPath,
+    [
+      ...(app.isPackaged ? [] : [app.getAppPath()]),
+      ...(process.argv.includes('--no-update') ? ['--no-update'] : []),
+      ...(filePath === undefined ? [] : [filePath]),
+    ],
+    { detached: true, stdio: 'ignore' },
+  );
+  child.on('error', console.error);
+  child.unref();
+}
+
 // macOS-only
 // This is called in two cases:
 // 1. The app is already running and the user opens a file
@@ -2940,12 +2938,18 @@ ipcMain.handle(
 app.on('open-file', async (event, path) => {
   if (headless) {
     event.preventDefault();
+    launchEditorFromMcp(path);
+    return;
+  }
+  if (!app.isReady()) {
+    pendingWindowFiles.push(path);
     return;
   }
   await editorOperationQueue.run(async () => {
-    darwinPath = path;
-
     try {
+      if (!loaded) {
+        pendingWindowFiles.push(path);
+      }
       if (!win) {
         createWindow();
       } else if (loaded) {
@@ -2987,9 +2991,16 @@ app.on(
       return;
     }
     await editorOperationQueue.run(async () => {
-      const results = await openFileFromArgs(
-        (additionalData as SecondInstanceData).argv,
-      );
+      const files = filesFromArgs((additionalData as SecondInstanceData).argv);
+      if (isMac && !win) {
+        // The replacement renderer reads these arguments during startup,
+        // before it is ready to receive file-open events.
+        pendingWindowFiles.push(...files);
+        await createWindow();
+        app.focus({ steal: true });
+        return;
+      }
+      const results = await openFiles(files);
 
       if (loaded) {
         results.files
@@ -2998,6 +3009,12 @@ app.on(
             win?.webContents.send(IpcMainChannels.FileMenuOpenScore, x),
           );
 
+        if (isMac) {
+          if (win?.isMinimized()) {
+            win.restore();
+          }
+          app.focus({ steal: true });
+        }
         win?.show();
       } else {
         win?.webContents.once('did-finish-load', () => {
@@ -3039,7 +3056,9 @@ app.on('will-quit', (event) => {
   }
 });
 
-if (!headless) {
+if (headless && isMac) {
+  app.on('activate', () => launchEditorFromMcp());
+} else if (!headless) {
   app.on('activate', () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -3080,23 +3099,25 @@ const automation = installAutomation({
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  // Load the persisted store first so the user's chosen language (if any)
-  // is honored when we initialize i18next and build the native menu.
-  await loadStore();
+  await editorOperationQueue.run(async () => {
+    // Load the persisted store first so the user's chosen language (if any)
+    // is honored when we initialize i18next and build the native menu.
+    await loadStore();
 
-  await initializeI18n({
-    lng: resolveLanguagePreference(store.language, app.getLocale()),
-  });
+    await initializeI18n({
+      lng: resolveLanguagePreference(store.language, app.getLocale()),
+    });
 
-  if (headless) {
+    if (headless) {
+      await automation.start();
+      return;
+    }
+    setupAutoUpdater();
     await automation.start();
-    return;
-  }
-  setupAutoUpdater();
-  await automation.start();
-  if (!win) {
-    createWindow();
-  }
+    if (!win) {
+      await createWindow();
+    }
+  });
 });
 
 // Exit cleanly on request from parent process in development mode.

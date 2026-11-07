@@ -12,6 +12,7 @@ const scenarios = [
   'text-search',
   'element-copy',
   'rich-text-update',
+  'inline-rich-text-fill-width',
   'preview',
 ];
 const requested = process.argv.slice(2);

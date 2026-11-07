@@ -519,7 +519,6 @@ export class LayoutService {
           pageSetup,
           neumeHeight,
           score.paragraphStyles,
-          defaultLyricsFontCss,
         );
       }
     }
@@ -586,7 +585,6 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
             score.paragraphStyles,
-            defaultLyricsFontCss,
           );
 
           this.addLyricReservation(
@@ -627,12 +625,8 @@ export class LayoutService {
 
             richTextBoxElement.oligonMidpoint = oligonMidpoint;
 
-            elementWidthPx = isFillWidthRichTextBox
-              ? this.getFillWidthPlaceholderWidth(
-                  richTextBoxElement,
-                  defaultLyricsFontCss,
-                )
-              : richTextBoxElement.customWidth!;
+            // Fill-width rich text takes the remaining space after line breaking.
+            elementWidthPx = richTextBoxElement.customWidth ?? 0;
             richTextBoxElement.height = neumeHeight;
           } else {
             elementWidthPx = pageSetup.innerPageWidth;
@@ -1820,9 +1814,8 @@ export class LayoutService {
           lastLineHeightPx;
         element.width = position.width;
 
-        // Fill-width elements were encoded using their intrinsic placeholder
-        // width in Phase 1. Now that line breaking is done, compute their
-        // actual width from the next positioned item or line end.
+        // After line breaking, extend fill-width boxes to the next positioned
+        // item or the line end.
         if (this.isFillWidthElement(element)) {
           let fillWidth: number | null = null;
           for (
@@ -1834,17 +1827,25 @@ export class LayoutService {
             if (nextPos.line > position.line) {
               break;
             }
-            if (nextPos.line === position.line) {
-              fillWidth = nextPos.xOffset - position.xOffset;
-              break;
+            const nextItem = paragraph[nextPos.item];
+            if (
+              element.elementType === ElementType.RichTextBox &&
+              !('element' in nextItem)
+            ) {
+              continue;
             }
+            fillWidth = nextPos.xOffset - position.xOffset;
+            break;
           }
           if (fillWidth == null) {
             const lineWidth =
               resolvedMargins.contentWidth - currentLine.indentation;
             fillWidth = lineWidth - position.xOffset;
           }
-          element.width = fillWidth;
+          element.width =
+            element.elementType === ElementType.RichTextBox
+              ? Math.max(0, fillWidth)
+              : fillWidth;
         }
 
         element.line = page.lines.length;
@@ -2301,60 +2302,6 @@ export class LayoutService {
       maxWidth,
       1,
     );
-  }
-
-  private static measureRichTextWidth(
-    html: string,
-    defaultLyricsFontCss: string,
-  ) {
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    const plainText = template.content.textContent ?? '';
-
-    return this.measurePlainTextWidth(plainText, defaultLyricsFontCss);
-  }
-
-  private static getFillWidthPlaceholderWidth(
-    element: ScoreElement,
-    defaultLyricsFontCss: string,
-  ) {
-    if (
-      element.elementType === ElementType.TextBox &&
-      (element as TextBoxElement).inline
-    ) {
-      const textBoxElement = element as TextBoxElement;
-      return Math.max(
-        this.measurePlainTextWidth(
-          textBoxElement.content,
-          textBoxElement.computedFont,
-          textBoxElement.computedFontVariantCaps,
-        ),
-        this.measurePlainTextWidth(
-          textBoxElement.contentBottom,
-          textBoxElement.computedFont,
-          textBoxElement.computedFontVariantCaps,
-        ),
-      );
-    }
-
-    if (
-      element.elementType === ElementType.RichTextBox &&
-      (element as RichTextBoxElement).inline
-    ) {
-      const richTextBoxElement = element as RichTextBoxElement;
-      return Math.max(
-        this.measureRichTextWidth(
-          richTextBoxElement.content,
-          defaultLyricsFontCss,
-        ),
-        this.measureRichTextWidth(
-          richTextBoxElement.contentBottom,
-          defaultLyricsFontCss,
-        ),
-      );
-    }
-
-    return this.measurePlainTextWidth('', defaultLyricsFontCss);
   }
 
   private static addLyricReservation(
@@ -5263,7 +5210,6 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
     paragraphStyles: ParagraphStyle[],
-    defaultLyricsFontCss: string,
   ) {
     // Currently headers and footers may only contain a single text box.
     // It may be a rich textbox, but we don't need to do any
@@ -5279,7 +5225,6 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
         paragraphStyles,
-        defaultLyricsFontCss,
       );
     } else if (
       container.elements.length > 0 &&
@@ -5319,7 +5264,6 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
     paragraphStyles: ParagraphStyle[],
-    defaultLyricsFontCss: string,
   ) {
     let elementWidthPx = 0;
     const resolvedParagraphStyle = resolveParagraphStyle(
@@ -5342,15 +5286,7 @@ export class LayoutService {
     textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
 
     if (textBoxElement.inline) {
-      if (textBoxElement.fillWidth) {
-        // Width is computed in Phase 2 after line breaking. During Phase 1 we
-        // use the textbox's intrinsic no-wrap width so the line breaker can
-        // move it to the next line when the remaining space is too small.
-        elementWidthPx = this.getFillWidthPlaceholderWidth(
-          textBoxElement,
-          defaultLyricsFontCss,
-        );
-      } else if (textBoxElement.customWidth != null) {
+      if (!textBoxElement.fillWidth && textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
       } else {
         elementWidthPx = Math.max(

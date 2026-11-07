@@ -34,7 +34,7 @@ export async function settleWorkspace(
       throw new Error('LAYOUT_MEASUREMENT_STALE');
     }
     if (!settlement.advance(heights)) {
-      return { pages, footnoteSlots: settlement.footnoteSlots };
+      return { pages, breaksBefore: settlement.finish() };
     }
     pages = settlement.paginate(options);
   }

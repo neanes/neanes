@@ -14,7 +14,7 @@ import {
   type LiveLayoutOutcome,
   settleWorkspace,
 } from '@/services/rendering/settleWorkspace';
-import { needsFootnoteSlotSettlement } from '@/services/rendering/workspaceLayoutSettlement';
+import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
 
 import { editorBusyError, type EditorBusyState } from '../contracts/editorBusy';
@@ -105,7 +105,7 @@ export function useEditorDocumentAutomation(
   function isSelectedFootnoteLayout(workspace: Workspace) {
     return (
       workspace.id === options.selectedWorkspace()?.id &&
-      needsFootnoteSlotSettlement(workspace.score)
+      needsFootnoteSettlement(workspace.score)
     );
   }
 

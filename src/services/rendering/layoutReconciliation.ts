@@ -10,20 +10,15 @@ import type {
 
 // Reconcile detached page layout with measured text-box heights.
 export class LayoutReconciliation {
-  private pass = 0;
   private readonly headerFooterHeights = new Map<MeasuredTextBox, number>();
   private readonly pageCappedHeights = new Map<
     MeasuredTextBox,
     { width: number; height: number }
   >();
 
-  resetPageCaps(boxes?: MeasuredTextBox[]) {
-    if (boxes === undefined) {
-      this.pageCappedHeights.clear();
-    } else {
-      for (const box of boxes) {
-        this.pageCappedHeights.delete(toRaw(box));
-      }
+  resetPageCaps(boxes: MeasuredTextBox[]) {
+    for (const box of boxes) {
+      this.pageCappedHeights.delete(toRaw(box));
     }
   }
 
@@ -72,9 +67,6 @@ export class LayoutReconciliation {
         element.height = height;
         changed = true;
       }
-    }
-    if (changed && ++this.pass >= 12) {
-      throw new Error('LAYOUT_DID_NOT_SETTLE');
     }
     return changed;
   }

@@ -264,7 +264,7 @@ import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadines
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import type { LiveLayoutOutcome } from '@/services/rendering/settleWorkspace';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
-import { needsFootnoteSlotSettlement } from '@/services/rendering/workspaceLayoutSettlement';
+import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
@@ -768,14 +768,14 @@ const selectedWorkspace = computed({
 const score = computed(() => {
   return selectedWorkspace.value.score;
 });
-const settleFootnoteSlots = computed(() =>
-  needsFootnoteSlotSettlement(score.value),
+const settleFootnoteReferences = computed(() =>
+  needsFootnoteSettlement(score.value),
 );
 const { textBoxes: liveLayoutMeasurement } = useWorkspaceMeasurements();
 const liveTextBoxMeasurement = liveLayoutMeasurement.pending;
 const liveLayout = useLiveWorkspaceLayout({
   selectedWorkspace: () => selectedWorkspace.value,
-  enabled: () => settleFootnoteSlots.value,
+  enabled: () => settleFootnoteReferences.value,
   settle: runLiveSettlement,
   measureTextBoxes: liveLayoutMeasurement.start,
   cancelMeasurement: liveLayoutMeasurement.cancel,
@@ -1747,7 +1747,7 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 });
 
 function onLayoutFontsChanged() {
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     invalidateLiveLayout();
   }
   saveDebounced();
@@ -2919,7 +2919,7 @@ watch(
       return;
     }
     const changed = () => {
-      if (settleFootnoteSlots.value) {
+      if (settleFootnoteReferences.value) {
         invalidateLiveLayout();
         saveDebounced();
       }
@@ -3392,7 +3392,7 @@ function addDropCap(after: boolean) {
 
 function focusInsertedTextElement(element: DropCapElement | TextBoxElement) {
   nextTick(async () => {
-    if (settleFootnoteSlots.value) {
+    if (settleFootnoteReferences.value) {
       await awaitCurrentFootnoteLayout(selectedWorkspace.value).catch(
         console.error,
       );
@@ -3418,7 +3418,7 @@ function onClickPrintScore() {
     return;
   }
 
-  if (!isBrowser.value && settleFootnoteSlots.value) {
+  if (!isBrowser.value && settleFootnoteReferences.value) {
     void onFileMenuPrint();
     return;
   }
@@ -3481,7 +3481,7 @@ async function openFootnote(
     editor.ui.getEditableElement()!.blur();
     clearActiveEditor();
   }
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     const selection = selectedElement.value;
     const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
       console.error,
@@ -3642,7 +3642,7 @@ function selectHeaderFooterRichTextBox(
 function focusSelectedRichTextBoxEditor(element: RichTextBoxElement) {
   nextTick(async () => {
     if (
-      settleFootnoteSlots.value &&
+      settleFootnoteReferences.value &&
       getRichTextBoxComponentRef(element) == null
     ) {
       await awaitCurrentFootnoteLayout(selectedWorkspace.value).catch(
@@ -5487,7 +5487,7 @@ function moveToNextLyricBox(clearMelisma: boolean = false) {
       }
     };
     nextTick(async () => {
-      if (!canMoveFocus() || focusNext() || !settleFootnoteSlots.value) {
+      if (!canMoveFocus() || focusNext() || !settleFootnoteReferences.value) {
         return;
       }
       await revealNextPage();
@@ -5666,9 +5666,18 @@ async function runLiveSettlement(
         rawOwner[key] = trialOwner[key];
       }
     }
+    const breaksBefore = new Set<ScoreElement>();
+    if (result.breaksBefore.size > 0) {
+      for (const element of score.staff.elements) {
+        const copy = result.copies.get(element);
+        if (copy && result.breaksBefore.has(copy)) {
+          breaksBefore.add(element);
+        }
+      }
+    }
     processedPages = LayoutService.processPages(source, {
       ...options,
-      footnoteSlots: result.footnoteSlots,
+      breaksBefore,
     });
   } finally {
     if (rawOwner !== null) {
@@ -5697,7 +5706,7 @@ async function runLiveSettlement(
 
 function save() {
   invalidateLiveLayout();
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     if (displayedScore !== toRaw(score.value)) {
       displayedScore = undefined;
       pages.value = [];
@@ -6930,7 +6939,7 @@ function updateRichTextBox(
     ...newValues,
   };
 
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     delete newValues.height;
     if (Object.keys(newValues).length === 0) {
       return;
@@ -7022,7 +7031,7 @@ function flushPendingAnnotationEditor() {
 }
 
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     return;
   }
   // The height could be updated by many rich text box elements at once
@@ -7038,7 +7047,7 @@ function updateTextBox(
 ) {
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
-    if (settleFootnoteSlots.value) {
+    if (settleFootnoteReferences.value) {
       return;
     }
     element.height = newValues.height;
@@ -7057,7 +7066,7 @@ function updateTextBox(
 }
 
 function updateTextBoxHeight(element: TextBoxElement, height: number) {
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     return;
   }
   // The height could be updated by many text box elements at once
@@ -8186,7 +8195,7 @@ function onAudioServiceStop() {
 }
 
 function recalculateRichTextBoxHeights() {
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     return;
   }
   if (richTextBoxCalculation.value) {
@@ -8225,7 +8234,7 @@ function recalculateRichTextBoxHeights() {
 }
 
 function recalculateTextBoxHeights() {
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     return;
   }
   if (textBoxCalculation.value) {
@@ -8333,7 +8342,7 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
   if (source !== toRaw(selectedWorkspace.value)) {
     throw new Error('LAYOUT_CONFLICT');
   }
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     invalidateLiveLayout();
     const outcome = await awaitCurrentFootnoteLayout(workspace);
     if (outcome !== 'published') {
@@ -9470,7 +9479,7 @@ async function onSearchText(args: { query: string; reverse?: boolean }) {
   selectedElement.value = result;
   const isCurrent = () =>
     workspace === selectedWorkspace.value && selectedElement.value === result;
-  if (settleFootnoteSlots.value) {
+  if (settleFootnoteReferences.value) {
     const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
       console.error,
     );
@@ -10353,7 +10362,7 @@ function renderTabLabel(tab: Tab) {
                       :zoom="zoom"
                       :print-mode="printMode"
                       :interaction="pageInteraction"
-                      :settled-text-boxes="settleFootnoteSlots"
+                      :settled-text-boxes="settleFootnoteReferences"
                       :overlays="pageOverlaySettings"
                       v-on="pageHandlers"
                     >
@@ -10731,7 +10740,7 @@ function renderTabLabel(tab: Tab) {
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
     />
-    <template v-if="richTextBoxCalculation && !settleFootnoteSlots">
+    <template v-if="richTextBoxCalculation && !settleFootnoteReferences">
       <TextBoxRich
         v-for="element in resizableRichTextBoxElements"
         :key="element.id!"
@@ -10749,7 +10758,7 @@ function renderTabLabel(tab: Tab) {
         "
       />
     </template>
-    <template v-if="textBoxCalculation && !settleFootnoteSlots">
+    <template v-if="textBoxCalculation && !settleFootnoteReferences">
       <TextBox
         v-for="element in resizableTextBoxElements"
         :key="element.id!"

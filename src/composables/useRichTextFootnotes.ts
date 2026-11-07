@@ -16,7 +16,7 @@ import {
   planRichTextFootnoteUpdate,
 } from '@/services/FootnoteService';
 import { CommandFactory } from '@/services/history/CommandService';
-import { needsFootnoteSlotSettlement } from '@/services/rendering/workspaceLayoutSettlement';
+import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import {
   activeRichTextContentKeys,
   FOOTNOTE_ELEMENT,
@@ -119,7 +119,7 @@ export function useRichTextFootnotes(
       const updates = { [key]: html };
       if (
         pendingRichTextStyles.has(owner) &&
-        needsFootnoteSlotSettlement(workspace.value.score)
+        needsFootnoteSettlement(workspace.value.score)
       ) {
         return;
       }
@@ -152,7 +152,7 @@ export function useRichTextFootnotes(
     paste(owner, payload) {
       // Publishing the old HTML during a deferred paste can echo it back
       // into CKEditor after insertion and overwrite the staged marker.
-      if (!needsFootnoteSlotSettlement(workspace.value.score)) {
+      if (!needsFootnoteSettlement(workspace.value.score)) {
         flush(workspace.value);
       }
       const saved = JSON.parse(payload) as {
@@ -210,7 +210,7 @@ export function useRichTextFootnotes(
     reject(owner) {
       if (
         owner instanceof RichTextBoxElement &&
-        !needsFootnoteSlotSettlement(workspace.value.score)
+        !needsFootnoteSettlement(workspace.value.score)
       ) {
         clearPendingFootnotes(owner);
       }

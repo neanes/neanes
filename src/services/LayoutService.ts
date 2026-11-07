@@ -86,7 +86,6 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
-import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import {
   FOOTNOTE_OVERFLOW_BOTTOM_PADDING,
@@ -108,10 +107,7 @@ import {
   NeumeMappingService,
   type SbmuflGlyphName,
 } from '@/services/NeumeMappingService';
-import {
-  FOOTNOTE_ATTRIBUTE,
-  FOOTNOTE_CLASS,
-} from '@/services/RichTextFootnotes';
+import { FOOTNOTE_CLASS } from '@/services/RichTextFootnotes';
 import { TATWEEL } from '@/utils/constants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
@@ -414,7 +410,13 @@ interface AtomicMelismaLayout {
 
 type LayoutInput = Pick<Workspace, 'score' | 'nextId'>;
 type LayoutOptions = LayoutDiagnosticsOptions & {
-  footnoteSlots?: ReadonlyMap<string, number>;
+  provisionalFootnoteWidths?: boolean;
+  breaksBefore?: ReadonlySet<ScoreElement>;
+  onOverflowBreak?: (
+    boundary: ScoreElement,
+    elements: ScoreElement[],
+    excess: number,
+  ) => void;
 };
 
 export class LayoutService {
@@ -449,12 +451,6 @@ export class LayoutService {
 
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
     const references = orderedFootnotes(score, null);
-    const markerWidths = this.measureRichTextFootnoteMarkers(
-      references,
-      pageSetup,
-      score.paragraphStyles,
-      options?.footnoteSlots,
-    );
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
@@ -467,7 +463,6 @@ export class LayoutService {
       score.paragraphStyles,
       options,
       false,
-      markerWidths,
     );
     const {
       layoutWorkspace,
@@ -501,7 +496,6 @@ export class LayoutService {
           pageSetup,
           neumeHeight,
           score.paragraphStyles,
-          defaultLyricsFontCss,
         );
       }
     }
@@ -517,8 +511,14 @@ export class LayoutService {
           ? [(item as ElementBox).element]
           : [];
       });
-      const continuationLines =
+      const reservedContinuationLines =
         paragraphLineIndex === 0 ? paragraph.dropCapContinuationLines : 0;
+      // Reserve the full drop-cap height, but only group lines belonging to
+      // its paragraph.
+      const continuationLines = Math.min(
+        reservedContinuationLines,
+        paragraph.lineHeights.length - 1,
+      );
       return {
         height: candidate.height,
         elements,
@@ -528,11 +528,30 @@ export class LayoutService {
         additionalHeight: this.getLineSpanHeight(
           paragraph.lineHeights,
           1,
-          continuationLines,
+          reservedContinuationLines,
           neumeLineHeight,
         ),
       };
     });
+    const breaksBefore = new Set<number>();
+    const groupStarts: number[] = [];
+    const onOverflowBreak = options?.onOverflowBreak;
+    if (options?.breaksBefore?.size || onOverflowBreak) {
+      let groupStart = 0;
+      let groupEnd = -1;
+      for (const [index, line] of paginationLines.entries()) {
+        if (index > groupEnd) {
+          groupStart = index;
+          groupEnd = index + line.continuationLines;
+        }
+        groupStarts.push(groupStart);
+        if (
+          line.elements.some((element) => options?.breaksBefore?.has(element))
+        ) {
+          breaksBefore.add(groupStart);
+        }
+      }
+    }
     const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
     const decisions = buildContentPages(
       paginationLines,
@@ -540,6 +559,22 @@ export class LayoutService {
       {
         innerPageHeight: pageSetup.innerPageHeight,
         footnoteSpacing: above + below + thickness,
+        breaksBefore,
+        onOverflowBreak: onOverflowBreak
+          ? (index, first, excess) => {
+              const line = paginationLines[index];
+              const boundary = line.elements[0];
+              if (groupStarts[index] === index && boundary) {
+                onOverflowBreak(
+                  boundary,
+                  paginationLines
+                    .slice(first, index + line.continuationLines + 1)
+                    .flatMap((candidate) => candidate.elements),
+                  excess,
+                );
+              }
+            }
+          : undefined,
         // The existing paginator freezes reservations before adding the first
         // line to each page. Chapter-opening selection is therefore false at
         // reservation time, even if the completed page later opens a chapter.
@@ -584,6 +619,12 @@ export class LayoutService {
     }
 
     const assigned = orderedFootnotes(score, pageAssignments);
+    const markerWidths = this.measureRichTextFootnoteMarkers(
+      assigned,
+      pageSetup,
+      score.paragraphStyles,
+      options?.provisionalFootnoteWidths ?? false,
+    );
     const assignedById = new Map(
       assigned.map((entry) => [entry.footnote.id, entry]),
     );
@@ -930,9 +971,8 @@ export class LayoutService {
       element.y = top + marginTop;
       element.width = position.width;
 
-      // Fill-width elements were encoded using their intrinsic placeholder
-      // width in Phase 1. Now that line breaking is done, compute their
-      // actual width from the next positioned item or line end.
+      // Resolve the fill width after line breaking, up to the next
+      // positioned item (such as a right-aligned martyria) or the line end.
       if (this.isFillWidthElement(element)) {
         let fillWidth: number | null = null;
         for (
@@ -944,17 +984,25 @@ export class LayoutService {
           if (nextPos.line > position.line) {
             break;
           }
-          if (nextPos.line === position.line) {
-            fillWidth = nextPos.xOffset - position.xOffset;
-            break;
+          const nextItem = paragraph[nextPos.item];
+          if (
+            element.elementType === ElementType.RichTextBox &&
+            !('element' in nextItem)
+          ) {
+            continue;
           }
+          fillWidth = nextPos.xOffset - position.xOffset;
+          break;
         }
         if (fillWidth == null) {
           const lineWidth =
             resolvedMargins.contentWidth - currentLine.indentation;
           fillWidth = lineWidth - position.xOffset;
         }
-        element.width = fillWidth;
+        element.width =
+          element.elementType === ElementType.RichTextBox
+            ? Math.max(0, fillWidth)
+            : fillWidth;
       }
 
       element.line = lineNumber;
@@ -1079,7 +1127,6 @@ export class LayoutService {
     paragraphStyles: ParagraphStyle[],
     options?: LayoutDiagnosticsOptions,
     hidePopulatedTerminator = false,
-    markerWidths?: ReadonlyMap<string, number>,
   ) {
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
@@ -1226,7 +1273,6 @@ export class LayoutService {
             pageSetup,
             neumeHeight,
             paragraphStyles,
-            defaultLyricsFontCss,
           );
 
           this.addLyricReservation(
@@ -1267,13 +1313,8 @@ export class LayoutService {
 
             richTextBoxElement.oligonMidpoint = oligonMidpoint;
 
-            elementWidthPx = isFillWidthRichTextBox
-              ? this.getFillWidthPlaceholderWidth(
-                  richTextBoxElement,
-                  defaultLyricsFontCss,
-                  markerWidths,
-                )
-              : richTextBoxElement.customWidth!;
+            // The line breaker reserves no intrinsic width for fill boxes.
+            elementWidthPx = richTextBoxElement.customWidth ?? 0;
             richTextBoxElement.height = neumeHeight;
           } else {
             elementWidthPx = pageSetup.innerPageWidth;
@@ -2812,7 +2853,6 @@ export class LayoutService {
     text: string,
     font: string,
     fontVariantCaps: string = 'normal',
-    additionalWidth = 0,
   ) {
     const lines = text.split(/(?:\r\n|\r|\n)/g);
     let maxWidth = 0;
@@ -2830,18 +2870,8 @@ export class LayoutService {
 
     return Math.max(
       TextMeasurementService.getTextWidth(' ', font, fontVariantCaps),
-      maxWidth + additionalWidth,
+      maxWidth,
       1,
-    );
-  }
-
-  public static requiredFootnoteSlots(score: Score) {
-    return this.measureRichTextFootnoteMarkers(
-      orderedFootnotes(score),
-      score.pageSetup,
-      score.paragraphStyles,
-      undefined,
-      true,
     );
   }
 
@@ -2849,8 +2879,7 @@ export class LayoutService {
     references: ReturnType<typeof orderedFootnotes>,
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
-    slots?: ReadonlyMap<string, number>,
-    useAssignedLabels = false,
+    provisional: boolean,
   ) {
     const widths = new Map<string, number>();
     const richTextReferences = references.filter(
@@ -2869,7 +2898,7 @@ export class LayoutService {
     document.body.append(sample);
     try {
       const measured = new Map<string, number>();
-      const prefixWidthsByStyle = new Map<string, number[]>();
+
       for (const {
         footnote,
         reference,
@@ -2900,117 +2929,16 @@ export class LayoutService {
           `${style.fontSize}px`,
         );
 
-        if (
-          useAssignedLabels ||
-          pageSetup.footnoteNumbering !== 'page' ||
-          number === null
-        ) {
-          widths.set(footnote.id, measure(marker));
-          continue;
-        }
-
-        if (slots !== undefined) {
-          widths.set(
-            footnote.id,
-            slots.get(footnote.id) ??
-              measure(
-                automaticFootnoteMarker(
-                  pageSetup.firstFootnoteNumber,
-                  pageSetup,
-                ),
-              ),
-          );
-          continue;
-        }
-
-        let prefixWidths = prefixWidthsByStyle.get(styleKey);
-        if (prefixWidths === undefined) {
-          prefixWidths = [];
-          prefixWidthsByStyle.set(styleKey, prefixWidths);
-        }
-        const index = number - pageSetup.firstFootnoteNumber;
-        while (prefixWidths.length <= index) {
-          const label = automaticFootnoteMarker(
-            pageSetup.firstFootnoteNumber + prefixWidths.length,
-            pageSetup,
-          );
-          prefixWidths.push(Math.max(prefixWidths.at(-1) ?? 0, measure(label)));
-        }
-        widths.set(footnote.id, prefixWidths[index]);
+        const label =
+          provisional && number !== null
+            ? automaticFootnoteMarker(pageSetup.firstFootnoteNumber, pageSetup)
+            : marker;
+        widths.set(footnote.id, measure(label));
       }
     } finally {
       sample.remove();
     }
     return widths;
-  }
-
-  private static measureRichTextWidth(
-    html: string,
-    defaultLyricsFontCss: string,
-    markerWidths?: ReadonlyMap<string, number>,
-  ) {
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    // The surrounding text still uses the existing plain-text approximation.
-    let width = 0;
-    for (const marker of template.content.querySelectorAll(
-      `.${FOOTNOTE_CLASS}`,
-    )) {
-      width += markerWidths?.get(marker.getAttribute(FOOTNOTE_ATTRIBUTE)!) ?? 0;
-      marker.remove();
-    }
-    return this.measurePlainTextWidth(
-      template.content.textContent ?? '',
-      defaultLyricsFontCss,
-      'normal',
-      width,
-    );
-  }
-
-  private static getFillWidthPlaceholderWidth(
-    element: ScoreElement,
-    defaultLyricsFontCss: string,
-    markerWidths?: ReadonlyMap<string, number>,
-  ) {
-    if (
-      element.elementType === ElementType.TextBox &&
-      (element as TextBoxElement).inline
-    ) {
-      const textBoxElement = element as TextBoxElement;
-      return Math.max(
-        this.measurePlainTextWidth(
-          textBoxElement.content,
-          textBoxElement.computedFont,
-          textBoxElement.computedFontVariantCaps,
-        ),
-        this.measurePlainTextWidth(
-          textBoxElement.contentBottom,
-          textBoxElement.computedFont,
-          textBoxElement.computedFontVariantCaps,
-        ),
-      );
-    }
-
-    if (
-      element.elementType === ElementType.RichTextBox &&
-      (element as RichTextBoxElement).inline
-    ) {
-      const richTextBoxElement = element as RichTextBoxElement;
-      return Math.max(
-        this.measureRichTextWidth(
-          richTextBoxElement.content,
-          defaultLyricsFontCss,
-          markerWidths,
-        ),
-        this.measureRichTextWidth(
-          richTextBoxElement.contentBottom,
-          defaultLyricsFontCss,
-          markerWidths,
-        ),
-      );
-    }
-
-    return this.measurePlainTextWidth('', defaultLyricsFontCss);
   }
 
   private static addLyricReservation(
@@ -5920,7 +5848,6 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
     paragraphStyles: ParagraphStyle[],
-    defaultLyricsFontCss: string,
   ) {
     // Currently headers and footers may only contain a single text box.
     // It may be a rich textbox, but we don't need to do any
@@ -5936,7 +5863,6 @@ export class LayoutService {
         pageSetup,
         neumeHeight,
         paragraphStyles,
-        defaultLyricsFontCss,
       );
     } else if (
       container.elements.length > 0 &&
@@ -5976,7 +5902,6 @@ export class LayoutService {
     pageSetup: PageSetup,
     neumeHeight: number,
     paragraphStyles: ParagraphStyle[],
-    defaultLyricsFontCss: string,
   ) {
     let elementWidthPx = 0;
     const resolvedParagraphStyle = resolveParagraphStyle(
@@ -5999,15 +5924,7 @@ export class LayoutService {
     textBoxElement.computedAlignment = resolvedParagraphStyle.alignment;
 
     if (textBoxElement.inline) {
-      if (textBoxElement.fillWidth) {
-        // Width is computed in Phase 2 after line breaking. During Phase 1 we
-        // use the textbox's intrinsic no-wrap width so the line breaker can
-        // move it to the next line when the remaining space is too small.
-        elementWidthPx = this.getFillWidthPlaceholderWidth(
-          textBoxElement,
-          defaultLyricsFontCss,
-        );
-      } else if (textBoxElement.customWidth != null) {
+      if (!textBoxElement.fillWidth && textBoxElement.customWidth != null) {
         elementWidthPx = textBoxElement.customWidth;
       } else {
         elementWidthPx = Math.max(

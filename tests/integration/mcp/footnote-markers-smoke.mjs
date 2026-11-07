@@ -6,9 +6,11 @@ import path from 'node:path';
 import { checkFootnoteMarkerCollisionSpacing } from './footnoteMarkerChecks.mjs';
 import { checkFootnoteNumbering } from './footnoteNumberingChecks.mjs';
 import {
+  checkFillWidthReference,
   checkFootnoteColdGutter,
   checkFootnoteSettlement,
-  checkSparseAndDenseSlots,
+  checkLiveFootnoteSettlement,
+  checkMarkerWidthThreshold,
 } from './footnoteSettlementChecks.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
 import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
@@ -938,10 +940,12 @@ try {
     socket,
     directory: app.directory,
   });
+  await checkFillWidthReference(call, evaluate);
+  await checkMarkerWidthThreshold(call, evaluate, app.directory);
   // Keep the inspected page focused even if macOS activates another window.
   await socket.send('Emulation.setFocusEmulationEnabled', { enabled: true });
   try {
-    await checkSparseAndDenseSlots(call, evaluate);
+    await checkLiveFootnoteSettlement(call, evaluate);
   } finally {
     await socket.send('Emulation.setFocusEmulationEnabled', { enabled: false });
   }

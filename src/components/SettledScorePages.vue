@@ -79,6 +79,7 @@ function measured(heights: TextBoxHeightMeasurement[]) {
       renderPass.value++;
       pages.value = processPages();
     } else {
+      settlement.finish();
       assertVisualExportFits(pages.value!);
       stopped = true;
       emit('ready', pages.value!);

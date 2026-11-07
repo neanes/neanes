@@ -111,23 +111,4 @@ describe('detached layout reconciliation', () => {
       }
     }
   });
-
-  it('bounds oscillating layout passes and accepts convergence within the limit', () => {
-    const score = new Score();
-    const body = new TextBoxElement();
-    const state = new LayoutReconciliation();
-    for (let i = 0; i < 11; i++) {
-      expect(
-        state.apply(score, [
-          { element: body, width: body.width, height: 100 + i },
-        ]),
-      ).toBe(true);
-    }
-    expect(
-      state.apply(score, [{ element: body, width: body.width, height: 110 }]),
-    ).toBe(false);
-    expect(() =>
-      state.apply(score, [{ element: body, width: body.width, height: 111 }]),
-    ).toThrow('LAYOUT_DID_NOT_SETTLE');
-  });
 });

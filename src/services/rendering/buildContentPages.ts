@@ -27,6 +27,8 @@ export function buildContentPages(
   constraints: {
     innerPageHeight: number;
     footnoteSpacing: number;
+    breaksBefore?: ReadonlySet<number>;
+    onOverflowBreak?: (index: number, first: number, excess: number) => void;
     // Indexed by physical page minus one, with enough entries for every line
     // to start a page (and the initial empty page when there are no lines).
     reservations: readonly PageReservation[];
@@ -58,15 +60,18 @@ export function buildContentPages(
       constraints.innerPageHeight -
       page.reservation.extraHeaderHeightPx -
       page.reservation.extraFooterHeightPx;
-    if (
-      (page.lines.length > 0 &&
-        height +
-          candidate.height +
-          candidate.additionalHeight +
-          sectionHeight(requiredIds) >
-          availableHeight()) ||
-      explicitBreak
-    ) {
+    const excess =
+      height +
+      candidate.height +
+      candidate.additionalHeight +
+      sectionHeight(requiredIds) -
+      availableHeight();
+    const first = page.lines[0];
+    const remembered = constraints.breaksBefore?.has(index);
+    if (explicitBreak || (first && (remembered || excess > 0))) {
+      if (first && !explicitBreak && !remembered) {
+        constraints.onOverflowBreak?.(index, first.index, excess);
+      }
       page = createPage();
       pages.push(page);
       height = 0;

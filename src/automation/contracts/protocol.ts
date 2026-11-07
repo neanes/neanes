@@ -21,6 +21,7 @@ import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
 import { PREVIEW_MAX_EDGE } from './preview';
 import { richTextFormatQuerySchema } from './richTextFormat';
+import { staffCollectionSchema } from './staffCollectionSchema';
 import { textSearchShape } from './textSearchSchema';
 
 const documentId = z.string().min(1);
@@ -68,6 +69,7 @@ export const automationSchemas = {
     ...elementContentQueryShape,
   }),
   get_staff_lyrics: z.strictObject({
+    collection: staffCollectionSchema.default({ kind: 'staff' }),
     ...documentRead,
     ...contentChunkQueryShape,
   }),

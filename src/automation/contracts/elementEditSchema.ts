@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { ElementType } from '@/models/Element';
+import { normalizeFootnoteMarker } from '@/services/FootnoteMarker';
 
 import { paragraphStyleOverridesSchema } from '../../services/documents/paragraphStyleSchema';
 import { headerFooterVariants } from '../documents/elementDiscovery';
@@ -10,6 +11,7 @@ import {
   lyricParserDescription,
 } from './lyricSyntax';
 import { modeKeyEditIssue } from './modeKeyTemplates';
+import { staffCollectionSchema } from './staffCollectionSchema';
 
 const editReferenceSchema = z
   .union([
@@ -23,6 +25,10 @@ const clientId = z.string().regex(/^[A-Za-z][A-Za-z0-9_-]{0,63}$/);
 const index = z.number().int().nonnegative();
 const editCollectionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('staff') }),
+  z.strictObject({
+    kind: z.literal('footnote'),
+    footnoteId: z.string().uuid(),
+  }),
   z.strictObject({
     kind: z.enum(['headers', 'footers']),
     variant: z.enum(headerFooterVariants),
@@ -42,8 +48,14 @@ function editPropertySchema(type: ElementType) {
     elementPropertySchemas[type].shape,
   )) {
     if (
-      type === ElementType.Note &&
-      ['scaleNotes', 'scaleNotesVirtual'].includes(key)
+      [ElementType.Note, ElementType.Martyria].includes(type) &&
+      [
+        'scaleNotes',
+        'scaleNotesVirtual',
+        'footnoteId',
+        'footnoteNumber',
+        'footnoteMarker',
+      ].includes(key)
     ) {
       continue;
     }
@@ -264,6 +276,33 @@ const elementDefinitionSchema = z
   );
 const elementEditActionSchema = z.discriminatedUnion('action', [
   z.strictObject({
+    action: z.literal('update_footnote'),
+    footnoteId: z.string().uuid(),
+    marker: z
+      .string()
+      .nullable()
+      .refine((value) => {
+        try {
+          normalizeFootnoteMarker(value);
+          return true;
+        } catch {
+          return false;
+        }
+      }, 'Footnote markers require 1-16 characters without control characters.')
+      .describe(
+        'Null uses automatic numbering. A custom marker does not consume an automatic number.',
+      ),
+  }),
+  z.strictObject({
+    action: z.literal('insert_footnote'),
+    elementRef: editReferenceSchema,
+    elements: z.array(elementDefinitionSchema).max(1000).default([]),
+  }),
+  z.strictObject({
+    action: z.literal('remove_footnote'),
+    elementRef: editReferenceSchema,
+  }),
+  z.strictObject({
     action: z.literal('insert'),
     collection: editCollectionSchema.default({ kind: 'staff' }),
     index: index.optional(),
@@ -303,10 +342,11 @@ const elementEditActionSchema = z.discriminatedUnion('action', [
   }),
   z.strictObject({
     action: z.literal('set_staff_lyrics'),
+    collection: staffCollectionSchema.default({ kind: 'staff' }),
     text: z
       .string()
       .describe(
-        'Complete staff lyrics parsed using the shared actions syntax. With locked=true, text stays authoritative for later structural edits and may retain excess input for future notes; direct main-staff lyric edits are rejected. With locked=false, staff text is derived from element lyrics during settlement.',
+        'Complete main-staff or footnote lyrics parsed using the shared actions syntax. With locked=true, text stays authoritative for later structural edits and may retain excess input for future notes; direct lyric edits in that staff are rejected. With locked=false, staff text is derived from element lyrics during settlement.',
       ),
     locked: z.boolean(),
   }),
@@ -318,7 +358,7 @@ const elementEditActionSchema = z.discriminatedUnion('action', [
     text: z
       .string()
       .describe(
-        'Lyrics parsed into collection[start,end) using the shared actions syntax; end defaults to collection size. Locked main-staff lyrics reject assignment with LYRICS_LOCKED; alternate lines remain editable. Include complete tied, melismatic, or hyphenated groups: cutting a group or leaving unconsumed input (including nonempty text for an empty range) raises INVALID_ELEMENT_RANGE. Expand the range or shorten the input; use direct note lyrics and flags for partial groups.',
+        'Lyrics parsed into collection[start,end) using the shared actions syntax; end defaults to collection size. Locked lyrics in the selected staff reject assignment with LYRICS_LOCKED; alternate lines remain editable. Include complete tied, melismatic, or hyphenated groups: cutting a group or leaving unconsumed input (including nonempty text for an empty range) raises INVALID_ELEMENT_RANGE. Expand the range or shorten the input; use direct note lyrics and flags for partial groups.',
       ),
   }),
 ]);

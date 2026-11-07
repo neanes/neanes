@@ -3,8 +3,14 @@ import { DomUtils, parseDocument } from 'htmlparser2';
 import { describe, expect, it } from 'vitest';
 
 import { automationOutputSchema } from '@/automation/__tests__/helpers';
+import { ElementDiscovery } from '@/automation/documents/elementDiscovery';
+import {
+  applyElementEdits,
+  planElementEdits,
+} from '@/automation/documents/elementEdits';
 import { ElementType } from '@/models/Element';
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
+import { Workspace } from '@/models/Workspace';
 import { fontCatalog } from '@/services/FontCatalog';
 import { applyLegacyStyle } from '@/utils/fontStyle';
 import {
@@ -213,7 +219,9 @@ describe('rich-text authoring discovery', () => {
     for (const topics of [
       ['inline'],
       ['opentype'],
+      ['footnotes'],
       ['basics', 'inline', 'opentype'],
+      ['basics', 'inline', 'opentype', 'footnotes'],
     ]) {
       expect(validate({ topics })).toMatchObject({ valid: true });
       expect(() =>
@@ -223,7 +231,7 @@ describe('rich-text authoring discovery', () => {
     for (const topics of [
       [],
       ['unknown'],
-      ['basics', 'basics', 'basics', 'basics'],
+      ['basics', 'basics', 'basics', 'basics', 'basics'],
     ]) {
       expect(validate({ topics })).toMatchObject({ valid: false });
       expect(() =>
@@ -235,6 +243,46 @@ describe('rich-text authoring discovery', () => {
     expect(getRichTextFormat({ topics: ['inline', 'inline'] })).toEqual(
       getRichTextFormat({ topics: ['inline'] }),
     );
+  });
+
+  it('provides an opt-in footnote workflow that creates a discoverable rich body', () => {
+    const { guide } = getRichTextFormat({ topics: ['footnotes'] });
+    expect(guide.length).toBeLessThan(5500);
+    expect(guide).toContain('FOOTNOTES');
+    expect(getRichTextFormat().guide).not.toContain('FOOTNOTES');
+    const workspace = new Workspace();
+    const discovery = new ElementDiscovery();
+    const example = guide.split('\n').find((line) => line.startsWith('{'))!;
+    const request = parseAutomationRequest(JSON.parse(example));
+    if (request.tool !== 'edit_elements') {
+      throw new Error('Expected edit');
+    }
+    applyElementEdits(
+      workspace,
+      planElementEdits(workspace, discovery, request.arguments.actions, []),
+    );
+    const footnote = workspace.score.footnotes[0];
+    expect(footnote).toBeDefined();
+    const body = discovery.read(workspace.score, {
+      collection: { kind: 'footnote', footnoteId: footnote.id },
+      start: 0,
+      offset: 0,
+      limit: 10,
+      includeContent: true,
+    });
+    expect(body.elements.map((element) => element.elementType)).toEqual([
+      'RichTextBox',
+      'Empty',
+    ]);
+    expect(body.elements[0].properties).toHaveProperty(
+      'content',
+      '<p class="neanes-paragraph-style-footnote-text"></p>',
+    );
+    expect(body.footnote).toMatchObject({
+      id: footnote.id,
+      marker: null,
+      number: 1,
+    });
   });
 
   it.each(['read', 'edit'] as const)(

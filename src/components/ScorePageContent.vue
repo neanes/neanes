@@ -36,7 +36,7 @@
     "
   >
     <div
-      v-for="(line, lineIndex) in page.lines"
+      v-for="(line, lineIndex) in page.allLines"
       :key="`developer-glue-line-${pageIndex}-${lineIndex}`"
     >
       <div
@@ -80,7 +80,7 @@
     "
   >
     <div
-      v-for="(line, lineIndex) in page.lines"
+      v-for="(line, lineIndex) in page.allLines"
       :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
     >
       <div
@@ -152,21 +152,86 @@
     ></div>
   </template>
   <div
-    v-for="(line, lineIndex) in page.lines"
+    v-if="page.footnoteOverflow && !printMode"
+    class="footnote-overflow-area"
+    :style="{
+      top: withZoom(score.pageSetup.pageHeight),
+      width: withZoom(score.pageSetup.pageWidth),
+      height: withZoom(
+        page.footnoteOverflowBottom - score.pageSetup.pageHeight,
+      ),
+    }"
+  />
+  <div
+    v-if="page.footnoteRuleTop !== null"
+    class="footnote-rule"
+    :style="footnoteRuleStyle"
+  />
+  <button
+    v-for="footnote in page.footnotes"
+    :id="`footnote-${footnote.id}`"
+    :key="`footnote-label-${footnote.id}`"
+    :data-footnote-id="footnote.id"
+    class="footnote-label"
+    type="button"
+    :style="footnoteBodyStyles.get(footnote.id)"
+    :title="
+      i18next.t(($) => $.menu.footnotes.returnToReference, { ns: 'menu' })
+    "
+    @dblclick="
+      !printMode && emit('returnToFootnoteReference', footnote.reference)
+    "
+  >
+    <span class="footnote-body-marker" :style="bodyMarkerCss">{{
+      footnoteBodyMarkerText(footnote.marker)
+    }}</span>
+  </button>
+  <div
+    v-if="page.footnoteOverflow && !printMode"
+    class="footnote-overflow"
+    :style="{
+      top: withZoom(score.pageSetup.pageHeight),
+      width: withZoom(score.pageSetup.pageWidth),
+      height: withZoom(FOOTNOTE_OVERFLOW_NOTICE_HEIGHT),
+      fontSize: withZoom(14),
+    }"
+    role="alert"
+  >
+    {{ i18next.t(($) => $.menu.footnotes.overflow, { ns: 'menu' }) }}
+  </div>
+  <div
+    v-for="(line, lineIndex) in page.allLines"
     :key="`line-${pageIndex}-${lineIndex}`"
     class="line"
+    :data-footnote-id="line.footnoteId"
   >
     <div
       v-for="element in line.elements"
-      :id="`element-${element.id}`"
+      :id="element.id === null ? undefined : `element-${element.id}`"
       :key="`element-${workspaceId}-${element.id}-${element.keyHelper}`"
       class="element-box"
       :style="getElementStyle(element)"
       @contextmenu="emit('onScoreElementContextMenu', element)"
     >
+      <span
+        v-if="
+          element instanceof FootnoteAnchorElement &&
+          element.footnoteMarker !== null
+        "
+        class="footnote-reference"
+        :data-footnote-id="element.footnoteId"
+        :style="footnoteReferenceStyle(element)"
+      >
+        {{
+          footnoteMarkerText(
+            element.footnoteMarker!,
+            score.pageSetup.footnoteReferenceParentheses,
+          )
+        }}
+      </span>
       <template v-if="isSyllableElement(element)">
         <div
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           class="neume-box"
         >
           <span v-if="element.pageBreak" class="page-break"><PhFile /></span>
@@ -212,7 +277,7 @@
             v-for="(annotation, index) in (element as NoteElement).annotations"
             :key="index"
             :ref="
-              setTemplateRef(`annotation-${getElementIndex(element)}-${index}`)
+              setTemplateRef(`annotation-${getElementKey(element)}-${index}`)
             "
             :element="annotation"
             :page-setup="score.pageSetup"
@@ -258,16 +323,16 @@
             :style="getLyricStyle(element as NoteElement)"
           >
             <ContentEditable
-              :ref="setTemplateRef(`lyrics-${getElementIndex(element)}`)"
+              :ref="setTemplateRef(`lyrics-${getElementKey(element)}`)"
               class="lyrics"
               :class="{
                 selectedLyrics: element === selectedLyrics,
               }"
               :style="{ minWidth: withZoom(element.width) }"
               :content="(element as NoteElement).lyrics"
-              :editable="!printMode && !lyricsLocked"
+              :editable="!printMode && !isLyricsLocked(element)"
               white-space="nowrap"
-              @click="emit('focusLyrics', element.index)"
+              @click="emit('focusLyrics', element as NoteElement)"
               @focus="emit('selectLyrics', element as NoteElement)"
               @blur="emit('updateLyrics', element as NoteElement, $event)"
             />
@@ -340,7 +405,7 @@
                 :class="{
                   selectedMelisma: element === selectedLyrics,
                 }"
-                @click="emit('focusLyrics', element.index)"
+                @click="emit('focusLyrics', element as NoteElement)"
                 @focus="emit('selectLyrics', element as NoteElement)"
                 v-text="(element as NoteElement).melismaText"
               ></span>
@@ -355,7 +420,7 @@
             ><PhParagraph weight="fill"
           /></span>
           <MartyriaNeumeBox
-            :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+            :ref="setTemplateRef(`element-${getElementKey(element)}`)"
             class="marytria-neume-box"
             :neume="element as MartyriaElement"
             :page-setup="score.pageSetup"
@@ -372,7 +437,7 @@
       </template>
       <template v-else-if="isTempoElement(element)">
         <div
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           class="neume-box"
         >
           <span v-if="element.pageBreak" class="page-break"> <PhFile /></span>
@@ -392,7 +457,7 @@
       </template>
       <template v-else-if="isEmptyElement(element)">
         <div
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           class="neume-box"
         >
           <span v-if="element.pageBreak" class="page-break"> <PhFile /></span>
@@ -414,10 +479,12 @@
           ><PhParagraph weight="fill"
         /></span>
         <TextBox
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :element="element as TextBoxElement"
           :edit-mode="!printMode"
-          :metadata="metadata"
+          :metadata="
+            score.staff.elements.includes(element) ? metadata : undefined
+          "
           :page-setup="score.pageSetup"
           :selected="isSelected(element)"
           @select-single="emit('selectElement', element)"
@@ -433,9 +500,10 @@
           ><PhParagraph weight="fill"
         /></span>
         <TextBoxRich
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :edit-mode="!printMode"
           :element="element as RichTextBoxElement"
+          :footnote-body="line.footnoteId !== null"
           :inline-page-center-offset="inlinePageCenter - element.x"
           :page-setup="score.pageSetup"
           :fonts="fonts"
@@ -465,7 +533,7 @@
           ><PhParagraph weight="fill"
         /></span>
         <ModeKey
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :element="element as ModeKeyElement"
           :page-setup="score.pageSetup"
           :class="[
@@ -483,10 +551,10 @@
           ><PhParagraph weight="fill"
         /></span>
         <DropCap
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :element="element as DropCapElement"
           :page-setup="score.pageSetup"
-          :editable="!printMode && !lyricsLocked"
+          :editable="!printMode && !isLyricsLocked(element)"
           :class="[
             {
               selectedTextbox: isSelected(element),
@@ -504,7 +572,7 @@
           ><PhParagraph weight="fill"
         /></span>
         <ImageBox
-          :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
+          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :element="element as ImageBoxElement"
           :zoom="zoom"
           :print-mode="printMode"
@@ -608,7 +676,8 @@ import {
   PhTextAlignCenter,
 } from '@phosphor-icons/vue';
 import i18next from 'i18next';
-import { computed, nextTick, type StyleValue, toRef } from 'vue';
+import type { CSSProperties } from 'vue';
+import { computed, nextTick, type StyleValue, toRaw, toRef } from 'vue';
 
 import AlternateLine from '@/components/AlternateLine.vue';
 import ContentEditable from '@/components/ContentEditable.vue';
@@ -628,6 +697,7 @@ import {
   type DropCapElement,
   ElementType,
   type EmptyElement,
+  FootnoteAnchorElement,
   type ImageBoxElement,
   isKeepWithNextActive,
   LineBreakType,
@@ -641,7 +711,18 @@ import {
 } from '@/models/Element';
 import type { BoxOverlayDiagnostics } from '@/models/LayoutDiagnostics';
 import type { Line, Page } from '@/models/Page';
+import {
+  BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
+  resolveParagraphStyle,
+} from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
+import {
+  FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
+  footnoteBodyMarkerText,
+  footnoteMarkerStyle,
+  footnoteMarkerText,
+} from '@/services/FootnoteLayout';
 import { LayoutService } from '@/services/LayoutService';
 import { getLyricsBaseline } from '@/services/LyricsLayout';
 import {
@@ -659,8 +740,11 @@ import {
   isTempoElement,
   isTextBoxElement,
 } from '@/utils/elementTypeGuards';
+import { resolveFontStyle } from '@/utils/fontStyle';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import type { resolvePageMargins } from '@/utils/PageMargins';
 import type { TokenMetadata } from '@/utils/replaceTokens';
+import { richTextParagraphStyleIdFromClassName } from '@/utils/richTextParagraphStyleClasses';
 import { withZoom, withZoomOffset } from '@/utils/withZoom';
 
 import type {
@@ -694,7 +778,9 @@ const selectedLyrics = computed(
 const selectedHeaderFooterElement = computed(
   () => props.interaction?.selectedHeaderFooterElement ?? null,
 );
-const lyricsLocked = computed(() => props.interaction?.lyricsLocked ?? true);
+function isLyricsLocked(element: ScoreElement) {
+  return props.interaction?.isLyricsLocked(element) ?? true;
+}
 const header = computed(
   () =>
     props.score.getHeaderForPage(
@@ -737,6 +823,111 @@ const {
   getMelismaUnderscoreStyleInner,
   getMelismaHyphenStyle,
 } = useScoreRendering(score, toRef(props, 'zoom'));
+
+const footnoteRuleStyle = computed(() => {
+  const margins = getResolvedMarginsForPage(props.page);
+  const width =
+    (margins.contentWidth *
+      props.score.pageSetup.footnoteHorizontalRuleLength) /
+    100;
+  return {
+    left: withZoom(
+      props.score.pageSetup.melkiteRtl
+        ? margins.contentRight - width
+        : margins.contentLeft,
+    ),
+    top: withZoom(props.page.footnoteRuleTop ?? 0),
+    width: withZoom(width),
+    borderTopWidth: withZoom(props.page.footnoteRuleThickness),
+    borderColor: props.score.pageSetup.footnoteRuleColor,
+  };
+});
+const bodyMarkerTypography = computed(() =>
+  footnoteMarkerStyle(props.score.paragraphStyles, 'body'),
+);
+const referenceMarkerTypography = computed(() =>
+  footnoteMarkerStyle(props.score.paragraphStyles),
+);
+function markerCss(style: ReturnType<typeof footnoteMarkerStyle>) {
+  const font = resolveFontStyle(style.fontFamily, style.fontStyle);
+  return {
+    fontSize: withZoom(style.fontSize),
+    fontFamily: getFontFamilyWithFallback(font.cssFontFamily),
+    fontStyle: font.cssFontStyle,
+    fontWeight: font.cssFontWeight,
+    color: style.color,
+    textDecoration: style.textDecoration ?? undefined,
+    WebkitTextStrokeWidth: withZoom(style.strokeWidth),
+    WebkitTextStrokeColor: style.strokeColor,
+    fontVariantCaps: style.fontVariantCaps ?? undefined,
+    fontVariantNumeric: style.fontVariantNumeric ?? undefined,
+    fontVariantLigatures: style.fontVariantLigatures ?? undefined,
+    fontVariantAlternates: style.fontVariantAlternates ?? undefined,
+  } as CSSProperties;
+}
+const bodyMarkerCss = computed(() => markerCss(bodyMarkerTypography.value));
+const footnoteBodyStyles = computed(() => {
+  return new Map(
+    props.page.footnotes.map((footnote) => {
+      const first = footnote.lines[0]?.elements[0];
+      let style = resolveParagraphStyle(
+        props.score.paragraphStyles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+      );
+      if (first && isRichTextBoxElement(first)) {
+        const template = document.createElement('template');
+        template.innerHTML = first.multipanel
+          ? first.contentLeft
+          : first.content;
+        const paragraph = template.content.querySelector('p');
+        const styleId = Array.from(paragraph?.classList ?? [])
+          .map(richTextParagraphStyleIdFromClassName)
+          .find((id) => id !== null);
+        style = resolveParagraphStyle(
+          props.score.paragraphStyles,
+          styleId ?? getTextBoxParagraphStyleFallbackId(first.inline),
+        );
+      }
+      const contextCss: CSSProperties = {
+        ...markerCss(style),
+        lineHeight: style.lineHeight ?? 'normal',
+      };
+      if (
+        first &&
+        (isSyllableElement(first) ||
+          isMartyriaElement(first) ||
+          isTempoElement(first) ||
+          isEmptyElement(first))
+      ) {
+        contextCss.lineHeight = 'inherit';
+        contextCss.fontFamily = props.score.pageSetup.neumeDefaultFontFamily;
+        contextCss.fontSize = withZoom(
+          props.score.pageSetup.neumeDefaultFontSize,
+        );
+      }
+      return [
+        footnote.id,
+        {
+          ...contextCss,
+          left: withZoom(footnote.labelX),
+          transform: rtl.value ? undefined : 'translateX(-100%)',
+          top: withZoom(first?.y ?? footnote.top),
+        },
+      ] as const;
+    }),
+  );
+});
+const referenceMarkerCss = computed(() =>
+  markerCss(referenceMarkerTypography.value),
+);
+function footnoteReferenceStyle(element: FootnoteAnchorElement) {
+  return {
+    ...referenceMarkerCss.value,
+    top: withZoom(element.footnoteMarkerTop),
+    left: !rtl.value ? withZoom(element.footnoteMarkerOffset) : undefined,
+    right: rtl.value ? withZoom(element.footnoteMarkerOffset) : undefined,
+  };
+}
 
 const inlinePageCenter = computed(() => {
   const margins = getResolvedMarginsForPage(props.page);
@@ -881,7 +1072,7 @@ function getDeveloperLyricBaselines(page: Page) {
     context.defaultCanonicalAscent,
   );
 
-  return page.lines.flatMap((line, lineIndex) => {
+  return page.allLines.flatMap((line, lineIndex) => {
     const note = line.elements.find(
       (element): element is NoteElement =>
         element.elementType === ElementType.Note,
@@ -1121,8 +1312,16 @@ function isSelected(element: ScoreElement) {
 function isAudioSelected(element: ScoreElement) {
   return props.interaction?.isAudioSelected(element) ?? false;
 }
-function getElementIndex(element: ScoreElement) {
-  return element.index;
+const elementKeys = new WeakMap<ScoreElement, number>();
+let nextElementKey = 0;
+function getElementKey(element: ScoreElement) {
+  const raw = toRaw(element);
+  let key = elementKeys.get(raw);
+  if (key === undefined) {
+    key = nextElementKey++;
+    elementKeys.set(raw, key);
+  }
+  return key;
 }
 function isMelisma(element: NoteElement) {
   return element.melismaWidth > 0;
@@ -1130,7 +1329,8 @@ function isMelisma(element: NoteElement) {
 function hasActiveKeepWithNext(element: ScoreElement) {
   return isKeepWithNextActive(
     element,
-    props.score.staff.elements[element.index + 1] ?? null,
+    props.score.getStaffForElement(element)?.elements[element.index + 1] ??
+      null,
   );
 }
 
@@ -1151,17 +1351,18 @@ function setTemplateRef(name: string) {
   return setter;
 }
 // Ref keys stay private to the page. Callers identify a child by its model
-// position, or by its header/footer region on this page.
-function getElementRef<T = unknown>(index: number): T | undefined {
-  return localRefs.get(`element-${index}`) as T | undefined;
+// object, or by its header/footer region on this page.
+function getElementRef<T = unknown>(element: ScoreElement): T | undefined {
+  return localRefs.get(`element-${getElementKey(element)}`) as T | undefined;
 }
-function getLyricsRef(index: number) {
-  return localRefs.get(`lyrics-${index}`) as
+function getLyricsRef(element: ScoreElement) {
+  return localRefs.get(`lyrics-${getElementKey(element)}`) as
     InstanceType<typeof ContentEditable> | undefined;
 }
-function getAnnotationRef(parentIndex: number, annotationIndex: number) {
-  return localRefs.get(`annotation-${parentIndex}-${annotationIndex}`) as
-    InstanceType<typeof Annotation> | undefined;
+function getAnnotationRef(parent: ScoreElement, annotationIndex: number) {
+  return localRefs.get(
+    `annotation-${getElementKey(parent)}-${annotationIndex}`,
+  ) as InstanceType<typeof Annotation> | undefined;
 }
 function getHeaderFooterRef<T = unknown>(
   region: 'header' | 'footer',
@@ -1194,10 +1395,10 @@ async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
     ...(props.score.pageSetup.showHeader
       ? [{ element: header.value, name: `header-${props.pageIndex}` }]
       : []),
-    ...props.page.lines.flatMap((line) =>
+    ...props.page.allLines.flatMap((line) =>
       line.elements.map((element) => ({
         element,
-        name: `element-${getElementIndex(element)}`,
+        name: `element-${getElementKey(element)}`,
       })),
     ),
     ...(props.score.pageSetup.showFooter
@@ -1209,16 +1410,13 @@ async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
       .filter(({ element }) =>
         resizable.has(element as TextBoxElement | RichTextBoxElement),
       )
-      .map(async ({ element, name }) => {
+      .map(async ({ name }) => {
         const component = localRefs.get(name) as
           InstanceType<typeof TextBox | typeof TextBoxRich> | undefined;
         if (component == null) {
           throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
         }
-        return {
-          element: element as TextBoxElement | RichTextBoxElement,
-          height: await component.measureHeight(),
-        };
+        return component.measureTextBox();
       }),
   );
 }
@@ -1233,6 +1431,54 @@ defineExpose({
 });
 </script>
 <style scoped>
+.footnote-rule {
+  position: absolute;
+  border-top-style: solid;
+}
+.footnote-label,
+.footnote-reference {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: black;
+  font-family: serif;
+  font-weight: normal;
+  line-height: 1;
+}
+.footnote-reference {
+  cursor: default;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  white-space: nowrap;
+}
+.footnote-label {
+  cursor: pointer;
+  white-space: nowrap;
+}
+.footnote-body-marker {
+  display: inline-block;
+  line-height: 1;
+}
+.footnote-overflow-area {
+  position: absolute;
+  left: 0;
+  background: white;
+  outline: 1px dashed #b91c1c;
+  pointer-events: none;
+}
+.footnote-overflow {
+  position: absolute;
+  box-sizing: border-box;
+  overflow: auto;
+  left: 0;
+  padding: 0.25rem;
+  background: white;
+  color: #b91c1c;
+  z-index: 30;
+}
+
 .guide-line-vl {
   border-left: 1px solid black;
   position: absolute;

@@ -2,6 +2,7 @@ import type { z } from 'zod';
 
 import { type PageSetup, resolvePageDimensions } from '@/models/PageSetup';
 import type { Workspace } from '@/models/Workspace';
+import { isValidFootnoteStart } from '@/services/FootnoteMarker';
 import { CommandFactory } from '@/services/history/CommandService';
 
 import {
@@ -47,6 +48,18 @@ export function updatePageSetup(
   const next = { ...setup, ...changes };
   const values: Partial<PageSetup> = { ...changes };
   if (kind === 'page') {
+    if (
+      !isValidFootnoteStart(
+        next.firstFootnoteNumber,
+        next.footnoteFormat,
+        next.footnoteSymbolSequence,
+      )
+    ) {
+      throw new Error(
+        'INVALID_PAGE_SETUP: Footnote start exceeds the rendering limit.',
+      );
+    }
+
     if (
       ['pageSize', 'landscape', 'pageWidthCustom', 'pageHeightCustom'].some(
         (key) => Object.hasOwn(changes, key),

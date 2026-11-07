@@ -51,11 +51,12 @@ describe('MCP token efficiency contracts', () => {
     // Includes host file discovery and inline batch publication for clients that
     // lose local input references. Detailed style/settings constraints stay shared.
     // Detailed authoring guides remain opt-in, outside tools/list.
-    expect(sizes.inventory).toBeLessThan(153000);
+    // Includes footnote actions, collection selectors, and reference projections.
+    expect(sizes.inventory).toBeLessThan(156500);
     expect(sizes.inputs).toBeLessThan(52000);
-    expect(sizes.outputs).toBeLessThan(79000);
-    expect(sizes.inputView).toBeLessThan(71500);
-    expect(sizes.elementOutput).toBeLessThan(4500);
+    expect(sizes.outputs).toBeLessThan(81000);
+    expect(sizes.inputView).toBeLessThan(73500);
+    expect(sizes.elementOutput).toBeLessThan(4800);
   });
 
   it('keeps style ID discovery smaller than complete definitions', () => {

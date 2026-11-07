@@ -21,6 +21,10 @@ const index = z.number().int().nonnegative();
 export const elementCollectionSchema = z.discriminatedUnion('kind', [
   z.strictObject({ kind: z.literal('staff') }),
   z.strictObject({
+    kind: z.literal('footnote'),
+    footnoteId: z.string().uuid(),
+  }),
+  z.strictObject({
     kind: z.enum(['headers', 'footers']),
     variant: z.enum(headerFooterVariants),
   }),
@@ -75,6 +79,14 @@ export const discoveredElementSchema = z.discriminatedUnion('elementType', [
   elementResult(ElementType.AlternateLine),
 ]);
 export const elementPageShape = {
+  footnote: z
+    .strictObject({
+      id: z.string().uuid(),
+      marker: z.string().nullable(),
+      label: z.string(),
+      number: z.number().int().positive().nullable(),
+    })
+    .optional(),
   collection: elementCollectionSchema,
   collectionSize: index,
   start: index,

@@ -407,10 +407,20 @@ export class McpDocumentAdapter {
         };
       }
       if (request.tool === 'get_staff_lyrics') {
+        const collection = request.arguments.collection;
+        const staff =
+          collection.kind === 'staff'
+            ? workspace.score.staff
+            : workspace.score.footnotes.find(
+                (body) => body.id === collection.footnoteId,
+              )?.staff;
+        if (staff === undefined) {
+          throw new Error('INVALID_ELEMENT_COLLECTION');
+        }
         return {
           documentId: summary.documentId,
           revision: summary.revision,
-          ...readStaffLyrics(workspace.score.staff.lyrics, request.arguments),
+          ...readStaffLyrics(staff.lyrics, request.arguments),
         };
       }
       if (request.tool === 'get_element_content') {
@@ -544,7 +554,7 @@ export class McpDocumentAdapter {
       const images = new Map<string, string>();
       for (const action of request.arguments.actions) {
         const properties =
-          action.action === 'insert'
+          action.action === 'insert' || action.action === 'insert_footnote'
             ? action.elements.map((element) => element.properties)
             : action.action === 'update'
               ? [action.properties]
@@ -594,6 +604,7 @@ export class McpDocumentAdapter {
           plan.created,
           discovery,
           request.arguments.includeCreated,
+          plan.createdFootnotes,
         ),
       };
     }

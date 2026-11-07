@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PageSetup } from '@/models/PageSetup';
 import { Workspace } from '@/models/Workspace';
 import { fontService } from '@/services/FontService';
+import { footnoteStartMax } from '@/services/FootnoteMarker';
 import { SaveService } from '@/services/SaveService';
 import { NEUME_FONT_FAMILIES } from '@/utils/fontConstants';
 
@@ -20,6 +21,49 @@ import {
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 
 describe('focused page and header/footer settings', () => {
+  it('rejects unsafe starts before changing content or history, including partial updates and format overrides', () => {
+    const workspace = new Workspace();
+    const setup = workspace.score.pageSetup;
+    const maximum = footnoteStartMax('symbols', 'standard');
+    const original = { ...setup };
+    const revision = workspace.contentRevision;
+    expect(() =>
+      updatePageSetup(
+        workspace,
+        { firstFootnoteNumber: 1_000_000_000_000 },
+        'page',
+      ),
+    ).toThrow();
+    expect(() =>
+      updatePageSetup(
+        workspace,
+        { footnoteFormat: 'symbols', firstFootnoteNumber: maximum + 1 },
+        'page',
+      ),
+    ).toThrow('INVALID_PAGE_SETUP');
+    expect({ ...setup }).toEqual(original);
+    expect(workspace.contentRevision).toBe(revision);
+    updatePageSetup(
+      workspace,
+      { footnoteFormat: 'symbols', firstFootnoteNumber: maximum },
+      'page',
+    );
+    const accepted = workspace.contentRevision;
+    expect(() =>
+      updatePageSetup(workspace, { firstFootnoteNumber: maximum + 1 }, 'page'),
+    ).toThrow('INVALID_PAGE_SETUP');
+    expect(workspace.contentRevision).toBe(accepted);
+    expect(setup.firstFootnoteNumber).toBe(maximum);
+    workspace.commandService.undo();
+    expect({ ...setup }).toEqual(original);
+    updatePageSetup(workspace, { firstFootnoteNumber: 1_000_000 }, 'page');
+    expect(() =>
+      updatePageSetup(workspace, { footnoteFormat: 'symbols' }, 'page'),
+    ).toThrow('INVALID_PAGE_SETUP');
+    expect(setup.footnoteFormat).toBe('numbers');
+    expect(setup.firstFootnoteNumber).toBe(1_000_000);
+  });
+
   it('covers every persisted setting exactly once and excludes content, getters and transient settings', () => {
     const setup = new PageSetup();
     const page = readPageSetup(setup);
@@ -38,6 +82,74 @@ describe('focused page and header/footer settings', () => {
     expect(Object.keys(headerFooter)).toEqual(
       Object.keys(headerFooterSettingsSchema.shape),
     );
+  });
+
+  it('preserves numbering and start across format changes and undoes explicit changes together', () => {
+    const workspace = new Workspace();
+    const setup = workspace.score.pageSetup;
+    updatePageSetup(workspace, { firstFootnoteNumber: 20 }, 'page');
+    updatePageSetup(workspace, { footnoteFormat: 'symbols' }, 'page');
+    expect([
+      setup.footnoteFormat,
+      setup.footnoteNumbering,
+      setup.firstFootnoteNumber,
+    ]).toEqual(['symbols', 'continuous', 20]);
+    workspace.commandService.undo();
+    expect([
+      setup.footnoteFormat,
+      setup.footnoteNumbering,
+      setup.firstFootnoteNumber,
+    ]).toEqual(['numbers', 'continuous', 20]);
+    workspace.commandService.redo();
+    updatePageSetup(
+      workspace,
+      { footnoteNumbering: 'section', firstFootnoteNumber: 8 },
+      'page',
+    );
+    updatePageSetup(
+      workspace,
+      { footnoteFormat: 'symbols', leftMargin: 80 },
+      'page',
+    );
+    expect([setup.footnoteNumbering, setup.firstFootnoteNumber]).toEqual([
+      'section',
+      8,
+    ]);
+    updatePageSetup(
+      workspace,
+      {
+        footnoteFormat: 'numbers',
+        footnoteNumbering: 'section',
+        firstFootnoteNumber: 3,
+      },
+      'page',
+    );
+    expect([
+      setup.footnoteFormat,
+      setup.footnoteNumbering,
+      setup.firstFootnoteNumber,
+    ]).toEqual(['numbers', 'section', 3]);
+    updatePageSetup(workspace, { footnoteFormat: 'symbols' }, 'page');
+    updatePageSetup(workspace, { footnoteFormat: 'numbers' }, 'page');
+    expect([setup.footnoteNumbering, setup.firstFootnoteNumber]).toEqual([
+      'section',
+      3,
+    ]);
+    updatePageSetup(workspace, { footnoteSymbolSequence: 'asterisks' }, 'page');
+    expect(readPageSetup(setup).footnoteSymbolSequence).toBe('asterisks');
+    expect([setup.footnoteNumbering, setup.firstFootnoteNumber]).toEqual([
+      'section',
+      3,
+    ]);
+    workspace.commandService.undo();
+    expect(setup.footnoteSymbolSequence).toBe('standard');
+    expect(() =>
+      updatePageSetup(
+        workspace,
+        { footnoteSymbolSequence: 'unknown' } as never,
+        'page',
+      ),
+    ).toThrow();
   });
 
   it('applies partial updates with derived custom geometry in a single undo step', () => {

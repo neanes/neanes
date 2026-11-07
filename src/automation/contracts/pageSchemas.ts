@@ -16,10 +16,10 @@ export const pageElementQueryShape = {
   ...layoutReadShape,
   pageNumber: z.number().int().positive(),
   regions: z
-    .array(z.enum(['staff', 'header', 'footer']))
+    .array(z.enum(['staff', 'header', 'footer', 'footnote']))
     .min(1)
-    .max(3)
-    .default(['staff', 'header', 'footer']),
+    .max(4)
+    .default(['staff', 'header', 'footer', 'footnote']),
   elementTypes: elementSearchShape.elementTypes,
   where: elementSearchShape.where,
 };
@@ -44,7 +44,7 @@ export const pageElementsResultShape = {
   page: pageSummarySchema,
   occurrences: z.array(
     selectedElementSchema.extend({
-      region: z.enum(['staff', 'header', 'footer']),
+      region: z.enum(['staff', 'header', 'footer', 'footnote']),
       lineIndex: index.optional(),
     }),
   ),

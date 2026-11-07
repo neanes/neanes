@@ -298,7 +298,7 @@ export interface ExportWorkspaceAsMusicXmlArgs {
 export interface ExportWorkspaceAsLatexArgs {
   filePath: string | null;
   tempFileName: string;
-  data: string;
+  data: string | null;
 }
 
 export interface ExportSnapshotAsPngArgs {

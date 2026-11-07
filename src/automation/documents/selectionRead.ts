@@ -18,7 +18,7 @@ export function readSelection(
     const { start: anchor, end: focus } = workspace.selectionRange;
     const start = Math.min(anchor, focus);
     const end = Math.max(anchor, focus) + 1;
-    const elements = workspace.score.staff.elements;
+    const elements = workspace.activeStaff.elements;
     if (
       !Number.isInteger(anchor) ||
       !Number.isInteger(focus) ||
@@ -31,7 +31,10 @@ export function readSelection(
       status,
       selection: {
         kind: 'range',
-        collection: { kind: 'staff' },
+        collection:
+          workspace.activeStaff === workspace.score.staff
+            ? { kind: 'staff' }
+            : { kind: 'footnote', footnoteId: workspace.activeFootnoteId! },
         start,
         end,
         anchorRef: discovery.reference(elements[anchor]),

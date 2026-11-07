@@ -68,6 +68,7 @@ export default defineConfig({
               text: 'Paragraph Styles',
               link: '/guide/text-and-styles.html',
             },
+            { text: 'Footnotes', link: '/guide/footnotes.html' },
             { text: 'Page Layout and Books', link: '/guide/page-layout.html' },
             { text: 'Playback', link: '/guide/playback.html' },
             {

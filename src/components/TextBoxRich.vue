@@ -84,7 +84,7 @@
       </div>
     </div>
     <RichTextEditor
-      v-else-if="element.scrollable"
+      v-else-if="element.scrollable && !footnoteBody"
       :key="`scrollable-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor single scrollable"
@@ -164,6 +164,10 @@ const emit = defineEmits([
   'select-neume',
 ]);
 const props = defineProps({
+  footnoteBody: {
+    type: Boolean,
+    default: false,
+  },
   element: {
     type: Object as PropType<RichTextBoxElement>,
     required: true,
@@ -454,13 +458,14 @@ const containerStyle = computed(() => {
 const textBoxStyle = computed(() => {
   const style: StyleValue = {
     width: `${props.element.width}px`, // no zoom because we scale with the transform
-    maxHeight: props.element.scrollable
-      ? withZoom(
-          props.pageSetup.pageHeight -
-            props.element.y -
-            props.pageSetup.bottomMargin,
-        )
-      : undefined,
+    maxHeight:
+      props.element.scrollable && !props.footnoteBody
+        ? withZoom(
+            props.pageSetup.pageHeight -
+              props.element.y -
+              props.pageSetup.bottomMargin,
+          )
+        : undefined,
   };
 
   return style;
@@ -552,6 +557,7 @@ watch(
 
 onBeforeUnmount(() => {
   unmounting.value = true;
+  debouncedPhoneHome.cancel();
   update();
   // Observers are disconnected automatically by useResizeObserver's own
   // onBeforeUnmount hook.
@@ -596,7 +602,7 @@ async function whenReady() {
   await nextTick();
 }
 
-async function measureHeight() {
+async function measureTextBox() {
   await whenReady();
   await document.fonts.ready;
   refreshCkContentFontSize();
@@ -605,7 +611,7 @@ async function measureHeight() {
   if (height == null || !Number.isFinite(height)) {
     throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
   }
-  return height;
+  return { element: props.element, width: props.element.width, height };
 }
 
 function getActiveEditorInstances() {
@@ -624,8 +630,14 @@ function getActiveEditorInstances() {
   return [getEditorInstance()];
 }
 
-function phoneHome(height: number) {
-  emit('update:height', height);
+function phoneHome() {
+  if (unmounting.value) {
+    return;
+  }
+  const height = getHeight();
+  if (height != null && Math.abs(props.element.height - height) > 0.001) {
+    emit('update:height', height);
+  }
 }
 
 const ckContentFontSize = ref(`${resolvedParagraphStyle.value.fontSize}px`);
@@ -656,14 +668,8 @@ async function initializeCkContentFontSize() {
 }
 
 function emitRecalculatedHeightIfNeeded() {
-  if (!props.recalc) {
-    return;
-  }
-
-  const height = getHeight();
-
-  if (height != null && Math.abs(props.element.height - height) > 0.001) {
-    debouncedPhoneHome(height);
+  if (props.recalc) {
+    debouncedPhoneHome();
   }
 }
 
@@ -707,7 +713,7 @@ function observeBlockHeight() {
         Math.abs(props.element.height - resizedHeight) > 0.001
       ) {
         if (props.recalc) {
-          debouncedPhoneHome(resizedHeight);
+          debouncedPhoneHome();
         } else {
           // A resize is pure geometry -- there is no pending edit to persist. Route
           // through `update:height` (-> updateRichTextBoxHeight, which only sets
@@ -964,7 +970,7 @@ function focus() {
 
 defineExpose({
   whenReady,
-  measureHeight,
+  measureTextBox,
   focus,
   getPendingUpdates,
   htmlElement,
@@ -1001,6 +1007,7 @@ defineExpose({
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
   border: none !important;
+  --ck-editor-frame-border-radius: 0;
 }
 
 .rich-text-box-container {
@@ -1100,8 +1107,9 @@ defineExpose({
   overflow: visible;
 }
 
-:deep(.ck-editor__editable.ck-focused) {
+.rich-text-editor.ck.ck-editor__editable.ck-focused {
   border: none !important;
+  box-shadow: none;
   outline: var(--ck-focus-ring) !important;
 }
 

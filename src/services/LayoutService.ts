@@ -24,6 +24,7 @@ import type {
 import {
   ElementType,
   EmptyElement,
+  FootnoteAnchorElement,
   isAutomaticBreakProhibited,
   isBlockElement,
   isKeepWithNextActive,
@@ -85,6 +86,22 @@ import {
 } from '@/models/Scales';
 import type { Workspace } from '@/models/Workspace';
 import {
+  FOOTNOTE_OVERFLOW_BOTTOM_PADDING,
+  FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
+  footnoteBodyGutter,
+  footnoteBodyMarkerGap,
+  footnoteMarkerFont,
+  footnoteMarkerStyle,
+  footnoteMarkerText,
+  footnotePageSetup,
+  positionFootnoteMarker,
+  resolveFootnoteSpacing,
+} from '@/services/FootnoteLayout';
+import {
+  elementFootnoteIds,
+  orderedFootnotes,
+} from '@/services/FootnoteService';
+import {
   NeumeMappingService,
   type SbmuflGlyphName,
 } from '@/services/NeumeMappingService';
@@ -94,8 +111,7 @@ import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
-import type { RunningMarkerPageMetadata } from '@/utils/runningMarkers';
-import { resolveNextRunningMarkerPageMetadata } from '@/utils/runningMarkers';
+import { getFirstRunningMarker } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -106,6 +122,7 @@ import {
 } from './LyricsLayout';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
+import { buildContentPages } from './rendering/buildContentPages';
 import {
   type InkBounds,
   TextMeasurementService,
@@ -262,6 +279,12 @@ interface ElementBox extends Box {
   element: ScoreElement;
 }
 
+export interface MusicalContext {
+  note: number;
+  scale: Scale;
+  shift: number;
+}
+
 interface CompletedParagraph {
   diagnostics: LineLayoutDiagnostics[] | null;
   paragraph: InputItem[];
@@ -270,6 +293,13 @@ interface CompletedParagraph {
   lineHeights: number[];
   dropCapWidthPx: number;
   dropCapContinuationLines: number;
+}
+
+interface ContentLine {
+  paragraph: CompletedParagraph;
+  paragraphLineIndex: number;
+  height: number;
+  positions: { position: PositionedItem; index: number }[];
 }
 
 interface LayoutDiagnosticsCollector {
@@ -374,31 +404,682 @@ interface AtomicMelismaLayout {
   potentiallyCenteredGroupEndNotes: Set<NoteElement>;
 }
 
+type LayoutInput = Pick<Workspace, 'score' | 'nextId'>;
+
 export class LayoutService {
   public static processPages(
-    workspace: Workspace,
+    workspace: LayoutInput,
     options?: LayoutDiagnosticsOptions,
   ): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
-    elements.forEach((element, index) => {
-      element.index = index;
+    score.staves.forEach((staff) =>
+      staff.elements.forEach((element, index) => {
+        element.index = index;
 
-      if (element.id == null && element.elementType !== ElementType.Empty) {
-        element.id = workspace.nextId;
-      }
+        if (element.id == null && element.elementType !== ElementType.Empty) {
+          element.id = workspace.nextId;
+        }
 
-      this.saveElementState(element);
-    });
+        this.saveElementState(element);
+        if (element instanceof FootnoteAnchorElement) {
+          element.footnoteNumber = null;
+          element.footnoteMarker = null;
+          element.footnoteMarkerOffset = 0;
+        }
+      }),
+    );
 
     score.headersAndFooters.forEach((element) => {
       this.saveElementState(element);
     });
 
-    this.calculateMartyriae(elements, pageSetup);
+    const musicalContexts = this.calculateMartyriae(elements, pageSetup);
+    const references = orderedFootnotes(score);
+    const referencesById = new Map(
+      references.map((entry) => [entry.footnote.id, entry]),
+    );
+    for (const { reference, number, marker } of references) {
+      reference.footnoteNumber = number;
+      reference.footnoteMarker = marker;
+    }
+    const footnotes = this.prepareFootnotes(
+      workspace,
+      musicalContexts,
+      references,
+      options,
+    );
+    const content = this.prepareContentLines(
+      elements,
+      pageSetup,
+      score.paragraphStyles,
+      options,
+      false,
+    );
+    const {
+      layoutWorkspace,
+      neumeHeight,
+      neumeLineHeight,
+      lyricsBaseline,
+      defaultLyricsFontCss,
+      measureBarWidthMap,
+      atomicMelismaLayout,
+    } = content;
 
+    // Process Header and Footers
+    // Only a single text box is supported right now
+    for (const [show, containers] of [
+      [score.pageSetup.showHeader, score.headers],
+      [score.pageSetup.showFooter, score.footers],
+    ] as const) {
+      if (!show) {
+        continue;
+      }
+
+      for (const headerFooter of [
+        containers.default,
+        containers.chapterOpening,
+        containers.odd,
+        containers.even,
+        containers.firstPage,
+      ]) {
+        this.processHeaderFooter(
+          headerFooter,
+          pageSetup,
+          neumeHeight,
+          score.paragraphStyles,
+        );
+      }
+    }
+
+    const contentLines = this.getContentLines(
+      layoutWorkspace.completedParagraphs,
+    );
+    const paginationLines = contentLines.map((candidate) => {
+      const { paragraph, paragraphLineIndex } = candidate;
+      const elements = candidate.positions.flatMap(({ position }) => {
+        const item = paragraph.paragraph[position.item];
+        return item.type === 'box' && 'element' in item
+          ? [(item as ElementBox).element]
+          : [];
+      });
+      const reservedContinuationLines =
+        paragraphLineIndex === 0 ? paragraph.dropCapContinuationLines : 0;
+      // Reserve the full drop-cap height, but only group lines belonging to
+      // its paragraph.
+      const continuationLines = Math.min(
+        reservedContinuationLines,
+        paragraph.lineHeights.length - 1,
+      );
+      return {
+        height: candidate.height,
+        footnoteIds: elements.flatMap(elementFootnoteIds),
+        chapterMarker: pageSetup.headerFooterDifferentChapterOpening
+          ? getFirstRunningMarker(elements, 'chapter')
+          : null,
+        pageBreak: elements.at(-1)?.pageBreak ?? false,
+        continuationLines,
+        additionalHeight: this.getLineSpanHeight(
+          paragraph.lineHeights,
+          1,
+          reservedContinuationLines,
+          neumeLineHeight,
+        ),
+      };
+    });
+    const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
+    const decisions = buildContentPages(
+      paginationLines,
+      new Map([...footnotes].map(([id, body]) => [id, body.height])),
+      {
+        innerPageHeight: pageSetup.innerPageHeight,
+        footnoteSpacing: above + below + thickness,
+        getReservation: (pageNumber, isChapterOpening) =>
+          this.getExtraHeaderFooterHeight(
+            score,
+            pageSetup,
+            pageNumber,
+            isChapterOpening,
+          ),
+      },
+    );
+    const pages: Page[] = [];
+    for (const [index, decision] of decisions.entries()) {
+      const page = new Page();
+      page.physicalPageNumber = index + 1;
+      page.footnoteOverflow = decision.footnoteOverflow;
+      const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
+      for (const placement of decision.lines) {
+        const previousLine =
+          page.lines.at(-1) ?? pages.at(-1)?.lines.at(-1) ?? null;
+        page.lines.push(
+          this.positionContentLine(
+            contentLines[placement.index],
+            pageSetup,
+            margins,
+            pageSetup.topMargin +
+              decision.reservation.extraHeaderHeightPx +
+              placement.top,
+            page.physicalPageNumber,
+            page.lines.length + 1,
+            previousLine,
+            neumeLineHeight,
+            lyricsBaseline,
+            defaultLyricsFontCss,
+            measureBarWidthMap,
+          ),
+        );
+      }
+      pages.push(page);
+    }
+
+    for (const [index, decision] of decisions.entries()) {
+      pages[index].footnotes = decision.footnoteIds.map((id) => {
+        const { reference, number, marker } = referencesById.get(id)!;
+        return {
+          id,
+          number,
+          marker,
+          reference,
+          lines: [],
+          top: 0,
+          height: footnotes.get(id)!.height,
+          labelX: 0,
+        };
+      });
+    }
+
+    this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
+    this.addMelismas(
+      pages,
+      pageSetup,
+      defaultLyricsFontCss,
+      measureBarWidthMap,
+      atomicMelismaLayout.centeringPlans,
+    );
+
+    if (pageSetup.alignIsonIndicators) {
+      this.alignIsonIndicators(pages, pageSetup);
+    }
+
+    const markerGap = footnoteBodyMarkerGap(score.paragraphStyles);
+    for (const physicalPage of pages) {
+      if (physicalPage.footnotes.length === 0) {
+        continue;
+      }
+      const margins = resolvePageMargins(
+        pageSetup,
+        physicalPage.physicalPageNumber,
+      );
+      const footerReservation =
+        decisions[physicalPage.physicalPageNumber - 1].reservation
+          .extraFooterHeightPx;
+      const bodiesHeight = physicalPage.footnotes.reduce(
+        (sum, footnote) => sum + footnote.height,
+        0,
+      );
+      let top =
+        pageSetup.pageHeight -
+        pageSetup.bottomMargin -
+        footerReservation -
+        bodiesHeight;
+      if (physicalPage.footnoteOverflow) {
+        // Invalid content stays editable below the physical page. Export rejects it.
+        top =
+          pageSetup.pageHeight +
+          FOOTNOTE_OVERFLOW_NOTICE_HEIGHT +
+          below +
+          thickness;
+        physicalPage.footnoteOverflowBottom =
+          top + bodiesHeight + FOOTNOTE_OVERFLOW_BOTTOM_PADDING;
+      }
+      physicalPage.footnoteRuleTop = pageSetup.showFootnoteHorizontalRule
+        ? top - below - thickness
+        : null;
+      physicalPage.footnoteRuleThickness = thickness;
+      for (const body of physicalPage.footnotes) {
+        const prepared = footnotes.get(body.id)!;
+        const setup = footnotePageSetup(
+          pageSetup,
+          prepared.gutter,
+          physicalPage.physicalPageNumber,
+        );
+        const bodyMargins = resolvePageMargins(
+          setup,
+          physicalPage.physicalPageNumber,
+        );
+        body.top = top;
+        body.labelX = pageSetup.melkiteRtl
+          ? margins.contentRight - prepared.gutter + markerGap
+          : margins.contentLeft + prepared.gutter - markerGap;
+        for (const candidate of prepared.lines) {
+          const line = this.positionContentLine(
+            candidate,
+            setup,
+            bodyMargins,
+            top,
+            physicalPage.physicalPageNumber,
+            body.lines.length + 1,
+            body.lines.at(-1) ?? null,
+            prepared.content.neumeLineHeight,
+            prepared.content.lyricsBaseline,
+            prepared.content.defaultLyricsFontCss,
+            prepared.content.measureBarWidthMap,
+          );
+          body.lines.push(line);
+          line.footnoteId = body.id;
+          top += candidate.height;
+        }
+        const staff = score.footnotes.find(
+          (footnote) => footnote.id === body.id,
+        )!.staff;
+        if (staff.elements.length > 1) {
+          const last = staff.elements.at(-2)!;
+          const terminal = staff.elements.at(-1)!;
+          terminal.page = last.page;
+          terminal.line = last.line;
+          terminal.x = last.x + last.width;
+          terminal.y = last.y;
+        }
+        const bodyPage = new Page();
+        bodyPage.physicalPageNumber = physicalPage.physicalPageNumber;
+        bodyPage.lines = body.lines;
+        this.centerMeasureBars(
+          [bodyPage],
+          setup,
+          prepared.content.measureBarWidthMap,
+        );
+        this.addMelismas(
+          [bodyPage],
+          setup,
+          prepared.content.defaultLyricsFontCss,
+          prepared.content.measureBarWidthMap,
+          prepared.content.atomicMelismaLayout.centeringPlans,
+        );
+        if (setup.alignIsonIndicators) {
+          this.alignIsonIndicators([bodyPage], setup);
+        }
+      }
+    }
+
+    for (const page of pages) {
+      for (const line of page.lines) {
+        for (const [
+          element,
+          position,
+        ] of this.getFootnoteMarkerPositionsForLine(
+          line.elements,
+          pageSetup,
+          score.paragraphStyles,
+          measureBarWidthMap,
+        )) {
+          element.footnoteMarkerOffset = position.left;
+          element.footnoteMarkerTop = position.top;
+        }
+      }
+    }
+
+    // Record element updates
+    score.staves.forEach((staff) =>
+      staff.elements.forEach((element) => {
+        this.checkElementState(element);
+      }),
+    );
+
+    score.headersAndFooters.forEach((element) => {
+      this.checkElementState(element);
+    });
+
+    if (layoutWorkspace.loggingEnabled) {
+      console.log(
+        'avg ratio',
+        layoutWorkspace.completedParagraphs
+          .flatMap((p) => p.ratios)
+          .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
+      );
+    }
+
+    return pages;
+  }
+
+  private static prepareFootnotes(
+    workspace: LayoutInput,
+    musicalContexts: Map<ScoreElement, MusicalContext>,
+    references: ReturnType<typeof orderedFootnotes>,
+    options?: LayoutDiagnosticsOptions,
+  ) {
+    const score = workspace.score;
+    const gutter = footnoteBodyGutter(score.paragraphStyles);
+    return new Map(
+      references.map(({ footnote, reference }) => {
+        if (
+          footnote.staff.elements.some(
+            (element) => elementFootnoteIds(element).length > 0,
+          )
+        ) {
+          throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
+        }
+        const setup = footnotePageSetup(score.pageSetup, gutter, 1);
+        this.calculateMartyriae(
+          footnote.staff.elements,
+          setup,
+          musicalContexts.get(reference),
+        );
+        const content = this.prepareContentLines(
+          footnote.staff.elements,
+          setup,
+          score.paragraphStyles,
+          options,
+          true,
+        );
+        const lines = this.getContentLines(
+          content.layoutWorkspace.completedParagraphs,
+        );
+        for (const line of lines) {
+          const { paragraph, paragraphLineIndex } = line;
+          if (paragraphLineIndex === paragraph.lineHeights.length - 1) {
+            // Reserve any part of the drop cap below its last actual line.
+            const missingLines = Math.max(
+              0,
+              paragraph.dropCapContinuationLines - paragraphLineIndex,
+            );
+            line.height += missingLines * content.neumeLineHeight;
+          }
+        }
+        return [
+          footnote.id,
+          {
+            content,
+            lines,
+            gutter,
+            height: lines.reduce((sum, line) => sum + line.height, 0),
+          },
+        ] as const;
+      }),
+    );
+  }
+
+  private static getContentLines(
+    paragraphs: CompletedParagraph[],
+  ): ContentLine[] {
+    return paragraphs.flatMap((paragraph) => {
+      const lines: ContentLine[] = paragraph.lineHeights.map(
+        (height, paragraphLineIndex) => ({
+          paragraph,
+          paragraphLineIndex,
+          height,
+          positions: [],
+        }),
+      );
+      for (const [index, position] of paragraph.positions.entries()) {
+        lines[position.line].positions.push({ position, index });
+      }
+      return lines;
+    });
+  }
+
+  private static positionContentLine(
+    candidate: ContentLine,
+    pageSetup: PageSetup,
+    resolvedMargins: ResolvedPageMargins,
+    top: number,
+    pageNumber: number,
+    lineNumber: number,
+    prevLine: Line | null,
+    neumeLineHeight: number,
+    lyricsBaseline: number,
+    defaultLyricsFontCss: string,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ): Line {
+    const { paragraph: completedParagraph, paragraphLineIndex } = candidate;
+    const {
+      paragraph,
+      positions,
+      ratios,
+      diagnostics,
+      lineHeights,
+      dropCapWidthPx,
+      dropCapContinuationLines,
+    } = completedParagraph;
+    const currentLine = new Line();
+    currentLine.adjustmentRatio = ratios[paragraphLineIndex]!;
+    currentLine.diagnostics = diagnostics?.[paragraphLineIndex] ?? null;
+    currentLine.paragraphEnd = paragraphLineIndex === lineHeights.length - 1;
+    let centerOffsetPx = 0;
+    for (const { index: posIndex, position } of candidate.positions) {
+      const item = paragraph[position.item];
+      if (item.type !== 'box') {
+        continue;
+      }
+      const contentStart = pageSetup.melkiteRtl
+        ? resolvedMargins.right
+        : resolvedMargins.contentLeft;
+      if (!('element' in item)) {
+        continue;
+      }
+      const element = (item as ElementBox).element;
+      const isFirstElementOnLine = currentLine.elements.length === 0;
+
+      // Indent only the continuation lines covered by a multiline drop cap.
+      if (
+        isFirstElementOnLine &&
+        paragraphLineIndex > 0 &&
+        paragraphLineIndex <= dropCapContinuationLines
+      ) {
+        currentLine.indentation = dropCapWidthPx;
+      }
+
+      if (
+        isFirstElementOnLine &&
+        element.elementType === ElementType.Martyria &&
+        !(element as MartyriaElement).alignRight
+      ) {
+        currentLine.indentation += this.getLineStartMartyriaShift(
+          element as MartyriaElement,
+          position.xOffset,
+          pageSetup,
+        );
+      }
+
+      element.x = contentStart + position.xOffset + currentLine.indentation;
+
+      // marginTop offsets the element within its line's allocated space
+      // (whose height already includes marginTop + marginBottom).
+      let marginTop = 0;
+      if (element.elementType === ElementType.TextBox) {
+        marginTop = (element as TextBoxElement).marginTop;
+      } else if (element.elementType === ElementType.RichTextBox) {
+        marginTop = (element as RichTextBoxElement).marginTop;
+      } else if (element.elementType === ElementType.ModeKey) {
+        marginTop = (element as ModeKeyElement).marginTop;
+      }
+
+      element.y = top + marginTop;
+      element.width = position.width;
+
+      // Resolve the fill width after line breaking, up to the next
+      // positioned item (such as a right-aligned martyria) or the line end.
+      if (this.isFillWidthElement(element)) {
+        let fillWidth: number | null = null;
+        for (
+          let nextIdx = posIndex + 1;
+          nextIdx < positions.length;
+          nextIdx++
+        ) {
+          const nextPos = positions[nextIdx];
+          if (nextPos.line > position.line) {
+            break;
+          }
+          const nextItem = paragraph[nextPos.item];
+          if (
+            element.elementType === ElementType.RichTextBox &&
+            !('element' in nextItem)
+          ) {
+            continue;
+          }
+          fillWidth = nextPos.xOffset - position.xOffset;
+          break;
+        }
+        if (fillWidth == null) {
+          const lineWidth =
+            resolvedMargins.contentWidth - currentLine.indentation;
+          fillWidth = lineWidth - position.xOffset;
+        }
+        element.width =
+          element.elementType === ElementType.RichTextBox
+            ? Math.max(0, fillWidth)
+            : fillWidth;
+      }
+
+      element.line = lineNumber;
+      element.page = pageNumber;
+
+      this.adjustDropCapPosition(
+        element,
+        lineHeights,
+        neumeLineHeight,
+        lyricsBaseline,
+      );
+
+      // Measure bar transfer logic between lines
+      if (isFirstElementOnLine) {
+        const previousElement = prevLine
+          ? prevLine.elements[prevLine.elements.length - 1]
+          : null;
+
+        if (previousElement?.elementType === ElementType.Note) {
+          // If the new line starts with a left measure, apply it to the
+          // right of the previous line
+          const previousNoteElement = previousElement as NoteElement;
+          const transferredMeasureBar =
+            this.getMeasureBarTransferredFromLineStart(element);
+          if (transferredMeasureBar) {
+            previousNoteElement.computedMeasureBarRight = transferredMeasureBar;
+          }
+        } else if (
+          element.elementType === ElementType.Note &&
+          previousElement?.elementType === ElementType.Martyria &&
+          paragraphLineIndex > 0
+        ) {
+          const noteElement = element as NoteElement;
+          // If the previous line ends with a martyria with a barline, apply
+          // it to the left of the new line. Only transfer within the same
+          // paragraph (paragraphLineIndex > 0); when a martyria ends a
+          // paragraph (right-aligned or explicit line break), no bar is
+          // transferred to the next paragraph's first note.
+          const previousMartyriaElement = previousElement as MartyriaElement;
+          const normalizedMeasureBar = this.getMartyriaTransferBar(
+            previousMartyriaElement,
+          );
+          // Only transfer if the note doesn't already have its own
+          // measureBarLeft: getNoteWidth already accounted for the
+          // explicit one in Phase 1.
+          if (normalizedMeasureBar && !noteElement.measureBarLeft) {
+            noteElement.computedMeasureBarLeft = normalizedMeasureBar;
+            // Phase 1 reserved non-stretching leading space for this
+            // barline and its collision-aware clearance via an anonymous
+            // spacer box before the note. Shift the note left so the
+            // rendered barline occupies that reserved space instead of
+            // adding extra width. Adjust neumeWidth and
+            // lyricsHorizontalOffset so lyrics center under the neume body.
+            const barlineWidth =
+              measureBarWidthMap.get(normalizedMeasureBar) ?? 0;
+            if (barlineWidth > 0) {
+              const leadingSpacing = this.getMeasureBarLeftLeadingSpacing(
+                noteElement,
+                pageSetup,
+                measureBarWidthMap,
+              );
+              const reservedWidth = barlineWidth + leadingSpacing;
+              noteElement.computedMeasureBarLeftLeadingSpacing = leadingSpacing;
+              noteElement.neumeWidth += reservedWidth;
+              noteElement.lyricsHorizontalOffset += reservedWidth;
+              element.x -= reservedWidth;
+            }
+          }
+        }
+      }
+
+      currentLine.elements.push(element);
+
+      // Right-aligned martyriae need an explicit placement override when they
+      // start a paragraph: the leading `MAX_COST`-stretch glue used in Phase
+      // 1 is skipped at line start by positionItems, so it cannot push the
+      // martyria to the right edge on its own.
+      if (
+        isRightAlignedMartyria(element) &&
+        currentLine.elements.length === 1
+      ) {
+        const martyriaElement = element as MartyriaElement;
+        const rightInkReservation =
+          this.getVisibleMeasureBarRight(martyriaElement) == null
+            ? this.getMartyriaRightInkOverhang(martyriaElement, pageSetup)
+            : 0;
+        element.x = pageSetup.melkiteRtl
+          ? resolvedMargins.right + rightInkReservation
+          : pageSetup.pageWidth -
+            resolvedMargins.right -
+            element.width -
+            rightInkReservation;
+      }
+
+      // Special logic for centered lines
+      if (element.lineBreakType === LineBreakType.Center) {
+        const nextPosition = positions[posIndex + 1];
+        if (nextPosition?.line === position.line) {
+          throw new Error(
+            `Centered element must terminate its line: ${element.id ?? element.index}`,
+          );
+        }
+
+        let centeredWidth = position.width;
+        if (
+          element.elementType === ElementType.RichTextBox &&
+          this.isFillWidthElement(element)
+        ) {
+          // Its line-breaking width is zero. Center the visible text with
+          // the preceding music and keep equal space at both line ends.
+          const box = element as RichTextBoxElement;
+          const template = document.createElement('template');
+          centeredWidth = Math.min(
+            box.width,
+            Math.max(
+              ...[box.content, box.contentBottom].map((html) => {
+                template.innerHTML = html;
+                return this.measurePlainTextWidth(
+                  template.content.textContent ?? '',
+                  defaultLyricsFontCss,
+                );
+              }),
+            ),
+          );
+          box.width = centeredWidth;
+        }
+
+        centerOffsetPx =
+          (resolvedMargins.contentWidth -
+            currentLine.indentation -
+            (position.xOffset + centeredWidth)) /
+          2;
+        for (const lineElement of currentLine.elements) {
+          lineElement.x += centerOffsetPx;
+        }
+      }
+    }
+    return currentLine;
+  }
+
+  // Build an independent content sequence before assigning it to physical pages.
+  // All musical and paragraph state is local to this invocation.
+  private static prepareContentLines(
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    options?: LayoutDiagnosticsOptions,
+    hidePopulatedTerminator = false,
+  ) {
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
     // users corrupting their score.
@@ -425,19 +1106,6 @@ export class LayoutService {
         import.meta.env.VITE_LAYOUT_SERVICE_LOGGING_ENABLED === 'true',
     };
 
-    const pages: Page[] = [];
-
-    let page: Page = new Page();
-    page.physicalPageNumber = 1;
-
-    pages.push(page);
-
-    let currentPageHeightPx = 0;
-
-    let lastLineHeightPx = 0;
-
-    let lastElementWasPageBreak = false;
-
     // First, calculate some constants that will
     // be used later. This is so we don't unnecessarily
     // calculate them more than once during the loop.
@@ -448,9 +1116,7 @@ export class LayoutService {
 
     const neumeAscent =
       TextMeasurementService.getFontBoundingBoxAscent(neumeFont);
-    const defaultLyricsFontCss = this.getDefaultLyricsFont(
-      score.paragraphStyles,
-    );
+    const defaultLyricsFontCss = this.getDefaultLyricsFont(paragraphStyles);
 
     const oligonMidpoint = fontService.getMetrics(
       pageSetup.neumeDefaultFontFamily,
@@ -481,7 +1147,7 @@ export class LayoutService {
     const noteWidthArgs: GetNoteWidthArgs = {
       lyricsBaseline,
       measureBarWidthMap,
-      paragraphStyles: score.paragraphStyles,
+      paragraphStyles: paragraphStyles,
     };
 
     this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
@@ -496,32 +1162,6 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
     );
-
-    // Process Header and Footers
-    // Only a single text box is supported right now
-    for (const [show, containers] of [
-      [score.pageSetup.showHeader, score.headers],
-      [score.pageSetup.showFooter, score.footers],
-    ] as const) {
-      if (!show) {
-        continue;
-      }
-
-      for (const headerFooter of [
-        containers.default,
-        containers.chapterOpening,
-        containers.odd,
-        containers.even,
-        containers.firstPage,
-      ]) {
-        this.processHeaderFooter(
-          headerFooter,
-          pageSetup,
-          neumeHeight,
-          score.paragraphStyles,
-        );
-      }
-    }
 
     // Keep this encoding's elasticity non-negative so adjustment ratios retain
     // their conventional meaning and tex-linebreak can use its suffix-floor
@@ -584,7 +1224,7 @@ export class LayoutService {
             textBoxElement,
             pageSetup,
             neumeHeight,
-            score.paragraphStyles,
+            paragraphStyles,
           );
 
           this.addLyricReservation(
@@ -625,7 +1265,7 @@ export class LayoutService {
 
             richTextBoxElement.oligonMidpoint = oligonMidpoint;
 
-            // Fill-width rich text takes the remaining space after line breaking.
+            // The line breaker reserves no intrinsic width for fill boxes.
             elementWidthPx = richTextBoxElement.customWidth ?? 0;
             richTextBoxElement.height = neumeHeight;
           } else {
@@ -860,9 +1500,7 @@ export class LayoutService {
           }
 
           const neumeEnd =
-            layoutWorkspace.neumesEndPx +
-            noteElement.neumeWidth +
-            inlineSpacing;
+            layoutWorkspace.neumesEndPx + elementWidthPx + inlineSpacing;
 
           layoutWorkspace.lyricsEndPx = noteElement.isMelismaStart
             ? neumeEnd
@@ -885,7 +1523,7 @@ export class LayoutService {
           }
 
           // The note box width (unchanged by the bar transfer).
-          this.addBox(elementWidthPx, noteElement, layoutWorkspace);
+          this.addBox(noteElement.neumeWidth, noteElement, layoutWorkspace);
 
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
@@ -1076,10 +1714,11 @@ export class LayoutService {
           // PROCESS MARTYRIA
           const martyriaElement = elements[i] as MartyriaElement;
           const previousElement = this.getElementAt(elements, i - 1);
-          const elementWidthPx = this.getMartyriaWidth(
+          const martyriaWidth = this.getMartyriaWidth(
             martyriaElement,
             pageSetup,
           );
+          const elementWidthPx = martyriaWidth;
           const isParagraphStartMartyria =
             layoutWorkspace.pendingParagraph.length === 0;
           const lineStartMartyriaShift = martyriaElement.alignRight
@@ -1346,7 +1985,7 @@ export class LayoutService {
               trailingGlue.width,
             );
           }
-          this.addBox(elementWidthPx, martyriaElement, layoutWorkspace);
+          this.addBox(martyriaWidth, martyriaElement, layoutWorkspace);
 
           // Compute the measure bar width that would transfer from this
           // martyria to the next line's first note at an automatic break in the
@@ -1458,7 +2097,7 @@ export class LayoutService {
           // PROCESS DROPCAP
           const dropCapElement = elements[i] as DropCapElement;
           const resolvedDropCapStyle = resolveParagraphStyle(
-            score.paragraphStyles,
+            paragraphStyles,
             dropCapElement.paragraphStyleId,
             dropCapElement.getParagraphStyleOverrides(),
           );
@@ -1520,6 +2159,21 @@ export class LayoutService {
           }
 
           const emptyElement = elements[i] as EmptyElement;
+          if (hidePopulatedTerminator && elements.length > 1) {
+            // The sentinel remains in the model for editing, but owns no layout.
+            emptyElement.width = 0;
+            emptyElement.height = 0;
+            if (layoutWorkspace.pendingParagraph.length > 0) {
+              this.endParagraph(
+                false,
+                layoutWorkspace,
+                measureBarWidthMap,
+                neumeLineHeight,
+                neumeHeight,
+              );
+            }
+            continue;
+          }
           const previousElement = this.getElementAt(elements, i - 1);
           const followsNonRightAlignedMartyria =
             previousElement?.elementType === ElementType.Martyria &&
@@ -1595,445 +2249,15 @@ export class LayoutService {
       }
     }
 
-    // Phase 2: Place completed paragraphs onto pages
-    const extraHeaderFooterHeightCache = new Map<
-      number,
-      { extraHeaderHeightPx: number; extraFooterHeightPx: number }
-    >();
-
-    // Running-marker metadata is a left fold over pages: a page's metadata
-    // depends only on its own content and the previous page's metadata.
-    // Pages are appended in order, so fold each page exactly once when it
-    // has completed, and resolve the current, still-filling page on demand
-    // without folding it in.
-    let completedRunningMarkerPageCount = 0;
-    let completedRunningMarkerMetadata: RunningMarkerPageMetadata | null = null;
-    const resolveCurrentPageIsChapterOpening = () => {
-      while (completedRunningMarkerPageCount < pages.length - 1) {
-        completedRunningMarkerMetadata = resolveNextRunningMarkerPageMetadata(
-          pages[completedRunningMarkerPageCount],
-          completedRunningMarkerMetadata,
-        );
-        completedRunningMarkerPageCount++;
-      }
-
-      return resolveNextRunningMarkerPageMetadata(
-        page,
-        completedRunningMarkerMetadata,
-      ).isChapterOpening;
-    };
-
-    // Keep header/footer overflow reservation stable within a physical page.
-    // This mitigates intra-page drift when oversized headers/footers extend
-    // outside the margins, but it is not a predictive pagination fix and does
-    // not guarantee those out-of-margin layouts will behave correctly.
-    const getCachedExtraHeaderFooterHeight = () => {
-      const physicalPageNumber = page.physicalPageNumber;
-      const cachedHeights =
-        extraHeaderFooterHeightCache.get(physicalPageNumber);
-
-      if (cachedHeights != null) {
-        return cachedHeights;
-      }
-
-      // Running markers only affect header/footer selection, so skip the
-      // page scan entirely when neither is shown.
-      const isChapterOpening =
-        pageSetup.showHeader || pageSetup.showFooter
-          ? resolveCurrentPageIsChapterOpening()
-          : false;
-      const extraHeights = this.getExtraHeaderFooterHeight(
-        score,
-        pageSetup,
-        physicalPageNumber,
-        isChapterOpening,
-      );
-      extraHeaderFooterHeightCache.set(physicalPageNumber, extraHeights);
-
-      return extraHeights;
-    };
-
-    // Page margins depend only on the physical page number, so resolve them
-    // once per page instead of once per positioned element.
-    const resolvedPageMarginsCache = new Map<number, ResolvedPageMargins>();
-    const getCachedResolvedPageMargins = () => {
-      const physicalPageNumber = page.physicalPageNumber;
-      let resolvedMargins = resolvedPageMarginsCache.get(physicalPageNumber);
-
-      if (resolvedMargins == null) {
-        resolvedMargins = resolvePageMargins(pageSetup, physicalPageNumber);
-        resolvedPageMarginsCache.set(physicalPageNumber, resolvedMargins);
-      }
-
-      return resolvedMargins;
-    };
-
-    for (const [
-      completedParagraphIndex,
-      completedParagraph,
-    ] of layoutWorkspace.completedParagraphs.entries()) {
-      const {
-        diagnostics,
-        paragraph,
-        positions,
-        ratios,
-        lineHeights,
-        dropCapWidthPx,
-        dropCapContinuationLines,
-      } = completedParagraph;
-
-      // Tracks the current line index within this completed paragraph.
-      let paragraphLineIndex = -1;
-
-      for (const [posIndex, position] of positions.entries()) {
-        const item = paragraph[position.item];
-        if (item.type !== 'box') {
-          // No need to position glue items
-          continue;
-        }
-
-        const startsNewLine = position.line > paragraphLineIndex;
-
-        // Check if we need a new line
-        if (startsNewLine) {
-          const newLine = new Line();
-          const nextLineIndex = paragraphLineIndex + 1;
-          const adjustmentRatio = ratios[nextLineIndex];
-          if (adjustmentRatio == null) {
-            throw new Error(
-              `Missing adjustment ratio for completed paragraph ${completedParagraphIndex}, line ${nextLineIndex}`,
-            );
-          }
-          newLine.adjustmentRatio = adjustmentRatio;
-          newLine.diagnostics = diagnostics?.[nextLineIndex] ?? null;
-          page.lines.push(newLine);
-
-          paragraphLineIndex += 1;
-
-          lastLineHeightPx = lineHeights[nextLineIndex]!;
-          currentPageHeightPx += lastLineHeightPx;
-        }
-
-        // Calculate the height of the headers/footers of the current page
-        let { extraHeaderHeightPx, extraFooterHeightPx } =
-          getCachedExtraHeaderFooterHeight();
-
-        const innerPageHeight =
-          pageSetup.innerPageHeight - extraHeaderHeightPx - extraFooterHeightPx;
-        const additionalHeight =
-          startsNewLine && paragraphLineIndex === 0
-            ? this.getLineSpanHeight(
-                lineHeights,
-                1,
-                dropCapContinuationLines,
-                neumeLineHeight,
-              )
-            : 0;
-        // A line alone on its page stays there even if it overflows, since
-        // moving it would leave the page empty.
-        const requiresNewPage =
-          startsNewLine &&
-          ((page.lines.length > 1 &&
-            currentPageHeightPx + additionalHeight > innerPageHeight) ||
-            lastElementWasPageBreak);
-
-        // Keep multiline drop caps on the same page as their continuation lines
-        // when possible.
-        if (requiresNewPage) {
-          const lastLine = page.lines.pop()!;
-
-          page = new Page();
-          page.physicalPageNumber = pages.length + 1;
-          page.lines.push(lastLine);
-          pages.push(page);
-          currentPageHeightPx = lastLineHeightPx;
-
-          // Consume the page-break trigger. Subsequent positioned items
-          // belonging to the same break (glues, penalties without an
-          // associated element) hit the `continue` below and skip the
-          // `lastElementWasPageBreak` update, so without this reset the
-          // flag re-fires this branch and leaves an empty page behind.
-          lastElementWasPageBreak = false;
-
-          // Recalculate the height of the headers/footers of the new page
-          ({ extraHeaderHeightPx, extraFooterHeightPx } =
-            getCachedExtraHeaderFooterHeight());
-        }
-
-        if (!('element' in item)) {
-          continue;
-        }
-        const element = (item as ElementBox).element;
-        const resolvedMargins = getCachedResolvedPageMargins();
-        const contentStart = pageSetup.melkiteRtl
-          ? resolvedMargins.right
-          : resolvedMargins.contentLeft;
-
-        const currentLine = page.lines[page.lines.length - 1];
-        const isFirstElementOnLine = currentLine.elements.length === 0;
-
-        // Indent only the continuation lines covered by a multiline drop cap.
-        if (
-          isFirstElementOnLine &&
-          paragraphLineIndex > 0 &&
-          paragraphLineIndex <= dropCapContinuationLines
-        ) {
-          currentLine.indentation = dropCapWidthPx;
-        }
-
-        if (
-          isFirstElementOnLine &&
-          element.elementType === ElementType.Martyria &&
-          !(element as MartyriaElement).alignRight
-        ) {
-          currentLine.indentation += this.getLineStartMartyriaShift(
-            element as MartyriaElement,
-            position.xOffset,
-            pageSetup,
-          );
-        }
-
-        element.x = contentStart + position.xOffset + currentLine.indentation;
-
-        // marginTop offsets the element within its line's allocated space
-        // (whose height already includes marginTop + marginBottom).
-        let marginTop = 0;
-        if (element.elementType === ElementType.TextBox) {
-          marginTop = (element as TextBoxElement).marginTop;
-        } else if (element.elementType === ElementType.RichTextBox) {
-          marginTop = (element as RichTextBoxElement).marginTop;
-        } else if (element.elementType === ElementType.ModeKey) {
-          marginTop = (element as ModeKeyElement).marginTop;
-        }
-
-        element.y =
-          pageSetup.topMargin +
-          extraHeaderHeightPx +
-          marginTop +
-          currentPageHeightPx -
-          lastLineHeightPx;
-        element.width = position.width;
-
-        // After line breaking, extend fill-width boxes to the next positioned
-        // item or the line end.
-        if (this.isFillWidthElement(element)) {
-          let fillWidth: number | null = null;
-          for (
-            let nextIdx = posIndex + 1;
-            nextIdx < positions.length;
-            nextIdx++
-          ) {
-            const nextPos = positions[nextIdx];
-            if (nextPos.line > position.line) {
-              break;
-            }
-            const nextItem = paragraph[nextPos.item];
-            if (
-              element.elementType === ElementType.RichTextBox &&
-              !('element' in nextItem)
-            ) {
-              continue;
-            }
-            fillWidth = nextPos.xOffset - position.xOffset;
-            break;
-          }
-          if (fillWidth == null) {
-            const lineWidth =
-              resolvedMargins.contentWidth - currentLine.indentation;
-            fillWidth = lineWidth - position.xOffset;
-          }
-          element.width =
-            element.elementType === ElementType.RichTextBox
-              ? Math.max(0, fillWidth)
-              : fillWidth;
-        }
-
-        element.line = page.lines.length;
-        element.page = pages.length;
-
-        this.adjustDropCapPosition(
-          element,
-          lineHeights,
-          neumeLineHeight,
-          lyricsBaseline,
-        );
-
-        // Measure bar transfer logic between lines
-        let prevLine =
-          page.lines.length > 1 ? page.lines[page.lines.length - 2] : null;
-        if (prevLine === null && pages.length > 1) {
-          const prevPage = pages[pages.length - 2];
-          prevLine = prevPage.lines[prevPage.lines.length - 1];
-        }
-
-        if (isFirstElementOnLine) {
-          const previousElement = prevLine
-            ? prevLine.elements[prevLine.elements.length - 1]
-            : null;
-
-          if (previousElement?.elementType === ElementType.Note) {
-            // If the new line starts with a left measure, apply it to the
-            // right of the previous line
-            const previousNoteElement = previousElement as NoteElement;
-            const transferredMeasureBar =
-              this.getMeasureBarTransferredFromLineStart(element);
-            if (transferredMeasureBar) {
-              previousNoteElement.computedMeasureBarRight =
-                transferredMeasureBar;
-            }
-          } else if (
-            element.elementType === ElementType.Note &&
-            previousElement?.elementType === ElementType.Martyria &&
-            paragraphLineIndex > 0
-          ) {
-            const noteElement = element as NoteElement;
-            // If the previous line ends with a martyria with a barline, apply
-            // it to the left of the new line. Only transfer within the same
-            // paragraph (paragraphLineIndex > 0); when a martyria ends a
-            // paragraph (right-aligned or explicit line break), no bar is
-            // transferred to the next paragraph's first note.
-            const previousMartyriaElement = previousElement as MartyriaElement;
-            const normalizedMeasureBar = this.getMartyriaTransferBar(
-              previousMartyriaElement,
-            );
-            // Only transfer if the note doesn't already have its own
-            // measureBarLeft: getNoteWidth already accounted for the
-            // explicit one in Phase 1.
-            if (normalizedMeasureBar && !noteElement.measureBarLeft) {
-              noteElement.computedMeasureBarLeft = normalizedMeasureBar;
-              // Phase 1 reserved non-stretching leading space for this
-              // barline and its collision-aware clearance via an anonymous
-              // spacer box before the note. Shift the note left so the
-              // rendered barline occupies that reserved space instead of
-              // adding extra width. Adjust neumeWidth and
-              // lyricsHorizontalOffset so lyrics center under the neume body.
-              const barlineWidth =
-                measureBarWidthMap.get(normalizedMeasureBar) ?? 0;
-              if (barlineWidth > 0) {
-                const leadingSpacing = this.getMeasureBarLeftLeadingSpacing(
-                  noteElement,
-                  pageSetup,
-                  measureBarWidthMap,
-                );
-                const reservedWidth = barlineWidth + leadingSpacing;
-                noteElement.computedMeasureBarLeftLeadingSpacing =
-                  leadingSpacing;
-                noteElement.neumeWidth += reservedWidth;
-                noteElement.lyricsHorizontalOffset += reservedWidth;
-                element.x -= reservedWidth;
-              }
-            }
-          }
-        }
-
-        currentLine.elements.push(element);
-
-        // Right-aligned martyriae need an explicit placement override when they
-        // start a paragraph: the leading `MAX_COST`-stretch glue used in Phase
-        // 1 is skipped at line start by positionItems, so it cannot push the
-        // martyria to the right edge on its own.
-        if (
-          isRightAlignedMartyria(element) &&
-          currentLine.elements.length === 1
-        ) {
-          const martyriaElement = element as MartyriaElement;
-          const rightInkReservation =
-            this.getVisibleMeasureBarRight(martyriaElement) == null
-              ? this.getMartyriaRightInkOverhang(martyriaElement, pageSetup)
-              : 0;
-          element.x = pageSetup.melkiteRtl
-            ? resolvedMargins.right + rightInkReservation
-            : pageSetup.pageWidth -
-              resolvedMargins.right -
-              element.width -
-              rightInkReservation;
-        }
-
-        // Special logic for centered lines
-        if (element.lineBreakType === LineBreakType.Center) {
-          const nextPosition =
-            posIndex + 1 < positions.length ? positions[posIndex + 1] : null;
-          if (nextPosition?.line === position.line) {
-            throw new Error(
-              `Centered element must terminate its line: ${element.id ?? element.index}`,
-            );
-          }
-
-          let centeredWidth = position.width;
-          if (
-            element.elementType === ElementType.RichTextBox &&
-            this.isFillWidthElement(element)
-          ) {
-            // Its line-breaking width is zero. Center the visible text with
-            // the preceding music and keep equal space at both line ends.
-            const box = element as RichTextBoxElement;
-            const template = document.createElement('template');
-            centeredWidth = Math.min(
-              box.width,
-              Math.max(
-                ...[box.content, box.contentBottom].map((html) => {
-                  template.innerHTML = html;
-                  return this.measurePlainTextWidth(
-                    template.content.textContent ?? '',
-                    defaultLyricsFontCss,
-                  );
-                }),
-              ),
-            );
-            box.width = centeredWidth;
-          }
-
-          const centerOffsetPx =
-            (resolvedMargins.contentWidth -
-              currentLine.indentation -
-              (position.xOffset + centeredWidth)) /
-            2;
-          for (const lineElement of currentLine.elements) {
-            lineElement.x += centerOffsetPx;
-          }
-        }
-
-        lastElementWasPageBreak = element.pageBreak;
-      }
-
-      // Preserve the paragraph boundary after Knuth-Plass has expanded this
-      // completed paragraph into one or more positioned lines. Exporters need
-      // this distinction because a visual line is not necessarily a paragraph.
-      page.lines[page.lines.length - 1].paragraphEnd = true;
-    }
-
-    this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
-    this.addMelismas(
-      pages,
-      pageSetup,
+    return {
+      layoutWorkspace,
+      neumeHeight,
+      neumeLineHeight,
+      lyricsBaseline,
       defaultLyricsFontCss,
       measureBarWidthMap,
-      atomicMelismaLayout.centeringPlans,
-    );
-
-    if (pageSetup.alignIsonIndicators) {
-      this.alignIsonIndicators(pages, pageSetup);
-    }
-
-    // Record element updates
-    elements.forEach((element) => {
-      this.checkElementState(element);
-    });
-
-    score.headersAndFooters.forEach((element) => {
-      this.checkElementState(element);
-    });
-
-    if (layoutWorkspace.loggingEnabled) {
-      console.log(
-        'avg ratio',
-        layoutWorkspace.completedParagraphs
-          .flatMap((p) => p.ratios)
-          .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
-      );
-    }
-
-    return pages;
+      atomicMelismaLayout,
+    };
   }
 
   public static getElementOverlayDiagnostics(
@@ -2210,6 +2434,281 @@ export class LayoutService {
       rightProjection: null,
       rightTuck: null,
       rootNeume: null,
+    };
+  }
+
+  // Finished-line obstacles use the rendered glyph origins, including barline
+  // spacing. They are separate from the geometry used to break musical lines.
+  private static getReferenceMarkerObstacles(
+    element: ScoreElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+  ): NoteGlyphBox[] {
+    const size = pageSetup.neumeDefaultFontSize;
+    let boxes: NoteGlyphBox[];
+    let width = element.width;
+    if (
+      element.elementType === ElementType.Note ||
+      element.elementType === ElementType.Martyria
+    ) {
+      const owner = element as NoteElement | MartyriaElement;
+      const isNote = element.elementType === ElementType.Note;
+      const transferred =
+        isNote &&
+        owner.measureBarRight === null &&
+        (owner as NoteElement).computedMeasureBarRight !== null;
+      width =
+        this.getMeasureBarOwnerWidth(owner) +
+        (transferred ? 0 : owner.computedMeasureBarRightTrailingSpacing);
+      boxes = isNote
+        ? this.getNoteCollisionGlyphBoxes(
+            owner as NoteElement,
+            pageSetup,
+            measureBarWidthMap,
+          )
+        : this.getMartyriaCollisionGlyphBoxes(
+            owner as MartyriaElement,
+            pageSetup,
+          );
+      for (const edge of ['left', 'right'] as const) {
+        const bar =
+          edge === 'left'
+            ? this.getVisibleMeasureBarLeft(owner)
+            : this.getVisibleMeasureBarRight(owner);
+        if (bar === null) {
+          continue;
+        }
+        const barWidth = measureBarWidthMap.get(bar)!;
+        const offsetX = isNote
+          ? this.emToPx(
+              edge === 'left'
+                ? (owner as NoteElement).measureBarLeftOffsetX
+                : (owner as NoteElement).measureBarRightOffsetX,
+              size,
+            )
+          : 0;
+        const offsetY = isNote
+          ? this.emToPx(
+              edge === 'left'
+                ? (owner as NoteElement).measureBarLeftOffsetY
+                : (owner as NoteElement).measureBarRightOffsetY,
+              size,
+            )
+          : pageSetup.martyriaVerticalOffset +
+            (owner as MartyriaElement).verticalOffset;
+        const x =
+          edge === 'left'
+            ? owner.computedMeasureBarLeftOffsetX + offsetX
+            : this.getMeasureBarOwnerWidth(owner) -
+              (transferred ? 0 : barWidth) +
+              owner.computedMeasureBarRightTrailingSpacing +
+              owner.computedMeasureBarRightOffsetX +
+              offsetX;
+        const stroke = pageSetup.measureBarDefaultStrokeWidth / 2;
+        boxes.push(
+          ...this.getGlyphCollisionBoxes(
+            pageSetup.neumeDefaultFontFamily,
+            NeumeMappingService.getMapping(bar).glyphName,
+            x,
+            offsetY,
+            size,
+          ).map((box) => ({
+            left: box.left - stroke,
+            right: box.right + stroke,
+            top: box.top - stroke,
+            bottom: box.bottom + stroke,
+          })),
+        );
+      }
+    } else if (element.elementType === ElementType.Tempo) {
+      width = (element as TempoElement).neumeWidth;
+      boxes = this.getGlyphCollisionBoxes(
+        pageSetup.neumeDefaultFontFamily,
+        NeumeMappingService.getMapping((element as TempoElement).neume)
+          .glyphName,
+        0,
+        0,
+        size,
+      );
+    } else {
+      return [];
+    }
+    const x = pageSetup.melkiteRtl
+      ? pageSetup.pageWidth - element.x - width
+      : element.x;
+    return boxes.map((box) => ({
+      ...box,
+      left: box.left + x,
+      right: box.right + x,
+      top: box.top + element.y,
+      bottom: box.bottom + element.y,
+    }));
+  }
+
+  // Shared by page layout and the positioning preview. Does not mutate elements.
+  public static getFootnoteMarkerPositionsForLine(
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    measureBarWidthMap = this.getMeasureBarWidthMap(pageSetup),
+  ) {
+    const positions = new Map<
+      FootnoteAnchorElement,
+      ReturnType<typeof LayoutService.getFootnoteMarkerPosition>
+    >();
+    if (
+      !elements.some(
+        (element) =>
+          element instanceof FootnoteAnchorElement &&
+          element.footnoteMarker !== null,
+      )
+    ) {
+      return positions;
+    }
+    const obstacles = elements.flatMap((element) =>
+      this.getReferenceMarkerObstacles(element, pageSetup, measureBarWidthMap),
+    );
+    for (const element of elements) {
+      if (
+        element instanceof FootnoteAnchorElement &&
+        element.footnoteMarker !== null
+      ) {
+        const x = pageSetup.melkiteRtl
+          ? pageSetup.pageWidth -
+            element.x -
+            (element as NoteElement | MartyriaElement).neumeWidth
+          : element.x;
+        const position = this.getFootnoteMarkerPosition(
+          element,
+          pageSetup,
+          paragraphStyles,
+          element.footnoteMarker,
+          obstacles.map((box) => ({
+            ...box,
+            left: box.left - x,
+            right: box.right - x,
+            top: box.top - element.y,
+            bottom: box.bottom - element.y,
+          })),
+        );
+        positions.set(element, position);
+        obstacles.push({
+          left: position.inkBox.left + x,
+          right: position.inkBox.right + x,
+          top: position.inkBox.top + element.y,
+          bottom: position.inkBox.bottom + element.y,
+        });
+      }
+    }
+    return positions;
+  }
+
+  public static getFootnoteMarkerPosition(
+    element: FootnoteAnchorElement,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+    marker = element.footnoteMarker!,
+    obstacles?: NoteGlyphBox[],
+  ) {
+    const context = this.createOverlayDiagnosticsContext(pageSetup);
+    const size = pageSetup.neumeDefaultFontSize;
+    let boxes: NoteGlyphBox[];
+    let base: NoteGlyphBox[];
+    if (element.elementType === ElementType.Note) {
+      const noteBoxes = this.getNoteCollisionGlyphBoxes(
+        element as NoteElement,
+        pageSetup,
+        context.measureBarWidthMap,
+        null,
+      );
+      boxes = noteBoxes;
+      base = noteBoxes.filter((box) => box.collisionKind === 'base');
+    } else {
+      boxes = this.getMartyriaCollisionGlyphBoxes(
+        element as MartyriaElement,
+        pageSetup,
+      );
+      base = boxes;
+    }
+    const { ink, style } = this.measureFootnoteMarker(
+      marker,
+      pageSetup,
+      paragraphStyles,
+    );
+    const position = this.getFootnoteMarkerInkBox(
+      element,
+      pageSetup,
+      base,
+      obstacles ?? boxes,
+      {
+        width: ink.inkWidth,
+        height: ink.inkAscent + ink.inkDescent,
+        strokeWidth: style.strokeWidth,
+      },
+    );
+    // Convert ink coordinates to the CSS text box (line-height: 1).
+    const textLeft = position.left - ink.inkLeft;
+    const markerBaseline =
+      ink.fontAscent + (style.fontSize - ink.fontAscent - ink.fontDescent) / 2;
+    return {
+      inkBox: {
+        left: position.left - style.strokeWidth / 2,
+        right: position.right + style.strokeWidth / 2,
+        top: position.top - style.strokeWidth / 2,
+        bottom: position.bottom + style.strokeWidth / 2,
+      },
+      // Collision geometry is physical LTR; score elements use logical offsets.
+      left: pageSetup.melkiteRtl
+        ? (element as NoteElement | MartyriaElement).neumeWidth -
+          textLeft -
+          ink.advanceWidth
+        : textLeft,
+      top:
+        position.top +
+        ink.inkAscent -
+        markerBaseline +
+        context.neumeFontAscent +
+        (context.neumeFontHeight - size) / 2,
+    };
+  }
+
+  private static measureFootnoteMarker(
+    marker: string,
+    pageSetup: PageSetup,
+    paragraphStyles: ParagraphStyle[],
+  ) {
+    const style = footnoteMarkerStyle(paragraphStyles);
+    const ink = TextMeasurementService.getInkBounds(
+      footnoteMarkerText(marker, pageSetup.footnoteReferenceParentheses),
+      footnoteMarkerFont(paragraphStyles),
+      style.fontVariantCaps ?? 'normal',
+    );
+    return { ink, style };
+  }
+
+  private static getFootnoteMarkerInkBox(
+    element: FootnoteAnchorElement,
+    pageSetup: PageSetup,
+    base: NoteGlyphBox[],
+    boxes: NoteGlyphBox[],
+    metrics: { width: number; height: number; strokeWidth: number },
+  ): NoteGlyphBox {
+    const size = pageSetup.neumeDefaultFontSize;
+    const { left, top } = positionFootnoteMarker(
+      base,
+      element.footnotePositionOverride ? [] : boxes,
+      metrics.width,
+      metrics.height,
+      -size * 0.75,
+      element.footnoteOffsetX * size,
+      element.footnoteOffsetY * size,
+      size * 0.08 + metrics.strokeWidth / 2,
+    );
+    return {
+      left,
+      right: left + metrics.width,
+      top,
+      bottom: top + metrics.height,
     };
   }
 
@@ -3838,7 +4337,7 @@ export class LayoutService {
     const baseIndex = glyphs.findIndex((glyph) => glyph.kind === 'base');
     const baseGlyphName = resolvedGlyphNames[baseIndex];
 
-    return glyphs.flatMap((glyph, index) => {
+    const boxes = glyphs.flatMap((glyph, index) => {
       const glyphName = resolvedGlyphNames[index];
       let x = glyph.x;
       let y = glyph.y;
@@ -3862,6 +4361,7 @@ export class LayoutService {
         fontSize,
       ).map((box) => ({ ...box, collisionKind: glyph.kind }));
     });
+    return boxes;
   }
 
   private static getNoteCollisionGlyphs(
@@ -4070,7 +4570,7 @@ export class LayoutService {
       pageSetup.martyriaVerticalOffset + martyriaElement.verticalOffset;
     const glyphs = this.getMartyriaCollisionGlyphs(martyriaElement, pageSetup);
 
-    return glyphs.flatMap((glyph) =>
+    const boxes = glyphs.flatMap((glyph) =>
       this.getGlyphCollisionBoxes(
         fontFamily,
         glyph.glyphName,
@@ -4079,6 +4579,7 @@ export class LayoutService {
         fontSize,
       ),
     );
+    return boxes;
   }
 
   private static getMartyriaCollisionGlyphs(
@@ -4947,9 +5448,8 @@ export class LayoutService {
       }
 
       if (diagnosticItems != null) {
-        // The only penalty that can immediately follow a note box is the
-        // unlabeled break opportunity pushed after the neume, so there is no
-        // existing label to preserve here.
+        // The penalty after a note is the unlabeled
+        // boundary opportunity, so there is no existing label to preserve.
         const diagnosticItem = diagnosticItems[i];
         diagnosticItem.cost = item.cost;
         diagnosticItem.label = `runt-${tailNoteCount}-note`;
@@ -7393,11 +7893,13 @@ export class LayoutService {
   public static calculateMartyriae(
     elements: ScoreElement[],
     pageSetup: PageSetup,
+    initialContext?: MusicalContext,
   ) {
-    let currentNote = 0;
-    let currentNoteVirtual = 0;
-    let currentScale = Scale.Diatonic;
-    let currentShift = 0;
+    let currentNote = initialContext?.note ?? 0;
+    let currentShift = initialContext?.shift ?? 0;
+    let currentNoteVirtual = currentNote + currentShift;
+    let currentScale = initialContext?.scale ?? Scale.Diatonic;
+    const contexts = new Map<ScoreElement, MusicalContext>();
 
     let ambitusLow: number = Number.MAX_SAFE_INTEGER;
     let ambitusHigh: number = Number.MIN_SAFE_INTEGER;
@@ -7676,6 +8178,13 @@ export class LayoutService {
           );
         }
       }
+      if (elementFootnoteIds(element).length > 0) {
+        contexts.set(element, {
+          note: currentNote,
+          scale: currentScale,
+          shift: currentShift,
+        });
+      }
     }
 
     if (currentModeKey) {
@@ -7689,6 +8198,7 @@ export class LayoutService {
         ambitusHighShift,
       });
     }
+    return contexts;
   }
 
   public static assignAmbitus({

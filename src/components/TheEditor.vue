@@ -1624,9 +1624,22 @@ watch(
   { flush: 'post' },
 );
 
-watch(currentFilePath, () => {
-  window.document.title = windowTitle.value;
-});
+watch(
+  [selectedWorkspace, currentFilePath],
+  ([workspace, path], [previousWorkspace, previousPath]) => {
+    window.document.title = windowTitle.value;
+
+    // Tab switches already lay out the new workspace. A rename can change
+    // the measured height of headers and footers that use filename tokens.
+    if (
+      workspace === previousWorkspace &&
+      path !== previousPath &&
+      settleFootnoteReferences.value
+    ) {
+      save();
+    }
+  },
+);
 
 watch(selectedWorkspaceId, () => {
   window.document.title = windowTitle.value;
@@ -3418,19 +3431,18 @@ function onClickPrintScore() {
     return;
   }
 
-  if (!isBrowser.value && settleFootnoteReferences.value) {
-    void onFileMenuPrint();
+  if (isBrowser.value) {
+    void onFileMenuPrint(true);
     return;
   }
-  if (pages.value.some((page) => page.footnoteOverflow)) {
+  if (
+    !settleFootnoteReferences.value &&
+    pages.value.some((page) => page.footnoteOverflow)
+  ) {
     toast.error(t(($) => $.menu.footnotes.overflow, { ns: 'menu' }));
     return;
   }
-  if (isBrowser.value) {
-    window.print();
-  } else {
-    void onFileMenuPrint();
-  }
+  void onFileMenuPrint();
 }
 
 function observeSelectedHistory() {
@@ -4646,11 +4658,13 @@ function onKeydownLyrics(event: KeyboardEvent) {
 }
 
 function onKeydownDropCap(event: KeyboardEvent) {
-  let handled = false;
-
   const index = activeElements.value.indexOf(selectedElement.value!);
-  const htmlElement = getElementComponent<InstanceType<typeof DropCap>>(index)!;
+  const htmlElement = getElementComponent<InstanceType<typeof DropCap>>(index);
+  if (htmlElement === undefined) {
+    return;
+  }
 
+  let handled = false;
   switch (event.code) {
     case 'Enter':
       // Do not allow enter key in drop caps
@@ -4692,11 +4706,13 @@ function onKeydownDropCap(event: KeyboardEvent) {
 }
 
 function onKeydownTextBox(event: KeyboardEvent) {
-  let handled = false;
-
   const index = activeElements.value.indexOf(selectedElement.value!);
-  const htmlElement = getElementComponent<InstanceType<typeof TextBox>>(index)!;
+  const htmlElement = getElementComponent<InstanceType<typeof TextBox>>(index);
+  if (htmlElement === undefined) {
+    return;
+  }
 
+  let handled = false;
   switch (event.code) {
     case 'Tab':
       throttled.moveRight();
@@ -8371,7 +8387,7 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
   }
 }
 
-async function onFileMenuPrint() {
+async function onFileMenuPrint(openBrowserDialog = false) {
   if (!isBrowser.value) {
     if (nativePrintInProgress) {
       return;
@@ -8391,7 +8407,12 @@ async function onFileMenuPrint() {
     }
     return;
   }
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
+  // window.print() fires beforeprint, which also calls this handler.
+  if (printMode.value) {
+    return;
+  }
+  const workspace = selectedWorkspace.value;
+  prepareWorkspaceForSerialization(workspace);
 
   printMode.value = true;
 
@@ -8399,20 +8420,30 @@ async function onFileMenuPrint() {
   // blinking cursors don't show up in the printed page
   const activeElement = blurActiveElement();
 
-  const previousTitle = window.document.title;
-  window.document.title = getFileName(selectedWorkspace.value, false);
-
   try {
-    await nextTick();
-    await ipcService.printWorkspace(
-      selectedWorkspace.value,
-      createScoreRenderSnapshot(selectedWorkspace.value),
+    // The browser does not wait for async work in beforeprint.
+    if (openBrowserDialog) {
+      await awaitBrowserOutputLayout(workspace);
+      if (pages.value.some((page) => page.footnoteOverflow)) {
+        toast.error(t(($) => $.menu.footnotes.overflow, { ns: 'menu' }));
+        return;
+      }
+    }
+
+    window.document.title = getFileName(workspace, false);
+    const printed = ipcService.printWorkspace(
+      workspace,
+      createScoreRenderSnapshot(workspace),
     );
+    if (openBrowserDialog) {
+      window.print();
+    }
+    await printed;
   } catch (error) {
     console.error(error);
   } finally {
     printMode.value = false;
-    window.document.title = previousTitle;
+    window.document.title = windowTitle.value;
 
     // Re-focus the active element
     focusElement(activeElement);

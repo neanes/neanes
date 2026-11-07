@@ -65,7 +65,8 @@
             :key="`inline-top-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
             ref="editor"
             class="rich-text-editor inline-top"
-            :style="textBoxStyleTop"
+            :style="inlineTextBoxStyle"
+            :class="{ 'center-outside-box': inlineCenterOutsideBox }"
             :owner="element"
             :footnote-markers="footnoteMarkers"
             :footnotes-editable="editMode && !recalc"
@@ -83,7 +84,8 @@
           :key="`inline-bottom-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
-          :style="textBoxStyleBottom"
+          :style="inlineTextBoxStyle"
+          :class="{ 'center-outside-box': inlineCenterOutsideBox }"
           :owner="element"
           :footnote-markers="footnoteMarkers"
           :footnotes-editable="editMode && !recalc"
@@ -201,6 +203,10 @@ const props = defineProps({
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
+  },
+  inlinePageCenterOffset: {
+    type: Number,
+    default: undefined,
   },
   fonts: {
     type: Array as PropType<string[]>,
@@ -513,20 +519,35 @@ const textBoxTopInnerContainerStyle = computed(() => {
   return style;
 });
 
-const textBoxStyleTop = computed(() => {
-  const style: any = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
-  };
-
-  return style;
+const inlinePageCenter = computed(() => {
+  const center = props.inlinePageCenterOffset;
+  if (!props.element.centerOnPage || center == null) {
+    return undefined;
+  }
+  return props.pageSetup.melkiteRtl ? props.element.width - center : center;
 });
 
-const textBoxStyleBottom = computed(() => {
-  const style: any = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
-  };
+const inlineCenterOutsideBox = computed(() => {
+  const center = inlinePageCenter.value;
+  return center != null && (center <= 0 || center >= props.element.width);
+});
 
-  return style;
+const inlineTextBoxStyle = computed<StyleValue>(() => {
+  const { width } = props.element;
+  const physicalCenter = inlinePageCenter.value;
+  if (physicalCenter == null) {
+    return { width: `${width}px` };
+  }
+
+  // Center the content without extending the editor's background or hit area.
+  const centerInBox = Math.min(width, Math.max(0, physicalCenter));
+  const padding = 2 * centerInBox - width;
+  return {
+    width: `${width}px`, // no zoom because we scale with the transform
+    paddingLeft: `${Math.max(0, padding)}px`,
+    paddingRight: `${Math.max(0, -padding)}px`,
+    '--inline-page-center-shift': `${physicalCenter - centerInBox}px`,
+  };
 });
 
 const textBoxTopContainerStyle = computed(() => {
@@ -558,14 +579,6 @@ const multipanelContainerStyle = computed(() => {
 
   return style;
 });
-
-watch(
-  () => props.element.centerOnPage,
-  () => {
-    setPadding(getEditorInstance());
-    setPadding(getEditorInstanceBottom());
-  },
-);
 
 watch(
   () => resolvedParagraphStyle.value.fontSize,
@@ -775,7 +788,6 @@ function onEditorReadyInline(editor: InlineEditor) {
     }),
   );
 
-  setPadding(editor);
   markEditorReady(editor);
 }
 
@@ -798,7 +810,6 @@ function onEditorReadyInlineBottom(editor: InlineEditor) {
     }),
   );
 
-  setPadding(editor);
   markEditorReady(editor);
 }
 
@@ -968,26 +979,6 @@ function getHeightTop() {
   return element.getBoundingClientRect().height / zoom;
 }
 
-function setPadding(editor: Editor | undefined) {
-  if (editor == null) {
-    return;
-  }
-
-  editor.editing.view.change((writer) => {
-    const editable = editor.editing.view.document.getRoot();
-
-    if (props.element.centerOnPage) {
-      writer.setStyle(
-        'padding-right',
-        `${props.pageSetup.innerPageWidth - props.element.width}px`,
-        editable!,
-      );
-    } else {
-      writer.removeStyle('padding-right', editable!);
-    }
-  });
-}
-
 function focus() {
   const editor =
     (props.element.multipanel
@@ -1126,6 +1117,17 @@ defineExpose({
   white-space: nowrap !important;
   border: none;
   overflow: visible;
+}
+
+/* The padding collapses the content area when the center is outside the box.
+   Center each block at the requested point using its own intrinsic width. */
+.rich-text-editor.center-outside-box > :deep(*) {
+  inline-size: max-content;
+  translate: calc(var(--inline-page-center-shift) - 50%);
+}
+
+.rich-text-editor.center-outside-box:dir(rtl) > :deep(*) {
+  translate: calc(var(--inline-page-center-shift) + 50%);
 }
 
 .inline-bottom-container,

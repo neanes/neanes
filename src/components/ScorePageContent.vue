@@ -505,6 +505,7 @@
           :element="element as RichTextBoxElement"
           :footnote-body="line.footnoteId !== null"
           :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
+          :inline-page-center-offset="inlinePageCenter - element.x"
           :page-setup="score.pageSetup"
           :fonts="fonts"
           :paragraph-styles="score.paragraphStyles"
@@ -928,6 +929,11 @@ function footnoteReferenceStyle(element: FootnoteAnchorElement) {
     right: rtl.value ? withZoom(element.footnoteMarkerOffset) : undefined,
   };
 }
+
+const inlinePageCenter = computed(() => {
+  const margins = getResolvedMarginsForPage(props.page);
+  return (rtl.value ? margins.right : margins.left) + margins.contentWidth / 2;
+});
 
 function getDeveloperGlueOverlays(
   page: Page,

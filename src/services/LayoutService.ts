@@ -564,6 +564,7 @@ export class LayoutService {
             previousLine,
             neumeLineHeight,
             lyricsBaseline,
+            defaultLyricsFontCss,
             measureBarWidthMap,
           ),
         );
@@ -661,6 +662,7 @@ export class LayoutService {
             body.lines.at(-1) ?? null,
             prepared.content.neumeLineHeight,
             prepared.content.lyricsBaseline,
+            prepared.content.defaultLyricsFontCss,
             prepared.content.measureBarWidthMap,
           );
           body.lines.push(line);
@@ -814,6 +816,7 @@ export class LayoutService {
     prevLine: Line | null,
     neumeLineHeight: number,
     lyricsBaseline: number,
+    defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
   ): Line {
     const { paragraph: completedParagraph, paragraphLineIndex } = candidate;
@@ -1017,10 +1020,34 @@ export class LayoutService {
           );
         }
 
+        let centeredWidth = position.width;
+        if (
+          element.elementType === ElementType.RichTextBox &&
+          this.isFillWidthElement(element)
+        ) {
+          // Its line-breaking width is zero. Center the visible text with
+          // the preceding music and keep equal space at both line ends.
+          const box = element as RichTextBoxElement;
+          const template = document.createElement('template');
+          centeredWidth = Math.min(
+            box.width,
+            Math.max(
+              ...[box.content, box.contentBottom].map((html) => {
+                template.innerHTML = html;
+                return this.measurePlainTextWidth(
+                  template.content.textContent ?? '',
+                  defaultLyricsFontCss,
+                );
+              }),
+            ),
+          );
+          box.width = centeredWidth;
+        }
+
         centerOffsetPx =
           (resolvedMargins.contentWidth -
             currentLine.indentation -
-            (position.xOffset + position.width)) /
+            (position.xOffset + centeredWidth)) /
           2;
         for (const lineElement of currentLine.elements) {
           lineElement.x += centerOffsetPx;

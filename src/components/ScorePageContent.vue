@@ -436,6 +436,7 @@
           :ref="setTemplateRef(`element-${getElementIndex(element)}`)"
           :edit-mode="!printMode"
           :element="element as RichTextBoxElement"
+          :inline-page-center-offset="inlinePageCenter - element.x"
           :page-setup="score.pageSetup"
           :fonts="fonts"
           :paragraph-styles="score.paragraphStyles"
@@ -736,6 +737,11 @@ const {
   getMelismaUnderscoreStyleInner,
   getMelismaHyphenStyle,
 } = useScoreRendering(score, toRef(props, 'zoom'));
+
+const inlinePageCenter = computed(() => {
+  const margins = getResolvedMarginsForPage(props.page);
+  return (rtl.value ? margins.right : margins.left) + margins.contentWidth / 2;
+});
 
 function getDeveloperGlueOverlays(
   page: Page,

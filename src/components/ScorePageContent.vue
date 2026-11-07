@@ -1465,7 +1465,7 @@ defineExpose({
   white-space: nowrap;
 }
 .footnote-label {
-  cursor: pointer;
+  cursor: default;
   white-space: nowrap;
 }
 .footnote-body-marker {

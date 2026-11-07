@@ -296,6 +296,48 @@ try {
     ),
     1,
   );
+  const lockedBody = {
+    kind: 'footnote',
+    footnoteId: await evaluate(`${ws}.score.footnotes[1].id`),
+  };
+  await edit([
+    {
+      action: 'insert',
+      collection: lockedBody,
+      elements: [note],
+    },
+    {
+      action: 'set_staff_lyrics',
+      collection: lockedBody,
+      text: 'One Two',
+      locked: true,
+    },
+  ]);
+  const lockedLyrics = () =>
+    evaluate(
+      `${ws}.score.footnotes[1].staff.elements.filter(e=>e.elementType==='Note').map(e=>e.lyrics)`,
+    );
+  assert.deepEqual(await lockedLyrics(), ['One', 'Two']);
+  await open(1);
+  await key('ArrowLeft', 'ArrowLeft', 37);
+  await eventually(async () =>
+    assert.equal(await evaluate(`${ws}.selectedElement.lyrics`), 'One'),
+  );
+  await key('Delete', 'Delete', 46);
+  await eventually(async () => assert.deepEqual(await lockedLyrics(), ['One']));
+  await evaluate(
+    `document.querySelector('.footnote-label[data-footnote-id="${lockedBody.footnoteId}"]').dispatchEvent(new MouseEvent('dblclick', {bubbles:true, detail:2}))`,
+  );
+  await eventually(async () =>
+    assert.equal(await evaluate(`${ws}.activeFootnoteId`), null),
+  );
+  await menu('FileMenuUndo');
+  await eventually(async () =>
+    assert.deepEqual(await lockedLyrics(), ['One', 'Two']),
+  );
+  await menu('FileMenuRedo');
+  await eventually(async () => assert.deepEqual(await lockedLyrics(), ['One']));
+
   const pages = await call('get_pages', args);
   const baseline = (await geometry()).map((b) => b.height);
   await open(1);
@@ -397,6 +439,135 @@ try {
       (await readFile(tightPdf, 'latin1')).match(/\/Type\s*\/Page\b/g).length,
       1,
     );
+
+    const updateTightPage = async (changes) =>
+      call('update_page_setup', {
+        ...target,
+        expectedRevision: (await props()).revision,
+        changes,
+      });
+    const editTight = async (actions) =>
+      call('edit_elements', {
+        ...target,
+        expectedRevision: (await props()).revision,
+        actions,
+      });
+    const { created } = await editTight([
+      {
+        action: 'insert',
+        index: 0,
+        elements: [
+          { elementType: 'DropCap', properties: { content: 'A', lineSpan: 1 } },
+        ],
+      },
+    ]);
+    assert.equal((await call('get_pages', target)).pageCount, 1);
+    await editTight([
+      {
+        action: 'update',
+        elementRef: created[0].elementRef,
+        elementType: 'DropCap',
+        properties: { lineSpan: 3 },
+      },
+    ]);
+    await call('get_pages', target, 'LAYOUT_SETTLEMENT_FAILED');
+    await call(
+      'export_pdf',
+      {
+        ...target,
+        expectedRevision: (await props()).revision,
+        filePath: path.join(
+          app.directory,
+          `overlapping-drop-cap-${documentScope}.pdf`,
+        ),
+      },
+      'EXPORT_RENDER_FAILED',
+    );
+    await editTight([{ action: 'remove', elementRef: created[0].elementRef }]);
+
+    await updateTightPage({ pageHeightCustom: 500 });
+    const footer = await call('get_elements', {
+      ...target,
+      collection: { kind: 'footers', variant: 'chapterOpening' },
+    });
+    await editTight([
+      {
+        action: 'insert',
+        index: 0,
+        elements: [
+          {
+            elementType: 'TextBox',
+            properties: {
+              content: 'Opening chapter',
+              customHeight: 30,
+              runningMarkerRole: 'chapter',
+            },
+          },
+        ],
+      },
+      {
+        action: 'update',
+        elementRef: footer.elements[0].elementRef,
+        elementType: 'TextBox',
+        properties: { customHeight: 240, contentCenter: 'Chapter footer' },
+      },
+    ]);
+    assert.equal((await call('get_pages', target)).pageCount, 1);
+    await call('update_header_footer_settings', {
+      ...target,
+      expectedRevision: (await props()).revision,
+      changes: {
+        showFooter: true,
+        footerMargin: 15,
+        headerFooterDifferentChapterOpening: true,
+      },
+    });
+    assert.equal(
+      (await call('get_pages', target)).pageCount,
+      2,
+      'The chapter footer moves the anchored line and its footnote to page two',
+    );
+
+    if (documentScope === 'editor') {
+      await updateTightPage({ pageHeightCustom: 900 });
+      await eventually(async () => {
+        const gap = await evaluate(`(() => {
+          const body = document.querySelector('.line[data-footnote-id="${collection.footnoteId}"] .text-box');
+          const footer = [...(body?.closest('.page')?.querySelectorAll('.text-box') ?? [])]
+            .find(box => box.textContent.includes('Chapter footer'));
+          return footer?.getBoundingClientRect().top - body?.getBoundingClientRect().bottom;
+        })()`);
+        assert.ok(gap >= -0.1, 'The footnote ends above the chapter footer');
+      });
+    }
+    await call('update_header_footer_settings', {
+      ...target,
+      expectedRevision: (await props()).revision,
+      changes: { showFooter: false },
+    });
+    await editTight([
+      { action: 'remove_range', start: 0, end: 0 },
+      {
+        action: 'replace',
+        elementRef: body.elements[0].elementRef,
+        element: {
+          elementType: 'DropCap',
+          properties: { content: 'A', lineSpan: 1 },
+        },
+      },
+    ]);
+    await updateTightPage({ pageHeightCustom: 700 });
+    await call('get_pages', target);
+    const dropCapBody = await call('get_elements', { ...target, collection });
+    await editTight([
+      {
+        action: 'update',
+        elementRef: dropCapBody.elements[0].elementRef,
+        elementType: 'DropCap',
+        properties: { lineSpan: 3 },
+      },
+    ]);
+    await call('get_pages', target, 'LAYOUT_SETTLEMENT_FAILED');
   }
   console.log(
     'PASS: footnote content heights, hidden endpoints, reference focus, append/insert, keyboard navigation, deletion, undo/redo, and PDF/PNG export.',

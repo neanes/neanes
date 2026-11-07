@@ -77,6 +77,7 @@ export function useStaffLyrics(
   function assignLyrics(
     workspace: Workspace = workspaceRef.value,
     staff: Staff = workspace.activeStaff,
+    saveAfterAssignment = true,
   ) {
     const workspaceScore = workspace.score;
     if (
@@ -126,7 +127,7 @@ export function useStaffLyrics(
       staff.lyrics.locked,
     );
 
-    if (workspaceIsSelected) {
+    if (workspaceIsSelected && saveAfterAssignment) {
       save();
     }
   }

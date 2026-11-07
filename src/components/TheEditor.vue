@@ -6497,6 +6497,21 @@ function refreshStaffLyrics() {
   }
 }
 
+function refreshLyricsAfterHistoryReplay() {
+  const workspace = selectedWorkspace.value;
+
+  // History can edit any staff regardless of the current selection.
+  for (const staff of workspace.score.staves) {
+    if (staff.lyrics.locked) {
+      assignLyrics(workspace, staff, false);
+    }
+  }
+
+  if (!lyricsLocked.value && isLyricsManagerOpen.value) {
+    extractStaffLyrics(workspace);
+  }
+}
+
 function updateAnnotation(
   element: AnnotationElement,
   newValues: Partial<AnnotationElement>,
@@ -8703,9 +8718,7 @@ function onFileMenuUndo() {
 
     commandService.value.undo();
 
-    // TODO this may be overkill, but the alternative is putting in place
-    // an event system to only refresh on certain undo actions
-    refreshStaffLyrics();
+    refreshLyricsAfterHistoryReplay();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the undo process, choose a new one
@@ -8734,9 +8747,7 @@ function onFileMenuRedo() {
 
     commandService.value.redo();
 
-    // TODO this may be overkill, but the alternative is putting in place
-    // an event system to only refresh on certain undo actions
-    refreshStaffLyrics();
+    refreshLyricsAfterHistoryReplay();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the redo process, choose a new one

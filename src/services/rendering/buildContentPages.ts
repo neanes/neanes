@@ -2,6 +2,7 @@ export interface PaginationLine {
   height: number;
   pageBreak: boolean;
   footnoteIds: string[];
+  chapterMarker: string | null;
   // The first line of a multiline drop cap reserves its continuation span.
   additionalHeight: number;
   continuationLines: number;
@@ -27,9 +28,10 @@ export function buildContentPages(
   constraints: {
     innerPageHeight: number;
     footnoteSpacing: number;
-    // Indexed by physical page minus one, with enough entries for every line
-    // to start a page (and the initial empty page when there are no lines).
-    reservations: readonly PageReservation[];
+    getReservation: (
+      physicalPageNumber: number,
+      isChapterOpening: boolean,
+    ) => PageReservation;
   },
 ): ContentPage[] {
   const pages: ContentPage[] = [];
@@ -37,46 +39,89 @@ export function buildContentPages(
     lines: [],
     footnoteIds: [],
     footnoteOverflow: false,
-    reservation: constraints.reservations[pages.length],
+    reservation: constraints.getReservation(pages.length + 1, false),
   });
   let page = createPage();
   pages.push(page);
   let height = 0;
+  // A drop cap can extend below the last line placed on the page.
+  let contentBottom = 0;
   let ids = new Set<string>();
   let explicitBreak = false;
+  let previousChapter = '';
+  let firstChapter: string | null = null;
+  const reserveForChapter = (chapter: string | null) =>
+    firstChapter != null || chapter == null || chapter === previousChapter
+      ? page.reservation
+      : constraints.getReservation(pages.length, true);
+  const availableHeight = (reservation: PageReservation) =>
+    constraints.innerPageHeight -
+    reservation.extraHeaderHeightPx -
+    reservation.extraFooterHeightPx;
   const sectionHeight = (ids: Set<string>) =>
     ids.size === 0
       ? 0
       : [...ids].reduce((sum, id) => sum + footnoteHeights.get(id)!, 0) +
         constraints.footnoteSpacing;
-  for (const [index, candidate] of lines.entries()) {
-    const groupedIds = lines
-      .slice(index, index + candidate.continuationLines + 1)
-      .flatMap((line) => line.footnoteIds);
-    const requiredIds = new Set([...ids, ...groupedIds]);
-    const availableHeight = () =>
-      constraints.innerPageHeight -
-      page.reservation.extraHeaderHeightPx -
-      page.reservation.extraFooterHeightPx;
-    const excess =
-      height +
-      candidate.height +
-      candidate.additionalHeight +
-      sectionHeight(requiredIds) -
-      availableHeight();
-    if (explicitBreak || (page.lines.length > 0 && excess > 0)) {
+  const fits = (
+    candidate: PaginationLine,
+    groupIds: string[],
+    chapter: string | null,
+  ) => {
+    const requiredIds = new Set([...ids, ...groupIds]);
+    const candidateBottom =
+      height + candidate.height + candidate.additionalHeight;
+    const fitBottom =
+      requiredIds.size > 0
+        ? Math.max(contentBottom, candidateBottom)
+        : candidateBottom;
+    return (
+      fitBottom + sectionHeight(requiredIds) <=
+      availableHeight(reserveForChapter(chapter))
+    );
+  };
+  for (let index = 0; index < lines.length;) {
+    const candidate = lines[index];
+    const group = lines.slice(index, index + candidate.continuationLines + 1);
+    const breakIndex = group.findIndex((line) => line.pageBreak);
+    if (breakIndex !== -1) {
+      group.length = breakIndex + 1;
+    }
+    const groupIds = group.flatMap((line) => line.footnoteIds);
+    const groupChapter =
+      group.find((line) => line.chapterMarker != null)?.chapterMarker ?? null;
+    let groupFits = !explicitBreak && fits(candidate, groupIds, groupChapter);
+    if (explicitBreak || (page.lines.length > 0 && !groupFits)) {
+      previousChapter = firstChapter ?? previousChapter;
+      firstChapter = null;
       page = createPage();
       pages.push(page);
       height = 0;
+      contentBottom = 0;
       ids = new Set();
+      groupFits = fits(candidate, groupIds, groupChapter);
     }
-    page.lines.push({ index, top: height });
-    candidate.footnoteIds.forEach((id) => ids.add(id));
-    height += candidate.height;
+
+    // Place fitting continuation lines with the reservation they were tested
+    // against. If the group is too tall on an empty page, place one line and
+    // let the remaining lines paginate normally.
+    const chapter = groupFits ? groupChapter : candidate.chapterMarker;
+    if (firstChapter == null && chapter != null) {
+      page.reservation = reserveForChapter(chapter);
+      firstChapter = chapter;
+    }
+    for (const line of groupFits ? group : [candidate]) {
+      page.lines.push({ index, top: height });
+      index++;
+      line.footnoteIds.forEach((id) => ids.add(id));
+      height += line.height;
+      contentBottom = Math.max(contentBottom, height + line.additionalHeight);
+      explicitBreak = line.pageBreak;
+    }
     page.footnoteIds = [...ids];
     page.footnoteOverflow =
-      ids.size > 0 && height + sectionHeight(ids) > availableHeight();
-    explicitBreak = candidate.pageBreak;
+      ids.size > 0 &&
+      contentBottom + sectionHeight(ids) > availableHeight(page.reservation);
   }
   return pages;
 }

@@ -90,7 +90,8 @@ export function buildContentPages(
     const groupIds = group.flatMap((line) => line.footnoteIds);
     const groupChapter =
       group.find((line) => line.chapterMarker != null)?.chapterMarker ?? null;
-    let groupFits = !explicitBreak && fits(candidate, groupIds, groupChapter);
+    let groupFits: boolean =
+      !explicitBreak && fits(candidate, groupIds, groupChapter);
     if (explicitBreak || (page.lines.length > 0 && !groupFits)) {
       previousChapter = firstChapter ?? previousChapter;
       firstChapter = null;

@@ -1959,10 +1959,34 @@ export class LayoutService {
             );
           }
 
+          let centeredWidth = position.width;
+          if (
+            element.elementType === ElementType.RichTextBox &&
+            this.isFillWidthElement(element)
+          ) {
+            // Its line-breaking width is zero. Center the visible text with
+            // the preceding music and keep equal space at both line ends.
+            const box = element as RichTextBoxElement;
+            const template = document.createElement('template');
+            centeredWidth = Math.min(
+              box.width,
+              Math.max(
+                ...[box.content, box.contentBottom].map((html) => {
+                  template.innerHTML = html;
+                  return this.measurePlainTextWidth(
+                    template.content.textContent ?? '',
+                    defaultLyricsFontCss,
+                  );
+                }),
+              ),
+            );
+            box.width = centeredWidth;
+          }
+
           const centerOffsetPx =
             (resolvedMargins.contentWidth -
               currentLine.indentation -
-              (position.xOffset + position.width)) /
+              (position.xOffset + centeredWidth)) /
             2;
           for (const lineElement of currentLine.elements) {
             lineElement.x += centerOffsetPx;

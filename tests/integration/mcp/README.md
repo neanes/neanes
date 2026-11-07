@@ -100,10 +100,18 @@ and RTL. Rendered examples are retained with the footnote artifacts.
 local body music, anchor edits, paragraph-style marker typography, martyria save
 data, and centered ordinary/right-aligned LTR/RTL musical markers.
 
+`rich-text-footnotes` tests caret insertion with surrounding inline formatting,
+focused default rich-body creation, atomic marker deletion, double-click navigation,
+native text Undo/Redo before flush and score-level body reconciliation, save/reopen, and copying for ordinary, inline top/bottom,
+and left/center/right multipanel rich textboxes. It also uses the real system
+clipboard to copy a marker across documents, checking fresh body identities,
+custom lyric style imports, and a single undo step for the complete paste.
+
 `footnote-markers` exercises Footnote Properties through real context menus on
-musical references and footnote body labels. It checks the
+neume references, rich text widgets, and footnote body labels. It checks the
 custom-marker checkbox, custom-text validation, previews, cancel,
-automatic-marker restoration, number skipping, Undo/Redo, parenthesized musical labels, MCP marker metadata, BYZ/BYZX persistence, PNG
+automatic-marker restoration, number skipping, Undo/Redo, plain rich-text labels
+versus parenthesized neume labels, MCP marker metadata, BYZ/BYZX persistence, PNG
 rendering, and navigation. It checks continuous and section numbering,
 symbol sequences, and the Footnotes Page Setup controls.
 It also checks gorgon clearance after mark and reference offsets, musical-anchor
@@ -112,6 +120,23 @@ Tempo elements reject footnote insertion and offer no footnote context-menu acti
 Page Setup parentheses are checked for pending edits, preview/rendering, and
 persistence; marker ink clearance is compared across glyphs with different ink
 heights.
+
+Rich text history checks type in paragraph two, undo/redo a merged typing batch,
+and type again after Undo. They verify the caret, backward selection ranges, and
+panel focus across all six textbox layouts. Marker
+checks also verify that MCP rejects annotation references without advancing the
+document revision; pure transaction tests cover annotations nested in main notes,
+alternate-line notes, and footnote notes.
+
+`rich-text-history-boundary` verifies the intentionally separate histories:
+keyboard shortcuts and the rich-text toolbar use native CKEditor Undo/Redo,
+while the application menu uses score history. Save and blur preserve native
+Undo/Redo on echoed commits, and exhausting native Undo does not fall back into
+score history. Footnote marker deletion and native restoration reconcile complete
+bodies immediately by ID. Ordinary typing does not create score history entries.
+See `src/services/history/README.md` for the accepted compromises; these tests do
+not require a unified history, historical selection replay, or native history
+survival across score-driven editor replacement.
 
 The `footnote-end-content` scenario checks hidden populated-body terminators,
 visible empty-body targets, reference focus, appending after text and music,

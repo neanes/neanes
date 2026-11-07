@@ -1,14 +1,23 @@
-import { FootnoteAnchorElement, type ScoreElement } from '@/models/Element';
+import {
+  FootnoteAnchorElement,
+  RichTextBoxElement,
+  type ScoreElement,
+} from '@/models/Element';
 import type { Footnote } from '@/models/Footnote';
 import type { Score } from '@/models/Score';
 import { isSectionMarker } from '@/utils/runningMarkers';
 
 import { automaticFootnoteMarker } from './FootnoteMarker';
+import { richTextBoxFootnoteIds } from './RichTextFootnotes';
 
 export function elementFootnoteIds(element: ScoreElement): string[] {
-  return element instanceof FootnoteAnchorElement && element.footnoteId !== null
-    ? [element.footnoteId]
-    : [];
+  return element instanceof FootnoteAnchorElement
+    ? element.footnoteId === null
+      ? []
+      : [element.footnoteId]
+    : element instanceof RichTextBoxElement
+      ? richTextBoxFootnoteIds(element)
+      : [];
 }
 
 export function orderedFootnotes(score: Score) {
@@ -18,7 +27,7 @@ export function orderedFootnotes(score: Score) {
   const seen = new Set<string>();
   const result: {
     footnote: Footnote;
-    reference: FootnoteAnchorElement;
+    reference: ScoreElement;
     number: number | null;
     automaticMarker: string;
     marker: string;
@@ -31,30 +40,26 @@ export function orderedFootnotes(score: Score) {
     ) {
       nextNumber = score.pageSetup.firstFootnoteNumber;
     }
-    if (
-      !(element instanceof FootnoteAnchorElement) ||
-      element.footnoteId === null
-    ) {
-      continue;
-    }
-    const footnote = byId.get(element.footnoteId);
-    if (footnote === undefined || seen.has(footnote.id)) {
-      throw new Error('INVALID_FOOTNOTE_REFERENCE');
-    }
-    seen.add(footnote.id);
-    const automaticMarker = automaticFootnoteMarker(
-      nextNumber,
-      score.pageSetup,
-    );
-    result.push({
-      footnote,
-      reference: element,
-      number: footnote.marker === null ? nextNumber : null,
-      automaticMarker,
-      marker: footnote.marker ?? automaticMarker,
-    });
-    if (footnote.marker === null) {
-      nextNumber++;
+    for (const id of elementFootnoteIds(element)) {
+      const footnote = byId.get(id);
+      if (footnote === undefined || seen.has(footnote.id)) {
+        throw new Error('INVALID_FOOTNOTE_REFERENCE');
+      }
+      seen.add(footnote.id);
+      const automaticMarker = automaticFootnoteMarker(
+        nextNumber,
+        score.pageSetup,
+      );
+      result.push({
+        footnote,
+        reference: element,
+        number: footnote.marker === null ? nextNumber : null,
+        automaticMarker,
+        marker: footnote.marker ?? automaticMarker,
+      });
+      if (footnote.marker === null) {
+        nextNumber++;
+      }
     }
   }
   return result;

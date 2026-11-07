@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { elementEditBatchSchema } from '@/automation/contracts/elementEditSchema';
-import type { NoteElement } from '@/models/Element';
+import type { RichTextBoxElement } from '@/models/Element';
+import { ElementType, type NoteElement } from '@/models/Element';
 import { Workspace } from '@/models/Workspace';
+import { SaveService } from '@/services/SaveService';
 
 import { ElementDiscovery } from './elementDiscovery';
 import {
@@ -14,6 +16,184 @@ import {
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 
 describe('footnote transactions', () => {
+  it.each([
+    { inline: false, multipanel: false, keys: ['content'] },
+    { inline: true, multipanel: false, keys: ['content', 'contentBottom'] },
+    {
+      inline: false,
+      multipanel: true,
+      keys: ['contentLeft', 'contentCenter', 'contentRight'],
+    },
+  ])(
+    'discovers rich references without HTML and returns new body identities: %j',
+    ({ inline, multipanel, keys }) => {
+      const workspace = new Workspace();
+      const discovery = new ElementDiscovery();
+      const edit = (actions: unknown) => {
+        const plan = planElementEdits(
+          workspace,
+          discovery,
+          elementEditBatchSchema.parse(actions),
+          [],
+        );
+        applyElementEdits(workspace, plan);
+        return plan;
+      };
+      const html = '<p>' + 'Long panel content '.repeat(3000) + '</p>';
+      const plan = edit([
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              clientId: 'box',
+              properties: {
+                inline,
+                multipanel,
+                ...Object.fromEntries(keys.map((key) => [key, html])),
+              },
+            },
+          ],
+        },
+        ...[...keys].reverse().map((contentKey) => ({
+          action: 'insert_footnote',
+          elementRef: '@box',
+          contentKey,
+          htmlOffset: 3,
+        })),
+      ]);
+      const result = createdElementResult(
+        plan.created,
+        discovery,
+        true,
+        plan.createdFootnotes,
+      );
+      const references = result.createdFootnotes!;
+      expect(references.map((reference) => reference.contentKey)).toEqual(keys);
+      const box = workspace.score.staff.elements[0] as RichTextBoxElement;
+      for (const reference of references) {
+        expect(reference.elementRef).toBe(discovery.reference(box));
+        expect(box[reference.contentKey!]).toContain(
+          `data-footnote-id="${reference.footnoteId}"`,
+        );
+      }
+      expect(
+        createdElementResult(
+          plan.created,
+          discovery,
+          false,
+          plan.createdFootnotes,
+        ),
+      ).not.toHaveProperty('createdFootnotes');
+      const projected = discovery.lookup(workspace.score, {
+        elementRef: discovery.reference(box),
+        before: 0,
+        after: 0,
+        properties: ['footnoteReferences'],
+        includeContent: false,
+      });
+      expect(projected.elements[0].properties).toEqual({
+        footnoteReferences: references.map(({ footnoteId, contentKey }) => ({
+          footnoteId,
+          contentKey,
+        })),
+      });
+      expect(JSON.stringify(projected).length).toBeLessThan(1000);
+      const found = discovery.find(workspace.score, {
+        scope: { kind: 'document' },
+        where: { field: 'footnoteReferences', op: 'isNotNull' },
+        properties: ['footnoteReferences'],
+        includeContent: false,
+        offset: 0,
+        limit: 100,
+      });
+      expect(found.elements.map((element) => element.elementRef)).toEqual([
+        discovery.reference(box),
+      ]);
+      edit([
+        {
+          action: 'update_footnote',
+          footnoteId: references[0].footnoteId,
+          marker: '*',
+        },
+      ]);
+      expect(
+        workspace.score.footnotes.find(
+          (body) => body.id === references[0].footnoteId,
+        )!.marker,
+      ).toBe('*');
+      for (const reference of references) {
+        const body = discovery.read(workspace.score, {
+          collection: { kind: 'footnote', footnoteId: reference.footnoteId },
+          start: 0,
+          offset: 0,
+          limit: 10,
+          includeContent: false,
+        });
+        expect(body.elements.map((element) => element.elementType)).toEqual([
+          ElementType.RichTextBox,
+          ElementType.Empty,
+        ]);
+        expect(body.elements[0].properties).not.toHaveProperty(
+          'footnoteReferences',
+        );
+      }
+      expect(
+        JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+      ).not.toContain('footnoteReferences');
+      expect(() =>
+        edit([
+          {
+            action: 'update',
+            elementRef: discovery.reference(box),
+            elementType: 'RichTextBox',
+            properties: { footnoteReferences: null },
+          },
+        ]),
+      ).toThrow();
+      expect(() =>
+        edit([
+          {
+            action: 'update',
+            elementRef: discovery.reference(box),
+            elementType: 'RichTextBox',
+            reset: ['footnoteReferences'],
+          },
+        ]),
+      ).toThrow('INVALID_ELEMENT_EDIT');
+      edit([
+        {
+          action: 'update',
+          elementRef: discovery.reference(box),
+          elementType: 'RichTextBox',
+          properties: Object.fromEntries(
+            keys.map((key) => [key, '<p>No references</p>']),
+          ),
+        },
+      ]);
+      expect(
+        discovery.lookup(workspace.score, {
+          elementRef: discovery.reference(box),
+          before: 0,
+          after: 0,
+          properties: ['footnoteReferences'],
+          includeContent: false,
+        }).elements[0].properties,
+      ).toEqual({});
+      expect(workspace.score.footnotes).toHaveLength(0);
+      workspace.commandService.undo();
+      expect(
+        discovery.lookup(workspace.score, {
+          elementRef: discovery.reference(box),
+          before: 0,
+          after: 0,
+          properties: ['footnoteReferences'],
+          includeContent: false,
+        }).elements[0].properties,
+      ).toEqual(projected.elements[0].properties);
+    },
+  );
+
   it('returns only surviving footnote creations with their final musical owner', () => {
     const workspace = new Workspace();
     const discovery = new ElementDiscovery();
@@ -231,6 +411,112 @@ describe('footnote transactions', () => {
     },
   );
 
+  it.each(['staff', 'alternate', 'footnote'])(
+    'rejects annotation references recursively in %s without changing the document',
+    (location) => {
+      const workspace = new Workspace();
+      const discovery = new ElementDiscovery();
+      const edit = (actions: unknown) =>
+        applyElementEdits(
+          workspace,
+          planElementEdits(
+            workspace,
+            discovery,
+            elementEditBatchSchema.parse(actions),
+            [],
+          ),
+        );
+      const actions: unknown[] = [
+        {
+          action: 'insert',
+          elements: [{ elementType: 'Note', clientId: 'anchor' }],
+        },
+      ];
+      let parentRef = '@anchor';
+      if (location === 'alternate') {
+        actions.push(
+          {
+            action: 'insert',
+            collection: {
+              kind: 'children',
+              parentRef,
+              collection: 'alternateLines',
+            },
+            elements: [{ elementType: 'AlternateLine', clientId: 'line' }],
+          },
+          {
+            action: 'insert',
+            collection: {
+              kind: 'children',
+              parentRef: '@line',
+              collection: 'elements',
+            },
+            elements: [{ elementType: 'Note', clientId: 'nested' }],
+          },
+        );
+        parentRef = '@nested';
+      } else if (location === 'footnote') {
+        actions.push({
+          action: 'insert_footnote',
+          elementRef: parentRef,
+          elements: [{ elementType: 'Note', clientId: 'nested' }],
+        });
+        parentRef = '@nested';
+      }
+      actions.push({
+        action: 'insert',
+        collection: { kind: 'children', parentRef, collection: 'annotations' },
+        elements: [
+          {
+            elementType: 'Annotation',
+            properties: { text: '<p>Original</p>' },
+          },
+        ],
+      });
+      edit(actions);
+      const note =
+        location === 'staff'
+          ? (workspace.score.staff.elements[0] as NoteElement)
+          : location === 'footnote'
+            ? (workspace.score.footnotes[0].staff.elements[0] as NoteElement)
+            : ((workspace.score.staff.elements[0] as NoteElement)
+                .alternateLines[0].elements[0] as NoteElement);
+      const annotation = note.annotations[0];
+      const revision = workspace.contentRevision;
+      const invalid =
+        '<p><span class="neanes-footnote" data-footnote-id="00000000-0000-4000-8000-000000000001"></span></p>';
+      expect(() =>
+        edit([
+          {
+            action: 'update',
+            elementRef: discovery.reference(annotation),
+            elementType: 'Annotation',
+            properties: { text: invalid },
+          },
+        ]),
+      ).toThrow('INVALID_ELEMENT_EDIT');
+      expect(annotation.text).toBe('<p>Original</p>');
+      expect(workspace.contentRevision).toBe(revision);
+      expect(() =>
+        edit([
+          {
+            action: 'insert',
+            collection: {
+              kind: 'children',
+              parentRef: discovery.reference(note),
+              collection: 'annotations',
+            },
+            elements: [
+              { elementType: 'Annotation', properties: { text: invalid } },
+            ],
+          },
+        ]),
+      ).toThrow('INVALID_ELEMENT_EDIT');
+      expect(note.annotations).toHaveLength(1);
+      expect(workspace.contentRevision).toBe(revision);
+    },
+  );
+
   it.each(['Note', 'Martyria'])(
     'supports footnote insertion and offset edits on %s through MCP',
     (elementType) => {
@@ -344,6 +630,70 @@ describe('footnote transactions', () => {
     ).toBe(false);
   });
 
+  it('inserts rich text references and removes their bodies with content edits', () => {
+    const workspace = new Workspace();
+    const discovery = new ElementDiscovery();
+    const edit = (actions: unknown) =>
+      applyElementEdits(
+        workspace,
+        planElementEdits(
+          workspace,
+          discovery,
+          elementEditBatchSchema.parse(actions),
+          [],
+        ),
+      );
+    edit([
+      {
+        action: 'insert',
+        elements: [
+          {
+            elementType: 'RichTextBox',
+            clientId: 'box',
+            properties: { content: '<p>Before after</p>' },
+          },
+        ],
+      },
+      {
+        action: 'insert_footnote',
+        elementRef: '@box',
+        contentKey: 'content',
+        htmlOffset: 9,
+        elements: [{ elementType: 'Note', properties: { spaceAfter: 37 } }],
+      },
+    ]);
+    const box = workspace.score.staff.elements.find(
+      (element) => element.elementType === 'RichTextBox',
+    )!;
+    const reference = discovery.reference(box);
+    const body = workspace.score.footnotes[0];
+    expect(body.staff.elements[0]).toHaveProperty('spaceAfter', 37);
+    edit([
+      {
+        action: 'update',
+        elementRef: reference,
+        elementType: 'RichTextBox',
+        properties: { content: '<p>Edited</p>' },
+      },
+    ]);
+    expect(workspace.score.footnotes).toEqual([]);
+    workspace.commandService.undo();
+    expect(workspace.score.footnotes[0]).toBe(body);
+    expect(() =>
+      edit([
+        {
+          action: 'update',
+          elementRef: reference,
+          elementType: 'RichTextBox',
+          properties: {
+            content:
+              '<p><span class="neanes-footnote" data-footnote-id="00000000-0000-4000-8000-000000000001"></span></p>',
+          },
+        },
+      ]),
+    ).toThrow('INVALID_FOOTNOTE_REFERENCE');
+    expect(workspace.score.footnotes[0]).toBe(body);
+  });
   it('keeps authoritative lyrics and locks scoped to their own staff', () => {
     const workspace = new Workspace();
     const discovery = new ElementDiscovery();

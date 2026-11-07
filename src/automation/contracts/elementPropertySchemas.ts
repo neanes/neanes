@@ -13,7 +13,7 @@ import { dropCapLyricsDescription } from './lyricSyntax';
 
 // Read-only live content projections. These are not edit validation schemas.
 // Layout caches are excluded except the explicitly exposed calculated pitches.
-// Rendering state and saved IDs are excluded.
+// Rendering state and saved IDs are excluded; rich reference identities are computed.
 // Unset values are omitted, except lineHeight: null explicitly resets to normal.
 // False, zero and empty strings remain.
 const breaks = {
@@ -380,6 +380,24 @@ export const elementPropertySchemas = {
     height: z.number(),
   }),
   [ElementType.RichTextBox]: z.strictObject({
+    footnoteReferences: z
+      .array(
+        z.strictObject({
+          footnoteId: z.string().uuid(),
+          contentKey: z.enum([
+            'content',
+            'contentBottom',
+            'contentLeft',
+            'contentCenter',
+            'contentRight',
+          ]),
+        }),
+      )
+      .min(1)
+      .optional()
+      .describe(
+        'Read-only references in active panel and source order, without HTML. Omitted when none. Use footnoteId as the footnote collection selector.',
+      ),
     ...breaks,
     content: richTextContent,
     contentBottom: richTextContent,

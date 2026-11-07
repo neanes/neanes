@@ -1,11 +1,25 @@
 import { v4 as uuid } from 'uuid';
+import { toRaw } from 'vue';
 
-import { FootnoteAnchorElement, ScoreElement } from '@/models/Element';
+import {
+  FootnoteAnchorElement,
+  RICH_TEXT_BOX_CONTENT_KEYS,
+  RichTextBoxElement,
+  ScoreElement,
+} from '@/models/Element';
 import { Footnote } from '@/models/Footnote';
+import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { CommandFactory } from '@/services/history/CommandService';
 import { cloneModel } from '@/utils/cloneModel';
+import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
+
+import {
+  activeRichTextContentKeys,
+  remapRichTextBoxFootnotes,
+  richTextFootnoteIds,
+} from './RichTextFootnotes';
 
 export { elementFootnoteIds, orderedFootnotes } from './FootnoteReferences';
 import { normalizeFootnoteMarker } from './FootnoteMarker';
@@ -13,6 +27,10 @@ import { elementFootnoteIds } from './FootnoteReferences';
 
 const footnoteFactory = new CommandFactory<Footnote>();
 const anchorFactory = new CommandFactory<FootnoteAnchorElement>();
+
+// Native text Undo can restore a marker after its body left the score. Retain
+// bodies for this score's lifetime, independently of either undo stack.
+const retainedFootnotes = new WeakMap<Score, Map<string, Footnote>>();
 
 // Explicit properties have already been applied to the replacement.
 export function transferFootnoteReference(
@@ -33,6 +51,21 @@ export function transferFootnoteReference(
   }
 }
 
+export function createFootnote(
+  reference: ScoreElement,
+  initializeRichTextBody = true,
+) {
+  const footnote = new Footnote();
+  if (initializeRichTextBody && reference instanceof RichTextBoxElement) {
+    const text = new RichTextBoxElement();
+    text.content = `<p class="${richTextParagraphStyleClassName(BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText)}"></p>`;
+    text.languageCode = reference.languageCode;
+    text.textDirection = reference.textDirection;
+    footnote.staff.elements.unshift(text);
+  }
+  return footnote;
+}
+
 export function planFootnoteInsertion(
   workspace: Workspace,
   reference: FootnoteAnchorElement,
@@ -43,7 +76,7 @@ export function planFootnoteInsertion(
   ) {
     throw new Error('INVALID_FOOTNOTE_ANCHOR');
   }
-  const footnote = new Footnote();
+  const footnote = createFootnote(reference);
   return {
     footnote,
     commands: [
@@ -135,8 +168,84 @@ export function prepareFootnotePaste(
     ) {
       element.footnoteId = remap.get(element.footnoteId)!;
     }
+    if (element instanceof RichTextBoxElement) {
+      remapRichTextBoxFootnotes(element, remap);
+    }
   }
   return copies;
+}
+
+// Content and body ownership must enter history together, including deletion.
+export function planRichTextFootnoteUpdate(
+  score: Score,
+  element: RichTextBoxElement,
+  newValues: Partial<RichTextBoxElement>,
+  added: Footnote[] = [],
+) {
+  const next = Object.assign(new RichTextBoxElement(), element, newValues);
+  const nextIds = elementFootnoteIds(next);
+  const beforeIds = elementFootnoteIds(element);
+  const retained =
+    retainedFootnotes.get(toRaw(score)) ?? new Map<string, Footnote>();
+  const available = new Map(
+    [...score.footnotes, ...added].map((body) => [body.id, body]),
+  );
+  const restored = nextIds
+    .filter((id) => !available.has(id) && retained.has(id))
+    .map((id) => retained.get(id)!);
+  const inserted = [...added, ...restored];
+  const isMain = score.staff.elements.includes(element);
+  if (!isMain && nextIds.length > 0) {
+    throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
+  }
+  const bodies = new Set(
+    [...score.footnotes, ...inserted].map((body) => body.id),
+  );
+  const allIds = score.staff.elements.flatMap((candidate) =>
+    elementFootnoteIds(candidate === element ? next : candidate),
+  );
+  if (
+    new Set(allIds).size !== allIds.length ||
+    allIds.some((id) => !bodies.has(id))
+  ) {
+    throw new Error('INVALID_FOOTNOTE_REFERENCE');
+  }
+  // Changing panel layout must not hide a stored reference.
+  if (
+    RICH_TEXT_BOX_CONTENT_KEYS.some(
+      (key) =>
+        !activeRichTextContentKeys(next).includes(key) &&
+        richTextFootnoteIds(next[key]).length > 0,
+    )
+  ) {
+    throw new Error('INVALID_FOOTNOTE_REFERENCE');
+  }
+  for (const body of [...score.footnotes, ...inserted]) {
+    retained.set(body.id, body);
+  }
+  retainedFootnotes.set(toRaw(score), retained);
+  return [
+    ...inserted.map((body) =>
+      footnoteFactory.create('add-to-collection', {
+        collection: score.footnotes,
+        elements: [body],
+      }),
+    ),
+    new CommandFactory<RichTextBoxElement>().create('update-properties', {
+      target: element,
+      newValues,
+    }),
+    ...score.footnotes
+      .filter(
+        (body) => beforeIds.includes(body.id) && !nextIds.includes(body.id),
+      )
+      .map((body) =>
+        footnoteFactory.create('remove-from-collection', {
+          collection: score.footnotes,
+          element: body,
+        }),
+      ),
+  ];
 }
 
 export function footnoteMarkerUpdateCommand(

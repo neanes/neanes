@@ -150,7 +150,7 @@ To remove the entire alternate line, click it to select it and press <kbd>Delete
 
 ## Put explanations or alternate melodies in footnotes
 
-Use a footnote when an explanation, alternate melody, or finale should appear at the bottom of the page. Right-click a note or martyria and choose **Insert Footnote**.
+Use a footnote when an explanation, alternate melody, or finale should appear at the bottom of the page. Right-click a note or martyria and choose **Insert Footnote**, or place the cursor in a rich text box and choose **Insert Footnote** in the rich-text toolbar.
 
 See [Footnotes](/guide/footnotes.html) for editing and removing footnotes, customizing markers, and choosing score-wide settings.
 

@@ -142,6 +142,15 @@ export const automationResultSchemas = {
         z.strictObject({
           footnoteId: z.string().uuid(),
           elementRef: z.string().uuid(),
+          contentKey: z
+            .enum([
+              'content',
+              'contentBottom',
+              'contentLeft',
+              'contentCenter',
+              'contentRight',
+            ])
+            .optional(),
         }),
       )
       .optional(),

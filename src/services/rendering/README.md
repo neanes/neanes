@@ -1,6 +1,7 @@
 # Layout ownership
 
-`LayoutService.processPages` assigns footnote labels in score order and prepares score lines and footnote bodies. The page builder
+`LayoutService.processPages` assigns footnote labels in score order, measures
+their widths, and prepares score lines and footnote bodies. The page builder
 fits prepared lines into pages and reserves space for whole footnote bodies on
 their anchor page. It accounts for explicit page breaks, drop-cap continuation
 lines, and measured header and footer reservations before content is positioned.

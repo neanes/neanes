@@ -20,7 +20,14 @@ export function elementFootnoteIds(element: ScoreElement): string[] {
       : [];
 }
 
-export function orderedFootnotes(score: Score) {
+export type FootnotePageAssignments = ReadonlyMap<ScoreElement, number>;
+
+// With null assignments, count through each run between explicit page breaks.
+// This bounds the label ordinal before any automatic page breaks are known.
+export function orderedFootnotes(
+  score: Score,
+  pageAssignments?: FootnotePageAssignments | null,
+) {
   const byId = new Map(
     score.footnotes.map((footnote) => [footnote.id, footnote]),
   );
@@ -33,6 +40,7 @@ export function orderedFootnotes(score: Score) {
     marker: string;
   }[] = [];
   let nextNumber = score.pageSetup.firstFootnoteNumber;
+  let previousPage: number | null = null;
   for (const element of score.staff.elements) {
     if (
       score.pageSetup.footnoteNumbering === 'section' &&
@@ -40,12 +48,21 @@ export function orderedFootnotes(score: Score) {
     ) {
       nextNumber = score.pageSetup.firstFootnoteNumber;
     }
+    const page = pageAssignments?.get(element) ?? element.page;
     for (const id of elementFootnoteIds(element)) {
       const footnote = byId.get(id);
       if (footnote === undefined || seen.has(footnote.id)) {
         throw new Error('INVALID_FOOTNOTE_REFERENCE');
       }
       seen.add(footnote.id);
+      if (
+        score.pageSetup.footnoteNumbering === 'page' &&
+        pageAssignments !== null &&
+        page !== previousPage
+      ) {
+        nextNumber = score.pageSetup.firstFootnoteNumber;
+      }
+      previousPage = page;
       const automaticMarker = automaticFootnoteMarker(
         nextNumber,
         score.pageSetup,
@@ -60,6 +77,13 @@ export function orderedFootnotes(score: Score) {
       if (footnote.marker === null) {
         nextNumber++;
       }
+    }
+    if (
+      pageAssignments === null &&
+      score.pageSetup.footnoteNumbering === 'page' &&
+      element.pageBreak
+    ) {
+      nextNumber = score.pageSetup.firstFootnoteNumber;
     }
   }
   return result;

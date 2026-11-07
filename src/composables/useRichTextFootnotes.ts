@@ -16,7 +16,12 @@ import {
   planRichTextFootnoteUpdate,
 } from '@/services/FootnoteService';
 import { CommandFactory } from '@/services/history/CommandService';
-import { FOOTNOTE_ELEMENT } from '@/services/RichTextFootnotes';
+import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
+import {
+  activeRichTextContentKeys,
+  FOOTNOTE_ELEMENT,
+  richTextFootnoteIds,
+} from '@/services/RichTextFootnotes';
 import { SaveService } from '@/services/SaveService';
 import {
   collectClipboardParagraphStyleIdsFromElements,
@@ -60,6 +65,21 @@ export function useRichTextFootnotes(
     RichTextBoxElement,
     Footnote[]
   >();
+  function hasPendingFootnotePaste(
+    owner: RichTextBoxElement,
+    updates: Partial<RichTextBoxElement>,
+  ) {
+    if (!pendingRichTextStyles.has(owner)) {
+      return false;
+    }
+    const staged = pendingRichTextFootnotes.get(owner)!;
+    return activeRichTextContentKeys(owner).some((key) =>
+      richTextFootnoteIds(updates[key] ?? owner[key]).some((id) =>
+        staged.some((body) => body.id === id),
+      ),
+    );
+  }
+
   function clearPendingFootnotes(owner: RichTextBoxElement) {
     pendingRichTextFootnotes.delete(owner);
     pendingRichTextStyles.delete(owner);
@@ -97,6 +117,12 @@ export function useRichTextFootnotes(
     changed(owner, key, html) {
       // Marker changes commit HTML and bodies together; ordinary typing stays local.
       const updates = { [key]: html };
+      if (
+        pendingRichTextStyles.has(owner) &&
+        needsFootnoteSettlement(workspace.value.score)
+      ) {
+        return;
+      }
       updateRichTextBox(owner, updates);
     },
     navigate(id) {
@@ -124,7 +150,11 @@ export function useRichTextFootnotes(
       });
     },
     paste(owner, payload) {
-      flush(workspace.value);
+      // Publishing the old HTML during a deferred paste can echo it back
+      // into CKEditor after insertion and overwrite the staged marker.
+      if (!needsFootnoteSettlement(workspace.value.score)) {
+        flush(workspace.value);
+      }
       const saved = JSON.parse(payload) as {
         body: ReturnType<typeof SaveService.SaveFootnote>;
         paragraphStyles: ReturnType<typeof SaveService.SaveParagraphStyle>[];
@@ -178,7 +208,10 @@ export function useRichTextFootnotes(
       return copy.id;
     },
     reject(owner) {
-      if (owner instanceof RichTextBoxElement) {
+      if (
+        owner instanceof RichTextBoxElement &&
+        !needsFootnoteSettlement(workspace.value.score)
+      ) {
         clearPendingFootnotes(owner);
       }
       rejectPaste();
@@ -228,5 +261,5 @@ export function useRichTextFootnotes(
       clearPendingFootnotes(element);
     }
   }
-  return { commitRichTextFootnotes };
+  return { commitRichTextFootnotes, hasPendingFootnotePaste };
 }

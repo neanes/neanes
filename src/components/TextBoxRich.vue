@@ -186,6 +186,12 @@ const emit = defineEmits([
   'select-neume',
 ]);
 const props = defineProps({
+  layoutGeometry: {
+    type: Object as PropType<
+      Pick<RichTextBoxElement, 'width' | 'y' | 'height'>
+    >,
+    default: undefined,
+  },
   footnoteBody: {
     type: Boolean,
     default: false,
@@ -457,10 +463,14 @@ function getMinimumFontSizeInEditor(editor: Editor) {
   return `${Math.min(...sizes)}pt`;
 }
 
+// The editor publishes settled geometry on raw elements. Explicit geometry
+// props refresh these styles without remounting a focused CKEditor.
+const layout = computed(() => props.layoutGeometry ?? props.element);
+
 const containerStyle = computed(() => {
   const style: StyleValue = {
-    width: withZoom(props.element.width),
-    height: withZoom(props.element.height),
+    width: withZoom(layout.value.width),
+    height: withZoom(layout.value.height),
     '--ck-content-font-family': getFontFamilyWithFallback(
       resolvedParagraphStyle.value.fontFamily,
     ),
@@ -483,12 +493,12 @@ const containerStyle = computed(() => {
 
 const textBoxStyle = computed(() => {
   const style: StyleValue = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
     maxHeight:
       props.element.scrollable && !props.footnoteBody
         ? withZoom(
             props.pageSetup.pageHeight -
-              props.element.y -
+              layout.value.y -
               props.pageSetup.bottomMargin,
           )
         : undefined,
@@ -515,7 +525,7 @@ const textBoxTopInnerContainerStyle = computed(() => {
 
 const textBoxStyleTop = computed(() => {
   const style: any = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
   };
 
   return style;
@@ -523,7 +533,7 @@ const textBoxStyleTop = computed(() => {
 
 const textBoxStyleBottom = computed(() => {
   const style: any = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
   };
 
   return style;
@@ -531,7 +541,7 @@ const textBoxStyleBottom = computed(() => {
 
 const textBoxTopContainerStyle = computed(() => {
   const style: any = {
-    height: withZoom(props.element.height),
+    height: withZoom(layout.value.height),
   };
 
   return style;
@@ -553,7 +563,7 @@ const textBoxBottomContainerStyle = computed(() => {
 
 const multipanelContainerStyle = computed(() => {
   const style: StyleValue = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
   };
 
   return style;

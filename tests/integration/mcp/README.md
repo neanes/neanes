@@ -112,8 +112,10 @@ neume references, rich text widgets, and footnote body labels. It checks the
 custom-marker checkbox, custom-text validation, previews, cancel,
 automatic-marker restoration, number skipping, Undo/Redo, plain rich-text labels
 versus parenthesized neume labels, MCP marker metadata, BYZ/BYZX persistence, PNG
-rendering, and navigation. It checks continuous and section numbering,
-symbol sequences, and the Footnotes Page Setup controls.
+rendering, and navigation. It compares inline marker and wrapping geometry across
+numeric and repeated-symbol page restarts, verifies the width reset at explicit
+breaks, and checks natural custom-marker widths, non-scrollable body measurement,
+and agreement between the editor, cold private reopen, and detached exports.
 It also checks gorgon clearance after mark and reference offsets, musical-anchor
 position controls and previews, reset, undo/redo, and martyria footnote persistence.
 Tempo elements reject footnote insertion and offer no footnote context-menu actions.

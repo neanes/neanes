@@ -9,6 +9,7 @@ function useMeasurement<Result>() {
   const pending = shallowRef<{
     id: number;
     workspace: Workspace;
+    templatePages?: Page[];
     resolve(result: Result): void;
     reject(error: Error): void;
   } | null>(null);
@@ -30,11 +31,12 @@ function useMeasurement<Result>() {
   onBeforeUnmount(() => cancel());
   return {
     pending,
-    start: (workspace: Workspace) =>
+    start: (workspace: Workspace, templatePages?: Page[]) =>
       new Promise<Result>((resolve, reject) => {
         pending.value = {
           id: ++sequence,
           workspace,
+          templatePages,
           resolve,
           reject,
         };

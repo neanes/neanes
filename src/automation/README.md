@@ -87,7 +87,7 @@ Removing its main-score reference removes the body in the same history operation
 copying the reference copies the body with a new identity.
 
 `get_page_setup` / `update_page_setup` expose `footnoteFormat` (`numbers` or
-`symbols`), `footnoteNumbering` (`continuous` or `section`),
+`symbols`), `footnoteNumbering` (`continuous`, `page`, or `section`),
 `footnoteSymbolSequence` (`standard` or `asterisks`), `firstFootnoteNumber`,
 `showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent),
 `footnoteSpaceAboveRule`, `footnoteSpaceBelowRule`, `footnoteRuleThickness`,
@@ -106,8 +106,10 @@ before applying settings; the automatic sequence itself can continue beyond this
 starting-value limit.
 The `asterisks` sequence uses `*`, `**`, `***`, and so on. Changing format or
 symbol sequence preserves the start and numbering.
+Page restarts follow physical pages, independent of displayed page numbers.
 Section restarts use the same nonempty section running markers as the editor;
-content before the first marker belongs to the initial section. Custom markers do not consume sequence entries.
+content before the first marker belongs to the initial section. Neither page
+nor section restarts consume sequence entries for custom markers.
 Use `update_footnote` with `footnoteId` and `marker` to change a marker. Null restores
 automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters
 without control characters, and do not consume an automatic number. `get_elements`
@@ -145,10 +147,14 @@ collection. Footnote numbering follows document reference order across pages.
 collection selector for independent authoritative footnote lyrics.
 Rich-text references use the box's default font family and size for superscript
 markers. Custom labels and automatic labels in continuous or section numbering
-use their rendered width. Custom markers do not advance the sequence.
+use their rendered width. With page restart, automatic rich-text references start with the configured
+starting label's width. After pagination assigns the actual labels, the renderer
+remeasures text at those widths. If measured growth causes a page break,
+settlement can retain the break even if the new label is narrower. Custom
+markers do not advance the sequence.
 
-Editor automation and private workers reconcile measured text-box heights
-with pagination. Footnote bodies use natural heights even if a stored rich-text box is
+Editor automation and private workers lay out, measure text boxes, then lay out
+again. Footnote bodies use natural heights even if a stored rich-text box is
 scrollable. The fixed body gutter is 1.8em for the marker plus a 0.4em gap, both
 relative to the body marker font size. Visual exports reconcile measured heights
 with the existing pass limit and retain maxima for header/footer templates.

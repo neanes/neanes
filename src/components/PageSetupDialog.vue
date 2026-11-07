@@ -2069,6 +2069,7 @@ const footnoteNumberingOptions = new Map<
   DialogSelector
 >([
   ['continuous', ($) => $.dialog.pageSetup.footnoteContinuous],
+  ['page', ($) => $.dialog.pageSetup.footnoteRestartPage],
   ['section', ($) => $.dialog.pageSetup.footnoteRestartSection],
 ]);
 const neumeBulkColor = ref('#000000');

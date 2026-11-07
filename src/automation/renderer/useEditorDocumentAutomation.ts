@@ -5,13 +5,12 @@ import {
   type DocumentEditor,
   DocumentService,
 } from '@/services/documents/DocumentService';
-import { LayoutService } from '@/services/LayoutService';
 import {
   loadFontFamilies,
   loadScoreFonts,
 } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
-import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
+import { settleWorkspace } from '@/services/rendering/settleWorkspace';
 import { SaveService } from '@/services/SaveService';
 
 import type { EditorBusyState } from '../contracts/editorBusy';
@@ -33,29 +32,25 @@ export function useEditorDocumentAutomation(
   const dirtyTextBoxWorkspaces = new Set<string>();
   let editorUnmounted = false;
   const { textBoxes, pages } = useWorkspaceMeasurements();
-
   // Automation requests await settlement serially, including private batch documents.
   async function measureWorkspaceTextBoxes(workspace: Workspace) {
     // Let the previous measurement's component unmount before mounting the next.
     await nextTick();
     if (editorUnmounted || !isActive(workspace)) {
-      return;
+      throw new Error('DOCUMENT_NOT_FOUND');
     }
     await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
     await document.fonts.ready;
     if (editorUnmounted || !isActive(workspace)) {
-      return;
+      throw new Error('DOCUMENT_NOT_FOUND');
     }
-    // Compute target widths and inherited legacy text styles before mounting measurements.
-    LayoutService.processPages(toRaw(workspace));
-    if (getResizableTextBoxes(workspace.score).length > 0) {
-      await textBoxes.start(workspace);
+    await settleWorkspace(toRaw(workspace), async () => {
       await nextTick();
       if (editorUnmounted || !isActive(workspace)) {
-        return;
+        throw new Error('DOCUMENT_NOT_FOUND');
       }
-      LayoutService.processPages(toRaw(workspace));
-    }
+      return textBoxes.start(workspace);
+    });
     if (
       workspace.id === options.selectedWorkspace()?.id ||
       !automation.ownsPrivateWorkspace(workspace)

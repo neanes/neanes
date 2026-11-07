@@ -186,10 +186,10 @@ async function run() {
     );
     assert.equal(await dirty(), true);
     const afterEdit = await revision();
-    await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+    await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
     assert.equal(await revision(), afterEdit + 1);
     assert.equal(await dirty(), false);
-    await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+    await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
     assert.equal(await revision(), afterEdit + 2);
     assert.equal(await dirty(), true);
     console.log(
@@ -273,9 +273,9 @@ async function run() {
   assert.equal(result.savedContentUnchanged, false);
   assert.equal(await dirty(), true);
   assertScoreContains(await readRecoveryScore(), 'EDIT DURING WRITE');
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.equal(await dirty(), false);
-  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
   assert.equal(await dirty(), true);
   await rm(writeGate);
   await setPath(scorePath);
@@ -292,7 +292,6 @@ async function run() {
   await evaluate(`
     window.__saveSmoke.updateDocumentProperties({title: 'Temporary edit during saving', author: ''});
     window.__saveSmoke.onFileMenuUndo();
-    true;
   `);
   assert.equal(await revision(), beforeUndoSave + 2);
   assert.equal(await dirty(), false);
@@ -313,14 +312,14 @@ async function run() {
   createFifo(undoGate);
   await setPath(undoGate);
   await beginSave();
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   const undoneWrite = JSON.parse(await readFile(undoGate, 'utf8'));
   assert.equal(undoneWrite.documentProperties.title, 'Written but undone');
   result = await endSave();
   assert.equal(result.success, true);
   assert.equal(result.savedContentUnchanged, false);
   assert.equal(await dirty(), true);
-  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
   assert.equal(await dirty(), false);
   await rm(undoGate);
   await setPath(scorePath);
@@ -419,7 +418,6 @@ async function run() {
   await evaluate(`
     window.__saveSmoke.updateDocumentProperties({title: 'Temporary cleanup edit', author: ''});
     window.__saveSmoke.onFileMenuUndo();
-    true;
   `);
   assert.equal(await revision(), beforeCleanupUndo + 2);
   assert.equal(await dirty(), false);
@@ -436,13 +434,18 @@ async function run() {
     `window.__saveSmoke.updateDocumentProperties({title: 'Saved history branch', author: ''}); true`,
   );
   assert.equal((await save()).savedContentUnchanged, true);
-  await evaluate(`
-    window.__saveSmoke.onFileMenuUndo();
-    window.__saveSmoke.updateDocumentProperties({title: 'Replacement branch', author: ''});
-    window.__saveSmoke.onFileMenuUndo();
-    window.__saveSmoke.onFileMenuRedo();
-    true;
+  // Menu history handlers await editor acknowledgement before replaying. Keep
+  // each operation ordered before branching again or reading the dirty state.
+  const branchTitle = await evaluate(`
+    (async () => {
+      await window.__saveSmoke.onFileMenuUndo();
+      window.__saveSmoke.updateDocumentProperties({title: 'Replacement branch', author: ''});
+      await window.__saveSmoke.onFileMenuUndo();
+      await window.__saveSmoke.onFileMenuRedo();
+      return window.__saveSmoke.selectedWorkspace.score.documentProperties.title;
+    })()
   `);
+  assert.equal(branchTitle, 'Replacement branch');
   assert.equal(await dirty(), true);
   assert.equal((await save()).savedContentUnchanged, true);
   console.log(
@@ -472,10 +475,10 @@ async function run() {
     `window.__saveSmoke.updateDocumentProperties({title: 'An undoable edit', author: ''}); true`,
   );
   const afterEdit = await revision();
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.equal(await revision(), afterEdit + 1);
   assert.equal(await dirty(), false);
-  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
   assert.equal(await revision(), afterEdit + 2);
   await setPath(output);
   console.log(
@@ -557,7 +560,7 @@ async function run() {
     null,
   );
   assert.equal(await dirty(), true);
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   const restoredNotation = await evaluate(`
     (async () => {
       const {SaveService} = await import('/src/services/SaveService.ts');
@@ -566,13 +569,13 @@ async function run() {
   `);
   assert.deepEqual(restoredNotation, notationOnDisk);
   assert.equal(await dirty(), false);
-  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
   assert.equal(
     await evaluate(`window.__saveSmoke.selectedElement.secondaryFthora`),
     null,
   );
   assert.equal(await dirty(), true);
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.equal(
     await evaluate(`window.__saveSmoke.selectedElement.secondaryFthora`),
     'SoftChromaticPa_TopSecondary',
@@ -623,21 +626,21 @@ async function run() {
   );
   assert.equal(await dirty(), true);
   const pastedCarryScore = await serializeCurrentScore();
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.deepEqual(await serializeCurrentScore(), carryOnDisk);
   assert.equal(
     await evaluate(`window.__saveSmoke.selectedElement.fthoraCarry`),
     null,
   );
   assert.equal(await dirty(), false);
-  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
   assert.deepEqual(await serializeCurrentScore(), pastedCarryScore);
   assert.equal(
     await evaluate(`window.__saveSmoke.selectedElement.fthoraCarry`),
     'Enharmonic_Top',
   );
   assert.equal(await dirty(), true);
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.deepEqual(await serializeCurrentScore(), carryOnDisk);
   assert.equal(await dirty(), false);
   console.log(
@@ -690,17 +693,17 @@ async function run() {
     editedDownstreamNotes[1].secondaryFthora,
     'GeneralFlat_TopSecondary',
   );
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.deepEqual(await serializeCurrentScore(), downstreamOnDisk);
   assert.equal(await dirty(), false);
   await evaluate(`window.__saveSmoke.save(); true`);
   assert.deepEqual(await serializeCurrentScore(), downstreamOnDisk);
-  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
   assert.deepEqual(await serializeCurrentScore(), editedDownstreamScore);
   assert.equal(await dirty(), true);
   await evaluate(`window.__saveSmoke.save(); true`);
   assert.deepEqual(await serializeCurrentScore(), editedDownstreamScore);
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.deepEqual(await serializeCurrentScore(), downstreamOnDisk);
   assert.equal(await dirty(), false);
   console.log(
@@ -746,13 +749,13 @@ async function run() {
   );
   assert.equal(await dirty(), true);
   const autoMartyriaScore = await serializeCurrentScore();
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.deepEqual(await serializeCurrentScore(), martyriaOnDisk);
   assert.equal(await dirty(), false);
-  await evaluate(`window.__saveSmoke.onFileMenuRedo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuRedo()`);
   assert.deepEqual(await serializeCurrentScore(), autoMartyriaScore);
   assert.equal(await dirty(), true);
-  await evaluate(`window.__saveSmoke.onFileMenuUndo(); true`);
+  await evaluate(`window.__saveSmoke.onFileMenuUndo()`);
   assert.deepEqual(await serializeCurrentScore(), martyriaOnDisk);
   assert.equal(await dirty(), false);
   console.log(
@@ -812,7 +815,7 @@ async function run() {
     (async () => {
       const editor = window.__saveSmoke;
       const workspace = editor.selectedWorkspace;
-      editor.onFileMenuUndo();
+      await editor.onFileMenuUndo();
       const clean = !workspace.hasUnsavedChanges;
       const title = workspace.score.documentProperties.title;
       editor.onFileMenuNewScore();

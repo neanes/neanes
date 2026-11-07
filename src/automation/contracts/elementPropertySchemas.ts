@@ -13,7 +13,7 @@ import { dropCapLyricsDescription } from './lyricSyntax';
 
 // Read-only live content projections. These are not edit validation schemas.
 // Layout caches are excluded except the explicitly exposed calculated pitches.
-// Rendering state, saved IDs and nested objects are excluded.
+// Rendering state and saved IDs are excluded.
 // Unset values are omitted, except lineHeight: null explicitly resets to normal.
 // False, zero and empty strings remain.
 const breaks = {
@@ -56,8 +56,30 @@ const plainTextContent = z
   .string()
   .describe('Plain text, not HTML or Markdown.');
 
+const footnotePosition = {
+  footnotePositionOverride: z
+    .boolean()
+    .describe(
+      'True disables automatic collision clearance and uses the offsets from the default marker position directly.',
+    ),
+  footnoteOffsetX: z
+    .number()
+    .describe(
+      'Neume-font em units, not CSS pixels; positive moves right. Automatic clearance may still raise the marker unless footnotePositionOverride is true.',
+    ),
+  footnoteOffsetY: z
+    .number()
+    .describe(
+      'Neume-font em units, not CSS pixels; positive moves down. Automatic clearance may still raise the marker unless footnotePositionOverride is true.',
+    ),
+};
+
 export const elementPropertySchemas = {
   [ElementType.Note]: z.strictObject({
+    footnoteId: z.string().uuid().optional(),
+    footnoteNumber: z.number().int().positive().optional(),
+    footnoteMarker: z.string().optional(),
+    ...footnotePosition,
     ...breaks,
     lyrics: z.string(),
     isHyphen: z.boolean(),
@@ -261,6 +283,10 @@ export const elementPropertySchemas = {
     ignoreAttractions: z.boolean(),
   }),
   [ElementType.Martyria]: z.strictObject({
+    footnoteId: z.string().uuid().optional(),
+    footnoteNumber: z.number().int().positive().optional(),
+    footnoteMarker: z.string().optional(),
+    ...footnotePosition,
     ...breaks,
     auto: z
       .boolean()
@@ -364,7 +390,11 @@ export const elementPropertySchemas = {
     textDirection: z.enum(['ltr', 'rtl']).optional(),
     multipanel: z.boolean(),
     inline: z.boolean(),
-    scrollable: z.boolean(),
+    scrollable: z
+      .boolean()
+      .describe(
+        'Enables scrolling in main-score rich-text boxes. Footnote bodies always expand to their natural height.',
+      ),
     centerOnPage: z.boolean(),
     height: z.number(),
     customWidth: z.number().optional(),

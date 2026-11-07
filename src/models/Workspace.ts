@@ -17,6 +17,7 @@ import type {
 import type { LyricSetup } from './LyricSetup';
 import { Score } from './Score';
 import type { ScoreElementSelectionRange } from './ScoreElementSelectionRange';
+import type { Staff } from './Staff';
 
 export type ZoomFitMode = 'page-width' | 'text-width' | 'whole-page';
 
@@ -79,6 +80,7 @@ export class Workspace {
   public selectedAlternateLineElement: AlternateLineElement | null = null;
   public selectedHeaderFooterElement: ScoreElement | null = null;
   public selectedLyrics: NoteElement | null = null;
+  public activeFootnoteId: string | null = null;
   public selectionRange: ScoreElementSelectionRange | null = null;
   public zoom: number = 1;
   public zoomFitMode: ZoomFitMode | null = null;
@@ -93,9 +95,26 @@ export class Workspace {
     return this._score;
   }
 
+  public get activeStaff() {
+    return (
+      this.score.footnotes.find(
+        (footnote) => footnote.id === this.activeFootnoteId,
+      )?.staff ?? this.score.staff
+    );
+  }
+
+  public selectContentForElement(element: ScoreElement) {
+    this.activeFootnoteId =
+      this.score.footnotes.find((footnote) =>
+        footnote.staff.elements.includes(element),
+      )?.id ?? null;
+  }
+
   public set score(score: Score) {
     if (toRaw(this._score) !== toRaw(score)) {
       this._score = score;
+      this.activeFootnoteId = null;
+      this._nextId = null;
       this.contentChanges.invalidate();
       this.commandService.clearHistory();
     }
@@ -121,20 +140,20 @@ export class Workspace {
     this.contentChanges.hasUnsavedChanges = value;
   }
 
-  public updateStaffLyrics(text: string) {
+  public updateStaffLyrics(text: string, staff: Staff = this.score.staff) {
     this.commandService.execute(
       lyricSetupCommandFactory.create('update-properties', {
-        target: this.score.staff.lyrics,
+        target: staff.lyrics,
         newValues: { text },
       }),
       true,
     );
   }
 
-  public updateLyricsLocked(locked: boolean) {
+  public updateLyricsLocked(locked: boolean, staff: Staff = this.score.staff) {
     this.commandService.execute(
       lyricSetupCommandFactory.create('update-properties', {
-        target: this.score.staff.lyrics,
+        target: staff.lyrics,
         newValues: { locked },
       }),
       true,
@@ -148,7 +167,9 @@ export class Workspace {
     if (this._nextId == null) {
       let maxId = 0;
 
-      for (const element of this.score.staff.elements) {
+      for (const element of this.score.staves.flatMap(
+        (staff) => staff.elements,
+      )) {
         if (element.id != null && element.id > maxId) {
           maxId = element.id;
         }

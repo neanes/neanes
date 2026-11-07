@@ -555,6 +555,186 @@
                   </Field>
                 </template>
 
+                <template v-else-if="section.value === 'footnotes'">
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-format">{{
+                      $t(($) => $.dialog.pageSetup.footnoteFormat, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <Select v-model="footnoteFormat">
+                      <SelectTrigger id="page-setup-footnote-format"
+                        ><SelectValue
+                      /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="numbers">{{
+                          $t(($) => $.dialog.pageSetup.footnoteNumbers, {
+                            ns: 'dialog',
+                          })
+                        }}</SelectItem>
+                        <SelectItem value="standard">{{
+                          $t(($) => $.dialog.pageSetup.footnoteSymbols, {
+                            ns: 'dialog',
+                          })
+                        }}</SelectItem>
+                        <SelectItem value="asterisks">{{
+                          $t(($) => $.dialog.pageSetup.footnoteAsterisks, {
+                            ns: 'dialog',
+                          })
+                        }}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-numbering">{{
+                      $t(($) => $.dialog.pageSetup.footnoteNumbering, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <Select v-model="form.footnoteNumbering">
+                      <SelectTrigger id="page-setup-footnote-numbering"
+                        ><SelectValue
+                      /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="[value, label] in footnoteNumberingOptions"
+                          :key="value"
+                          :value="value"
+                          >{{ $t(label, { ns: 'dialog' }) }}</SelectItem
+                        >
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-first-footnote-number">{{
+                      $t(($) => $.dialog.pageSetup.firstFootnoteNumber, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <FootnoteSymbolInput
+                      v-if="form.footnoteFormat === 'symbols'"
+                      id="page-setup-first-footnote-number"
+                      v-model="form.firstFootnoteNumber"
+                      :sequence="form.footnoteSymbolSequence"
+                      @valid="footnoteSymbolValid = $event"
+                    />
+                    <InputUnit
+                      v-else
+                      id="page-setup-first-footnote-number"
+                      v-model="form.firstFootnoteNumber"
+                      unit="unitless"
+                      :min="1"
+                      :max="MAX_FOOTNOTE_START_NUMBER"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="page-setup-footnote-parentheses"
+                      :model-value="form.footnoteReferenceParentheses"
+                      @update:model-value="
+                        setBoolean('footnoteReferenceParentheses', $event)
+                      "
+                    />
+                    <FieldLabel for="page-setup-footnote-parentheses">{{
+                      $t(
+                        ($) => $.dialog.pageSetup.footnoteReferenceParentheses,
+                        { ns: 'dialog' },
+                      )
+                    }}</FieldLabel>
+                  </Field>
+                  <Field orientation="horizontal">
+                    <Checkbox
+                      id="page-setup-footnote-rule"
+                      :model-value="form.showFootnoteHorizontalRule"
+                      @update:model-value="
+                        setBoolean('showFootnoteHorizontalRule', $event)
+                      "
+                    />
+                    <FieldLabel for="page-setup-footnote-rule">{{
+                      $t(($) => $.dialog.pageSetup.showFootnoteHorizontalRule, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-rule-length">{{
+                      $t(
+                        ($) => $.dialog.pageSetup.footnoteHorizontalRuleLength,
+                        { ns: 'dialog' },
+                      )
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-rule-length"
+                      v-model="form.footnoteHorizontalRuleLength"
+                      unit="unitless"
+                      :min="1"
+                      :max="100"
+                      :step="1"
+                      :format-options="fraction0FormatOptions"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-space-above-rule">{{
+                      $t(($) => $.dialog.pageSetup.footnoteSpaceAboveRule, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-space-above-rule"
+                      v-model="form.footnoteSpaceAboveRule"
+                      unit="pt"
+                      :min="0"
+                      :step="0.01"
+                      :format-options="fraction2FormatOptions"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-space-below-rule">{{
+                      $t(($) => $.dialog.pageSetup.footnoteSpaceBelowRule, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-space-below-rule"
+                      v-model="form.footnoteSpaceBelowRule"
+                      unit="pt"
+                      :min="0"
+                      :step="0.01"
+                      :format-options="fraction2FormatOptions"
+                      :disabled="!form.showFootnoteHorizontalRule"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-rule-thickness">{{
+                      $t(($) => $.dialog.pageSetup.footnoteRuleThickness, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <InputUnit
+                      id="page-setup-footnote-rule-thickness"
+                      v-model="form.footnoteRuleThickness"
+                      unit="pt"
+                      :min="0"
+                      :max="100"
+                      :step="0.5"
+                      :format-options="fraction1FormatOptions"
+                      :disabled="!form.showFootnoteHorizontalRule"
+                    />
+                  </Field>
+                  <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-rule-color">{{
+                      $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
+                    }}</FieldLabel>
+                    <ColorPicker
+                      id="page-setup-footnote-rule-color"
+                      v-model="form.footnoteRuleColor"
+                      :disabled="!form.showFootnoteHorizontalRule"
+                    />
+                  </Field>
+                </template>
+
                 <template v-else-if="section.value === 'headersAndFooters'">
                   <Field
                     v-for="row in headerFooterCheckboxRows"
@@ -1505,7 +1685,12 @@
             {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
           </Button>
         </DialogClose>
-        <Button variant="outline" type="button" @click="saveAsDefault">
+        <Button
+          variant="outline"
+          type="button"
+          :disabled="!footnoteStartValid"
+          @click="saveAsDefault"
+        >
           <PhFloppyDisk />
           {{ $t(($) => $.dialog.common.setAsDefault, { ns: 'dialog' }) }}
         </Button>
@@ -1513,7 +1698,11 @@
           <PhArrowCounterClockwise />
           {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
         </Button>
-        <Button type="submit" form="page-setup-form">
+        <Button
+          type="submit"
+          form="page-setup-form"
+          :disabled="!footnoteStartValid"
+        >
           <PhCheck />
           {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
         </Button>
@@ -1544,6 +1733,7 @@ import { computed, ref } from 'vue';
 
 import ColorPicker from '@/components/ColorPicker.vue';
 import FontCombobox from '@/components/FontCombobox.vue';
+import FootnoteSymbolInput from '@/components/FootnoteSymbolInput.vue';
 import InputFontSize from '@/components/InputFontSize.vue';
 import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import { toDisplay } from '@/components/InputUnit.types';
@@ -1585,6 +1775,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import type { MartyriaElement, TempoElement } from '@/models/Element';
 import { ElementType, NoteElement } from '@/models/Element';
+import type { FootnoteSymbolSequence } from '@/models/FootnoteNumbering';
 import {
   Accidental,
   GorgonNeume,
@@ -1608,6 +1799,10 @@ import {
 } from '@/models/ParagraphStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { fontService } from '@/services/FontService';
+import {
+  isValidFootnoteStart,
+  MAX_FOOTNOTE_START_NUMBER,
+} from '@/services/FootnoteMarker';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
 import { SaveService } from '@/services/SaveService';
 import {
@@ -1780,6 +1975,11 @@ const sections = [
     icon: PhSplitHorizontal,
   },
   {
+    value: 'footnotes',
+    labelSelector: ($) => $.dialog.pageSetup.footnotes,
+    icon: PhBookOpenText,
+  },
+  {
     value: 'headersAndFooters',
     labelSelector: ($) => $.dialog.pageSetup.headersAndFooters,
     icon: PhBookOpenText,
@@ -1842,6 +2042,35 @@ const numeralsOptions = new Map<PageNumerals, DialogSelector>([
 ]);
 
 const form = ref(new PageSetup());
+const footnoteSymbolValid = ref(true);
+const footnoteStartValid = computed(
+  () =>
+    isValidFootnoteStart(
+      form.value.firstFootnoteNumber,
+      form.value.footnoteFormat,
+      form.value.footnoteSymbolSequence,
+    ) &&
+    (form.value.footnoteFormat !== 'symbols' || footnoteSymbolValid.value),
+);
+const footnoteFormat = computed({
+  get: () =>
+    form.value.footnoteFormat === 'numbers'
+      ? 'numbers'
+      : form.value.footnoteSymbolSequence,
+  set: (value: 'numbers' | FootnoteSymbolSequence) => {
+    form.value.footnoteFormat = value === 'numbers' ? 'numbers' : 'symbols';
+    if (value !== 'numbers') {
+      form.value.footnoteSymbolSequence = value;
+    }
+  },
+});
+const footnoteNumberingOptions = new Map<
+  PageSetup['footnoteNumbering'],
+  DialogSelector
+>([
+  ['continuous', ($) => $.dialog.pageSetup.footnoteContinuous],
+  ['section', ($) => $.dialog.pageSetup.footnoteRestartSection],
+]);
 const neumeBulkColor = ref('#000000');
 
 const previewNeumes = computed(() => {
@@ -2422,12 +2651,18 @@ function updatePageSize() {
 }
 
 function updatePageSetup() {
+  if (!footnoteStartValid.value) {
+    return;
+  }
   normalizeDirection();
   emit('update', form.value);
   open.value = false;
 }
 
 function saveAsDefault() {
+  if (!footnoteStartValid.value) {
+    return;
+  }
   normalizeDirection();
   const defaults = new PageSetup_v1();
   SaveService.SavePageSetup(defaults, form.value);

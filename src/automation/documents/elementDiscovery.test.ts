@@ -47,6 +47,39 @@ const query = (collection: ElementCollection = { kind: 'staff' }) => ({
 });
 
 describe('typed element discovery', () => {
+  it.each([ElementType.Note, ElementType.Martyria])(
+    'publishes em offset units and collision behavior in focused %s catalogs',
+    (elementType) => {
+      const catalog = getElementCatalog({
+        elementTypes: [elementType],
+        properties: [
+          'footnoteOffsetX',
+          'footnoteOffsetY',
+          'footnotePositionOverride',
+        ],
+        view: 'both',
+      }).elementTypes[0];
+      for (const schema of [catalog.properties, catalog.editProperties]) {
+        expect(schema!.properties).toMatchObject({
+          footnoteOffsetX: {
+            description: expect.stringContaining(
+              'Neume-font em units, not CSS pixels; positive moves right',
+            ),
+          },
+          footnoteOffsetY: {
+            description: expect.stringContaining(
+              'Neume-font em units, not CSS pixels; positive moves down',
+            ),
+          },
+          footnotePositionOverride: {
+            description: expect.stringContaining(
+              'disables automatic collision clearance',
+            ),
+          },
+        });
+      }
+    },
+  );
   it('explains drop-cap lyric association in focused read and edit catalogs', () => {
     const catalog = getElementCatalog({
       elementTypes: [ElementType.DropCap],

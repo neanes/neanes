@@ -39,3 +39,100 @@ use the Electron debugging endpoint as their test driver.
 
 Future automation jobs and export transformations belong in this feature area
 (and its Electron counterpart), reusing shared document and rendering behavior.
+
+## Footnotes
+
+Clients can request `get_rich_text_format` with `topics: ["footnotes"]` for the
+authoring workflow, constraints, and an executable insertion example.
+
+`edit_elements` supports `insert_footnote` with a main-score Note or Martyria `elementRef`
+(and optional body `elements`) and `remove_footnote` with that musical reference.
+Tempo elements cannot own footnotes and expose no footnote properties.
+Each reference owns a separate body; nested and shared references are unsupported.
+`insert_footnote` returns `createdFootnotes: [{footnoteId, elementRef}]`
+for new bodies surviving the transaction. `elementRef` identifies their final
+main-score owner.
+Use these IDs directly in body/marker edits; `includeCreated: false` suppresses
+this list as well as created element references.
+
+Read the musical anchor's read-only `footnoteId`, calculated `footnoteNumber` (automatic references only), and `footnoteMarker` (the displayed label), then use
+`collection: { kind: "footnote", footnoteId }` with normal element readers/edits.
+The body retains its terminal Empty element and its own lyrics. In populated
+bodies the terminal has no layout box, reservation, or page occurrence; completely
+empty bodies retain the visible insertion target and its page occurrence.
+Collection readers and edits continue to include the terminal. Musical state
+starts from immediately after the anchor and then evolves independently. With no explicit body elements, insertion creates an empty staff.
+Removing its main-score reference removes the body in the same history operation;
+copying the reference copies the body with a new identity.
+
+`get_page_setup` / `update_page_setup` expose `footnoteFormat` (`numbers` or
+`symbols`), `footnoteNumbering` (`continuous` or `section`),
+`footnoteSymbolSequence` (`standard` or `asterisks`), `firstFootnoteNumber`,
+`showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent),
+`footnoteSpaceAboveRule`, `footnoteSpaceBelowRule`, `footnoteRuleThickness`,
+`footnoteRuleColor`, and
+`footnoteReferenceParentheses` (defaults to true; applies to Note and Martyria
+reference markers). The API uses pixels for spacing and thickness. Page Setup
+displays them in points (6 pt, 2.6 pt, and 1 pt by default). Only the space
+above applies when the rule is hidden. Placement and collision clearance use
+measured marker ink bounds. Symbol positions use the same 1-based
+`firstFootnoteNumber`:
+`U+002A`, `U+2020`, `U+2021`, `U+00A7`, `U+00B6`, `U+2016`, then each symbol
+twice, three times, and so on. Starting values are limited to 1,000,000 for
+numbers or a label of at most 64 repeated symbols (positions 1-384 in the
+standard sequence, 1-64 in the asterisks sequence). Invalid starts are rejected
+before applying settings; the automatic sequence itself can continue beyond this
+starting-value limit.
+The `asterisks` sequence uses `*`, `**`, `***`, and so on. Changing format or
+symbol sequence preserves the start and numbering.
+Section restarts use the same nonempty section running markers as the editor;
+content before the first marker belongs to the initial section. Custom markers do not consume sequence entries.
+Use `update_footnote` with `footnoteId` and `marker` to change a marker. Null restores
+automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters
+without control characters, and do not consume an automatic number. `get_elements`
+for a footnote collection includes `footnote: {id, marker, label, number}`: `marker`
+is the stored override or null, `label` is the displayed string, and `number` is
+null for custom markers. Musical references surround the label with parentheses when
+`footnoteReferenceParentheses` is enabled. Body labels have no parentheses.
+Musical markers are centered above their anchor. Note and Martyria markers use vertical collision clearance from neumes,
+barlines, attached marks, and other reference markers. Their ink starts with its bottom 0.75 neume-font em above
+the musical baseline, rising only as needed for collision clearance.
+Replacing a musical anchor preserves its footnote and marker offsets; explicit
+replacement offsets override the inherited value independently for each axis.
+Edit `footnoteOffsetX` / `footnoteOffsetY` on Note or Martyria elements (in neume-font em units; positive means right/down). Collision
+clearance raises the marker after applying these offsets and accounts for
+collision regions across the finished musical line, including neighboring
+neumes, barlines, and other reference markers. Musical references do not reserve
+horizontal space or change line/page breaks. The Footnote Properties dialog exposes these same
+values in a positioning section that starts collapsed, with a draggable preview and reset control.
+The preview includes the preceding and following musical elements on the same
+line, dimmed and positioned using their page coordinates. Automatic marker
+placement in the preview uses the same finished-line obstacles and preceding
+reference markers as page layout.
+Set `footnotePositionOverride: true` to disable automatic collision clearance for that
+marker and use the offsets directly from the default baseline-relative position.
+The dialog enables manual controls with an Override position checkbox; enabling it
+preserves the current page position, and disabling it resets offsets to zero.
+The override is saved, copied, and inherited when replacing musical anchors;
+explicit replacement values (including `false`) take precedence.
+
+Page occurrence readers include the `footnote` region; page line counts include
+main and footnote lines. Range selections can identify the active footnote
+collection. Footnote numbering follows document reference order across pages.
+`get_staff_lyrics` and the `set_staff_lyrics` edit action also accept this
+collection selector for independent authoritative footnote lyrics.
+Editor automation and private workers reconcile measured text-box heights
+with pagination. Footnote bodies use natural heights even if a stored rich-text box is
+scrollable. The fixed body gutter is 1.8em for the marker plus a 0.4em gap, both
+relative to the body marker font size. Visual exports reconcile measured heights
+with the existing pass limit and retain maxima for header/footer templates.
+An oversized body remains editable
+and saveable, but settled page discovery/visual export fails explicitly until it
+fits. Run the self-launching `footnotes` integration scenario for both document
+scopes and real editor/rendering behavior.
+
+Footnote typography uses the built-in `footnote-text`, `footnote-body-marker`,
+and `footnote-reference` paragraph styles. The body-marker style inherits Footnote Text, including its font size.
+Body labels render on the baseline, with a period after numeric markers and no
+period after symbols. Parenthesized musical references retain their existing
+position and configured reference font size without scaling.

@@ -1,7 +1,9 @@
 import { isDisplayedPageNumberOdd } from '@/utils/PageNumbering';
 
+import type { ScoreElement } from './Element';
 import type { Footer } from './Footer';
 import { Footers } from './Footers';
+import type { Footnote } from './Footnote';
 import type { Header } from './Header';
 import { Headers } from './Headers';
 import { PageSetup } from './PageSetup';
@@ -23,6 +25,15 @@ export class Score {
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();
+  public footnotes: Footnote[] = [];
+
+  public get staves() {
+    return [this.staff, ...this.footnotes.map((footnote) => footnote.staff)];
+  }
+
+  public getStaffForElement(element: ScoreElement) {
+    return this.staves.find((staff) => staff.elements.includes(element));
+  }
 
   public get headersAndFooters() {
     return [

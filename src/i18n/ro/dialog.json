@@ -97,7 +97,10 @@
       "header": "Antet",
       "footer": "Subsol",
       "lyrics": "Versuri",
-      "dropCap": "Majusculă decorativă"
+      "dropCap": "Majusculă decorativă",
+      "footnoteText": "Text de notă de subsol",
+      "footnoteBodyMarker": "Marcaj în corpul notei de subsol",
+      "footnoteReference": "Referință la nota de subsol"
     }
   },
   "neumePositioning": {
@@ -249,7 +252,25 @@
     "thickness": "Grosime",
     "applyColor": "Aplică culoarea",
     "neumeBulkColor": "Schimbă culoarea mai multor neume",
-    "neumeBulkColorDescription": "Pentru a schimba culoarea mai multor neume simultan, selectați tipurile de neume de mai sus, alegeți o culoare și apăsați butonul pentru a aplica culoarea tuturor neumelor selectate."
+    "neumeBulkColorDescription": "Pentru a schimba culoarea mai multor neume simultan, selectați tipurile de neume de mai sus, alegeți o culoare și apăsați butonul pentru a aplica culoarea tuturor neumelor selectate.",
+    "footnotes": "Note de subsol",
+    "firstFootnoteNumber": "Începe de la",
+    "footnoteReferenceParentheses": "Încadrează în paranteze marcajele notelor de subsol muzicale",
+    "showFootnoteHorizontalRule": "Afișează linia separatoare deasupra notelor de subsol",
+    "footnoteHorizontalRuleLength": "Lungimea liniei separatoare (%)",
+    "footnoteSpaceAboveRule": "Spațiu deasupra liniei separatoare (pt)",
+    "footnoteSpaceBelowRule": "Spațiu sub linia separatoare (pt)",
+    "footnoteRuleThickness": "Grosimea liniei separatoare (pt)",
+    "footnoteFormat": "Format",
+    "footnoteNumbering": "Numerotare",
+    "footnoteContinuous": "Continuă",
+    "footnoteRestartSection": "Reîncepe la fiecare secțiune",
+    "nextFootnoteSymbol": "Simbolul următor",
+    "previousFootnoteSymbol": "Simbolul anterior",
+    "invalidFootnoteSymbol": "Introduceți un simbol din secvență, repetat de cel mult {{count}} ori.",
+    "footnoteNumbers": "1, 2, 3, …",
+    "footnoteSymbols": "*, †, ‡, …",
+    "footnoteAsterisks": "*, **, ***, …"
   },
   "playbackSettings": {
     "root": "Setări de redare",
@@ -353,5 +374,20 @@
     "accessTitle": "Ce poate accesa?",
     "accessDescription": "Instrumentele conectate pot citi, edita, salva și exporta partituri folosind permisiunile de fișiere ale sistemului de operare. Implicit, lucrează cu documente private separate și pot citi și edita filele deschise când vizează explicit editorul. Ciornele private sunt eliminate la încheierea conexiunii dacă nu sunt salvate.",
     "documentation": "Documentație"
+  },
+  "footnoteProperties": {
+    "positioning": "Poziționare",
+    "overridePosition": "Suprascrie poziția",
+    "dragMarker": "Trageți marcajul notei de subsol",
+
+    "offsetX": "Deplasare orizontală (em)",
+    "offsetY": "Deplasare verticală (em)",
+    "positionHint": "Activați suprascrierea poziției pentru a trage marcajul sau a modifica deplasările fără ajustarea automată a suprapunerilor. Valorile pozitive deplasează spre dreapta sau în jos.",
+    "resetPosition": "Resetare poziție",
+    "title": "Proprietățile notei de subsol",
+    "customText": "Text personalizat",
+    "reference": "Referință",
+    "body": "Eticheta notei de subsol",
+    "invalid": "Introduceți 1–16 caractere fără întreruperi de rând."
   }
 }

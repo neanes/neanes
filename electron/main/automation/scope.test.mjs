@@ -100,7 +100,7 @@ describe('stdio scope publication', () => {
     const tools = scopedTools(automationTools('headless'));
     // Includes host file discovery and an inline batch envelope; detailed
     // settings/style constraints remain in the single-document tools.
-    expect(JSON.stringify({ tools }).length).toBeLessThan(156000);
+    expect(JSON.stringify({ tools }).length).toBeLessThan(160000);
     expect(
       JSON.stringify(
         tools.map(({ name, description, inputSchema }) => ({
@@ -109,6 +109,6 @@ describe('stdio scope publication', () => {
           inputSchema,
         })),
       ).length,
-    ).toBeLessThan(74500);
+    ).toBeLessThan(76500);
   });
 });

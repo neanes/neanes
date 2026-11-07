@@ -357,3 +357,23 @@ export function rewriteClipboardNoteFormatParagraphStyleId(
         lyricsParagraphStyleId,
       };
 }
+
+export function collectClipboardParagraphStylesForPassageAndFootnotes(
+  passage: ScoreElement[],
+  footnoteElements: ScoreElement[],
+  includeLyrics: boolean,
+  paragraphStyles: ParagraphStyle[],
+) {
+  const styles = [
+    ...collectClipboardParagraphStylesFromPasteElements(
+      passage,
+      includeLyrics,
+      paragraphStyles,
+    ),
+    ...collectClipboardParagraphStylesFromElements(
+      footnoteElements,
+      paragraphStyles,
+    ),
+  ];
+  return [...new Map(styles.map((style) => [style.id, style])).values()];
+}

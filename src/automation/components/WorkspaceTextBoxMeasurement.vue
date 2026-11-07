@@ -1,5 +1,6 @@
 <template>
   <div
+    :id="styleScopeId"
     class="workspace-text-box-measurement"
     :style="{ '--zoom': 1, '--zoom-residue': 1 }"
     inert
@@ -11,6 +12,7 @@
         v-if="element.elementType === ElementType.RichTextBox"
         :ref="(instance) => setMeasurer(element, instance)"
         :element="element as RichTextBoxElement"
+        :footnote-body="footnoteBodyElements.has(element)"
         :page-setup="workspace.score.pageSetup"
         :paragraph-styles="workspace.score.paragraphStyles"
         :fonts="fonts"
@@ -30,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, useId } from 'vue';
 
 import TextBox from '@/components/TextBox.vue';
 import TextBoxRich from '@/components/TextBoxRich.vue';
@@ -56,16 +58,20 @@ const emit = defineEmits<{
   complete: [heights: TextBoxHeightMeasurement[]];
   failed: [error: Error];
 }>();
+const styleScopeId = `text-box-measurement-${useId()}`;
 const elements = getResizableTextBoxes(props.workspace.score);
+const footnoteBodyElements = new Set(
+  props.workspace.score.footnotes.flatMap((body) => body.staff.elements),
+);
 const paragraphStyleCss = computed(() =>
   buildRichTextParagraphStyleCss(
     props.workspace.score.paragraphStyles,
-    '.workspace-text-box-measurement .ck-content',
+    `#${styleScopeId} .ck-content`,
   ),
 );
 const measurers = new Map<
   MeasuredTextBox,
-  { measureHeight(): Promise<number> }
+  { measureTextBox(): Promise<TextBoxHeightMeasurement> }
 >();
 let disposed = false;
 const timer = setTimeout(() => {
@@ -78,7 +84,24 @@ function setMeasurer(element: MeasuredTextBox, instance: unknown) {
   if (instance == null) {
     measurers.delete(element);
   } else {
-    measurers.set(element, instance as { measureHeight(): Promise<number> });
+    measurers.set(
+      element,
+      instance as { measureTextBox(): Promise<TextBoxHeightMeasurement> },
+    );
+  }
+}
+
+function complete(heights: TextBoxHeightMeasurement[]) {
+  if (!disposed) {
+    clearTimeout(timer);
+    emit('complete', heights);
+  }
+}
+
+function failed(error: Error) {
+  if (!disposed) {
+    clearTimeout(timer);
+    emit('failed', error);
   }
 }
 
@@ -89,25 +112,13 @@ onMounted(async () => {
       throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
     }
     const heights = await Promise.all(
-      elements.map(async (element) => ({
-        element,
-        height: await measurers.get(element)!.measureHeight(),
-      })),
+      elements.map((element) => measurers.get(element)!.measureTextBox()),
     );
-    if (!disposed) {
-      clearTimeout(timer);
-      emit('complete', heights);
-    }
+    complete(heights);
   } catch (error) {
-    if (!disposed) {
-      clearTimeout(timer);
-      emit(
-        'failed',
-        error instanceof Error
-          ? error
-          : new Error('TEXT_BOX_MEASUREMENT_FAILED'),
-      );
-    }
+    failed(
+      error instanceof Error ? error : new Error('TEXT_BOX_MEASUREMENT_FAILED'),
+    );
   }
 });
 onBeforeUnmount(() => {

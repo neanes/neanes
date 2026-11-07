@@ -63,6 +63,7 @@
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
       :source="richTextBoxSource"
+      :footnote-body="context.kind === 'rich-text-box' && context.footnoteBody"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
       @open-paragraph-styles-dialog="

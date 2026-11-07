@@ -23,7 +23,7 @@ type Occurrence = {
   elementType: ElementType;
   collection: ElementCollection;
   index: number;
-  region: 'staff' | 'header' | 'footer';
+  region: 'staff' | 'header' | 'footer' | 'footnote';
   lineIndex?: number;
 };
 export function discoverPages(
@@ -79,19 +79,20 @@ export function discoverPages(
         'header',
       );
     }
-    for (const [lineIndex, line] of page.lines.entries()) {
+    for (const [lineIndex, line] of page.allLines.entries()) {
+      const region = lineIndex < page.lines.length ? 'staff' : 'footnote';
       for (const element of line.elements) {
-        add(element, 'staff', lineIndex);
+        add(element, region, lineIndex);
         if (element.elementType === ElementType.Note) {
           const note = element as NoteElement;
           for (const annotation of note.annotations) {
-            add(annotation, 'staff', lineIndex);
+            add(annotation, region, lineIndex);
           }
           for (const alternate of note.alternateLines) {
-            add(alternate, 'staff', lineIndex);
+            add(alternate, region, lineIndex);
             for (const child of alternate.elements) {
               if (child.elementType === ElementType.Note) {
-                add(child, 'staff', lineIndex);
+                add(child, region, lineIndex);
               }
             }
           }
@@ -113,7 +114,7 @@ export function discoverPages(
         copy.pageSetup,
         page.physicalPageNumber,
       ),
-      lineCount: page.lines.length,
+      lineCount: page.allLines.length,
       occurrenceCount: occurrences.length,
       occurrences,
     };

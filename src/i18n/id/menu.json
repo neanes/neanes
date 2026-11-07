@@ -97,5 +97,16 @@
     "closeToTheLeft": "Tutup ke Kiri",
     "closeToTheRight": "Tutup ke Kanan"
   },
-  "warning": "Peringatan: Aplikasi ini bekerja paling baik di browser berbasis Chromium. Anda mungkin mengalami fungsionalitas yang berkurang atau kesalahan di browser non-Chromium."
+  "warning": "Peringatan: Aplikasi ini bekerja paling baik di browser berbasis Chromium. Anda mungkin mengalami fungsionalitas yang berkurang atau kesalahan di browser non-Chromium.",
+  "footnotes": {
+    "insert": "Sisipkan Catatan Kaki",
+    "edit": "Edit catatan kaki {{number}}",
+    "remove": "Hapus Catatan Kaki",
+    "returnToReference": "Klik dua kali untuk kembali ke penanda",
+    "overflow": "Catatan kaki dan penandanya tidak muat di halaman ini. Persingkat catatan kaki atau perbesar ukuran halaman. Ekspor tidak tersedia sampai masalah ini diselesaikan.",
+    "nested": "Catatan kaki tidak dapat memuat penanda catatan kaki.",
+    "unsupportedExport": "Format ekspor ini belum mendukung catatan kaki. Gunakan PDF atau PNG untuk mempertahankannya.",
+    "lyrics": "Lirik Catatan Kaki {{number}}",
+    "properties": "Properti Catatan Kaki…"
+  }
 }

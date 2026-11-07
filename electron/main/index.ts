@@ -1160,6 +1160,17 @@ async function exportWorkspaceAsLatex(
 ): Promise<ExportWorkspaceReplyArgs> {
   const result: ExportWorkspaceReplyArgs = { success: false };
 
+  if (args.data === null) {
+    result.errorMessage = i18next.t(($) => $.menu.footnotes.unsupportedExport, {
+      ns: 'menu',
+    });
+    if (silentLatex) {
+      silentLatexFailCount++;
+      console.error(`FAIL ${args.filePath} | ${result.errorMessage}`);
+    }
+    return result;
+  }
+
   if (saving) {
     result.canceled = true;
     return result;

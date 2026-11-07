@@ -148,6 +148,12 @@ The color and size shared by alternate lines are set under **Neumes** in `File >
 
 To remove the entire alternate line, click it to select it and press <kbd>Delete</kbd>, or choose **Delete** in the main toolbar. This does not remove the note to which it was attached.
 
+## Put explanations or alternate melodies in footnotes
+
+Use a footnote when an explanation, alternate melody, or finale should appear at the bottom of the page. Right-click a note or martyria and choose **Insert Footnote**.
+
+See [Footnotes](/guide/footnotes.html) for editing and removing footnotes, customizing markers, and choosing score-wide settings.
+
 ## Format rich text
 
 Use the rich-text toolbar to change the selected text or the paragraph containing the cursor. Character formatting, such as bold or color applied to a selection, can coexist with the paragraph's style.

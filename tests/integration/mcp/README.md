@@ -81,3 +81,43 @@ retaining annotations.
 
 On macOS, agents must launch Electron outside the command sandbox as described in
 [AGENTS.md](../../../AGENTS.md). Never connect these tests to the normal user profile.
+
+`footnotes` checks independent footnote text/music editing in private and editor
+scopes, real context-menu insertion and keyboard input, numbering and marker
+placement, same-page ownership, footer placement, stable page discovery, oversized
+body recovery with offscreen page unmount/remount, copying with new identities,
+undo/redo, BYZ/BYZX save/reopen, and
+PNG/PDF rendering. Its disposable output directory retains visual artifacts.
+
+Marker geometry checks cover centered markers, unchanged natural and justified
+spacing, tight lines, centered line endings, and RTL placement. Collision
+clearance raises markers above overlapping ink without changing horizontal
+layout. `footnote-markers` checks clearance from single, short, and centered
+barlines on both sides, neighboring neumes, and other reference markers in LTR
+and RTL. Rendered examples are retained with the footnote artifacts.
+
+`footnote-styles-context` checks pitch/scale inheritance from musical anchors,
+local body music, anchor edits, paragraph-style marker typography, martyria save
+data, and centered ordinary/right-aligned LTR/RTL musical markers.
+
+`footnote-markers` exercises Footnote Properties through real context menus on
+musical references and footnote body labels. It checks the
+custom-marker checkbox, custom-text validation, previews, cancel,
+automatic-marker restoration, number skipping, Undo/Redo, parenthesized musical labels, MCP marker metadata, BYZ/BYZX persistence, PNG
+rendering, and navigation. It checks continuous and section numbering,
+symbol sequences, and the Footnotes Page Setup controls.
+It also checks gorgon clearance after mark and reference offsets, musical-anchor
+position controls and previews, reset, undo/redo, and martyria footnote persistence.
+Tempo elements reject footnote insertion and offer no footnote context-menu actions.
+Page Setup parentheses are checked for pending edits, preview/rendering, and
+persistence; marker ink clearance is compared across glyphs with different ink
+heights.
+
+The `footnote-end-content` scenario checks hidden populated-body terminators,
+visible empty-body targets, reference focus, appending after text and music,
+keyboard end navigation, deletion/undo/redo, stable pagination, and PDF/PNG output.
+It launches a real disposable Electron app; use unsandboxed execution on macOS.
+
+`footnote-body-alignment` compares body labels with baseline-aligned inline text in
+text and neume font contexts at multiple zoom levels, checks numeric punctuation,
+and retains a screenshot.

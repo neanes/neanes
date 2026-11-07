@@ -8,6 +8,8 @@ import type { Score } from '@/models/Score';
 export type MeasuredTextBox = TextBoxElement | RichTextBoxElement;
 export interface TextBoxHeightMeasurement {
   element: MeasuredTextBox;
+  // Assigned layout width used to render this measurement.
+  width: number;
   height: number;
 }
 
@@ -18,7 +20,11 @@ export function getResizableTextBoxes(score: Score): MeasuredTextBox[] {
   const footers = score.pageSetup.showFooter
     ? Object.values(score.footers).flatMap((footer) => footer.elements)
     : [];
-  return [...score.staff.elements, ...headers, ...footers].filter(
+  return [
+    ...score.staves.flatMap((staff) => staff.elements),
+    ...headers,
+    ...footers,
+  ].filter(
     (element): element is MeasuredTextBox =>
       (element.elementType === ElementType.RichTextBox &&
         !(element as RichTextBoxElement).inline) ||

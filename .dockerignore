@@ -1,0 +1,15 @@
+.git
+.agents
+.codex
+.aws
+node_modules
+dist
+dist-electron
+release
+.test-files
+.venv
+coverage
+**/.env*.local
+docs/.vitepress/cache
+docs/.vitepress/dist
+*.log

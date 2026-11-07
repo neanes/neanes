@@ -13,16 +13,26 @@
 
 <script setup lang="ts">
 import { Ckeditor } from '@ckeditor/ckeditor5-vue';
-import type { EditorConfig } from 'ckeditor5';
-import { computed, onBeforeUnmount, useTemplateRef, watch } from 'vue';
+import type { EditorConfig, ViewDocumentDomEventData } from 'ckeditor5';
+import { computed, inject, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import { Footnotes } from '@/ckeditor-plugins/footnotes/footnotes';
 import { NEUME_ELEMENT } from '@/ckeditor-plugins/insertneume/insertneumeediting';
 import {
   registerEditor,
   unregisterEditor,
 } from '@/composables/useRichTextEditorRegistry';
+import { richTextFootnoteControllerKey } from '@/composables/useRichTextFootnotes';
 import InlineEditor from '@/customEditor';
+import type {
+  RichTextBoxContentKey,
+  RichTextFootnoteMarker,
+} from '@/models/Element';
+import {
+  FOOTNOTE_ELEMENT,
+  richTextFootnoteIds,
+} from '@/services/RichTextFootnotes';
 import { inferRichTextEditorDirection } from '@/utils/richTextLanguage';
 
 defineOptions({
@@ -33,6 +43,9 @@ const props = defineProps<{
   config: EditorConfig;
   modelValue: string;
   owner: object;
+  contentKey?: RichTextBoxContentKey;
+  footnotesEditable?: boolean;
+  footnoteMarkers?: Readonly<Record<string, RichTextFootnoteMarker>>;
 }>();
 
 const emit = defineEmits<{
@@ -47,23 +60,21 @@ const instance = computed(
   () => editorRef.value?.instance as InlineEditor | undefined,
 );
 
-// We own content syncing into the editor instead of leaning on
-// @ckeditor/ckeditor5-vue's internal `lastEditorData` dedupe. The wrapper above
-// receives a frozen `initialData` snapshot for `:model-value`, so its own model->editor
-// watcher only seeds the editor at creation. Separately, `disable-two-way-data-binding`
-// suppresses the wrapper's editor->model emit. The parent re-pushes content into
-// `modelValue` after a flush; a byte-identical round-trip would still call
-// `editor.data.set()` -- which resets the model selection to the document start,
-// collapsing the user's selection mid-edit. So push to the editor only when the
-// incoming content differs from what it already holds. Comparing against the live
-// `getData()` (always current, unlike the library's ~300 ms-debounced key) means an
-// echo never slips through, while any genuine change -- undo, file load, element
-// switch, even one that restores a value the editor held earlier -- is always applied,
-// because we call `data.set` directly rather than through a mirror whose own value
-// could mask the update. Watching `instance` too applies a change that arrived before
-// the editor finished creating.
+// Seed CKEditor once. Apply incoming HTML only when it differs from live data,
+// so committing the current content does not reset the caret or native history.
 const initialData = props.modelValue;
 let loadedModelValue = initialData;
+let applyingModel = false;
+const footnotes = inject(richTextFootnoteControllerKey, null);
+watch(
+  () => props.footnoteMarkers,
+  (markers) => {
+    const editor = instance.value;
+    if (editor !== undefined) {
+      editor.plugins.get(Footnotes).setMarkers(markers ?? {});
+    }
+  },
+);
 
 // Read the owner's current field, not this component's possibly stale prop:
 // a keyed remount can unmount us before Vue delivers the new modelValue.
@@ -74,7 +85,12 @@ function canFlush(modelValue: string) {
 watch([() => props.modelValue, instance], ([next, editor]) => {
   if (editor != null) {
     if (next !== editor.getData()) {
-      editor.data.set(next);
+      applyingModel = true;
+      try {
+        editor.data.set(next);
+      } finally {
+        applyingModel = false;
+      }
     }
     loadedModelValue = next;
   }
@@ -122,6 +138,60 @@ function refreshBaseDirection(editor: InlineEditor) {
 }
 
 function onReady(editor: InlineEditor) {
+  const plugin = editor.plugins.get(Footnotes);
+  plugin.setMarkers(props.footnoteMarkers ?? {});
+  if (footnotes !== null) {
+    plugin.clipboard = {
+      copy: (id) => footnotes.copy(id),
+      reject: () => footnotes.reject(props.owner),
+      paste:
+        props.footnotesEditable && footnotes.supports(props.owner)
+          ? (payload) => {
+              if (!footnotes.supports(props.owner)) {
+                throw new Error('INVALID_FOOTNOTE_REFERENCE');
+              }
+              const id = footnotes.paste(props.owner, payload);
+              return id;
+            }
+          : undefined,
+    };
+  }
+  if (props.footnotesEditable && footnotes?.supports(props.owner)) {
+    plugin.enableInsertion(() => {
+      if (footnotes.supports(props.owner)) {
+        footnotes.insert(props.owner, editor);
+      }
+    });
+    let markerIds = richTextFootnoteIds(editor.getData()).join(',');
+    editor.model.document.on('change:data', () => {
+      // Plain typing cannot change references. Structural edits can insert or
+      // remove whole paragraphs containing markers, so inspect those too.
+      if (
+        !editor.model.document.differ
+          .getChanges()
+          .some((change) =>
+            change.type === 'attribute'
+              ? change.attributeKey === 'footnoteId'
+              : change.name !== '$text',
+          )
+      ) {
+        return;
+      }
+      const html = editor.getData();
+      const nextIds = richTextFootnoteIds(html).join(',');
+      const changed = nextIds !== markerIds;
+      markerIds = nextIds;
+      if (
+        changed &&
+        !applyingModel &&
+        props.contentKey !== undefined &&
+        footnotes.supports(props.owner)
+      ) {
+        footnotes.changed(props.owner, props.contentKey, html);
+      }
+    });
+  }
+
   registerEditor(editor, props.owner);
   registeredEditor = editor;
   editorIsFocused = editor.ui.focusTracker.isFocused;
@@ -146,7 +216,11 @@ function onReady(editor: InlineEditor) {
     editor.ui.focusTracker.off('change:isFocused', onFocusChanged);
   };
 
-  const onViewClick = () => {
+  const onViewClick = (
+    _event: unknown,
+    data: ViewDocumentDomEventData<MouseEvent>,
+  ) => {
+    const isDoubleClick = data.domEvent.detail === 2;
     window.setTimeout(() => {
       if (registeredEditor !== editor) {
         return;
@@ -155,6 +229,9 @@ function onReady(editor: InlineEditor) {
       const selectedElement =
         editor.model.document.selection.getSelectedElement();
 
+      if (isDoubleClick && selectedElement?.name === FOOTNOTE_ELEMENT) {
+        footnotes?.navigate(String(selectedElement.getAttribute('footnoteId')));
+      }
       if (selectedElement?.name === NEUME_ELEMENT) {
         emit('select-neume');
       }
@@ -319,5 +396,20 @@ defineExpose({
     --chrome-ckeditor-dialog-overlay-background
   );
   --ck-dialog-drop-shadow: var(--chrome-ckeditor-dialog-drop-shadow);
+}
+</style>
+
+<style>
+.neanes-footnote {
+  font: normal var(--footnote-reference-size) / 1
+    var(--footnote-reference-family);
+  font-variant-position: super;
+  height: 1em;
+  text-align: left;
+  letter-spacing: normal;
+  word-spacing: normal;
+  display: inline-block;
+  white-space: pre;
+  cursor: pointer;
 }
 </style>

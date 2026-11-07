@@ -8,9 +8,11 @@ import {
   FootnoteAnchorElement,
   MartyriaElement,
   NoteElement,
+  RichTextBoxElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
+import { Footnote } from '@/models/Footnote';
 import { TempoSign } from '@/models/Neumes';
 import { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
@@ -19,11 +21,13 @@ import { Unit } from '@/utils/Unit';
 import { normalizeFootnoteMarker } from './FootnoteMarker';
 import {
   captureFootnotes,
+  createFootnote,
   footnoteMarkerUpdateCommand,
   footnoteRemovalCommands,
   orderedFootnotes,
   planFootnoteInsertion,
   planFootnoteRemoval,
+  planRichTextFootnoteUpdate,
   prepareFootnotePaste,
   transferFootnoteReference,
 } from './FootnoteService';
@@ -169,6 +173,45 @@ describe('footnote ownership', () => {
     },
   );
 
+  it('preserves rich marker HTML when loading scores without footnote styles', () => {
+    const workspace = new Workspace();
+    const body = new Footnote();
+    const box = new RichTextBoxElement();
+    box.content = `<p>A<span class="neanes-footnote" data-footnote-id="${body.id}"></span>B</p>`;
+    workspace.score.staff.elements.unshift(box);
+    workspace.score.footnotes.push(body);
+    const saved = SaveService.SaveScoreToJson(workspace.score);
+    expect(
+      SaveService.LoadScoreFromJson(saved).staff.elements[0],
+    ).toHaveProperty('content', box.content);
+    saved.paragraphStyles = saved.paragraphStyles?.filter(
+      (style) => !style.id.startsWith('footnote-'),
+    );
+    const loaded = SaveService.LoadScoreFromJson(saved);
+    expect(loaded.staff.elements[0]).toHaveProperty('content', box.content);
+    const roundTrip = SaveService.LoadScoreFromJson(
+      SaveService.SaveScoreToJson(loaded),
+    );
+    expect(roundTrip.staff.elements[0]).toHaveProperty(
+      'content',
+      (loaded.staff.elements[0] as RichTextBoxElement).content,
+    );
+  });
+
+  it('creates a styled rich-text body only for rich-text anchors', () => {
+    const source = new RichTextBoxElement();
+    source.languageCode = 'el';
+    source.textDirection = 'ltr';
+    const body = createFootnote(source);
+    expect(body.staff.elements[0]).toBeInstanceOf(RichTextBoxElement);
+    expect(body.staff.elements[0]).toMatchObject({
+      content: '<p class="neanes-paragraph-style-footnote-text"></p>',
+      languageCode: 'el',
+    });
+    expect(createFootnote(new NoteElement()).staff.elements).toHaveLength(1);
+    expect(createFootnote(source, false).staff.elements).toHaveLength(1);
+  });
+
   it('creates and removes a reference and its body in one undo step', () => {
     const { workspace, reference, footnote } = fixture();
     expect(reference.footnoteId).toBe(footnote.id);
@@ -184,6 +227,46 @@ describe('footnote ownership', () => {
     workspace.commandService.undo();
     expect(reference.footnoteId).toBe(footnote.id);
     expect(workspace.score.footnotes[0].id).toBe(footnote.id);
+  });
+
+  it('restores a flushed marker and its complete body together through score history', () => {
+    const workspace = reactive(new Workspace()) as Workspace;
+    const box = new RichTextBoxElement();
+    workspace.score.staff.elements.unshift(box);
+    const body = new Footnote();
+    const note = new NoteElement();
+    note.spaceAfter = 37;
+    note.lyrics = 'Remember me';
+    body.staff.elements.unshift(note);
+    const html = `<p>A<span class="neanes-footnote" data-footnote-id="${body.id}"></span>B</p>`;
+    const flush = (content: string, added: Footnote[] = []) =>
+      workspace.commandService.executeAsBatch(
+        planRichTextFootnoteUpdate(
+          workspace.score,
+          workspace.score.staff.elements[0] as RichTextBoxElement,
+          { content },
+          added,
+        ),
+      );
+    flush(html, [body]);
+    flush('<p>AB</p>');
+    expect(workspace.score.footnotes).toHaveLength(0);
+    expect(
+      SaveService.SaveScoreToJson(workspace.score).footnotes ?? [],
+    ).toHaveLength(0);
+    workspace.commandService.undo();
+    expect(workspace.score.footnotes[0].id).toBe(body.id);
+    expect(workspace.score.staff.elements[0]).toHaveProperty('content', html);
+    expect(workspace.score.footnotes[0].staff.elements[0]).toMatchObject({
+      spaceAfter: 37,
+      lyrics: 'Remember me',
+    });
+    workspace.commandService.redo();
+    expect(workspace.score.footnotes).toHaveLength(0);
+    expect(workspace.score.staff.elements[0]).toHaveProperty(
+      'content',
+      '<p>AB</p>',
+    );
   });
 
   it('numbers in reference order using the document starting number', () => {

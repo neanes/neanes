@@ -92,6 +92,7 @@ import {
   isActiveEditorForOwner,
   useActiveEditorForOwner,
 } from '@/composables/useRichTextEditorRegistry';
+import { useRichTextFootnotes } from '@/composables/useRichTextFootnotes';
 import { useScoreRendering } from '@/composables/useScoreRendering';
 import { useStaffEditingContext } from '@/composables/useStaffEditingContext';
 import { useStaffLyrics } from '@/composables/useStaffLyrics';
@@ -798,6 +799,14 @@ const {
   pages,
   flushPendingRichTextEditors,
   save,
+);
+const { commitRichTextFootnotes } = useRichTextFootnotes(
+  selectedWorkspace,
+  flushPendingRichTextEditors,
+  openFootnote,
+  updateRichTextBox,
+  () =>
+    toast.error(t(($) => $.menu.footnotes.pasteUnavailable, { ns: 'menu' })),
 );
 const footnoteBodyElements = computed(
   () => new Set(score.value.footnotes.flatMap((body) => body.staff.elements)),
@@ -6618,12 +6627,7 @@ function updateRichTextBox(
     return;
   }
 
-  commandService.value.execute(
-    new CommandFactory<RichTextBoxElement>().create('update-properties', {
-      target: element,
-      newValues,
-    }),
-  );
+  commitRichTextFootnotes(element, newValues);
 
   const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
 
@@ -9526,7 +9530,7 @@ function resetScoreContextMenu(event: MouseEvent) {
 
   const target =
     event.target instanceof Element
-      ? event.target.closest('.footnote-label')
+      ? event.target.closest('.footnote-label, .neanes-footnote')
       : null;
   contextMenuFootnoteId.value =
     target?.getAttribute('data-footnote-id') ?? null;
@@ -10282,10 +10286,17 @@ function renderTabLabel(tab: Tab) {
       :footnote="editedFootnote.footnote"
       :surrounding-elements="footnotePreviewNeighbors"
       :line-elements="footnotePreviewLineElements"
-      :anchor="editedFootnote.reference"
+      :anchor="
+        editedFootnote.reference instanceof FootnoteAnchorElement
+          ? editedFootnote.reference
+          : null
+      "
       :page-setup="score.pageSetup"
       :paragraph-styles="score.paragraphStyles"
       :automatic-marker="editedFootnote.automaticMarker"
+      :rich-text-reference="
+        editedFootnote.reference instanceof RichTextBoxElement
+      "
       @update="updateFootnoteMarker"
     />
     <ModeKeyDialog
@@ -10378,6 +10389,7 @@ function renderTabLabel(tab: Tab) {
         class="richTextBoxCalculation"
         :element="element as RichTextBoxElement"
         :footnote-body="footnoteBodyElements.has(element)"
+        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
         :page-setup="score.pageSetup"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"

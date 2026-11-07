@@ -66,6 +66,7 @@ import {
 import { DocumentProperties, Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 import { fontCatalog } from '@/services/FontCatalog';
+import { removeRichTextFootnoteFillers } from '@/services/RichTextFootnotes';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { applyLegacyStyle, normalizeFontStyle } from '@/utils/fontStyle';
 import { applyAxes } from '@/utils/fontStyleAxes';
@@ -2583,19 +2584,25 @@ export class SaveService {
     element: RichTextBoxElement,
     e: RichTextBoxElement_v1,
   ) {
-    element.content = e.content;
+    element.content = removeRichTextFootnoteFillers(e.content ?? '');
     element.height = e.height;
     element.marginTop = e.marginTop ?? 0;
     element.marginBottom = e.marginBottom ?? 0;
 
     if (e.multipanel) {
-      element.contentLeft = e.contentLeft;
-      element.contentCenter = e.contentCenter;
-      element.contentRight = e.contentRight;
+      element.contentLeft = removeRichTextFootnoteFillers(e.contentLeft ?? '');
+      element.contentCenter = removeRichTextFootnoteFillers(
+        e.contentCenter ?? '',
+      );
+      element.contentRight = removeRichTextFootnoteFillers(
+        e.contentRight ?? '',
+      );
     }
 
     if (e.inline) {
-      element.contentBottom = e.contentBottom;
+      element.contentBottom = removeRichTextFootnoteFillers(
+        e.contentBottom ?? '',
+      );
       element.centerOnPage = e.centerOnPage === true;
       element.offsetYBottom = e.offsetYBottom ?? 0;
       element.offsetYTop = e.offsetYTop ?? 0;

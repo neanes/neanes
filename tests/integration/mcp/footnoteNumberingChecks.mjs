@@ -40,11 +40,19 @@ export async function checkFootnoteNumbering({
         properties: { content: 'Section', runningMarkerRole: 'section' },
       });
     }
-    elements.push({
-      elementType: 'Note',
-      clientId: `n${index}`,
-      properties: { pageBreak: index === 10 },
-    });
+    elements.push(
+      index === 2
+        ? {
+            elementType: 'RichTextBox',
+            clientId: `n${index}`,
+            properties: { content: '<p>Reference</p>' },
+          }
+        : {
+            elementType: 'Note',
+            clientId: `n${index}`,
+            properties: { pageBreak: index === 10 },
+          },
+    );
   }
   await edit([
     { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
@@ -52,6 +60,7 @@ export async function checkFootnoteNumbering({
     ...Array.from({ length: 13 }, (_, index) => ({
       action: 'insert_footnote',
       elementRef: `@n${index}`,
+      ...(index === 2 ? { contentKey: 'content', htmlOffset: 7 } : {}),
       elements: [
         {
           elementType: 'RichTextBox',
@@ -60,8 +69,17 @@ export async function checkFootnoteNumbering({
       ],
     })),
   ]);
-  const ids = (await call('get_elements', args)).elements.flatMap(
-    ({ properties }) => properties.footnoteId ?? [],
+  const anchors = (
+    await call('get_elements', { ...args, includeContent: true })
+  ).elements.filter(
+    (entry) =>
+      entry.properties.footnoteId ||
+      entry.properties.content?.includes('data-footnote-id'),
+  );
+  const ids = anchors.map(
+    (entry) =>
+      entry.properties.footnoteId ??
+      entry.properties.content.match(/data-footnote-id="([^"]+)"/)[1],
   );
   await edit([{ action: 'update_footnote', footnoteId: ids[4], marker: 'X' }]);
   await settings({

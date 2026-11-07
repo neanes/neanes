@@ -107,6 +107,7 @@
     "nested": "Footnotes cannot contain footnote references.",
     "unsupportedExport": "This export format does not yet support footnotes. Use PDF or PNG to preserve them.",
     "lyrics": "Footnote {{number}} Lyrics",
+    "pasteUnavailable": "Footnote references can only be pasted from Neanes into a rich textbox in the main score.",
     "properties": "Footnote Properties…"
   }
 }

@@ -17,6 +17,7 @@ import type {
   ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
+  RichTextFootnoteMarker,
   ScoreElement,
   TempoElement,
   TextBoxElement,
@@ -73,6 +74,7 @@ import type {
 } from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
+  getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import {
@@ -105,9 +107,11 @@ import {
   NeumeMappingService,
   type SbmuflGlyphName,
 } from '@/services/NeumeMappingService';
+import { FOOTNOTE_CLASS } from '@/services/RichTextFootnotes';
 import { TATWEEL } from '@/utils/constants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
@@ -437,12 +441,44 @@ export class LayoutService {
 
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
     const references = orderedFootnotes(score);
+    const markerWidths = this.measureRichTextFootnoteMarkers(
+      references,
+      score.paragraphStyles,
+    );
     const referencesById = new Map(
       references.map((entry) => [entry.footnote.id, entry]),
     );
-    for (const { reference, number, marker } of references) {
-      reference.footnoteNumber = number;
-      reference.footnoteMarker = marker;
+    const markersByBox = new Map<
+      ScoreElement,
+      Record<string, RichTextFootnoteMarker>
+    >();
+    for (const { footnote, reference, number, marker } of references) {
+      if (reference instanceof FootnoteAnchorElement) {
+        reference.footnoteNumber = number;
+        reference.footnoteMarker = marker;
+      } else {
+        let markers = markersByBox.get(reference);
+        if (markers === undefined) {
+          markers = {};
+          markersByBox.set(reference, markers);
+        }
+        markers[footnote.id] = {
+          label: marker,
+          width: markerWidths.get(footnote.id)!,
+        };
+      }
+    }
+    for (const element of elements) {
+      if (element.elementType === ElementType.RichTextBox) {
+        const box = element as RichTextBoxElement;
+        const markers = markersByBox.get(element);
+        if (
+          markers !== undefined ||
+          Object.keys(box.footnoteMarkers).length > 0
+        ) {
+          box.footnoteMarkers = markers ?? {};
+        }
+      }
     }
     const footnotes = this.prepareFootnotes(
       workspace,
@@ -2784,6 +2820,60 @@ export class LayoutService {
       maxWidth,
       1,
     );
+  }
+
+  private static measureRichTextFootnoteMarkers(
+    references: ReturnType<typeof orderedFootnotes>,
+    paragraphStyles: ParagraphStyle[],
+  ) {
+    const widths = new Map<string, number>();
+    const richTextReferences = references.filter(
+      ({ reference }) => reference.elementType === ElementType.RichTextBox,
+    );
+    if (richTextReferences.length === 0) {
+      return widths;
+    }
+
+    // Use the same typography and browser shaping as the CKEditor widget.
+    const sample = document.createElement('span');
+    sample.className = FOOTNOTE_CLASS;
+    sample.dir = 'auto';
+    sample.style.position = 'absolute';
+    sample.style.visibility = 'hidden';
+    document.body.append(sample);
+    try {
+      const measured = new Map<string, number>();
+
+      for (const { footnote, reference, marker } of richTextReferences) {
+        const style = resolveParagraphStyle(
+          paragraphStyles,
+          getTextBoxParagraphStyleFallbackId(
+            (reference as RichTextBoxElement).inline,
+          ),
+        );
+        const family = getFontFamilyWithFallback(style.fontFamily);
+        const styleKey = JSON.stringify([family, style.fontSize]);
+        const measure = (label: string) => {
+          const key = JSON.stringify([styleKey, label]);
+          let width = measured.get(key);
+          if (width === undefined) {
+            sample.textContent = label;
+            width = sample.getBoundingClientRect().width;
+            measured.set(key, width);
+          }
+          return width;
+        };
+        sample.style.setProperty('--footnote-reference-family', family);
+        sample.style.setProperty(
+          '--footnote-reference-size',
+          `${style.fontSize}px`,
+        );
+        widths.set(footnote.id, measure(marker));
+      }
+    } finally {
+      sample.remove();
+    }
+    return widths;
   }
 
   private static addLyricReservation(

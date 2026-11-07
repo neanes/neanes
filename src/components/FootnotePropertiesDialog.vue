@@ -193,10 +193,15 @@
                   ns: 'dialog',
                 })
               }}:
-              <span
+              <component
+                :is="richTextReference ? 'sup' : 'span'"
                 data-testid="footnote-marker-preview"
-                :style="{ fontSize: `${referenceTypography.fontSize}px` }"
-                >{{ referencePreview }}</span
+                :style="
+                  richTextReference
+                    ? undefined
+                    : { fontSize: `${referenceTypography.fontSize}px` }
+                "
+                >{{ referencePreview }}</component
               ></span
             >
             <span
@@ -283,6 +288,7 @@ const props = defineProps<{
   pageSetup: PageSetup;
   paragraphStyles: ParagraphStyle[];
   automaticMarker: string;
+  richTextReference: boolean;
 }>();
 const emit = defineEmits<{
   update: [
@@ -338,10 +344,12 @@ const referenceTypography = computed(() =>
   footnoteMarkerStyle(props.paragraphStyles),
 );
 const referencePreview = computed(() =>
-  footnoteMarkerText(
-    markerPreview.value,
-    props.pageSetup.footnoteReferenceParentheses,
-  ),
+  props.richTextReference
+    ? markerPreview.value
+    : footnoteMarkerText(
+        markerPreview.value,
+        props.pageSetup.footnoteReferenceParentheses,
+      ),
 );
 const previewAnchor = computed(() =>
   props.anchor === null

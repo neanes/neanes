@@ -13,6 +13,7 @@
         :ref="(instance) => setMeasurer(element, instance)"
         :element="element as RichTextBoxElement"
         :footnote-body="footnoteBodyElements.has(element)"
+        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
         :page-setup="workspace.score.pageSetup"
         :paragraph-styles="workspace.score.paragraphStyles"
         :fonts="fonts"

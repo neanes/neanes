@@ -138,7 +138,7 @@ describe('automatic footnote sequences', () => {
     expect(labels(score)).toEqual(['5', '6', '7', '8']);
   });
 
-  it('restarts at the same nonempty section markers as the editor', () => {
+  it('restarts at the same nonempty section markers as the editor, including a reference in the heading itself', () => {
     const { score, anchors } = fixture();
     score.pageSetup.footnoteNumbering = 'section';
     score.pageSetup.firstFootnoteNumber = 7;
@@ -152,7 +152,7 @@ describe('automatic footnote sequences', () => {
     chapter.content = 'Chapter';
     const richSection = new RichTextBoxElement();
     richSection.runningMarkerRole = 'section';
-    richSection.content = '<p>Heading</p>';
+    richSection.content = `<p>Heading <span class="neanes-footnote" data-footnote-id="${score.footnotes[3].id}"></span></p>`;
     score.staff.elements = [
       anchors[0],
       chapter,
@@ -161,7 +161,6 @@ describe('automatic footnote sequences', () => {
       section,
       anchors[2],
       richSection,
-      anchors[3],
       new EmptyElement(),
     ];
     expect(labels(score)).toEqual(['7', '8', '7', '7']);

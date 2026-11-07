@@ -11,12 +11,14 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RICH_TEXT_BOX_CONTENT_KEYS,
+  type RichTextBoxContentKey,
   RichTextBoxElement,
   type ScoreElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
-import { Footnote } from '@/models/Footnote';
+import type { Footnote } from '@/models/Footnote';
 import type { LyricSetup } from '@/models/LyricSetup';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
@@ -35,6 +37,7 @@ import {
   getMartyriaAlignmentChange,
 } from '@/services/elementEditing';
 import {
+  createFootnote,
   elementFootnoteIds,
   footnoteMarkerUpdateCommand,
   transferFootnoteReference,
@@ -48,6 +51,11 @@ import {
   CommandFactory,
 } from '@/services/history/CommandService';
 import { LyricService } from '@/services/LyricService';
+import {
+  activeRichTextContentKeys,
+  insertRichTextFootnote,
+  richTextFootnoteIds,
+} from '@/services/RichTextFootnotes';
 
 import {
   type ElementDefinition,
@@ -62,6 +70,7 @@ import {
   headerFooterVariants,
   reachableElements,
 } from './elementDiscovery';
+import { richFootnoteReferences } from './elementProperties';
 
 const constructors = {
   [ElementType.Note]: NoteElement,
@@ -98,6 +107,7 @@ export interface ElementEditPlan {
   createdFootnotes?: {
     footnoteId: string;
     reference: ScoreElement;
+    contentKey?: RichTextBoxContentKey;
   }[];
 }
 
@@ -487,21 +497,36 @@ export function planElementEdits(
     ) {
       const reference = resolve(action.elementRef);
       if (
-        !(reference instanceof FootnoteAnchorElement) ||
+        !(
+          reference instanceof FootnoteAnchorElement ||
+          (reference instanceof RichTextBoxElement &&
+            action.action === 'insert_footnote')
+        ) ||
         !staff.includes(reference)
       ) {
         throw new Error('INVALID_ELEMENT_EDIT');
       }
-      if (action.action === 'remove_footnote') {
+      if (
+        action.action === 'remove_footnote' &&
+        reference instanceof FootnoteAnchorElement
+      ) {
         if (reference.footnoteId === null) {
           throw new Error('INVALID_ELEMENT_EDIT');
         }
         reference.footnoteId = null;
       } else {
-        if (reference.footnoteId !== null) {
+        if (action.action !== 'insert_footnote') {
           throw new Error('INVALID_ELEMENT_EDIT');
         }
-        const body = new Footnote();
+        if (
+          reference instanceof FootnoteAnchorElement &&
+          (reference.footnoteId !== null ||
+            action.contentKey !== undefined ||
+            action.htmlOffset !== undefined)
+        ) {
+          throw new Error('INVALID_ELEMENT_EDIT');
+        }
+        const body = createFootnote(reference, action.elements.length === 0);
         footnotes.push(body);
         const elements = cloneCollection(body.staff.elements);
         const setup = { ...body.staff.lyrics };
@@ -513,7 +538,22 @@ export function planElementEdits(
           ),
         );
         roots.set(`footnotes.${body.id}`, elements);
-        reference.footnoteId = body.id;
+        if (reference instanceof FootnoteAnchorElement) {
+          reference.footnoteId = body.id;
+        } else if (
+          reference instanceof RichTextBoxElement &&
+          action.contentKey !== undefined &&
+          action.htmlOffset !== undefined &&
+          activeRichTextContentKeys(reference).includes(action.contentKey)
+        ) {
+          reference[action.contentKey] = insertRichTextFootnote(
+            reference[action.contentKey],
+            action.htmlOffset,
+            body.id,
+          );
+        } else {
+          throw new Error('INVALID_ELEMENT_EDIT');
+        }
       }
     } else if (action.action === 'insert') {
       const collection = resolveCollection(action.collection);
@@ -633,8 +673,22 @@ export function planElementEdits(
       if (!allowed.includes(element.elementType)) {
         throw new Error('INVALID_ELEMENT_COLLECTION');
       }
-      if (!allowFootnoteReferences && elementFootnoteIds(element).length > 0) {
+      if (
+        (element instanceof AnnotationElement &&
+          richTextFootnoteIds(element.text).length > 0) ||
+        (!allowFootnoteReferences && elementFootnoteIds(element).length > 0)
+      ) {
         throw new Error('INVALID_ELEMENT_EDIT');
+      }
+      if (element instanceof RichTextBoxElement) {
+        for (const key of RICH_TEXT_BOX_CONTENT_KEYS) {
+          if (
+            !activeRichTextContentKeys(element).includes(key) &&
+            richTextFootnoteIds(element[key]).length > 0
+          ) {
+            throw new Error('INVALID_ELEMENT_EDIT');
+          }
+        }
       }
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
@@ -862,8 +916,13 @@ export function planElementEdits(
       newFootnoteIds.size === 0
         ? []
         : staff.flatMap((reference) => {
-            return elementFootnoteIds(reference)
-              .map((footnoteId) => ({ footnoteId }))
+            const references =
+              reference instanceof RichTextBoxElement
+                ? richFootnoteReferences(reference)
+                : elementFootnoteIds(reference).map((footnoteId) => ({
+                    footnoteId,
+                  }));
+            return references
               .filter(({ footnoteId }) => newFootnoteIds.has(footnoteId))
               .map((footnote) => ({ ...footnote, reference: live(reference) }));
           }),

@@ -30,6 +30,7 @@ import {
 } from '../contracts/responseBudget';
 import type { TextSearchQuery } from '../contracts/textSearchSchema';
 import { readContentChunk } from './contentRead';
+import { readElementProperty } from './elementProperties';
 import { collectPage } from './pagination';
 
 export const headerFooterVariants = [
@@ -154,7 +155,7 @@ export class ElementDiscovery {
         ) {
           return [];
         }
-        let value: unknown = Reflect.get(element, key);
+        let value: unknown = readElementProperty(element, key);
         if (value === undefined && defaults) {
           value = Reflect.get(defaults, key);
         }

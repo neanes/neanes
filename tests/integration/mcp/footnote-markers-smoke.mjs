@@ -42,13 +42,18 @@ try {
       elements: [
         { elementType: 'Note', clientId: 'a' },
         { elementType: 'Note', clientId: 'b' },
-        { elementType: 'Note', clientId: 'c' },
+        {
+          elementType: 'RichTextBox',
+          clientId: 'c',
+          properties: { content: '<p>Rich text</p>' },
+        },
         { elementType: 'Note', clientId: 'd' },
       ],
     },
     ...['a', 'b', 'c', 'd'].map((id) => ({
       action: 'insert_footnote',
       elementRef: `@${id}`,
+      ...(id === 'c' ? { contentKey: 'content', htmlOffset: 7 } : {}),
       elements: [{ elementType: 'Note', properties: { lyrics: `Body ${id}` } }],
     })),
   ]);
@@ -63,8 +68,13 @@ try {
   });
   const ids = elements.elements
     .slice(0, 4)
-    .map((entry) => entry.properties.footnoteId);
-  const marker = (id) => `.page .footnote-reference[data-footnote-id="${id}"]`;
+    .map(
+      (entry) =>
+        entry.properties.footnoteId ??
+        entry.properties.content.match(/data-footnote-id="([^"]+)"/)[1],
+    );
+  const marker = (id, rich = false) =>
+    `.page ${rich ? '.neanes-footnote' : '.footnote-reference'}[data-footnote-id="${id}"]`;
   const anchorSelector = (id) =>
     `.page .element-box:has(> .footnote-reference[data-footnote-id="${id}"])`;
   const label = (id) => `.page .footnote-label[data-footnote-id="${id}"]`;
@@ -174,8 +184,45 @@ try {
       `process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').BrowserWindow.getAllWindows().find(w=>w.webContents.getURL().includes('/index.html')).webContents.send(${JSON.stringify(channel)})`,
     );
   }
+  const beforeRejectedAnnotation = await call('get_document_properties', args);
+  await call(
+    'edit_elements',
+    {
+      ...args,
+      expectedRevision: beforeRejectedAnnotation.revision,
+      actions: [
+        {
+          action: 'insert',
+          collection: {
+            kind: 'children',
+            parentRef: elements.elements[0].elementRef,
+            collection: 'annotations',
+          },
+          elements: [
+            {
+              elementType: 'Annotation',
+              properties: {
+                text: '<p><span class="neanes-footnote" data-footnote-id="00000000-0000-4000-8000-000000000001"></span></p>',
+              },
+            },
+          ],
+        },
+      ],
+    },
+    'INVALID_ELEMENT_EDIT',
+  );
+  assert.equal(
+    (await call('get_document_properties', args)).revision,
+    beforeRejectedAnnotation.revision,
+    'Rejected annotation references must not change the document',
+  );
   await eventually(async () =>
     assert.equal(await text(marker(ids[0])), '(98)'),
+  );
+  assert.equal(
+    await text(marker(ids[2], true)),
+    '100',
+    'Rich text automatic numbers have no parentheses',
   );
   await open(anchorSelector(ids[1]));
   await choose('*');
@@ -196,13 +243,13 @@ try {
   await update();
   await eventually(async () => assert.equal(await text(marker(ids[1])), '(*)'));
   assert.equal(await text(label(ids[1])), '*');
-  assert.equal(await text(marker(ids[2])), '(99)');
+  assert.equal(await text(marker(ids[2], true)), '99');
   assert.equal(await text(marker(ids[3])), '(100)');
   await undo('FileMenuUndo');
   await eventually(async () =>
     assert.equal(await text(marker(ids[1])), '(99)'),
   );
-  assert.equal(await text(marker(ids[2])), '(100)');
+  assert.equal(await text(marker(ids[2], true)), '100');
   await undo('FileMenuRedo');
   await eventually(async () => assert.equal(await text(marker(ids[1])), '(*)'));
   // Body labels open the same dialog without replacing element properties.
@@ -225,16 +272,13 @@ try {
     assert.equal(await text(marker(ids[1])), '(Ref A)'),
   );
   assert.equal(await text(label(ids[1])), 'Ref A');
-  // A second custom marker leaves the next automatic number available.
-  await open(anchorSelector(ids[2]));
+  // Right-click a rich text widget, keeping ordinary rich text context menus intact.
+  await open(marker(ids[2], true));
   await choose('\u2020');
-  assert.equal(
-    await text('[data-testid="footnote-marker-preview"]'),
-    '(\u2020)',
-  );
+  assert.equal(await text('[data-testid="footnote-marker-preview"]'), '\u2020');
   await update();
   await eventually(async () =>
-    assert.equal(await text(marker(ids[2])), '(\u2020)'),
+    assert.equal(await text(marker(ids[2], true)), '\u2020'),
   );
   assert.equal(await text(label(ids[2])), '\u2020');
   assert.equal(await text(marker(ids[3])), '(99)');
@@ -306,6 +350,49 @@ try {
       path.join(app.directory, `${extension}-markers.png`),
     );
   }
+  // A single click keeps the editing context; a double-click opens the body.
+  const ws = 'window._editor.selectedWorkspace.value';
+  const richEditor = `document.querySelector(${JSON.stringify(marker(ids[2], true))})?.closest('.rich-text-editor')?.ckeditorInstance`;
+  await eventually(async () =>
+    assert.equal(await evaluate(`${richEditor}?.state`), 'ready'),
+  );
+  // Focus the marker's owner without aiming at the center of a full-width box,
+  // which can be clipped by the editor viewport on smaller displays.
+  await evaluate(`(() => {
+    const editor = ${richEditor};
+    editor.ui.getEditableElement().click();
+    editor.editing.view.focus();
+  })()`);
+  await eventually(async () =>
+    assert.equal(
+      await evaluate('document.activeElement?.isContentEditable'),
+      true,
+    ),
+  );
+  const editingContext = await evaluate(
+    `({footnoteId:${ws}.activeFootnoteId, elementId:${ws}.selectedElement.id})`,
+  );
+  await click(marker(ids[2], true));
+  await evaluate('new Promise(resolve => setTimeout(resolve, 0))');
+  assert.deepEqual(
+    await evaluate(
+      `({footnoteId:${ws}.activeFootnoteId, elementId:${ws}.selectedElement.id})`,
+    ),
+    editingContext,
+    'A single click preserves the current editing context',
+  );
+  assert.equal(
+    await evaluate('document.activeElement?.isContentEditable'),
+    true,
+    'A single click keeps focus in rich text',
+  );
+  await click(marker(ids[2], true), 'left', null, 2);
+  await eventually(async () =>
+    assert.equal(
+      await evaluate(`window._editor.selectedWorkspace.value.activeFootnoteId`),
+      ids[2],
+    ),
+  );
   // Musical placement, tempo footnote rejection, and offsets before clearance.
   const placement = await call('create_document', {
     documentScope: 'editor',

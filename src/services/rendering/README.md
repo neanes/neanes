@@ -14,11 +14,9 @@ Body gutters are fixed at 2.2 times the body marker font size (a 1.8em marker
 area plus a 0.4em gap). Labels align against the body boundary and may extend
 outward for long markers.
 
-Header/footer overflow reservations retain the existing timing: a reservation
-is frozen before the first line is added to its physical page. At that point the
-page has no chapter marker, so the reservation uses ordinary header/footer
-selection. Rendering can still select chapter-opening headers for completed
-pages. This refactor does not change that limitation.
+Page fitting uses the appropriate header and footer reservations for ordinary
+and chapter-opening pages. It accounts for the first chapter marker in each
+candidate group before placing those lines.
 
 # Measurement
 

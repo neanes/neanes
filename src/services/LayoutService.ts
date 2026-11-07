@@ -115,6 +115,7 @@ import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { getFirstRunningMarker } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
@@ -523,6 +524,9 @@ export class LayoutService {
         height: candidate.height,
         elements,
         footnoteIds: elements.flatMap(elementFootnoteIds),
+        chapterMarker: pageSetup.headerFooterDifferentChapterOpening
+          ? getFirstRunningMarker(elements, 'chapter')
+          : null,
         pageBreak: elements.at(-1)?.pageBreak ?? false,
         continuationLines,
         additionalHeight: this.getLineSpanHeight(
@@ -540,7 +544,7 @@ export class LayoutService {
       let groupStart = 0;
       let groupEnd = -1;
       for (const [index, line] of paginationLines.entries()) {
-        if (index > groupEnd) {
+        if (index > groupEnd || paginationLines[index - 1]?.pageBreak) {
           groupStart = index;
           groupEnd = index + line.continuationLines;
         }
@@ -559,30 +563,29 @@ export class LayoutService {
       {
         innerPageHeight: pageSetup.innerPageHeight,
         footnoteSpacing: above + below + thickness,
+        getReservation: (pageNumber, isChapterOpening) =>
+          this.getExtraHeaderFooterHeight(
+            score,
+            pageSetup,
+            pageNumber,
+            isChapterOpening,
+          ),
         breaksBefore,
         onOverflowBreak: onOverflowBreak
-          ? (index, first, excess) => {
+          ? (index, first, excess, groupEnd) => {
               const line = paginationLines[index];
               const boundary = line.elements[0];
               if (groupStarts[index] === index && boundary) {
                 onOverflowBreak(
                   boundary,
                   paginationLines
-                    .slice(first, index + line.continuationLines + 1)
+                    .slice(first, groupEnd)
                     .flatMap((candidate) => candidate.elements),
                   excess,
                 );
               }
             }
           : undefined,
-        // The existing paginator freezes reservations before adding the first
-        // line to each page. Chapter-opening selection is therefore false at
-        // reservation time, even if the completed page later opens a chapter.
-        reservations: Array.from(
-          { length: contentLines.length + 1 },
-          (_, index) =>
-            this.getExtraHeaderFooterHeight(score, pageSetup, index + 1, false),
-        ),
       },
     );
     const pages: Page[] = [];
@@ -611,6 +614,7 @@ export class LayoutService {
             previousLine,
             neumeLineHeight,
             lyricsBaseline,
+            defaultLyricsFontCss,
             measureBarWidthMap,
           ),
         );
@@ -750,6 +754,7 @@ export class LayoutService {
             body.lines.at(-1) ?? null,
             prepared.content.neumeLineHeight,
             prepared.content.lyricsBaseline,
+            prepared.content.defaultLyricsFontCss,
             prepared.content.measureBarWidthMap,
           );
           body.lines.push(line);
@@ -861,6 +866,17 @@ export class LayoutService {
         const lines = this.getContentLines(
           content.layoutWorkspace.completedParagraphs,
         );
+        for (const line of lines) {
+          const { paragraph, paragraphLineIndex } = line;
+          if (paragraphLineIndex === paragraph.lineHeights.length - 1) {
+            // Reserve any part of the drop cap below its last actual line.
+            const missingLines = Math.max(
+              0,
+              paragraph.dropCapContinuationLines - paragraphLineIndex,
+            );
+            line.height += missingLines * content.neumeLineHeight;
+          }
+        }
         return [
           footnote.id,
           {
@@ -903,6 +919,7 @@ export class LayoutService {
     prevLine: Line | null,
     neumeLineHeight: number,
     lyricsBaseline: number,
+    defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
   ): Line {
     const { paragraph: completedParagraph, paragraphLineIndex } = candidate;
@@ -1106,10 +1123,34 @@ export class LayoutService {
           );
         }
 
+        let centeredWidth = position.width;
+        if (
+          element.elementType === ElementType.RichTextBox &&
+          this.isFillWidthElement(element)
+        ) {
+          // Its line-breaking width is zero. Center the visible text with
+          // the preceding music and keep equal space at both line ends.
+          const box = element as RichTextBoxElement;
+          const template = document.createElement('template');
+          centeredWidth = Math.min(
+            box.width,
+            Math.max(
+              ...[box.content, box.contentBottom].map((html) => {
+                template.innerHTML = html;
+                return this.measurePlainTextWidth(
+                  template.content.textContent ?? '',
+                  defaultLyricsFontCss,
+                );
+              }),
+            ),
+          );
+          box.width = centeredWidth;
+        }
+
         centerOffsetPx =
           (resolvedMargins.contentWidth -
             currentLine.indentation -
-            (position.xOffset + position.width)) /
+            (position.xOffset + centeredWidth)) /
           2;
         for (const lineElement of currentLine.elements) {
           lineElement.x += centerOffsetPx;

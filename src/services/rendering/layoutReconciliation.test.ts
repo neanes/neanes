@@ -87,11 +87,16 @@ describe('detached layout reconciliation', () => {
           height,
           pageBreak: false,
           footnoteIds: [],
+          chapterMarker: null,
           additionalHeight: 0,
           continuationLines: 0,
         })),
         new Map(),
-        { innerPageHeight, footnoteSpacing: 8, reservations },
+        {
+          innerPageHeight,
+          footnoteSpacing: 8,
+          getReservation: (pageNumber) => reservations[pageNumber - 1],
+        },
       );
       const heights = pages.flatMap(({ lines, reservation }) =>
         lines.map(({ index, top }) => ({

@@ -1,9 +1,10 @@
-import type {
+import {
+  ElementType,
   RichTextBoxElement,
-  RunningMarkerRole,
-  ScoreElement,
+  type RunningMarkerRole,
+  type ScoreElement,
+  TextBoxElement,
 } from '@/models/Element';
-import { ElementType, TextBoxElement } from '@/models/Element';
 import type { Page } from '@/models/Page';
 
 const blockBoundaryTags = new Set([
@@ -92,23 +93,28 @@ function getFirstRunningMarkerForPage(
   role: RunningMarkerRole,
 ): string | null {
   for (const line of page.lines) {
-    for (const element of line.elements) {
-      if (
-        element.elementType === ElementType.TextBox ||
-        element.elementType === ElementType.RichTextBox
-      ) {
-        const runningMarkerElement = element as
-          TextBoxElement | RichTextBoxElement;
+    const marker = getFirstRunningMarker(line.elements, role);
+    if (marker != null) {
+      return marker;
+    }
+  }
 
-        if (runningMarkerElement.runningMarkerRole !== role) {
-          continue;
-        }
+  return null;
+}
 
-        const text = resolveRunningMarkerText(runningMarkerElement);
-
-        if (text != null) {
-          return text;
-        }
+export function getFirstRunningMarker(
+  elements: readonly ScoreElement[],
+  role: RunningMarkerRole,
+): string | null {
+  for (const element of elements) {
+    if (
+      (element instanceof TextBoxElement ||
+        element instanceof RichTextBoxElement) &&
+      element.runningMarkerRole === role
+    ) {
+      const text = resolveRunningMarkerText(element);
+      if (text != null) {
+        return text;
       }
     }
   }

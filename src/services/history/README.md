@@ -71,3 +71,50 @@ The editor observes only the selected workspace's history and owns toolbar and
 native-menu publication. Background and private histories need no UI suppression
 or compensating publication. Selection changes flush pending edits before
 switching the subscription; editor teardown removes the subscription.
+
+## Rich text and footnotes: intentional separate histories
+
+Decision: preserve master's separate-history behavior rather than merge CKEditor
+history with score history. These are accepted product compromises, not missing
+history coordination to reintroduce during review:
+
+- Rich-text keyboard shortcuts and toolbar Undo/Redo use CKEditor's native
+  history only. Exhausting it does not fall back to score history.
+- Clicking the application Undo/Redo menu uses score history, even when a text
+  editor is focused. Menu availability reflects score history only.
+- Flushed HTML remains in score history. Native and score histories are not a
+  single chronological timeline. Fresh buffered typing does not eagerly discard
+  score Redo; recording a score command discards it normally.
+- Save and blur do not clear native history for an echoed content commit.
+  External replacement and score replay can reset native history or remount the
+  editor. Historical caret/selection restoration and native Redo survival across
+  those replacements are not guaranteed.
+- Pending text detection compares stored HTML directly with CKEditor's output,
+  as on master. CKEditor normalization alone can therefore produce a content
+  command on blur or flush (for example, imported `<b>` markup). This pre-existing
+  behavior is intentionally outside the footnote feature's scope; no separate
+  normalized-data baseline is maintained here.
+- There is no checkpoint graph, native batch replay, shared history action
+  injection, or commit boundary imposed on CKEditor's undo stack.
+
+Footnote consistency uses IDs instead. A score-scoped weak map retains complete
+footnote bodies, including deleted ones, for the score's lifetime. There is no
+expiry timer and retained bodies are not serialized. Closing/replacing the score
+allows the cache to be collected; native Undo across close/reopen is not supported.
+This deliberately trades memory for predictable restoration without searching
+undo history. Active bodies take precedence over retained versions.
+
+Interactive rich-text editors observe data changes. Plain text insertions,
+deletions, and formatting skip reference scanning; structural edits and changes
+to footnote IDs compare the marker IDs. A changed marker sequence commits the
+current HTML and body additions/removals together using ordinary score commands.
+Native Undo that reinstates a marker restores its retained body immediately.
+Marker edits can therefore also commit surrounding pending text and invalidate
+score Redo. Ordinary typing remains buffered. Programmatic model synchronization
+updates the marker baseline without creating another edit.
+
+Serialization, export, clipboard and navigation still flush pending text. The
+same footnote planner resolves retained IDs there, validates ownership, and
+rejects genuinely unknown, duplicate or unsupported nested references. Incoming
+model synchronization and stale-editor flush guards remain necessary independently
+of undo policy. Do not remove those safeguards when simplifying history.

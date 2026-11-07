@@ -18,6 +18,8 @@ const scenarios = [
   'footnote-end-content',
   'rich-text-update',
   'inline-rich-text-fill-width',
+  'rich-text-footnotes',
+  'rich-text-history-boundary',
   'preview',
 ];
 const requested = process.argv.slice(2);

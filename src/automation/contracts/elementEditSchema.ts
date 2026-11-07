@@ -47,6 +47,9 @@ function editPropertySchema(type: ElementType) {
   for (const [key, inspected] of Object.entries(
     elementPropertySchemas[type].shape,
   )) {
+    if (type === ElementType.RichTextBox && key === 'footnoteReferences') {
+      continue;
+    }
     if (
       [ElementType.Note, ElementType.Martyria].includes(type) &&
       [
@@ -296,6 +299,23 @@ const elementEditActionSchema = z.discriminatedUnion('action', [
   z.strictObject({
     action: z.literal('insert_footnote'),
     elementRef: editReferenceSchema,
+    contentKey: z
+      .enum([
+        'content',
+        'contentBottom',
+        'contentLeft',
+        'contentCenter',
+        'contentRight',
+      ])
+      .optional(),
+    htmlOffset: z
+      .number()
+      .int()
+      .nonnegative()
+      .optional()
+      .describe(
+        'RichTextBox only: UTF-16 offset in stored HTML, within paragraph text or just after its opening tag.',
+      ),
     elements: z.array(elementDefinitionSchema).max(1000).default([]),
   }),
   z.strictObject({

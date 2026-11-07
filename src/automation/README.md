@@ -43,15 +43,33 @@ Future automation jobs and export transformations belong in this feature area
 ## Footnotes
 
 Clients can request `get_rich_text_format` with `topics: ["footnotes"]` for the
-authoring workflow, constraints, and an executable insertion example.
+authoring workflow, constraints, and an executable rich-reference insertion example.
 
 `edit_elements` supports `insert_footnote` with a main-score Note or Martyria `elementRef`
 (and optional body `elements`) and `remove_footnote` with that musical reference.
 Tempo elements cannot own footnotes and expose no footnote properties.
+For a main-score RichTextBox, `insert_footnote` also requires `contentKey` and
+`htmlOffset`: a UTF-16 offset in the stored panel HTML, within paragraph text or
+immediately after a paragraph opening tag. Insertion inside tags, entities, or
+surrogate pairs is rejected. The panel must be active for the box's layout.
+Rich markers serialize as atomic `span.neanes-footnote` objects with a
+`data-footnote-id` attribute; displayed numbers are generated. Markers render
+with `font-variant-position: super`, using the font's superscript glyphs when
+available and browser-synthesized glyphs otherwise. Surrounding inline formatting
+wraps the marker and must be preserved when editing HTML. To remove a rich
+reference, update that panel's HTML to remove its span, or remove the owning box.
+The same transaction removes the body; undo restores both. Unknown or duplicate
+references and references outside main-score rich textboxes are rejected.
+Panel reference order is left/center/right for multipanel boxes and top/bottom
+for inline boxes, in document order. Plain textbox references are unsupported.
 Each reference owns a separate body; nested and shared references are unsupported.
-`insert_footnote` returns `createdFootnotes: [{footnoteId, elementRef}]`
+Read RichTextBox `footnoteReferences` with `properties: ["footnoteReferences"]`
+to get `{footnoteId, contentKey}` entries in active panel/source order without
+fetching HTML. The property is omitted when there are no active references.
+It is read-only; `isNotNull` predicates locate boxes with references.
+`insert_footnote` returns `createdFootnotes: [{footnoteId, elementRef, contentKey?}]`
 for new bodies surviving the transaction. `elementRef` identifies their final
-main-score owner.
+main-score owner; `contentKey` is present for rich references.
 Use these IDs directly in body/marker edits; `includeCreated: false` suppresses
 this list as well as created element references.
 
@@ -61,7 +79,10 @@ The body retains its terminal Empty element and its own lyrics. In populated
 bodies the terminal has no layout box, reservation, or page occurrence; completely
 empty bodies retain the visible insertion target and its page occurrence.
 Collection readers and edits continue to include the terminal. Musical state
-starts from immediately after the anchor and then evolves independently. With no explicit body elements, insertion creates an empty staff.
+starts from immediately after the anchor and then evolves independently. Rich
+references use the context at their textbox. With no explicit body elements, a
+rich reference creates an empty RichTextBox styled with Footnote Text; musical
+references create an empty staff.
 Removing its main-score reference removes the body in the same history operation;
 copying the reference copies the body with a new identity.
 
@@ -92,7 +113,8 @@ automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters
 without control characters, and do not consume an automatic number. `get_elements`
 for a footnote collection includes `footnote: {id, marker, label, number}`: `marker`
 is the stored override or null, `label` is the displayed string, and `number` is
-null for custom markers. Musical references surround the label with parentheses when
+null for custom markers. Rich textbox references display the label directly;
+musical references surround it with parentheses when
 `footnoteReferenceParentheses` is enabled. Body labels have no parentheses.
 Musical markers are centered above their anchor. Note and Martyria markers use vertical collision clearance from neumes,
 barlines, attached marks, and other reference markers. Their ink starts with its bottom 0.75 neume-font em above
@@ -121,18 +143,23 @@ main and footnote lines. Range selections can identify the active footnote
 collection. Footnote numbering follows document reference order across pages.
 `get_staff_lyrics` and the `set_staff_lyrics` edit action also accept this
 collection selector for independent authoritative footnote lyrics.
+Rich-text references use the box's default font family and size for superscript
+markers. Custom labels and automatic labels in continuous or section numbering
+use their rendered width. Custom markers do not advance the sequence.
+
 Editor automation and private workers reconcile measured text-box heights
 with pagination. Footnote bodies use natural heights even if a stored rich-text box is
 scrollable. The fixed body gutter is 1.8em for the marker plus a 0.4em gap, both
 relative to the body marker font size. Visual exports reconcile measured heights
 with the existing pass limit and retain maxima for header/footer templates.
-An oversized body remains editable
+Whole-footnote pagination is used initially. An oversized body remains editable
 and saveable, but settled page discovery/visual export fails explicitly until it
 fits. Run the self-launching `footnotes` integration scenario for both document
 scopes and real editor/rendering behavior.
 
 Footnote typography uses the built-in `footnote-text`, `footnote-body-marker`,
-and `footnote-reference` paragraph styles. The body-marker style inherits Footnote Text, including its font size.
+and `footnote-reference` paragraph styles. Superscript is not a paragraph-style
+property. The body-marker style inherits Footnote Text, including its font size.
 Body labels render on the baseline, with a period after numeric markers and no
 period after symbols. Parenthesized musical references retain their existing
 position and configured reference font size without scaling.

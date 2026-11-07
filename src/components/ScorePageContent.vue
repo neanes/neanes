@@ -504,6 +504,7 @@
           :edit-mode="!printMode"
           :element="element as RichTextBoxElement"
           :footnote-body="line.footnoteId !== null"
+          :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
           :inline-page-center-offset="inlinePageCenter - element.x"
           :page-setup="score.pageSetup"
           :fonts="fonts"

@@ -6,6 +6,7 @@
           variant="secondary"
           class="chrome-button"
           :disabled="!isCommandEnabled('undo')"
+          data-testid="rich-text-undo"
           @mousedown.prevent
           @click="runCommand('undo')"
         >
@@ -17,6 +18,7 @@
           variant="secondary"
           class="chrome-button"
           :disabled="!isCommandEnabled('redo')"
+          data-testid="rich-text-redo"
           @mousedown.prevent
           @click="runCommand('redo')"
         >
@@ -345,6 +347,33 @@
       <RichTextToolbarItem name="bulletedList" :owner="element" />
       <RichTextToolbarItem name="numberedList" :owner="element" />
       <RichTextToolbarItem name="link" :owner="element" />
+      <AppTooltip
+        v-if="isCommandEnabled('insertFootnote')"
+        :tooltip="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
+      >
+        <ToolbarButton
+          variant="secondary"
+          class="chrome-button"
+          data-testid="insert-rich-text-footnote"
+          :aria-label="$t(($) => $.menu.footnotes.insert, { ns: 'menu' })"
+          @mousedown.prevent
+          @click="runCommand('insertFootnote')"
+        >
+          <svg
+            class="size-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.65"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M10 4l2-2v8m-2 0h4M3 14h18M3 19h12" />
+          </svg>
+        </ToolbarButton>
+      </AppTooltip>
       <RichTextToolbarItem name="horizontalLine" :owner="element" />
       <RichTextToolbarItem name="uploadImage" :owner="element" />
       <RichTextToolbarItem name="insertTable" :owner="element" />
@@ -430,12 +459,13 @@ import { TextMeasurementService } from '@/services/TextMeasurementService';
 import { RICH_TEXT_DEFAULT_FONT_FAMILY } from '@/utils/fontConstants';
 
 const EXTRA_COMMAND_NAMES = [
-  'outdent',
-  'indent',
   'undo',
   'redo',
+  'outdent',
+  'indent',
   'removeFormat',
   INSERT_NEUME_COMMAND,
+  'insertFootnote',
 ];
 
 const props = defineProps({

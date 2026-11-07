@@ -1208,6 +1208,11 @@ export const RICH_TEXT_BOX_CONTENT_KEYS = [
 
 export type RichTextBoxContentKey = (typeof RICH_TEXT_BOX_CONTENT_KEYS)[number];
 
+export interface RichTextFootnoteMarker {
+  label: string;
+  width: number;
+}
+
 export class RichTextBoxElement extends ScoreElement {
   public readonly elementType: ElementType = ElementType.RichTextBox;
   public content: string = '';
@@ -1239,6 +1244,7 @@ export class RichTextBoxElement extends ScoreElement {
   public runningMarkerText: string | null = null;
 
   // Values computed by the layout service
+  public footnoteMarkers: Record<string, RichTextFootnoteMarker> = {};
   public defaultLyricsFontHeight: number = 0;
   public defaultNeumeFontAscent: number = 0;
   public oligonMidpoint: number = 0;

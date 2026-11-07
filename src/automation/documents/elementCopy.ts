@@ -45,7 +45,9 @@ function copyElement(
     ) {
       continue;
     }
-    if (!['scaleNotes', 'scaleNotesVirtual'].includes(key)) {
+    if (
+      !['scaleNotes', 'scaleNotesVirtual', 'footnoteReferences'].includes(key)
+    ) {
       Reflect.set(copy, key, Reflect.get(source, key));
     }
   }

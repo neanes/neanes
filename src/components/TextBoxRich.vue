@@ -17,7 +17,10 @@
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentLeft"
+        content-key="contentLeft"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
@@ -28,7 +31,10 @@
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentCenter"
+        content-key="contentCenter"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReady"
@@ -39,7 +45,10 @@
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentRight"
+        content-key="contentRight"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
@@ -59,7 +68,10 @@
             :style="inlineTextBoxStyle"
             :class="{ 'center-outside-box': inlineCenterOutsideBox }"
             :owner="element"
+            :footnote-markers="footnoteMarkers"
+            :footnotes-editable="editMode && !recalc"
             :model-value="content"
+            content-key="content"
             :config="editorConfig"
             @blur="onBlur"
             @ready="onEditorReadyInline"
@@ -75,7 +87,10 @@
           :style="inlineTextBoxStyle"
           :class="{ 'center-outside-box': inlineCenterOutsideBox }"
           :owner="element"
+          :footnote-markers="footnoteMarkers"
+          :footnotes-editable="editMode && !recalc"
           :model-value="contentBottom"
+          content-key="contentBottom"
           :config="editorConfig"
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
@@ -89,7 +104,10 @@
       ref="editor"
       class="rich-text-editor single scrollable"
       :owner="element"
+      :footnote-markers="footnoteMarkers"
+      :footnotes-editable="editMode && !recalc"
       :model-value="content"
+      content-key="content"
       :config="editorConfig"
       :style="textBoxStyle"
       @blur="onBlur"
@@ -102,7 +120,10 @@
       ref="editor"
       class="rich-text-editor single"
       :owner="element"
+      :footnote-markers="footnoteMarkers"
+      :footnotes-editable="editMode && !recalc"
       :model-value="content"
+      content-key="content"
       :config="editorConfig"
       :style="textBoxStyle"
       @blur="onBlur"
@@ -130,7 +151,10 @@ import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
-import type { RichTextBoxElement } from '@/models/Element';
+import type {
+  RichTextBoxElement,
+  RichTextFootnoteMarker,
+} from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -167,6 +191,10 @@ const props = defineProps({
   footnoteBody: {
     type: Boolean,
     default: false,
+  },
+  footnoteMarkers: {
+    type: Object as PropType<Readonly<Record<string, RichTextFootnoteMarker>>>,
+    default: () => ({}),
   },
   element: {
     type: Object as PropType<RichTextBoxElement>,
@@ -448,6 +476,10 @@ const containerStyle = computed(() => {
     '--ck-content-font-size': props.element.inline
       ? `${resolvedParagraphStyle.value.fontSize}px`
       : ckContentFontSize.value, // no zoom because we will apply zooming on the whole editor
+    '--footnote-reference-family': getFontFamilyWithFallback(
+      resolvedParagraphStyle.value.fontFamily,
+    ),
+    '--footnote-reference-size': `${resolvedParagraphStyle.value.fontSize}px`,
     '--ck-content-font-color': resolvedParagraphStyle.value.color,
     '--ck-content-line-height': `${resolvedParagraphStyle.value.lineHeight ?? 'normal'}`,
   };

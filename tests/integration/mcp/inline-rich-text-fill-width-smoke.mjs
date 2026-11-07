@@ -169,6 +169,7 @@ try {
     })),
   });
   await checkPageCenter();
+  await socket.send('Page.bringToFront');
   await eventually(async () => {
     const hit = await socket.evaluate(`(() => {
       const [box, martyria] = window._editor.score.value.staff.elements;
@@ -177,18 +178,26 @@ try {
       const marker = document.getElementById('element-' + martyria.id);
       editable.ckeditorInstance.editing.view.focus();
 
-      const markerRect = marker.querySelector('.neume-box').getBoundingClientRect();
+      const neumeBox = marker.querySelector('.neume-box');
+      // Focusing the editor can scroll the right-aligned martyria out of view.
+      neumeBox.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
+      const markerRect = neumeBox.getBoundingClientRect();
       const editorRect = editable.getBoundingClientRect();
       const x = (markerRect.left + markerRect.right) / 2;
-      const y = (Math.max(markerRect.top, editorRect.top) +
-        Math.min(markerRect.bottom, editorRect.bottom)) / 2;
+      const overlapTop = Math.max(markerRect.top, editorRect.top);
+      const overlapBottom = Math.min(markerRect.bottom, editorRect.bottom);
+      const y = (overlapTop + overlapBottom) / 2;
       const target = document.elementFromPoint(x, y);
       return {
         focused: editable.classList.contains('ck-focused'),
+        overlapsVertically: overlapTop < overlapBottom,
         hitsMartyria: marker.contains(target),
       };
     })()`);
-    assert.ok(hit.focused && hit.hitsMartyria, JSON.stringify(hit));
+    assert.ok(
+      hit.focused && hit.overlapsVertically && hit.hitsMartyria,
+      JSON.stringify(hit),
+    );
   });
 
   // A narrow fixed-width box can end before the page midpoint.

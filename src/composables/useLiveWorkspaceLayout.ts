@@ -24,6 +24,7 @@ export type LiveLayoutTrial = {
 
 type LayoutRequest = {
   isCurrent: () => boolean;
+  outcome?: LiveLayoutOutcome;
   promise: Promise<LiveLayoutOutcome>;
   cancel: () => void;
 };
@@ -139,6 +140,7 @@ export function useLiveWorkspaceLayout(options: {
         if (!isCurrent()) {
           return 'superseded';
         }
+        request.outcome = outcome;
         waitingForBlur = outcome === 'deferred';
         return outcome;
       })
@@ -155,11 +157,12 @@ export function useLiveWorkspaceLayout(options: {
       })
       .finally(() => clearTimeout(timer));
 
-    current = {
+    const request: LayoutRequest = {
       isCurrent,
       promise,
       cancel: () => cancellation.resolve('superseded'),
     };
+    current = request;
     return promise;
   }
 
@@ -205,6 +208,9 @@ export function useLiveWorkspaceLayout(options: {
     start,
     wait,
     invalidate,
+    get isPublished() {
+      return current?.outcome === 'published' && current.isCurrent();
+    },
     get waitingForBlur() {
       return waitingForBlur;
     },

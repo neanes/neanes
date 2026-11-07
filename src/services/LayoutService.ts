@@ -87,6 +87,7 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 import type { Workspace } from '@/models/Workspace';
+import { assignMissingElementIds } from '@/models/Workspace';
 import {
   FOOTNOTE_OVERFLOW_BOTTOM_PADDING,
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
@@ -429,13 +430,10 @@ export class LayoutService {
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
+    assignMissingElementIds(workspace);
     score.staves.forEach((staff) =>
       staff.elements.forEach((element, index) => {
         element.index = index;
-
-        if (element.id == null && element.elementType !== ElementType.Empty) {
-          element.id = workspace.nextId;
-        }
 
         this.saveElementState(element);
         if (element instanceof FootnoteAnchorElement) {

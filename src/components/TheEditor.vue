@@ -203,6 +203,7 @@ import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import type { WorkspaceLocalStorage, ZoomFitMode } from '@/models/Workspace';
 import {
+  assignMissingElementIds,
   formatZoomPercent,
   MAX_ZOOM,
   MIN_ZOOM,
@@ -496,6 +497,7 @@ const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
 // Whether an export or print job is rendering the pages.
 const printMode = ref(false);
+const browserPrintWarning = useTemplateRef<HTMLElement>('browserPrintWarning');
 const canUndo = ref(false);
 const canRedo = ref(false);
 let unsubscribeHistory: (() => void) | undefined;
@@ -613,6 +615,7 @@ const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
 let pdfExportInProgress = false;
 let nativePrintInProgress = false;
+let browserPrintPrepared = false;
 
 const ckeditorLanguage = computed(() => {
   return (
@@ -3431,11 +3434,8 @@ function onClickPrintScore() {
     return;
   }
 
-  if (isBrowser.value) {
-    void onFileMenuPrint(true);
-    return;
-  }
   if (
+    !isBrowser.value &&
     !settleFootnoteReferences.value &&
     pages.value.some((page) => page.footnoteOverflow)
   ) {
@@ -5723,6 +5723,7 @@ async function runLiveSettlement(
 function save() {
   invalidateLiveLayout();
   if (settleFootnoteReferences.value) {
+    assignMissingElementIds(selectedWorkspace.value);
     if (displayedScore !== toRaw(score.value)) {
       displayedScore = undefined;
       pages.value = [];
@@ -8387,7 +8388,62 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
   }
 }
 
-async function onFileMenuPrint(openBrowserDialog = false) {
+async function awaitBrowserPrintPages(workspace: Workspace) {
+  const layout = pages.value;
+  const printScore = workspace.score;
+  const revision = workspace.contentRevision;
+  const pageContents = scorePageContents.value ?? [];
+  if (pageContents.length !== filteredPages.value.length) {
+    throw new Error('LAYOUT_CONFLICT');
+  }
+
+  const interrupted = Promise.withResolvers<never>();
+  const stop = watch(
+    [pages, selectedWorkspace, score, () => workspace.contentRevision],
+    () => interrupted.reject(new Error('LAYOUT_CONFLICT')),
+  );
+  // A rich-text editor that fails to initialize may never report readiness.
+  const timer = setTimeout(
+    () => interrupted.reject(new Error('PRINT_RENDER_TIMEOUT')),
+    45_000,
+  );
+  try {
+    await Promise.race([
+      Promise.all(pageContents.map((page) => page.whenReady())),
+      interrupted.promise,
+    ]);
+  } finally {
+    clearTimeout(timer);
+    stop();
+  }
+  return () =>
+    workspace === selectedWorkspace.value &&
+    printScore === workspace.score &&
+    revision === workspace.contentRevision &&
+    layout === pages.value &&
+    (!settleFootnoteReferences.value || liveLayout.isPublished);
+}
+
+function showBrowserPrintWarning(
+  message = t(($) => $.menu.file.printLayoutPending, { ns: 'menu' }),
+) {
+  const warning = browserPrintWarning.value;
+  if (warning === null) {
+    return;
+  }
+  // beforeprint cannot wait for Vue to update the DOM.
+  warning.textContent = message;
+  warning.hidden = false;
+  window.addEventListener(
+    'afterprint',
+    () => {
+      warning.hidden = true;
+    },
+    { once: true },
+  );
+}
+
+async function onFileMenuPrint(browserInitiated = false) {
   if (!isBrowser.value) {
     if (nativePrintInProgress) {
       return;
@@ -8407,8 +8463,13 @@ async function onFileMenuPrint(openBrowserDialog = false) {
     }
     return;
   }
-  // window.print() fires beforeprint, which also calls this handler.
-  if (printMode.value) {
+  if (browserInitiated && browserPrintPrepared) {
+    return;
+  }
+  if (printMode.value || isLoading.value) {
+    if (browserInitiated) {
+      showBrowserPrintWarning();
+    }
     return;
   }
   const workspace = selectedWorkspace.value;
@@ -8421,12 +8482,27 @@ async function onFileMenuPrint(openBrowserDialog = false) {
   const activeElement = blurActiveElement();
 
   try {
-    // The browser does not wait for async work in beforeprint.
-    if (openBrowserDialog) {
-      await awaitBrowserOutputLayout(workspace);
-      if (pages.value.some((page) => page.footnoteOverflow)) {
-        toast.error(t(($) => $.menu.footnotes.overflow, { ns: 'menu' }));
+    if (browserInitiated) {
+      if (settleFootnoteReferences.value && !liveLayout.isPublished) {
+        showBrowserPrintWarning();
         return;
+      }
+    } else {
+      await awaitBrowserOutputLayout(workspace);
+    }
+    if (pages.value.some((page) => page.footnoteOverflow)) {
+      const message = t(($) => $.menu.footnotes.overflow, { ns: 'menu' });
+      if (browserInitiated) {
+        showBrowserPrintWarning(message);
+      } else {
+        toast.error(message);
+      }
+      return;
+    }
+    if (!browserInitiated) {
+      const isLayoutCurrent = await awaitBrowserPrintPages(workspace);
+      if (!isLayoutCurrent()) {
+        throw new Error('LAYOUT_CONFLICT');
       }
     }
 
@@ -8435,13 +8511,15 @@ async function onFileMenuPrint(openBrowserDialog = false) {
       workspace,
       createScoreRenderSnapshot(workspace),
     );
-    if (openBrowserDialog) {
+    if (!browserInitiated) {
+      browserPrintPrepared = true;
       window.print();
     }
     await printed;
   } catch (error) {
     console.error(error);
   } finally {
+    browserPrintPrepared = false;
     printMode.value = false;
     window.document.title = windowTitle.value;
 
@@ -10127,6 +10205,12 @@ function renderTabLabel(tab: Tab) {
 
 <template>
   <div class="editor">
+    <div
+      v-if="isBrowser"
+      ref="browserPrintWarning"
+      class="browser-print-warning"
+      hidden
+    />
     <div v-if="isLoading" class="loading-overlay">
       <Spinner class="size-16" />
     </div>
@@ -11071,7 +11155,21 @@ function renderTabLabel(tab: Tab) {
   display: none;
 }
 
+.browser-print-warning {
+  display: none;
+}
+
 @media print {
+  .editor:has(> .browser-print-warning:not([hidden]))
+    > :not(.browser-print-warning) {
+    display: none !important;
+  }
+
+  .browser-print-warning:not([hidden]) {
+    display: block;
+    visibility: visible;
+  }
+
   .content {
     display: block;
     height: auto;

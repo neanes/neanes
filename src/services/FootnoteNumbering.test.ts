@@ -11,6 +11,7 @@ import { Score } from '@/models/Score';
 import { SaveService } from '@/services/SaveService';
 
 import {
+  automaticFootnoteMarker,
   footnoteStartMax,
   footnoteSymbol,
   footnoteSymbolPosition,
@@ -138,6 +139,38 @@ describe('automatic footnote sequences', () => {
     expect(labels(score)).toEqual(['5', '6', '7', '8']);
   });
 
+  it.each(['numbers', 'symbols'] as const)(
+    'restarts %s on physical pages regardless of displayed page numbers',
+    (format) => {
+      const { score, anchors } = fixture();
+      Object.assign(score.pageSetup, {
+        footnoteFormat: format,
+        footnoteNumbering: 'page',
+        firstFootnoteNumber: 3,
+        firstPageNumber: 98,
+      });
+      anchors.forEach((anchor, index) => {
+        anchor.page = index < 2 ? 1 : 2;
+      });
+      expect(labels(score)).toEqual(
+        [3, 4, 3, 4].map((position) =>
+          automaticFootnoteMarker(position, score.pageSetup),
+        ),
+      );
+      score.footnotes[2].marker = 'Custom';
+      expect(labels(score)[3]).toBe(
+        automaticFootnoteMarker(3, score.pageSetup),
+      );
+      anchors[1].page = 2;
+      expect(labels(score)).toEqual([
+        automaticFootnoteMarker(3, score.pageSetup),
+        automaticFootnoteMarker(3, score.pageSetup),
+        'Custom',
+        automaticFootnoteMarker(4, score.pageSetup),
+      ]);
+    },
+  );
+
   it('restarts at the same nonempty section markers as the editor, including a reference in the heading itself', () => {
     const { score, anchors } = fixture();
     score.pageSetup.footnoteNumbering = 'section';
@@ -166,6 +199,31 @@ describe('automatic footnote sequences', () => {
     expect(labels(score)).toEqual(['7', '8', '7', '7']);
     section.content = '';
     expect(labels(score)).toEqual(['7', '8', '9', '7']);
+  });
+
+  it('uses final page assignments for labels and explicit breaks for pre-layout ordinals', () => {
+    const { score, anchors } = fixture();
+    score.pageSetup.footnoteNumbering = 'page';
+    const assignments = new Map(
+      anchors.map((anchor, index) => [anchor, index < 2 ? 1 : 2]),
+    );
+    anchors.forEach((anchor) => {
+      anchor.page = 99;
+    });
+    expect(
+      orderedFootnotes(score, assignments).map((entry) => entry.number),
+    ).toEqual([1, 2, 1, 2]);
+    expect(orderedFootnotes(score, null).map((entry) => entry.number)).toEqual([
+      1, 2, 3, 4,
+    ]);
+    score.footnotes[1].marker = 'Custom';
+    anchors[2].pageBreak = true;
+    expect(orderedFootnotes(score, null).map((entry) => entry.marker)).toEqual([
+      '1',
+      'Custom',
+      '2',
+      '1',
+    ]);
   });
 
   it('round trips all numbering settings and supplies the original defaults for older files', () => {

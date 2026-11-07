@@ -1,29 +1,47 @@
 # Layout ownership
 
-`LayoutService.processPages` assigns footnote labels in score order, measures
-their widths, and prepares score lines and footnote bodies. The page builder
-fits prepared lines into pages and reserves space for whole footnote bodies on
-their anchor page. It accounts for explicit page breaks, drop-cap continuation
-lines, and measured header and footer reservations before content is positioned.
+`LayoutService.processPages` prepares line dimensions and footnote bodies, calls
+`buildContentPages`, then positions main content and bottom-aligned footnotes.
+The page builder works with prepared heights, footnote IDs, explicit and
+remembered breaks, drop-cap continuation requirements, and measured page
+reservations. It returns line membership, offsets, and whole-footnote ownership,
+and reports overflow and the lines that triggered it.
 
 Fill-width inline rich text takes the remaining width after musical line
 breaking, up to a following right-aligned martyria or the end of the line.
-Footnote body gutters are fixed at 2.2 times the body marker font size (a 1.8em
-marker area plus a 0.4em gap). Long labels can extend outward from the gutter.
+Rich-text reference widths come from the labels assigned to the current pages.
+Body gutters are fixed at 2.2 times the body marker font size (a 1.8em marker
+area plus a 0.4em gap). Labels align against the body boundary and may extend
+outward for long markers.
 
-Pagination reserves header and footer overflow before the first line is added
-to a page. This uses ordinary header and footer selection because chapter
-opening status is resolved after the page's content is known.
+Header/footer overflow reservations retain the existing timing: a reservation
+is frozen before the first line is added to its physical page. At that point the
+page has no chapter marker, so the reservation uses ordinary header/footer
+selection. Rendering can still select chapter-opening headers for completed
+pages. This refactor does not change that limitation.
 
 # Measurement
 
-The live editor uses its debounced DOM height callbacks. Existing automation
-and export measurement paths also measure footnote bodies at their natural
-height, including rich text with a stored scrollable setting. Each reconciliation
-retains the largest observed height for repeated header and footer templates.
-In scores with footnotes it also retains the largest measured height for
-page-capped main-score rich text at the current width, so moving to a smaller
-page cap cannot move the box back again.
+The editor, private worker, and visual exports use
+`WorkspaceLayoutSettlement` to repeat layout and DOM measurement. Eligible
+page-restarted references start with fresh heights and widths based on the
+starting label. Once that geometry settles, each pass uses the widths of its
+assigned labels. When measured growth among elements sharing a page in the
+previous pass causes an overflow break, settlement remembers the first score
+element of the movable line or group. It retains the
+break even if a subsequent label is narrower and clears it after publication.
+`LayoutReconciliation` applies the measured heights. Each operation retains the
+largest height for repeated header/footer templates. In scores with footnotes,
+it also retains the largest height for page-capped main-score rich-text boxes
+at their current box and marker widths. This lets a box grow after moving to
+a page with a larger cap. In footnote-free scores, main-score boxes can shrink
+between passes. Footnote bodies use natural height, including rich-text boxes
+with a stored scrollable setting.
 
-Oversized footnotes remain editable. Settled page discovery and visual export
-reject pages with footnote overflow.
+Settlement rejects stale measurements and fails on the twelfth changed pass.
+The measurement and rendering lifecycles handle cancellation. Overflow remains
+editable and visual export validation rejects it.
+
+The live editor measures eligible page-restarted layouts offscreen and
+publishes only the settled result. Other live layouts retain their debounced
+DOM height callbacks.

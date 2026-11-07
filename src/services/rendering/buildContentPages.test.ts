@@ -93,6 +93,40 @@ describe('whole-footnote page selection', () => {
     expect(membership(paginate(lines))).toEqual([[0], [1, 2]]);
   });
 
+  it('reports overflow breaks and honors remembered boundaries on a later pass', () => {
+    const overflow: number[][] = [];
+    const constraints = {
+      innerPageHeight: 100,
+      footnoteSpacing,
+      reservations: Array.from({ length: 4 }, () => ({
+        extraHeaderHeightPx: 0,
+        extraFooterHeightPx: 0,
+      })),
+      onOverflowBreak: (index: number, first: number, excess: number) =>
+        overflow.push([index, first, excess]),
+    };
+    const last = line(5);
+    const candidate = line(50);
+    candidate.pageBreak = true;
+    const lines = [line(60), candidate, last];
+    expect(
+      membership(buildContentPages(lines, new Map(), constraints)),
+    ).toEqual([[0], [1], [2]]);
+    expect(overflow).toEqual([[1, 0, 10]]);
+
+    candidate.height = 30;
+    overflow.length = 0;
+    expect(
+      membership(
+        buildContentPages(lines, new Map(), {
+          ...constraints,
+          breaksBefore: new Set([0, 1]),
+        }),
+      ),
+    ).toEqual([[0], [1], [2]]);
+    expect(overflow).toEqual([]);
+  });
+
   it('reserves continuation heights and their footnotes before starting a drop cap', () => {
     const lines = [line(45), line(20), line(20, ['a'])];
     lines[1].continuationLines = 1;

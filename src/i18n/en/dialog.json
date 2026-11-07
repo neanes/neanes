@@ -264,6 +264,7 @@
     "footnoteFormat": "Format",
     "footnoteNumbering": "Numbering",
     "footnoteContinuous": "Continuous",
+    "footnoteRestartPage": "Restart each page",
     "footnoteRestartSection": "Restart each section",
     "nextFootnoteSymbol": "Next symbol",
     "previousFootnoteSymbol": "Previous symbol",

@@ -55,6 +55,7 @@ const props = defineProps<{
   fonts: string[];
   editorLanguage: string;
   overlays: ScoreOverlaySettings;
+  measureTextOnly?: boolean;
 }>();
 const emit = defineEmits<{
   measured: [heights: TextBoxHeightMeasurement[]];
@@ -116,9 +117,11 @@ onMounted(async () => {
     await Promise.all([...pageContents].map((page) => page.whenReady()));
     await document.fonts.ready;
     await nextTick();
-    await Promise.all(
-      [...root.value!.querySelectorAll('img')].map((image) => image.decode()),
-    );
+    if (!props.measureTextOnly) {
+      await Promise.all(
+        [...root.value!.querySelectorAll('img')].map((image) => image.decode()),
+      );
+    }
     const heights = await Promise.all(
       [...pageContents].map((page) => page.measureTextBoxes()),
     );

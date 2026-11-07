@@ -118,6 +118,7 @@ import { resolvePageMargins } from '@/utils/PageMargins';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
+import { automaticFootnoteMarker } from './FootnoteMarker';
 import {
   getLyricsBaseline,
   getLyricsTop,
@@ -408,11 +409,20 @@ interface AtomicMelismaLayout {
 }
 
 type LayoutInput = Pick<Workspace, 'score' | 'nextId'>;
+type LayoutOptions = LayoutDiagnosticsOptions & {
+  provisionalFootnoteWidths?: boolean;
+  breaksBefore?: ReadonlySet<ScoreElement>;
+  onOverflowBreak?: (
+    boundary: ScoreElement,
+    elements: ScoreElement[],
+    excess: number,
+  ) => void;
+};
 
 export class LayoutService {
   public static processPages(
     workspace: LayoutInput,
-    options?: LayoutDiagnosticsOptions,
+    options?: LayoutOptions,
   ): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
@@ -440,46 +450,7 @@ export class LayoutService {
     });
 
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
-    const references = orderedFootnotes(score);
-    const markerWidths = this.measureRichTextFootnoteMarkers(
-      references,
-      score.paragraphStyles,
-    );
-    const referencesById = new Map(
-      references.map((entry) => [entry.footnote.id, entry]),
-    );
-    const markersByBox = new Map<
-      ScoreElement,
-      Record<string, RichTextFootnoteMarker>
-    >();
-    for (const { footnote, reference, number, marker } of references) {
-      if (reference instanceof FootnoteAnchorElement) {
-        reference.footnoteNumber = number;
-        reference.footnoteMarker = marker;
-      } else {
-        let markers = markersByBox.get(reference);
-        if (markers === undefined) {
-          markers = {};
-          markersByBox.set(reference, markers);
-        }
-        markers[footnote.id] = {
-          label: marker,
-          width: markerWidths.get(footnote.id)!,
-        };
-      }
-    }
-    for (const element of elements) {
-      if (element.elementType === ElementType.RichTextBox) {
-        const box = element as RichTextBoxElement;
-        const markers = markersByBox.get(element);
-        if (
-          markers !== undefined ||
-          Object.keys(box.footnoteMarkers).length > 0
-        ) {
-          box.footnoteMarkers = markers ?? {};
-        }
-      }
-    }
+    const references = orderedFootnotes(score, null);
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
@@ -550,6 +521,7 @@ export class LayoutService {
       );
       return {
         height: candidate.height,
+        elements,
         footnoteIds: elements.flatMap(elementFootnoteIds),
         pageBreak: elements.at(-1)?.pageBreak ?? false,
         continuationLines,
@@ -561,6 +533,25 @@ export class LayoutService {
         ),
       };
     });
+    const breaksBefore = new Set<number>();
+    const groupStarts: number[] = [];
+    const onOverflowBreak = options?.onOverflowBreak;
+    if (options?.breaksBefore?.size || onOverflowBreak) {
+      let groupStart = 0;
+      let groupEnd = -1;
+      for (const [index, line] of paginationLines.entries()) {
+        if (index > groupEnd) {
+          groupStart = index;
+          groupEnd = index + line.continuationLines;
+        }
+        groupStarts.push(groupStart);
+        if (
+          line.elements.some((element) => options?.breaksBefore?.has(element))
+        ) {
+          breaksBefore.add(groupStart);
+        }
+      }
+    }
     const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
     const decisions = buildContentPages(
       paginationLines,
@@ -568,6 +559,22 @@ export class LayoutService {
       {
         innerPageHeight: pageSetup.innerPageHeight,
         footnoteSpacing: above + below + thickness,
+        breaksBefore,
+        onOverflowBreak: onOverflowBreak
+          ? (index, first, excess) => {
+              const line = paginationLines[index];
+              const boundary = line.elements[0];
+              if (groupStarts[index] === index && boundary) {
+                onOverflowBreak(
+                  boundary,
+                  paginationLines
+                    .slice(first, index + line.continuationLines + 1)
+                    .flatMap((candidate) => candidate.elements),
+                  excess,
+                );
+              }
+            }
+          : undefined,
         // The existing paginator freezes reservations before adding the first
         // line to each page. Chapter-opening selection is therefore false at
         // reservation time, even if the completed page later opens a chapter.
@@ -579,12 +586,16 @@ export class LayoutService {
       },
     );
     const pages: Page[] = [];
+    const pageAssignments = new Map<ScoreElement, number>();
     for (const [index, decision] of decisions.entries()) {
       const page = new Page();
       page.physicalPageNumber = index + 1;
       page.footnoteOverflow = decision.footnoteOverflow;
       const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
       for (const placement of decision.lines) {
+        paginationLines[placement.index].elements.forEach((element) =>
+          pageAssignments.set(element, page.physicalPageNumber),
+        );
         const previousLine =
           page.lines.at(-1) ?? pages.at(-1)?.lines.at(-1) ?? null;
         page.lines.push(
@@ -607,9 +618,51 @@ export class LayoutService {
       pages.push(page);
     }
 
+    const assigned = orderedFootnotes(score, pageAssignments);
+    const markerWidths = this.measureRichTextFootnoteMarkers(
+      assigned,
+      pageSetup,
+      score.paragraphStyles,
+      options?.provisionalFootnoteWidths ?? false,
+    );
+    const assignedById = new Map(
+      assigned.map((entry) => [entry.footnote.id, entry]),
+    );
+    const markersByBox = new Map<
+      ScoreElement,
+      Record<string, RichTextFootnoteMarker>
+    >();
+    for (const { footnote, reference, number, marker } of assigned) {
+      if (reference instanceof FootnoteAnchorElement) {
+        reference.footnoteNumber = number;
+        reference.footnoteMarker = marker;
+      } else {
+        let markers = markersByBox.get(reference);
+        if (markers === undefined) {
+          markers = {};
+          markersByBox.set(reference, markers);
+        }
+        markers[footnote.id] = {
+          label: marker,
+          width: markerWidths.get(footnote.id)!,
+        };
+      }
+    }
+    for (const element of elements) {
+      if (element.elementType === ElementType.RichTextBox) {
+        const box = element as RichTextBoxElement;
+        const markers = markersByBox.get(element);
+        if (
+          markers !== undefined ||
+          Object.keys(box.footnoteMarkers).length > 0
+        ) {
+          box.footnoteMarkers = markers ?? {};
+        }
+      }
+    }
     for (const [index, decision] of decisions.entries()) {
       pages[index].footnotes = decision.footnoteIds.map((id) => {
-        const { reference, number, marker } = referencesById.get(id)!;
+        const { reference, number, marker } = assignedById.get(id)!;
         return {
           id,
           number,
@@ -2824,7 +2877,9 @@ export class LayoutService {
 
   private static measureRichTextFootnoteMarkers(
     references: ReturnType<typeof orderedFootnotes>,
+    pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
+    provisional: boolean,
   ) {
     const widths = new Map<string, number>();
     const richTextReferences = references.filter(
@@ -2844,7 +2899,12 @@ export class LayoutService {
     try {
       const measured = new Map<string, number>();
 
-      for (const { footnote, reference, marker } of richTextReferences) {
+      for (const {
+        footnote,
+        reference,
+        number,
+        marker,
+      } of richTextReferences) {
         const style = resolveParagraphStyle(
           paragraphStyles,
           getTextBoxParagraphStyleFallbackId(
@@ -2868,7 +2928,12 @@ export class LayoutService {
           '--footnote-reference-size',
           `${style.fontSize}px`,
         );
-        widths.set(footnote.id, measure(marker));
+
+        const label =
+          provisional && number !== null
+            ? automaticFootnoteMarker(pageSetup.firstFootnoteNumber, pageSetup)
+            : marker;
+        widths.set(footnote.id, measure(label));
       }
     } finally {
       sample.remove();

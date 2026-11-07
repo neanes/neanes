@@ -58,18 +58,18 @@ Use **Reset position** to clear the offsets. Turn off **Override position** to r
 
 Open `File > Page Setup` and select **Footnotes**. These settings control the automatic markers and the separator above the footnote area:
 
-| Setting                                          | Use it to...                                                                                                                                 |
-| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Format**                                       | Choose numbers (`1, 2, 3, …`), the standard symbol sequence (`*, †, ‡, …`), or asterisks (`*, **, ***, …`).                                  |
-| **Numbering**                                    | Keep one **Continuous** sequence or **Restart each section**. Section restarts follow text boxes with a **Section** running marker.          |
-| **Starts at**                                    | Choose the first number or symbol in each sequence. For symbols, type a symbol from the selected sequence or use the adjacent arrow buttons. |
-| **Wrap musical footnote markers in parentheses** | Put parentheses around references beside music, such as `(1)` or `(*)`. Rich-text references remain superscripts without these parentheses.  |
-| **Show separator above footnotes**               | Draw a horizontal line between the main score and its footnotes.                                                                             |
-| **Separator Length (%)**                         | Set the separator's length as a percentage of the available text width.                                                                      |
-| **Space Above Separator (pt)**                   | Set the minimum gap after the main score. Defaults to **6 pt** and still applies when the separator is hidden.                               |
-| **Space Below Separator (pt)**                   | Set the gap between the separator and the footnote area. Defaults to **2.6 pt**.                                                             |
-| **Separator Thickness (pt)**                     | Set the thickness of the separator. Defaults to **1 pt**.                                                                                    |
-| **Color**                                        | Choose the separator color. Defaults to black.                                                                                               |
+| Setting                                          | Use it to...                                                                                                                                                |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Format**                                       | Choose numbers (`1, 2, 3, …`), the standard symbol sequence (`*, †, ‡, …`), or asterisks (`*, **, ***, …`).                                                 |
+| **Numbering**                                    | Keep one **Continuous** sequence, **Restart each page**, or **Restart each section**. Section restarts follow text boxes with a **Section** running marker. |
+| **Starts at**                                    | Choose the first number or symbol in each sequence. For symbols, type a symbol from the selected sequence or use the adjacent arrow buttons.                |
+| **Wrap musical footnote markers in parentheses** | Put parentheses around references beside music, such as `(1)` or `(*)`. Rich-text references remain superscripts without these parentheses.                 |
+| **Show separator above footnotes**               | Draw a horizontal line between the main score and its footnotes.                                                                                            |
+| **Separator Length (%)**                         | Set the separator's length as a percentage of the available text width.                                                                                     |
+| **Space Above Separator (pt)**                   | Set the minimum gap after the main score. Defaults to **6 pt** and still applies when the separator is hidden.                                              |
+| **Space Below Separator (pt)**                   | Set the gap between the separator and the footnote area. Defaults to **2.6 pt**.                                                                            |
+| **Separator Thickness (pt)**                     | Set the thickness of the separator. Defaults to **1 pt**.                                                                                                   |
+| **Color**                                        | Choose the separator color. Defaults to black.                                                                                                              |
 
 The spacing defaults match the nominal values of the standard 10 pt LaTeX classes. The default separator thickness matches the header and footer rules. These measurements stay fixed when font sizes change. The footnotes sit at the bottom of the page’s content area, so the space above the separator may be larger than the minimum. Older scores without saved spacing settings use these defaults when opened, which can change pagination.
 

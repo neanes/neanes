@@ -619,12 +619,123 @@ try {
         '<p>Body text</p>',
       );
       assert.equal(await evaluate(`${ws}.score.footnotes.length`), 1);
+      await call('update_page_setup', {
+        ...targetArgs,
+        expectedRevision: (await call('get_document_properties', targetArgs))
+          .revision,
+        changes: { footnoteNumbering: 'page' },
+      });
+      await edit(targetArgs, [
+        { action: 'update_footnote', footnoteId: pastedId, marker: null },
+      ]);
       const targetEditor = editorFor('single');
+      await focus(targetEditor);
+      const targetHeight = () =>
+        evaluate(`${ws}.score.staff.elements[0].height`);
+      const previousHeight = await targetHeight();
+      await socket.send('Input.insertText', { text: ' ordinary'.repeat(70) });
+      await eventually(async () =>
+        assert.ok((await targetHeight()) > previousHeight),
+      );
+      const layout = () =>
+        evaluate(`JSON.stringify(${ws}.score.staff.elements.map(
+        ({ page, line, height }) => [page, line, height],
+      ))`);
+      await evaluate(`(() => {
+        const editor = ${targetEditor};
+        const marker = [...editor.model.createRangeIn(editor.model.document.getRoot()).getItems()]
+          .find(item => item.is('element', 'footnoteReference'));
+        editor.model.change(writer => writer.setSelection(marker, 'on'));
+        editor.editing.view.forceRender();
+      })()`);
+      await main(`${nativeContents}.copy()`);
+      await eventually(async () =>
+        assert.match(
+          await main(
+            `(async () => {const items=await process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').clipboard.read(); const item=items.find(i=>i.types.includes('text/html')); return item ? (await item.getType('text/html')).text() : '';})()`,
+          ),
+          /data-neanes-footnote-body=/,
+        ),
+      );
+      await focus(targetEditor);
+      await evaluate(`(() => {
+        const editor = ${targetEditor};
+        editor.model.change(writer => {
+          const position = editor.model.document.selection.getFirstPosition();
+          writer.insertText(' buffered', position);
+          writer.setSelection(position.getShiftedBy(' buffered'.length));
+        });
+        editor.editing.view.forceRender();
+      })()`);
+      const beforePaste = await layout();
+      await main(`(() => {
+        globalThis.footnotePasteErrors = [];
+        globalThis.recordFootnotePasteError = ({message}) => {
+          if (message.includes('INVALID_FOOTNOTE_REFERENCE')) {
+            globalThis.footnotePasteErrors.push(message);
+          }
+        };
+        ${nativeContents}.on('console-message', globalThis.recordFootnotePasteError);
+      })()`);
+      await main(`${nativeContents}.paste()`);
+      const stagedId = await eventually(async () => {
+        const html = await evaluate(`${targetEditor}.getData()`);
+        const ids = [...html.matchAll(/data-footnote-id="([^"]+)"/g)].map(
+          (match) => match[1],
+        );
+        assert.equal(ids.length, 2);
+        return ids.find((id) => id !== pastedId);
+      });
+      // Let the live-layout debounce run while the pasted body is still staged.
+      await evaluate('new Promise(resolve => setTimeout(resolve, 400))');
+      assert.equal(await evaluate(`${ws}.score.footnotes.length`), 1);
+      assert.equal(await layout(), beforePaste);
+      assert.equal(
+        await evaluate(`${targetEditor}.ui.focusTracker.isFocused`),
+        true,
+      );
+      await evaluate(`${targetEditor}.execute('undo')`);
+      await evaluate('document.activeElement.blur()');
+      await eventually(async () => {
+        const html = await evaluate(`${ws}.score.staff.elements[0].content`);
+        assert.match(html, /buffered/);
+        assert.ok(!html.includes(stagedId));
+        assert.equal(await evaluate(`${ws}.score.footnotes.length`), 1);
+      });
+      await focus(targetEditor);
+      await evaluate(`${targetEditor}.execute('redo')`);
+      assert.ok(
+        (await evaluate(`${targetEditor}.getData()`)).includes(stagedId),
+      );
+      await evaluate('document.activeElement.blur()');
+      await eventually(async () => {
+        assert.equal(await evaluate(`${ws}.score.footnotes.length`), 2);
+        assert.equal(
+          await evaluate(
+            `${ws}.score.staff.elements[0].footnoteMarkers[${JSON.stringify(stagedId)}]?.label`,
+          ),
+          '2',
+        );
+      });
+      assert.match(
+        await evaluate(`${ws}.score.staff.elements[0].content`),
+        /buffered/,
+      );
+      assert.deepEqual(
+        await main(`(() => {
+          ${nativeContents}.off('console-message', globalThis.recordFootnotePasteError);
+          return globalThis.footnotePasteErrors;
+        })()`),
+        [],
+      );
+      console.log(
+        'Page-restarted rich-text paste: typing settles while focused and the staged footnote settles after blur.',
+      );
       await focus(targetEditor);
       await evaluate(`${targetEditor}.execute('insertFootnote')`);
       await eventually(async () => {
         const active = await evaluate(`${ws}.activeFootnoteId`);
-        assert.ok(active && active !== pastedId);
+        assert.ok(active && active !== pastedId && active !== stagedId);
         assert.equal(
           await evaluate(
             `document.getElementById(${JSON.stringify(`footnote-${active}`)})?.isConnected`,

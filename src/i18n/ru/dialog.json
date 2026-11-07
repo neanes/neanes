@@ -264,6 +264,7 @@
     "footnoteFormat": "Формат",
     "footnoteNumbering": "Нумерация",
     "footnoteContinuous": "Непрерывная",
+    "footnoteRestartPage": "Заново на каждой странице",
     "footnoteRestartSection": "Заново в каждом разделе",
     "nextFootnoteSymbol": "Следующий символ",
     "previousFootnoteSymbol": "Предыдущий символ",

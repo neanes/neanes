@@ -84,12 +84,12 @@ export async function checkFootnoteNumbering({
   await edit([{ action: 'update_footnote', footnoteId: ids[4], marker: 'X' }]);
   await settings({
     footnoteFormat: 'symbols',
-    footnoteNumbering: 'continuous',
+    footnoteNumbering: 'page',
     footnoteReferenceParentheses: true,
   });
   assert.equal(
     (await call('get_page_setup', args)).settings.footnoteNumbering,
-    'continuous',
+    'page',
   );
 
   async function rendered() {
@@ -139,7 +139,7 @@ export async function checkFootnoteNumbering({
           '\u2021\u2021',
           '\u00a7\u00a7',
         ],
-        ['\u00b6\u00b6', '\u2016\u2016'],
+        ['*', '\u2020'],
       ],
     ),
   );
@@ -207,6 +207,60 @@ export async function checkFootnoteNumbering({
     path.join(directory, 'automatic-symbols-page-2.png'),
   );
 
+  // Reflow from shorter pages restarts by actual placement, including rich text references.
+  await settings({
+    footnoteNumbering: 'page',
+    pageSize: 'Custom',
+    pageWidthCustom: 816,
+    pageHeightCustom: 440,
+    topMargin: 30,
+    bottomMargin: 30,
+  });
+  // Deliberately exercise page virtualization even on a large host display.
+  const previousMaxHeight = await evaluate(`(() => {
+    const viewport = document.querySelector('.page-background');
+    const previous = viewport.style.maxHeight;
+    viewport.style.maxHeight = '180px';
+    return previous;
+  })()`);
+  const sequence = ['*', '\u2020', '\u2021', '\u00a7', '\u00b6', '\u2016'];
+  await eventually(async () => {
+    const actual = await rendered();
+    assert.ok(actual.length > 2);
+    for (const page of actual) {
+      let position = 3;
+      for (const entry of page) {
+        const expected =
+          entry.id === ids[4]
+            ? 'X'
+            : sequence[(position - 1) % 6].repeat(
+                Math.floor((position - 1) / 6) + 1,
+              );
+        assert.equal(entry.marker, expected);
+        if (entry.id !== ids[4]) {
+          position++;
+        }
+      }
+    }
+    assert.equal(actual.flat().length, 13);
+  });
+  await evaluate(
+    `document.querySelector('.page-background').style.maxHeight = ${JSON.stringify(previousMaxHeight)}`,
+  );
+  // Remounting rich text after restoring the viewport can update measurements.
+  // Retry only this read-only pair, discovering a fresh revision each time.
+  await eventually(
+    async () => {
+      const reflowPages = await call('get_pages', args);
+      await call('preview_page', {
+        ...args,
+        expectedRevision: reflowPages.revision,
+        pageNumber: 2,
+      });
+    },
+    { retry: (error) => error.message.includes('REVISION_CONFLICT') },
+  );
+
   async function openSetup() {
     await dispatch('FileMenuPageSetup');
     await eventually(async () =>
@@ -244,7 +298,7 @@ export async function checkFootnoteNumbering({
     await evaluate(
       "document.querySelector('#page-setup-footnote-numbering').textContent.trim()",
     ),
-    'Restart each section',
+    'Restart each page',
   );
   await select('#page-setup-footnote-format', 'asterisks');
   assert.equal(
@@ -258,7 +312,7 @@ export async function checkFootnoteNumbering({
     await evaluate(
       "document.querySelector('#page-setup-footnote-numbering').textContent.trim()",
     ),
-    'Restart each section',
+    'Restart each page',
   );
   assert.equal(
     await evaluate(

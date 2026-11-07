@@ -151,7 +151,20 @@ export type NoteNotationState = Pick<
   | 'tertiaryFthoraCarry'
 >;
 
-export class NoteElement extends ScoreElement {
+// Musical anchors share stable footnote identity and derived marker geometry.
+export abstract class FootnoteAnchorElement extends ScoreElement {
+  public footnoteId: string | null = null;
+  public footnotePositionOverride = false;
+  public footnoteOffsetX = 0;
+  public footnoteOffsetY = 0;
+  // Derived after pagination; identity is independent of the displayed number.
+  public footnoteNumber: number | null = null;
+  public footnoteMarker: string | null = null;
+  public footnoteMarkerOffset = 0;
+  public footnoteMarkerTop = 0;
+}
+
+export class NoteElement extends FootnoteAnchorElement {
   public readonly elementType: ElementType = ElementType.Note;
   public keepWithNext: boolean = false;
   public measureNumber: MeasureNumber | null = null;
@@ -262,6 +275,10 @@ export class NoteElement extends ScoreElement {
 
   public getClipboardProperties(includeLyrics: boolean) {
     return {
+      footnoteId: this.footnoteId,
+      footnotePositionOverride: this.footnotePositionOverride,
+      footnoteOffsetX: this.footnoteOffsetX,
+      footnoteOffsetY: this.footnoteOffsetY,
       ...(includeLyrics
         ? {
             lyrics: this.lyrics,
@@ -819,7 +836,7 @@ export type MartyriaNotationState = Pick<
   | 'measureBarRight'
 >;
 
-export class MartyriaElement extends ScoreElement {
+export class MartyriaElement extends FootnoteAnchorElement {
   public readonly elementType: ElementType = ElementType.Martyria;
   public auto: boolean = true;
   public note: Note = Note.Pa;
@@ -954,6 +971,10 @@ export class MartyriaElement extends ScoreElement {
 
   public getClipboardProperties() {
     return {
+      footnoteId: this.footnoteId,
+      footnotePositionOverride: this.footnotePositionOverride,
+      footnoteOffsetX: this.footnoteOffsetX,
+      footnoteOffsetY: this.footnoteOffsetY,
       auto: this.auto,
       note: this.note,
       rootSign: this.rootSign,

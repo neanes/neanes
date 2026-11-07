@@ -355,6 +355,7 @@
     </PaneSection>
 
     <PaneSection
+      v-if="!footnoteBody"
       value="scrollable"
       :title="$t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })"
     >
@@ -431,6 +432,7 @@ const scales = Object.values(Scale).map((x) => ({
 }));
 
 const props = defineProps({
+  footnoteBody: Boolean,
   element: {
     type: Object as PropType<RichTextBoxElement>,
     required: true,

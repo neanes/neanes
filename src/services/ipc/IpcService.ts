@@ -147,7 +147,7 @@ export class IpcService implements IIpcService {
 
   public async exportWorkspaceAsLatex(
     workspace: Workspace,
-    data: string,
+    data: string | null,
   ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsLatex,

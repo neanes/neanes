@@ -30,13 +30,13 @@ import { EditorPreferences } from '@/models/EditorPreferences';
 import { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { fontCatalog } from '@/services/FontCatalog';
-import { LayoutService } from '@/services/LayoutService';
 import { LyricService } from '@/services/LyricService';
 import {
   getBundledFontLoadDescriptors,
   loadFontFamilies,
   loadScoreFonts,
 } from '@/services/rendering/fontReadiness';
+import { settleWorkspace } from '@/services/rendering/settleWorkspace';
 import { SaveService } from '@/services/SaveService';
 
 const language = 'en';
@@ -61,11 +61,13 @@ const { textBoxes, pages } = useWorkspaceMeasurements();
 const measurement = textBoxes.pending;
 const pageMeasurement = pages.pending;
 function prepare(workspace: Workspace) {
-  if (!workspace.score.staff.lyrics.locked) {
-    workspace.score.staff.lyrics.text = lyrics.extractLyrics(
-      workspace.score.staff.elements,
-      workspace.score.pageSetup.disableGreekMelismata,
-    );
+  for (const staff of workspace.score.staves) {
+    if (!staff.lyrics.locked) {
+      staff.lyrics.text = lyrics.extractLyrics(
+        staff.elements,
+        workspace.score.pageSetup.disableGreekMelismata,
+      );
+    }
   }
 }
 async function settle(workspace: Workspace) {
@@ -74,16 +76,21 @@ async function settle(workspace: Workspace) {
   }
   const complete = settlements.begin(workspace);
   await loadScoreFonts(SaveService.SaveScoreToJson(workspace.score));
-  LayoutService.processPages(workspace);
-  await textBoxes.start(workspace);
-  await nextTick();
-  LayoutService.processPages(workspace);
+  await document.fonts.ready;
+  await settleWorkspace(workspace, async () => {
+    await nextTick();
+    return textBoxes.start(workspace);
+  });
   complete();
 }
 const hooks = {
   createScore: () => new Score(),
   prepare,
-  dispose: (workspace: Workspace) => settlements.dispose(workspace),
+  dispose(workspace: Workspace) {
+    settlements.dispose(workspace);
+    textBoxes.cancel(workspace);
+    pages.cancel(workspace);
+  },
   settle,
 };
 // One private store lives until the worker shuts down or access is revoked.

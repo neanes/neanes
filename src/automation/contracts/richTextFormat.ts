@@ -5,9 +5,9 @@ import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleC
 
 export const richTextFormatQuerySchema = z.strictObject({
   topics: z
-    .array(z.enum(['basics', 'inline', 'opentype']))
+    .array(z.enum(['basics', 'inline', 'opentype', 'footnotes']))
     .min(1)
-    .max(3)
+    .max(4)
     .default(['basics', 'inline']),
 });
 
@@ -36,6 +36,38 @@ export function getRichTextFormat(
       arguments: { documentId: 'DOCUMENT_ID', expectedRevision: 0, actions },
     });
   const sections = {
+    footnotes: [
+      'FOOTNOTES',
+      'Use edit_elements insert_footnote with a main-score Note or Martyria elementRef. Tempo, plain TextBox, annotations, alternate lines, headers/footers and footnote bodies cannot own references. Each reference owns one body; nested/shared references are unsupported.',
+      'Optional elements supplies body element definitions. Omitted/empty elements creates an empty footnote staff. Bodies can mix music and text, retain a terminal Empty, and reject pageBreak:true. They inherit musical context at the anchor and then evolve independently.',
+      'Read Note/Martyria footnoteId with get_elements. insert_footnote returns createdFootnotes:[{footnoteId,elementRef}] unless includeCreated:false, filtered to references surviving the batch. Use the returned ID directly for body or marker edits.',
+      'Use collection:{kind:"footnote",footnoteId:BODY_UUID} with get_elements and normal element edits. get_elements returns footnote:{id,marker,label,number}; marker is the stored override or null, label is the displayed string, and number is null for custom markers. get_staff_lyrics and set_staff_lyrics accept the same collection; locks apply independently to each staff.',
+      'Use update_footnote with footnoteId and marker to change a label. Null restores automatic numbering; custom markers are trimmed, contain 1-16 Unicode characters without control characters, and do not advance the automatic sequence. remove_footnote takes a musical anchor elementRef. Removing any owning element removes its bodies atomically; undo restores both. copy_elements copies owned bodies with fresh IDs.',
+      'Page setup controls footnoteFormat:numbers|symbols, footnoteSymbolSequence:standard|asterisks, footnoteNumbering:continuous|section, firstFootnoteNumber, footnoteReferenceParentheses, showFootnoteHorizontalRule and footnoteHorizontalRuleLength (1-100 percent). footnoteSpaceAboveRule, footnoteSpaceBelowRule, and footnoteRuleThickness are in pixels. footnoteRuleColor defaults to black. Starts are 1-based, at most 1000000 for numbers, 384 for standard symbols or 64 for asterisks. Standard symbols cycle *, dagger, double dagger, section, pilcrow, double vertical line, repeating each twice, three times, etc. Section restarts follow nonempty section running markers.',
+      'Musical reference labels optionally use parentheses. Body labels use a period after numeric labels. Styles: footnote-text, footnote-body-marker, footnote-reference. Note/Martyria footnoteOffsetX/Y use neume-font em, positive right/down. Automatic collision clearance raises markers; footnotePositionOverride:true disables clearance and uses offsets directly. Markers do not reserve horizontal space.',
+      'Footnotes stay on their anchor page as whole bodies. Oversized bodies remain editable/saveable but settled page discovery and visual export fail until they fit. Page occurrences include region:footnote and exclude the terminal Empty for populated bodies. Unknown or duplicate body IDs fail with INVALID_FOOTNOTE_REFERENCE before mutation.',
+      call([
+        {
+          action: 'insert',
+          elements: [{ elementType: 'Note', clientId: 'note' }],
+        },
+        {
+          action: 'insert_footnote',
+          elementRef: '@note',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              properties: {
+                content: paragraph(
+                  BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+                  '',
+                ),
+              },
+            },
+          ],
+        },
+      ]),
+    ],
     basics: [
       'BASICS',
       'Use get_paragraph_styles with documentId and includeResolved:false for existing IDs (not display names). Common IDs: default-text for ordinary text, annotation for annotations, lyrics for inline text boxes, header/footer for templates; title/subtitle/chapter/section for headings.',

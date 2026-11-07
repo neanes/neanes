@@ -1,5 +1,6 @@
 <template>
   <div
+    :id="styleScopeId"
     ref="root"
     class="score-print-pages foreground-workspace"
     :style="{ '--zoom': 1, '--zoom-residue': 0 }"
@@ -29,7 +30,14 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, nextTick, onMounted, useTemplateRef } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  useId,
+  useTemplateRef,
+} from 'vue';
 
 import ScorePageContent from '@/components/ScorePageContent.vue';
 import type { ScoreOverlaySettings } from '@/models/EditorPreferences';
@@ -53,11 +61,12 @@ const emit = defineEmits<{
   failed: [error: Error];
 }>();
 const score = computed(() => props.workspace.score);
+const styleScopeId = `score-print-${useId()}`;
 const root = useTemplateRef<HTMLElement>('root');
 const paragraphStyleCss = computed(() =>
   buildRichTextParagraphStyleCss(
     score.value.paragraphStyles,
-    '.score-print-pages .ck-content',
+    `#${styleScopeId} .ck-content`,
   ),
 );
 const pageStyle = computed(() => ({
@@ -97,6 +106,10 @@ function getTokenMetadata(index: number): TokenMetadata {
 defineExpose({
   getPages: () => [...root.value!.querySelectorAll<HTMLElement>('.page')],
 });
+let disposed = false;
+onBeforeUnmount(() => {
+  disposed = true;
+});
 onMounted(async () => {
   try {
     await nextTick();
@@ -109,8 +122,13 @@ onMounted(async () => {
     const heights = await Promise.all(
       [...pageContents].map((page) => page.measureTextBoxes()),
     );
-    emit('measured', heights.flat());
+    if (!disposed) {
+      emit('measured', heights.flat());
+    }
   } catch (error) {
+    if (disposed) {
+      return;
+    }
     emit(
       'failed',
       error instanceof Error ? error : new Error('EXPORT_RENDER_FAILED'),

@@ -11,6 +11,7 @@ import type { ScoreElement } from '../models/Element';
 import {
   DropCapElement,
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   TempoElement,
   TextBoxElement,
@@ -19,18 +20,197 @@ import type { MeasureBar } from '../models/Neumes';
 import {
   Fthora,
   GorgonNeume,
+  Note,
   QuantitativeNeume,
   restNeumes,
 } from '../models/Neumes';
 import { Line, Page } from '../models/Page';
 import { PageSetup } from '../models/PageSetup';
-import { Scale } from '../models/Scales';
+import {
+  getNoteValue,
+  getScaleNoteFromValue,
+  Scale,
+  ScaleNote,
+} from '../models/Scales';
 import { resolvePageMargins } from '../utils/PageMargins';
 import { LayoutService } from './LayoutService';
 
 const itif = (condition: boolean) => (condition ? it : it.skip);
 
+describe('reference marker layout geometry', () => {
+  it.each([NoteElement, MartyriaElement])(
+    'honors manual marker placement despite overlapping glyphs for %s',
+    (Anchor) => {
+      const anchor = new Anchor();
+      const setup = new PageSetup();
+      setup.neumeDefaultFontSize = 20;
+      const base = [{ left: 0, right: 40, top: -20, bottom: 0 }];
+      const obstacles = [{ left: 0, right: 40, top: -60, bottom: 0 }];
+      const metrics = { width: 10, height: 10, strokeWidth: 0 };
+      const position = () =>
+        LayoutService['getFootnoteMarkerInkBox'](
+          anchor,
+          setup,
+          base,
+          obstacles,
+          metrics,
+        );
+      const automatic = position();
+      anchor.footnotePositionOverride = true;
+      anchor.footnoteOffsetX = 0.25;
+      anchor.footnoteOffsetY = 0.5;
+      expect(position()).toEqual({ left: 20, right: 30, top: -15, bottom: -5 });
+      anchor.footnotePositionOverride = false;
+      expect(position().top).toBe(automatic.top);
+    },
+  );
+
+  it.each([false, true])(
+    'excludes markers and their offsets from musical collision geometry (RTL=%s)',
+    (rtl) => {
+      const setup = new PageSetup();
+      setup.melkiteRtl = rtl;
+      setup.neumeDefaultFontFamily = rtl ? 'NeanesRTL' : 'Neanes';
+      const note = new NoteElement();
+      const bars = new Map<MeasureBar, number>();
+      const boxes = () =>
+        LayoutService['getNoteCollisionGlyphBoxes'](note, setup, bars);
+      const original = boxes();
+      note.footnoteMarker = '††';
+      note.footnoteOffsetX = 0.5;
+      note.footnoteOffsetY = 0.4;
+      expect(boxes()).toEqual(original);
+      note.footnoteMarker = null;
+      expect(boxes()).toEqual(original);
+    },
+  );
+
+  it.each([false, true])(
+    'includes finished barline positions without adding them to musical collision geometry (RTL=%s)',
+    (rtl) => {
+      const setup = new PageSetup();
+      setup.melkiteRtl = rtl;
+      setup.neumeDefaultFontFamily = rtl ? 'NeanesRTL' : 'Neanes';
+      const note = new NoteElement();
+      note.x = 80;
+      note.y = 100;
+      note.neumeWidth = 35;
+      note.measureBarRight = 'MeasureBarRight' as MeasureBar;
+      note.computedMeasureBarRightOffsetX = 12;
+      const bars = new Map<MeasureBar, number>([[note.measureBarRight, 5]]);
+      const musical = LayoutService['getNoteCollisionGlyphBoxes'](
+        note,
+        setup,
+        bars,
+      );
+      const finished = LayoutService['getReferenceMarkerObstacles'](
+        note,
+        setup,
+        bars,
+      );
+      expect(finished.length).toBeGreaterThan(musical.length);
+      const before = finished.at(-1)!;
+      note.measureBarRightOffsetX = 0.25;
+      note.measureBarRightOffsetY = -0.5;
+      const after = LayoutService['getReferenceMarkerObstacles'](
+        note,
+        setup,
+        bars,
+      ).at(-1)!;
+      expect(after.left - before.left).toBeCloseTo(
+        setup.neumeDefaultFontSize * 0.25,
+      );
+      expect(after.top - before.top).toBeCloseTo(
+        setup.neumeDefaultFontSize * -0.5,
+      );
+      expect(
+        LayoutService['getNoteCollisionGlyphBoxes'](note, setup, bars),
+      ).toEqual(musical);
+    },
+  );
+});
+
 describe('LayoutService.calculateMartyriae', () => {
+  it('forks the pitch after a note and updates it without changing the main melody', () => {
+    const setup = new PageSetup();
+    const key = new ModeKeyElement();
+    key.scaleNote = ScaleNote.Ga;
+    const anchor = new NoteElement();
+    anchor.footnoteId = 'body';
+    const mainMartyria = new MartyriaElement();
+    const bodyMartyria = new MartyriaElement();
+    let contexts = LayoutService.calculateMartyriae(
+      [key, anchor, mainMartyria],
+      setup,
+    );
+    LayoutService.calculateMartyriae(
+      [bodyMartyria],
+      setup,
+      contexts.get(anchor),
+    );
+    expect(bodyMartyria.note).toBe(Note.Ga);
+    anchor.quantitativeNeume = QuantitativeNeume.Oligon;
+    contexts = LayoutService.calculateMartyriae(
+      [key, anchor, mainMartyria],
+      setup,
+    );
+    LayoutService.calculateMartyriae(
+      [bodyMartyria],
+      setup,
+      contexts.get(anchor),
+    );
+    expect(bodyMartyria.note).toBe(Note.Thi);
+    const bodyNote = new NoteElement();
+    bodyNote.quantitativeNeume = QuantitativeNeume.Oligon;
+    LayoutService.calculateMartyriae(
+      [bodyNote, bodyMartyria],
+      setup,
+      contexts.get(anchor),
+    );
+    expect(bodyMartyria.note).toBe(Note.Ke);
+    expect(mainMartyria.note).toBe(Note.Thi);
+  });
+
+  it('inherits scale and virtual pitch, while a manual body martyria can reset them', () => {
+    const setup = new PageSetup();
+    const note = new NoteElement();
+    const automatic = new MartyriaElement();
+    const initial = {
+      note: getNoteValue(Note.Ga),
+      scale: Scale.SoftChromatic,
+      shift: 2,
+    };
+    LayoutService.calculateMartyriae([note, automatic], setup, initial);
+    expect(automatic.note).toBe(Note.Ga);
+    expect(automatic.scale).toBe(Scale.SoftChromatic);
+    expect(note.scaleNotesVirtual).toEqual([
+      getScaleNoteFromValue(initial.note + 2),
+    ]);
+    const manual = new MartyriaElement();
+    manual.auto = false;
+    manual.note = Note.Pa;
+    LayoutService.calculateMartyriae([manual, automatic], setup, initial);
+    expect(automatic.note).toBe(Note.Pa);
+    expect(automatic.scale).toBe(Scale.Diatonic);
+  });
+
+  it('captures a martyria anchor after its attached interval and fthora', () => {
+    const anchor = new MartyriaElement();
+    anchor.auto = false;
+    anchor.alignRight = true;
+    anchor.footnoteId = 'body';
+    anchor.quantitativeNeume = QuantitativeNeume.OligonPlusKentimaAbove;
+    anchor.quantitativeNeumeFthora = Fthora.Zygos_Top;
+    const setup = new PageSetup();
+    const main = new MartyriaElement();
+    const contexts = LayoutService.calculateMartyriae([anchor, main], setup);
+    const body = new MartyriaElement();
+    LayoutService.calculateMartyriae([body], setup, contexts.get(anchor));
+    expect(body.note).toBe(main.note);
+    expect(body.scale).toBe(Scale.Zygos);
+    expect(body.rootSign).toBe(main.rootSign);
+  });
+
   it('normalizes all fthora slots in one layout pass', () => {
     const note = new NoteElement();
     note.quantitativeNeume =

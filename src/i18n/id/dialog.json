@@ -97,7 +97,10 @@
       "header": "Header",
       "footer": "Footer",
       "lyrics": "Lirik",
-      "dropCap": "Huruf Awal Besar"
+      "dropCap": "Huruf Awal Besar",
+      "footnoteText": "Teks Catatan Kaki",
+      "footnoteBodyMarker": "Penanda Isi Catatan Kaki",
+      "footnoteReference": "Referensi Catatan Kaki"
     }
   },
   "neumePositioning": {
@@ -249,7 +252,25 @@
     "thickness": "Ketebalan",
     "applyColor": "Terapkan Warna",
     "neumeBulkColor": "Ubah Warna Beberapa Neuma",
-    "neumeBulkColorDescription": "Untuk mengubah warna beberapa neuma sekaligus, pilih jenis neuma di atas, pilih warna, dan klik tombol untuk menerapkan warna ke semua neuma yang dipilih."
+    "neumeBulkColorDescription": "Untuk mengubah warna beberapa neuma sekaligus, pilih jenis neuma di atas, pilih warna, dan klik tombol untuk menerapkan warna ke semua neuma yang dipilih.",
+    "footnotes": "Catatan Kaki",
+    "firstFootnoteNumber": "Mulai dari",
+    "footnoteReferenceParentheses": "Apit penanda catatan kaki musik dengan tanda kurung",
+    "showFootnoteHorizontalRule": "Tampilkan garis pemisah di atas catatan kaki",
+    "footnoteHorizontalRuleLength": "Panjang Garis Pemisah (%)",
+    "footnoteSpaceAboveRule": "Jarak di Atas Garis Pemisah (pt)",
+    "footnoteSpaceBelowRule": "Jarak di Bawah Garis Pemisah (pt)",
+    "footnoteRuleThickness": "Ketebalan Garis Pemisah (pt)",
+    "footnoteFormat": "Format",
+    "footnoteNumbering": "Penomoran",
+    "footnoteContinuous": "Berkelanjutan",
+    "footnoteRestartSection": "Mulai ulang setiap bagian",
+    "nextFootnoteSymbol": "Simbol berikutnya",
+    "previousFootnoteSymbol": "Simbol sebelumnya",
+    "invalidFootnoteSymbol": "Masukkan simbol dari urutan, diulang hingga {{count}} kali.",
+    "footnoteNumbers": "1, 2, 3, …",
+    "footnoteSymbols": "*, †, ‡, …",
+    "footnoteAsterisks": "*, **, ***, …"
   },
   "playbackSettings": {
     "root": "Pengaturan Pemutaran",
@@ -353,5 +374,20 @@
     "accessTitle": "Apa yang dapat diakses?",
     "accessDescription": "Alat yang terhubung dapat membaca, mengedit, menyimpan, dan mengekspor partitur sesuai izin berkas sistem operasi Anda. Secara bawaan, alat menggunakan dokumen pribadi terpisah dan juga dapat membaca serta mengedit tab editor yang terbuka jika secara eksplisit menargetkan editor. Draf pribadi akan dibuang saat koneksi berakhir kecuali sudah disimpan.",
     "documentation": "Dokumentasi"
+  },
+  "footnoteProperties": {
+    "positioning": "Penempatan",
+    "overridePosition": "Atur posisi secara manual",
+    "dragMarker": "Seret penanda catatan kaki",
+
+    "offsetX": "Pergeseran horizontal (em)",
+    "offsetY": "Pergeseran vertikal (em)",
+    "positionHint": "Aktifkan pengaturan posisi manual untuk menyeret penanda atau mengubah pergeseran tanpa penyesuaian otomatis untuk menghindari tumpang tindih. Nilai positif menggeser ke kanan atau ke bawah.",
+    "resetPosition": "Atur ulang posisi",
+    "title": "Properti Catatan Kaki",
+    "customText": "Teks khusus",
+    "reference": "Referensi",
+    "body": "Label catatan kaki",
+    "invalid": "Masukkan 1–16 karakter tanpa baris baru."
   }
 }

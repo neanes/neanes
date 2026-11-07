@@ -15,12 +15,13 @@ export interface ScorePageInteraction {
   selectedHeaderFooterElement: ScoreElement | null;
   selectedAnnotationElement: AnnotationElement | null;
   selectedAlternateLineElement: AlternateLineElement | null;
-  lyricsLocked: boolean;
+  isLyricsLocked(element: ScoreElement): boolean;
 }
 
 // Explicit events preserve the editor's existing mutation and focus operations.
 export interface ScorePageEvents {
   selectElement: [element: ScoreElement];
+  returnToFootnoteReference: [element: ScoreElement];
   selectLyrics: [element: NoteElement];
   selectHeaderFooter: [element: ScoreElement];
   selectHeaderRichTextBox: [pageIndex: number];
@@ -30,7 +31,7 @@ export interface ScorePageEvents {
   setSelectionRange: [element: ScoreElement];
   openSyllablePositioningDialog: [];
   openModeKeyDialog: [];
-  focusLyrics: [index: number];
+  focusLyrics: [element: NoteElement];
   updateLyrics: [element: NoteElement, lyrics: string];
   updateDropCapContent: [element: DropCapElement, content: string];
   updateTextBox: [element: TextBoxElement, updates: Partial<TextBoxElement>];

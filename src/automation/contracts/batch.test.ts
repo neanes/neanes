@@ -173,7 +173,7 @@ describe('batch file contracts', () => {
       description: tool.description!.length,
       input: inputCharacters,
     });
-    expect(inputCharacters).toBeLessThan(11500);
+    expect(inputCharacters).toBeLessThan(11700);
   });
 
   it('accepts every style action in the compact publication and runtime contract', () => {

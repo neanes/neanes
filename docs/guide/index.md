@@ -48,5 +48,6 @@ Use `File > Save` to save the editable score. Then choose `File > Export > Expor
 - [Write music](/guide/writing-music.html), including martyriæ, supporting signs, and line control.
 - [Work with lyrics](/guide/lyrics.html), including the Lyrics pane and prosomoia.
 - [Add text, images, annotations, and alternate lines](/guide/text-and-images.html), then [keep text consistent with paragraph styles](/guide/text-and-styles.html).
+- [Add footnotes](/guide/footnotes.html) for explanations, alternate melodies, and finales.
 - [Set up pages](/guide/page-layout.html) and [choose file formats](/guide/saving-and-exporting.html).
 - [Configure playback](/guide/playback.html) or explore [advanced workflows](/guide/advanced.html).

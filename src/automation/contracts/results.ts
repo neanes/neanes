@@ -137,6 +137,14 @@ export const automationResultSchemas = {
   get_page_elements: documentSummarySchema.extend(pageElementsResultShape),
   edit_elements: documentSummarySchema.extend({
     applied: z.boolean(),
+    createdFootnotes: z
+      .array(
+        z.strictObject({
+          footnoteId: z.string().uuid(),
+          elementRef: z.string().uuid(),
+        }),
+      )
+      .optional(),
     createdCount: z.number().int().nonnegative(),
     created: z
       .array(

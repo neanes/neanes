@@ -53,7 +53,7 @@ export interface IIpcService {
 
   exportWorkspaceAsLatex(
     workspace: Workspace,
-    data: string,
+    data: string | null,
   ): Promise<ExportWorkspaceReplyArgs>;
 
   exportWorkspaceAsImage(

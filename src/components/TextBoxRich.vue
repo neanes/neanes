@@ -162,6 +162,7 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { richTextBoxHeightCap } from '@/services/rendering/textBoxMeasurement';
 import {
   getFontFamilyWithFallback,
   getLegacyNeumeFontFamily,
@@ -188,6 +189,12 @@ const emit = defineEmits([
   'select-neume',
 ]);
 const props = defineProps({
+  layoutGeometry: {
+    type: Object as PropType<
+      Pick<RichTextBoxElement, 'width' | 'y' | 'height'>
+    >,
+    default: undefined,
+  },
   footnoteBody: {
     type: Boolean,
     default: false,
@@ -463,10 +470,14 @@ function getMinimumFontSizeInEditor(editor: Editor) {
   return `${Math.min(...sizes)}pt`;
 }
 
+// The editor publishes settled geometry on raw elements. Explicit geometry
+// props refresh these styles without remounting a focused CKEditor.
+const layout = computed(() => props.layoutGeometry ?? props.element);
+
 const containerStyle = computed(() => {
   const style: StyleValue = {
-    width: withZoom(props.element.width),
-    height: withZoom(props.element.height),
+    width: withZoom(layout.value.width),
+    height: withZoom(layout.value.height),
     '--ck-content-font-family': getFontFamilyWithFallback(
       resolvedParagraphStyle.value.fontFamily,
     ),
@@ -488,16 +499,15 @@ const containerStyle = computed(() => {
 });
 
 const textBoxStyle = computed(() => {
+  const heightCap = richTextBoxHeightCap(
+    props.element,
+    props.pageSetup,
+    props.footnoteBody,
+    layout.value.y,
+  );
   const style: StyleValue = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
-    maxHeight:
-      props.element.scrollable && !props.footnoteBody
-        ? withZoom(
-            props.pageSetup.pageHeight -
-              props.element.y -
-              props.pageSetup.bottomMargin,
-          )
-        : undefined,
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
+    maxHeight: heightCap === undefined ? undefined : withZoom(heightCap),
   };
 
   return style;
@@ -524,16 +534,16 @@ const inlinePageCenter = computed(() => {
   if (!props.element.centerOnPage || center == null) {
     return undefined;
   }
-  return props.pageSetup.melkiteRtl ? props.element.width - center : center;
+  return props.pageSetup.melkiteRtl ? layout.value.width - center : center;
 });
 
 const inlineCenterOutsideBox = computed(() => {
   const center = inlinePageCenter.value;
-  return center != null && (center <= 0 || center >= props.element.width);
+  return center != null && (center <= 0 || center >= layout.value.width);
 });
 
 const inlineTextBoxStyle = computed<StyleValue>(() => {
-  const { width } = props.element;
+  const { width } = layout.value;
   const physicalCenter = inlinePageCenter.value;
   if (physicalCenter == null) {
     return { width: `${width}px` };
@@ -552,7 +562,7 @@ const inlineTextBoxStyle = computed<StyleValue>(() => {
 
 const textBoxTopContainerStyle = computed(() => {
   const style: any = {
-    height: withZoom(props.element.height),
+    height: withZoom(layout.value.height),
   };
 
   return style;
@@ -574,7 +584,7 @@ const textBoxBottomContainerStyle = computed(() => {
 
 const multipanelContainerStyle = computed(() => {
   const style: StyleValue = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
   };
 
   return style;

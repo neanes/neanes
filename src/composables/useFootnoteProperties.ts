@@ -17,16 +17,27 @@ import { CommandFactory } from '@/services/history/CommandService';
 export function useFootnoteProperties(
   workspace: Ref<Workspace>,
   pages: Ref<Page[]>,
-  flush: (workspace: Workspace) => void,
   save: () => void,
 ) {
   const footnotePropertiesDialogIsOpen = ref(false);
   const editedFootnoteId = ref<string | null>(null);
-  const editedFootnote = computed(() =>
-    orderedFootnotes(workspace.value.score).find(
+  const editedFootnote = computed(() => {
+    const score = workspace.value.score;
+    const pageAssignments =
+      score.pageSetup.footnoteNumbering === 'page'
+        ? new Map(
+            pages.value.flatMap((page) =>
+              page.footnotes.map(
+                ({ reference }) =>
+                  [reference, page.physicalPageNumber] as const,
+              ),
+            ),
+          )
+        : undefined;
+    return orderedFootnotes(score, pageAssignments).find(
       ({ footnote }) => footnote.id === editedFootnoteId.value,
-    ),
-  );
+    );
+  });
   const footnotePreviewLineElements = computed(() => {
     const reference = editedFootnote.value?.reference;
     if (!(reference instanceof FootnoteAnchorElement)) {
@@ -56,9 +67,8 @@ export function useFootnoteProperties(
   });
 
   function openFootnoteProperties(id: string) {
-    flush(workspace.value);
     editedFootnoteId.value = id;
-    footnotePropertiesDialogIsOpen.value = true;
+    footnotePropertiesDialogIsOpen.value = editedFootnote.value !== undefined;
   }
 
   function updateFootnoteMarker(

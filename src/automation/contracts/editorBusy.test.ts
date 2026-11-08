@@ -24,6 +24,7 @@ describe('editor busy policy', () => {
     { reason: 'dialog_open', dialog: 'preferences' },
     { reason: 'dialog_open', dialog: 'recovery' },
     { reason: 'printing' },
+    { reason: 'layout_deferred' },
     { reason: 'native_save' },
   ])(
     'preserves actionable busy details across IPC for $reason',

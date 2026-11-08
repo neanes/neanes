@@ -5,6 +5,7 @@ export type EditorBusyState =
   | { reason: 'workspace_closing'; documentIds: string[] }
   | { reason: 'dialog_open'; dialog: string }
   | { reason: 'printing' }
+  | { reason: 'layout_deferred' }
   | { reason: 'native_save' };
 
 const messages: Record<EditorBusyState['reason'], string> = {
@@ -15,6 +16,8 @@ const messages: Record<EditorBusyState['reason'], string> = {
     'An editor dialog is open. Close the dialog before retrying document operations.',
   printing:
     'The editor is rendering a print or export job. Wait for it to finish before retrying.',
+  layout_deferred:
+    'The active rich-text editor must lose focus before the new layout can publish. Leave the text box before retrying.',
   native_save:
     'A native save operation is pending. Complete any save dialog before retrying.',
 };

@@ -17,6 +17,7 @@
     "exportAsMusicXml": "Exportă ca MusicXML…",
     "exportAsImage": "Exportă ca imagine…",
     "print": "Tipărește…",
+    "printLayoutPending": "Paginarea partiturii este în curs. Închide această previzualizare și alege Fișier → Tipărește în Neanes.",
     "close": "Închide",
     "closeOthers": "Închide celelalte"
   },

@@ -1,5 +1,6 @@
 {
   "editor": {
+    "printFailed": "Unable to print the score.",
     "unexpectedError": "An unexpected error occurred.",
     "rangeOverflow": "Range overflow",
     "openFailed": "Open failed",

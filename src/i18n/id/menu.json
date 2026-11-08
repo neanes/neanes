@@ -17,6 +17,7 @@
     "exportAsMusicXml": "Ekspor sebagai MusicXML…",
     "exportAsImage": "Ekspor sebagai Gambar…",
     "print": "Cetak…",
+    "printLayoutPending": "Tata letak partitur masih diproses. Tutup pratinjau ini dan pilih File → Cetak di Neanes.",
     "close": "Tutup",
     "closeOthers": "Tutup Lainnya"
   },

@@ -94,6 +94,46 @@ describe('whole-footnote page selection', () => {
     expect(membership(paginate(lines))).toEqual([[0], [1, 2]]);
   });
 
+  it('reports chapter-opening overflow breaks and honors remembered boundaries on a later pass', () => {
+    const overflow: number[][] = [];
+    const constraints = {
+      innerPageHeight: 100,
+      footnoteSpacing,
+      getReservation: (_page: number, isChapterOpening: boolean) => ({
+        extraHeaderHeightPx: isChapterOpening ? 20 : 0,
+        extraFooterHeightPx: 0,
+      }),
+      onOverflowBreak: (
+        index: number,
+        first: number,
+        excess: number,
+        groupEnd: number,
+      ) => overflow.push([index, first, excess, groupEnd]),
+    };
+    const last = line(5);
+    const candidate = line(30);
+    candidate.chapterMarker = 'Chapter';
+    candidate.continuationLines = 1;
+    candidate.pageBreak = true;
+    const lines = [line(60), candidate, last];
+    expect(
+      membership(buildContentPages(lines, new Map(), constraints)),
+    ).toEqual([[0], [1], [2]]);
+    expect(overflow).toEqual([[1, 0, 10, 2]]);
+
+    candidate.height = 10;
+    overflow.length = 0;
+    expect(
+      membership(
+        buildContentPages(lines, new Map(), {
+          ...constraints,
+          breaksBefore: new Set([0, 1]),
+        }),
+      ),
+    ).toEqual([[0], [1], [2]]);
+    expect(overflow).toEqual([]);
+  });
+
   it('reserves continuation heights and their footnotes before starting a drop cap', () => {
     const lines = [line(45), line(20), line(20, ['a'])];
     lines[1].continuationLines = 1;

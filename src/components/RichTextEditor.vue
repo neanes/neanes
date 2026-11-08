@@ -410,6 +410,6 @@ defineExpose({
   word-spacing: normal;
   display: inline-block;
   white-space: pre;
-  cursor: pointer;
+  cursor: default;
 }
 </style>

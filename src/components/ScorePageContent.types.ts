@@ -35,6 +35,7 @@ export interface ScorePageEvents {
   updateLyrics: [element: NoteElement, lyrics: string];
   updateDropCapContent: [element: DropCapElement, content: string];
   updateTextBox: [element: TextBoxElement, updates: Partial<TextBoxElement>];
+  blurTextBox: [];
   updateTextBoxHeight: [element: TextBoxElement, height: number];
   updateRichTextBox: [
     element: RichTextBoxElement,

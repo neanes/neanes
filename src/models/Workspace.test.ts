@@ -2,15 +2,41 @@ import { describe, expect, it } from 'vitest';
 import { computed, reactive } from 'vue';
 
 import { CommandFactory } from '@/services/history/CommandService';
+import { SaveService } from '@/services/SaveService';
 
 import type { ScoreElement } from './Element';
 import { NoteElement } from './Element';
+import { Footnote } from './Footnote';
 import type { DocumentProperties } from './Score';
 import { Score } from './Score';
-import { Workspace } from './Workspace';
+import { assignMissingElementIds, Workspace } from './Workspace';
 
 const properties = new CommandFactory<DocumentProperties>();
 const elements = new CommandFactory<ScoreElement>();
+
+it('assigns reactive, serializable element IDs before pagination', () => {
+  const workspace = reactive(new Workspace());
+  const existing = new NoteElement();
+  existing.id = 12;
+  workspace.score.staff.elements.unshift(existing, new NoteElement());
+  const footnote = new Footnote();
+  footnote.staff.elements.unshift(new NoteElement());
+  workspace.score.footnotes.push(footnote);
+  const [, selected, placeholder] = workspace.score.staff.elements;
+  const canCopyLink = computed(() => selected.id != null);
+  expect(canCopyLink.value).toBe(false);
+  const revision = workspace.contentRevision;
+
+  assignMissingElementIds(workspace);
+  assignMissingElementIds(workspace);
+
+  expect(canCopyLink.value).toBe(true);
+  const saved = SaveService.SaveElements(workspace.score.staff.elements);
+  expect(saved.map((element) => element.id)).toEqual([12, 13, undefined]);
+  expect(SaveService.SaveFootnote(footnote).staff.elements[0].id).toBe(14);
+  expect(placeholder.id).toBeNull();
+  expect(workspace.contentRevision).toBe(revision);
+});
 
 function changeTitle(workspace: Workspace, title: string) {
   return properties.create('update-properties', {

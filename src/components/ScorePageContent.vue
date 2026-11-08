@@ -94,7 +94,7 @@
     </div>
   </template>
 
-  <template v-if="score.pageSetup.showHeader">
+  <template v-if="score.pageSetup.showHeader && shouldRender(header)">
     <slot name="header-badge" />
     <template v-if="isRichTextBoxElement(header)">
       <TextBoxRich
@@ -102,6 +102,7 @@
         :ref="setTemplateRef(`header-${pageIndex}`)"
         class="element-box"
         :element="header as RichTextBoxElement"
+        :layout-geometry="richTextGeometry(header as RichTextBoxElement)"
         :edit-mode="!printMode && header == selectedHeaderFooterElement"
         :metadata="metadata"
         token-scope="header"
@@ -143,6 +144,7 @@
         :style="getHeaderStyle(page)"
         @click="emit('selectHeaderFooter', header)"
         @update="emit('updateTextBox', header! as TextBoxElement, $event)"
+        @blur="emit('blurTextBox')"
       />
     </template>
     <div
@@ -206,7 +208,7 @@
     :data-footnote-id="line.footnoteId"
   >
     <div
-      v-for="element in line.elements"
+      v-for="element in elementsToRender(line.elements)"
       :id="element.id === null ? undefined : `element-${element.id}`"
       :key="`element-${workspaceId}-${element.id}-${element.keyHelper}`"
       class="element-box"
@@ -489,6 +491,7 @@
           :selected="isSelected(element)"
           @select-single="emit('selectElement', element)"
           @update="emit('updateTextBox', element as TextBoxElement, $event)"
+          @blur="emit('blurTextBox')"
           @update:height="
             emit('updateTextBoxHeight', element as TextBoxElement, $event)
           "
@@ -504,6 +507,7 @@
           :edit-mode="!printMode"
           :element="element as RichTextBoxElement"
           :footnote-body="line.footnoteId !== null"
+          :layout-geometry="richTextGeometry(element as RichTextBoxElement)"
           :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
           :inline-page-center-offset="inlinePageCenter - element.x"
           :page-setup="score.pageSetup"
@@ -612,7 +616,7 @@
       >{{ line.adjustmentRatio.toFixed(2) }}</span
     >
   </div>
-  <template v-if="score.pageSetup.showFooter">
+  <template v-if="score.pageSetup.showFooter && shouldRender(footer)">
     <slot name="footer-badge" />
     <div
       v-if="showFooterRule"
@@ -625,6 +629,7 @@
         :ref="setTemplateRef(`footer-${pageIndex}`)"
         class="element-box"
         :element="footer as RichTextBoxElement"
+        :layout-geometry="richTextGeometry(footer as RichTextBoxElement)"
         :edit-mode="!printMode && footer == selectedHeaderFooterElement"
         :metadata="metadata"
         token-scope="footer"
@@ -666,6 +671,7 @@
         :style="getFooterStyle(page)"
         @click="emit('selectHeaderFooter', footer)"
         @update="emit('updateTextBox', footer! as TextBoxElement, $event)"
+        @blur="emit('blurTextBox')"
     /></template>
   </template>
 </template>
@@ -728,6 +734,7 @@ import { LayoutService } from '@/services/LayoutService';
 import { getLyricsBaseline } from '@/services/LyricsLayout';
 import {
   getResizableTextBoxes,
+  type MeasuredTextBox,
   type TextBoxHeightMeasurement,
 } from '@/services/rendering/textBoxMeasurement';
 import {
@@ -765,10 +772,18 @@ const props = withDefaults(
     editorLanguage: string;
     zoom?: number;
     printMode?: boolean;
+    settledTextBoxes?: boolean;
+    measurementBoxes?: ReadonlySet<MeasuredTextBox>;
     interaction?: ScorePageInteraction;
     overlays?: ScoreOverlaySettings;
   }>(),
-  { zoom: 1, printMode: false, interaction: undefined, overlays: undefined },
+  {
+    zoom: 1,
+    printMode: false,
+    measurementBoxes: undefined,
+    interaction: undefined,
+    overlays: undefined,
+  },
 );
 const emit = defineEmits<ScorePageEvents>();
 const score = toRef(props, 'score');
@@ -1307,6 +1322,12 @@ const overlayDiagnosticsContext = computed(() =>
   LayoutService.createOverlayDiagnosticsContext(score.value.pageSetup),
 );
 
+function richTextGeometry({ width, height, y }: RichTextBoxElement) {
+  if (props.settledTextBoxes) {
+    return { width, height, y };
+  }
+}
+
 function isSelected(element: ScoreElement) {
   return props.interaction?.isSelected(element) ?? false;
 }
@@ -1390,6 +1411,16 @@ async function whenReady() {
   );
   await nextTick();
 }
+function shouldRender(element: ScoreElement) {
+  return props.measurementBoxes?.has(element as MeasuredTextBox) ?? true;
+}
+
+function elementsToRender(elements: ScoreElement[]) {
+  return props.measurementBoxes === undefined
+    ? elements
+    : elements.filter(shouldRender);
+}
+
 async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
   const resizable = new Set(getResizableTextBoxes(props.score));
   const boxes = [
@@ -1408,8 +1439,9 @@ async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
   ];
   return Promise.all(
     boxes
-      .filter(({ element }) =>
-        resizable.has(element as TextBoxElement | RichTextBoxElement),
+      .filter(
+        ({ element }) =>
+          resizable.has(element as MeasuredTextBox) && shouldRender(element),
       )
       .map(async ({ name }) => {
         const component = localRefs.get(name) as
@@ -1455,7 +1487,7 @@ defineExpose({
   white-space: nowrap;
 }
 .footnote-label {
-  cursor: pointer;
+  cursor: default;
   white-space: nowrap;
 }
 .footnote-body-marker {

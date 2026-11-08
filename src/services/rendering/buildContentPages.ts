@@ -28,6 +28,13 @@ export function buildContentPages(
   constraints: {
     innerPageHeight: number;
     footnoteSpacing: number;
+    breaksBefore?: ReadonlySet<number>;
+    onOverflowBreak?: (
+      index: number,
+      first: number,
+      excess: number,
+      groupEnd: number,
+    ) => void;
     getReservation: (
       physicalPageNumber: number,
       isChapterOpening: boolean,
@@ -63,7 +70,7 @@ export function buildContentPages(
       ? 0
       : [...ids].reduce((sum, id) => sum + footnoteHeights.get(id)!, 0) +
         constraints.footnoteSpacing;
-  const fits = (
+  const overflow = (
     candidate: PaginationLine,
     groupIds: string[],
     chapter: string | null,
@@ -76,7 +83,8 @@ export function buildContentPages(
         ? Math.max(contentBottom, candidateBottom)
         : candidateBottom;
     return (
-      fitBottom + sectionHeight(requiredIds) <=
+      fitBottom +
+      sectionHeight(requiredIds) -
       availableHeight(reserveForChapter(chapter))
     );
   };
@@ -90,9 +98,19 @@ export function buildContentPages(
     const groupIds = group.flatMap((line) => line.footnoteIds);
     const groupChapter =
       group.find((line) => line.chapterMarker != null)?.chapterMarker ?? null;
-    let groupFits: boolean =
-      !explicitBreak && fits(candidate, groupIds, groupChapter);
-    if (explicitBreak || (page.lines.length > 0 && !groupFits)) {
+    const excess = overflow(candidate, groupIds, groupChapter);
+    const first = page.lines[0];
+    const remembered = constraints.breaksBefore?.has(index);
+    let groupFits = excess <= 0;
+    if (explicitBreak || (first && (remembered || !groupFits))) {
+      if (first && !explicitBreak && !remembered) {
+        constraints.onOverflowBreak?.(
+          index,
+          first.index,
+          excess,
+          index + group.length,
+        );
+      }
       previousChapter = firstChapter ?? previousChapter;
       firstChapter = null;
       page = createPage();
@@ -100,7 +118,7 @@ export function buildContentPages(
       height = 0;
       contentBottom = 0;
       ids = new Set();
-      groupFits = fits(candidate, groupIds, groupChapter);
+      groupFits = overflow(candidate, groupIds, groupChapter) <= 0;
     }
 
     // Place fitting continuation lines with the reservation they were tested

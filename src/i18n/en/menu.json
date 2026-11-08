@@ -17,6 +17,7 @@
     "exportAsMusicXml": "Export as MusicXML…",
     "exportAsImage": "Export as Image…",
     "print": "Print…",
+    "printLayoutPending": "The score is still being laid out. Close this preview and choose File → Print in Neanes.",
     "close": "Close",
     "closeOthers": "Close Others"
   },

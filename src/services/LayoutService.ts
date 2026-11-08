@@ -87,6 +87,7 @@ import {
   ScaleNote,
 } from '@/models/Scales';
 import type { Workspace } from '@/models/Workspace';
+import { assignMissingElementIds } from '@/models/Workspace';
 import {
   FOOTNOTE_OVERFLOW_BOTTOM_PADDING,
   FOOTNOTE_OVERFLOW_NOTICE_HEIGHT,
@@ -119,6 +120,7 @@ import { getFirstRunningMarker } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
+import { automaticFootnoteMarker } from './FootnoteMarker';
 import {
   getLyricsBaseline,
   getLyricsTop,
@@ -409,23 +411,29 @@ interface AtomicMelismaLayout {
 }
 
 type LayoutInput = Pick<Workspace, 'score' | 'nextId'>;
+type LayoutOptions = LayoutDiagnosticsOptions & {
+  provisionalFootnoteWidths?: boolean;
+  breaksBefore?: ReadonlySet<ScoreElement>;
+  onOverflowBreak?: (
+    boundary: ScoreElement,
+    elements: ScoreElement[],
+    excess: number,
+  ) => void;
+};
 
 export class LayoutService {
   public static processPages(
     workspace: LayoutInput,
-    options?: LayoutDiagnosticsOptions,
+    options?: LayoutOptions,
   ): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
+    assignMissingElementIds(workspace);
     score.staves.forEach((staff) =>
       staff.elements.forEach((element, index) => {
         element.index = index;
-
-        if (element.id == null && element.elementType !== ElementType.Empty) {
-          element.id = workspace.nextId;
-        }
 
         this.saveElementState(element);
         if (element instanceof FootnoteAnchorElement) {
@@ -441,46 +449,8 @@ export class LayoutService {
     });
 
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
-    const references = orderedFootnotes(score);
-    const markerWidths = this.measureRichTextFootnoteMarkers(
-      references,
-      score.paragraphStyles,
-    );
-    const referencesById = new Map(
-      references.map((entry) => [entry.footnote.id, entry]),
-    );
-    const markersByBox = new Map<
-      ScoreElement,
-      Record<string, RichTextFootnoteMarker>
-    >();
-    for (const { footnote, reference, number, marker } of references) {
-      if (reference instanceof FootnoteAnchorElement) {
-        reference.footnoteNumber = number;
-        reference.footnoteMarker = marker;
-      } else {
-        let markers = markersByBox.get(reference);
-        if (markers === undefined) {
-          markers = {};
-          markersByBox.set(reference, markers);
-        }
-        markers[footnote.id] = {
-          label: marker,
-          width: markerWidths.get(footnote.id)!,
-        };
-      }
-    }
-    for (const element of elements) {
-      if (element.elementType === ElementType.RichTextBox) {
-        const box = element as RichTextBoxElement;
-        const markers = markersByBox.get(element);
-        if (
-          markers !== undefined ||
-          Object.keys(box.footnoteMarkers).length > 0
-        ) {
-          box.footnoteMarkers = markers ?? {};
-        }
-      }
-    }
+    const references = orderedFootnotes(score, null);
+    const hasFootnoteReferences = references.length > 0;
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
@@ -551,7 +521,10 @@ export class LayoutService {
       );
       return {
         height: candidate.height,
-        footnoteIds: elements.flatMap(elementFootnoteIds),
+        elements,
+        footnoteIds: hasFootnoteReferences
+          ? elements.flatMap(elementFootnoteIds)
+          : [],
         chapterMarker: pageSetup.headerFooterDifferentChapterOpening
           ? getFirstRunningMarker(elements, 'chapter')
           : null,
@@ -565,6 +538,25 @@ export class LayoutService {
         ),
       };
     });
+    const breaksBefore = new Set<number>();
+    const groupStarts: number[] = [];
+    const onOverflowBreak = options?.onOverflowBreak;
+    if (options?.breaksBefore?.size || onOverflowBreak) {
+      let groupStart = 0;
+      let groupEnd = -1;
+      for (const [index, line] of paginationLines.entries()) {
+        if (index > groupEnd || paginationLines[index - 1]?.pageBreak) {
+          groupStart = index;
+          groupEnd = index + line.continuationLines;
+        }
+        groupStarts.push(groupStart);
+        if (
+          line.elements.some((element) => options?.breaksBefore?.has(element))
+        ) {
+          breaksBefore.add(groupStart);
+        }
+      }
+    }
     const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
     const decisions = buildContentPages(
       paginationLines,
@@ -579,6 +571,22 @@ export class LayoutService {
             pageNumber,
             isChapterOpening,
           ),
+        breaksBefore,
+        onOverflowBreak: onOverflowBreak
+          ? (index, first, excess, groupEnd) => {
+              const line = paginationLines[index];
+              const boundary = line.elements[0];
+              if (groupStarts[index] === index && boundary) {
+                onOverflowBreak(
+                  boundary,
+                  paginationLines
+                    .slice(first, groupEnd)
+                    .flatMap((candidate) => candidate.elements),
+                  excess,
+                );
+              }
+            }
+          : undefined,
       },
     );
     const pages: Page[] = [];
@@ -611,9 +619,46 @@ export class LayoutService {
       pages.push(page);
     }
 
+    // The positioned elements now have their physical page numbers.
+    const assigned =
+      hasFootnoteReferences && pageSetup.footnoteNumbering === 'page'
+        ? orderedFootnotes(score)
+        : references;
+    const markerWidths = this.measureRichTextFootnoteMarkers(
+      assigned,
+      pageSetup,
+      score.paragraphStyles,
+      options?.provisionalFootnoteWidths ?? false,
+    );
+    const assignedById = new Map(
+      assigned.map((entry) => [entry.footnote.id, entry]),
+    );
+    const markersByBox = new Map<
+      ScoreElement,
+      Record<string, RichTextFootnoteMarker>
+    >();
+    for (const { footnote, reference, number, marker } of assigned) {
+      if (reference instanceof FootnoteAnchorElement) {
+        reference.footnoteNumber = number;
+        reference.footnoteMarker = marker;
+      } else {
+        let markers = markersByBox.get(reference);
+        if (markers === undefined) {
+          markers = {};
+          markersByBox.set(reference, markers);
+        }
+        markers[footnote.id] = {
+          label: marker,
+          width: markerWidths.get(footnote.id)!,
+        };
+      }
+    }
     for (const [index, decision] of decisions.entries()) {
+      if (decision.footnoteIds.length === 0) {
+        continue;
+      }
       pages[index].footnotes = decision.footnoteIds.map((id) => {
-        const { reference, number, marker } = referencesById.get(id)!;
+        const { reference, number, marker } = assignedById.get(id)!;
         return {
           id,
           number,
@@ -740,19 +785,21 @@ export class LayoutService {
       }
     }
 
-    for (const page of pages) {
-      for (const line of page.lines) {
-        for (const [
-          element,
-          position,
-        ] of this.getFootnoteMarkerPositionsForLine(
-          line.elements,
-          pageSetup,
-          score.paragraphStyles,
-          measureBarWidthMap,
-        )) {
-          element.footnoteMarkerOffset = position.left;
-          element.footnoteMarkerTop = position.top;
+    if (hasFootnoteReferences) {
+      for (const page of pages) {
+        for (const line of page.lines) {
+          for (const [
+            element,
+            position,
+          ] of this.getFootnoteMarkerPositionsForLine(
+            line.elements,
+            pageSetup,
+            score.paragraphStyles,
+            measureBarWidthMap,
+          )) {
+            element.footnoteMarkerOffset = position.left;
+            element.footnoteMarkerTop = position.top;
+          }
         }
       }
     }
@@ -760,6 +807,19 @@ export class LayoutService {
     // Record element updates
     score.staves.forEach((staff) =>
       staff.elements.forEach((element) => {
+        if (
+          staff === score.staff &&
+          element.elementType === ElementType.RichTextBox
+        ) {
+          const box = element as RichTextBoxElement;
+          const markers = markersByBox.get(element);
+          if (
+            markers !== undefined ||
+            Object.keys(box.footnoteMarkers).length > 0
+          ) {
+            box.footnoteMarkers = markers ?? {};
+          }
+        }
         this.checkElementState(element);
       }),
     );
@@ -2865,7 +2925,9 @@ export class LayoutService {
 
   private static measureRichTextFootnoteMarkers(
     references: ReturnType<typeof orderedFootnotes>,
+    pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
+    provisional: boolean,
   ) {
     const widths = new Map<string, number>();
     const richTextReferences = references.filter(
@@ -2885,7 +2947,12 @@ export class LayoutService {
     try {
       const measured = new Map<string, number>();
 
-      for (const { footnote, reference, marker } of richTextReferences) {
+      for (const {
+        footnote,
+        reference,
+        number,
+        marker,
+      } of richTextReferences) {
         const style = resolveParagraphStyle(
           paragraphStyles,
           getTextBoxParagraphStyleFallbackId(
@@ -2909,7 +2976,12 @@ export class LayoutService {
           '--footnote-reference-size',
           `${style.fontSize}px`,
         );
-        widths.set(footnote.id, measure(marker));
+
+        const label =
+          provisional && number !== null
+            ? automaticFootnoteMarker(pageSetup.firstFootnoteNumber, pageSetup)
+            : marker;
+        widths.set(footnote.id, measure(label));
       }
     } finally {
       sample.remove();

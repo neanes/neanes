@@ -49,8 +49,10 @@ export async function pauseNextExport(evaluateMain) {
   };
 }
 
-export async function editorTarget(debugUrl) {
-  const targets = await (await fetch(`${debugUrl}/json/list`)).json();
+export async function editorTarget(debugUrl, { signal } = {}) {
+  const targets = await (
+    await fetch(`${debugUrl}/json/list`, { signal })
+  ).json();
   const target = targets.find(
     (entry) =>
       entry.type === 'page' &&

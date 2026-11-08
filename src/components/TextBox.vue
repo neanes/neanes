@@ -98,7 +98,7 @@ import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
-const emit = defineEmits(['update', 'update:height', 'select-single']);
+const emit = defineEmits(['update', 'update:height', 'select-single', 'blur']);
 const props = defineProps({
   element: {
     type: Object as PropType<TextBoxElement>,
@@ -459,6 +459,7 @@ function getHeight() {
 function onBlur() {
   if (!unmounting.value) {
     update();
+    emit('blur');
   }
 }
 

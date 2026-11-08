@@ -2,13 +2,18 @@ import { onBeforeUnmount, shallowRef } from 'vue';
 
 import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
-import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
+import type {
+  MeasuredTextBox,
+  TextBoxHeightMeasurement,
+} from '@/services/rendering/textBoxMeasurement';
 
 function useMeasurement<Result>() {
   let sequence = 0;
   const pending = shallowRef<{
     id: number;
     workspace: Workspace;
+    templatePages?: Page[];
+    measurementBoxes?: ReadonlySet<MeasuredTextBox>;
     resolve(result: Result): void;
     reject(error: Error): void;
   } | null>(null);
@@ -30,11 +35,17 @@ function useMeasurement<Result>() {
   onBeforeUnmount(() => cancel());
   return {
     pending,
-    start: (workspace: Workspace) =>
+    start: (
+      workspace: Workspace,
+      templatePages?: Page[],
+      measurementBoxes?: ReadonlySet<MeasuredTextBox>,
+    ) =>
       new Promise<Result>((resolve, reject) => {
         pending.value = {
           id: ++sequence,
           workspace,
+          templatePages,
+          measurementBoxes,
           resolve,
           reject,
         };

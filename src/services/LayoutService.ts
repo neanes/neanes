@@ -450,6 +450,7 @@ export class LayoutService {
 
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
     const references = orderedFootnotes(score, null);
+    const hasFootnoteReferences = references.length > 0;
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
@@ -521,7 +522,9 @@ export class LayoutService {
       return {
         height: candidate.height,
         elements,
-        footnoteIds: elements.flatMap(elementFootnoteIds),
+        footnoteIds: hasFootnoteReferences
+          ? elements.flatMap(elementFootnoteIds)
+          : [],
         chapterMarker: pageSetup.headerFooterDifferentChapterOpening
           ? getFirstRunningMarker(elements, 'chapter')
           : null,
@@ -587,16 +590,12 @@ export class LayoutService {
       },
     );
     const pages: Page[] = [];
-    const pageAssignments = new Map<ScoreElement, number>();
     for (const [index, decision] of decisions.entries()) {
       const page = new Page();
       page.physicalPageNumber = index + 1;
       page.footnoteOverflow = decision.footnoteOverflow;
       const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
       for (const placement of decision.lines) {
-        paginationLines[placement.index].elements.forEach((element) =>
-          pageAssignments.set(element, page.physicalPageNumber),
-        );
         const previousLine =
           page.lines.at(-1) ?? pages.at(-1)?.lines.at(-1) ?? null;
         page.lines.push(
@@ -620,7 +619,11 @@ export class LayoutService {
       pages.push(page);
     }
 
-    const assigned = orderedFootnotes(score, pageAssignments);
+    // The positioned elements now have their physical page numbers.
+    const assigned =
+      hasFootnoteReferences && pageSetup.footnoteNumbering === 'page'
+        ? orderedFootnotes(score)
+        : references;
     const markerWidths = this.measureRichTextFootnoteMarkers(
       assigned,
       pageSetup,
@@ -650,19 +653,10 @@ export class LayoutService {
         };
       }
     }
-    for (const element of elements) {
-      if (element.elementType === ElementType.RichTextBox) {
-        const box = element as RichTextBoxElement;
-        const markers = markersByBox.get(element);
-        if (
-          markers !== undefined ||
-          Object.keys(box.footnoteMarkers).length > 0
-        ) {
-          box.footnoteMarkers = markers ?? {};
-        }
-      }
-    }
     for (const [index, decision] of decisions.entries()) {
+      if (decision.footnoteIds.length === 0) {
+        continue;
+      }
       pages[index].footnotes = decision.footnoteIds.map((id) => {
         const { reference, number, marker } = assignedById.get(id)!;
         return {
@@ -791,19 +785,21 @@ export class LayoutService {
       }
     }
 
-    for (const page of pages) {
-      for (const line of page.lines) {
-        for (const [
-          element,
-          position,
-        ] of this.getFootnoteMarkerPositionsForLine(
-          line.elements,
-          pageSetup,
-          score.paragraphStyles,
-          measureBarWidthMap,
-        )) {
-          element.footnoteMarkerOffset = position.left;
-          element.footnoteMarkerTop = position.top;
+    if (hasFootnoteReferences) {
+      for (const page of pages) {
+        for (const line of page.lines) {
+          for (const [
+            element,
+            position,
+          ] of this.getFootnoteMarkerPositionsForLine(
+            line.elements,
+            pageSetup,
+            score.paragraphStyles,
+            measureBarWidthMap,
+          )) {
+            element.footnoteMarkerOffset = position.left;
+            element.footnoteMarkerTop = position.top;
+          }
         }
       }
     }
@@ -811,6 +807,19 @@ export class LayoutService {
     // Record element updates
     score.staves.forEach((staff) =>
       staff.elements.forEach((element) => {
+        if (
+          staff === score.staff &&
+          element.elementType === ElementType.RichTextBox
+        ) {
+          const box = element as RichTextBoxElement;
+          const markers = markersByBox.get(element);
+          if (
+            markers !== undefined ||
+            Object.keys(box.footnoteMarkers).length > 0
+          ) {
+            box.footnoteMarkers = markers ?? {};
+          }
+        }
         this.checkElementState(element);
       }),
     );

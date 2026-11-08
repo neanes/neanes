@@ -8542,6 +8542,9 @@ async function awaitBrowserPrintPages(workspace: Workspace) {
     revision === workspace.contentRevision;
 
   await awaitBrowserOutputLayout(workspace);
+  if (!settleFootnoteReferences.value) {
+    return isScoreCurrent;
+  }
 
   const deadline = Promise.withResolvers<never>();
   // A rich-text editor that fails to initialize may never report readiness.

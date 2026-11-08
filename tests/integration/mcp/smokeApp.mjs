@@ -10,6 +10,9 @@ import { connectCdp, editorTarget } from './smokeCdp.mjs';
 import { requestEditor } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
+const rendererDebugger = /DevTools listening on ws:\/\/127\.0\.0\.1:(\d+)/;
+const mainDebugger = /Debugger listening on ws:\/\/127\.0\.0\.1:(\d+)/;
+
 export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), prefix));
   const profile = path.join(directory, 'profile');
@@ -28,6 +31,34 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
       `Electron exited (${child?.exitCode ?? child?.signalCode}): ${log}`,
     );
   }
+  async function logStartupDiagnostics() {
+    const match = rendererDebugger.exec(log);
+    let connection;
+    try {
+      assert.ok(match, 'No renderer debugger endpoint was announced.');
+      const target = await editorTarget(`http://127.0.0.1:${match[1]}`, {
+        signal: AbortSignal.timeout(1000),
+      });
+      console.error(`Editor startup target: ${target.url}`);
+      connection = await connectCdp(target.webSocketDebuggerUrl, {
+        timeoutMs: 1000,
+      });
+      const state = await connection.evaluate(`({
+        url: location.href,
+        readyState: document.readyState,
+        visibilityState: document.visibilityState,
+        hasFocus: document.hasFocus(),
+        fontStatus: document.fonts.status,
+        editorInitializationStarted: Boolean(window._editor)
+      })`);
+      console.error(`Editor startup state: ${JSON.stringify(state)}`);
+    } catch (error) {
+      console.error(`Could not inspect editor startup: ${error.message}`);
+    } finally {
+      connection?.close();
+      console.error(`Electron startup output:\n${log || '(empty)'}`);
+    }
+  }
   return {
     directory,
     profile,
@@ -40,14 +71,21 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
       assert.equal(child, undefined, 'This fixture already launched Electron.');
       const env = {
         ...process.env,
+        ELECTRON_ENABLE_LOGGING: '1',
         IS_TEST: '1',
         NEANES_DEV_USER_DATA_DIR: profile,
       };
       delete env.ELECTRON_RUN_AS_NODE;
-      child = spawn(executable, [...appArgs, ...args, '--no-update'], {
-        env,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
+      const debuggingArgs = args.some((arg) =>
+        arg.startsWith('--remote-debugging-port='),
+      )
+        ? []
+        : ['--remote-debugging-port=0'];
+      child = spawn(
+        executable,
+        [...appArgs, ...args, ...debuggingArgs, '--no-update'],
+        { env, stdio: ['ignore', 'pipe', 'pipe'] },
+      );
       closed = new Promise((resolve) => {
         child.once('close', resolve);
         child.once('error', (error) => {
@@ -79,9 +117,7 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
           });
           if (!outcome.success) {
             throw Object.assign(
-              new Error(
-                `Editor is not ready: ${JSON.stringify(outcome)}\n${log}`,
-              ),
+              new Error(`Editor is not ready: ${JSON.stringify(outcome)}`),
               { code: outcome.error.code },
             );
           }
@@ -99,16 +135,16 @@ export async function createSmokeApp(prefix, { keepArtifacts = false } = {}) {
               'EDITOR_BUSY',
             ].includes(error.code),
         },
-      );
+      ).catch(async (error) => {
+        await logStartupDiagnostics();
+        throw error;
+      });
     },
     async debugger(kind = 'renderer') {
       const target = await eventually(
         async () => {
           requireRunning();
-          const pattern =
-            kind === 'renderer'
-              ? /DevTools listening on ws:\/\/127\.0\.0\.1:(\d+)/
-              : /Debugger listening on ws:\/\/127\.0\.0\.1:(\d+)/;
+          const pattern = kind === 'renderer' ? rendererDebugger : mainDebugger;
           const match = pattern.exec(log);
           assert.ok(match, `The ${kind} debugger is not ready: ${log}`);
           const url = `http://127.0.0.1:${match[1]}`;

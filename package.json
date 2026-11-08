@@ -94,7 +94,7 @@
     "typescript": "^6.0.3",
     "uuid": "^14.0.3",
     "vite": "^8.3.5",
-    "vite-plugin-electron": "^1.1.2",
+    "vite-plugin-electron": "^1.2.0",
     "vite-plugin-pwa": "^2.0.0",
     "vite-plugin-vue-devtools": "^8.2.1",
     "vitepress": "^1.6.4",

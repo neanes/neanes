@@ -575,6 +575,7 @@ const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
 const toolbarMartyriaLayoutRevision = ref(0);
 const keyboardModifier = ref<string | null>(null);
 const audioElement = ref<ScoreElement | null>(null);
+let pendingPlaybackStart: AbortController | undefined;
 const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
 const playbackTimeInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const audioOptions = reactive<PlaybackOptions>({
@@ -819,14 +820,9 @@ const {
   editedFootnote,
   footnotePreviewLineElements,
   footnotePreviewNeighbors,
-  openFootnoteProperties,
+  openFootnoteProperties: showFootnoteProperties,
   updateFootnoteMarker,
-} = useFootnoteProperties(
-  selectedWorkspace,
-  pages,
-  flushPendingRichTextEditors,
-  save,
-);
+} = useFootnoteProperties(selectedWorkspace, pages, save);
 const { commitRichTextFootnotes, hasPendingFootnotePaste } =
   useRichTextFootnotes(
     selectedWorkspace,
@@ -1770,6 +1766,7 @@ function onLayoutFontsChanged() {
 }
 onBeforeUnmount(() => {
   pendingLyricFocus?.abort();
+  pendingPlaybackStart?.abort();
   saveDebounced.cancel();
   document.fonts.removeEventListener('loadingdone', onLayoutFontsChanged);
   document.fonts.removeEventListener('loadingerror', onLayoutFontsChanged);
@@ -2109,13 +2106,11 @@ const pageHandlers: ScorePageHandlers = {
   setSelectionRange,
   openSyllablePositioningDialog,
   openModeKeyDialog,
-  focusLyrics: (element) => {
-    activateContent(element);
-    focusLyrics(element.index);
-  },
+  focusLyrics: focusClickedLyric,
   updateLyrics,
   updateDropCapContent,
   updateTextBox,
+  blurTextBox: resumeLayoutAfterTextBlur,
   updateTextBoxHeight,
   updateRichTextBox,
   updateRichTextBoxHeight,
@@ -2541,7 +2536,10 @@ function getTextOffset(root: HTMLElement, container: Node, offset: number) {
 }
 
 function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
-  if (selectedLyrics.value !== lyricSelection.element) {
+  if (
+    pendingLyricFocus?.signal.aborted === false ||
+    selectedLyrics.value !== lyricSelection.element
+  ) {
     return;
   }
 
@@ -3524,6 +3522,32 @@ async function openFootnote(
   );
 }
 
+let footnotePropertiesOpenRequest = 0;
+
+async function openFootnoteProperties(id: string) {
+  const request = ++footnotePropertiesOpenRequest;
+  const workspace = selectedWorkspace.value;
+  const sourceScore = workspace.score;
+  flushPendingRichTextEditors(workspace);
+  if (settleFootnoteReferences.value) {
+    blurActiveElement();
+    clearActiveEditor();
+    const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
+      console.error,
+    );
+    if (outcome !== 'published') {
+      return;
+    }
+  }
+  if (
+    request === footnotePropertiesOpenRequest &&
+    workspace === selectedWorkspace.value &&
+    workspace.score === sourceScore
+  ) {
+    showFootnoteProperties(id);
+  }
+}
+
 function insertFootnote(reference: FootnoteAnchorElement) {
   flushPendingRichTextEditors(selectedWorkspace.value);
   const plan = planFootnoteInsertion(selectedWorkspace.value, reference);
@@ -3618,6 +3642,11 @@ function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
 
 function focusLyrics(index: number, selectAll: boolean = false) {
   getLyricsComponent(index)!.focus(selectAll);
+}
+
+function focusClickedLyric(element: NoteElement) {
+  activateContent(element);
+  getLyricsComponentForElement(element)?.focus(false);
 }
 
 function selectHeaderRichTextBox(pageIndex: number) {
@@ -5466,105 +5495,105 @@ function getNextLyricBoxIndex() {
 let pendingLyricFocus: AbortController | undefined;
 
 function moveToNextLyricBox(clearMelisma: boolean = false) {
+  const current = selectedLyrics.value;
   const nextIndex = getNextLyricBoxIndex();
-
-  if (nextIndex >= 0) {
-    // Commit the current lyrics first. Repagination can remount the next
-    // lyric box, so resolve its component after the new layout is rendered.
-    const workspace = selectedWorkspace.value;
-    const noteElement = selectedLyrics.value!;
-    const nextNote = activeElements.value[nextIndex];
-
-    const currentBox = getLyricsComponent(
-      activeElements.value.indexOf(noteElement),
-    )!;
-    const source = currentBox.htmlElement;
-    const initialFocus = document.activeElement;
-    updateLyrics(noteElement, currentBox.getInnerText(), clearMelisma);
-
-    const isCurrent = () =>
-      workspace === selectedWorkspace.value &&
-      selectedLyrics.value === noteElement;
-    const canMoveFocus = () =>
-      isCurrent() &&
-      document.hasFocus() &&
-      (document.activeElement === initialFocus ||
-        (document.activeElement === document.body && !source.isConnected));
-    const focusNext = () => {
-      const component = getLyricsComponentForElement(nextNote);
-      component?.focus(true);
-      return component !== undefined;
-    };
-    const revealNextPage = async () => {
-      const page = pages.value[nextNote.page - 1];
-      if (page !== undefined && !page.isVisible) {
-        page.isVisible = true;
-        await nextTick();
-      }
-    };
-    nextTick(async () => {
-      if (!canMoveFocus() || focusNext() || !settleFootnoteReferences.value) {
-        return;
-      }
-      await revealNextPage();
-      if (!canMoveFocus() || focusNext()) {
-        return;
-      }
-
-      // The destination has no mounted box yet. Leave the old box so input
-      // cannot change the committed syllable while waiting for pagination.
-      source.blur();
-      const pending = new AbortController();
-      pendingLyricFocus?.abort();
-      pendingLyricFocus = pending;
-      const cancel = () => pending.abort();
-      const listenerOptions = { capture: true, signal: pending.signal };
-      window.addEventListener('focusin', cancel, listenerOptions);
-      window.addEventListener('pointerdown', cancel, listenerOptions);
-      window.addEventListener('blur', cancel, { signal: pending.signal });
-      const canFinish = () =>
-        !pending.signal.aborted && isCurrent() && document.hasFocus();
-      try {
-        const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
-          console.error,
-        );
-        if (outcome !== 'published' || !canFinish()) {
-          return;
-        }
-        await revealNextPage();
-        if (canFinish()) {
-          focusNext();
-        }
-      } finally {
-        pending.abort();
-        if (pendingLyricFocus === pending) {
-          pendingLyricFocus = undefined;
-        }
-      }
-    });
-
-    return true;
+  if (current === null || nextIndex < 0) {
+    return false;
+  }
+  const destination = activeElements.value[nextIndex];
+  const currentBox = getLyricsComponentForElement(current);
+  if (currentBox === undefined) {
+    return false;
   }
 
-  return false;
+  // Commit before moving focus. Repagination can remount the destination.
+  const workspace = selectedWorkspace.value;
+  const source = currentBox.htmlElement;
+  const initialFocus = document.activeElement;
+  updateLyrics(current, currentBox.getInnerText(), clearMelisma);
+
+  const isCurrent = () =>
+    workspace === selectedWorkspace.value &&
+    selectedLyrics.value === current &&
+    activeElements.value.includes(destination);
+  const canMoveFocus = () =>
+    isCurrent() &&
+    document.hasFocus() &&
+    (document.activeElement === initialFocus ||
+      (document.activeElement === document.body && !source.isConnected));
+  const focusDestination = () => {
+    const component = getLyricsComponentForElement(destination);
+    component?.focus(true);
+    return component !== undefined;
+  };
+  const revealDestinationPage = async () => {
+    const page = pages.value[destination.page - 1];
+    if (page !== undefined && !page.isVisible) {
+      page.isVisible = true;
+      await nextTick();
+    }
+  };
+  nextTick(async () => {
+    if (
+      !canMoveFocus() ||
+      focusDestination() ||
+      !settleFootnoteReferences.value
+    ) {
+      return;
+    }
+    await revealDestinationPage();
+    if (!canMoveFocus() || focusDestination()) {
+      return;
+    }
+
+    // The destination has no mounted box yet. Leave the old box so input
+    // cannot change the committed syllable while waiting for pagination.
+    source.blur();
+    const pending = new AbortController();
+    pendingLyricFocus?.abort();
+    pendingLyricFocus = pending;
+    const cancel = () => pending.abort();
+    const listenerOptions = { capture: true, signal: pending.signal };
+    window.addEventListener('focusin', cancel, listenerOptions);
+    window.addEventListener('pointerdown', cancel, listenerOptions);
+    window.addEventListener('blur', cancel, { signal: pending.signal });
+    const canFinish = () =>
+      !pending.signal.aborted && isCurrent() && document.hasFocus();
+    try {
+      const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
+        console.error,
+      );
+      if (outcome !== 'published' || !canFinish()) {
+        return;
+      }
+      await revealDestinationPage();
+      if (canFinish()) {
+        focusDestination();
+      }
+    } finally {
+      pending.abort();
+      if (pendingLyricFocus === pending) {
+        pendingLyricFocus = undefined;
+      }
+    }
+  });
+
+  return true;
 }
 
 function moveToPreviousLyricBox() {
-  if (selectedLyrics.value) {
-    const currentIndex = activeElements.value.indexOf(selectedLyrics.value);
-    let nextIndex = -1;
+  const current = selectedLyrics.value;
+  if (current === null) {
+    return false;
+  }
 
-    // Find the index of the previous note
-    for (let i = currentIndex - 1; i >= 0; i--) {
-      if (activeElements.value[i].elementType === ElementType.Note) {
-        nextIndex = i;
-        break;
-      }
-    }
-
-    if (nextIndex >= 0) {
-      focusLyrics(nextIndex, true);
-      return true;
+  const currentIndex = activeElements.value.indexOf(current);
+  for (let i = currentIndex - 1; i >= 0; i--) {
+    const destination = activeElements.value[i];
+    if (destination.elementType === ElementType.Note) {
+      const component = getLyricsComponentForElement(destination);
+      component?.focus(true);
+      return component !== undefined;
     }
   }
 
@@ -5639,6 +5668,15 @@ async function runLiveSettlement(
   });
   if (!isCurrent()) {
     return 'superseded';
+  }
+
+  // Keep focused plain-text editors mounted until blur commits their drafts.
+  const focused = document.activeElement;
+  if (
+    focused?.matches('.drop-cap, .text-box') &&
+    pageBackgroundRef.value?.contains(focused)
+  ) {
+    return 'deferred';
   }
 
   const activeBox = selectedRichTextBoxElement.value;
@@ -7097,6 +7135,12 @@ function updateTextBox(
   save();
 }
 
+function resumeLayoutAfterTextBlur() {
+  if (liveLayout.waitingForBlur) {
+    save();
+  }
+}
+
 function updateTextBoxHeight(element: TextBoxElement, height: number) {
   if (settleFootnoteReferences.value) {
     return;
@@ -7302,6 +7346,11 @@ function updateDropCap(
 }
 
 function updateDropCapContent(element: DropCapElement, content: string) {
+  if (element.content === content) {
+    resumeLayoutAfterTextBlur();
+    return;
+  }
+
   // Replace newlines. This should only happen if the user pastes
   // text containing new lines.
   const sanitizedContent = content.replace(/(?:\r\n|\r|\n)/g, ' ');
@@ -8059,34 +8108,66 @@ function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
 }
 
 async function playAudio() {
+  if (pendingPlaybackStart !== undefined) {
+    return;
+  }
+  if (audioService.state !== AudioState.Stopped) {
+    pauseAudio();
+    return;
+  }
+
+  const pending = new AbortController();
+  pendingPlaybackStart = pending;
+  const workspace = selectedWorkspace.value;
+  const sourceScore = workspace.score;
+  const staff = activeStaff.value;
+  const element = selectedElement.value;
+  const lyric = selectedLyrics.value;
+  const isCurrent = () =>
+    !pending.signal.aborted &&
+    workspace === selectedWorkspace.value &&
+    workspace.score === sourceScore &&
+    staff === activeStaff.value &&
+    element === selectedElement.value &&
+    lyric === selectedLyrics.value;
+
   try {
-    if (audioService.state === AudioState.Stopped) {
-      playbackEvents.value = playbackService.computePlaybackSequence(
-        score.value.staff.elements,
-        audioOptions,
-        score.value.pageSetup.chrysanthineAccidentals,
-      );
-
-      if (playbackEvents.value.length === 0) {
-        return;
-      }
-
-      const startAt = playbackEvents.value.find(
-        (x) =>
-          x.elementIndex >=
-          (isMainStaff.value ? selectedElementIndex.value : 0),
-      );
-
-      await audioService.play(playbackEvents.value, audioOptions, startAt);
-
-      if (startAt) {
-        selectedWorkspace.value.playbackTime = startAt.absoluteTime;
-      }
-
-      startPlaybackClock();
-    } else {
-      pauseAudio();
+    if (
+      settleFootnoteReferences.value &&
+      (await awaitCurrentFootnoteLayout(workspace)) !== 'published'
+    ) {
+      return;
     }
+    if (
+      !isCurrent() ||
+      (settleFootnoteReferences.value && !liveLayout.isPublished)
+    ) {
+      return;
+    }
+
+    const revision = workspace.contentRevision;
+    playbackEvents.value = playbackService.computePlaybackSequence(
+      sourceScore.staff.elements,
+      audioOptions,
+      sourceScore.pageSetup.chrysanthineAccidentals,
+    );
+    if (playbackEvents.value.length === 0) {
+      return;
+    }
+
+    const startIndex = isMainStaff.value ? selectedElementIndex.value : 0;
+    const startAt = playbackEvents.value.find(
+      (event) => event.elementIndex >= startIndex,
+    );
+    await audioService.play(playbackEvents.value, audioOptions, startAt);
+    if (!isCurrent() || workspace.contentRevision !== revision) {
+      stopAudio();
+      return;
+    }
+    if (startAt) {
+      workspace.playbackTime = startAt.absoluteTime;
+    }
+    startPlaybackClock();
   } catch (error) {
     console.error(error);
     showErrorToast(
@@ -8098,10 +8179,13 @@ async function playAudio() {
         }),
       },
     );
+  } finally {
+    pendingPlaybackStart = undefined;
   }
 }
 
 function stopAudio() {
+  pendingPlaybackStart?.abort();
   try {
     audioService.stop();
 

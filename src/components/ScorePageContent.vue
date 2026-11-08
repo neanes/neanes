@@ -144,6 +144,7 @@
         :style="getHeaderStyle(page)"
         @click="emit('selectHeaderFooter', header)"
         @update="emit('updateTextBox', header! as TextBoxElement, $event)"
+        @blur="emit('blurTextBox')"
       />
     </template>
     <div
@@ -490,6 +491,7 @@
           :selected="isSelected(element)"
           @select-single="emit('selectElement', element)"
           @update="emit('updateTextBox', element as TextBoxElement, $event)"
+          @blur="emit('blurTextBox')"
           @update:height="
             emit('updateTextBoxHeight', element as TextBoxElement, $event)
           "
@@ -669,6 +671,7 @@
         :style="getFooterStyle(page)"
         @click="emit('selectHeaderFooter', footer)"
         @update="emit('updateTextBox', footer! as TextBoxElement, $event)"
+        @blur="emit('blurTextBox')"
     /></template>
   </template>
 </template>

@@ -380,7 +380,6 @@
     "positioning": "Penempatan",
     "overridePosition": "Atur posisi secara manual",
     "dragMarker": "Seret penanda catatan kaki",
-
     "offsetX": "Pergeseran horizontal (em)",
     "offsetY": "Pergeseran vertikal (em)",
     "positionHint": "Aktifkan pengaturan posisi manual untuk menyeret penanda atau mengubah pergeseran tanpa penyesuaian otomatis untuk menghindari tumpang tindih. Nilai positif menggeser ke kanan atau ke bawah.",

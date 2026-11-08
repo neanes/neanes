@@ -380,7 +380,6 @@
     "positioning": "Poziționare",
     "overridePosition": "Suprascrie poziția",
     "dragMarker": "Trageți marcajul notei de subsol",
-
     "offsetX": "Deplasare orizontală (em)",
     "offsetY": "Deplasare verticală (em)",
     "positionHint": "Activați suprascrierea poziției pentru a trage marcajul sau a modifica deplasările fără ajustarea automată a suprapunerilor. Valorile pozitive deplasează spre dreapta sau în jos.",

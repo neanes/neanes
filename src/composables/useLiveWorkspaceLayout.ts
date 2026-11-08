@@ -9,7 +9,11 @@ import {
   type LiveLayoutOutcome,
   settleWorkspace,
 } from '@/services/rendering/settleWorkspace';
-import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
+import type {
+  MeasuredTextBox,
+  TextBoxHeightMeasurement,
+} from '@/services/rendering/textBoxMeasurement';
+import { TextBoxMeasurementCache } from '@/services/rendering/textBoxMeasurementCache';
 
 export type LiveLayoutTrial = {
   isCurrent: () => boolean;
@@ -38,11 +42,14 @@ export function useLiveWorkspaceLayout(options: {
   ) => Promise<LiveLayoutOutcome>;
   measureTextBoxes: (
     workspace: Workspace,
-    templatePages?: Page[],
+    templatePages: Page[] | undefined,
+    boxes: ReadonlySet<MeasuredTextBox>,
   ) => Promise<TextBoxHeightMeasurement[]>;
+  textBoxEditor: () => { fonts: string[]; language: string };
   cancelMeasurement: () => void;
   onFailure: (workspace: Workspace, score: Score) => void;
 }) {
+  const measurements = new TextBoxMeasurementCache();
   let current: LayoutRequest | undefined;
   let disposed = false;
   let waitingForBlur = false;
@@ -115,9 +122,18 @@ export function useLiveWorkspaceLayout(options: {
               if (!isCurrent()) {
                 throw new Error('LAYOUT_MEASUREMENT_STALE');
               }
-              return options.measureTextBoxes(
+              return measurements.measure(
                 detached.workspace,
                 templatePages,
+                detached.originals,
+                options.textBoxEditor(),
+                (boxes) =>
+                  options.measureTextBoxes(
+                    detached.workspace,
+                    templatePages,
+                    boxes,
+                  ),
+                isCurrent,
               );
             },
             layoutOptions,
@@ -208,6 +224,7 @@ export function useLiveWorkspaceLayout(options: {
     start,
     wait,
     invalidate,
+    clearMeasurements: () => measurements.clear(),
     get isPublished() {
       return current?.outcome === 'published' && current.isCurrent();
     },

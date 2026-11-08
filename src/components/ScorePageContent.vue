@@ -94,7 +94,7 @@
     </div>
   </template>
 
-  <template v-if="score.pageSetup.showHeader">
+  <template v-if="score.pageSetup.showHeader && shouldRender(header)">
     <slot name="header-badge" />
     <template v-if="isRichTextBoxElement(header)">
       <TextBoxRich
@@ -208,7 +208,7 @@
     :data-footnote-id="line.footnoteId"
   >
     <div
-      v-for="element in line.elements"
+      v-for="element in elementsToRender(line.elements)"
       :id="element.id === null ? undefined : `element-${element.id}`"
       :key="`element-${workspaceId}-${element.id}-${element.keyHelper}`"
       class="element-box"
@@ -616,7 +616,7 @@
       >{{ line.adjustmentRatio.toFixed(2) }}</span
     >
   </div>
-  <template v-if="score.pageSetup.showFooter">
+  <template v-if="score.pageSetup.showFooter && shouldRender(footer)">
     <slot name="footer-badge" />
     <div
       v-if="showFooterRule"
@@ -734,6 +734,7 @@ import { LayoutService } from '@/services/LayoutService';
 import { getLyricsBaseline } from '@/services/LyricsLayout';
 import {
   getResizableTextBoxes,
+  type MeasuredTextBox,
   type TextBoxHeightMeasurement,
 } from '@/services/rendering/textBoxMeasurement';
 import {
@@ -772,10 +773,17 @@ const props = withDefaults(
     zoom?: number;
     printMode?: boolean;
     settledTextBoxes?: boolean;
+    measurementBoxes?: ReadonlySet<MeasuredTextBox>;
     interaction?: ScorePageInteraction;
     overlays?: ScoreOverlaySettings;
   }>(),
-  { zoom: 1, printMode: false, interaction: undefined, overlays: undefined },
+  {
+    zoom: 1,
+    printMode: false,
+    measurementBoxes: undefined,
+    interaction: undefined,
+    overlays: undefined,
+  },
 );
 const emit = defineEmits<ScorePageEvents>();
 const score = toRef(props, 'score');
@@ -1403,6 +1411,16 @@ async function whenReady() {
   );
   await nextTick();
 }
+function shouldRender(element: ScoreElement) {
+  return props.measurementBoxes?.has(element as MeasuredTextBox) ?? true;
+}
+
+function elementsToRender(elements: ScoreElement[]) {
+  return props.measurementBoxes === undefined
+    ? elements
+    : elements.filter(shouldRender);
+}
+
 async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
   const resizable = new Set(getResizableTextBoxes(props.score));
   const boxes = [
@@ -1421,8 +1439,9 @@ async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
   ];
   return Promise.all(
     boxes
-      .filter(({ element }) =>
-        resizable.has(element as TextBoxElement | RichTextBoxElement),
+      .filter(
+        ({ element }) =>
+          resizable.has(element as MeasuredTextBox) && shouldRender(element),
       )
       .map(async ({ name }) => {
         const component = localRefs.get(name) as

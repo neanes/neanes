@@ -19,8 +19,9 @@
         :page="page"
         :page-index="pageIndex"
         :workspace-id="workspace.id"
-        :metadata="getTokenMetadata(pageIndex)"
-        :is-chapter-opening="runningMarkers[pageIndex].isChapterOpening"
+        :metadata="pageMetadata[pageIndex]"
+        :is-chapter-opening="pageMetadata[pageIndex].isChapterOpening"
+        :measurement-boxes="measurementBoxes"
         :fonts="fonts"
         :editor-language="editorLanguage"
         :print-mode="true"
@@ -43,12 +44,12 @@ import ScorePageContent from '@/components/ScorePageContent.vue';
 import type { ScoreOverlaySettings } from '@/models/EditorPreferences';
 import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
-import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
-import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
-import { getDisplayedPageNumber } from '@/utils/PageNumbering';
-import type { TokenMetadata } from '@/utils/replaceTokens';
+import { getPrintPageMetadata } from '@/services/rendering/printPageMetadata';
+import type {
+  MeasuredTextBox,
+  TextBoxHeightMeasurement,
+} from '@/services/rendering/textBoxMeasurement';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
-import { resolveRunningMarkerPageMetadata } from '@/utils/runningMarkers';
 const props = defineProps<{
   workspace: Workspace;
   pages: Page[];
@@ -56,6 +57,7 @@ const props = defineProps<{
   editorLanguage: string;
   overlays: ScoreOverlaySettings;
   measureTextOnly?: boolean;
+  measurementBoxes?: ReadonlySet<MeasuredTextBox>;
 }>();
 const emit = defineEmits<{
   measured: [heights: TextBoxHeightMeasurement[]];
@@ -74,35 +76,14 @@ const pageStyle = computed(() => ({
   width: `${score.value.pageSetup.pageWidth}px`,
   height: `${score.value.pageSetup.pageHeight}px`,
 }));
-const runningMarkers = computed(() =>
-  resolveRunningMarkerPageMetadata(props.pages),
+const pageMetadata = computed(() =>
+  getPrintPageMetadata(props.workspace, props.pages),
 );
 const pageContents = new Set<InstanceType<typeof ScorePageContent>>();
 function collectPage(instance: unknown) {
   if (instance != null) {
     pageContents.add(instance as InstanceType<typeof ScorePageContent>);
   }
-}
-function getTokenMetadata(index: number): TokenMetadata {
-  return {
-    pageNumber: getDisplayedPageNumber(
-      score.value.pageSetup,
-      props.pages[index].physicalPageNumber,
-    ),
-    numberOfPages: getDisplayedPageNumber(
-      score.value.pageSetup,
-      props.pages[props.pages.length - 1].physicalPageNumber,
-    ),
-    numerals: score.value.pageSetup.numerals,
-    fileName:
-      props.workspace.filePath == null
-        ? props.workspace.tempFileName
-        : getFileNameFromPath(props.workspace.filePath),
-    filePath: props.workspace.filePath ?? '',
-    ...score.value.documentProperties,
-    chapter: runningMarkers.value[index].chapter,
-    section: runningMarkers.value[index].section,
-  };
 }
 defineExpose({
   getPages: () => [...root.value!.querySelectorAll<HTMLElement>('.page')],

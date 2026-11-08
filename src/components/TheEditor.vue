@@ -782,6 +782,10 @@ const liveLayout = useLiveWorkspaceLayout({
   enabled: () => settleFootnoteReferences.value,
   settle: runLiveSettlement,
   measureTextBoxes: liveLayoutMeasurement.start,
+  textBoxEditor: () => ({
+    fonts: fonts.value,
+    language: ckeditorLanguage.value,
+  }),
   cancelMeasurement: liveLayoutMeasurement.cancel,
   onFailure: publishFirstLayoutFallback,
 });
@@ -1759,6 +1763,7 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 });
 
 function onLayoutFontsChanged() {
+  liveLayout.clearMeasurements();
   if (settleFootnoteReferences.value) {
     invalidateLiveLayout();
   }
@@ -2743,15 +2748,20 @@ function getSectionCount() {
 }
 
 function setSelectionRange(element: ScoreElement) {
-  if (!activeElements.value.includes(element)) {
+  const elementIndex = activeElements.value.indexOf(element);
+  if (elementIndex < 0) {
     selectedElement.value = element;
     return;
   }
-  const elementIndex = getElementIndex(element);
 
   if (selectedElement.value != null) {
+    const start = selectedElementIndex.value;
+    if (start < 0) {
+      selectedElement.value = element;
+      return;
+    }
     selectionRange.value = {
-      start: selectedElementIndex.value,
+      start,
       end: elementIndex,
     };
 
@@ -2793,21 +2803,20 @@ function getNormalizedSelectionRange() {
   } as ScoreElementSelectionRange;
 }
 
+const selectedRangeElements = computed(() => {
+  const range = getNormalizedSelectionRange();
+  return new Set(
+    range === null
+      ? []
+      : activeElements.value.slice(range.start, range.end + 1),
+  );
+});
+
 function isSelected(element: ScoreElement) {
-  if (selectedElement.value === element) {
-    return true;
-  }
-  if (selectionRange.value != null && activeElements.value.includes(element)) {
-    const start = Math.min(
-      selectionRange.value.start,
-      selectionRange.value.end,
-    );
-    const end = Math.max(selectionRange.value.start, selectionRange.value.end);
-
-    return start <= getElementIndex(element) && getElementIndex(element) <= end;
-  }
-
-  return false;
+  return (
+    selectedElement.value === element ||
+    selectedRangeElements.value.has(element)
+  );
 }
 
 function setSelectedAnnotation(
@@ -3640,8 +3649,57 @@ function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
   return newElement;
 }
 
-function focusLyrics(index: number, selectAll: boolean = false) {
-  getLyricsComponent(index)!.focus(selectAll);
+async function focusSelectedNoteLyrics(note: NoteElement) {
+  const workspace = selectedWorkspace.value;
+  const initialFocus = document.activeElement;
+  const isCurrent = () =>
+    workspace === selectedWorkspace.value &&
+    selectedElement.value === note &&
+    activeElements.value.includes(note) &&
+    document.activeElement === initialFocus &&
+    document.hasFocus();
+
+  let component = getLyricsComponentForElement(note);
+  if (component === undefined) {
+    await nextTick();
+    if (!isCurrent()) {
+      return;
+    }
+    if (
+      getLyricsComponentForElement(note) === undefined &&
+      settleFootnoteReferences.value
+    ) {
+      await awaitCurrentFootnoteLayout(workspace).catch(console.error);
+    }
+    if (!isCurrent()) {
+      return;
+    }
+
+    const page = pages.value[note.page - 1];
+    if (page !== undefined && !page.isVisible) {
+      page.isVisible = true;
+      await nextTick();
+    }
+    component = getLyricsComponentForElement(note);
+  }
+
+  if (!isCurrent() || component === undefined) {
+    return;
+  }
+  const { htmlElement } = component;
+  if (!htmlElement.isContentEditable) {
+    return;
+  }
+  component.focus(true);
+  // Select the syllable again after the focus event updates the selection.
+  await nextTick();
+  if (
+    workspace === selectedWorkspace.value &&
+    selectedLyrics.value === note &&
+    document.activeElement === htmlElement
+  ) {
+    component.focus(true);
+  }
 }
 
 function focusClickedLyric(element: NoteElement) {
@@ -4191,24 +4249,18 @@ function onKeydownNeume(event: KeyboardEvent) {
         }
         handled = true;
         break;
-      case 'ArrowDown':
+      case 'ArrowDown': {
+        const element = selectedElement.value;
         if (
           (event.ctrlKey || event.metaKey) &&
-          selectedElement.value?.elementType === ElementType.Note
+          element != null &&
+          isSyllableElement(element)
         ) {
-          const index = selectedElementIndex.value;
-
-          focusLyrics(index, true);
-
-          // Select All doesn't work until after the lyrics have been selected,
-          // hence we call focus lyrics twice
-          nextTick(() => {
-            focusLyrics(index, true);
-          });
-
+          void focusSelectedNoteLyrics(element);
           handled = true;
         }
         break;
+      }
       case 'Space':
         if (!event.repeat) {
           if (audioService.state === AudioState.Stopped || event.ctrlKey) {
@@ -4924,9 +4976,8 @@ const canSelectAllElements = computed(() =>
 
 function getSelectedNonEmptyElements() {
   if (selectionRange.value != null) {
-    return activeElements.value.filter(
-      (element) =>
-        element.elementType !== ElementType.Empty && isSelected(element),
+    return [...selectedRangeElements.value].filter(
+      (element) => element.elementType !== ElementType.Empty,
     );
   }
 
@@ -5500,7 +5551,14 @@ function moveToNextLyricBox(clearMelisma: boolean = false) {
   if (current === null || nextIndex < 0) {
     return false;
   }
-  const destination = activeElements.value[nextIndex];
+  return moveToLyricBox(current, activeElements.value[nextIndex], clearMelisma);
+}
+
+function moveToLyricBox(
+  current: NoteElement,
+  destination: ScoreElement,
+  clearMelisma = false,
+) {
   const currentBox = getLyricsComponentForElement(current);
   if (currentBox === undefined) {
     return false;
@@ -5592,8 +5650,11 @@ function moveToPreviousLyricBox() {
     const destination = activeElements.value[i];
     if (destination.elementType === ElementType.Note) {
       const component = getLyricsComponentForElement(destination);
-      component?.focus(true);
-      return component !== undefined;
+      if (component !== undefined) {
+        component.focus(true);
+        return true;
+      }
+      return moveToLyricBox(current, destination);
     }
   }
 
@@ -8473,39 +8534,63 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
 }
 
 async function awaitBrowserPrintPages(workspace: Workspace) {
-  const layout = pages.value;
   const printScore = workspace.score;
   const revision = workspace.contentRevision;
-  const pageContents = scorePageContents.value ?? [];
-  if (pageContents.length !== filteredPages.value.length) {
-    throw new Error('LAYOUT_CONFLICT');
-  }
+  const isScoreCurrent = () =>
+    workspace === selectedWorkspace.value &&
+    printScore === workspace.score &&
+    revision === workspace.contentRevision;
 
-  const interrupted = Promise.withResolvers<never>();
-  const stop = watch(
-    [pages, selectedWorkspace, score, () => workspace.contentRevision],
-    () => interrupted.reject(new Error('LAYOUT_CONFLICT')),
-  );
+  await awaitBrowserOutputLayout(workspace);
+
+  const deadline = Promise.withResolvers<never>();
   // A rich-text editor that fails to initialize may never report readiness.
   const timer = setTimeout(
-    () => interrupted.reject(new Error('PRINT_RENDER_TIMEOUT')),
+    () => deadline.reject(new Error('PRINT_RENDER_TIMEOUT')),
     45_000,
   );
   try {
-    await Promise.race([
-      Promise.all(pageContents.map((page) => page.whenReady())),
-      interrupted.promise,
-    ]);
+    while (isScoreCurrent()) {
+      const layout = pages.value;
+      const isLayoutCurrent = () =>
+        isScoreCurrent() &&
+        layout === pages.value &&
+        (!settleFootnoteReferences.value || liveLayout.isPublished);
+      if (layout.some((page) => page.footnoteOverflow)) {
+        return isLayoutCurrent;
+      }
+      const pageContents = scorePageContents.value ?? [];
+      if (pageContents.length !== filteredPages.value.length) {
+        break;
+      }
+
+      // Mounting offscreen pages for print can change measured box heights.
+      const interrupted = Promise.withResolvers<void>();
+      const stop = watch(
+        [pages, selectedWorkspace, score, () => workspace.contentRevision],
+        () => interrupted.resolve(),
+      );
+      try {
+        await Promise.race([
+          Promise.all(pageContents.map((page) => page.whenReady())),
+          interrupted.promise,
+          deadline.promise,
+        ]);
+      } finally {
+        stop();
+      }
+      if (isLayoutCurrent()) {
+        return isLayoutCurrent;
+      }
+      if (layout === pages.value) {
+        break;
+      }
+      await nextTick();
+    }
+    throw new Error('LAYOUT_CONFLICT');
   } finally {
     clearTimeout(timer);
-    stop();
   }
-  return () =>
-    workspace === selectedWorkspace.value &&
-    printScore === workspace.score &&
-    revision === workspace.contentRevision &&
-    layout === pages.value &&
-    (!settleFootnoteReferences.value || liveLayout.isPublished);
 }
 
 function showBrowserPrintWarning(
@@ -8557,22 +8642,24 @@ async function onFileMenuPrint(browserInitiated = false) {
     return;
   }
   const workspace = selectedWorkspace.value;
-  prepareWorkspaceForSerialization(workspace);
-
-  printMode.value = true;
-
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
+  let activeElement: Element | null = null;
 
   try {
+    prepareWorkspaceForSerialization(workspace);
+    printMode.value = true;
+    // Keep focus outlines and blinking cursors out of the printed page.
+    activeElement = blurActiveElement();
+
     if (browserInitiated) {
       if (settleFootnoteReferences.value && !liveLayout.isPublished) {
         showBrowserPrintWarning();
         return;
       }
     } else {
-      await awaitBrowserOutputLayout(workspace);
+      const isLayoutCurrent = await awaitBrowserPrintPages(workspace);
+      if (!isLayoutCurrent()) {
+        throw new Error('LAYOUT_CONFLICT');
+      }
     }
     if (pages.value.some((page) => page.footnoteOverflow)) {
       const message = t(($) => $.menu.footnotes.overflow, { ns: 'menu' });
@@ -8583,13 +8670,6 @@ async function onFileMenuPrint(browserInitiated = false) {
       }
       return;
     }
-    if (!browserInitiated) {
-      const isLayoutCurrent = await awaitBrowserPrintPages(workspace);
-      if (!isLayoutCurrent()) {
-        throw new Error('LAYOUT_CONFLICT');
-      }
-    }
-
     window.document.title = getFileName(workspace, false);
     const printed = ipcService.printWorkspace(
       workspace,
@@ -8602,6 +8682,12 @@ async function onFileMenuPrint(browserInitiated = false) {
     await printed;
   } catch (error) {
     console.error(error);
+    const message = t(($) => $.toast.editor.printFailed, { ns: 'toast' });
+    if (browserInitiated) {
+      showBrowserPrintWarning(message);
+    } else {
+      toast.error(message);
+    }
   } finally {
     browserPrintPrepared = false;
     printMode.value = false;
@@ -10984,6 +11070,7 @@ function renderTabLabel(tab: Tab) {
       :key="liveTextBoxMeasurement.id"
       :workspace="liveTextBoxMeasurement.workspace"
       :template-pages="liveTextBoxMeasurement.templatePages"
+      :measurement-boxes="liveTextBoxMeasurement.measurementBoxes"
       :fonts="fonts"
       :editor-language="ckeditorLanguage"
       @complete="liveLayoutMeasurement.complete"

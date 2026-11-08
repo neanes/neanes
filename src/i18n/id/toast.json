@@ -1,5 +1,6 @@
 {
   "editor": {
+    "printFailed": "Partitur tidak dapat dicetak.",
     "unexpectedError": "Terjadi kesalahan tak terduga.",
     "rangeOverflow": "Rentang melampaui batas",
     "openFailed": "Gagal membuka",

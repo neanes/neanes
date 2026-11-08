@@ -162,6 +162,7 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { richTextBoxHeightCap } from '@/services/rendering/textBoxMeasurement';
 import {
   getFontFamilyWithFallback,
   getLegacyNeumeFontFamily,
@@ -498,16 +499,15 @@ const containerStyle = computed(() => {
 });
 
 const textBoxStyle = computed(() => {
+  const heightCap = richTextBoxHeightCap(
+    props.element,
+    props.pageSetup,
+    props.footnoteBody,
+    layout.value.y,
+  );
   const style: StyleValue = {
     width: `${layout.value.width}px`, // no zoom because we scale with the transform
-    maxHeight:
-      props.element.scrollable && !props.footnoteBody
-        ? withZoom(
-            props.pageSetup.pageHeight -
-              layout.value.y -
-              props.pageSetup.bottomMargin,
-          )
-        : undefined,
+    maxHeight: heightCap === undefined ? undefined : withZoom(heightCap),
   };
 
   return style;

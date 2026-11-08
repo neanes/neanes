@@ -737,8 +737,8 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
       }))`);
   assert.equal(
     await evaluate('window.slotMeasurementPasses'),
-    2,
-    'Sparse references only measure the initial and reconciled heights',
+    1,
+    'Sparse references reuse the initial measurements during reconciliation',
   );
   const sparse = await slots();
   assert.deepEqual(
@@ -1001,7 +1001,7 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
     });
     observer.observe(document.body, { childList: true, subtree: true });
   })()`);
-  await settings({ pageHeightCustom: 900 });
+  await settings({ pageHeightCustom: 900, pageWidthCustom: 401 });
   assert.deepEqual(
     await evaluate(`({
       selected: window._editor.selectedWorkspace.value.id,
@@ -1044,6 +1044,8 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
         resolve(advanced);
       });
       observer.observe(document.body, { childList: true, subtree: true });
+      // Make this lyric edit exercise the asynchronous measurement path.
+      document.fonts.dispatchEvent(new Event('loadingdone'));
       first.dispatchEvent(new KeyboardEvent('keydown', {
         code: 'Space', bubbles: true, cancelable: true,
       }));
@@ -1059,11 +1061,91 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
   );
   await evaluate(`${lyricBox(1)}.blur()`);
   await call('get_elements', args);
+  await checkSelectionDuringPagination(evaluate);
   await checkLiveMeasurementTimeout(call, evaluate, args);
   await evaluate('window.slotMeasurementObserver.disconnect()');
   console.log(
     'PASS: marker widths, supersession, CKEditor focus and Undo, tab handoff, and live layout fast paths',
   );
+}
+
+async function checkSelectionDuringPagination(evaluate) {
+  const key = (code, modifiers = '') =>
+    `window.dispatchEvent(new KeyboardEvent('keydown', {
+      code: '${code}', key: '${code === 'KeyJ' ? 'j' : code}',
+      bubbles: true, cancelable: true, ${modifiers}
+    }))`;
+  const { inserted, later } = await evaluate(`(() => {
+    const editor = window._editor;
+    const workspace = editor.selectedWorkspace.value;
+    const [first, later] = editor.elements.value;
+    const laterBox = document.querySelector('#element-' + later.id + ' .syllable-box');
+    const entryMode = workspace.entryMode;
+    document.activeElement.blur();
+    workspace.entryMode = 'Insert';
+    editor.selectedElement.value = first;
+    ${key('KeyJ')};
+    const inserted = editor.selectedElement.value;
+    if (inserted === first || later.index === editor.elements.value.indexOf(later)) {
+      throw new Error('The insertion must precede the layout refresh');
+    }
+    workspace.entryMode = entryMode;
+    laterBox.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
+    return { inserted: inserted.id, later: later.id };
+  })()`);
+  await eventually(async () => {
+    assert.deepEqual(
+      await evaluate(`Array.from(
+        document.querySelectorAll('.page-background .syllable-box.selected'),
+        box => box.closest('.element-box').id,
+      )`),
+      [`element-${inserted}`, `element-${later}`],
+      'The range highlights both notes after the insertion is laid out',
+    );
+  });
+  assert.equal(
+    await evaluate(`document.activeElement.blur(); ${key('Delete')}`),
+    false,
+    'Delete is handled',
+  );
+  await eventually(async () => {
+    assert.equal(
+      await evaluate(`window._editor.elements.value.some(
+        note => [${JSON.stringify(inserted)}, ${JSON.stringify(later)}].includes(note.id),
+      )`),
+      false,
+      'Delete removes the highlighted range',
+    );
+  });
+
+  // Let the keyboard entry throttle reset before inserting the next note.
+  await evaluate('new Promise(resolve => setTimeout(resolve, 110))');
+  const noteId = await evaluate(`(() => {
+    const editor = window._editor;
+    const workspace = editor.selectedWorkspace.value;
+    const entryMode = workspace.entryMode;
+    document.activeElement.blur();
+    workspace.entryMode = 'Insert';
+    editor.selectedElement.value = editor.elements.value[0];
+    ${key('KeyJ')};
+    workspace.entryMode = entryMode;
+    const id = editor.selectedElement.value.id;
+    if (document.getElementById('element-' + id)) {
+      throw new Error('The new note must still be waiting for layout');
+    }
+    ${key('ArrowDown', 'ctrlKey: true')};
+    return id;
+  })()`);
+  await eventually(async () => {
+    assert.equal(
+      await evaluate(
+        'document.activeElement.matches(".lyrics") && document.activeElement.closest(".element-box")?.id',
+      ),
+      `element-${noteId}`,
+      'Ctrl+Down focuses the new note once its lyric control mounts',
+    );
+  });
+  await evaluate('document.activeElement.blur()');
 }
 
 async function checkLiveMeasurementTimeout(call, evaluate, args) {
@@ -1098,6 +1180,9 @@ async function checkLiveMeasurementTimeout(call, evaluate, args) {
       // a debounced save that would supersede it.
       const workspace = window._editor.selectedWorkspace.value;
       state.lyricsLocked = workspace.score.staff.lyrics.locked;
+      state.box = workspace.score.staff.elements.find(element => element.elementType === 'RichTextBox');
+      state.content = state.box.content;
+      state.box.content += '<p>Unmeasured text</p>';
       workspace.updateLyricsLocked(!state.lyricsLocked);
     })()`);
     await Promise.all([
@@ -1130,6 +1215,7 @@ async function checkLiveMeasurementTimeout(call, evaluate, args) {
       state.observer.disconnect();
       if (state.measurement) await state.face.loaded.catch(() => {});
       document.fonts.delete(state.face);
+      state.box.content = state.content;
       window._editor.selectedWorkspace.value.updateLyricsLocked(state.lyricsLocked);
       delete window.slotTimeout;
     })()`);
@@ -1182,6 +1268,135 @@ async function createPageRestartFixture(call, title) {
       ],
     });
   return { args, mutate, settings, insert, reference, content };
+}
+
+export async function checkTextBoxMeasurementReuse(call, evaluate) {
+  const { args, settings, insert, mutate, content } =
+    await createPageRestartFixture(call, 'Text-heavy note entry');
+  await insert(
+    [
+      { elementType: 'Note' },
+      ...Array.from({ length: 20 }, (_, index) => ({
+        elementType: 'RichTextBox',
+        clientId: `box${index}`,
+        properties: { content },
+      })),
+    ],
+    ['box0', 'box1', 'box2', 'box3'],
+  );
+  const header = (
+    await call('get_elements', {
+      ...args,
+      collection: { kind: 'headers', variant: 'default' },
+      properties: [],
+    })
+  ).elements[0];
+  await mutate('edit_elements', {
+    actions: [
+      {
+        action: 'update',
+        elementRef: header.elementRef,
+        elementType: header.elementType,
+        properties: { contentCenter: 'Page $p of $n' },
+      },
+    ],
+  });
+  const callbacks = [];
+  for (const [footnoteNumbering, showHeader] of [
+    ['continuous', false],
+    ['page', false],
+    ['page', true],
+  ]) {
+    await settings({ footnoteNumbering });
+    if (showHeader) {
+      await mutate('update_header_footer_settings', {
+        changes: { showHeader },
+      });
+    }
+    await call('get_pages', args);
+    await evaluate(`(() => {
+      window.measurementPeak = 0;
+      window.measurementObserver = new MutationObserver(() => {
+        const count = document.querySelectorAll(
+          '.workspace-text-box-measurement :is(.rich-text-box-container, .text-box-container)',
+        ).length;
+        window.measurementPeak = Math.max(window.measurementPeak, count);
+      });
+      window.measurementObserver.observe(document.body, { childList: true, subtree: true });
+    })()`);
+    try {
+      const delays = [];
+      for (let index = 0; index < 3; index++) {
+        const { id, delay } = await evaluate(`new Promise(resolve => {
+          const editor = window._editor;
+          const workspace = editor.selectedWorkspace.value;
+          const entryMode = workspace.entryMode;
+          document.activeElement.blur();
+          workspace.entryMode = 'Insert';
+          editor.selectedElement.value = editor.elements.value[0];
+          const start = performance.now();
+          window.dispatchEvent(new KeyboardEvent('keydown', {
+            code: 'KeyJ', key: 'j', bubbles: true, cancelable: true,
+          }));
+          const id = editor.selectedElement.value.id;
+          workspace.entryMode = entryMode;
+          setTimeout(() => resolve({ id, delay: performance.now() - start }), 120);
+        })`);
+        delays.push(Math.round(delay));
+        await call('get_pages', args);
+        assert.equal(
+          await evaluate(`window._editor.score.value.staff.elements[1].id`),
+          id,
+        );
+      }
+      assert.equal(
+        await evaluate('window.measurementPeak'),
+        0,
+        'Note entry reuses unchanged rich-text heights',
+      );
+      callbacks.push({ footnoteNumbering, showHeader, delays });
+      if (footnoteNumbering === 'page') {
+        const { elements } = await call('get_elements', {
+          ...args,
+          includeContent: true,
+        });
+        const box = elements
+          .filter((element) => element.elementType === 'RichTextBox')
+          .at(-1);
+        await mutate('edit_elements', {
+          actions: [
+            {
+              action: 'update',
+              elementType: 'RichTextBox',
+              elementRef: box.elementRef,
+              properties: {
+                content: box.properties.content + '<p>Another line</p>',
+              },
+            },
+          ],
+        });
+        assert.equal(
+          await evaluate('window.measurementPeak'),
+          1,
+          'A content edit measures only the changed box',
+        );
+      }
+      if (showHeader) {
+        await evaluate('window.measurementPeak = 0');
+        await mutate('update_header_footer_settings', {
+          changes: { firstPageNumber: 2 },
+        });
+        assert.equal(
+          await evaluate('window.measurementPeak'),
+          1,
+          'Only the template is measured when its page number changes',
+        );
+      }
+    } finally {
+      await evaluate('window.measurementObserver.disconnect()');
+    }
+  }
+  console.log('PASS: note entry reuses rich-text measurements', callbacks);
 }
 
 export async function checkFillWidthReference(call, evaluate) {
@@ -1313,19 +1528,6 @@ export async function checkMarkerWidthThreshold(call, evaluate, directory) {
   })()`);
   assert.ok(probe.threshold, JSON.stringify(probe));
   const { text, oneLine, wide } = probe.threshold;
-  await mutate('edit_elements', {
-    actions: [
-      {
-        action: 'update',
-        elementType: 'RichTextBox',
-        elementRef: boxes[1].elementRef,
-        properties: {
-          content: boxes[1].properties.content.replace('Reference', text),
-        },
-      },
-    ],
-  });
-  assert.equal((await geometry()).height, wide);
   await evaluate(`(() => {
     const id = ${JSON.stringify(id)};
     window.thresholdTrials = [];
@@ -1343,6 +1545,35 @@ export async function checkMarkerWidthThreshold(call, evaluate, directory) {
       childList: true, subtree: true, attributes: true, characterData: true,
     });
   })()`);
+  await mutate('edit_elements', {
+    actions: [
+      {
+        action: 'update',
+        elementType: 'RichTextBox',
+        elementRef: boxes[1].elementRef,
+        properties: {
+          content: boxes[1].properties.content.replace('Reference', text),
+        },
+      },
+    ],
+  });
+  assert.equal((await geometry()).height, wide);
+  const trials = await evaluate('window.thresholdTrials');
+  assert.ok(
+    trials.some(
+      (trial) => trial.label === '10' && trial.width === probe.widths[1],
+    ),
+    JSON.stringify({ trials, widths: probe.widths }),
+  );
+  assert.ok(
+    trials.some((trial) => trial.width === probe.widths[0]),
+    JSON.stringify({ trials, widths: probe.widths }),
+  );
+  assert.ok(
+    trials.every((trial) => trial.livePage === 1 && trial.hidden),
+    JSON.stringify(trials),
+  );
+
   // The default space above the footnotes is 6 pt (8 px).
   const thresholdHeight = 60 + 8 + probe.fixedHeight + (oneLine + wide) / 2;
   await settings({ pageHeightCustom: thresholdHeight });
@@ -1362,24 +1593,12 @@ export async function checkMarkerWidthThreshold(call, evaluate, directory) {
       assert.ok(Math.abs(width - probe.widths[0]) < 0.001);
     });
   await assertSettled();
-  const trials = await evaluate(
-    'window.thresholdObserver.disconnect(); window.thresholdTrials',
-  );
-  assert.ok(
-    trials.some(
-      (trial) => trial.label === '10' && trial.width === probe.widths[1],
+  assert.deepEqual(
+    await evaluate(
+      'window.thresholdObserver.disconnect(); window.thresholdTrials',
     ),
-    JSON.stringify({ trials, widths: probe.widths }),
-  );
-  assert.ok(
-    trials.some(
-      (trial) => trial.label === '9' && trial.width === probe.widths[0],
-    ),
-    JSON.stringify({ trials, widths: probe.widths }),
-  );
-  assert.ok(
-    trials.every((trial) => trial.livePage === 1 && trial.hidden),
-    JSON.stringify(trials),
+    trials,
+    'Repagination reuses the measurement for the narrower marker',
   );
 
   const filePath = path.join(directory, 'marker-width-threshold.byzx');

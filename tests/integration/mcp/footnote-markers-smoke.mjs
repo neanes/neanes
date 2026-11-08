@@ -11,6 +11,7 @@ import {
   checkFootnoteSettlement,
   checkLiveFootnoteSettlement,
   checkMarkerWidthThreshold,
+  checkTextBoxMeasurementReuse,
 } from './footnoteSettlementChecks.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
 import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
@@ -945,6 +946,7 @@ try {
   // Keep the inspected page focused even if macOS activates another window.
   await socket.send('Emulation.setFocusEmulationEnabled', { enabled: true });
   try {
+    await checkTextBoxMeasurementReuse(call, evaluate);
     await checkLiveFootnoteSettlement(call, evaluate);
   } finally {
     await socket.send('Emulation.setFocusEmulationEnabled', { enabled: false });

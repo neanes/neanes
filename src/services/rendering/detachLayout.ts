@@ -62,6 +62,7 @@ export function detachLayout(workspace: Workspace) {
   return {
     workspace: detached,
     copies,
+    originals,
     applyHeights() {
       const changed: MeasuredTextBox[] = [];
       for (const box of getResizableTextBoxes(detached.score)) {

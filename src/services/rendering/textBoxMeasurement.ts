@@ -3,6 +3,7 @@ import {
   type RichTextBoxElement,
   type TextBoxElement,
 } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
 import type { Score } from '@/models/Score';
 
 export type MeasuredTextBox = TextBoxElement | RichTextBoxElement;
@@ -32,4 +33,15 @@ export function getResizableTextBoxes(score: Score): MeasuredTextBox[] {
         !(element as TextBoxElement).inline &&
         (element as TextBoxElement).customHeight == null),
   );
+}
+
+export function richTextBoxHeightCap(
+  box: Pick<RichTextBoxElement, 'scrollable' | 'multipanel' | 'inline'>,
+  pageSetup: PageSetup,
+  footnoteBody: boolean,
+  y: number,
+) {
+  return box.scrollable && !box.multipanel && !box.inline && !footnoteBody
+    ? pageSetup.pageHeight - y - pageSetup.bottomMargin
+    : undefined;
 }

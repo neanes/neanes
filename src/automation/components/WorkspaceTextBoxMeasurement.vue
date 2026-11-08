@@ -13,6 +13,7 @@
       :fonts="fonts"
       :editor-language="editorLanguage"
       :overlays="overlays"
+      :measurement-boxes="measurementBoxes"
       measure-text-only
       @measured="complete"
       @failed="failed"
@@ -69,6 +70,7 @@ import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCs
 const props = defineProps<{
   workspace: Workspace;
   templatePages?: Page[];
+  measurementBoxes?: ReadonlySet<MeasuredTextBox>;
   fonts: string[];
   editorLanguage: string;
 }>();
@@ -78,7 +80,10 @@ const emit = defineEmits<{
 }>();
 const overlays = new EditorPreferences();
 const styleScopeId = `text-box-measurement-${useId()}`;
-const elements = getResizableTextBoxes(props.workspace.score);
+const elements =
+  props.measurementBoxes === undefined
+    ? getResizableTextBoxes(props.workspace.score)
+    : [...props.measurementBoxes];
 const footnoteBodyElements = new Set(
   props.workspace.score.footnotes.flatMap((body) => body.staff.elements),
 );

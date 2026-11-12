@@ -786,7 +786,7 @@ const liveLayout = useLiveWorkspaceLayout({
   }),
   cancelMeasurement: liveLayoutMeasurement.cancel,
 });
-const { invalidate: invalidateLiveLayout, wait: awaitCurrentFootnoteLayout } =
+const { invalidate: invalidateLiveLayout, wait: awaitSettledLayout } =
   liveLayout;
 
 const {
@@ -2176,7 +2176,7 @@ const {
     return await discardRecoverySnapshot(workspace.id);
   },
   snapshot: createScoreRenderSnapshot,
-  awaitCurrentFootnoteLayout,
+  awaitSettledLayout,
   busyState() {
     if (isLoading.value) {
       return { reason: 'loading' };
@@ -5695,7 +5695,7 @@ async function runLiveSettlement(
     box.updated = true;
   }
   publishLayout(processedPages, activeBox, lyricSelection);
-  return 'published';
+  return 'settled';
 }
 
 function save() {
@@ -8366,8 +8366,8 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
   }
   if (settleFootnoteReferences.value) {
     invalidateLiveLayout();
-    const outcome = await awaitCurrentFootnoteLayout(workspace);
-    if (outcome !== 'published') {
+    const outcome = await awaitSettledLayout(workspace);
+    if (outcome !== 'settled') {
       throw new Error('LAYOUT_CONFLICT');
     }
   } else {
@@ -8403,7 +8403,7 @@ async function awaitBrowserPrintPages(workspace: Workspace) {
       const isLayoutCurrent = () =>
         isScoreCurrent() &&
         layout === pages.value &&
-        (!settleFootnoteReferences.value || liveLayout.isPublished);
+        (!settleFootnoteReferences.value || liveLayout.isSettled);
       if (layout.some((page) => page.footnoteOverflow)) {
         return isLayoutCurrent;
       }
@@ -8499,7 +8499,7 @@ async function onFileMenuPrint(browserInitiated = false) {
     activeElement = blurActiveElement();
 
     if (browserInitiated) {
-      if (settleFootnoteReferences.value && !liveLayout.isPublished) {
+      if (settleFootnoteReferences.value && !liveLayout.isSettled) {
         showBrowserPrintWarning();
         return;
       }

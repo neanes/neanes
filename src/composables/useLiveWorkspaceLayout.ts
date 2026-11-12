@@ -172,7 +172,7 @@ export function useLiveWorkspaceLayout(options: {
         }
         request.outcome = outcome;
         waitingForBlur = outcome === 'deferred';
-        if (outcome === 'published' && measuredBreaks !== undefined) {
+        if (outcome === 'settled' && measuredBreaks !== undefined) {
           settledBreaks.set(score, measuredBreaks);
         }
         return outcome;
@@ -256,8 +256,8 @@ export function useLiveWorkspaceLayout(options: {
     refresh,
     breaksFor,
     clearMeasurements: () => measurements.clear(),
-    get isPublished() {
-      return current?.outcome === 'published' && current.isCurrent();
+    get isSettled() {
+      return current?.outcome === 'settled' && current.isCurrent();
     },
     get waitingForBlur() {
       return waitingForBlur;

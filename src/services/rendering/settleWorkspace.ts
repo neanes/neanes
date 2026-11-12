@@ -8,7 +8,7 @@ import {
 } from './textBoxMeasurement';
 import { WorkspaceLayoutSettlement } from './workspaceLayoutSettlement';
 
-export type LiveLayoutOutcome = 'published' | 'deferred' | 'superseded';
+export type LiveLayoutOutcome = 'settled' | 'deferred' | 'superseded';
 
 export async function settleWorkspace(
   workspace: Workspace,

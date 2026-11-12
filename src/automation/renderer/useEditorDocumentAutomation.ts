@@ -31,9 +31,7 @@ export function useEditorDocumentAutomation(
     enabled: boolean;
     busyState(): EditorBusyState | null;
     snapshot(workspace: Workspace): ScoreRenderSnapshot;
-    awaitCurrentFootnoteLayout(
-      workspace: Workspace,
-    ): Promise<LiveLayoutOutcome>;
+    awaitSettledLayout(workspace: Workspace): Promise<LiveLayoutOutcome>;
   },
 ) {
   const dirtyTextBoxWorkspaces = new Set<string>();
@@ -42,7 +40,7 @@ export function useEditorDocumentAutomation(
   const selectedDuringMeasurement = new Error('WORKSPACE_BECAME_SELECTED');
 
   async function settleSelectedFootnoteLayout(workspace: Workspace) {
-    const outcome = await options.awaitCurrentFootnoteLayout(workspace);
+    const outcome = await options.awaitSettledLayout(workspace);
     if (outcome === 'deferred') {
       throw editorBusyError({ reason: 'layout_deferred' });
     }

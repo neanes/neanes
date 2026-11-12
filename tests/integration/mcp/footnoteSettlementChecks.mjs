@@ -1086,8 +1086,8 @@ async function checkSelectionDuringPagination(evaluate) {
     editor.selectedElement.value = first;
     ${key('KeyJ')};
     const inserted = editor.selectedElement.value;
-    if (inserted === first || later.index === editor.elements.value.indexOf(later)) {
-      throw new Error('The insertion must precede the layout refresh');
+    if (inserted === first) {
+      throw new Error('The note must be inserted');
     }
     workspace.entryMode = entryMode;
     laterBox.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }));
@@ -1131,7 +1131,7 @@ async function checkSelectionDuringPagination(evaluate) {
     workspace.entryMode = entryMode;
     const id = editor.selectedElement.value.id;
     if (document.getElementById('element-' + id)) {
-      throw new Error('The new note must still be waiting for layout');
+      throw new Error('The new note must not be mounted yet');
     }
     ${key('ArrowDown', 'ctrlKey: true')};
     return id;

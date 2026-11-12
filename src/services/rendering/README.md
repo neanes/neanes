@@ -40,6 +40,10 @@ Settlement rejects stale measurements and fails on the twelfth changed pass.
 The measurement and rendering lifecycles handle cancellation. Overflow remains
 editable and visual export validation rejects it.
 
-The live editor measures eligible page-restarted layouts offscreen and
-publishes only the settled result. Other live layouts retain their debounced
-DOM height callbacks.
+The live editor always publishes a synchronous layout first, using the
+current heights and the breaks retained by the last settled publish. For
+eligible page-restarted layouts it then settles a detached copy offscreen and
+publishes the result as a refinement. Interactions use whichever layout is
+displayed; only output (print, export, and MCP) waits for the settled result.
+A failed settlement leaves the synchronous layout displayed. Other live
+layouts retain their debounced DOM height callbacks.

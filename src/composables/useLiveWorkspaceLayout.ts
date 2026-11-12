@@ -47,7 +47,6 @@ export function useLiveWorkspaceLayout(options: {
   ) => Promise<TextBoxHeightMeasurement[]>;
   textBoxEditor: () => { fonts: string[]; language: string };
   cancelMeasurement: () => void;
-  onFailure: (workspace: Workspace, score: Score) => void;
 }) {
   const measurements = new TextBoxMeasurementCache();
   let current: LayoutRequest | undefined;
@@ -165,11 +164,11 @@ export function useLiveWorkspaceLayout(options: {
         if (current?.promise === promise) {
           invalidate();
         }
-        if (failedWhileCurrent) {
-          options.onFailure(source, score);
-          throw error;
+        if (!failedWhileCurrent) {
+          return 'superseded';
         }
-        return 'superseded';
+        // The synchronous layout stays published.
+        throw error;
       })
       .finally(() => clearTimeout(timer));
 

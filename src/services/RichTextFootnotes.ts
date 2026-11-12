@@ -10,8 +10,25 @@ export const FOOTNOTE_CLASS = 'neanes-footnote';
 export const FOOTNOTE_ATTRIBUTE = 'data-footnote-id';
 export const FOOTNOTE_ELEMENT = 'footnoteReference';
 
+// Layout and reactive state query the same content repeatedly. Cache only
+// successful parses so invalid references keep throwing.
+const MAX_CACHED_CONTENT = 1024;
+const cachedIds = new Map<string, readonly string[]>();
+
+export function richTextFootnoteIds(html: string): readonly string[] {
+  let ids = cachedIds.get(html);
+  if (ids === undefined) {
+    ids = Object.freeze(parseRichTextFootnoteIds(html));
+    if (cachedIds.size >= MAX_CACHED_CONTENT) {
+      cachedIds.delete(cachedIds.keys().next().value!);
+    }
+    cachedIds.set(html, ids);
+  }
+  return ids;
+}
+
 // Parse HTML without a DOM so model operations also work in private documents.
-export function richTextFootnoteIds(html: string): string[] {
+function parseRichTextFootnoteIds(html: string): string[] {
   const ids: string[] = [];
   const objects: boolean[] = [];
   new Parser({

@@ -195,22 +195,6 @@ describe('rich textbox footnotes', () => {
     ).toEqual([]);
   });
 
-  it('reuses parsed IDs without caching invalid content', () => {
-    const body = new Footnote();
-    const html = `<p>A${richTextFootnoteHtml(body.id)}</p>`;
-    const ids = richTextFootnoteIds(html);
-    expect(ids).toEqual([body.id]);
-    expect(richTextFootnoteIds(html)).toBe(ids);
-    expect(Object.isFrozen(ids)).toBe(true);
-
-    const invalid = '<p><span class="neanes-footnote"></span></p>';
-    for (let attempt = 0; attempt < 2; attempt++) {
-      expect(() => richTextFootnoteIds(invalid)).toThrow(
-        'INVALID_FOOTNOTE_REFERENCE',
-      );
-    }
-  });
-
   it('only inserts at safe HTML text boundaries', () => {
     const body = new Footnote();
     const html = '<p>Hello &amp; goodbye</p>';

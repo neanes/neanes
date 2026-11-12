@@ -52,8 +52,12 @@ export function useLiveWorkspaceLayout(options: {
   const measurements = new TextBoxMeasurementCache();
   // Breaks retained by each score's last settled publish, on the original
   // elements. Reusing them keeps the synchronous layout of unchanged content
-  // identical to the settled one.
-  const settledBreaks = new WeakMap<Score, ReadonlySet<ScoreElement>>();
+  // identical to the settled one. After an edit they can force breaks where
+  // content now fits, so they apply only at the revision they settled.
+  const settledBreaks = new WeakMap<
+    Score,
+    { contentRevision: number; breaks: ReadonlySet<ScoreElement> }
+  >();
   let current: LayoutRequest | undefined;
   let disposed = false;
   let waitingForBlur = false;
@@ -173,7 +177,10 @@ export function useLiveWorkspaceLayout(options: {
         request.outcome = outcome;
         waitingForBlur = outcome === 'deferred';
         if (outcome === 'settled' && measuredBreaks !== undefined) {
-          settledBreaks.set(score, measuredBreaks);
+          settledBreaks.set(score, {
+            contentRevision,
+            breaks: measuredBreaks,
+          });
         }
         return outcome;
       })
@@ -245,8 +252,11 @@ export function useLiveWorkspaceLayout(options: {
   }
 
   function breaksFor(workspace: Workspace) {
-    const { score } = toRaw(workspace);
-    return options.enabled() ? settledBreaks.get(score) : undefined;
+    const { score, contentRevision } = toRaw(workspace);
+    const settled = settledBreaks.get(score);
+    return options.enabled() && settled?.contentRevision === contentRevision
+      ? settled.breaks
+      : undefined;
   }
 
   return {

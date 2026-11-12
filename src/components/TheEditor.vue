@@ -5699,11 +5699,22 @@ async function runLiveSettlement(
 }
 
 function save() {
+  publishAndSettleLayout(true);
+}
+
+// After a lyric commit, the focused box no longer holds a draft. Its committed
+// text can differ from the typed text (e.g. locked lyrics reassign syllables),
+// so restoring the typed text would overwrite the model.
+function saveCommittedLyrics() {
+  publishAndSettleLayout(false);
+}
+
+function publishAndSettleLayout(preserveLyricDraft: boolean) {
   refineLayoutDebounced.cancel({ upcomingOnly: true });
   // Always publish a layout immediately. Settlement only refines it.
   const workspace = toRaw(selectedWorkspace.value);
   // Keep an uncommitted lyric draft in case the layout remounts its control.
-  const lyricSelection = captureSelectedLyricSelection(true);
+  const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
   publishLayout(
     LayoutService.processPages(workspace, {
       ...layoutOptions(),
@@ -6775,7 +6786,7 @@ function updateLyrics(
     } else {
       extractStaffLyrics(selectedWorkspace.value, staff);
     }
-    save();
+    saveCommittedLyrics();
   }
 }
 

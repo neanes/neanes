@@ -1,5 +1,6 @@
 import { nextTick, onBeforeUnmount, toRaw } from 'vue';
 
+import type { ScoreElement } from '@/models/Element';
 import type { LayoutDiagnosticsOptions } from '@/models/LayoutDiagnostics';
 import type { Page } from '@/models/Page';
 import type { Score } from '@/models/Score';
@@ -49,6 +50,10 @@ export function useLiveWorkspaceLayout(options: {
   cancelMeasurement: () => void;
 }) {
   const measurements = new TextBoxMeasurementCache();
+  // Breaks retained by each score's last settled publish, on the original
+  // elements. Reusing them keeps the synchronous layout of unchanged content
+  // identical to the settled one.
+  const settledBreaks = new WeakMap<Score, ReadonlySet<ScoreElement>>();
   let current: LayoutRequest | undefined;
   let disposed = false;
   let waitingForBlur = false;
@@ -101,6 +106,7 @@ export function useLiveWorkspaceLayout(options: {
       current?.promise === promise &&
       isSelected(source, score) &&
       source.contentRevision === contentRevision;
+    let measuredBreaks: ReadonlySet<ScoreElement> | undefined;
 
     async function run(): Promise<LiveLayoutOutcome> {
       // Let canceled measurement components unmount before starting another.
@@ -137,10 +143,19 @@ export function useLiveWorkspaceLayout(options: {
             },
             layoutOptions,
           );
+          const breaksBefore = new Set<ScoreElement>();
+          for (const copy of result.breaksBefore) {
+            const original = detached.originals.get(copy);
+            if (original !== undefined) {
+              breaksBefore.add(original);
+            }
+          }
+          measuredBreaks = breaksBefore;
           return {
             copies: detached.copies,
             applyHeights: detached.applyHeights,
-            ...result,
+            pages: result.pages,
+            breaksBefore,
           };
         },
       });
@@ -157,6 +172,9 @@ export function useLiveWorkspaceLayout(options: {
         }
         request.outcome = outcome;
         waitingForBlur = outcome === 'deferred';
+        if (outcome === 'published' && measuredBreaks !== undefined) {
+          settledBreaks.set(score, measuredBreaks);
+        }
         return outcome;
       })
       .catch((error: unknown): LiveLayoutOutcome => {
@@ -219,10 +237,24 @@ export function useLiveWorkspaceLayout(options: {
     }
   }
 
+  // Restart settlement even when the content revision is unchanged, so that
+  // uncommitted rich-text drafts are measured.
+  function refresh(workspace: Workspace) {
+    invalidate();
+    void start(workspace).catch(console.error);
+  }
+
+  function breaksFor(workspace: Workspace) {
+    const { score } = toRaw(workspace);
+    return options.enabled() ? settledBreaks.get(score) : undefined;
+  }
+
   return {
     start,
     wait,
     invalidate,
+    refresh,
+    breaksFor,
     clearMeasurements: () => measurements.clear(),
     get isPublished() {
       return current?.outcome === 'published' && current.isCurrent();

@@ -517,9 +517,6 @@ const tabs = ref<Tab[]>([]);
 const contextMenuWorkspaceId = ref<string | null>(null);
 const scoreContextMenuTarget = ref<ScoreElement | null>(null);
 const scoreMenuPointerDownInside = ref(false);
-// Breaks retained by each score's last settled publish. Reusing them keeps the
-// synchronous layout of unchanged content identical to the settled one.
-const settledBreaksBefore = new WeakMap<Score, ReadonlySet<ScoreElement>>();
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
@@ -1580,7 +1577,11 @@ const throttled = {
   onScroll: throttle(250, onScroll),
 };
 const saveDebounced = debounce(250, save);
-const refineLayoutDebounced = debounce(250, refineLayout);
+// Refine the published layout with uncommitted rich-text content, without
+// republishing the committed content first.
+const refineLayoutDebounced = debounce(250, () =>
+  liveLayout.refresh(selectedWorkspace.value),
+);
 const ZOOM_WHEEL_DELTA_THRESHOLD = 80;
 const ZOOM_WHEEL_DELTA_RESET_DELAY_MS = 200;
 let zoomWheelDelta = 0;
@@ -1765,9 +1766,7 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 
 function onLayoutFontsChanged() {
   liveLayout.clearMeasurements();
-  if (settleFootnoteReferences.value) {
-    invalidateLiveLayout();
-  }
+  invalidateLiveLayout();
   saveDebounced();
 }
 onBeforeUnmount(() => {
@@ -2940,10 +2939,9 @@ watch(
       return;
     }
     const changed = () => {
-      if (settleFootnoteReferences.value) {
-        invalidateLiveLayout();
-        refineLayoutDebounced();
-      }
+      // Cancel the stale settlement now; the refresh starts after typing pauses.
+      invalidateLiveLayout();
+      refineLayoutDebounced();
     };
     editor.model.document.on('change:data', changed);
     onCleanup(() => editor.model.document.off('change:data', changed));
@@ -5675,15 +5673,6 @@ async function runLiveSettlement(
   const trialOwner = rawOwner == null ? undefined : result.copies.get(rawOwner);
   const previousContent =
     rawOwner == null ? [] : contentKeys.map((key) => rawOwner[key]);
-  const breaksBefore = new Set<ScoreElement>();
-  if (result.breaksBefore.size > 0) {
-    for (const element of score.staff.elements) {
-      const copy = result.copies.get(element);
-      if (copy && result.breaksBefore.has(copy)) {
-        breaksBefore.add(element);
-      }
-    }
-  }
   let processedPages: Page[];
   try {
     if (rawOwner !== null && trialOwner instanceof RichTextBoxElement) {
@@ -5693,7 +5682,7 @@ async function runLiveSettlement(
     }
     processedPages = LayoutService.processPages(source, {
       ...options,
-      breaksBefore,
+      breaksBefore: result.breaksBefore,
     });
   } finally {
     if (rawOwner !== null) {
@@ -5705,14 +5694,12 @@ async function runLiveSettlement(
   for (const box of resized) {
     box.updated = true;
   }
-  settledBreaksBefore.set(score, breaksBefore);
   publishLayout(processedPages, activeBox, lyricSelection);
   return 'published';
 }
 
 function save() {
   refineLayoutDebounced.cancel({ upcomingOnly: true });
-  invalidateLiveLayout();
   // Always publish a layout immediately. Settlement only refines it.
   const workspace = toRaw(selectedWorkspace.value);
   // Keep an uncommitted lyric draft in case the layout remounts its control.
@@ -5720,25 +5707,14 @@ function save() {
   publishLayout(
     LayoutService.processPages(workspace, {
       ...layoutOptions(),
-      breaksBefore: settleFootnoteReferences.value
-        ? settledBreaksBefore.get(workspace.score)
-        : undefined,
+      breaksBefore: liveLayout.breaksFor(workspace),
     }),
     null,
     lyricSelection,
   );
-  refineLayout();
+  liveLayout.refresh(workspace);
 
   persistLayoutRecovery();
-}
-
-// Refine the published layout with uncommitted rich-text content, without
-// republishing the committed content first.
-function refineLayout() {
-  invalidateLiveLayout();
-  if (settleFootnoteReferences.value) {
-    void liveLayout.start(selectedWorkspace.value).catch(console.error);
-  }
 }
 
 function publishLayout(
@@ -7080,7 +7056,7 @@ function updateTextBox(
 
 function resumeLayoutAfterTextBlur() {
   if (liveLayout.waitingForBlur) {
-    refineLayout();
+    liveLayout.refresh(selectedWorkspace.value);
   }
 }
 

@@ -22,19 +22,10 @@ export function useFootnoteProperties(
   const footnotePropertiesDialogIsOpen = ref(false);
   const editedFootnoteId = ref<string | null>(null);
   const editedFootnote = computed(() => {
-    const score = workspace.value.score;
-    const pageAssignments =
-      score.pageSetup.footnoteNumbering === 'page'
-        ? new Map(
-            pages.value.flatMap((page) =>
-              page.footnotes.map(
-                ({ reference }) =>
-                  [reference, page.physicalPageNumber] as const,
-              ),
-            ),
-          )
-        : undefined;
-    return orderedFootnotes(score, pageAssignments).find(
+    // Layout writes page numbers to raw elements. Depend on the published
+    // pages so page-restarted labels refresh after each layout.
+    void pages.value;
+    return orderedFootnotes(workspace.value.score).find(
       ({ footnote }) => footnote.id === editedFootnoteId.value,
     );
   });

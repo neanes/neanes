@@ -201,24 +201,21 @@ describe('automatic footnote sequences', () => {
     expect(labels(score)).toEqual(['7', '8', '9', '7']);
   });
 
-  it('uses final page assignments for labels and explicit breaks for pre-layout ordinals', () => {
+  it('uses element pages for labels and explicit breaks for pre-layout ordinals', () => {
     const { score, anchors } = fixture();
     score.pageSetup.footnoteNumbering = 'page';
-    const assignments = new Map(
-      anchors.map((anchor, index) => [anchor, index < 2 ? 1 : 2]),
-    );
-    anchors.forEach((anchor) => {
-      anchor.page = 99;
+    anchors.forEach((anchor, index) => {
+      anchor.page = index < 2 ? 1 : 2;
     });
-    expect(
-      orderedFootnotes(score, assignments).map((entry) => entry.number),
-    ).toEqual([1, 2, 1, 2]);
-    expect(orderedFootnotes(score, null).map((entry) => entry.number)).toEqual([
+    expect(orderedFootnotes(score).map((entry) => entry.number)).toEqual([
+      1, 2, 1, 2,
+    ]);
+    expect(orderedFootnotes(score, true).map((entry) => entry.number)).toEqual([
       1, 2, 3, 4,
     ]);
     score.footnotes[1].marker = 'Custom';
     anchors[2].pageBreak = true;
-    expect(orderedFootnotes(score, null).map((entry) => entry.marker)).toEqual([
+    expect(orderedFootnotes(score, true).map((entry) => entry.marker)).toEqual([
       '1',
       'Custom',
       '2',

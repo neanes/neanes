@@ -115,7 +115,10 @@ versus parenthesized neume labels, MCP marker metadata, BYZ/BYZX persistence, PN
 rendering, and navigation. It compares inline marker and wrapping geometry across
 numeric and repeated-symbol page restarts, verifies the width reset at explicit
 breaks, and checks natural custom-marker widths, non-scrollable body measurement,
-and agreement between the editor, cold private reopen, and detached exports.
+and that a private reopen with stale heights settles to the editor's heights and
+placement. Live checks cover typing in a focused rich-text editor, deferring a
+settled layout that would move it until blur, lyric entry during settlement, and
+measurement reuse across note entry and content edits.
 It also checks gorgon clearance after mark and reference offsets, musical-anchor
 position controls and previews, reset, undo/redo, and martyria footnote persistence.
 Tempo elements reject footnote insertion and offer no footnote context-menu actions.

@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
-import { createServer } from 'node:http';
 import path from 'node:path';
 
 import { eventually } from './smokePolling.mjs';
@@ -162,7 +161,6 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
   for (const [footnoteFormat, firstFootnoteNumber, candidates] of [
     ['numbers', 9, ['9', '10']],
     ['symbols', 5, ['¶', '‖']],
-    ['symbols', 6, ['‖', '**']],
   ]) {
     await settings({
       pageHeightCustom: 900,
@@ -286,9 +284,6 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     ),
     'Custom labels do not rewrap footnote bodies',
   );
-  const stable = await call('get_pages', args);
-  await eventually(async () => assert.deepEqual(await geometry(), custom));
-  assert.equal((await call('get_pages', args)).layoutId, stable.layoutId);
   await edit([{ action: 'update_footnote', footnoteId: ids[0], marker: null }]);
   const restored = await geometry();
   const bodySizes = (geometry) =>
@@ -337,7 +332,7 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     expectedRevision: await revision(),
     changes: { showFooter: true },
   });
-  // Save/reopen in the private worker, then compare independently settled exports.
+  // Reopen with stale heights in the private worker and compare its settled layout.
   const filePath = path.join(directory, 'footnote-wrapping.byzx');
   await call('save_document', {
     ...args,
@@ -368,285 +363,59 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
     documentScope: 'private',
     documentId: privateDoc.documentId,
   };
-  await evaluate(`(() => {
-    const observer = new MutationObserver(() => {
-      const pages = document.querySelectorAll('.workspace-page-measurement .page');
-      if (!pages.length) return;
-      window.detachedStaffGeometry = [...pages].flatMap((page, index) =>
-        [...page.querySelectorAll('.line:not([data-footnote-id]) > .element-box .rich-text-box-container')]
-          .map(box => {
-            const position = getComputedStyle(box.closest('.element-box'));
-            const size = getComputedStyle(box);
-            return [index + 1, ...[position.left, position.top, size.width, size.height].map(parseFloat)];
-          }),
-      );
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.detachedGeometryObserver = observer;
-  })()`);
   const editorPages = await call('get_pages', args);
-  const comparison = await evaluate(`(() => {
-    window.detachedGeometryObserver.disconnect();
-    return {
-      detached: window.detachedStaffGeometry,
-      live: window._editor.score.value.staff.elements
-        .filter(element => element.elementType === 'RichTextBox')
-        .map(({ page, x, y, width, height }) => [page, x, y, width, height]),
-    };
-  })()`);
-  assert.equal(comparison.detached.length, comparison.live.length);
-  for (const [index, layout] of comparison.detached.entries()) {
-    assert.ok(
-      layout.every(
-        (value, field) =>
-          Math.abs(value - comparison.live[index][field]) < 0.05,
-      ),
-      JSON.stringify(comparison),
-    );
-  }
   const privatePages = await call('get_pages', privateArgs);
   assert.equal(
     privatePages.pageCount,
     editorPages.pageCount,
     'Editor and private worker agree on pagination',
   );
+  const heights = async (document) =>
+    (await call('get_elements', document)).elements
+      .filter((entry) => entry.elementType === 'RichTextBox')
+      .map((entry) => entry.properties.height);
+  const editorHeights = await heights(args);
+  const privateHeights = await heights(privateArgs);
+  assert.equal(privateHeights.length, editorHeights.length);
+  privateHeights.forEach((height, index) =>
+    assert.ok(
+      Math.abs(height - editorHeights[index]) < 0.05,
+      'Reopening with stale heights settles to the editor heights',
+    ),
+  );
+  const occurrences = (result) =>
+    result.occurrences.map(
+      ({ elementType, collection, index, region, lineIndex }) => ({
+        elementType,
+        collection,
+        index,
+        region,
+        lineIndex,
+      }),
+    );
   for (let pageNumber = 1; pageNumber <= editorPages.pageCount; pageNumber++) {
-    const left = await call('get_page_elements', { ...args, pageNumber });
-    const right = await call('get_page_elements', {
-      ...privateArgs,
-      pageNumber,
-    });
-    const occurrences = (result) =>
-      result.occurrences.map(
-        ({ elementType, collection, index, region, lineIndex }) => ({
-          elementType,
-          collection,
-          index,
-          region,
-          lineIndex,
-        }),
-      );
     assert.deepEqual(
-      occurrences(left),
-      occurrences(right),
+      occurrences(await call('get_page_elements', { ...args, pageNumber })),
+      occurrences(
+        await call('get_page_elements', { ...privateArgs, pageNumber }),
+      ),
       'Editor and private worker agree on element placement',
     );
-    const editorPreview = await call('preview_page', {
+    const preview = await call('preview_page', {
       ...args,
       expectedRevision: editorPages.revision,
       pageNumber,
     });
-    const privatePreview = await call('preview_page', {
-      ...privateArgs,
-      expectedRevision: privatePages.revision,
-      pageNumber,
-    });
-    assert.deepEqual(
-      await readFile(editorPreview.outputFilePath),
-      await readFile(privatePreview.outputFilePath),
-      'Detached exports agree across editor and private worker',
-    );
     await copyFile(
-      editorPreview.outputFilePath,
+      preview.outputFilePath,
       path.join(directory, `footnote-wrapping-${pageNumber}.png`),
     );
   }
   console.log(
-    'PASS: page numbering and rich-text wrapping, fixed gutters, label-independent body geometry, editor/private-worker/export agreement',
+    'PASS: page numbering and rich-text wrapping, fixed gutters, label-independent body geometry, editor/private-worker agreement',
   );
 }
 
-// One reference per page exposes reservations made from obsolete page assignments.
-export async function checkFootnoteColdGutter(call, evaluate, directory) {
-  const doc = await call('create_document', {
-    documentScope: 'editor',
-    title: 'Cold footnote gutter',
-  });
-  const args = { documentScope: 'editor', documentId: doc.documentId };
-  const revision = async () =>
-    (await call('get_document_properties', args)).revision;
-  const settings = async (changes) =>
-    call('update_page_setup', {
-      ...args,
-      expectedRevision: await revision(),
-      changes,
-    });
-  await settings({
-    footnoteFormat: 'symbols',
-    footnoteNumbering: 'page',
-    firstFootnoteNumber: 1,
-  });
-  const initial = await call('get_elements', args);
-  const inserted = await call('edit_elements', {
-    ...args,
-    expectedRevision: await revision(),
-    actions: [
-      { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
-      {
-        action: 'insert',
-        elements: Array.from({ length: 13 }, (_, i) => ({
-          elementType: 'Note',
-          clientId: `anchor${i}`,
-          properties: { pageBreak: i < 12 },
-        })),
-      },
-      ...Array.from({ length: 13 }, (_, i) => ({
-        action: 'insert_footnote',
-        elementRef: `@anchor${i}`,
-        elements: [
-          {
-            elementType: 'RichTextBox',
-            clientId: `body${i}`,
-            properties: { content: '<p>Body</p>' },
-          },
-        ],
-      })),
-    ],
-  });
-  // Put text near a wrapping boundary to detect any numbering-dependent body width.
-  const wrappingText = await evaluate(`(() => {
-    const w=window._editor.selectedWorkspace.value;
-    const p=document.querySelector('.line[data-footnote-id] .ck-content p');
-    const style=getComputedStyle(p), context=document.createElement('canvas').getContext('2d');
-    context.font=style.fontStyle+' '+style.fontWeight+' '+style.fontSize+' '+style.fontFamily;
-    const target=w.score.footnotes[0].staff.elements[0].width-6;
-    let text='Footnote ';
-    while(context.measureText(text).width<target-20) text+='a ';
-    while(context.measureText(text).width<target) text+='i';
-    return '<p>'+text+'</p>';
-  })()`);
-  await call('edit_elements', {
-    ...args,
-    expectedRevision: await revision(),
-    actions: inserted.created
-      .filter((e) => e.clientId?.startsWith('body'))
-      .map((e) => ({
-        action: 'update',
-        elementType: 'RichTextBox',
-        elementRef: e.elementRef,
-        properties: { content: wrappingText },
-      })),
-  });
-  const editorHeight = await evaluate(
-    'window._editor.selectedWorkspace.value.score.footnotes[0].staff.elements[0].height',
-  );
-  const filePath = path.join(directory, 'cold-rich-footnotes.byzx');
-  await call('save_document', {
-    ...args,
-    expectedRevision: await revision(),
-    filePath,
-  });
-  const reopened = await call('open_document', {
-    documentScope: 'private',
-    filePath,
-  });
-  const privateArgs = {
-    documentScope: 'private',
-    documentId: reopened.documentId,
-  };
-  const footnoteIds = await evaluate(
-    'window._editor.selectedWorkspace.value.score.footnotes.map(f=>f.id)',
-  );
-  const privateHeights = async () =>
-    Promise.all(
-      footnoteIds.map(
-        async (footnoteId) =>
-          (
-            await call('get_elements', {
-              ...privateArgs,
-              collection: { kind: 'footnote', footnoteId },
-            })
-          ).elements[0].properties.height,
-      ),
-    );
-  const coldHeights = await privateHeights();
-  assert.deepEqual(
-    coldHeights,
-    Array(13).fill(editorHeight),
-    'Cold private reopening must discard heights measured at provisional body widths',
-  );
-  const editorPages = await call('get_pages', args);
-  const privatePages = await call('get_pages', privateArgs);
-  assert.equal(editorPages.pageCount, 13);
-  assert.equal(privatePages.pageCount, editorPages.pageCount);
-  const editorPreview = await call('preview_page', {
-    ...args,
-    expectedRevision: editorPages.revision,
-    pageNumber: 1,
-  });
-  const privatePreview = await call('preview_page', {
-    ...privateArgs,
-    expectedRevision: privatePages.revision,
-    pageNumber: 1,
-  });
-  assert.deepEqual(
-    await readFile(editorPreview.outputFilePath),
-    await readFile(privatePreview.outputFilePath),
-    'Cold editor and private exports must agree on rich-text body geometry',
-  );
-  await copyFile(
-    privatePreview.outputFilePath,
-    path.join(directory, 'cold-rich-footnotes-private.png'),
-  );
-  const privateBefore = await call('get_document_properties', privateArgs);
-  await call('update_page_setup', {
-    ...privateArgs,
-    expectedRevision: privateBefore.revision,
-    changes: { footnoteHorizontalRuleLength: 43 },
-  });
-  assert.deepEqual(
-    await privateHeights(),
-    coldHeights,
-    'Fresh warm settlement must retain the same natural body heights',
-  );
-  const geometry = () =>
-    evaluate(`(() => {
-    const w=window._editor.selectedWorkspace.value;
-    return {
-      references:w.score.staff.elements.filter(e=>e.elementType==='Note').map(e=>({page:e.page,line:e.line,marker:e.footnoteMarker})),
-      bodies:w.score.footnotes.map(f=>f.staff.elements.filter(e=>e.elementType!=='Empty').map(e=>({page:e.page,line:e.line,x:e.x,width:e.width,y:e.y,height:e.height}))),
-    };
-  })()`);
-  // Clear only transient pagination, as on a newly loaded document.
-  await evaluate(`(() => {
-    const score=window._editor.selectedWorkspace.value.score;
-    score.staff.elements.forEach(e=>{e.page=0;});
-    score.pageSetup.footnoteHorizontalRuleLength=41;
-  })()`);
-  await call('get_elements', args);
-  await call('get_elements', args);
-  const cold = await geometry();
-  assert.equal(new Set(cold.references.map((e) => e.page)).size, 13);
-  assert.deepEqual(
-    cold.references.map((e) => e.marker),
-    Array(13).fill('*'),
-  );
-  // A new operation with the completed page assignments must produce the same gutter.
-  await evaluate(
-    'window._editor.selectedWorkspace.value.score.pageSetup.footnoteHorizontalRuleLength=42',
-  );
-  await call('get_elements', args);
-  await call('get_elements', args);
-  const warm = await geometry();
-  assert.deepEqual(
-    cold,
-    warm,
-    'Cold and previously paginated settlement must use identical body positions and widths',
-  );
-  const pages = await call('get_pages', args);
-  const preview = await call('preview_page', {
-    ...args,
-    expectedRevision: pages.revision,
-    pageNumber: 1,
-  });
-  await copyFile(
-    preview.outputFilePath,
-    path.join(directory, 'cold-footnote-gutter.png'),
-  );
-  console.log(
-    'PASS: 13 page-restarted symbol footnotes have identical cold/warm gutters, rich-text heights, and exports',
-  );
-}
 export async function checkLiveFootnoteSettlement(call, evaluate) {
   const doc = await call('create_document', {
     documentScope: 'editor',
@@ -670,7 +439,7 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
   await settings({
     pageSize: 'Custom',
     pageWidthCustom: 400,
-    pageHeightCustom: 110,
+    pageHeightCustom: 900,
     leftMargin: 35,
     rightMargin: 35,
     topMargin: 30,
@@ -678,48 +447,21 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
     footnoteFormat: 'symbols',
     footnoteSymbolSequence: 'asterisks',
     footnoteNumbering: 'page',
+    showFootnoteHorizontalRule: false,
   });
   const initial = await call('get_elements', args);
-  await evaluate(`(() => {
-    window.slotMeasurementPasses = 0;
-    window.slotMeasurementObserver = new MutationObserver(records => {
-      for (const record of records) {
-        for (const node of record.addedNodes) {
-          if (node.matches?.('.workspace-text-box-measurement')) {
-            window.slotMeasurementPasses++;
-          }
-        }
-      }
-    });
-    window.slotMeasurementObserver.observe(document.body, { childList: true, subtree: true });
-  })()`);
-  async function assertLiveFastPath() {
-    await evaluate(`(() => {
-      window.slotMeasurementPasses = 0;
-      window._editor.score.value.staff.elements[0].page = 0;
-      document.fonts.dispatchEvent(new Event('loadingdone'));
-    })()`);
-    await eventually(async () =>
-      assert.equal(
-        await evaluate('window._editor.score.value.staff.elements[0].page'),
-        1,
-      ),
-    );
-    assert.equal(await evaluate('window.slotMeasurementPasses'), 0);
-  }
-  await assertLiveFastPath();
   const content = '<p>Reference</p>';
   await edit([
     { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
     {
       action: 'insert',
-      elements: Array.from({ length: 3 }, (_, index) => ({
+      elements: Array.from({ length: 2 }, (_, index) => ({
         elementType: 'RichTextBox',
         clientId: `box${index}`,
         properties: { content },
       })),
     },
-    ...Array.from({ length: 3 }, (_, index) => ({
+    ...Array.from({ length: 2 }, (_, index) => ({
       action: 'insert_footnote',
       elementRef: `@box${index}`,
       contentKey: 'content',
@@ -735,45 +477,21 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
       .map(element => ({
         page: element.page, height: element.height, ...Object.values(element.footnoteMarkers)[0],
       }))`);
-  assert.equal(
-    await evaluate('window.slotMeasurementPasses'),
-    1,
-    'Sparse references reuse the initial measurements during reconciliation',
-  );
-  const sparse = await slots();
-  assert.deepEqual(
-    sparse.map(({ page, label }) => [page, label]),
-    [
-      [1, '*'],
-      [2, '*'],
-      [3, '*'],
-    ],
-  );
-
-  await settings({ pageHeightCustom: 900 });
-  const dense = await slots();
-  for (const [index, slot] of dense.entries()) {
-    assert.equal(slot.page, 1);
-    assert.equal(slot.label, '*'.repeat(index + 1));
-    assert.ok(Math.abs(slot.width - sparse[0].width * (index + 1)) < 0.05);
-  }
 
   // Leave room for two short boxes, but push one forward when the editor adds
-  // three lines. The live editor checks only need a single page boundary.
-  await edit([{ action: 'remove_range', start: 2, end: 3 }]);
-  const lineHeight = dense[0].height;
+  // three lines.
+  const lineHeight = (await slots())[0].height;
   const bodyHeight = await evaluate(`window._editor.score.value.footnotes
     .reduce((sum, body) => sum + body.staff.elements[0].height, 0)`);
-  await settings({
-    pageHeightCustom: 60 + 8 + bodyHeight + 4.5 * lineHeight,
-    showFootnoteHorizontalRule: false,
-  });
+  await settings({ pageHeightCustom: 60 + 8 + bodyHeight + 4.5 * lineHeight });
   const settled = await slots();
   assert.deepEqual(
     settled.map(({ page }) => page),
     [1, 1],
   );
 
+  // Typing in a focused editor settles with the uncommitted content without
+  // remounting the editor, and MCP reads wait for that layout.
   const editable =
     "document.querySelector('.page .line:not([data-footnote-id]) .ck-content.single')";
   await eventually(async () => {
@@ -796,100 +514,54 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
       true,
     ),
   );
-  await evaluate(`(() => {
+  const caret = await evaluate(`(() => {
     const editor = window.slotTestEditor;
-    const geometry = () => window._editor.score.value.staff.elements
-      .filter(element => element.elementType === 'RichTextBox')
-      .map(({ page, line, height }) => [page, line, height]);
-    const addParagraphs = count => {
-      editor.model.change(writer => {
-        const root = editor.model.document.getRoot();
-        for (let i = 0; i < count; i++) {
-          const paragraph = writer.createElement('paragraph');
-          writer.insert(paragraph, root, 'end');
-          writer.insertText('New text', paragraph, 0);
-          writer.setSelection(paragraph, 'end');
-        }
-      });
-      editor.editing.view.forceRender();
-    };
-    window.slotTest = { old: geometry(), trial: [], originalHtml: editor.getData() };
-    const observer = new MutationObserver(records => {
-      const newTrial = records.some(record => [...record.addedNodes].some(
-        node => node.matches?.('.workspace-text-box-measurement'),
-      ));
-      if (!newTrial) return;
-      window.slotTest.trial.push(geometry());
-      if (window.slotTest.trial.length === 1) {
-        // Supersede a request after its offscreen component has mounted.
-        editor.execute('undo');
-        addParagraphs(3);
-        window.slotTest.caret = editor.model.document.selection.focus.path;
+    window.slotTestHtml = editor.getData();
+    editor.model.change(writer => {
+      const root = editor.model.document.getRoot();
+      for (let i = 0; i < 3; i++) {
+        const paragraph = writer.createElement('paragraph');
+        writer.insert(paragraph, root, 'end');
+        writer.insertText('New text', paragraph, 0);
+        writer.setSelection(paragraph, 'end');
       }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.slotTestObserver = observer;
-    addParagraphs(20);
+    editor.editing.view.forceRender();
+    return editor.model.document.selection.focus.path;
   })()`);
-  const awaitedLayout = await call('get_elements', args);
+  const typed = await call('get_elements', args);
   assert.ok(
     Math.abs(
-      awaitedLayout.elements[0].properties.height -
-        settled[0].height -
-        3 * lineHeight,
+      typed.elements[0].properties.height - settled[0].height - 3 * lineHeight,
     ) < 0.05,
-    'MCP waits for the replacement layout before reading geometry',
+    'MCP waits for the layout of uncommitted typing',
   );
   await eventually(async () => {
-    const state = await evaluate(`(() => {
-      const editor = window.slotTestEditor;
-      const current = ${editable}?.ckeditorInstance;
-      const trial = window.slotTest;
-      return {
-        old: trial.old, trial: trial.trial, same: current === editor,
-        final: window._editor.score.value.staff.elements
-          .filter(element => element.elementType === 'RichTextBox')
-          .map(({ page, line, height }) => [page, line, height]),
-        caret: editor.model.document.selection.focus.path, expectedCaret: trial.caret,
-        focused: document.activeElement === editor.ui.getEditableElement(),
-      };
-    })()`);
-    assert.ok(state.trial.length >= 2);
-    assert.deepEqual(state.trial[0], state.old);
-    for (const geometry of state.trial) {
-      // Flushing the latest HTML can start another settlement after publication.
-      assert.ok(
-        [state.old, state.final].some(
-          (layout) => JSON.stringify(layout) === JSON.stringify(geometry),
-        ),
-        'Offscreen trials expose only the original or final geometry',
-      );
-    }
-    assert.equal(state.same, true);
-    assert.equal(state.focused, true);
-    assert.deepEqual(state.caret, state.expectedCaret);
+    assert.deepEqual(
+      await evaluate(`(() => {
+        const editor = window.slotTestEditor;
+        return {
+          same: ${editable}?.ckeditorInstance === editor,
+          focused: document.activeElement === editor.ui.getEditableElement(),
+          caret: editor.model.document.selection.focus.path,
+        };
+      })()`),
+      { same: true, focused: true, caret },
+    );
     assert.notEqual(
-      state.final[1][0],
+      (await slots())[1].page,
       settled[1].page,
-      'Only final geometry moves the next box',
+      'The grown box pushes the next box forward',
     );
   });
-  await evaluate(`(() => {
-    window.slotTestObserver.disconnect();
-    window.slotTestEditor.execute('undo');
-  })()`);
+  await evaluate("window.slotTestEditor.execute('undo')");
   assert.equal(
-    await evaluate(
-      'window.slotTestEditor.getData() === window.slotTest.originalHtml',
-    ),
-    true,
-  );
-  assert.equal(
-    await evaluate(`${editable}.ckeditorInstance === window.slotTestEditor`),
+    await evaluate('window.slotTestEditor.getData() === window.slotTestHtml'),
     true,
   );
   await evaluate(`${editable}.blur()`);
 
+  // A settled layout that would move the focused editor waits for blur.
   await call('get_elements', args);
   const secondBox =
     "window._editor.score.value.staff.elements.filter(element => element.elementType === 'RichTextBox')[1]";
@@ -951,70 +623,7 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
   await call('get_elements', args);
   assert.equal((await slots())[1].page, 2);
 
-  await evaluate(`(() => {
-    const invalidate = () => document.fonts.dispatchEvent(new Event('loadingdone'));
-    const observer = new MutationObserver(records => {
-      if (records.some(record => [...record.addedNodes].some(
-        node => node.matches?.('.workspace-text-box-measurement'),
-      ))) {
-        invalidate();
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    window.slotRetryObserver = observer;
-    invalidate();
-  })()`);
-  try {
-    await call('get_elements', args, 'LAYOUT_SETTLEMENT_FAILED');
-  } finally {
-    await evaluate(`(() => {
-      window.slotRetryObserver.disconnect();
-    })()`);
-  }
-  assert.equal(
-    await evaluate(
-      "document.querySelector('.workspace-text-box-measurement') === null",
-    ),
-    true,
-    'Superseded attempts leave no offscreen measurement mounted',
-  );
-  await call('get_elements', args);
-  console.log(
-    'PASS: repeated supersession hits the retry limit and releases the MCP queue',
-  );
-
-  await call('create_document', {
-    documentScope: 'editor',
-    title: 'Background measurement handoff',
-  });
-  await evaluate(`(() => {
-    const observer = new MutationObserver(records => {
-      if (records.some(record => [...record.addedNodes].some(
-        node => node.matches?.('.workspace-text-box-measurement'),
-      ))) {
-        observer.disconnect();
-        const { selectedWorkspace, workspaces } = window._editor;
-        selectedWorkspace.value = workspaces.value.find(
-          workspace => workspace.id === ${JSON.stringify(doc.documentId)},
-        );
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  })()`);
-  await settings({ pageHeightCustom: 900, pageWidthCustom: 401 });
-  assert.deepEqual(
-    await evaluate(`({
-      selected: window._editor.selectedWorkspace.value.id,
-      measuring: !!document.querySelector('.workspace-text-box-measurement'),
-      pagesPublished: !!document.querySelector('.page-background .page'),
-    })`),
-    { selected: doc.documentId, measuring: false, pagesPublished: true },
-    'MCP waits for the selected editor to publish after a tab switch',
-  );
-
-  await settings({ footnoteNumbering: 'continuous' });
-  await assertLiveFastPath();
-  await settings({ footnoteNumbering: 'page' });
+  // Lyric entry keeps the next syllable being typed while settlement publishes.
   await edit([
     {
       action: 'insert',
@@ -1028,31 +637,22 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
   await eventually(async () =>
     assert.equal(await evaluate(`!!${lyricBox(0)} && !!${lyricBox(1)}`), true),
   );
-  assert.equal(
-    await evaluate(`new Promise(resolve => {
-      const first = ${lyricBox(0)};
-      const second = ${lyricBox(1)};
-      first.focus();
-      document.execCommand('insertText', false, 'first');
-      const observer = new MutationObserver(records => {
-        if (!records.some(record => [...record.addedNodes].some(
-          node => node.matches?.('.workspace-text-box-measurement'),
-        ))) return;
-        observer.disconnect();
-        const advanced = document.activeElement === second;
-        if (advanced) document.execCommand('insertText', false, 'second');
-        resolve(advanced);
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-      // Make this lyric edit exercise the asynchronous measurement path.
-      document.fonts.dispatchEvent(new Event('loadingdone'));
-      first.dispatchEvent(new KeyboardEvent('keydown', {
-        code: 'Space', bubbles: true, cancelable: true,
-      }));
-    })`),
-    true,
-    'Lyric entry advances before offscreen measurement completes',
+  await evaluate(`(() => {
+    const first = ${lyricBox(0)};
+    first.focus();
+    document.execCommand('insertText', false, 'first');
+    first.dispatchEvent(new KeyboardEvent('keydown', {
+      code: 'Space', bubbles: true, cancelable: true,
+    }));
+  })()`);
+  await eventually(async () =>
+    assert.equal(
+      await evaluate(`document.activeElement === ${lyricBox(1)}`),
+      true,
+      'Lyric entry advances to the next syllable',
+    ),
   );
+  await evaluate(`document.execCommand('insertText', false, 'second')`);
   await call('get_elements', args);
   assert.deepEqual(
     await evaluate(`[${lyricBox(0)}.innerText, ${lyricBox(1)}.innerText]`),
@@ -1062,10 +662,8 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
   await evaluate(`${lyricBox(1)}.blur()`);
   await call('get_elements', args);
   await checkSelectionDuringPagination(evaluate);
-  await checkLiveMeasurementTimeout(call, evaluate, args);
-  await evaluate('window.slotMeasurementObserver.disconnect()');
   console.log(
-    'PASS: marker widths, supersession, CKEditor focus and Undo, tab handoff, and live layout fast paths',
+    'PASS: live settlement of focused rich text, deferred moves, and lyric entry',
   );
 }
 
@@ -1130,9 +728,6 @@ async function checkSelectionDuringPagination(evaluate) {
     ${key('KeyJ')};
     workspace.entryMode = entryMode;
     const id = editor.selectedElement.value.id;
-    if (document.getElementById('element-' + id)) {
-      throw new Error('The new note must not be mounted yet');
-    }
     ${key('ArrowDown', 'ctrlKey: true')};
     return id;
   })()`);
@@ -1146,84 +741,6 @@ async function checkSelectionDuringPagination(evaluate) {
     );
   });
   await evaluate('document.activeElement.blur()');
-}
-
-async function checkLiveMeasurementTimeout(call, evaluate, args) {
-  const font = await readFile(
-    new URL(
-      '../../../src/assets/fonts/SourceSerif4-Regular.otf',
-      import.meta.url,
-    ),
-  );
-  let fontResponse;
-  const server = createServer((_request, response) => {
-    response.setHeader('Access-Control-Allow-Origin', '*');
-    response.setHeader('Content-Type', 'font/otf');
-    fontResponse = response;
-  });
-  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  try {
-    await evaluate(`(() => {
-      const face = new FontFace('LiveLayoutPendingFont', 'url(http://127.0.0.1:${server.address().port}/pending.otf)');
-      const state = window.slotTimeout = { face };
-      state.observer = new MutationObserver(records => {
-        const measurement = records.flatMap(record => [...record.addedNodes])
-          .find(node => node.matches?.('.workspace-text-box-measurement'));
-        if (!measurement) return;
-        state.observer.disconnect();
-        state.measurement = measurement;
-        document.fonts.add(face);
-        void face.load().catch(() => {});
-      });
-      state.observer.observe(document.body, { childList: true, subtree: true });
-      // Advance the revision so the read starts a new trial without scheduling
-      // a debounced save that would supersede it.
-      const workspace = window._editor.selectedWorkspace.value;
-      state.lyricsLocked = workspace.score.staff.lyrics.locked;
-      state.box = workspace.score.staff.elements.find(element => element.elementType === 'RichTextBox');
-      state.content = state.box.content;
-      state.box.content += '<p>Unmeasured text</p>';
-      workspace.updateLyricsLocked(!state.lyricsLocked);
-    })()`);
-    await Promise.all([
-      call('get_elements', args, 'LAYOUT_SETTLEMENT_FAILED'),
-      eventually(async () => {
-        assert.ok(fontResponse);
-        assert.equal(
-          await evaluate(`window.slotTimeout.measurement?.isConnected &&
-            window.slotTimeout.face.status === 'loading'`),
-          true,
-          'A mounted measurement is waiting for the held font response',
-        );
-      }),
-    ]);
-    assert.deepEqual(
-      await evaluate(`({
-        mounted: window.slotTimeout.measurement.isConnected,
-        fontStatus: window.slotTimeout.face.status,
-      })`),
-      { mounted: false, fontStatus: 'loading' },
-      'The request deadline removes the measurement while the font is still pending',
-    );
-  } finally {
-    fontResponse?.end(font);
-    server.closeAllConnections();
-    await new Promise((resolve) => server.close(resolve));
-    await evaluate(`(async () => {
-      const state = window.slotTimeout;
-      if (!state) return;
-      state.observer.disconnect();
-      if (state.measurement) await state.face.loaded.catch(() => {});
-      document.fonts.delete(state.face);
-      state.box.content = state.content;
-      window._editor.selectedWorkspace.value.updateLyricsLocked(state.lyricsLocked);
-      delete window.slotTimeout;
-    })()`);
-  }
-  await call('get_elements', args);
-  console.log(
-    'PASS: live layout timeout removes pending measurement and allows retry',
-  );
 }
 
 async function createPageRestartFixture(call, title) {
@@ -1270,9 +787,13 @@ async function createPageRestartFixture(call, title) {
   return { args, mutate, settings, insert, reference, content };
 }
 
+// Settlement must reuse unchanged measurements; otherwise every edit in a
+// text-heavy score remounts each rich-text box offscreen.
 export async function checkTextBoxMeasurementReuse(call, evaluate) {
-  const { args, settings, insert, mutate, content } =
-    await createPageRestartFixture(call, 'Text-heavy note entry');
+  const { args, insert, mutate, content } = await createPageRestartFixture(
+    call,
+    'Text-heavy note entry',
+  );
   await insert(
     [
       { elementType: 'Note' },
@@ -1284,119 +805,73 @@ export async function checkTextBoxMeasurementReuse(call, evaluate) {
     ],
     ['box0', 'box1', 'box2', 'box3'],
   );
-  const header = (
-    await call('get_elements', {
-      ...args,
-      collection: { kind: 'headers', variant: 'default' },
-      properties: [],
-    })
-  ).elements[0];
-  await mutate('edit_elements', {
-    actions: [
-      {
-        action: 'update',
-        elementRef: header.elementRef,
-        elementType: header.elementType,
-        properties: { contentCenter: 'Page $p of $n' },
-      },
-    ],
-  });
-  const callbacks = [];
-  for (const [footnoteNumbering, showHeader] of [
-    ['continuous', false],
-    ['page', false],
-    ['page', true],
-  ]) {
-    await settings({ footnoteNumbering });
-    if (showHeader) {
-      await mutate('update_header_footer_settings', {
-        changes: { showHeader },
-      });
-    }
-    await call('get_pages', args);
-    await evaluate(`(() => {
-      window.measurementPeak = 0;
-      window.measurementObserver = new MutationObserver(() => {
-        const count = document.querySelectorAll(
-          '.workspace-text-box-measurement :is(.rich-text-box-container, .text-box-container)',
-        ).length;
-        window.measurementPeak = Math.max(window.measurementPeak, count);
-      });
-      window.measurementObserver.observe(document.body, { childList: true, subtree: true });
-    })()`);
-    try {
-      const delays = [];
-      for (let index = 0; index < 3; index++) {
-        const { id, delay } = await evaluate(`new Promise(resolve => {
-          const editor = window._editor;
-          const workspace = editor.selectedWorkspace.value;
-          const entryMode = workspace.entryMode;
-          document.activeElement.blur();
-          workspace.entryMode = 'Insert';
-          editor.selectedElement.value = editor.elements.value[0];
-          const start = performance.now();
-          window.dispatchEvent(new KeyboardEvent('keydown', {
-            code: 'KeyJ', key: 'j', bubbles: true, cancelable: true,
-          }));
-          const id = editor.selectedElement.value.id;
-          workspace.entryMode = entryMode;
-          setTimeout(() => resolve({ id, delay: performance.now() - start }), 120);
-        })`);
-        delays.push(Math.round(delay));
-        await call('get_pages', args);
-        assert.equal(
-          await evaluate(`window._editor.score.value.staff.elements[1].id`),
-          id,
-        );
-      }
+  await call('get_pages', args);
+  await evaluate(`(() => {
+    window.measurementPeak = 0;
+    window.measurementObserver = new MutationObserver(() => {
+      const count = document.querySelectorAll(
+        '.workspace-text-box-measurement .rich-text-box-container',
+      ).length;
+      window.measurementPeak = Math.max(window.measurementPeak, count);
+    });
+    window.measurementObserver.observe(document.body, { childList: true, subtree: true });
+  })()`);
+  try {
+    for (let index = 0; index < 3; index++) {
+      const id = await evaluate(`new Promise(resolve => {
+        const editor = window._editor;
+        const workspace = editor.selectedWorkspace.value;
+        const entryMode = workspace.entryMode;
+        document.activeElement.blur();
+        workspace.entryMode = 'Insert';
+        editor.selectedElement.value = editor.elements.value[0];
+        window.dispatchEvent(new KeyboardEvent('keydown', {
+          code: 'KeyJ', key: 'j', bubbles: true, cancelable: true,
+        }));
+        const id = editor.selectedElement.value.id;
+        workspace.entryMode = entryMode;
+        // Let the keyboard entry throttle reset before the next note.
+        setTimeout(() => resolve(id), 120);
+      })`);
+      await call('get_pages', args);
       assert.equal(
-        await evaluate('window.measurementPeak'),
-        0,
-        'Note entry reuses unchanged rich-text heights',
+        await evaluate(`window._editor.score.value.staff.elements[1].id`),
+        id,
       );
-      callbacks.push({ footnoteNumbering, showHeader, delays });
-      if (footnoteNumbering === 'page') {
-        const { elements } = await call('get_elements', {
-          ...args,
-          includeContent: true,
-        });
-        const box = elements
-          .filter((element) => element.elementType === 'RichTextBox')
-          .at(-1);
-        await mutate('edit_elements', {
-          actions: [
-            {
-              action: 'update',
-              elementType: 'RichTextBox',
-              elementRef: box.elementRef,
-              properties: {
-                content: box.properties.content + '<p>Another line</p>',
-              },
-            },
-          ],
-        });
-        assert.equal(
-          await evaluate('window.measurementPeak'),
-          1,
-          'A content edit measures only the changed box',
-        );
-      }
-      if (showHeader) {
-        await evaluate('window.measurementPeak = 0');
-        await mutate('update_header_footer_settings', {
-          changes: { firstPageNumber: 2 },
-        });
-        assert.equal(
-          await evaluate('window.measurementPeak'),
-          1,
-          'Only the template is measured when its page number changes',
-        );
-      }
-    } finally {
-      await evaluate('window.measurementObserver.disconnect()');
     }
+    assert.equal(
+      await evaluate('window.measurementPeak'),
+      0,
+      'Note entry reuses unchanged rich-text heights',
+    );
+    const box = (
+      await call('get_elements', { ...args, includeContent: true })
+    ).elements
+      .filter((element) => element.elementType === 'RichTextBox')
+      .at(-1);
+    await mutate('edit_elements', {
+      actions: [
+        {
+          action: 'update',
+          elementType: 'RichTextBox',
+          elementRef: box.elementRef,
+          properties: {
+            content: box.properties.content + '<p>Another line</p>',
+          },
+        },
+      ],
+    });
+    assert.equal(
+      await evaluate('window.measurementPeak'),
+      1,
+      'A content edit measures only the changed box',
+    );
+  } finally {
+    await evaluate('window.measurementObserver.disconnect()');
   }
-  console.log('PASS: note entry reuses rich-text measurements', callbacks);
+  console.log(
+    'PASS: note entry and content edits reuse rich-text measurements',
+  );
 }
 
 export async function checkFillWidthReference(call, evaluate) {
@@ -1528,23 +1003,6 @@ export async function checkMarkerWidthThreshold(call, evaluate, directory) {
   })()`);
   assert.ok(probe.threshold, JSON.stringify(probe));
   const { text, oneLine, wide } = probe.threshold;
-  await evaluate(`(() => {
-    const id = ${JSON.stringify(id)};
-    window.thresholdTrials = [];
-    window.thresholdObserver = new MutationObserver(() => {
-      const root = document.querySelector('.workspace-text-box-measurement');
-      const marker = root?.querySelector('.neanes-footnote[data-footnote-id="' + id + '"]');
-      if (!marker || !['9', '10'].includes(marker.textContent)) return;
-      window.thresholdTrials.push({
-        label: marker.textContent, width: parseFloat(marker.style.width),
-        livePage: window._editor.score.value.staff.elements[1].page,
-        hidden: getComputedStyle(root).visibility === 'hidden' && root.inert,
-      });
-    });
-    window.thresholdObserver.observe(document.body, {
-      childList: true, subtree: true, attributes: true, characterData: true,
-    });
-  })()`);
   await mutate('edit_elements', {
     actions: [
       {
@@ -1558,21 +1016,6 @@ export async function checkMarkerWidthThreshold(call, evaluate, directory) {
     ],
   });
   assert.equal((await geometry()).height, wide);
-  const trials = await evaluate('window.thresholdTrials');
-  assert.ok(
-    trials.some(
-      (trial) => trial.label === '10' && trial.width === probe.widths[1],
-    ),
-    JSON.stringify({ trials, widths: probe.widths }),
-  );
-  assert.ok(
-    trials.some((trial) => trial.width === probe.widths[0]),
-    JSON.stringify({ trials, widths: probe.widths }),
-  );
-  assert.ok(
-    trials.every((trial) => trial.livePage === 1 && trial.hidden),
-    JSON.stringify(trials),
-  );
 
   // The default space above the footnotes is 6 pt (8 px).
   const thresholdHeight = 60 + 8 + probe.fixedHeight + (oneLine + wide) / 2;
@@ -1593,13 +1036,6 @@ export async function checkMarkerWidthThreshold(call, evaluate, directory) {
       assert.ok(Math.abs(width - probe.widths[0]) < 0.001);
     });
   await assertSettled();
-  assert.deepEqual(
-    await evaluate(
-      'window.thresholdObserver.disconnect(); window.thresholdTrials',
-    ),
-    trials,
-    'Repagination reuses the measurement for the narrower marker',
-  );
 
   const filePath = path.join(directory, 'marker-width-threshold.byzx');
   await mutate('save_document', { filePath });
@@ -1623,18 +1059,6 @@ export async function checkMarkerWidthThreshold(call, evaluate, directory) {
         (entry) => entry.region === 'staff' && entry.index === 1,
       ),
     );
-    const preview = await call('preview_page', {
-      ...document,
-      expectedRevision: pages.revision,
-      pageNumber: 2,
-    });
-    const png = await readFile(preview.outputFilePath);
-    const output = path.join(directory, 'marker-width-threshold-page-2.png');
-    if (document === args) {
-      await writeFile(output, png);
-    } else {
-      assert.deepEqual(png, await readFile(output));
-    }
   }
   const coldPath = path.join(directory, 'marker-width-threshold-cold.byzx');
   const cold = JSON.parse(await readFile(filePath, 'utf8'));

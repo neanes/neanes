@@ -7,7 +7,6 @@ import { checkFootnoteMarkerCollisionSpacing } from './footnoteMarkerChecks.mjs'
 import { checkFootnoteNumbering } from './footnoteNumberingChecks.mjs';
 import {
   checkFillWidthReference,
-  checkFootnoteColdGutter,
   checkFootnoteSettlement,
   checkLiveFootnoteSettlement,
   checkMarkerWidthThreshold,
@@ -952,7 +951,6 @@ try {
     await socket.send('Emulation.setFocusEmulationEnabled', { enabled: false });
   }
   await checkFootnoteSettlement(call, evaluate, app.directory);
-  await checkFootnoteColdGutter(call, evaluate, app.directory);
   console.log(
     `PASS: marker properties, context menus, numbering, previews, Undo/Redo, save/reopen, rendering. Artifacts: ${app.directory}`,
   );

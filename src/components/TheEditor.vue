@@ -573,7 +573,6 @@ const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
 const toolbarMartyriaLayoutRevision = ref(0);
 const keyboardModifier = ref<string | null>(null);
 const audioElement = ref<ScoreElement | null>(null);
-let pendingPlaybackStart: AbortController | undefined;
 const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
 const playbackTimeInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const audioOptions = reactive<PlaybackOptions>({
@@ -1770,7 +1769,6 @@ function onLayoutFontsChanged() {
   saveDebounced();
 }
 onBeforeUnmount(() => {
-  pendingPlaybackStart?.abort();
   saveDebounced.cancel();
   refineLayoutDebounced.cancel();
   document.fonts.removeEventListener('loadingdone', onLayoutFontsChanged);
@@ -8037,53 +8035,34 @@ function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
 }
 
 async function playAudio() {
-  if (pendingPlaybackStart !== undefined) {
-    return;
-  }
-  if (audioService.state !== AudioState.Stopped) {
-    pauseAudio();
-    return;
-  }
-
-  const pending = new AbortController();
-  pendingPlaybackStart = pending;
-  const workspace = selectedWorkspace.value;
-  const sourceScore = workspace.score;
-  const staff = activeStaff.value;
-  const element = selectedElement.value;
-  const lyric = selectedLyrics.value;
-  const isCurrent = () =>
-    !pending.signal.aborted &&
-    workspace === selectedWorkspace.value &&
-    workspace.score === sourceScore &&
-    staff === activeStaff.value &&
-    element === selectedElement.value &&
-    lyric === selectedLyrics.value;
-
   try {
-    const revision = workspace.contentRevision;
-    playbackEvents.value = playbackService.computePlaybackSequence(
-      sourceScore.staff.elements,
-      audioOptions,
-      sourceScore.pageSetup.chrysanthineAccidentals,
-    );
-    if (playbackEvents.value.length === 0) {
-      return;
-    }
+    if (audioService.state === AudioState.Stopped) {
+      playbackEvents.value = playbackService.computePlaybackSequence(
+        score.value.staff.elements,
+        audioOptions,
+        score.value.pageSetup.chrysanthineAccidentals,
+      );
 
-    const startIndex = isMainStaff.value ? selectedElementIndex.value : 0;
-    const startAt = playbackEvents.value.find(
-      (event) => event.elementIndex >= startIndex,
-    );
-    await audioService.play(playbackEvents.value, audioOptions, startAt);
-    if (!isCurrent() || workspace.contentRevision !== revision) {
-      stopAudio();
-      return;
+      if (playbackEvents.value.length === 0) {
+        return;
+      }
+
+      const startAt = playbackEvents.value.find(
+        (x) =>
+          x.elementIndex >=
+          (isMainStaff.value ? selectedElementIndex.value : 0),
+      );
+
+      await audioService.play(playbackEvents.value, audioOptions, startAt);
+
+      if (startAt) {
+        selectedWorkspace.value.playbackTime = startAt.absoluteTime;
+      }
+
+      startPlaybackClock();
+    } else {
+      pauseAudio();
     }
-    if (startAt) {
-      workspace.playbackTime = startAt.absoluteTime;
-    }
-    startPlaybackClock();
   } catch (error) {
     console.error(error);
     showErrorToast(
@@ -8095,13 +8074,10 @@ async function playAudio() {
         }),
       },
     );
-  } finally {
-    pendingPlaybackStart = undefined;
   }
 }
 
 function stopAudio() {
-  pendingPlaybackStart?.abort();
   try {
     audioService.stop();
 

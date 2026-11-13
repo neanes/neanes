@@ -5699,7 +5699,10 @@ async function runLiveSettlement(
 }
 
 function save() {
-  publishAndSettleLayout(true);
+  // Settling scores used to publish only through settlement, which keeps an
+  // uncommitted lyric draft across a remount. Keep that for them; other scores
+  // keep their previous synchronous behavior, which never restored drafts.
+  publishAndSettleLayout(settleFootnoteReferences.value);
 }
 
 // After a lyric commit, the focused box no longer holds a draft. Its committed
@@ -5713,7 +5716,6 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
   refineLayoutDebounced.cancel({ upcomingOnly: true });
   // Always publish a layout immediately. Settlement only refines it.
   const workspace = toRaw(selectedWorkspace.value);
-  // Keep an uncommitted lyric draft in case the layout remounts its control.
   const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
   publishLayout(
     LayoutService.processPages(workspace, {

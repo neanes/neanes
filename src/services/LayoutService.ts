@@ -449,7 +449,7 @@ export class LayoutService {
     });
 
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
-    const references = orderedFootnotes(score, null);
+    const references = orderedFootnotes(score, true);
     const hasFootnoteReferences = references.length > 0;
     const footnotes = this.prepareFootnotes(
       workspace,

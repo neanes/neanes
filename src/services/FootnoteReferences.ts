@@ -20,14 +20,9 @@ export function elementFootnoteIds(element: ScoreElement): string[] {
       : [];
 }
 
-export type FootnotePageAssignments = ReadonlyMap<ScoreElement, number>;
-
-// With null assignments, count through each run between explicit page breaks.
+// Before pagination, count through each run between explicit page breaks.
 // This bounds the label ordinal before any automatic page breaks are known.
-export function orderedFootnotes(
-  score: Score,
-  pageAssignments?: FootnotePageAssignments | null,
-) {
+export function orderedFootnotes(score: Score, beforePagination = false) {
   const byId = new Map(
     score.footnotes.map((footnote) => [footnote.id, footnote]),
   );
@@ -48,7 +43,6 @@ export function orderedFootnotes(
     ) {
       nextNumber = score.pageSetup.firstFootnoteNumber;
     }
-    const page = pageAssignments?.get(element) ?? element.page;
     for (const id of elementFootnoteIds(element)) {
       const footnote = byId.get(id);
       if (footnote === undefined || seen.has(footnote.id)) {
@@ -57,12 +51,12 @@ export function orderedFootnotes(
       seen.add(footnote.id);
       if (
         score.pageSetup.footnoteNumbering === 'page' &&
-        pageAssignments !== null &&
-        page !== previousPage
+        !beforePagination &&
+        element.page !== previousPage
       ) {
         nextNumber = score.pageSetup.firstFootnoteNumber;
       }
-      previousPage = page;
+      previousPage = element.page;
       const automaticMarker = automaticFootnoteMarker(
         nextNumber,
         score.pageSetup,
@@ -79,7 +73,7 @@ export function orderedFootnotes(
       }
     }
     if (
-      pageAssignments === null &&
+      beforePagination &&
       score.pageSetup.footnoteNumbering === 'page' &&
       element.pageBreak
     ) {

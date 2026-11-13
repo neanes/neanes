@@ -1,5 +1,6 @@
 import { nextTick, onBeforeUnmount, toRaw } from 'vue';
 
+import type { ScoreElement } from '@/models/Element';
 import type { LayoutDiagnosticsOptions } from '@/models/LayoutDiagnostics';
 import type { Page } from '@/models/Page';
 import type { Score } from '@/models/Score';
@@ -47,7 +48,6 @@ export function useLiveWorkspaceLayout(options: {
   ) => Promise<TextBoxHeightMeasurement[]>;
   textBoxEditor: () => { fonts: string[]; language: string };
   cancelMeasurement: () => void;
-  onFailure: (workspace: Workspace, score: Score) => void;
 }) {
   const measurements = new TextBoxMeasurementCache();
   let current: LayoutRequest | undefined;
@@ -138,10 +138,18 @@ export function useLiveWorkspaceLayout(options: {
             },
             layoutOptions,
           );
+          const breaksBefore = new Set<ScoreElement>();
+          for (const copy of result.breaksBefore) {
+            const original = detached.originals.get(copy);
+            if (original !== undefined) {
+              breaksBefore.add(original);
+            }
+          }
           return {
             copies: detached.copies,
             applyHeights: detached.applyHeights,
-            ...result,
+            pages: result.pages,
+            breaksBefore,
           };
         },
       });
@@ -165,11 +173,11 @@ export function useLiveWorkspaceLayout(options: {
         if (current?.promise === promise) {
           invalidate();
         }
-        if (failedWhileCurrent) {
-          options.onFailure(source, score);
-          throw error;
+        if (!failedWhileCurrent) {
+          return 'superseded';
         }
-        return 'superseded';
+        // The synchronous layout stays published.
+        throw error;
       })
       .finally(() => clearTimeout(timer));
 
@@ -220,13 +228,21 @@ export function useLiveWorkspaceLayout(options: {
     }
   }
 
+  // Restart settlement even when the content revision is unchanged, so that
+  // uncommitted rich-text drafts are measured.
+  function refresh(workspace: Workspace) {
+    invalidate();
+    void start(workspace).catch(console.error);
+  }
+
   return {
     start,
     wait,
     invalidate,
+    refresh,
     clearMeasurements: () => measurements.clear(),
-    get isPublished() {
-      return current?.outcome === 'published' && current.isCurrent();
+    get isSettled() {
+      return current?.outcome === 'settled' && current.isCurrent();
     },
     get waitingForBlur() {
       return waitingForBlur;

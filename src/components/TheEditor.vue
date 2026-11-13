@@ -203,7 +203,6 @@ import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
 import type { WorkspaceLocalStorage, ZoomFitMode } from '@/models/Workspace';
 import {
-  assignMissingElementIds,
   formatZoomPercent,
   MAX_ZOOM,
   MIN_ZOOM,
@@ -518,7 +517,6 @@ const tabs = ref<Tab[]>([]);
 const contextMenuWorkspaceId = ref<string | null>(null);
 const scoreContextMenuTarget = ref<ScoreElement | null>(null);
 const scoreMenuPointerDownInside = ref(false);
-let displayedScore: Score | undefined;
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
@@ -575,7 +573,6 @@ const toolbarInnerNeume = ref<NeumeSelection>(NeumeSelection.Primary);
 const toolbarMartyriaLayoutRevision = ref(0);
 const keyboardModifier = ref<string | null>(null);
 const audioElement = ref<ScoreElement | null>(null);
-let pendingPlaybackStart: AbortController | undefined;
 const playbackEvents = ref<PlaybackSequenceEvent[]>([]);
 const playbackTimeInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const audioOptions = reactive<PlaybackOptions>({
@@ -787,9 +784,8 @@ const liveLayout = useLiveWorkspaceLayout({
     language: ckeditorLanguage.value,
   }),
   cancelMeasurement: liveLayoutMeasurement.cancel,
-  onFailure: publishFirstLayoutFallback,
 });
-const { invalidate: invalidateLiveLayout, wait: awaitCurrentFootnoteLayout } =
+const { invalidate: invalidateLiveLayout, wait: awaitSettledLayout } =
   liveLayout;
 
 const {
@@ -1580,6 +1576,11 @@ const throttled = {
   onScroll: throttle(250, onScroll),
 };
 const saveDebounced = debounce(250, save);
+// Refine the published layout with uncommitted rich-text content, without
+// republishing the committed content first.
+const refineLayoutDebounced = debounce(250, () =>
+  liveLayout.refresh(selectedWorkspace.value),
+);
 const ZOOM_WHEEL_DELTA_THRESHOLD = 80;
 const ZOOM_WHEEL_DELTA_RESET_DELAY_MS = 200;
 let zoomWheelDelta = 0;
@@ -1764,15 +1765,12 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 
 function onLayoutFontsChanged() {
   liveLayout.clearMeasurements();
-  if (settleFootnoteReferences.value) {
-    invalidateLiveLayout();
-  }
+  invalidateLiveLayout();
   saveDebounced();
 }
 onBeforeUnmount(() => {
-  pendingLyricFocus?.abort();
-  pendingPlaybackStart?.abort();
   saveDebounced.cancel();
+  refineLayoutDebounced.cancel();
   document.fonts.removeEventListener('loadingdone', onLayoutFontsChanged);
   document.fonts.removeEventListener('loadingerror', onLayoutFontsChanged);
 });
@@ -2176,7 +2174,7 @@ const {
     return await discardRecoverySnapshot(workspace.id);
   },
   snapshot: createScoreRenderSnapshot,
-  awaitCurrentFootnoteLayout,
+  awaitSettledLayout,
   busyState() {
     if (isLoading.value) {
       return { reason: 'loading' };
@@ -2541,10 +2539,7 @@ function getTextOffset(root: HTMLElement, container: Node, offset: number) {
 }
 
 function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
-  if (
-    pendingLyricFocus?.signal.aborted === false ||
-    selectedLyrics.value !== lyricSelection.element
-  ) {
+  if (selectedLyrics.value !== lyricSelection.element) {
     return;
   }
 
@@ -2933,7 +2928,7 @@ watch(
   (editor, _, onCleanup) => {
     if (liveLayout.waitingForBlur) {
       invalidateLiveLayout();
-      saveDebounced();
+      refineLayoutDebounced();
     }
     if (
       editor == null ||
@@ -2942,10 +2937,9 @@ watch(
       return;
     }
     const changed = () => {
-      if (settleFootnoteReferences.value) {
-        invalidateLiveLayout();
-        saveDebounced();
-      }
+      // Cancel the stale settlement now; the refresh starts after typing pauses.
+      invalidateLiveLayout();
+      refineLayoutDebounced();
     };
     editor.model.document.on('change:data', changed);
     onCleanup(() => editor.model.document.off('change:data', changed));
@@ -3414,12 +3408,7 @@ function addDropCap(after: boolean) {
 }
 
 function focusInsertedTextElement(element: DropCapElement | TextBoxElement) {
-  nextTick(async () => {
-    if (settleFootnoteReferences.value) {
-      await awaitCurrentFootnoteLayout(selectedWorkspace.value).catch(
-        console.error,
-      );
-    }
+  nextTick(() => {
     if (toRaw(selectedElement.value) === element) {
       getElementComponentForElement<
         InstanceType<typeof DropCap | typeof TextBox>
@@ -3486,7 +3475,7 @@ async function openFootnoteFromContextMenu(reference: ScoreElement) {
   setTimeout(() => openFootnote(reference), 0);
 }
 
-async function openFootnote(
+function openFootnote(
   reference: ScoreElement,
   id = elementFootnoteIds(reference)[0],
 ) {
@@ -3499,19 +3488,6 @@ async function openFootnote(
   if (editor !== null) {
     editor.ui.getEditableElement()!.blur();
     clearActiveEditor();
-  }
-  if (settleFootnoteReferences.value) {
-    const selection = selectedElement.value;
-    const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
-      console.error,
-    );
-    if (
-      outcome !== 'published' ||
-      selectedElement.value !== selection ||
-      !workspace.score.footnotes.includes(footnote)
-    ) {
-      return;
-    }
   }
   const page = pages.value[reference.page - 1];
   if (page === undefined) {
@@ -3531,30 +3507,9 @@ async function openFootnote(
   );
 }
 
-let footnotePropertiesOpenRequest = 0;
-
-async function openFootnoteProperties(id: string) {
-  const request = ++footnotePropertiesOpenRequest;
-  const workspace = selectedWorkspace.value;
-  const sourceScore = workspace.score;
-  flushPendingRichTextEditors(workspace);
-  if (settleFootnoteReferences.value) {
-    blurActiveElement();
-    clearActiveEditor();
-    const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
-      console.error,
-    );
-    if (outcome !== 'published') {
-      return;
-    }
-  }
-  if (
-    request === footnotePropertiesOpenRequest &&
-    workspace === selectedWorkspace.value &&
-    workspace.score === sourceScore
-  ) {
-    showFootnoteProperties(id);
-  }
+function openFootnoteProperties(id: string) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  showFootnoteProperties(id);
 }
 
 function insertFootnote(reference: FootnoteAnchorElement) {
@@ -3665,15 +3620,6 @@ async function focusSelectedNoteLyrics(note: NoteElement) {
     if (!isCurrent()) {
       return;
     }
-    if (
-      getLyricsComponentForElement(note) === undefined &&
-      settleFootnoteReferences.value
-    ) {
-      await awaitCurrentFootnoteLayout(workspace).catch(console.error);
-    }
-    if (!isCurrent()) {
-      return;
-    }
 
     const page = pages.value[note.page - 1];
     if (page !== undefined && !page.isVisible) {
@@ -3739,15 +3685,7 @@ function selectHeaderFooterRichTextBox(
 }
 
 function focusSelectedRichTextBoxEditor(element: RichTextBoxElement) {
-  nextTick(async () => {
-    if (
-      settleFootnoteReferences.value &&
-      getRichTextBoxComponentRef(element) == null
-    ) {
-      await awaitCurrentFootnoteLayout(selectedWorkspace.value).catch(
-        console.error,
-      );
-    }
+  nextTick(() => {
     if (
       selectedRichTextBoxElement.value !== element ||
       isActiveEditorForOwner(element)
@@ -4586,10 +4524,6 @@ function onKeydownNeume(event: KeyboardEvent) {
 }
 
 function onKeydownLyrics(event: KeyboardEvent) {
-  if (pendingLyricFocus?.signal.aborted === false) {
-    return;
-  }
-
   let handled = false;
 
   // Do not allow enter key in lyrics
@@ -5543,8 +5477,6 @@ function getNextLyricBoxIndex() {
   return -1;
 }
 
-let pendingLyricFocus: AbortController | undefined;
-
 function moveToNextLyricBox(clearMelisma: boolean = false) {
   const current = selectedLyrics.value;
   const nextIndex = getNextLyricBoxIndex();
@@ -5592,47 +5524,12 @@ function moveToLyricBox(
     }
   };
   nextTick(async () => {
-    if (
-      !canMoveFocus() ||
-      focusDestination() ||
-      !settleFootnoteReferences.value
-    ) {
-      return;
-    }
-    await revealDestinationPage();
     if (!canMoveFocus() || focusDestination()) {
       return;
     }
-
-    // The destination has no mounted box yet. Leave the old box so input
-    // cannot change the committed syllable while waiting for pagination.
-    source.blur();
-    const pending = new AbortController();
-    pendingLyricFocus?.abort();
-    pendingLyricFocus = pending;
-    const cancel = () => pending.abort();
-    const listenerOptions = { capture: true, signal: pending.signal };
-    window.addEventListener('focusin', cancel, listenerOptions);
-    window.addEventListener('pointerdown', cancel, listenerOptions);
-    window.addEventListener('blur', cancel, { signal: pending.signal });
-    const canFinish = () =>
-      !pending.signal.aborted && isCurrent() && document.hasFocus();
-    try {
-      const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
-        console.error,
-      );
-      if (outcome !== 'published' || !canFinish()) {
-        return;
-      }
-      await revealDestinationPage();
-      if (canFinish()) {
-        focusDestination();
-      }
-    } finally {
-      pending.abort();
-      if (pendingLyricFocus === pending) {
-        pendingLyricFocus = undefined;
-      }
+    await revealDestinationPage();
+    if (canMoveFocus()) {
+      focusDestination();
     }
   });
 
@@ -5781,18 +5678,9 @@ async function runLiveSettlement(
         rawOwner[key] = trialOwner[key];
       }
     }
-    const breaksBefore = new Set<ScoreElement>();
-    if (result.breaksBefore.size > 0) {
-      for (const element of score.staff.elements) {
-        const copy = result.copies.get(element);
-        if (copy && result.breaksBefore.has(copy)) {
-          breaksBefore.add(element);
-        }
-      }
-    }
     processedPages = LayoutService.processPages(source, {
       ...options,
-      breaksBefore,
+      breaksBefore: result.breaksBefore,
     });
   } finally {
     if (rawOwner !== null) {
@@ -5804,58 +5692,37 @@ async function runLiveSettlement(
   for (const box of resized) {
     box.updated = true;
   }
-  const firstLayout = displayedScore !== score;
   publishLayout(processedPages, activeBox, lyricSelection);
-  if (firstLayout) {
-    await nextTick();
-    if (isCurrent()) {
-      pageBackgroundRef.value?.scrollTo(
-        workspace.scrollLeft,
-        workspace.scrollTop,
-      );
-      calculatePageNumber();
-    }
-  }
-  return 'published';
+  return 'settled';
 }
 
 function save() {
-  invalidateLiveLayout();
-  if (settleFootnoteReferences.value) {
-    assignMissingElementIds(selectedWorkspace.value);
-    if (displayedScore !== toRaw(score.value)) {
-      displayedScore = undefined;
-      pages.value = [];
-    }
-    void liveLayout.start(selectedWorkspace.value).catch(console.error);
-  } else {
-    publishSynchronousLayout(toRaw(selectedWorkspace.value));
-  }
-
-  persistLayoutRecovery();
+  // Settling scores used to publish only through settlement, which keeps an
+  // uncommitted lyric draft across a remount. Keep that for them; other scores
+  // keep their previous synchronous behavior, which never restored drafts.
+  publishAndSettleLayout(settleFootnoteReferences.value);
 }
 
-function publishSynchronousLayout(workspace: Workspace) {
-  const lyricSelection = captureSelectedLyricSelection();
+// After a lyric commit, the focused box no longer holds a draft. Its committed
+// text can differ from the typed text (e.g. locked lyrics reassign syllables),
+// so restoring the typed text would overwrite the model.
+function saveCommittedLyrics() {
+  publishAndSettleLayout(false);
+}
+
+function publishAndSettleLayout(preserveLyricDraft: boolean) {
+  refineLayoutDebounced.cancel({ upcomingOnly: true });
+  // Always publish a layout immediately. Settlement only refines it.
+  const workspace = toRaw(selectedWorkspace.value);
+  const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
   publishLayout(
     LayoutService.processPages(workspace, layoutOptions()),
     null,
     lyricSelection,
   );
-}
+  liveLayout.refresh(workspace);
 
-function publishFirstLayoutFallback(workspace: Workspace, score: Score) {
-  if (
-    workspace === toRaw(selectedWorkspace.value) &&
-    workspace.score === score &&
-    displayedScore !== score
-  ) {
-    try {
-      publishSynchronousLayout(workspace);
-    } catch (error) {
-      console.error(error);
-    }
-  }
+  persistLayoutRecovery();
 }
 
 function publishLayout(
@@ -5906,7 +5773,6 @@ function publishLayout(
       element.keyHelper++;
     });
 
-  displayedScore = toRaw(score.value);
   pages.value = processedPages;
 
   if (lyricSelection != null) {
@@ -6917,7 +6783,7 @@ function updateLyrics(
     } else {
       extractStaffLyrics(selectedWorkspace.value, staff);
     }
-    save();
+    saveCommittedLyrics();
   }
 }
 
@@ -7198,7 +7064,7 @@ function updateTextBox(
 
 function resumeLayoutAfterTextBlur() {
   if (liveLayout.waitingForBlur) {
-    save();
+    liveLayout.refresh(selectedWorkspace.value);
   }
 }
 
@@ -8169,66 +8035,34 @@ function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
 }
 
 async function playAudio() {
-  if (pendingPlaybackStart !== undefined) {
-    return;
-  }
-  if (audioService.state !== AudioState.Stopped) {
-    pauseAudio();
-    return;
-  }
-
-  const pending = new AbortController();
-  pendingPlaybackStart = pending;
-  const workspace = selectedWorkspace.value;
-  const sourceScore = workspace.score;
-  const staff = activeStaff.value;
-  const element = selectedElement.value;
-  const lyric = selectedLyrics.value;
-  const isCurrent = () =>
-    !pending.signal.aborted &&
-    workspace === selectedWorkspace.value &&
-    workspace.score === sourceScore &&
-    staff === activeStaff.value &&
-    element === selectedElement.value &&
-    lyric === selectedLyrics.value;
-
   try {
-    if (
-      settleFootnoteReferences.value &&
-      (await awaitCurrentFootnoteLayout(workspace)) !== 'published'
-    ) {
-      return;
-    }
-    if (
-      !isCurrent() ||
-      (settleFootnoteReferences.value && !liveLayout.isPublished)
-    ) {
-      return;
-    }
+    if (audioService.state === AudioState.Stopped) {
+      playbackEvents.value = playbackService.computePlaybackSequence(
+        score.value.staff.elements,
+        audioOptions,
+        score.value.pageSetup.chrysanthineAccidentals,
+      );
 
-    const revision = workspace.contentRevision;
-    playbackEvents.value = playbackService.computePlaybackSequence(
-      sourceScore.staff.elements,
-      audioOptions,
-      sourceScore.pageSetup.chrysanthineAccidentals,
-    );
-    if (playbackEvents.value.length === 0) {
-      return;
-    }
+      if (playbackEvents.value.length === 0) {
+        return;
+      }
 
-    const startIndex = isMainStaff.value ? selectedElementIndex.value : 0;
-    const startAt = playbackEvents.value.find(
-      (event) => event.elementIndex >= startIndex,
-    );
-    await audioService.play(playbackEvents.value, audioOptions, startAt);
-    if (!isCurrent() || workspace.contentRevision !== revision) {
-      stopAudio();
-      return;
+      const startAt = playbackEvents.value.find(
+        (x) =>
+          x.elementIndex >=
+          (isMainStaff.value ? selectedElementIndex.value : 0),
+      );
+
+      await audioService.play(playbackEvents.value, audioOptions, startAt);
+
+      if (startAt) {
+        selectedWorkspace.value.playbackTime = startAt.absoluteTime;
+      }
+
+      startPlaybackClock();
+    } else {
+      pauseAudio();
     }
-    if (startAt) {
-      workspace.playbackTime = startAt.absoluteTime;
-    }
-    startPlaybackClock();
   } catch (error) {
     console.error(error);
     showErrorToast(
@@ -8240,13 +8074,10 @@ async function playAudio() {
         }),
       },
     );
-  } finally {
-    pendingPlaybackStart = undefined;
   }
 }
 
 function stopAudio() {
-  pendingPlaybackStart?.abort();
   try {
     audioService.stop();
 
@@ -8521,8 +8352,8 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
   }
   if (settleFootnoteReferences.value) {
     invalidateLiveLayout();
-    const outcome = await awaitCurrentFootnoteLayout(workspace);
-    if (outcome !== 'published') {
+    const outcome = await awaitSettledLayout(workspace);
+    if (outcome !== 'settled') {
       throw new Error('LAYOUT_CONFLICT');
     }
   } else {
@@ -8558,7 +8389,7 @@ async function awaitBrowserPrintPages(workspace: Workspace) {
       const isLayoutCurrent = () =>
         isScoreCurrent() &&
         layout === pages.value &&
-        (!settleFootnoteReferences.value || liveLayout.isPublished);
+        (!settleFootnoteReferences.value || liveLayout.isSettled);
       if (layout.some((page) => page.footnoteOverflow)) {
         return isLayoutCurrent;
       }
@@ -8654,7 +8485,7 @@ async function onFileMenuPrint(browserInitiated = false) {
     activeElement = blurActiveElement();
 
     if (browserInitiated) {
-      if (settleFootnoteReferences.value && !liveLayout.isPublished) {
+      if (settleFootnoteReferences.value && !liveLayout.isSettled) {
         showBrowserPrintWarning();
         return;
       }
@@ -9772,14 +9603,6 @@ async function onSearchText(args: { query: string; reverse?: boolean }) {
   selectedElement.value = result;
   const isCurrent = () =>
     workspace === selectedWorkspace.value && selectedElement.value === result;
-  if (settleFootnoteReferences.value) {
-    const outcome = await awaitCurrentFootnoteLayout(workspace).catch(
-      console.error,
-    );
-    if (outcome !== 'published' || !isCurrent()) {
-      return;
-    }
-  }
   const pageIndex = result.page - 1;
   const page = pages.value[pageIndex];
   const pageElement = pagesRef.value?.[pageIndex];

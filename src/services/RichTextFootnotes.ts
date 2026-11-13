@@ -16,34 +16,100 @@ export function richTextFootnoteIds(html: string): string[] {
   const objects: boolean[] = [];
   new Parser({
     onopentag(name, attributes) {
-      if (
-        name === 'span' &&
-        attributes.class?.split(/\s+/).includes(FOOTNOTE_CLASS)
-      ) {
+      if (isFootnoteSpan(name, attributes)) {
         if (objects.some(Boolean)) {
           throw new Error('INVALID_FOOTNOTE_REFERENCE');
         }
         const id = attributes[FOOTNOTE_ATTRIBUTE];
-        if (!id || !/^[a-f\d-]{36}$/i.test(id)) {
+        if (!isRichTextFootnoteId(id)) {
           throw new Error('INVALID_FOOTNOTE_REFERENCE');
         }
         ids.push(id);
       }
-      objects.push(
-        attributes.contenteditable === 'false' ||
-          attributes.class
-            ?.split(/\s+/)
-            .some(
-              (value) =>
-                value === FOOTNOTE_CLASS || value === 'neanes-ck-neume',
-            ) === true,
-      );
+      objects.push(isRichTextObject(attributes));
     },
     onclosetag() {
       objects.pop();
     },
   }).end(html);
   return ids;
+}
+
+function isFootnoteSpan(name: string, attributes: Record<string, string>) {
+  return (
+    name === 'span' &&
+    attributes.class?.split(/\s+/).includes(FOOTNOTE_CLASS) === true
+  );
+}
+
+function isRichTextFootnoteId(id: string | undefined): id is string {
+  return id !== undefined && /^[a-f\d-]{36}$/i.test(id);
+}
+
+function isRichTextObject(attributes: Record<string, string>) {
+  return (
+    attributes.contenteditable === 'false' ||
+    attributes.class
+      ?.split(/\s+/)
+      .some(
+        (value) => value === FOOTNOTE_CLASS || value === 'neanes-ck-neume',
+      ) === true
+  );
+}
+
+// Removes each footnote span that richTextFootnoteIds would reject, and each
+// valid one that `keep` rejects. `keep` sees valid ids in document order. A
+// removed span takes its contents with it: a marker holds no user text.
+export function removeRichTextFootnotes(
+  html: string,
+  keep: (id: string) => boolean,
+) {
+  if (!html.includes(FOOTNOTE_CLASS)) {
+    return html;
+  }
+  const removals: { start: number; end: number }[] = [];
+  const objects: boolean[] = [];
+  let removing: { start: number; depth: number } | null = null;
+  const parser = new Parser({
+    onopentag(name, attributes) {
+      if (removing === null && isFootnoteSpan(name, attributes)) {
+        const id = attributes[FOOTNOTE_ATTRIBUTE];
+        if (objects.some(Boolean) || !isRichTextFootnoteId(id) || !keep(id)) {
+          removing = { start: parser.startIndex, depth: objects.length };
+        }
+      }
+      objects.push(isRichTextObject(attributes));
+    },
+    onclosetag(_name, isImplied) {
+      objects.pop();
+      if (removing !== null && objects.length === removing.depth) {
+        // An implied close happens at the tag that forced it, which stays.
+        removals.push({
+          start: removing.start,
+          end: isImplied ? parser.startIndex : parser.endIndex + 1,
+        });
+        removing = null;
+      }
+    },
+  });
+  parser.end(html);
+  return applyEdits(html, removals);
+}
+
+// Replaces each [start, end) range of `html` with its text. Ranges are in
+// document order and do not overlap.
+function applyEdits(
+  html: string,
+  edits: readonly { start: number; end: number; text?: string }[],
+) {
+  const parts: string[] = [];
+  let start = 0;
+  for (const edit of edits) {
+    parts.push(html.slice(start, edit.start), edit.text ?? '');
+    start = edit.end;
+  }
+  parts.push(html.slice(start));
+  return parts.join('');
 }
 
 export function activeRichTextContentKeys(
@@ -69,10 +135,7 @@ export function rewriteRichTextFootnoteIds(
   const replacements: { start: number; end: number; text: string }[] = [];
   const parser = new Parser({
     onopentag(name, attributes) {
-      if (
-        name === 'span' &&
-        attributes.class?.split(/\s+/).includes(FOOTNOTE_CLASS)
-      ) {
+      if (isFootnoteSpan(name, attributes)) {
         const id = remap.get(attributes[FOOTNOTE_ATTRIBUTE]);
         if (id !== undefined) {
           replacements.push({
@@ -93,13 +156,7 @@ export function rewriteRichTextFootnoteIds(
     },
   });
   parser.end(html);
-  for (const replacement of replacements.reverse()) {
-    html =
-      html.slice(0, replacement.start) +
-      replacement.text +
-      html.slice(replacement.end);
-  }
-  return html;
+  return applyEdits(html, replacements);
 }
 
 export function remapRichTextBoxFootnotes(
@@ -118,25 +175,21 @@ export function removeRichTextFootnoteFillers(html: string) {
     return html;
   }
 
-  const parts: string[] = [];
-  let start = 0;
+  const removals: { start: number; end: number }[] = [];
   const parser = new Parser({
     onopentag(name, attributes) {
       const offset = parser.endIndex + 1;
       if (
-        name === 'span' &&
-        attributes.class?.split(/\s+/).includes(FOOTNOTE_CLASS) &&
+        isFootnoteSpan(name, attributes) &&
         attributes[FOOTNOTE_ATTRIBUTE] !== undefined &&
         html.startsWith(`${filler}</span>`, offset)
       ) {
-        parts.push(html.slice(start, offset));
-        start = offset + filler.length;
+        removals.push({ start: offset, end: offset + filler.length });
       }
     },
   });
   parser.end(html);
-  parts.push(html.slice(start));
-  return parts.join('');
+  return applyEdits(html, removals);
 }
 
 export function richTextFootnoteHtml(id: string) {
@@ -155,15 +208,7 @@ export function insertRichTextFootnote(
   const parser = new Parser({
     onopentag(name, attributes) {
       stack.push(name);
-      objects.push(
-        attributes.contenteditable === 'false' ||
-          attributes.class
-            ?.split(/\s+/)
-            .some(
-              (value) =>
-                value === FOOTNOTE_CLASS || value === 'neanes-ck-neume',
-            ) === true,
-      );
+      objects.push(isRichTextObject(attributes));
       if (
         name === 'p' &&
         !objects.some(Boolean) &&

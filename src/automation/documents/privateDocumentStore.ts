@@ -33,6 +33,14 @@ export class PrivateDocumentStore {
         workspace.tempFileName = workspace.id;
         workspaces.push(workspace);
       },
+      removeWorkspace(workspace) {
+        const index = workspaces.indexOf(workspace);
+        if (index < 0) {
+          return;
+        }
+        hooks.dispose(workspace);
+        workspaces.splice(index, 1);
+      },
       selectWorkspace() {},
       prepare: (workspace) => hooks.prepare(workspace),
       changed() {},
@@ -43,9 +51,8 @@ export class PrivateDocumentStore {
       },
       settle: (workspace) => hooks.settle(workspace),
       async saved() {},
-      close: async (workspace) => {
-        hooks.dispose(workspace);
-        workspaces.splice(workspaces.indexOf(workspace), 1);
+      async close(workspace) {
+        this.removeWorkspace(workspace);
         return true;
       },
     });

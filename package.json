@@ -39,7 +39,7 @@
     "electron-updater": "^6.8.11",
     "i18next": "^26.7.2",
     "i18next-pseudo": "^2.2.1",
-    "image-size": "^2.0.4",
+    "image-size": "^2.1.0",
     "jszip": "^3.10.2",
     "mime-types": "^3.0.2",
     "throttle-debounce": "^5.0.2",

@@ -39,6 +39,9 @@ export async function renderSnapshot<T>(options: {
       contextIsolation: true,
       nodeIntegration: false,
       backgroundThrottling: false,
+      // PNG rasterization waits for animation frames, which hidden Wayland
+      // windows may not receive.
+      offscreen: options.png !== undefined,
       spellcheck: false,
     },
   });

@@ -22,12 +22,18 @@ export function useFootnoteProperties(
   const footnotePropertiesDialogIsOpen = ref(false);
   const editedFootnoteId = ref<string | null>(null);
   const editedFootnote = computed(() => {
+    const id = editedFootnoteId.value;
+    // Skip the full-score scan while no footnote is being edited.
+    if (id === null) {
+      return undefined;
+    }
+    const score = workspace.value.score;
     // Layout writes page numbers to raw elements. Depend on the published
     // pages so page-restarted labels refresh after each layout.
-    void pages.value;
-    return orderedFootnotes(workspace.value.score).find(
-      ({ footnote }) => footnote.id === editedFootnoteId.value,
-    );
+    if (score.pageSetup.footnoteNumbering === 'page') {
+      void pages.value;
+    }
+    return orderedFootnotes(score).find(({ footnote }) => footnote.id === id);
   });
   const footnotePreviewLineElements = computed(() => {
     const reference = editedFootnote.value?.reference;
@@ -56,10 +62,19 @@ export function useFootnoteProperties(
       footnotePropertiesDialogIsOpen.value = false;
     }
   });
+  watch(footnotePropertiesDialogIsOpen, (isOpen) => {
+    if (!isOpen) {
+      editedFootnoteId.value = null;
+    }
+  });
 
   function openFootnoteProperties(id: string) {
     editedFootnoteId.value = id;
-    footnotePropertiesDialogIsOpen.value = editedFootnote.value !== undefined;
+    if (editedFootnote.value === undefined) {
+      editedFootnoteId.value = null;
+      return;
+    }
+    footnotePropertiesDialogIsOpen.value = true;
   }
 
   function updateFootnoteMarker(

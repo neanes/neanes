@@ -20,6 +20,8 @@ export interface DocumentEditor {
   selectedWorkspace(): Workspace | null;
   createScore(): Score;
   addWorkspace(workspace: Workspace): void;
+  // Undoes addWorkspace for a workspace that never opened.
+  removeWorkspace(workspace: Workspace): void;
   selectWorkspace(workspace: Workspace): void;
   prepare(workspace: Workspace): void;
   changed(workspace: Workspace): void;
@@ -77,15 +79,24 @@ export class DocumentService {
       workspace.score.documentProperties.title = options.title;
     }
     workspace.hasUnsavedChanges = options.markUnsaved ?? false;
-    this.editor.addWorkspace(workspace);
-    this.editor.selectWorkspace(workspace);
+    this.addAndSelect(workspace);
     this.editor.changed(workspace);
     return workspace;
   }
 
+  // A new document that cannot lay out must not stay open.
+  private addAndSelect(workspace: Workspace) {
+    this.editor.addWorkspace(workspace);
+    try {
+      this.editor.selectWorkspace(workspace);
+    } catch (error) {
+      this.editor.removeWorkspace(workspace);
+      throw error;
+    }
+  }
+
   open(file: DocumentFileData | { documentId: string }) {
     let workspace: Workspace;
-    let created = false;
     if ('documentId' in file) {
       const existing = this.list().find(
         (workspace) => workspace.id === file.documentId,
@@ -103,21 +114,22 @@ export class DocumentService {
       } else {
         workspace = new Workspace();
         try {
-          workspace.score = SaveService.LoadScoreFromJson(
-            JSON.parse(file.data),
-          );
+          const { score, repairedFootnoteReferences } =
+            SaveService.LoadScoreFromJsonWithRepairs(JSON.parse(file.data));
+          workspace.score = score;
+          workspace.hasUnsavedChanges = repairedFootnoteReferences;
         } catch (error) {
           throw new Error('INVALID_SCORE', { cause: error });
         }
         workspace.filePath = file.filePath;
         workspace.sourceMtimeMs = file.sourceMtimeMs ?? null;
         workspace.sourceSize = file.sourceSize ?? null;
-        this.editor.addWorkspace(workspace);
-        created = true;
+        this.addAndSelect(workspace);
+        return { workspace, created: true };
       }
     }
     this.editor.selectWorkspace(workspace);
-    return { workspace, created };
+    return { workspace, created: false };
   }
 
   async close(workspace: Workspace, options: CloseDocumentOptions = {}) {

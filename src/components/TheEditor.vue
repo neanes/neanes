@@ -747,9 +747,28 @@ const selectedWorkspace = computed({
       selectedWorkspace.value.scrollTop = pageBackgroundElement.scrollTop;
     }
 
+    const previous = selectedWorkspaceValue.value;
     selectedWorkspaceValue.value = value;
     observeSelectedHistory();
-    save();
+    try {
+      save();
+    } catch (error) {
+      // Selecting lays the workspace out. If that throws, keep the previous
+      // workspace selected so the editor never shows one that cannot render.
+      // Reselecting the same workspace would only fail again;
+      // selectWorkspaceOrRestore restores it and lays it out.
+      if (previous !== value) {
+        selectedWorkspaceValue.value = previous;
+        observeSelectedHistory();
+        try {
+          save();
+        } catch (rollbackError) {
+          // Report the selection failure, not this one.
+          console.error(rollbackError);
+        }
+      }
+      throw error;
+    }
 
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
@@ -2147,6 +2166,7 @@ const {
     workspace.tempFileName = getTempFilename();
     addWorkspace(workspace);
   },
+  removeWorkspace,
   selectWorkspace(workspace) {
     selectedWorkspace.value = workspace;
   },
@@ -5824,12 +5844,16 @@ async function load() {
           );
           const workspace = new Workspace();
           workspace.id = localStorageWorkspace.id;
-          workspace.hasUnsavedChanges = localStorageWorkspace.hasUnsavedChanges;
+          const { score, repairedFootnoteReferences } =
+            SaveService.LoadScoreFromJsonWithRepairs(
+              JSON.parse(localStorageWorkspace.score),
+            );
+          workspace.hasUnsavedChanges =
+            localStorageWorkspace.hasUnsavedChanges ||
+            repairedFootnoteReferences;
           workspace.filePath = localStorageWorkspace.filePath;
           workspace.tempFileName = localStorageWorkspace.tempFileName;
-          workspace.score = SaveService.LoadScoreFromJson(
-            JSON.parse(localStorageWorkspace.score),
-          );
+          workspace.score = score;
 
           addWorkspace(workspace);
         } catch (error) {
@@ -5852,7 +5876,9 @@ async function load() {
 
   if (openWorkspaceResults.silentPdf) {
     for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
+      if (!openScore(file)) {
+        continue;
+      }
       await onFileMenuExportAsPdf();
       removeWorkspace(selectedWorkspace.value);
     }
@@ -5860,7 +5886,9 @@ async function load() {
 
   if (openWorkspaceResults.silentHtml) {
     for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
+      if (!openScore(file)) {
+        continue;
+      }
       await onFileMenuExportAsHtml();
       removeWorkspace(selectedWorkspace.value);
     }
@@ -5873,7 +5901,9 @@ async function load() {
         openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
       options.includeTextBoxes =
         openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
-      openScore(file);
+      if (!openScore(file)) {
+        continue;
+      }
       await nextTick();
       const workspace = selectedWorkspace.value;
       await ipcService.exportWorkspaceAsLatex(
@@ -5923,7 +5953,7 @@ async function load() {
         if (
           workspace != null &&
           candidate.sourceMatches &&
-          !candidate.hasUnsavedChanges
+          !workspace.hasUnsavedChanges
         ) {
           workspace.isRecovered = false;
           await discardRecoverySnapshot(workspace.id);
@@ -5935,9 +5965,16 @@ async function load() {
     recoveryDialogIsOpen.value = pendingRecoveryCandidates.length > 0;
   }
 
-  if (workspaces.value.length > 0) {
-    selectedWorkspace.value = workspaces.value[0] as Workspace;
-    return;
+  // Select the first restored workspace that lays out. One that cannot is
+  // dropped, like any other workspace that fails to open. Detaching never
+  // selects a replacement: the next pass, or the new score below, does.
+  for (const workspace of [...workspaces.value] as Workspace[]) {
+    try {
+      selectWorkspaceOrRestore(workspace, () => detachWorkspace(workspace));
+      return;
+    } catch (error) {
+      showOpenFailedToast(error);
+    }
   }
 
   const workspace = new Workspace();
@@ -8311,13 +8348,9 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
       workspace.score.staff.elements.unshift(...elements);
       workspace.hasUnsavedChanges = true;
 
-      addWorkspace(workspace);
-
-      selectedWorkspace.value = workspace;
+      addAndSelectWorkspace(workspace);
 
       currentFilePath.value = null;
-
-      save();
     } catch (error) {
       console.error(error);
 
@@ -9580,12 +9613,9 @@ function onFileMenuGenerateTestFile(testFileType: TestFileType) {
   );
   workspace.hasUnsavedChanges = true;
 
-  addWorkspace(workspace);
-
-  selectedWorkspace.value = workspace;
+  addAndSelectWorkspace(workspace);
 
   currentFilePath.value = null;
-  save();
 }
 
 async function onSearchText(args: { query: string; reverse?: boolean }) {
@@ -9674,55 +9704,58 @@ function createDefaultScore() {
   return score;
 }
 
+// Returns whether the score is now open and selected.
 function openScore(args: FileMenuOpenScoreArgs) {
   if (!args.success) {
-    return;
-  }
-
-  // First make sure we don't already have the score open
-  const existingWorkspace = workspaces.value.find(
-    (x) => x.filePath === args.filePath,
-  ) as Workspace;
-  if (existingWorkspace != null) {
-    selectedWorkspace.value = existingWorkspace;
-    return;
+    return false;
   }
 
   try {
-    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
+    // First make sure we don't already have the score open
+    const existingWorkspace = workspaces.value.find(
+      (x) => x.filePath === args.filePath,
+    ) as Workspace;
+    if (existingWorkspace != null) {
+      selectedWorkspace.value = existingWorkspace;
+      return true;
+    }
+
+    const { score, repairedFootnoteReferences } =
+      SaveService.LoadScoreFromJsonWithRepairs(JSON.parse(args.data));
 
     // if (score.version !== ScoreVersion) {
     //   alert('This score was created by an older version of the application. It may not work properly');
     // }
 
     const workspace = new Workspace();
+    workspace.hasUnsavedChanges = repairedFootnoteReferences;
     workspace.filePath = args.filePath;
     workspace.tempFileName = getTempFilename();
     workspace.sourceMtimeMs = args.sourceMtimeMs ?? null;
     workspace.sourceSize = args.sourceSize ?? null;
     workspace.score = score;
 
-    addWorkspace(workspace);
-
-    selectedWorkspace.value = workspace;
+    addAndSelectWorkspace(workspace);
 
     selectedElement.value = null;
-
-    save();
+    return true;
   } catch (error) {
+    // Later passes over the same open results skip this file.
     args.success = false;
-    console.error(error);
-
-    showErrorToast(
-      t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
-      error,
-      {
-        fallback: t(($) => $.toast.editor.openFailedDescription, {
-          ns: 'toast',
-        }),
-      },
-    );
+    showOpenFailedToast(error);
+    return false;
   }
+}
+
+function showOpenFailedToast(error: unknown) {
+  console.error(error);
+  showErrorToast(
+    t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+    error,
+    {
+      fallback: t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+    },
+  );
 }
 
 function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
@@ -9735,51 +9768,49 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
       return workspace.id === candidate.workspaceId;
     }) as Workspace | undefined;
 
+    const { score, repairedFootnoteReferences } =
+      SaveService.LoadScoreFromJsonWithRepairs(JSON.parse(candidate.score));
+
     if (existingWorkspace != null) {
-      existingWorkspace.isRecovered = true;
-      existingWorkspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
-      existingWorkspace.sourceMtimeMs = candidate.sourceMtimeMs;
-      existingWorkspace.sourceSize = candidate.sourceSize;
-      existingWorkspace.score = SaveService.LoadScoreFromJson(
-        JSON.parse(candidate.score),
+      const previousState = {
+        isRecovered: existingWorkspace.isRecovered,
+        hasUnsavedChanges: existingWorkspace.hasUnsavedChanges,
+        sourceMtimeMs: existingWorkspace.sourceMtimeMs,
+        sourceSize: existingWorkspace.sourceSize,
+        score: existingWorkspace.score,
+      };
+      Object.assign(existingWorkspace, {
+        isRecovered: true,
+        hasUnsavedChanges:
+          candidate.hasUnsavedChanges || repairedFootnoteReferences,
+        sourceMtimeMs: candidate.sourceMtimeMs,
+        sourceSize: candidate.sourceSize,
+        score,
+      });
+      // Keep the open document usable when its recovered score cannot lay out.
+      selectWorkspaceOrRestore(existingWorkspace, () =>
+        Object.assign(existingWorkspace, previousState),
       );
-      selectedWorkspace.value = existingWorkspace;
       selectedElement.value = null;
-      save();
       return existingWorkspace;
     }
-
-    const score: Score = SaveService.LoadScoreFromJson(
-      JSON.parse(candidate.score),
-    );
 
     const workspace = new Workspace();
     workspace.id = candidate.workspaceId;
     workspace.filePath = candidate.filePath;
     workspace.tempFileName = candidate.tempFileName;
-    workspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
+    workspace.hasUnsavedChanges =
+      candidate.hasUnsavedChanges || repairedFootnoteReferences;
     workspace.isRecovered = true;
     workspace.sourceMtimeMs = candidate.sourceMtimeMs;
     workspace.sourceSize = candidate.sourceSize;
     workspace.score = score;
 
-    addWorkspace(workspace);
-
-    selectedWorkspace.value = workspace;
+    addAndSelectWorkspace(workspace);
     selectedElement.value = null;
-    save();
     return workspace;
   } catch (error) {
-    console.error(error);
-    showErrorToast(
-      t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
-      error,
-      {
-        fallback: t(($) => $.toast.editor.openFailedDescription, {
-          ns: 'toast',
-        }),
-      },
-    );
+    showOpenFailedToast(error);
     return null;
   }
 }
@@ -9877,7 +9908,39 @@ function addWorkspace(workspace: Workspace) {
   }
 }
 
-function removeWorkspace(workspace: Workspace) {
+// Selects the workspace, which lays it out. If layout throws, the previous
+// selection stays, `restore` undoes whatever the caller changed so the
+// workspace can render again, and the layout error propagates.
+function selectWorkspaceOrRestore(workspace: Workspace, restore: () => void) {
+  const wasSelected = selectedWorkspace.value === workspace;
+  try {
+    selectedWorkspace.value = workspace;
+  } catch (error) {
+    try {
+      restore();
+      // The selection did not change, so lay the restored workspace back out
+      // unless `restore` removed it.
+      if (wasSelected && workspaces.value.includes(workspace)) {
+        save();
+      }
+    } catch (restoreError) {
+      // Report the selection failure, not this one.
+      console.error(restoreError);
+    }
+    throw error;
+  }
+}
+
+// A new workspace that cannot lay out must not stay behind as a tab that can
+// never render.
+function addAndSelectWorkspace(workspace: Workspace) {
+  addWorkspace(workspace);
+  selectWorkspaceOrRestore(workspace, () => detachWorkspace(workspace));
+}
+
+// Removes the workspace without selecting another in its place. A caller that
+// detaches the selected workspace must select another one.
+function detachWorkspace(workspace: Workspace) {
   disposeAutomationWorkspace(workspace);
   cancelLyricsAssignment(workspace);
   clearRecoverySnapshotTimer(workspace.id);
@@ -9895,6 +9958,12 @@ function removeWorkspace(workspace: Workspace) {
       tabs.value.splice(tabIndex, 1);
     }
   }
+
+  return index;
+}
+
+function removeWorkspace(workspace: Workspace) {
+  const index = detachWorkspace(workspace);
 
   if (selectedWorkspace.value === workspace) {
     if (workspaces.value.length > 0) {

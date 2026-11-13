@@ -66,6 +66,7 @@ import {
 import { DocumentProperties, Score } from '@/models/Score';
 import { Staff } from '@/models/Staff';
 import { fontCatalog } from '@/services/FontCatalog';
+import { repairFootnoteReferences } from '@/services/FootnoteReferences';
 import { removeRichTextFootnoteFillers } from '@/services/RichTextFootnotes';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import { applyLegacyStyle, normalizeFontStyle } from '@/utils/fontStyle';
@@ -886,6 +887,12 @@ function splitSavedFontFamily(
 
 export class SaveService {
   public static LoadScoreFromJson(s: IScore) {
+    return this.LoadScoreFromJsonWithRepairs(s).score;
+  }
+
+  // Callers that open a document mark it unsaved when the load repaired it,
+  // so the repair reaches the file on the next save.
+  public static LoadScoreFromJsonWithRepairs(s: IScore) {
     let score: Score = new Score();
 
     if (s.version == null || typeof s.version !== 'string') {
@@ -898,7 +905,12 @@ export class SaveService {
       throw new Error(`Unrecognized file version: ${s.version}`);
     }
 
-    return score;
+    const repairedFootnoteReferences = repairFootnoteReferences(score);
+    if (repairedFootnoteReferences) {
+      console.warn('Removed invalid footnote references while loading score.');
+    }
+
+    return { score, repairedFootnoteReferences };
   }
 
   public static SaveScoreToJson(s: Score) {

@@ -13,6 +13,7 @@ import {
 } from './FootnoteService';
 import {
   insertRichTextFootnote,
+  removeRichTextFootnotes,
   richTextBoxFootnoteIds,
   richTextFootnoteHtml,
   richTextFootnoteIds,
@@ -215,5 +216,35 @@ describe('rich textbox footnotes', () => {
         'INVALID_ELEMENT_EDIT',
       );
     }
+  });
+});
+
+describe('removeRichTextFootnotes', () => {
+  const body = new Footnote();
+
+  it('returns the input untouched when nothing is removed', () => {
+    const html = `<p>A${richTextFootnoteHtml(body.id)}B</p>`;
+    expect(removeRichTextFootnotes(html, () => true)).toBe(html);
+    expect(removeRichTextFootnotes('<p>Plain</p>', () => false)).toBe(
+      '<p>Plain</p>',
+    );
+  });
+
+  it('removes a rejected span with its contents', () => {
+    const marker = richTextFootnoteHtml(body.id);
+    expect(
+      removeRichTextFootnotes(
+        `<p>A${marker.replace('</span>', '<b>x</b></span>')}B</p>`,
+        () => false,
+      ),
+    ).toBe('<p>AB</p>');
+  });
+
+  it('keeps the tag that implicitly closes an unterminated span', () => {
+    const open = `<span class="neanes-footnote" data-footnote-id="${body.id}">`;
+    expect(removeRichTextFootnotes(`<p>A${open}</p>B`, () => false)).toBe(
+      '<p>A</p>B',
+    );
+    expect(removeRichTextFootnotes(`<p>A${open}`, () => false)).toBe('<p>A');
   });
 });

@@ -5718,10 +5718,7 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
   const workspace = toRaw(selectedWorkspace.value);
   const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
   publishLayout(
-    LayoutService.processPages(workspace, {
-      ...layoutOptions(),
-      breaksBefore: liveLayout.breaksFor(workspace),
-    }),
+    LayoutService.processPages(workspace, layoutOptions()),
     null,
     lyricSelection,
   );

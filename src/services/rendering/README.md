@@ -41,10 +41,9 @@ The measurement and rendering lifecycles handle cancellation. Overflow remains
 editable and visual export validation rejects it.
 
 The live editor always publishes a synchronous layout first, using the
-current heights and, while the content is unchanged, the breaks retained by
-the last settled publish. After an edit it paginates without them. For
-eligible page-restarted layouts it then settles a detached copy offscreen and
-publishes the result as a refinement. Interactions use whichever layout is
+current heights and ordinary page breaking. For eligible page-restarted
+layouts it then settles a detached copy offscreen and publishes the result
+as a refinement. Interactions use whichever layout is
 displayed; only output (print, export, and MCP) waits for the settled result.
 A failed settlement leaves the synchronous layout displayed. Other live
 layouts retain their debounced DOM height callbacks.

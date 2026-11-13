@@ -50,14 +50,6 @@ export function useLiveWorkspaceLayout(options: {
   cancelMeasurement: () => void;
 }) {
   const measurements = new TextBoxMeasurementCache();
-  // Breaks retained by each score's last settled publish, on the original
-  // elements. Reusing them keeps the synchronous layout of unchanged content
-  // identical to the settled one. After an edit they can force breaks where
-  // content now fits, so they apply only at the revision they settled.
-  const settledBreaks = new WeakMap<
-    Score,
-    { contentRevision: number; breaks: ReadonlySet<ScoreElement> }
-  >();
   let current: LayoutRequest | undefined;
   let disposed = false;
   let waitingForBlur = false;
@@ -110,7 +102,6 @@ export function useLiveWorkspaceLayout(options: {
       current?.promise === promise &&
       isSelected(source, score) &&
       source.contentRevision === contentRevision;
-    let measuredBreaks: ReadonlySet<ScoreElement> | undefined;
 
     async function run(): Promise<LiveLayoutOutcome> {
       // Let canceled measurement components unmount before starting another.
@@ -154,7 +145,6 @@ export function useLiveWorkspaceLayout(options: {
               breaksBefore.add(original);
             }
           }
-          measuredBreaks = breaksBefore;
           return {
             copies: detached.copies,
             applyHeights: detached.applyHeights,
@@ -176,12 +166,6 @@ export function useLiveWorkspaceLayout(options: {
         }
         request.outcome = outcome;
         waitingForBlur = outcome === 'deferred';
-        if (outcome === 'settled' && measuredBreaks !== undefined) {
-          settledBreaks.set(score, {
-            contentRevision,
-            breaks: measuredBreaks,
-          });
-        }
         return outcome;
       })
       .catch((error: unknown): LiveLayoutOutcome => {
@@ -251,20 +235,11 @@ export function useLiveWorkspaceLayout(options: {
     void start(workspace).catch(console.error);
   }
 
-  function breaksFor(workspace: Workspace) {
-    const { score, contentRevision } = toRaw(workspace);
-    const settled = settledBreaks.get(score);
-    return options.enabled() && settled?.contentRevision === contentRevision
-      ? settled.breaks
-      : undefined;
-  }
-
   return {
     start,
     wait,
     invalidate,
     refresh,
-    breaksFor,
     clearMeasurements: () => measurements.clear(),
     get isSettled() {
       return current?.outcome === 'settled' && current.isCurrent();

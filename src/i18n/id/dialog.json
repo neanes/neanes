@@ -345,6 +345,12 @@
     "enableDeveloperPanel": "Aktifkan Panel Pengembang",
     "tempoDefaults": "Default Tempo",
     "bpm": "BPM",
+    "characterReplacements": "Penggantian Karakter",
+    "characterReplacementsDescription": "Ganti karakter yang diketik dengan karakter lain pada lirik, huruf awal, kotak teks, dan panel lirik. Tanpa penggantian, karakter disisipkan sesuai yang diketik.",
+    "characterReplacementTyped": "Diketik",
+    "characterReplacementInserted": "Disisipkan",
+    "addCharacterReplacement": "Tambah Penggantian",
+    "removeCharacterReplacement": "Hapus penggantian",
     "sections": {
       "general": "Umum",
       "appearance": "Tampilan",

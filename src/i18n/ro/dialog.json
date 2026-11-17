@@ -345,6 +345,12 @@
     "enableDeveloperPanel": "Activează panoul pentru dezvoltatori",
     "tempoDefaults": "Tempouri implicite",
     "bpm": "BPM",
+    "characterReplacements": "Înlocuiri de caractere",
+    "characterReplacementsDescription": "Înlocuiește un caracter tastat cu altul în versuri, inițiale, casete de text și panoul de versuri. Fără înlocuiri, caracterele sunt inserate așa cum sunt tastate.",
+    "characterReplacementTyped": "Tastat",
+    "characterReplacementInserted": "Inserat",
+    "addCharacterReplacement": "Adaugă înlocuire",
+    "removeCharacterReplacement": "Elimină înlocuirea",
     "sections": {
       "general": "General",
       "appearance": "Aspect",

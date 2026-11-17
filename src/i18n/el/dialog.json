@@ -345,6 +345,12 @@
     "enableDeveloperPanel": "Ενεργοποίηση Πίνακα Προγραμματιστή",
     "tempoDefaults": "Προεπιλογές Χρονικής Αγωγής",
     "bpm": "BPM",
+    "characterReplacements": "Αντικαταστάσεις Χαρακτήρων",
+    "characterReplacementsDescription": "Αντικαταστήστε έναν πληκτρολογημένο χαρακτήρα με άλλον στους στίχους, στα αρχικά γράμματα, στα πλαίσια κειμένου και στο παράθυρο στίχων. Χωρίς αντικαταστάσεις, οι χαρακτήρες εισάγονται όπως πληκτρολογούνται.",
+    "characterReplacementTyped": "Πληκτρολογημένος",
+    "characterReplacementInserted": "Εισαγόμενος",
+    "addCharacterReplacement": "Προσθήκη Αντικατάστασης",
+    "removeCharacterReplacement": "Αφαίρεση αντικατάστασης",
     "sections": {
       "general": "Γενικά",
       "appearance": "Εμφάνιση",

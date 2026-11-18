@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { HoverCardContentProps } from 'reka-ui';
 import { HoverCardContent, HoverCardPortal, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 defineOptions({
   inheritAttrs: false,

@@ -79,6 +79,7 @@ import { debounce, throttle } from 'throttle-debounce';
 import type { PropType, StyleValue } from 'vue';
 import {
   computed,
+  nextTick,
   onBeforeUnmount,
   onMounted,
   ref,
@@ -97,7 +98,7 @@ import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import { withZoom } from '@/utils/withZoom';
 
-const emit = defineEmits(['update', 'update:height', 'select-single']);
+const emit = defineEmits(['update', 'update:height', 'select-single', 'blur']);
 const props = defineProps({
   element: {
     type: Object as PropType<TextBoxElement>,
@@ -311,6 +312,13 @@ function onEditorReady() {
 }
 
 function update() {
+  const updates = getPendingUpdates();
+  if (updates !== null) {
+    emit('update', updates);
+  }
+}
+
+function getPendingUpdates() {
   const updates: Partial<TextBoxElement> = {};
 
   let updated = false;
@@ -326,7 +334,7 @@ function update() {
   // This should never happen, but if it does, we don't want
   // to save garbage values.
   if (height == null) {
-    return;
+    return null;
   }
 
   // Nothing actually changed, so do nothing
@@ -363,9 +371,7 @@ function update() {
     updated = true;
   }
 
-  if (updated) {
-    emit('update', updates);
-  }
+  return updated ? updates : null;
 }
 
 function blur() {
@@ -398,6 +404,9 @@ function setupResizeObserver() {
     observeResize(
       elements,
       throttle(100, () => {
+        if (unmounting.value) {
+          return;
+        }
         const resizedHeight = getHeight();
 
         if (
@@ -450,10 +459,24 @@ function getHeight() {
 function onBlur() {
   if (!unmounting.value) {
     update();
+    emit('blur');
   }
 }
 
+async function measureTextBox() {
+  await nextTick();
+  await document.fonts.ready;
+  await nextTick();
+  const height = getHeight();
+  if (height == null || !Number.isFinite(height)) {
+    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+  }
+  return { element: props.element, width: props.element.width, height };
+}
+
 defineExpose({
+  getPendingUpdates,
+  measureTextBox,
   blur,
   focus,
   getTextElement,

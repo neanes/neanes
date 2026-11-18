@@ -35,13 +35,27 @@
         <PhDotsSixVertical class="size-4" aria-hidden="true" />
       </Button>
       <div class="combo-preview">
-        <SyllableNeumeBox
-          v-for="(neume, neumeIndex) in combo.elements"
+        <div
+          v-for="(preview, neumeIndex) in combo.previewNotes"
           :key="neumeIndex"
-          :note="neume"
-          :page-setup="pageSetup"
-          class="neume"
-        />
+          class="combo-note"
+        >
+          <SyllableNeumeBox
+            :note="preview.note"
+            :page-setup="pageSetup"
+            class="neume"
+          />
+          <div
+            class="lyrics-preview"
+            :style="getLyricsPreviewStyle(preview.note)"
+            aria-hidden="true"
+          >
+            <template v-if="preview.acceptsLyrics === AcceptsLyricsOption.Yes">
+              X
+            </template>
+            <template v-else>&#8203;</template>
+          </div>
+        </div>
       </div>
       <div v-if="combo.source === 'user'" class="user-combo-controls">
         <PhBookmarkSimple class="user-combo-indicator" weight="fill" />
@@ -109,12 +123,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import type { NeumeCombinationOrderPlacement } from '@/composables/neumeCombinationOrder';
+import { useEditorServices } from '@/composables/useEditorServices';
 import { useNeumeCombinations } from '@/composables/useNeumeCombinations';
+import { AcceptsLyricsOption, type NoteElement } from '@/models/Element';
 import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
+import { VocalExpressionNeume } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import { fontService } from '@/services/FontService';
+import { NeumeMappingService } from '@/services/NeumeMappingService';
 
 const emit = defineEmits(['select-neume-combo']);
-defineProps({
+const props = defineProps({
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
@@ -137,7 +156,36 @@ const dropTarget = ref<{
 } | null>(null);
 const { t } = useTranslation();
 
-const displayCombos = computed(() => allNeumeCombinations.value);
+const { lyricService } = useEditorServices();
+const displayCombos = computed(() =>
+  allNeumeCombinations.value.map((combo) => ({
+    ...combo,
+    previewNotes: combo.elements.map((note, index) => ({
+      note,
+      acceptsLyrics: lyricService.getEffectiveAcceptsLyrics(
+        note,
+        combo.elements[index - 1] ?? null,
+      ),
+    })),
+  })),
+);
+
+function getLyricsPreviewStyle(note: NoteElement) {
+  if (!note.vareia) {
+    return;
+  }
+
+  const vareiaWidth =
+    fontService.getAdvanceWidth(
+      props.pageSetup.neumeDefaultFontFamily,
+      NeumeMappingService.getMapping(VocalExpressionNeume.Vareia).glyphName,
+    ) * props.pageSetup.neumeDefaultFontSize;
+  const offset = (vareiaWidth + note.vareiaInternalSpacing) / 2;
+
+  return {
+    transform: `translateX(${props.pageSetup.melkiteRtl ? -offset : offset}px)`,
+  };
+}
 
 function promptDelete(combo: NeumeCombination) {
   comboPendingDelete.value = combo;
@@ -434,10 +482,25 @@ onBeforeUnmount(() => {
 
 .combo-preview {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: flex-start;
   min-width: 0;
   overflow: hidden;
+}
+
+.combo-note {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex-shrink: 0;
+  margin: 0 0.125rem;
+}
+
+.lyrics-preview {
+  text-align: center;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  white-space: pre;
 }
 
 .user-combo-controls {
@@ -459,7 +522,6 @@ onBeforeUnmount(() => {
 }
 
 .neume {
-  margin: 0 0.125rem;
   --zoom: 1;
 }
 </style>

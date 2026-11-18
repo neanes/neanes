@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { resources } from '@/i18n';
 import { Unit } from '@/utils/Unit';
 
+import { PageSetup } from './PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultBuiltInParagraphStyle,
@@ -32,6 +33,9 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.DropCap,
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
     ]);
     expect(styles[0].overrides).toEqual({});
     expect(styles[0].parentStyleId).toBeNull();
@@ -62,6 +66,30 @@ describe('ParagraphStyle', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
     expect(styles[11].overrides).toEqual({ fontFamily: 'GFS Didot' });
+  });
+
+  it('inherits footnote text typography for body markers', () => {
+    const styles = createDefaultParagraphStyles();
+    styles[0].overrides = { fontSize: 24, color: '#123456' };
+    styles.find(
+      (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+    )!.overrides = { fontSize: Unit.fromPt(12), color: '#654321' };
+
+    expect(
+      resolveParagraphStyle(
+        styles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteBodyMarker,
+      ),
+    ).toMatchObject({ fontSize: Unit.fromPt(12), color: '#654321' });
+    expect(
+      resolveParagraphStyle(
+        styles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteReference,
+      ),
+    ).toMatchObject({
+      fontSize: 24,
+      color: new PageSetup().gorgonDefaultColor,
+    });
   });
 
   it('resolves inheritance through parent styles and element overrides', () => {

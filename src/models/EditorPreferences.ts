@@ -26,6 +26,24 @@ export interface IEditorPreferences {
   showGlueWidths: boolean;
 }
 
+// Rendering preferences consumed by score pages.
+export type ScoreOverlaySettings = Pick<
+  IEditorPreferences,
+  | 'showDeveloperPanels'
+  | 'overlaysEnabled'
+  | 'printOverlays'
+  | 'showGuides'
+  | 'showAdjustmentRatios'
+  | 'showAnonymousBoxes'
+  | 'showElementBoxes'
+  | 'showInkBoundingBoxes'
+  | 'showGlueWidths'
+  | 'showLyricBaselines'
+  | 'showLyricBoundingBoxes'
+  | 'showNeumeBoundingBoxes'
+  | 'showCollisionRegions'
+>;
+
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
   buttonMenuMode = ButtonMenuMode.Hold;

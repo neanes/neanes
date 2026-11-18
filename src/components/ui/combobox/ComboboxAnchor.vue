@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { ComboboxAnchorProps } from 'reka-ui';
 import { ComboboxAnchor, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   ComboboxAnchorProps & { class?: HTMLAttributes['class'] }

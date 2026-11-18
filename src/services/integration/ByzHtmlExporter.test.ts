@@ -27,6 +27,7 @@ import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   Fthora,
+  Ison,
   ModeSign,
   QuantitativeNeume,
   TempoSign,
@@ -72,6 +73,17 @@ function embeddedModeKeyHtml(element = new ModeKeyElement(), content = '') {
 }
 
 describe('ByzHtmlExporter', () => {
+  it('exports the low Ga ison indicator', () => {
+    const exporter = new ByzHtmlExporter();
+    const note = new NoteElement();
+    note.ison = Ison.GaLow;
+
+    const html = exporter.exportNote(note, new PageSetup(), [], 0);
+
+    expect(html).toContain('<x-ii-ga-low');
+    expect(html).not.toContain('undefined');
+  });
+
   it('exports a right-aligned martyria fthora after its quantitative neume', () => {
     const exporter = new ByzHtmlExporter();
     const martyria = new MartyriaElement();

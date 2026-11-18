@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { cn } from 'cn';
 import { DialogClose } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 const props = withDefaults(
   defineProps<{

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { PhMagnifyingGlass } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { ListboxFilterProps } from 'reka-ui';
 import { ListboxFilter, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
 import { InputGroup, InputGroupAddon } from '@/components/ui/input-group';
-import { cn } from '@/lib/utils';
 
 import { useCommand } from '.';
 

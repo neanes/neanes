@@ -40,6 +40,7 @@
 </template>
 
 <script setup lang="ts">
+import { cn } from 'cn';
 import type { HTMLAttributes, StyleValue } from 'vue';
 import { computed, nextTick, onBeforeUnmount, ref, useAttrs } from 'vue';
 
@@ -52,7 +53,6 @@ import {
   NumberFieldIncrement,
   NumberFieldInput,
 } from '@/components/ui/number-field';
-import { cn } from '@/lib/utils';
 
 const emit = defineEmits<{
   'update:modelValue': [value: number | null];

@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { cn } from 'cn';
 import type { HTMLAttributes } from 'vue';
 
 import type { ButtonVariants } from '@/components/ui/button';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 const props = withDefaults(
   defineProps<{

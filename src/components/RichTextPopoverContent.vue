@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { PopoverContentEmits, PopoverContentProps } from 'reka-ui';
 import { PopoverContent, PopoverPortal, useForwardPropsEmits } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
 import { useRichTextPortalRoot } from '@/composables/useRichTextPortalRoot';
-import { cn } from '@/lib/utils';
 
 defineOptions({
   inheritAttrs: false,

@@ -17,6 +17,7 @@
     "exportAsMusicXml": "Ekspor sebagai MusicXML…",
     "exportAsImage": "Ekspor sebagai Gambar…",
     "print": "Cetak…",
+    "printLayoutPending": "Tata letak partitur masih diproses. Tutup pratinjau ini dan pilih File → Cetak di Neanes.",
     "close": "Tutup",
     "closeOthers": "Tutup Lainnya"
   },
@@ -89,7 +90,8 @@
     "guide": "Panduan",
     "requestAFeature": "Minta Fitur",
     "reportAnIssue": "Laporkan Masalah",
-    "about": "Tentang"
+    "about": "Tentang",
+    "connectAiTools": "Hubungkan ke alat AI…"
   },
   "tab": {
     "close": "Tutup",
@@ -97,5 +99,17 @@
     "closeToTheLeft": "Tutup ke Kiri",
     "closeToTheRight": "Tutup ke Kanan"
   },
-  "warning": "Peringatan: Aplikasi ini bekerja paling baik di browser berbasis Chromium. Anda mungkin mengalami fungsionalitas yang berkurang atau kesalahan di browser non-Chromium."
+  "warning": "Peringatan: Aplikasi ini bekerja paling baik di browser berbasis Chromium. Anda mungkin mengalami fungsionalitas yang berkurang atau kesalahan di browser non-Chromium.",
+  "footnotes": {
+    "insert": "Sisipkan Catatan Kaki",
+    "edit": "Edit catatan kaki {{number}}",
+    "remove": "Hapus Catatan Kaki",
+    "returnToReference": "Klik dua kali untuk kembali ke penanda",
+    "overflow": "Catatan kaki dan penandanya tidak muat di halaman ini. Persingkat catatan kaki atau perbesar ukuran halaman. Ekspor tidak tersedia sampai masalah ini diselesaikan.",
+    "nested": "Catatan kaki tidak dapat memuat penanda catatan kaki.",
+    "unsupportedExport": "Format ekspor ini belum mendukung catatan kaki. Gunakan PDF atau PNG untuk mempertahankannya.",
+    "lyrics": "Lirik Catatan Kaki {{number}}",
+    "pasteUnavailable": "Referensi catatan kaki hanya dapat ditempel dari Neanes ke kotak teks kaya di partitur utama.",
+    "properties": "Properti Catatan Kaki…"
+  }
 }

@@ -2,7 +2,7 @@
   <div class="flex size-full min-h-0 flex-col overflow-hidden p-3">
     <FieldSet class="min-h-0 flex-1 overflow-hidden">
       <FieldLegend class="sr-only">{{
-        $t(($) => $.menu.view.lyrics, { ns: 'menu' })
+        contextLabel || $t(($) => $.menu.view.lyrics, { ns: 'menu' })
       }}</FieldLegend>
       <FieldGroup class="min-h-0 flex-1 overflow-hidden">
         <Field orientation="horizontal">
@@ -31,7 +31,7 @@
 
         <Field class="min-h-0 flex-1 overflow-hidden">
           <FieldLabel for="lyrics-pane-text">{{
-            $t(($) => $.menu.view.lyrics, { ns: 'menu' })
+            contextLabel || $t(($) => $.menu.view.lyrics, { ns: 'menu' })
           }}</FieldLabel>
           <Textarea
             id="lyrics-pane-text"
@@ -63,6 +63,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
 defineProps({
+  contextLabel: { type: String, default: '' },
   locked: {
     type: Boolean,
     required: true,

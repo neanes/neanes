@@ -1,4 +1,9 @@
 import { Unit } from '../utils/Unit';
+import type {
+  FootnoteFormat,
+  FootnoteNumbering,
+  FootnoteSymbolSequence,
+} from './FootnoteNumbering';
 import { DEFAULT_INITIAL_MARTYRIA_STYLE_ID } from './InitialMartyriaBuiltInStyles';
 
 export type PageSize =
@@ -11,7 +16,8 @@ export type PageSize =
   | 'Half-Letter'
   | 'Half-Legal'
   | 'Custom';
-export type PageSizeUnit = 'pc' | 'pt' | 'cm' | 'mm' | 'in';
+export const pageSizeUnits = ['pc', 'pt', 'cm', 'mm', 'in'] as const;
+export type PageSizeUnit = (typeof pageSizeUnits)[number];
 
 export interface PageSizeOption {
   name: PageSize;
@@ -67,6 +73,24 @@ export const pageSizes: PageSizeOption[] = [
   },
 ];
 
+// Page width and height are derived from the selected size, the custom
+// dimensions when the size is Custom, and the orientation.
+export function resolvePageDimensions(setup: {
+  pageSize: PageSize;
+  landscape: boolean;
+  pageWidthCustom: number;
+  pageHeightCustom: number;
+}) {
+  const size = pageSizes.find((size) => size.name === setup.pageSize)!;
+  const width =
+    setup.pageSize === 'Custom' ? setup.pageWidthCustom : size.width;
+  const height =
+    setup.pageSize === 'Custom' ? setup.pageHeightCustom : size.height;
+  return setup.landscape
+    ? { pageWidth: height, pageHeight: width }
+    : { pageWidth: width, pageHeight: height };
+}
+
 export class PageSetup {
   public pageSize: PageSize = 'Letter';
   public pageSizeUnit: PageSizeUnit = 'in';
@@ -95,6 +119,17 @@ export class PageSetup {
   public showFooter = false;
   public richHeaderFooter = false;
   public firstPageNumber = 1;
+  public footnoteFormat: FootnoteFormat = 'numbers';
+  public footnoteNumbering: FootnoteNumbering = 'continuous';
+  public footnoteSymbolSequence: FootnoteSymbolSequence = 'standard';
+  public firstFootnoteNumber = 1;
+  public footnoteReferenceParentheses = true;
+  public showFootnoteHorizontalRule = true;
+  public footnoteHorizontalRuleLength = 40;
+  public footnoteSpaceAboveRule = Unit.fromPt(6);
+  public footnoteSpaceBelowRule = Unit.fromPt(2.6);
+  public footnoteRuleThickness = Unit.fromPt(1);
+  public footnoteRuleColor = '#000000';
   public numerals: 'westernArabic' | 'easternArabic' = 'westernArabic';
 
   public showHeaderHorizontalRule = false;

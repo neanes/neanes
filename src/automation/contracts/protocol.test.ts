@@ -1,0 +1,287 @@
+import { describe, expect, it } from 'vitest';
+
+import { parseAutomationRequest } from './protocol';
+
+const edit = (overrides: unknown) => ({
+  tool: 'edit_paragraph_styles',
+  arguments: {
+    documentId: 'id',
+    expectedRevision: 0,
+    changes: [
+      {
+        action: 'replace',
+        style: { id: 'lyrics', parentStyleId: 'default-text', overrides },
+      },
+    ],
+  },
+});
+
+describe('automation protocol validation', () => {
+  it('requires both document revisions when copying a range', () => {
+    const args = {
+      documentId: 'destination',
+      expectedRevision: 3,
+      sourceDocumentId: 'source',
+      expectedSourceRevision: 2,
+    };
+    expect(
+      parseAutomationRequest({ tool: 'copy_elements', arguments: args })
+        .arguments,
+    ).toEqual({ ...args, start: 0, includeCreated: true, includeLyrics: true });
+    expect(
+      parseAutomationRequest({
+        tool: 'copy_elements',
+        arguments: { ...args, includeLyrics: false },
+      }).arguments,
+    ).toMatchObject({ includeLyrics: false });
+    for (const key of [
+      'expectedRevision',
+      'expectedSourceRevision',
+      'sourceDocumentId',
+    ]) {
+      const incomplete: Record<string, unknown> = { ...args };
+      delete incomplete[key];
+      expect(() =>
+        parseAutomationRequest({
+          tool: 'copy_elements',
+          arguments: incomplete,
+        }),
+      ).toThrow();
+    }
+    for (const range of [
+      { start: -1 },
+      { end: 1.5 },
+      { index: -1 },
+      { includeLyrics: 'false' },
+    ]) {
+      expect(() =>
+        parseAutomationRequest({
+          tool: 'copy_elements',
+          arguments: { ...args, ...range },
+        }),
+      ).toThrow();
+    }
+  });
+
+  it('keeps created references by default and supports compact edit acknowledgments', () => {
+    const args = {
+      documentId: 'id',
+      expectedRevision: 0,
+      actions: [{ action: 'insert', elements: [{ elementType: 'Note' }] }],
+    };
+    for (const includeCreated of [undefined, false, true]) {
+      expect(
+        parseAutomationRequest({
+          tool: 'edit_elements',
+          arguments: {
+            ...args,
+            ...(includeCreated === undefined ? {} : { includeCreated }),
+          },
+        }).arguments,
+      ).toMatchObject({ includeCreated: includeCreated ?? true });
+    }
+  });
+
+  it('rejects retired session tools and document arguments', () => {
+    for (const tool of ['create_session', 'close_session']) {
+      expect(() => parseAutomationRequest({ tool, arguments: {} })).toThrow();
+    }
+    expect(
+      parseAutomationRequest({ tool: 'list_documents', arguments: {} }),
+    ).toEqual({ tool: 'list_documents', arguments: {} });
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'list_documents',
+        arguments: { sessionId: '00000000-0000-4000-8000-000000000001' },
+      }),
+    ).toThrow();
+  });
+
+  it('validates typed discovery selectors, revisions and bounded pagination', () => {
+    const read = (args: object) =>
+      parseAutomationRequest({
+        tool: 'get_elements',
+        arguments: { documentId: 'id', ...args },
+      });
+    expect(read({}).arguments).toMatchObject({
+      collection: { kind: 'staff' },
+      start: 0,
+      offset: 0,
+      limit: 100,
+    });
+    for (const args of [
+      { start: -1 },
+      { end: 1.5 },
+      { offset: -1 },
+      { limit: 1001 },
+      { expectedRevision: -1 },
+      { collection: { kind: 'headers' } },
+      { collection: { kind: 'staff', parentRef: 'unexpected' } },
+      {
+        collection: {
+          kind: 'children',
+          parentRef: 'not-a-ref',
+          collection: 'annotations',
+        },
+      },
+      { arbitrary: true },
+      { properties: ['misspelled'] },
+      { includeContent: 'false' },
+    ]) {
+      expect(() => read(args)).toThrow();
+    }
+    expect(
+      read({
+        expectedRevision: 0,
+        collection: { kind: 'footers', variant: 'odd' },
+      }).arguments,
+    ).toMatchObject({
+      expectedRevision: 0,
+      collection: { kind: 'footers', variant: 'odd' },
+    });
+  });
+
+  it.each([NaN, Infinity, -Infinity, 0, -1])(
+    'rejects invalid font size %s',
+    (fontSize) => {
+      expect(() => parseAutomationRequest(edit({ fontSize }))).toThrow();
+    },
+  );
+
+  it.each([
+    { color: 'red;} body {display:none' },
+    { fontVariantCaps: 'small-caps; color:red' },
+    { fontFamily: '   ' },
+    { lineHeight: -1 },
+    { strokeWidth: -1 },
+    { alignment: 'invalid' },
+  ])('rejects malformed style values: %j', (overrides) => {
+    expect(() => parseAutomationRequest(edit(overrides))).toThrow();
+  });
+
+  it('requires a revision for close and defaults to preserving unsaved changes', () => {
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'close_document',
+        arguments: { documentId: 'id' },
+      }),
+    ).toThrow();
+    expect(
+      parseAutomationRequest({
+        tool: 'close_document',
+        arguments: { documentId: 'id', expectedRevision: 0 },
+      }),
+    ).toEqual({
+      tool: 'close_document',
+      arguments: {
+        documentId: 'id',
+        expectedRevision: 0,
+        discardUnsavedChanges: false,
+      },
+    });
+  });
+
+  it('accepts sparse style updates while rejecting unsupported fields and nulls', () => {
+    const update = (changes: unknown) => ({
+      tool: 'edit_paragraph_styles',
+      arguments: {
+        documentId: 'id',
+        expectedRevision: 0,
+        changes: [{ action: 'update', id: 'default-text', changes }],
+      },
+    });
+    const changes = {
+      overrides: { fontFamily: 'Source Serif', lineHeight: null },
+    };
+    expect(parseAutomationRequest(update(changes)).arguments).toMatchObject({
+      changes: [{ action: 'update', id: 'default-text', changes }],
+    });
+    for (const changes of [
+      { id: 'renamed' },
+      { arbitrary: 1 },
+      { overrides: { fontFamily: null } },
+      { overrides: { arbitrary: 1 } },
+      { overrides: null },
+    ]) {
+      expect(() => parseAutomationRequest(update(changes))).toThrow();
+    }
+  });
+
+  it('accepts reset-only style updates and rejects invalid override resets', () => {
+    const request = (action: unknown) => ({
+      tool: 'edit_paragraph_styles',
+      arguments: {
+        documentId: 'id',
+        expectedRevision: 0,
+        changes: [action],
+      },
+    });
+    const reset = {
+      action: 'update',
+      id: 'lyrics',
+      resetOverrides: ['fontFamily', 'lineHeight'],
+    };
+    expect(parseAutomationRequest(request(reset)).arguments).toMatchObject({
+      changes: [reset],
+    });
+    for (const action of [
+      { ...reset, resetOverrides: ['parentStyleId'] },
+      { ...reset, resetOverrides: ['unknown'] },
+      { ...reset, resetOverrides: ['__proto__'] },
+      { ...reset, resetOverrides: null },
+      { ...reset, changes: { overrides: { fontFamily: 'Source Serif' } } },
+      { ...reset, changes: { overrides: { lineHeight: null } } },
+      {
+        action: 'replace',
+        style: { id: 'lyrics', parentStyleId: 'default-text', overrides: {} },
+        resetOverrides: ['fontFamily'],
+      },
+    ]) {
+      expect(() => parseAutomationRequest(request(action))).toThrow();
+    }
+  });
+
+  it('rejects unknown fields, empty batches, legacy shortcuts, and incomplete properties', () => {
+    expect(() =>
+      parseAutomationRequest(edit({ fontSize: 16, arbitrary: 1 })),
+    ).toThrow();
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'edit_paragraph_styles',
+        arguments: { documentId: 'id', expectedRevision: 0, changes: [] },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'update_document_settings',
+        arguments: {
+          documentId: 'id',
+          expectedRevision: 0,
+          settings: { lyrics: { fontSizePt: 12.5 } },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'replace_document_properties',
+        arguments: {
+          documentId: 'id',
+          expectedRevision: 0,
+          properties: { title: 'Title' },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'save_document',
+        arguments: { documentId: 'id' },
+      }),
+    ).toThrow();
+    expect(() =>
+      parseAutomationRequest({
+        tool: 'get_document',
+        arguments: { documentId: 'id', limit: 1001 },
+      }),
+    ).toThrow();
+  });
+});

@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { SplitterGroupEmits, SplitterGroupProps } from 'reka-ui';
 import { SplitterGroup, useForwardPropsEmits } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   SplitterGroupProps & { class?: HTMLAttributes['class'] }

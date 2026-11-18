@@ -1,5 +1,6 @@
 {
   "editor": {
+    "printFailed": "Δεν ήταν δυνατή η εκτύπωση της παρτιτούρας.",
     "unexpectedError": "Παρουσιάστηκε απρόσμενο σφάλμα.",
     "rangeOverflow": "Υπέρβαση εύρους",
     "openFailed": "Το άνοιγμα απέτυχε",
@@ -28,6 +29,7 @@
     "clipboardReadFailed": "Δεν ήταν δυνατή η ανάγνωση από το πρόχειρο. Ελέγξτε τα δικαιώματα του προχείρου."
   },
   "export": {
+    "pdfLoading": "Εξαγωγή PDF...",
     "pdfSuccess": "Το PDF εξήχθη",
     "pdfFailed": "Η εξαγωγή PDF απέτυχε",
     "pdfFailedDescription": "Δεν ήταν δυνατή η εξαγωγή PDF.",

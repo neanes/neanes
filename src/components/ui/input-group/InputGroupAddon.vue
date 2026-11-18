@@ -1,7 +1,6 @@
 <script setup lang="ts">
+import { cn } from 'cn';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 import type { InputGroupVariants } from '.';
 import { inputGroupAddonVariants } from '.';
@@ -23,7 +22,9 @@ function handleInputGroupAddonClick(e: MouseEvent) {
     return;
   }
   if (currentTarget && currentTarget?.parentElement) {
-    currentTarget.parentElement?.querySelector('input')?.focus();
+    currentTarget.parentElement
+      ?.querySelector<HTMLElement>('input, textarea')
+      ?.focus();
   }
 }
 </script>

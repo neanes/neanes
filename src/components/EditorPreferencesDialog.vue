@@ -1,6 +1,8 @@
 <template>
-  <Dialog v-model:open="open">
-    <DialogContent class="flex max-h-[90vh] flex-col sm:max-w-md">
+  <Dialog :open="open" @update:open="onOpenChanged">
+    <DialogContent
+      class="h-[42rem] max-h-[calc(100dvh-2rem)] flex flex-col sm:max-w-3xl"
+    >
       <DialogHeader>
         <DialogTitle>
           {{ $t(($) => $.dialog.preferences.root, { ns: 'dialog' }) }}
@@ -12,256 +14,311 @@
 
       <form
         id="editor-preferences-form"
-        class="min-h-0 flex-1 overflow-y-auto pr-1"
-        @submit.prevent="submit"
+        ref="preferencesForm"
+        class="min-h-0 flex-1 overflow-hidden"
+        @submit.prevent
       >
-        <FieldGroup class="pb-1">
-          <Field>
-            <FieldLabel for="editor-preferences-language">
-              {{ $t(($) => $.dialog.preferences.language, { ns: 'dialog' }) }}
-            </FieldLabel>
-            <Select v-model="languageSelectValue">
-              <SelectTrigger id="editor-preferences-language" class="w-full">
-                <SelectValue>
-                  <span class="flex min-w-0 items-center gap-2">
-                    <span
-                      v-if="selectedLocale"
-                      aria-hidden="true"
-                      class="size-5 shrink-0 text-center"
-                    >
-                      {{ selectedLocale.flag }}
-                    </span>
-                    <span class="truncate">{{ selectedLanguageLabel }}</span>
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem
-                    :value="LANGUAGE_SYSTEM_DEFAULT_VALUE"
-                    :text-value="
-                      $t(($) => $.dialog.preferences.languageSystemDefault, {
-                        ns: 'dialog',
-                      })
-                    "
-                  >
-                    <span class="flex items-center gap-2">
-                      <span aria-hidden="true" class="size-5 shrink-0" />
-                      <span>
-                        {{
-                          $t(
-                            ($) => $.dialog.preferences.languageSystemDefault,
-                            {
-                              ns: 'dialog',
-                            },
-                          )
-                        }}
-                      </span>
-                    </span>
-                  </SelectItem>
-                  <SelectItem
-                    v-for="locale in supportedLocales"
-                    :key="locale.code"
-                    :value="locale.code"
-                    :text-value="locale.name"
-                  >
-                    <span class="flex items-center gap-2">
-                      <span
-                        aria-hidden="true"
-                        class="size-5 shrink-0 text-center"
-                      >
-                        {{ locale.flag }}
-                      </span>
-                      <span>{{ locale.name }}</span>
-                    </span>
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <FieldDescription>
-              <a
-                href="https://crowdin.com/project/neanes"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {{
-                  $t(($) => $.dialog.preferences.helpTranslate, {
+        <Tabs
+          v-model="section"
+          orientation="vertical"
+          class="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] gap-4 sm:grid-cols-[13rem_minmax(0,1fr)] sm:grid-rows-[minmax(0,1fr)]"
+        >
+          <ScrollArea class="min-h-0"
+            ><TabsList
+              class="h-auto w-full flex-col items-stretch justify-start p-1"
+            >
+              <TabsTrigger
+                v-for="item in sections"
+                :key="item"
+                :value="item"
+                class="min-h-9 w-full justify-start whitespace-normal text-left"
+                >{{
+                  $t(($) => $.dialog.preferences.sections[item], {
                     ns: 'dialog',
                   })
-                }}
-              </a>
-            </FieldDescription>
-          </Field>
-
-          <Field>
-            <FieldLabel id="editor-preferences-color-mode-label">
-              {{
-                $t(($) => $.dialog.preferences.colorMode, {
-                  ns: 'dialog',
-                })
-              }}
-            </FieldLabel>
-            <ToggleGroup
-              id="editor-preferences-color-mode"
-              type="single"
-              variant="outline"
-              class="grid w-full grid-cols-3"
-              :model-value="colorModeDraft"
-              aria-labelledby="editor-preferences-color-mode-label"
-              @update:model-value="onColorModeChanged"
-            >
-              <ToggleGroupItem value="light" class="min-w-0 justify-center">
-                <PhSun data-icon="inline-start" />
-                <span class="min-w-0 truncate">
-                  {{
-                    $t(($) => $.dialog.preferences.colorModeLight, {
-                      ns: 'dialog',
-                    })
-                  }}
-                </span>
-              </ToggleGroupItem>
-              <ToggleGroupItem value="dark" class="min-w-0 justify-center">
-                <PhMoon data-icon="inline-start" />
-                <span class="min-w-0 truncate">
-                  {{
-                    $t(($) => $.dialog.preferences.colorModeDark, {
-                      ns: 'dialog',
-                    })
-                  }}
-                </span>
-              </ToggleGroupItem>
-              <ToggleGroupItem value="auto" class="min-w-0 justify-center">
-                <PhDesktop data-icon="inline-start" />
-                <span class="min-w-0 truncate">
-                  {{
-                    $t(($) => $.dialog.preferences.colorModeSystem, {
-                      ns: 'dialog',
-                    })
-                  }}
-                </span>
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </Field>
-
-          <Field>
-            <FieldLabel for="editor-preferences-menu-interaction">
-              {{
-                $t(($) => $.dialog.preferences.menuInteraction, {
-                  ns: 'dialog',
-                })
-              }}
-            </FieldLabel>
-            <Select v-model="form.buttonMenuMode">
-              <SelectTrigger
-                id="editor-preferences-menu-interaction"
-                class="w-full"
+                }}</TabsTrigger
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem :value="ButtonMenuMode.Hold">
+            </TabsList></ScrollArea
+          >
+          <TabsContent
+            :key="section"
+            :value="section"
+            class="min-h-0 overflow-hidden"
+            ><ScrollArea class="h-full border"
+              ><FieldGroup class="p-4">
+                <Field v-if="section === 'general'">
+                  <FieldLabel for="editor-preferences-language">
                     {{
-                      $t(($) => $.dialog.preferences.menuInteractionHold, {
+                      $t(($) => $.dialog.preferences.language, { ns: 'dialog' })
+                    }}
+                  </FieldLabel>
+                  <Select v-model="languageSelectValue">
+                    <SelectTrigger
+                      id="editor-preferences-language"
+                      class="w-full"
+                    >
+                      <SelectValue>
+                        <span class="flex min-w-0 items-center gap-2">
+                          <span
+                            v-if="selectedLocale"
+                            aria-hidden="true"
+                            class="size-5 shrink-0 text-center"
+                          >
+                            {{ selectedLocale.flag }}
+                          </span>
+                          <span class="truncate">{{
+                            selectedLanguageLabel
+                          }}</span>
+                        </span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem
+                          :value="LANGUAGE_SYSTEM_DEFAULT_VALUE"
+                          :text-value="
+                            $t(
+                              ($) => $.dialog.preferences.languageSystemDefault,
+                              {
+                                ns: 'dialog',
+                              },
+                            )
+                          "
+                        >
+                          <span class="flex items-center gap-2">
+                            <span aria-hidden="true" class="size-5 shrink-0" />
+                            <span>
+                              {{
+                                $t(
+                                  ($) =>
+                                    $.dialog.preferences.languageSystemDefault,
+                                  {
+                                    ns: 'dialog',
+                                  },
+                                )
+                              }}
+                            </span>
+                          </span>
+                        </SelectItem>
+                        <SelectItem
+                          v-for="locale in supportedLocales"
+                          :key="locale.code"
+                          :value="locale.code"
+                          :text-value="locale.name"
+                        >
+                          <span class="flex items-center gap-2">
+                            <span
+                              aria-hidden="true"
+                              class="size-5 shrink-0 text-center"
+                            >
+                              {{ locale.flag }}
+                            </span>
+                            <span>{{ locale.name }}</span>
+                          </span>
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldDescription>
+                    <a
+                      href="https://crowdin.com/project/neanes"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {{
+                        $t(($) => $.dialog.preferences.helpTranslate, {
+                          ns: 'dialog',
+                        })
+                      }}
+                    </a>
+                  </FieldDescription>
+                </Field>
+
+                <Field v-if="section === 'appearance'">
+                  <FieldLabel id="editor-preferences-color-mode-label">
+                    {{
+                      $t(($) => $.dialog.preferences.colorMode, {
                         ns: 'dialog',
                       })
                     }}
-                  </SelectItem>
-                  <SelectItem :value="ButtonMenuMode.Click">
+                  </FieldLabel>
+                  <ToggleGroup
+                    id="editor-preferences-color-mode"
+                    type="single"
+                    variant="outline"
+                    class="grid w-full grid-cols-3"
+                    :model-value="colorModeValue"
+                    aria-labelledby="editor-preferences-color-mode-label"
+                    @update:model-value="onColorModeChanged"
+                  >
+                    <ToggleGroupItem
+                      value="light"
+                      class="min-w-0 justify-center"
+                    >
+                      <PhSun data-icon="inline-start" />
+                      <span class="min-w-0 truncate">
+                        {{
+                          $t(($) => $.dialog.preferences.colorModeLight, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </span>
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="dark"
+                      class="min-w-0 justify-center"
+                    >
+                      <PhMoon data-icon="inline-start" />
+                      <span class="min-w-0 truncate">
+                        {{
+                          $t(($) => $.dialog.preferences.colorModeDark, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </span>
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="auto"
+                      class="min-w-0 justify-center"
+                    >
+                      <PhDesktop data-icon="inline-start" />
+                      <span class="min-w-0 truncate">
+                        {{
+                          $t(($) => $.dialog.preferences.colorModeSystem, {
+                            ns: 'dialog',
+                          })
+                        }}
+                      </span>
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </Field>
+
+                <Field v-if="section === 'general'">
+                  <FieldLabel for="editor-preferences-menu-interaction">
                     {{
-                      $t(($) => $.dialog.preferences.menuInteractionClick, {
+                      $t(($) => $.dialog.preferences.menuInteraction, {
                         ns: 'dialog',
                       })
                     }}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </Field>
+                  </FieldLabel>
+                  <Select v-model="form.buttonMenuMode">
+                    <SelectTrigger
+                      id="editor-preferences-menu-interaction"
+                      class="w-full"
+                    >
+                      <SelectValue>{{ menuInteractionLabel }}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem :value="ButtonMenuMode.Hold">
+                          {{
+                            $t(
+                              ($) => $.dialog.preferences.menuInteractionHold,
+                              {
+                                ns: 'dialog',
+                              },
+                            )
+                          }}
+                        </SelectItem>
+                        <SelectItem :value="ButtonMenuMode.Click">
+                          {{
+                            $t(
+                              ($) => $.dialog.preferences.menuInteractionClick,
+                              {
+                                ns: 'dialog',
+                              },
+                            )
+                          }}
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
 
-          <Field orientation="horizontal">
-            <Switch
-              id="editor-preferences-enable-developer-panel"
-              :model-value="form.showDeveloperPanels"
-              @update:model-value="form.showDeveloperPanels = $event === true"
-            />
-            <FieldLabel for="editor-preferences-enable-developer-panel">
-              {{
-                $t(($) => $.dialog.preferences.enableDeveloperPanel, {
-                  ns: 'dialog',
-                })
-              }}
-            </FieldLabel>
-          </Field>
-
-          <FieldSet class="gap-2">
-            <FieldLegend variant="label" class="mb-0">
-              {{
-                $t(($) => $.dialog.preferences.tempoDefaults, {
-                  ns: 'dialog',
-                })
-              }}
-            </FieldLegend>
-            <FieldGroup class="gap-1">
-              <Field
-                v-for="tempo in tempoSigns"
-                :key="tempo"
-                orientation="horizontal"
-              >
-                <FieldLabel
-                  :for="getTempoInputId(tempo)"
-                  class="items-center gap-1.5"
-                >
-                  <Neume
-                    aria-hidden="true"
-                    :neume="tempo"
-                    :font-family="pageSetup.neumeDefaultFontFamily"
+                <Field v-if="section === 'advanced'" orientation="horizontal">
+                  <Switch
+                    id="editor-preferences-enable-developer-panel"
+                    :model-value="form.showDeveloperPanels"
+                    @update:model-value="
+                      form.showDeveloperPanels = $event === true
+                    "
                   />
-                  <span>
-                    {{ $t(getTempoSignLabelSelector(tempo), { ns: 'model' }) }}
-                  </span>
-                </FieldLabel>
-                <InputBpm
-                  :id="getTempoInputId(tempo)"
-                  :model-value="form.tempoDefaults[tempo]!"
-                  @update:model-value="onTempoChanged(tempo, $event)"
-                />
-                <span>{{
-                  $t(($) => $.dialog.preferences.bpm, { ns: 'dialog' })
-                }}</span>
-              </Field>
-            </FieldGroup>
-          </FieldSet>
-        </FieldGroup>
+                  <FieldLabel for="editor-preferences-enable-developer-panel">
+                    {{
+                      $t(($) => $.dialog.preferences.enableDeveloperPanel, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </FieldLabel>
+                </Field>
+
+                <FieldSet v-if="section === 'editing'" class="gap-2">
+                  <FieldLegend variant="label" class="mb-0">
+                    {{
+                      $t(($) => $.dialog.preferences.tempoDefaults, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </FieldLegend>
+                  <FieldGroup class="gap-1">
+                    <Field
+                      v-for="tempo in tempoSigns"
+                      :key="tempo"
+                      orientation="horizontal"
+                    >
+                      <FieldLabel
+                        :for="getTempoInputId(tempo)"
+                        class="items-center gap-1.5"
+                      >
+                        <Neume
+                          aria-hidden="true"
+                          :neume="tempo"
+                          :font-family="pageSetup.neumeDefaultFontFamily"
+                        />
+                        <span>
+                          {{
+                            $t(getTempoSignLabelSelector(tempo), {
+                              ns: 'model',
+                            })
+                          }}
+                        </span>
+                      </FieldLabel>
+                      <InputBpm
+                        :id="getTempoInputId(tempo)"
+                        :model-value="form.tempoDefaults[tempo]!"
+                        @update:model-value="onTempoChanged(tempo, $event)"
+                      />
+                      <span>{{
+                        $t(($) => $.dialog.preferences.bpm, { ns: 'dialog' })
+                      }}</span>
+                    </Field>
+                  </FieldGroup>
+                </FieldSet>
+              </FieldGroup></ScrollArea
+            ></TabsContent
+          >
+        </Tabs>
       </form>
 
       <DialogFooter>
-        <DialogClose as-child>
-          <Button
-            variant="outline"
-            type="button"
-            class="h-auto min-h-8 max-w-full whitespace-normal text-center"
-          >
-            {{ $t(($) => $.dialog.common.cancel, { ns: 'dialog' }) }}
-          </Button>
-        </DialogClose>
         <Button
           variant="outline"
           type="button"
           class="h-auto min-h-8 max-w-full whitespace-normal text-center"
           @click="resetToSystemDefaults"
+          ><PhArrowCounterClockwise />{{
+            $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' })
+          }}</Button
         >
-          <PhArrowCounterClockwise />
-          {{ $t(($) => $.dialog.common.useSystemDefault, { ns: 'dialog' }) }}
-        </Button>
-        <Button
-          type="submit"
-          form="editor-preferences-form"
-          class="h-auto min-h-8 max-w-full whitespace-normal text-center"
+        <DialogClose as-child
+          ><Button
+            type="button"
+            class="h-auto min-h-8 max-w-full whitespace-normal text-center"
+            >{{
+              $t(($) => $.dialog.preferences.close, { ns: 'dialog' })
+            }}</Button
+          ></DialogClose
         >
-          <PhCheck />
-          {{ $t(($) => $.dialog.common.update, { ns: 'dialog' }) }}
-        </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
@@ -270,7 +327,6 @@
 <script setup lang="ts">
 import {
   PhArrowCounterClockwise,
-  PhCheck,
   PhDesktop,
   PhMoon,
   PhSun,
@@ -279,7 +335,7 @@ import type { BasicColorSchema } from '@vueuse/core';
 import { useColorMode } from '@vueuse/core';
 import { useTranslation } from 'i18next-vue';
 import type { PropType } from 'vue';
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 
 import Neume from '@/components/NeumeGlyph.vue';
 import { Button } from '@/components/ui/button';
@@ -300,6 +356,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -309,6 +366,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { supportedLocales } from '@/i18n';
 import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
@@ -317,6 +375,9 @@ import { TempoSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 
 import InputBpm from './InputBpm.vue';
+
+const sections = ['general', 'appearance', 'editing', 'advanced'] as const;
+const section = ref<(typeof sections)[number]>('general');
 
 const emit = defineEmits<{
   update: [form: EditorPreferences];
@@ -333,11 +394,12 @@ const props = defineProps({
 });
 const open = defineModel<boolean>('open', { required: true });
 
+const preferencesForm = useTemplateRef<HTMLFormElement>('preferencesForm');
 const form = ref(cloneEditorPreferences(props.options));
 const LANGUAGE_SYSTEM_DEFAULT_VALUE = '__system_default__';
 const { t } = useTranslation();
 const colorMode = useColorMode();
-const colorModeDraft = ref<BasicColorSchema>(colorMode.store.value);
+const colorModeValue = ref<BasicColorSchema>(colorMode.store.value);
 const languageSelectValue = computed({
   get() {
     return form.value.language || LANGUAGE_SYSTEM_DEFAULT_VALUE;
@@ -361,6 +423,14 @@ const selectedLanguageLabel = computed(() => {
 
   return selectedLocale.value?.name ?? languageSelectValue.value;
 });
+const menuInteractionLabel = computed(() =>
+  t(
+    form.value.buttonMenuMode === ButtonMenuMode.Hold
+      ? ($) => $.dialog.preferences.menuInteractionHold
+      : ($) => $.dialog.preferences.menuInteractionClick,
+    { ns: 'dialog' },
+  ),
+);
 const tempoSigns = [
   TempoSign.VerySlow,
   TempoSign.Slower,
@@ -372,34 +442,69 @@ const tempoSigns = [
   TempoSign.VeryQuick,
 ];
 
+async function onOpenChanged(isOpen: boolean) {
+  if (!isOpen) {
+    const activeElement = document.activeElement;
+    if (
+      activeElement instanceof HTMLInputElement &&
+      preferencesForm.value?.contains(activeElement)
+    ) {
+      // Number fields commit typed text on blur. Persist it before unmounting.
+      activeElement.blur();
+      await nextTick();
+    }
+  }
+
+  open.value = isOpen;
+}
+
 function onTempoChanged(neume: TempoSign, bpm: number) {
   form.value.tempoDefaults[neume] = bpm;
 }
 
 function onColorModeChanged(value: unknown) {
   if (value === 'light' || value === 'dark' || value === 'auto') {
-    colorModeDraft.value = value;
+    colorModeValue.value = value;
   }
 }
 
 function resetToSystemDefaults() {
-  form.value = new EditorPreferences();
-  colorModeDraft.value = 'auto';
+  const defaults = new EditorPreferences();
+  if (section.value === 'general') {
+    form.value.language = defaults.language;
+    form.value.buttonMenuMode = defaults.buttonMenuMode;
+  } else if (section.value === 'appearance') {
+    colorModeValue.value = 'auto';
+  } else if (section.value === 'editing') {
+    form.value.tempoDefaults = defaults.tempoDefaults;
+  } else if (section.value === 'advanced') {
+    form.value.showDeveloperPanels = defaults.showDeveloperPanels;
+  }
 }
 
 function getTempoInputId(tempo: TempoSign) {
   return `editor-preferences-tempo-${tempo}`;
 }
 
-async function submit() {
-  colorMode.store.value = colorModeDraft.value;
-  await nextTick();
-  emit('update', form.value);
-}
+watch(
+  form,
+  () => {
+    if (open.value) {
+      emit('update', cloneEditorPreferences(form.value));
+    }
+  },
+  { deep: true },
+);
+watch(colorModeValue, (value) => {
+  if (open.value) {
+    colorMode.store.value = value;
+  }
+});
 
 watch(open, (isOpen) => {
   if (isOpen) {
-    colorModeDraft.value = colorMode.store.value;
+    form.value = cloneEditorPreferences(props.options);
+    colorModeValue.value = colorMode.store.value;
   }
 });
 

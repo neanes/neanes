@@ -97,7 +97,7 @@ function collectCustomParagraphStylesFromIds(
 // with the same elements; each references regular and Greek paragraph styles.
 export function collectClipboardParagraphStyleIdsFromElements(
   elements: ScoreElement[],
-  initialMartyriaStyles: InitialMartyriaStyle[],
+  initialMartyriaStyles: InitialMartyriaStyle[] = [],
 ) {
   const paragraphStyleIds = new Set<string>();
 
@@ -375,4 +375,27 @@ export function rewriteClipboardNoteFormatParagraphStyleId(
         ...format,
         lyricsParagraphStyleId,
       };
+}
+
+export function collectClipboardParagraphStylesForPassageAndFootnotes(
+  passage: ScoreElement[],
+  footnoteElements: ScoreElement[],
+  includeLyrics: boolean,
+  paragraphStyles: ParagraphStyle[],
+  initialMartyriaStyles: InitialMartyriaStyle[] = [],
+) {
+  const styles = [
+    ...collectClipboardParagraphStylesFromPasteElements(
+      passage,
+      initialMartyriaStyles,
+      includeLyrics,
+      paragraphStyles,
+    ),
+    ...collectClipboardParagraphStylesFromElements(
+      footnoteElements,
+      initialMartyriaStyles,
+      paragraphStyles,
+    ),
+  ];
+  return [...new Map(styles.map((style) => [style.id, style])).values()];
 }

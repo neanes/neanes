@@ -1091,6 +1091,9 @@
   "isonIndicatorZoHigh": {
     "codepoint": "U+E26A"
   },
+  "isonIndicatorGaLow": {
+    "codepoint": "U+E26B"
+  },
   "gorthmikon": {
     "alternateCodepoint": "U+1D0B5",
     "codepoint": "U+E280"

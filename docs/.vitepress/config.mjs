@@ -10,6 +10,7 @@ const defaultNav = [
       { text: 'FAQ', link: '/guide/faq.html' },
       { text: 'Neume Keyboard', link: '/guide/keyboard.html' },
       { text: 'Advanced Workflows', link: '/guide/advanced.html' },
+      { text: 'MCP Server', link: '/guide/agent-access.html' },
     ],
   },
   { text: 'Download', link: '/download/' },
@@ -67,6 +68,7 @@ export default defineConfig({
               text: 'Paragraph Styles',
               link: '/guide/text-and-styles.html',
             },
+            { text: 'Footnotes', link: '/guide/footnotes.html' },
             { text: 'Page Layout and Books', link: '/guide/page-layout.html' },
             { text: 'Playback', link: '/guide/playback.html' },
             {
@@ -74,12 +76,19 @@ export default defineConfig({
               link: '/guide/saving-and-exporting.html',
             },
             { text: 'Advanced Workflows', link: '/guide/advanced.html' },
+            { text: 'MCP Server', link: '/guide/agent-access.html' },
             { text: 'FAQ', link: '/guide/faq.html' },
           ],
         },
         {
           text: 'Reference',
-          items: [{ text: 'Neume Keyboard', link: '/guide/keyboard.html' }],
+          items: [
+            { text: 'Neume Keyboard', link: '/guide/keyboard.html' },
+            {
+              text: 'MCP Tool Reference',
+              link: '/guide/mcp-tool-reference.html',
+            },
+          ],
         },
       ],
       '/download/': defaultNav,

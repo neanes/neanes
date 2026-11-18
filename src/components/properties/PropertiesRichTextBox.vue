@@ -38,6 +38,7 @@
         <Switch
           id="properties-rich-text-box-inline"
           :model-value="element.inline"
+          :disabled="hasFootnotes"
           @update:model-value="updateBooleanProperty('inline', $event)"
         />
         <FieldLabel for="properties-rich-text-box-inline">
@@ -366,7 +367,7 @@
     </PaneSection>
 
     <PaneSection
-      v-if="!isEmbeddedModeKeySelected"
+      v-if="!isEmbeddedModeKeySelected && !footnoteBody"
       value="scrollable"
       :title="$t(($) => $.toolbar.textbox.scrollable, { ns: 'toolbar' })"
     >
@@ -423,6 +424,7 @@ import {
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { Scale, ScaleNote } from '@/models/Scales';
+import { elementFootnoteIds } from '@/services/FootnoteService';
 import { fraction1FormatOptions } from '@/utils/numberFormatOptions';
 import { Unit } from '@/utils/Unit';
 
@@ -450,6 +452,7 @@ const scales = Object.values(Scale).map((x) => ({
 }));
 
 const props = defineProps({
+  footnoteBody: Boolean,
   element: {
     type: Object as PropType<RichTextBoxElement>,
     required: true,
@@ -514,6 +517,10 @@ const fallbackParagraphStyleId = computed(() =>
 );
 const resolvedParagraphStyle = computed(() =>
   resolveParagraphStyle(props.paragraphStyles, fallbackParagraphStyleId.value),
+);
+
+const hasFootnotes = computed(
+  () => elementFootnoteIds(props.element).length > 0,
 );
 
 function updateElement(value: Partial<RichTextBoxElement>) {

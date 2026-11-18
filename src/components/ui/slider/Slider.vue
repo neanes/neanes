@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { SliderRootEmits, SliderRootProps } from 'reka-ui';
 import {
   SliderRange,
@@ -9,8 +10,6 @@ import {
   useForwardPropsEmits,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   SliderRootProps & { class?: HTMLAttributes['class'] }

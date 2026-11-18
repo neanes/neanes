@@ -390,6 +390,7 @@
             <ToolbarButton
               variant="secondary"
               class="chrome-button toolbar-icon"
+              :disabled="!canInsertPageBreak"
               @click="$emit('toggle-page-break')"
             >
               <PhFile />
@@ -571,6 +572,10 @@ const tempoOptions: ButtonWithMenuOption[] = [
 ];
 
 const props = defineProps({
+  canInsertPageBreak: {
+    type: Boolean,
+    default: true,
+  },
   entryMode: {
     type: String as PropType<EntryMode>,
     required: true,

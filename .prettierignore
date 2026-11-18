@@ -1,4 +1,5 @@
 .vscode
+.test-files
 dist
 dist-electron
 release

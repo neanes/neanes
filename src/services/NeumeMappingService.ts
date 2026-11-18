@@ -634,6 +634,7 @@ mapNeumeToSbmufl(NoteIndicator.Thi, 'noteIndicatorDi');
 mapNeumeToSbmufl(NoteIndicator.Ke, 'noteIndicatorKe');
 mapNeumeToSbmufl(NoteIndicator.Zo, 'noteIndicatorZo');
 mapNeumeToSbmufl(Ison.Unison, 'isonIndicatorUnison');
+mapNeumeToSbmufl(Ison.GaLow, 'isonIndicatorGaLow');
 mapNeumeToSbmufl(Ison.ThiLow, 'isonIndicatorDiLow');
 mapNeumeToSbmufl(Ison.KeLow, 'isonIndicatorKeLow');
 mapNeumeToSbmufl(Ison.Zo, 'isonIndicatorZo');

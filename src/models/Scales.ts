@@ -88,6 +88,7 @@ const noteToNoteValueMap = new Map<Note, number>([
 ]);
 
 const isonToNoteValueMap = new Map<Ison, number>([
+  [Ison.GaLow, -5],
   [Ison.ThiLow, -4],
   [Ison.KeLow, -3],
   [Ison.Zo, -2],

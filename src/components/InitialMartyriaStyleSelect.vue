@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import { cn } from 'cn';
 import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
@@ -52,7 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import {
   builtInInitialMartyriaStyles,
   getInitialMartyriaStyleDisplayName,

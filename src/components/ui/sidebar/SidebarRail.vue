@@ -1,7 +1,6 @@
 <script setup lang="ts">
+import { cn } from 'cn';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 import { useSidebar } from './utils';
 

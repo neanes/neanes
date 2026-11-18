@@ -1,5 +1,6 @@
 {
   "editor": {
+    "printFailed": "Unable to print the score.",
     "unexpectedError": "An unexpected error occurred.",
     "rangeOverflow": "Range overflow",
     "openFailed": "Open failed",
@@ -28,6 +29,7 @@
     "clipboardReadFailed": "Unable to read from the clipboard. Check clipboard permissions."
   },
   "export": {
+    "pdfLoading": "Exporting PDF...",
     "pdfSuccess": "PDF exported",
     "pdfFailed": "PDF export failed",
     "pdfFailedDescription": "Unable to export PDF.",

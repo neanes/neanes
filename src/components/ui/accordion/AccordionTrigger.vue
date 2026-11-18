@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { PhCaretDown, PhCaretUp } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { AccordionTriggerProps } from 'reka-ui';
 import { AccordionHeader, AccordionTrigger } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   AccordionTriggerProps & { class?: HTMLAttributes['class'] }

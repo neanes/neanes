@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { PhCircle } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { RadioGroupItemProps } from 'reka-ui';
 import { RadioGroupIndicator, RadioGroupItem, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   RadioGroupItemProps & { class?: HTMLAttributes['class'] }

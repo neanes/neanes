@@ -17,7 +17,10 @@
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentLeft"
+        content-key="contentLeft"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
@@ -30,7 +33,10 @@
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentCenter"
+        content-key="contentCenter"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReady"
@@ -43,7 +49,10 @@
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
+        :footnote-markers="footnoteMarkers"
+        :footnotes-editable="editMode && !recalc"
         :model-value="contentRight"
+        content-key="contentRight"
         :config="editorConfig"
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
@@ -62,9 +71,13 @@
             :key="`inline-top-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
             ref="editor"
             class="rich-text-editor inline-top"
-            :style="textBoxStyleTop"
+            :style="inlineTextBoxStyle"
+            :class="{ 'center-outside-box': inlineCenterOutsideBox }"
             :owner="element"
+            :footnote-markers="footnoteMarkers"
+            :footnotes-editable="editMode && !recalc"
             :model-value="content"
+            content-key="content"
             :config="editorConfig"
             @blur="onBlur"
             @ready="onEditorReadyInline"
@@ -79,9 +92,13 @@
           :key="`inline-bottom-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
           ref="editorBottom"
           class="rich-text-editor inline-bottom"
-          :style="textBoxStyleBottom"
+          :style="inlineTextBoxStyle"
+          :class="{ 'center-outside-box': inlineCenterOutsideBox }"
           :owner="element"
+          :footnote-markers="footnoteMarkers"
+          :footnotes-editable="editMode && !recalc"
           :model-value="contentBottom"
+          content-key="contentBottom"
           :config="editorConfig"
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
@@ -92,12 +109,15 @@
       </div>
     </div>
     <RichTextEditor
-      v-else-if="element.scrollable"
+      v-else-if="element.scrollable && !footnoteBody"
       :key="`scrollable-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
       ref="editor"
       class="rich-text-editor single scrollable"
       :owner="element"
+      :footnote-markers="footnoteMarkers"
+      :footnotes-editable="editMode && !recalc"
       :model-value="content"
+      content-key="content"
       :config="editorConfig"
       :style="textBoxStyle"
       @blur="onBlur"
@@ -112,7 +132,10 @@
       ref="editor"
       class="rich-text-editor single"
       :owner="element"
+      :footnote-markers="footnoteMarkers"
+      :footnotes-editable="editMode && !recalc"
       :model-value="content"
+      content-key="content"
       :config="editorConfig"
       :style="textBoxStyle"
       @blur="onBlur"
@@ -146,8 +169,8 @@ import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextP
 import type InlineEditor from '@/customEditor';
 import type {
   ModeKeyElement,
-  RichTextBoxContentKey,
   RichTextBoxElement,
+  RichTextFootnoteMarker,
 } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
@@ -157,6 +180,7 @@ import {
   type ParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { richTextBoxHeightCap } from '@/services/rendering/textBoxMeasurement';
 import {
   getFontFamilyWithFallback,
   getLegacyNeumeFontFamily,
@@ -185,6 +209,20 @@ const emit = defineEmits([
 ]);
 const { t } = useTranslation();
 const props = defineProps({
+  layoutGeometry: {
+    type: Object as PropType<
+      Pick<RichTextBoxElement, 'width' | 'y' | 'height'>
+    >,
+    default: undefined,
+  },
+  footnoteBody: {
+    type: Boolean,
+    default: false,
+  },
+  footnoteMarkers: {
+    type: Object as PropType<Readonly<Record<string, RichTextFootnoteMarker>>>,
+    default: () => ({}),
+  },
   element: {
     type: Object as PropType<RichTextBoxElement>,
     required: true,
@@ -192,6 +230,10 @@ const props = defineProps({
   pageSetup: {
     type: Object as PropType<PageSetup>,
     required: true,
+  },
+  inlinePageCenterOffset: {
+    type: Number,
+    default: undefined,
   },
   fonts: {
     type: Array as PropType<string[]>,
@@ -477,10 +519,14 @@ function getMinimumFontSizeInEditor(editor: Editor) {
   return `${Math.min(...sizes)}pt`;
 }
 
+// The editor publishes settled geometry on raw elements. Explicit geometry
+// props refresh these styles without remounting a focused CKEditor.
+const layout = computed(() => props.layoutGeometry ?? props.element);
+
 const containerStyle = computed(() => {
   const style: StyleValue = {
-    width: withZoom(props.element.width),
-    height: withZoom(props.element.height),
+    width: withZoom(layout.value.width),
+    height: withZoom(layout.value.height),
     '--ck-content-font-family': getFontFamilyWithFallback(
       resolvedParagraphStyle.value.fontFamily,
     ),
@@ -490,6 +536,10 @@ const containerStyle = computed(() => {
     '--ck-content-font-size': props.element.inline
       ? `${resolvedParagraphStyle.value.fontSize}px`
       : ckContentFontSize.value, // no zoom because we will apply zooming on the whole editor
+    '--footnote-reference-family': getFontFamilyWithFallback(
+      resolvedParagraphStyle.value.fontFamily,
+    ),
+    '--footnote-reference-size': `${resolvedParagraphStyle.value.fontSize}px`,
     '--ck-content-font-color': resolvedParagraphStyle.value.color,
     '--ck-content-line-height': `${resolvedParagraphStyle.value.lineHeight ?? 'normal'}`,
   };
@@ -498,13 +548,15 @@ const containerStyle = computed(() => {
 });
 
 const textBoxStyle = computed(() => {
+  const heightCap = richTextBoxHeightCap(
+    props.element,
+    props.pageSetup,
+    props.footnoteBody,
+    layout.value.y,
+  );
   const style: StyleValue = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
-    maxHeight: withZoom(
-      props.pageSetup.pageHeight -
-        props.element.y -
-        props.pageSetup.bottomMargin,
-    ),
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
+    maxHeight: heightCap === undefined ? undefined : withZoom(heightCap),
   };
 
   return style;
@@ -526,25 +578,40 @@ const textBoxTopInnerContainerStyle = computed(() => {
   return style;
 });
 
-const textBoxStyleTop = computed(() => {
-  const style: any = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
-  };
-
-  return style;
+const inlinePageCenter = computed(() => {
+  const center = props.inlinePageCenterOffset;
+  if (!props.element.centerOnPage || center == null) {
+    return undefined;
+  }
+  return props.pageSetup.melkiteRtl ? layout.value.width - center : center;
 });
 
-const textBoxStyleBottom = computed(() => {
-  const style: any = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
-  };
+const inlineCenterOutsideBox = computed(() => {
+  const center = inlinePageCenter.value;
+  return center != null && (center <= 0 || center >= layout.value.width);
+});
 
-  return style;
+const inlineTextBoxStyle = computed<StyleValue>(() => {
+  const { width } = layout.value;
+  const physicalCenter = inlinePageCenter.value;
+  if (physicalCenter == null) {
+    return { width: `${width}px` };
+  }
+
+  // Center the content without extending the editor's background or hit area.
+  const centerInBox = Math.min(width, Math.max(0, physicalCenter));
+  const padding = 2 * centerInBox - width;
+  return {
+    width: `${width}px`, // no zoom because we scale with the transform
+    paddingLeft: `${Math.max(0, padding)}px`,
+    paddingRight: `${Math.max(0, -padding)}px`,
+    '--inline-page-center-shift': `${physicalCenter - centerInBox}px`,
+  };
 });
 
 const textBoxTopContainerStyle = computed(() => {
   const style: any = {
-    height: withZoom(props.element.height),
+    height: withZoom(layout.value.height),
   };
 
   return style;
@@ -566,19 +633,11 @@ const textBoxBottomContainerStyle = computed(() => {
 
 const multipanelContainerStyle = computed(() => {
   const style: StyleValue = {
-    width: `${props.element.width}px`, // no zoom because we scale with the transform
+    width: `${layout.value.width}px`, // no zoom because we scale with the transform
   };
 
   return style;
 });
-
-watch(
-  () => props.element.centerOnPage,
-  () => {
-    setPadding(getEditorInstance());
-    setPadding(getEditorInstanceBottom());
-  },
-);
 
 watch(
   () => resolvedParagraphStyle.value.fontSize,
@@ -589,6 +648,7 @@ watch(
 
 onBeforeUnmount(() => {
   unmounting.value = true;
+  debouncedPhoneHome.cancel();
   update();
   // Observers are disconnected automatically by useResizeObserver's own
   // onBeforeUnmount hook.
@@ -614,6 +674,37 @@ function getEditorInstanceRight() {
   return editorRight.value?.instance;
 }
 
+// Snapshot consumers wait for all editors, independently of height measurement.
+const editorsReady = Promise.withResolvers<void>();
+const readyEditors = new WeakSet<InlineEditor>();
+function markEditorReady(editor: InlineEditor) {
+  readyEditors.add(editor);
+  if (
+    getActiveEditorInstances().every(
+      (instance) => instance != null && readyEditors.has(instance),
+    )
+  ) {
+    editorsReady.resolve();
+  }
+}
+
+async function whenReady() {
+  await editorsReady.promise;
+  await nextTick();
+}
+
+async function measureTextBox() {
+  await whenReady();
+  await document.fonts.ready;
+  refreshCkContentFontSize();
+  await nextTick();
+  const height = getHeight();
+  if (height == null || !Number.isFinite(height)) {
+    throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+  }
+  return { element: props.element, width: props.element.width, height };
+}
+
 function getActiveEditorInstances() {
   if (props.element.multipanel) {
     return [
@@ -630,8 +721,14 @@ function getActiveEditorInstances() {
   return [getEditorInstance()];
 }
 
-function phoneHome(height: number) {
-  emit('update:height', height);
+function phoneHome() {
+  if (unmounting.value) {
+    return;
+  }
+  const height = getHeight();
+  if (height != null && Math.abs(props.element.height - height) > 0.001) {
+    emit('update:height', height);
+  }
 }
 
 const ckContentFontSize = ref(`${resolvedParagraphStyle.value.fontSize}px`);
@@ -662,14 +759,8 @@ async function initializeCkContentFontSize() {
 }
 
 function emitRecalculatedHeightIfNeeded() {
-  if (!props.recalc) {
-    return;
-  }
-
-  const height = getHeight();
-
-  if (height != null && Math.abs(props.element.height - height) > 0.001) {
-    debouncedPhoneHome(height);
+  if (props.recalc) {
+    debouncedPhoneHome();
   }
 }
 
@@ -689,6 +780,7 @@ function observeCkContentFontSize(editor: InlineEditor) {
 async function onEditorReady(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
 
   emitRecalculatedHeightIfNeeded();
 
@@ -697,12 +789,13 @@ async function onEditorReady(editor: InlineEditor) {
     focusOnReady.value = false;
   }
 
-  const element = editor.sourceElement;
-
   observeCkContentFontSize(editor);
+  observeBlockHeight();
+}
 
+function observeBlockHeight() {
   observeResize(
-    element!,
+    [...container.value!.querySelectorAll<HTMLElement>('.ck-content')],
     debounce(100, () => {
       const resizedHeight = getHeight();
 
@@ -711,7 +804,7 @@ async function onEditorReady(editor: InlineEditor) {
         Math.abs(props.element.height - resizedHeight) > 0.001
       ) {
         if (props.recalc) {
-          debouncedPhoneHome(resizedHeight);
+          debouncedPhoneHome();
         } else {
           // A resize is pure geometry -- there is no pending edit to persist. Route
           // through `update:height` (-> updateRichTextBoxHeight, which only sets
@@ -734,8 +827,10 @@ async function onEditorReady(editor: InlineEditor) {
 async function onEditorReadyMultipanelSide(editor: InlineEditor) {
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
+  markEditorReady(editor);
   emitRecalculatedHeightIfNeeded();
   observeCkContentFontSize(editor);
+  observeBlockHeight();
 }
 
 function onEditorReadyInline(editor: InlineEditor) {
@@ -752,7 +847,7 @@ function onEditorReadyInline(editor: InlineEditor) {
     }),
   );
 
-  setPadding(editor);
+  markEditorReady(editor);
 }
 
 function onEditorReadyInlineBottom(editor: InlineEditor) {
@@ -774,7 +869,7 @@ function onEditorReadyInlineBottom(editor: InlineEditor) {
     }),
   );
 
-  setPadding(editor);
+  markEditorReady(editor);
 }
 
 function applyInitialLanguage(editor: InlineEditor) {
@@ -828,24 +923,33 @@ function getPendingUpdates() {
 
   const height = getHeight();
 
-  updated =
-    addPendingEditorData(updates, 'content', getEditorInstance()) || updated;
-  updated =
-    addPendingEditorData(updates, 'contentBottom', getEditorInstanceBottom()) ||
-    updated;
-  updated =
-    addPendingEditorData(updates, 'contentLeft', getEditorInstanceLeft()) ||
-    updated;
-  updated =
-    addPendingEditorData(updates, 'contentCenter', getEditorInstanceCenter()) ||
-    updated;
-  updated =
-    addPendingEditorData(updates, 'contentRight', getEditorInstanceRight()) ||
-    updated;
+  const contentEditors = [
+    ['content', editorRef.value],
+    ['contentBottom', editorBottom.value],
+    ['contentLeft', editorLeft.value],
+    ['contentCenter', editorCenter.value],
+    ['contentRight', editorRight.value],
+  ] as const;
+  let hasStaleContent = false;
+  for (const [property, component] of contentEditors) {
+    if (!props.editMode || component?.instance == null) {
+      continue;
+    }
+    // Teardown must not flush an editor superseded by an external model edit.
+    if (!component.canFlush(props.element[property])) {
+      hasStaleContent = true;
+      continue;
+    }
+    const content = component.instance.getData();
+    if (props.element[property] !== content) {
+      updates[property] = content;
+      updated = true;
+    }
+  }
 
   const activeEditors = getActiveEditorInstances();
 
-  if (props.editMode && activeEditors.some(Boolean)) {
+  if (props.editMode && !hasStaleContent && activeEditors.some(Boolean)) {
     const hasMeaningfulContent = activeEditors.some(
       (editor) => editor != null && hasMeaningfulRichTextEditorContent(editor),
     );
@@ -871,6 +975,7 @@ function getPendingUpdates() {
   }
 
   if (
+    !hasStaleContent &&
     height != null &&
     !props.element.inline &&
     Math.abs(props.element.height - height) > 0.001
@@ -891,35 +996,22 @@ function getPendingUpdates() {
   return null;
 }
 
-function addPendingEditorData(
-  updates: Partial<RichTextBoxElement>,
-  propertyName: RichTextBoxContentKey,
-  editor: Editor | undefined,
-) {
-  if (!props.editMode || editor == null) {
-    return false;
-  }
-
-  const currentContent = editor.getData();
-
-  if (props.element[propertyName] === currentContent) {
-    return false;
-  }
-
-  updates[propertyName] = currentContent;
-  return true;
-}
-
 function getHeight() {
-  const element = container.value?.querySelector('.ck-content');
+  const elements = [
+    ...(container.value?.querySelectorAll<HTMLElement>('.ck-content') ?? []),
+  ];
 
-  if (element == null) {
+  if (elements.length === 0) {
     return null;
   }
 
-  const zoom = Number(getComputedStyle(element).getPropertyValue('--zoom'));
+  const zoom = Number(getComputedStyle(elements[0]).getPropertyValue('--zoom'));
 
-  return element.getBoundingClientRect().height / zoom;
+  return (
+    Math.max(
+      ...elements.map((element) => element.getBoundingClientRect().height),
+    ) / zoom
+  );
 }
 
 function getHeightBottom() {
@@ -946,26 +1038,6 @@ function getHeightTop() {
   return element.getBoundingClientRect().height / zoom;
 }
 
-function setPadding(editor: Editor | undefined) {
-  if (editor == null) {
-    return;
-  }
-
-  editor.editing.view.change((writer) => {
-    const editable = editor.editing.view.document.getRoot();
-
-    if (props.element.centerOnPage) {
-      writer.setStyle(
-        'padding-right',
-        `${props.pageSetup.innerPageWidth - props.element.width}px`,
-        editable!,
-      );
-    } else {
-      writer.removeStyle('padding-right', editable!);
-    }
-  });
-}
-
 function focus() {
   const editor =
     (props.element.multipanel
@@ -988,6 +1060,8 @@ function focus() {
 }
 
 defineExpose({
+  whenReady,
+  measureTextBox,
   focus,
   getPendingUpdates,
   htmlElement,
@@ -1024,6 +1098,7 @@ defineExpose({
   transform-origin: 0 0;
   transform: scale(var(--zoom, 1));
   border: none !important;
+  --ck-editor-frame-border-radius: 0;
 }
 
 .rich-text-box-container {
@@ -1103,6 +1178,17 @@ defineExpose({
   overflow: visible;
 }
 
+/* The padding collapses the content area when the center is outside the box.
+   Center each block at the requested point using its own intrinsic width. */
+.rich-text-editor.center-outside-box > :deep(*) {
+  inline-size: max-content;
+  translate: calc(var(--inline-page-center-shift) - 50%);
+}
+
+.rich-text-editor.center-outside-box:dir(rtl) > :deep(*) {
+  translate: calc(var(--inline-page-center-shift) + 50%);
+}
+
 .inline-bottom-container,
 .inline-top-container,
 .inline-top-inner-container {
@@ -1112,8 +1198,9 @@ defineExpose({
   overflow: visible;
 }
 
-:deep(.ck-editor__editable.ck-focused) {
+.rich-text-editor.ck.ck-editor__editable.ck-focused {
   border: none !important;
+  box-shadow: none;
   outline: var(--ck-focus-ring) !important;
 }
 

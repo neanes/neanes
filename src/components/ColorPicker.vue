@@ -49,6 +49,7 @@ import {
   ColorPickerSliderHue,
   ColorPickerSwatch,
 } from '@vuelor/picker';
+import { cn } from 'cn';
 import type { HTMLAttributes, PropType } from 'vue';
 import { computed, ref, watch } from 'vue';
 
@@ -59,7 +60,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
 
 defineOptions({ inheritAttrs: false });
 

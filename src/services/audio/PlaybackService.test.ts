@@ -13,6 +13,7 @@ import {
   Fthora,
   Note,
   QuantitativeNeume,
+  TempoSign,
 } from '../../models/Neumes';
 import { Scale, ScaleNote } from '../../models/Scales';
 import type { PlaybackOptions } from './PlaybackService';
@@ -97,6 +98,36 @@ describe('PlaybackService', () => {
   });
 
   describe('computePlaybackSequence', () => {
+    it.each([
+      ['tempoLeft', TempoSign.Slow],
+      ['tempo', TempoSign.SlowAbove],
+      ['tempoRight', TempoSign.Slow],
+    ] as const)(
+      'should apply %s on a right-aligned martyria to subsequent notes',
+      (placement, sign) => {
+        const service = new PlaybackService();
+        const elements = [
+          getTempoChange(120),
+          getNote(QuantitativeNeume.Ison),
+          getMartyria({ alignRight: true, [placement]: sign, bpm: 60 }),
+          getNote(QuantitativeNeume.Ison),
+          getNote(QuantitativeNeume.Ison),
+        ];
+
+        const events = service.computePlaybackSequence(
+          elements,
+          getDefaultWorkspaceOptions(),
+          true,
+        );
+
+        expect(events.map((event) => event.bpm)).toEqual([120, 60, 60]);
+        expect(events.map((event) => event.duration)).toEqual([0.5, 1, 1]);
+        expect(events.map((event) => event.absoluteTime)).toEqual([
+          0, 0.5, 1.5,
+        ]);
+      },
+    );
+
     it.each`
       scaleNote            | expectedFrequency
       ${ScaleNote.VouLow}  | ${80.84}

@@ -2,20 +2,8 @@
 import 'vue3-tabs-chrome/dist/vue3-tabs-chrome.css';
 
 import {
-  PhAlignRight,
   PhArrowLineLeft,
   PhArrowLineRight,
-  PhBookmarkSimple,
-  PhClipboardText,
-  PhCopy,
-  PhCrosshair,
-  PhFile,
-  PhLinkSimpleHorizontal,
-  PhParagraph,
-  PhScissors,
-  PhSelectionAll,
-  PhSlidersHorizontal,
-  PhTextAlignCenter,
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
@@ -43,15 +31,17 @@ import { toast } from 'vue-sonner';
 import type { Tab } from 'vue3-tabs-chrome';
 import Vue3TabsChrome from 'vue3-tabs-chrome';
 
+import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
+import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
+import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
+import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
 import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
 import { rewriteModeKeyAttributesInHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
-import AlternateLine from '@/components/AlternateLine.vue';
-import ContentEditable from '@/components/ContentEditable.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
 import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
-import DropCap from '@/components/DropCap.vue';
+import type DropCap from '@/components/DropCap.vue';
 import EditorPreferencesDialog from '@/components/EditorPreferencesDialog.vue';
 import type {
   ExportAsLatexSettings,
@@ -61,15 +51,12 @@ import type {
 import { ExportFormat } from '@/components/ExportDialog.types';
 import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
-import ImageBox from '@/components/ImageBox.vue';
+import FootnoteContextMenu from '@/components/FootnoteContextMenu.vue';
+import FootnotePropertiesDialog from '@/components/FootnotePropertiesDialog.vue';
 import InitialMartyriaStylesDialog from '@/components/InitialMartyriaStylesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
-import ModeKey from '@/components/ModeKey.vue';
+import McpSetupDialog from '@/components/McpSetupDialog.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
-import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
-import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
-import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
-import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
 import NeumeComboSelector from '@/components/NeumeComboSelector.vue';
 import NeumeSelector from '@/components/NeumeSelector.vue';
 import PageSetupDialog from '@/components/PageSetupDialog.vue';
@@ -79,9 +66,10 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RecoveryDialog from '@/components/RecoveryDialog.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
+import type { ScorePageHandlers } from '@/components/ScorePageContent.types';
+import ScorePageContent from '@/components/ScorePageContent.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
-import Annotation from '@/components/TextAnnotation.vue';
 import TextBox from '@/components/TextBox.vue';
 import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
@@ -95,22 +83,30 @@ import { Badge } from '@/components/ui/badge';
 import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
 import {
   ContextMenu,
-  ContextMenuCheckboxItem,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { Spinner } from '@/components/ui/spinner';
 import WorkspaceDockLayout from '@/components/WorkspaceDockLayout.vue';
 import { useEditorServices } from '@/composables/useEditorServices';
+import { useFootnoteProperties } from '@/composables/useFootnoteProperties';
+import {
+  type LiveLayoutTrial,
+  useLiveWorkspaceLayout,
+} from '@/composables/useLiveWorkspaceLayout';
 import { useNeumeCombinations } from '@/composables/useNeumeCombinations';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import {
   clearActiveEditor,
   focusLastActiveEditorForOwner,
   isActiveEditorForOwner,
+  useActiveEditorForOwner,
 } from '@/composables/useRichTextEditorRegistry';
+import { useRichTextFootnotes } from '@/composables/useRichTextFootnotes';
+import { useScoreRendering } from '@/composables/useScoreRendering';
+import { useStaffEditingContext } from '@/composables/useStaffEditingContext';
+import { useStaffLyrics } from '@/composables/useStaffLyrics';
 import { EventBus } from '@/eventBus';
 import { resolveLanguagePreference } from '@/i18n';
 import { editorPreferencesKey } from '@/injectionKeys';
@@ -140,17 +136,19 @@ import {
   DEFAULT_PANE_ACCORDION_STATE,
   EditorEnvironment,
 } from '@/models/EditorEnvironment';
-import { EditorPreferences } from '@/models/EditorPreferences';
-import type { EmptyElement, ScoreElement } from '@/models/Element';
+import {
+  EditorPreferences,
+  type ScoreOverlaySettings,
+} from '@/models/EditorPreferences';
+import type { LineBreakType, ScoreElement } from '@/models/Element';
 import {
   AlternateLineElement,
   AnnotationElement,
   canKeepWithNext,
   DropCapElement,
   ElementType,
+  FootnoteAnchorElement,
   ImageBoxElement,
-  isKeepWithNextActive,
-  LineBreakType,
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
@@ -160,13 +158,13 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
+import type { Footnote } from '@/models/Footnote';
 import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   isBuiltInInitialMartyriaStyleId,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type {
-  BoxOverlayDiagnostics,
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
@@ -183,6 +181,7 @@ import {
   onlyTakesTopKlasma,
 } from '@/models/NeumeReplacements';
 import type {
+  Fthora,
   Ison,
   MeasureBar,
   MeasureNumber,
@@ -192,15 +191,14 @@ import type {
 } from '@/models/Neumes';
 import {
   Accidental,
-  Fthora,
   GorgonNeume,
   NeumeSelection,
   QuantitativeNeume,
   TimeNeume,
   VocalExpressionNeume,
 } from '@/models/Neumes';
-import type { Line, Page } from '@/models/Page';
-import type { PageSetup } from '@/models/PageSetup';
+import type { Page } from '@/models/Page';
+import { PageSetup } from '@/models/PageSetup';
 import type {
   ParagraphStyle,
   ResolvedParagraphStyle,
@@ -211,7 +209,6 @@ import {
   getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { ScaleNote } from '@/models/Scales';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
@@ -236,8 +233,28 @@ import type {
   PlaybackOptions,
   PlaybackSequenceEvent,
 } from '@/services/audio/PlaybackService';
+import {
+  type DocumentSaveResult,
+  saveDocument,
+} from '@/services/documentPersistence';
+import {
+  createMartyriaUpdateCommand,
+  createNoteUpdateCommand,
+  getFthoraChange,
+  getMartyriaAlignmentChange,
+} from '@/services/elementEditing';
 import { fontCatalog } from '@/services/FontCatalog';
-import type { Command } from '@/services/history/CommandService';
+import {
+  captureFootnotes,
+  elementFootnoteIds,
+  footnoteRemovalCommands,
+  orderedFootnotes,
+  planFootnoteInsertion,
+  planFootnoteRemoval,
+  prepareFootnotePaste,
+  transferFootnoteReference,
+} from '@/services/FootnoteService';
+import type { Command, HistoryState } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
 import { ByzHtmlExporter } from '@/services/integration/ByzHtmlExporter';
 import {
@@ -248,17 +265,19 @@ import {
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
-import { getLyricsBaseline } from '@/services/LyricsLayout';
+import { createParagraphStyleUpdateCommands } from '@/services/paragraphStyles';
 import {
   classifyRecoveryCandidates,
   getRecoveryCandidateGroupRecoveryIds,
   getRecoveryCandidateSiblingRecoveryIds,
 } from '@/services/recovery/recoveryCandidates';
+import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
+import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
+import type { LiveLayoutOutcome } from '@/services/rendering/settleWorkspace';
+import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
+import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
-import {
-  type FontVerticalMetrics,
-  TextMeasurementService,
-} from '@/services/TextMeasurementService';
+import { TextMeasurementService } from '@/services/TextMeasurementService';
 import {
   collectClipboardInitialMartyriaStylesFromElements,
   resolveClipboardInitialMartyriaStyles,
@@ -266,8 +285,8 @@ import {
 } from '@/utils/clipboardInitialMartyriaStyles';
 import {
   collectClipboardParagraphStyleIdsFromElements,
+  collectClipboardParagraphStylesForPassageAndFootnotes,
   collectClipboardParagraphStylesFromElements,
-  collectClipboardParagraphStylesFromPasteElements,
   collectClipboardParagraphStylesFromStyleIds,
   resolveClipboardParagraphStyles,
   rewriteClipboardElementParagraphStyleIds,
@@ -276,10 +295,19 @@ import {
 } from '@/utils/clipboardParagraphStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import { deepEquals } from '@/utils/deepEquals';
-import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
+import {
+  isDropCapElement,
+  isImageBoxElement,
+  isMartyriaElement,
+  isModeKeyElement,
+  isRichTextBoxElement,
+  isSyllableElement,
+  isTempoElement,
+  isTextBoxElement,
+} from '@/utils/elementTypeGuards';
+import { resolveFontCss } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
-import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { isElectron } from '@/utils/isElectron';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import {
@@ -287,10 +315,6 @@ import {
   isDisplayedPageNumberOdd,
   isRightHandPage,
 } from '@/utils/PageNumbering';
-import {
-  type ParagraphStyleReferenceResolvers,
-  planParagraphStyleReferenceRemap,
-} from '@/utils/paragraphStyleReferences';
 import type { TokenMetadata } from '@/utils/replaceTokens';
 import {
   hasMeaningfulRichTextHtmlContent,
@@ -299,13 +323,13 @@ import {
 import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import {
+  isSectionMarker,
   resolveRunningMarkerPageMetadata,
-  resolveRunningMarkerText,
 } from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
 import { TestFileGenerator } from '@/utils/TestFileGenerator';
 import { TestFileType } from '@/utils/TestFileType';
-import { withZoom, withZoomOffset } from '@/utils/withZoom';
+import { withZoom } from '@/utils/withZoom';
 
 interface Vue3TabsChromeComponent {
   addTab: (...newTabs: Array<Tab>) => void;
@@ -314,10 +338,10 @@ interface Vue3TabsChromeComponent {
 }
 
 const noteElementCommandFactory: CommandFactory<NoteElement> =
-  new CommandFactory<NoteElement>();
+  new CommandFactory<NoteElement>(createNoteUpdateCommand);
 
 const martyriaCommandFactory: CommandFactory<MartyriaElement> =
-  new CommandFactory<MartyriaElement>();
+  new CommandFactory<MartyriaElement>(createMartyriaUpdateCommand);
 
 const tempoCommandFactory: CommandFactory<TempoElement> =
   new CommandFactory<TempoElement>();
@@ -330,9 +354,6 @@ const alternateLineCommandFactory: CommandFactory<AlternateLineElement> =
 
 const textBoxCommandFactory: CommandFactory<TextBoxElement> =
   new CommandFactory<TextBoxElement>();
-
-const richTextBoxCommandFactory: CommandFactory<RichTextBoxElement> =
-  new CommandFactory<RichTextBoxElement>();
 
 const imageBoxCommandFactory: CommandFactory<ImageBoxElement> =
   new CommandFactory<ImageBoxElement>();
@@ -353,37 +374,6 @@ const pageSetupCommandFactory: CommandFactory<PageSetup> =
 
 const documentPropertiesCommandFactory: CommandFactory<DocumentProperties> =
   new CommandFactory<DocumentProperties>();
-
-function createFontLoadDescriptor(
-  fontFamily: string,
-  fontStyle: string | null = null,
-) {
-  const resolved = resolveFontStyle(fontFamily, fontStyle);
-  const cssFontFamily = `"${resolved.cssFontFamily.replace(/["\\]/g, '\\$&')}"`;
-
-  return [
-    resolved.cssFontStyle,
-    'normal',
-    resolved.cssFontWeight,
-    '1rem',
-    cssFontFamily,
-  ].join(' ');
-}
-
-function getBundledFontLoadDescriptors() {
-  const descriptors = new Set<string>();
-
-  for (const family of fontCatalog.bundledFamilies()) {
-    for (const style of fontCatalog.getStyles(family)) {
-      descriptors.add(createFontLoadDescriptor(family, style));
-    }
-  }
-
-  descriptors.add(createFontLoadDescriptor('NeanesRTL'));
-  descriptors.add(createFontLoadDescriptor('NeanesRTLLegacy'));
-
-  return [...descriptors];
-}
 
 let untitledIndex = 1;
 
@@ -448,29 +438,47 @@ function scheduleWorkspaceTabLayout() {
   });
 }
 
-const dynamicTemplateRefs = new Map<string, unknown[]>();
-const dynamicTemplateRefSetters = new Map<string, (value: unknown) => void>();
+const scorePageContents =
+  useTemplateRef<InstanceType<typeof ScorePageContent>[]>('scorePageContents');
 
-function getTemplateRef<T>(name: string) {
-  return (dynamicTemplateRefs.get(name) ?? []) as T;
+function getPageContent(pageIndex: number) {
+  return scorePageContents.value?.find(
+    (page) => page.getPageIndex() === pageIndex,
+  );
 }
 
-function setTemplateRef(name: string) {
-  let setter = dynamicTemplateRefSetters.get(name);
+function getElementComponent<T>(index: number): T | undefined {
+  return getElementComponentForElement<T>(activeElements.value[index]);
+}
 
-  if (setter == null) {
-    setter = (value: unknown) => {
-      if (value == null) {
-        dynamicTemplateRefs.delete(name);
-      } else {
-        dynamicTemplateRefs.set(name, [value]);
-      }
-    };
-
-    dynamicTemplateRefSetters.set(name, setter);
+function getElementComponentForElement<T>(
+  element: ScoreElement | undefined,
+): T | undefined {
+  if (element === undefined) {
+    return;
   }
+  for (const page of scorePageContents.value ?? []) {
+    const component = page.getElementRef<T>(element);
+    if (component != null) {
+      return component;
+    }
+  }
+}
 
-  return setter;
+function getLyricsComponent(index: number) {
+  return getLyricsComponentForElement(activeElements.value[index]);
+}
+
+function getLyricsComponentForElement(element: ScoreElement | undefined) {
+  if (element === undefined) {
+    return;
+  }
+  for (const page of scorePageContents.value ?? []) {
+    const component = page.getLyricsRef(element);
+    if (component != null) {
+      return component;
+    }
+  }
 }
 
 type RichTextBoxComponent = {
@@ -478,15 +486,10 @@ type RichTextBoxComponent = {
   getPendingUpdates: () => Partial<RichTextBoxElement> | null;
 };
 
-type AnnotationComponent = {
-  focus: () => void;
-  getCurrentText: () => string;
-  getPendingUpdates: () => Partial<AnnotationElement>;
-};
-
 const preferredRichTextBoxFocusTarget = ref<{
   element: RichTextBoxElement;
-  refName: string;
+  pageIndex: number;
+  region: 'header' | 'footer';
 } | null>(null);
 
 const searchTextQuery = ref('');
@@ -510,8 +513,10 @@ const isBrowser = ref(!isElectron());
 const isLoading = ref(true);
 // Whether an export or print job is rendering the pages.
 const printMode = ref(false);
+const browserPrintWarning = useTemplateRef<HTMLElement>('browserPrintWarning');
 const canUndo = ref(false);
 const canRedo = ref(false);
+let unsubscribeHistory: (() => void) | undefined;
 const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
   set: (value: string[]) => setAccordionState('developer', value),
@@ -522,7 +527,6 @@ const propertiesPaneOpenSections = computed({
 });
 const workspaces = ref<Workspace[]>([]);
 const selectedWorkspaceValue = ref(new Workspace());
-const pendingLyricsAssignmentTimers = new Map<string, number>();
 const recoverySnapshotTimers = new Map<string, number>();
 const recoveryCandidates = ref<RecoveryCandidateArgs[]>([]);
 const recoveryDialogIsOpen = ref(false);
@@ -554,11 +558,14 @@ const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
 const documentPropertiesDialogIsOpen = ref(false);
+const contextMenuFootnoteId = ref<string | null>(null);
 const editorPreferencesDialogIsOpen = ref(false);
 const aboutDialogIsOpen = ref(false);
+const mcpSetupDialogIsOpen = ref(false);
 const exportDialogIsOpen = ref(false);
 const exportFormat = ref(ExportFormat.PNG);
 interface ClipboardState {
+  footnotes: Footnote[];
   elements: ScoreElement[];
   paragraphStyleIds: string[];
   paragraphStyles: ParagraphStyle[];
@@ -572,6 +579,7 @@ interface ClipboardFormatState<T> {
 }
 
 const clipboard = ref<ClipboardState>({
+  footnotes: [],
   elements: [],
   paragraphStyleIds: [],
   paragraphStyles: [],
@@ -635,6 +643,9 @@ const audioOptions = reactive<PlaybackOptions>({
 });
 const byzHtmlExporter = new ByzHtmlExporter();
 const exportInProgress = ref(false);
+let pdfExportInProgress = false;
+let nativePrintInProgress = false;
+let browserPrintPrepared = false;
 
 const ckeditorLanguage = computed(() => {
   return (
@@ -672,6 +683,9 @@ const inspectorContext = computed<InspectorContext>(() => {
     return {
       kind: 'rich-text-box',
       element: selectedRichTextBoxElement.value,
+      footnoteBody: footnoteBodyElements.value.has(
+        selectedRichTextBoxElement.value,
+      ),
       source:
         currentSelectedElement === selectedRichTextBoxElement.value
           ? 'score'
@@ -765,9 +779,28 @@ const selectedWorkspace = computed({
       selectedWorkspace.value.scrollTop = pageBackgroundElement.scrollTop;
     }
 
+    const previous = selectedWorkspaceValue.value;
     selectedWorkspaceValue.value = value;
-    selectedWorkspace.value.commandService.notify();
-    save(false);
+    observeSelectedHistory();
+    try {
+      save();
+    } catch (error) {
+      // Selecting lays the workspace out. If that throws, keep the previous
+      // workspace selected so the editor never shows one that cannot render.
+      // Reselecting the same workspace would only fail again;
+      // selectWorkspaceOrRestore restores it and lays it out.
+      if (previous !== value) {
+        selectedWorkspaceValue.value = previous;
+        observeSelectedHistory();
+        try {
+          save();
+        } catch (rollbackError) {
+          // Report the selection failure, not this one.
+          console.error(rollbackError);
+        }
+      }
+      throw error;
+    }
 
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
@@ -787,13 +820,75 @@ const selectedWorkspace = computed({
 const score = computed(() => {
   return selectedWorkspace.value.score;
 });
-
-const elements = computed(() => {
-  return score.value?.staff.elements ?? [];
+const settleFootnoteReferences = computed(() =>
+  needsFootnoteSettlement(score.value),
+);
+const { textBoxes: liveLayoutMeasurement } = useWorkspaceMeasurements();
+const liveTextBoxMeasurement = liveLayoutMeasurement.pending;
+const liveLayout = useLiveWorkspaceLayout({
+  selectedWorkspace: () => selectedWorkspace.value,
+  enabled: () => settleFootnoteReferences.value,
+  settle: runLiveSettlement,
+  measureTextBoxes: liveLayoutMeasurement.start,
+  textBoxEditor: () => ({
+    fonts: fonts.value,
+    language: ckeditorLanguage.value,
+  }),
+  cancelMeasurement: liveLayoutMeasurement.cancel,
 });
+const { invalidate: invalidateLiveLayout, wait: awaitSettledLayout } =
+  liveLayout;
+
+const {
+  updateLyricsLocked,
+  updateStaffLyrics,
+  flushLyricsAssignment,
+  cancelLyricsAssignment,
+  clearPendingLyricsAssignments,
+  assignLyrics,
+  extractStaffLyrics,
+} = useStaffLyrics(
+  selectedWorkspace,
+  lyricService,
+  keydownThrottleIntervalMs,
+  (note, lyrics) => getLyricsComponentForElement(note)?.setInnerText(lyrics),
+  save,
+);
+const {
+  activeStaff,
+  activeElements,
+  allElements,
+  isMainStaff,
+  activateContent,
+  staffForElement,
+} = useStaffEditingContext(
+  selectedWorkspace,
+  flushPendingRichTextEditors,
+  flushLyricsAssignment,
+);
+const {
+  footnotePropertiesDialogIsOpen,
+  editedFootnote,
+  footnotePreviewLineElements,
+  footnotePreviewNeighbors,
+  openFootnoteProperties: showFootnoteProperties,
+  updateFootnoteMarker,
+} = useFootnoteProperties(selectedWorkspace, pages, save);
+const { commitRichTextFootnotes, hasPendingFootnotePaste } =
+  useRichTextFootnotes(
+    selectedWorkspace,
+    flushPendingRichTextEditors,
+    openFootnote,
+    updateRichTextBox,
+    () =>
+      toast.error(t(($) => $.menu.footnotes.pasteUnavailable, { ns: 'menu' })),
+  );
+const footnoteBodyElements = computed(
+  () => new Set(score.value.footnotes.flatMap((body) => body.staff.elements)),
+);
 
 const resizableRichTextBoxElements = computed(() => {
-  return elements.value.filter(
+  return allElements.value.filter(
     (x) =>
       x.elementType === ElementType.RichTextBox &&
       !(x as RichTextBoxElement).inline,
@@ -801,29 +896,30 @@ const resizableRichTextBoxElements = computed(() => {
 });
 
 const resizableTextBoxElements = computed(() => {
-  return elements.value.filter(
+  return allElements.value.filter(
     (x) =>
       x.elementType === ElementType.TextBox && !(x as TextBoxElement).inline,
   );
 });
 
-const lyrics = computed({
-  get: () => {
-    return score.value?.staff.lyrics.text ?? '';
-  },
-  set: (value: string) => {
-    score.value.staff.lyrics.text = value;
-  },
+const lyrics = computed(() => activeStaff.value.lyrics.text);
+const activeLyricsLabel = computed(() => {
+  const activeId = selectedWorkspace.value.activeFootnoteId;
+  if (activeId === null) {
+    return t(($) => $.menu.view.lyrics, { ns: 'menu' });
+  }
+  const footnote = orderedFootnotes(score.value).find(
+    ({ footnote }) => footnote.id === activeId,
+  );
+  return footnote === undefined
+    ? t(($) => $.menu.view.lyrics, { ns: 'menu' })
+    : t(($) => $.menu.footnotes.lyrics, {
+        ns: 'menu',
+        number: footnote.marker,
+      });
 });
 
-const lyricsLocked = computed({
-  get: () => {
-    return score.value?.staff.lyrics.locked ?? false;
-  },
-  set: (value: boolean) => {
-    score.value.staff.lyrics.locked = value;
-  },
-});
+const lyricsLocked = computed(() => activeStaff.value.lyrics.locked);
 
 const isLyricsManagerOpen = computed(() => {
   return paneVisibility.value.lyrics;
@@ -845,7 +941,7 @@ const commandService = computed(() => {
 
 const selectedElementIndex = computed(() => {
   return selectedElement.value != null
-    ? elements.value.indexOf(selectedElement.value)
+    ? activeElements.value.indexOf(selectedElement.value)
     : -1;
 });
 
@@ -878,7 +974,10 @@ const selectedElement = computed({
       selectedHeaderFooterElement.value = null;
       toolbarInnerNeume.value = NeumeSelection.Primary;
 
-      if (audioService.state === AudioState.Playing) {
+      if (
+        audioService.state === AudioState.Playing &&
+        score.value.staff.elements.includes(element)
+      ) {
         const event = playbackEvents.value.find(
           (x) => x.elementIndex === getElementIndex(element),
         );
@@ -903,6 +1002,9 @@ const selectedElement = computed({
       );
     }
 
+    if (element != null) {
+      activateContent(element);
+    }
     selectedWorkspace.value.selectedElement = element;
     selectedWorkspace.value.selectedAnnotationElement = null;
     selectedWorkspace.value.selectedAlternateLineElement = null;
@@ -929,20 +1031,20 @@ const previousElementOnLine = computed(() => {
     return null;
   }
 
-  return elements.value[index - 1].line === selectedElement.value?.line
-    ? elements.value[index - 1]
+  return activeElements.value[index - 1].line === selectedElement.value?.line
+    ? activeElements.value[index - 1]
     : null;
 });
 
 const nextElementOnLine = computed(() => {
   const index = selectedElementIndex.value;
 
-  if (index + 1 >= elements.value.length - 1) {
+  if (index + 1 >= activeElements.value.length - 1) {
     return null;
   }
 
-  return elements.value[index + 1].line === selectedElement.value?.line
-    ? elements.value[index + 1]
+  return activeElements.value[index + 1].line === selectedElement.value?.line
+    ? activeElements.value[index + 1]
     : null;
 });
 
@@ -990,12 +1092,24 @@ const showCollisionRegions = computed(
   () => editorPreferences.value.showCollisionRegions,
 );
 
+const pageOverlaySettings = computed<ScoreOverlaySettings>(() => ({
+  showDeveloperPanels: showDeveloperPanels.value,
+  overlaysEnabled: overlaysEnabled.value,
+  printOverlays: printOverlays.value,
+  showGuides: showGuides.value,
+  showAdjustmentRatios: showAdjustmentRatios.value,
+  showAnonymousBoxes: showAnonymousBoxes.value,
+  showElementBoxes: showElementBoxes.value,
+  showInkBoundingBoxes: showInkBoundingBoxes.value,
+  showGlueWidths: showGlueWidths.value,
+  showLyricBaselines: showLyricBaselines.value,
+  showLyricBoundingBoxes: showLyricBoundingBoxes.value,
+  showNeumeBoundingBoxes: showNeumeBoundingBoxes.value,
+  showCollisionRegions: showCollisionRegions.value,
+}));
+
 const shouldCollectLayoutDiagnostics = computed(
   () => showDeveloperPanels.value,
-);
-
-const shouldRenderDeveloperOverlaysInPrint = computed(
-  () => showDeveloperPanels.value && printOverlays.value,
 );
 
 const selectedLyrics = computed({
@@ -1009,6 +1123,9 @@ const selectedLyrics = computed({
       selectionRange.value = null;
     }
 
+    if (element != null) {
+      activateContent(element);
+    }
     selectedWorkspace.value.selectedLyrics = element;
   },
 });
@@ -1062,14 +1179,14 @@ const developerNextElementOnLine = computed(() => {
     return null;
   }
 
-  const index = elements.value.indexOf(element);
+  const index = activeElements.value.indexOf(element);
 
-  if (index < 0 || index + 1 >= elements.value.length) {
+  if (index < 0 || index + 1 >= activeElements.value.length) {
     return null;
   }
 
-  return elements.value[index + 1].line === element.line
-    ? elements.value[index + 1]
+  return activeElements.value[index + 1].line === element.line
+    ? activeElements.value[index + 1]
     : null;
 });
 
@@ -1100,170 +1217,7 @@ const developerPaneHasMissingDiagnostics = computed(() => {
 });
 
 function reloadDeveloperPaneDiagnostics() {
-  save(false);
-}
-
-function getDeveloperGlueOverlays(
-  page: Page,
-  line: Line,
-  lineIndex: number,
-  pageIndex: number,
-) {
-  const diagnostics = line.diagnostics;
-
-  if (
-    !showDeveloperPanels.value ||
-    !overlaysEnabled.value ||
-    !showGlueWidths.value ||
-    diagnostics == null ||
-    line.elements.length === 0
-  ) {
-    return [];
-  }
-
-  const barHeight = Math.max(3, score.value.pageSetup.lineHeight * 0.06);
-  const barGap = Math.max(2, score.value.pageSetup.lineHeight * 0.03);
-  const stackHeight = barHeight * 2 + barGap;
-  const stackTop =
-    line.elements[0].y +
-    score.value.pageSetup.lineHeight * 0.45 -
-    stackHeight / 2;
-  const preferredTop = stackTop + barHeight + barGap;
-  const resolvedMargins = getResolvedMarginsForPage(page);
-
-  return diagnostics.glueOverlays.map((overlay, overlayIndex) => {
-    const delta = overlay.actualWidth - overlay.preferredWidth;
-    const actualFrame = getDeveloperGlueOverlayFrame(
-      resolvedMargins,
-      line,
-      overlay.left,
-      stackTop,
-      overlay.actualWidth,
-      barHeight,
-    );
-    const preferredFrame = getDeveloperGlueOverlayFrame(
-      resolvedMargins,
-      line,
-      overlay.left,
-      preferredTop,
-      overlay.preferredWidth,
-      barHeight,
-    );
-    const wrapperLeft = Math.min(actualFrame.left, preferredFrame.left);
-    const wrapperTop = Math.min(actualFrame.top, preferredFrame.top);
-    const wrapperRight = Math.max(
-      actualFrame.left + actualFrame.width,
-      preferredFrame.left + preferredFrame.width,
-    );
-    const wrapperBottom = Math.max(
-      actualFrame.top + actualFrame.height,
-      preferredFrame.top + preferredFrame.height,
-    );
-
-    return {
-      actualNegative: overlay.actualWidth < 0,
-      actualStyle: getDeveloperGlueOverlayStyle(
-        actualFrame,
-        wrapperLeft,
-        wrapperTop,
-      ),
-      delta,
-      key: `${pageIndex}-${lineIndex}-${overlay.ownerElementId ?? 'anon'}-${overlayIndex}`,
-      preferredNegative: overlay.preferredWidth < 0,
-      preferredStyle: getDeveloperGlueOverlayStyle(
-        preferredFrame,
-        wrapperLeft,
-        wrapperTop,
-      ),
-      wrapperStyle: getDeveloperGlueOverlayWrapperStyle({
-        height: wrapperBottom - wrapperTop,
-        left: wrapperLeft,
-        top: wrapperTop,
-        width: wrapperRight - wrapperLeft,
-      }),
-    };
-  });
-}
-
-function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
-  const diagnostics = line.diagnostics;
-
-  if (
-    !showDeveloperPanels.value ||
-    !overlaysEnabled.value ||
-    (!showAnonymousBoxes.value && !showElementBoxes.value) ||
-    diagnostics == null ||
-    line.elements.length === 0
-  ) {
-    return [];
-  }
-
-  const height = Math.max(4, score.value.pageSetup.lineHeight * 0.08);
-  const top = line.elements[0].y + score.value.pageSetup.lineHeight * 0.2;
-  const resolvedMargins = getResolvedMarginsForPage(page);
-
-  const overlays: BoxOverlayDiagnostics[] = [];
-
-  if (showAnonymousBoxes.value) {
-    overlays.push(...diagnostics.anonymousBoxOverlays);
-  }
-
-  if (showElementBoxes.value) {
-    overlays.push(...diagnostics.nonAnonymousBoxOverlays);
-  }
-
-  return overlays.map((overlay, overlayIndex) => ({
-    key: `${lineIndex}-${overlay.anonymous ? 'anon' : 'owned'}-${overlay.ownerElementId ?? 'none'}-${overlay.label ?? 'box'}-${overlayIndex}`,
-    kind: getDeveloperBoxOverlayKind(overlay),
-    label: overlay.label,
-    style: getDeveloperOverlayStyle(
-      getDeveloperGlueOverlayFrame(
-        resolvedMargins,
-        line,
-        overlay.left,
-        top,
-        overlay.width,
-        height,
-      ),
-    ),
-  }));
-}
-
-function getDeveloperLyricBaselines(page: Page) {
-  const resolvedMargins = getResolvedMarginsForPage(page);
-  const context = displayedLyricMetricsContext.value;
-  // Every lyric on the page sits on the same baseline, measured from the top
-  // of its line.
-  const lyricsBaseline = getLyricsBaseline(
-    overlayDiagnosticsContext.value.neumeFontHeight,
-    score.value.pageSetup.lyricsVerticalOffset,
-    context.defaultCanonicalAscent,
-  );
-
-  return page.lines.flatMap((line, lineIndex) => {
-    const note = line.elements.find(
-      (element): element is NoteElement =>
-        element.elementType === ElementType.Note,
-    );
-
-    if (note == null) {
-      return [];
-    }
-
-    return [
-      {
-        key: lineIndex,
-        style: {
-          left: withZoom(resolvedMargins.left),
-          top: withZoomOffset(
-            note.y + lyricsBaseline,
-            context.defaultAscentShift,
-          ),
-          width: withZoom(resolvedMargins.contentWidth),
-        } as StyleValue,
-      },
-    ];
-  });
+  save();
 }
 
 const overlayDiagnosticsContext = computed<OverlayDiagnosticsContext>(() =>
@@ -1452,16 +1406,40 @@ const statusPositionElementOnPage = computed(() => {
 const statusSectionNumber = computed(() => {
   const element = statusActiveElement.value;
 
-  return element?.page === statusPageNumber.value
-    ? getSectionNumberForElementIndex(element.index)
+  const footnote =
+    element == null
+      ? undefined
+      : score.value.footnotes.find((body) =>
+          body.staff.elements.includes(element),
+        );
+  const anchor =
+    footnote === undefined
+      ? element
+      : score.value.staff.elements.find((candidate) =>
+          elementFootnoteIds(candidate).includes(footnote.id),
+        );
+  return anchor?.page === statusPageNumber.value
+    ? getSectionNumberForElementIndex(anchor.index)
     : getSectionNumberForPage(statusPageNumber.value);
 });
 
 const statusSectionCount = computed(() => getSectionCount());
 
+const statusContentLines = computed(() => {
+  const page = filteredPages.value[statusPageNumber.value - 1];
+  const element = statusPositionElementOnPage.value;
+  const body =
+    element == null
+      ? undefined
+      : page?.footnotes.find((footnote) =>
+          footnote.lines.some((line) => line.elements.includes(element)),
+        );
+  return body?.lines ?? page?.lines ?? [];
+});
+
 const statusLinePosition = computed(() => {
   const page = filteredPages.value[statusPageNumber.value - 1];
-  const lineCount = Math.max(page?.lines.length ?? 0, 1);
+  const lineCount = Math.max(statusContentLines.value.length, 1);
   const lineNumber =
     statusPositionElementOnPage.value?.line ??
     getFirstLineNumberForPage(page) ??
@@ -1474,8 +1452,8 @@ const statusLinePosition = computed(() => {
 });
 
 const statusColumnPosition = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
-  const line = page?.lines[statusLinePosition.value.lineNumber - 1];
+  const line =
+    statusContentLines.value[statusLinePosition.value.lineNumber - 1];
   const lineElements = line?.elements ?? [];
   const columnCount = Math.max(lineElements.length, 1);
   const element = statusPositionElementOnPage.value;
@@ -1515,16 +1493,11 @@ const currentFilePath = computed({
   },
 });
 
-const hasUnsavedChanges = computed({
-  get: () => {
-    return selectedWorkspace.value.hasUnsavedChanges;
-  },
-  set: (hasUnsavedChanges: boolean) => {
-    selectedWorkspace.value.hasUnsavedChanges = hasUnsavedChanges;
-  },
-});
+const hasUnsavedChanges = computed(
+  () => selectedWorkspace.value.hasUnsavedChanges,
+);
 
-const pageStyle = computed(() => {
+function getPageStyle(page: Page) {
   return {
     minWidth: withZoom(score.value.pageSetup.pageWidth),
     maxWidth: withZoom(score.value.pageSetup.pageWidth),
@@ -1532,22 +1505,14 @@ const pageStyle = computed(() => {
     height: withZoom(score.value.pageSetup.pageHeight),
     minHeight: withZoom(score.value.pageSetup.pageHeight),
     maxHeight: withZoom(score.value.pageSetup.pageHeight),
+    overflow: page.footnoteOverflow ? 'visible' : undefined,
+    marginBottom: page.footnoteOverflow
+      ? withZoom(
+          page.footnoteOverflowBottom - score.value.pageSetup.pageHeight + 20,
+        )
+      : undefined,
   } as StyleValue;
-});
-
-const guideStyleTop = computed(() => {
-  return {
-    top: withZoom(score.value.pageSetup.topMargin),
-    width: withZoom(score.value.pageSetup.pageWidth),
-  } as StyleValue;
-});
-
-const guideStyleBottom = computed(() => {
-  return {
-    bottom: withZoom(score.value.pageSetup.bottomMargin),
-    width: withZoom(score.value.pageSetup.pageWidth),
-  } as StyleValue;
-});
+}
 
 const pageVisibilityIntersection = computed(() => {
   // look ahead/behind 1 page
@@ -1559,20 +1524,36 @@ const pageVisibilityIntersection = computed(() => {
   } as IntersectionObserver;
 });
 
-const dialogOpen = computed(() => {
-  return (
-    modeKeyDialogIsOpen.value ||
-    pageSetupDialogIsOpen.value ||
-    paragraphStylesDialogIsOpen.value ||
-    initialMartyriaStylesDialogIsOpen.value ||
-    documentPropertiesDialogIsOpen.value ||
-    playbackSettingsDialogIsOpen.value ||
-    syllablePositioningDialogIsOpen.value ||
-    exportDialogIsOpen.value ||
-    editorPreferencesDialogIsOpen.value ||
-    aboutDialogIsOpen.value
-  );
-});
+const activeDialog = computed(
+  () =>
+    [
+      { name: 'mode_key', open: modeKeyDialogIsOpen.value },
+      { name: 'page_setup', open: pageSetupDialogIsOpen.value },
+      { name: 'paragraph_styles', open: paragraphStylesDialogIsOpen.value },
+      {
+        name: 'initial_martyria_styles',
+        open: initialMartyriaStylesDialogIsOpen.value,
+      },
+      {
+        name: 'document_properties',
+        open: documentPropertiesDialogIsOpen.value,
+      },
+      { name: 'playback_settings', open: playbackSettingsDialogIsOpen.value },
+      {
+        name: 'syllable_positioning',
+        open: syllablePositioningDialogIsOpen.value,
+      },
+      {
+        name: 'footnote_properties',
+        open: footnotePropertiesDialogIsOpen.value,
+      },
+      { name: 'export', open: exportDialogIsOpen.value },
+      { name: 'preferences', open: editorPreferencesDialogIsOpen.value },
+      { name: 'about', open: aboutDialogIsOpen.value },
+      { name: 'mcp_setup', open: mcpSetupDialogIsOpen.value },
+    ].find((dialog) => dialog.open)?.name ?? null,
+);
+const dialogOpen = computed(() => activeDialog.value !== null);
 
 const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
@@ -1650,6 +1631,11 @@ const throttled = {
   onScroll: throttle(250, onScroll),
 };
 const saveDebounced = debounce(250, save);
+// Refine the published layout with uncommitted rich-text content, without
+// republishing the committed content first.
+const refineLayoutDebounced = debounce(250, () =>
+  liveLayout.refresh(selectedWorkspace.value),
+);
 const ZOOM_WHEEL_DELTA_THRESHOLD = 80;
 const ZOOM_WHEEL_DELTA_RESET_DELAY_MS = 200;
 let zoomWheelDelta = 0;
@@ -1697,15 +1683,28 @@ watch(
   { flush: 'post' },
 );
 
-watch(currentFilePath, () => {
-  window.document.title = windowTitle.value;
-});
+watch(
+  [selectedWorkspace, currentFilePath],
+  ([workspace, path], [previousWorkspace, previousPath]) => {
+    window.document.title = windowTitle.value;
+
+    // Tab switches already lay out the new workspace. A rename can change
+    // the measured height of headers and footers that use filename tokens.
+    if (
+      workspace === previousWorkspace &&
+      path !== previousPath &&
+      settleFootnoteReferences.value
+    ) {
+      save();
+    }
+  },
+);
 
 watch(selectedWorkspaceId, () => {
   window.document.title = windowTitle.value;
 
   if (paneVisibility.value.lyrics) {
-    refreshStaffLyrics();
+    initializeStaffLyricsPane();
   }
 });
 
@@ -1805,7 +1804,7 @@ watch(
 
 watch(isLyricsManagerOpen, (isOpen, wasOpen) => {
   if (isOpen && !wasOpen) {
-    refreshStaffLyrics();
+    initializeStaffLyricsPane();
   }
 });
 
@@ -1819,8 +1818,21 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
   }
 });
 
+function onLayoutFontsChanged() {
+  liveLayout.clearMeasurements();
+  invalidateLiveLayout();
+  saveDebounced();
+}
+onBeforeUnmount(() => {
+  saveDebounced.cancel();
+  refineLayoutDebounced.cancel();
+  document.fonts.removeEventListener('loadingdone', onLayoutFontsChanged);
+  document.fonts.removeEventListener('loadingerror', onLayoutFontsChanged);
+});
 onMounted(() => {
-  document.fonts.addEventListener('loadingdone', onModeKeyFontsLoaded);
+  document.fonts.addEventListener('loadingdone', onLayoutFontsChanged);
+  document.fonts.addEventListener('loadingerror', onLayoutFontsChanged);
+
   const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
 
   if (savedAudioOptions != null) {
@@ -1854,8 +1866,6 @@ onMounted(() => {
 
   EventBus.$on(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$on(IpcMainChannels.CloseApplication, onCloseApplication);
-  EventBus.$on(IpcRendererChannels.SetCanUndo, onSetCanUndo);
-  EventBus.$on(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$on(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$on(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -1918,6 +1928,7 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$on(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$on(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
+  EventBus.$on(IpcMainChannels.OpenMcpSetupDialog, onOpenMcpSetupDialog);
   EventBus.$on(
     IpcMainChannels.FileMenuInsertAnnotation,
     onFileMenuInsertAnnotation,
@@ -1955,11 +1966,12 @@ onMounted(() => {
   EventBus.$on(AudioServiceEventNames.EventPlay, onAudioServiceEventPlay);
 
   EventBus.$on(AudioServiceEventNames.Stop, onAudioServiceStop);
-  selectedWorkspace.value.commandService.notify();
+  observeSelectedHistory();
 });
 
 onBeforeUnmount(() => {
-  document.fonts.removeEventListener('loadingdone', onModeKeyFontsLoaded);
+  unsubscribeHistory?.();
+
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
 
@@ -1979,8 +1991,6 @@ onBeforeUnmount(() => {
 
   EventBus.$off(IpcMainChannels.CloseWorkspaces, onCloseWorkspaces);
   EventBus.$off(IpcMainChannels.CloseApplication, onCloseApplication);
-  EventBus.$off(IpcRendererChannels.SetCanUndo, onSetCanUndo);
-  EventBus.$off(IpcRendererChannels.SetCanRedo, onSetCanRedo);
 
   EventBus.$off(IpcMainChannels.FileMenuNewScore, onFileMenuNewScore);
   EventBus.$off(IpcMainChannels.FileMenuOpenScore, onFileMenuOpenScore);
@@ -2042,6 +2052,7 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuViewZoom, onFileMenuViewZoom);
   EventBus.$off(IpcMainChannels.FileMenuPreferences, onFileMenuPreferences);
   EventBus.$off(IpcMainChannels.OpenAboutDialog, onOpenAboutDialog);
+  EventBus.$off(IpcMainChannels.OpenMcpSetupDialog, onOpenMcpSetupDialog);
   EventBus.$off(
     IpcMainChannels.FileMenuInsertAnnotation,
     onFileMenuInsertAnnotation,
@@ -2088,7 +2099,7 @@ onBeforeUnmount(() => {
 async function initialize() {
   // Attach a small debugging surface without relying on the component proxy.
   (window as any)._editor = {
-    elements,
+    elements: activeElements,
     score,
     selectedElement,
     selectedWorkspace,
@@ -2118,300 +2129,143 @@ async function initialize() {
     console.error(error);
   } finally {
     isLoading.value = false;
+    editorAutomation.ready();
   }
 }
 
-void initialize();
+const { resolvedDefaultLyricsStyle, getResolvedMarginsForPage } =
+  useScoreRendering(score, zoom);
 
-function getResolvedMarginsForPage(page: Page) {
-  return resolvePageMargins(score.value.pageSetup, page.physicalPageNumber);
-}
-
-function getHeaderStyle(page: Page) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    left: withZoom(margins.left),
-    top: withZoom(score.value.pageSetup.headerMargin),
-  } as StyleValue;
-}
-
-function getFooterStyle(page: Page) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    left: withZoom(margins.left),
-    bottom: withZoom(score.value.pageSetup.footerMargin),
-  } as StyleValue;
-}
-
-function getGuideStyleLeft(page: Page) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    left: withZoom(margins.left),
-    height: withZoom(score.value.pageSetup.pageHeight),
-  } as StyleValue;
-}
-
-function getGuideStyleRight(page: Page) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    right: withZoom(margins.right),
-    height: withZoom(score.value.pageSetup.pageHeight),
-  } as StyleValue;
-}
-
-function getHeaderHorizontalRuleStyle(page: Page, headerHeight: number) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    left: withZoom(margins.left),
-    top: withZoom(
-      score.value.pageSetup.headerMargin +
-        headerHeight +
-        score.value.pageSetup.headerHorizontalRuleMarginTop,
-    ),
-    borderColor: score.value.pageSetup.headerHorizontalRuleColor,
-    borderTopWidth: withZoom(
-      score.value.pageSetup.headerHorizontalRuleThickness,
-    ),
-    width: withZoom(margins.contentWidth),
-  } as StyleValue;
-}
-
-function getFooterHorizontalRuleStyle(page: Page, footerHeight: number) {
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    left: withZoom(margins.left),
-    bottom: withZoom(
-      score.value.pageSetup.footerMargin +
-        footerHeight +
-        score.value.pageSetup.footerHorizontalRuleMarginBottom,
-    ),
-    borderColor: score.value.pageSetup.footerHorizontalRuleColor,
-    borderTopWidth: withZoom(
-      score.value.pageSetup.footerHorizontalRuleThickness,
-    ),
-    width: withZoom(margins.contentWidth),
-  } as StyleValue;
-}
-
-// Measuring the displayed font size avoids multiplying canvas metrics by a
-// fractional zoom. Chromium can round a rendered font baseline differently
-// from that scaled prediction, and any rounding already in the canonical
-// measurement is multiplied by the zoom, so the two can differ by more than
-// a pixel as the zoom grows. The shifts below are that residue: what the
-// browser actually does minus what scaling the canonical metrics would
-// predict. Only the residue is applied as a fixed offset, so the canonical
-// length keeps tracking --zoom.
-interface FontMetricShifts {
-  canonical: FontVerticalMetrics;
-  ascentShift: number;
-  heightShift: number;
-}
-
-interface LyricMetricsCaches {
-  styleShifts: Map<string, FontMetricShifts>;
-  dropCapShifts: Map<string, FontMetricShifts>;
-}
-
-function getFontMetricShifts(
-  font: string,
-  displayedFont: string,
-  zoomValue: number,
-): FontMetricShifts {
-  const canonical = TextMeasurementService.getCachedFontVerticalMetrics(font);
-  // Not cached for the session: every zoom value would add an entry. The
-  // caller's per-zoom caches already avoid repeat measurements.
-  const displayed =
-    TextMeasurementService.getFontVerticalMetrics(displayedFont);
-
-  return {
-    canonical,
-    ascentShift: displayed.ascent - canonical.ascent * zoomValue,
-    heightShift: displayed.height - canonical.height * zoomValue,
-  };
-}
-
-// The shifts depend only on the font and the zoom, so they are resolved once
-// per distinct lyrics style instead of once per note per render. The key is
-// the style's font identity, which is cheaper to build than the CSS font
-// shorthand it resolves to.
-function getParagraphStyleMetricShifts(
-  caches: LyricMetricsCaches,
-  style: ResolvedParagraphStyle,
-  zoomValue: number,
-) {
-  const key = `${style.fontFamily} | ${style.fontStyle} | ${style.fontSize}`;
-
-  let shifts = caches.styleShifts.get(key);
-
-  if (shifts == null) {
-    shifts = getFontMetricShifts(
-      resolveFontCss(style),
-      resolveFontCss({ ...style, fontSize: style.fontSize * zoomValue }),
-      zoomValue,
+const pageInteraction = computed(() => ({
+  isSelected,
+  isAudioSelected,
+  selectedLyrics: selectedLyrics.value,
+  selectedHeaderFooterElement: selectedHeaderFooterElement.value,
+  selectedAnnotationElement: selectedWorkspace.value.selectedAnnotationElement,
+  selectedAlternateLineElement:
+    selectedWorkspace.value.selectedAlternateLineElement,
+  isLyricsLocked: (element: ScoreElement) =>
+    staffForElement(element)?.lyrics.locked ?? true,
+}));
+const pageHandlers: ScorePageHandlers = {
+  selectElement: (element) => {
+    selectedElement.value = element;
+  },
+  returnToFootnoteReference: (element) => {
+    selectedElement.value = element;
+    pages.value[element.page - 1].isVisible = true;
+    nextTick(() =>
+      pageBackgroundRef.value
+        ?.querySelector(`#element-${element.id}`)
+        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
     );
+  },
+  selectLyrics: (element) => {
+    selectedLyrics.value = element;
+  },
+  selectHeaderFooter: (element) => {
+    selectedHeaderFooterElement.value = element;
+  },
+  selectHeaderRichTextBox,
+  selectFooterRichTextBox,
+  showPropertiesPaneForRichTextNeume,
+  onScoreElementContextMenu,
+  setSelectionRange,
+  openSyllablePositioningDialog,
+  openModeKeyDialog,
+  editModeKey: openRichTextModeKeyEditDialog,
+  focusLyrics: focusClickedLyric,
+  updateLyrics,
+  updateDropCapContent,
+  updateTextBox,
+  blurTextBox: resumeLayoutAfterTextBlur,
+  updateTextBoxHeight,
+  updateRichTextBox,
+  updateRichTextBoxHeight,
+  updateAnnotation,
+  removeAnnotation,
+  setSelectedAnnotation,
+  updateAlternateLine,
+  setSelectedAlternateLine,
+  resizeImage: (size) =>
+    updateImageBox(selectedElement.value as ImageBoxElement, {
+      imageWidth: size.width,
+      imageHeight: size.height,
+    }),
+};
 
-    caches.styleShifts.set(key, shifts);
-  }
+const {
+  automation: editorAutomation,
+  disposeWorkspace: disposeAutomationWorkspace,
+  workspaceTextBoxMeasurement,
+  workspacePageMeasurement,
+  completePageMeasurement,
+  failPageMeasurement,
+  completeWorkspaceTextBoxMeasurement,
+  failWorkspaceTextBoxMeasurement,
+} = useEditorDocumentAutomation({
+  enabled: !isBrowser.value,
+  workspaces: () => workspaces.value as Workspace[],
+  selectedWorkspace: () => selectedWorkspace.value,
+  createScore: createDefaultScore,
+  addWorkspace(workspace) {
+    workspace.tempFileName = getTempFilename();
+    addWorkspace(workspace);
+  },
+  removeWorkspace,
+  selectWorkspace(workspace) {
+    selectedWorkspace.value = workspace;
+  },
+  prepare: prepareWorkspaceForSerialization,
+  changed(workspace) {
+    if (workspace.id === selectedWorkspace.value.id) {
+      save();
+    } else {
+      scheduleRecoverySnapshot(workspace);
+    }
+  },
+  fonts: () => [
+    ...fontCatalog.bundledFamilies(),
+    ...fontCatalog.systemFamilies(),
+  ],
+  async saved(workspace) {
+    await discardRecoverySnapshot(workspace.id);
+  },
+  recover: persistRecoverySnapshot,
+  close: async (workspace) => {
+    removeWorkspace(workspace);
+    if (workspaces.value.length === 0) {
+      onFileMenuNewScore();
+    }
+    return await discardRecoverySnapshot(workspace.id);
+  },
+  snapshot: createScoreRenderSnapshot,
+  awaitSettledLayout,
+  busyState() {
+    if (isLoading.value) {
+      return { reason: 'loading' };
+    }
 
-  return shifts;
-}
-
-const displayedLyricMetricsContext = computed(() => {
-  // The residues below describe what the browser does at this zoom. Print and
-  // PDF render at the canonical size instead, and --zoom-residue drops them
-  // there, so this does not have to anticipate the render target.
-  const displayedZoom = zoom.value;
-  const caches: LyricMetricsCaches = {
-    styleShifts: new Map<string, FontMetricShifts>(),
-    dropCapShifts: new Map<string, FontMetricShifts>(),
-  };
-  const defaultShifts = getParagraphStyleMetricShifts(
-    caches,
-    resolvedDefaultLyricsStyle.value,
-    displayedZoom,
-  );
-
-  return {
-    // Every lyric on the page shares one displayed baseline, no matter which
-    // font it uses: the canonical baseline scaled by the zoom, plus the
-    // default lyrics font's residue.
-    defaultAscentShift: defaultShifts.ascentShift,
-    defaultCanonicalAscent: defaultShifts.canonical.ascent,
-    ...caches,
-    zoom: displayedZoom,
-  };
+    if (closingWorkspaceIds.size > 0) {
+      return {
+        reason: 'workspace_closing',
+        documentIds: [...closingWorkspaceIds],
+      };
+    }
+    if (activeDialog.value) {
+      return { reason: 'dialog_open', dialog: activeDialog.value };
+    }
+    if (recoveryDialogIsOpen.value) {
+      return { reason: 'dialog_open', dialog: 'recovery' };
+    }
+    if (printMode.value) {
+      return { reason: 'printing' };
+    }
+    return null;
+  },
 });
 
-function getDisplayedLyricGeometry(
-  element: NoteElement,
-  resolvedLyricsStyle: ResolvedParagraphStyle,
-) {
-  const context = displayedLyricMetricsContext.value;
-  const shifts = getParagraphStyleMetricShifts(
-    context,
-    resolvedLyricsStyle,
-    context.zoom,
-  );
-
-  return {
-    // A lyric in the default lyrics font cancels the two residues out, so its
-    // top is exactly the uncorrected zoomed offset. Its rendered baseline
-    // still moves, because the line height below drops the half-leading that
-    // a purely zoomed line height would have left.
-    top: withZoomOffset(
-      element.lyricsVerticalOffset,
-      context.defaultAscentShift - shifts.ascentShift,
-    ),
-    // Matching the line height to the measured font height leaves no
-    // half-leading, so the baseline sits one displayed ascent below the top.
-    lineHeight: withZoomOffset(shifts.canonical.height, shifts.heightShift),
-  };
-}
-
-function getDisplayedDropCapTop(element: DropCapElement) {
-  const context = displayedLyricMetricsContext.value;
-  // The computed font carries the canonical size, and the zoom is fixed for
-  // the whole context, so it identifies both measurements on its own.
-  const font = element.computedFont;
-
-  let shifts = context.dropCapShifts.get(font);
-
-  if (shifts == null) {
-    shifts = getFontMetricShifts(
-      font,
-      element.getComputedFont(element.computedFontSize * context.zoom),
-      context.zoom,
-    );
-
-    context.dropCapShifts.set(font, shifts);
-  }
-
-  // The drop cap sits on the lyrics baseline, so it follows the displayed
-  // lyric baseline, but the glyph moves within its own line box: its ascent
-  // pushes the baseline down, and half of its height residue is taken by the
-  // line box's half-leading.
-  return withZoomOffset(
-    element.y,
-    context.defaultAscentShift - shifts.ascentShift + shifts.heightShift / 2,
-  );
-}
-
-// The style properties the lyrics span and the leading-hyphen span share: the
-// resolved lyrics style plus the element's vertical metrics.
-function getLyricStyleBase(element: NoteElement): CSSProperties {
-  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
-  const resolvedLyricsFont = resolveFontStyle(
-    resolvedLyricsStyle.fontFamily,
-    resolvedLyricsStyle.fontStyle,
-  );
-  const displayedGeometry = getDisplayedLyricGeometry(
-    element,
-    resolvedLyricsStyle,
-  );
-
-  return {
-    top: displayedGeometry.top,
-    fontSize: withZoom(resolvedLyricsStyle.fontSize),
-    fontFamily: getFontFamilyWithFallback(
-      resolvedLyricsFont.cssFontFamily,
-      score.value.pageSetup.neumeDefaultFontFamily,
-    ),
-    fontWeight: resolvedLyricsFont.cssFontWeight,
-    fontStyle: resolvedLyricsFont.cssFontStyle,
-    fontVariantCaps: resolvedLyricsStyle.fontVariantCaps ?? undefined,
-    fontVariantNumeric: resolvedLyricsStyle.fontVariantNumeric ?? undefined,
-    fontVariantLigatures: resolvedLyricsStyle.fontVariantLigatures ?? undefined,
-    fontVariantAlternates:
-      resolvedLyricsStyle.fontVariantAlternates ?? undefined,
-    textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
-    color: resolvedLyricsStyle.color,
-    webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
-    webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
-    lineHeight: displayedGeometry.lineHeight,
-  } as CSSProperties;
-}
-
-function getLyricStyle(element: NoteElement) {
-  return {
-    ...getLyricStyleBase(element),
-    paddingLeft:
-      (!element.isFullMelisma ||
-        (element.melismaText && !element.melismaText.endsWith(TATWEEL))) &&
-      element.lyricsHorizontalOffset > 0
-        ? withZoom(element.lyricsHorizontalOffset)
-        : undefined,
-    paddingRight:
-      (!element.isFullMelisma ||
-        (element.melismaText && !element.melismaText.endsWith(TATWEEL))) &&
-      element.lyricsHorizontalOffset < 0
-        ? withZoom(-element.lyricsHorizontalOffset)
-        : undefined,
-    left: element.alignLeft
-      ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
-      : undefined,
-    textAlign: element.alignLeft ? 'left' : undefined,
-  } as CSSProperties;
-}
-
-function getLeadingLyricHyphenStyle(element: NoteElement) {
-  return {
-    ...getLyricStyleBase(element),
-    left: withZoom(element.leadingLyricHyphenOffset),
-  } as CSSProperties;
-}
-
-function getEmptyBoxStyle(element: EmptyElement) {
-  return {
-    width: withZoom(element.width),
-    height: withZoom(element.height),
-  } as StyleValue;
-}
+void initialize();
 
 function formatDeveloperBox(box: ElementOverlayBox) {
   const lines = [
@@ -2463,214 +2317,6 @@ function formatDeveloperNumber(value: number) {
   return Number.isFinite(value) ? value.toFixed(2) : String(value);
 }
 
-function getDeveloperBoxOverlayKind(overlay: BoxOverlayDiagnostics) {
-  switch (overlay.label) {
-    case 'line-start-reservation':
-      return 'line-start-reservation';
-    case 'martyria-shift':
-      return 'martyria-shift';
-    case 'lyric-collision':
-      return 'lyric-collision';
-    default:
-      return overlay.anonymous ? 'anonymous' : 'owned';
-  }
-}
-
-function getDeveloperOverlayBoxes(element: ScoreElement) {
-  if (!showDeveloperPanels.value || !overlaysEnabled.value) {
-    return [];
-  }
-
-  if (
-    !showInkBoundingBoxes.value &&
-    !showLyricBoundingBoxes.value &&
-    !showNeumeBoundingBoxes.value &&
-    !showCollisionRegions.value
-  ) {
-    return [];
-  }
-
-  const diagnostics = LayoutService.getElementOverlayDiagnostics(
-    element,
-    getNextElementOnSameLine(element),
-    score.value.pageSetup,
-    overlayDiagnosticsContext.value,
-  );
-  const boxes: Array<{
-    height: number;
-    kind: string;
-    left: number;
-    top: number;
-    width: number;
-  }> = [];
-
-  if (showNeumeBoundingBoxes.value && diagnostics.advanceBox != null) {
-    boxes.push({ ...diagnostics.advanceBox, kind: 'neume' });
-  }
-
-  if (showInkBoundingBoxes.value && diagnostics.inkBox != null) {
-    boxes.push({ ...diagnostics.inkBox, kind: 'ink' });
-  }
-
-  if (showLyricBoundingBoxes.value && diagnostics.lyricBox != null) {
-    boxes.push({ ...diagnostics.lyricBox, kind: 'lyric' });
-  }
-
-  if (showCollisionRegions.value) {
-    boxes.push(
-      ...diagnostics.collisionBoxes.map((box) => ({
-        ...box,
-        kind: 'collision',
-      })),
-    );
-  }
-
-  return boxes;
-}
-
-function getDeveloperOverlayStyle(box: {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}) {
-  return {
-    left: withZoom(box.left),
-    top: withZoom(box.top),
-    width: withZoom(box.width),
-    height: withZoom(box.height),
-  } as StyleValue;
-}
-
-function getDeveloperGlueOverlayFrame(
-  resolvedMargins: ReturnType<typeof resolvePageMargins>,
-  line: Line,
-  logicalLeft: number,
-  top: number,
-  width: number,
-  height: number,
-) {
-  const logicalRight = logicalLeft + width;
-  const normalizedLogicalLeft = Math.min(logicalLeft, logicalRight);
-  const normalizedLogicalRight = Math.max(logicalLeft, logicalRight);
-  const normalizedWidth = normalizedLogicalRight - normalizedLogicalLeft;
-  const physicalLeft = rtl.value
-    ? resolvedMargins.contentRight - line.indentation - normalizedLogicalRight
-    : resolvedMargins.contentLeft + line.indentation + normalizedLogicalLeft;
-
-  return {
-    height,
-    left: physicalLeft,
-    top,
-    width: normalizedWidth,
-  };
-}
-
-function getDeveloperGlueOverlayWrapperStyle(frame: {
-  height: number;
-  left: number;
-  top: number;
-  width: number;
-}) {
-  return {
-    left: withZoom(frame.left),
-    top: withZoom(frame.top),
-    width: withZoom(frame.width),
-    height: withZoom(frame.height),
-  } as StyleValue;
-}
-
-function getDeveloperGlueOverlayStyle(
-  frame: { height: number; left: number; top: number; width: number },
-  wrapperLeft: number,
-  wrapperTop: number,
-) {
-  return {
-    left: withZoom(frame.left - wrapperLeft),
-    top: withZoom(frame.top - wrapperTop),
-    width: withZoom(frame.width),
-    height: withZoom(frame.height),
-  } as StyleValue;
-}
-
-function getNextElementOnSameLine(element: ScoreElement) {
-  const index = elements.value.indexOf(element);
-
-  if (index < 0 || index + 1 >= elements.value.length) {
-    return null;
-  }
-
-  return elements.value[index + 1].line === element.line
-    ? elements.value[index + 1]
-    : null;
-}
-
-function getElementStyle(element: ScoreElement) {
-  return {
-    left: !rtl.value ? withZoom(element.x) : undefined,
-    right: rtl.value ? withZoom(element.x) : undefined,
-    top: isDropCapElement(element)
-      ? getDisplayedDropCapTop(element)
-      : withZoom(element.y),
-  } as StyleValue;
-}
-
-function getAdjustmentRatioStyle(line: Line, page: Page) {
-  const resolvedLyricsStyle = resolvedDefaultLyricsStyle.value;
-  const fontSize = resolvedLyricsStyle.fontSize * 0.8;
-  const gap = fontSize * 0.5;
-  const margins = getResolvedMarginsForPage(page);
-
-  return {
-    position: 'absolute',
-    left: withZoom(
-      rtl.value
-        ? margins.left - gap - fontSize * 3
-        : score.value.pageSetup.pageWidth - margins.right + gap,
-    ),
-    width: withZoom(fontSize * 3),
-    textAlign: 'right',
-    top: withZoom(
-      line.elements[0].y + score.value.pageSetup.lineHeight / 3 - fontSize / 2,
-    ),
-    fontSize: withZoom(fontSize),
-    fontFamily: resolvedLyricsStyle.fontFamily,
-    color: score.value.pageSetup.gorgonDefaultColor,
-  } as StyleValue;
-}
-
-function getMelismaStyle(element: NoteElement) {
-  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
-
-  return {
-    width: withZoom(element.melismaWidth),
-    minHeight: withZoom(resolvedLyricsStyle.fontSize),
-  } as StyleValue;
-}
-
-function getMelismaUnderscoreStyleInner(element: NoteElement) {
-  const thickness = score.value.pageSetup.lyricsMelismaThickness;
-  const resolvedLyricsStyle = getResolvedLyricsStyle(element);
-
-  const spacing = !element.isFullMelisma
-    ? score.value.pageSetup.lyricsMelismaSpacing
-    : 0;
-
-  return {
-    borderBottom: `${withZoom(thickness)} solid ${resolvedLyricsStyle.color}`,
-    // A full melisma starts at the left edge of the lyrics container.
-    left: element.isFullMelisma ? 0 : undefined,
-    marginLeft: withZoom(spacing),
-    width: withZoom(element.melismaWidth - spacing),
-  };
-}
-
-function getMelismaHyphenStyle(element: NoteElement, index: number) {
-  return {
-    left: withZoom(element.hyphenOffsets[index]),
-  } as StyleValue;
-}
-
 function getTempFilename() {
   return `Untitled-${untitledIndex++}`;
 }
@@ -2717,8 +2363,10 @@ function showReplyErrorToast(
   message: string,
   reply: { errorMessage?: string },
   fallback: string,
+  id?: string | number,
 ) {
   toast.error(message, {
+    id,
     description: reply.errorMessage ?? fallback,
   });
 }
@@ -2728,16 +2376,20 @@ function showExportReplyToast(
   successMessage: string,
   errorMessage: string,
   fallbackErrorDescription: string,
+  toastId?: string | number,
 ) {
   if (reply.success) {
     toast.success(successMessage, {
+      id: toastId,
       description: reply.filePath,
     });
     return true;
   }
 
   if (!reply.canceled) {
-    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription);
+    showReplyErrorToast(errorMessage, reply, fallbackErrorDescription, toastId);
+  } else if (toastId != null) {
+    toast.dismiss(toastId);
   }
 
   return false;
@@ -2852,25 +2504,6 @@ function getHeaderFooterBadgeStyle(
   return style;
 }
 
-function shouldShowHeaderRuleForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
-  const isChapterOpening =
-    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
-
-  return score.value.shouldShowHeaderRuleForPageIndex(
-    pageNumber,
-    isChapterOpening,
-  );
-}
-
-function shouldShowFooterRuleForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
-  const isChapterOpening =
-    runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
-
-  return score.value.shouldShowFooterRuleOnPage(pageNumber, isChapterOpening);
-}
-
 function getTokenMetadata(pageIndex: number): TokenMetadata {
   const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
   const lastPhysicalPageNumber =
@@ -2908,9 +2541,7 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function getLyricHtmlElement(index: number) {
-  const htmlElement = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${index}`,
-  )[0]?.htmlElement;
+  const htmlElement = getLyricsComponent(index)?.htmlElement;
 
   return htmlElement instanceof HTMLElement ? htmlElement : null;
 }
@@ -2920,16 +2551,19 @@ type LyricSelectionSnapshot = {
   startOffset: number;
   endOffset: number;
   wasFocused: boolean;
+  draft?: string;
 };
 
-function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
+function captureSelectedLyricSelection(
+  preserveDraft = false,
+): LyricSelectionSnapshot | null {
   const element = selectedLyrics.value;
 
   if (element == null) {
     return null;
   }
 
-  const index = elements.value.indexOf(element);
+  const index = activeElements.value.indexOf(element);
   const htmlElement = getLyricHtmlElement(index);
   const selection = window.getSelection();
 
@@ -2946,6 +2580,7 @@ function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
     return null;
   }
 
+  const wasFocused = document.activeElement === htmlElement;
   return {
     element,
     startOffset: getTextOffset(
@@ -2954,7 +2589,8 @@ function captureSelectedLyricSelection(): LyricSelectionSnapshot | null {
       range.startOffset,
     ),
     endOffset: getTextOffset(htmlElement, range.endContainer, range.endOffset),
-    wasFocused: document.activeElement === htmlElement,
+    wasFocused,
+    draft: preserveDraft && wasFocused ? htmlElement.innerText : undefined,
   };
 }
 
@@ -2973,12 +2609,29 @@ function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
     return;
   }
 
-  const index = elements.value.indexOf(lyricSelection.element);
+  const index = activeElements.value.indexOf(lyricSelection.element);
   const htmlElement = getLyricHtmlElement(index);
   const selection = window.getSelection();
 
   if (htmlElement == null || selection == null) {
     return;
+  }
+
+  if (lyricSelection.wasFocused) {
+    if (
+      !document.hasFocus() ||
+      (document.activeElement !== document.body &&
+        document.activeElement !== htmlElement)
+    ) {
+      return;
+    }
+    if (
+      lyricSelection.draft !== undefined &&
+      htmlElement.innerText !== lyricSelection.draft
+    ) {
+      htmlElement.innerText = lyricSelection.draft;
+    }
+    htmlElement.focus();
   }
 
   const textLength = htmlElement.textContent?.length ?? 0;
@@ -2988,10 +2641,6 @@ function restoreLyricSelection(lyricSelection: LyricSelectionSnapshot) {
 
   setTextRangeBoundary(htmlElement, range, clampedStartOffset, true);
   setTextRangeBoundary(htmlElement, range, clampedEndOffset, false);
-
-  if (lyricSelection.wasFocused && document.hasFocus()) {
-    htmlElement.focus();
-  }
 
   selection.removeAllRanges();
   selection.addRange(range);
@@ -3110,7 +2759,7 @@ function getPageElements(page: Page) {
 }
 
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = elements.value.filter(
+  const scoreElements = score.value.staff.elements.filter(
     (element) => element.elementType !== ElementType.Empty,
   );
 
@@ -3140,7 +2789,7 @@ function getSectionNumberForElementIndex(elementIndex: number) {
 }
 
 function getSectionCount() {
-  const scoreElements = elements.value.filter(
+  const scoreElements = score.value.staff.elements.filter(
     (element) => element.elementType !== ElementType.Empty,
   );
 
@@ -3159,29 +2808,21 @@ function getSectionCount() {
   );
 }
 
-function isSectionMarker(element: ScoreElement) {
-  if (
-    element.elementType !== ElementType.TextBox &&
-    element.elementType !== ElementType.RichTextBox
-  ) {
-    return false;
-  }
-
-  const runningMarkerElement = element as TextBoxElement | RichTextBoxElement;
-
-  if (runningMarkerElement.runningMarkerRole !== 'section') {
-    return false;
-  }
-
-  return resolveRunningMarkerText(runningMarkerElement) != null;
-}
-
 function setSelectionRange(element: ScoreElement) {
-  const elementIndex = getElementIndex(element);
+  const elementIndex = activeElements.value.indexOf(element);
+  if (elementIndex < 0) {
+    selectedElement.value = element;
+    return;
+  }
 
   if (selectedElement.value != null) {
+    const start = selectedElementIndex.value;
+    if (start < 0) {
+      selectedElement.value = element;
+      return;
+    }
     selectionRange.value = {
-      start: selectedElementIndex.value,
+      start,
       end: elementIndex,
     };
 
@@ -3192,10 +2833,10 @@ function setSelectionRange(element: ScoreElement) {
 }
 
 function onSelectAllScoreElements() {
-  const firstElementIndex = elements.value.findIndex(
+  const firstElementIndex = activeElements.value.findIndex(
     (element) => element.elementType !== ElementType.Empty,
   );
-  const lastElementIndex = elements.value.findLastIndex(
+  const lastElementIndex = activeElements.value.findLastIndex(
     (element) => element.elementType !== ElementType.Empty,
   );
 
@@ -3223,21 +2864,20 @@ function getNormalizedSelectionRange() {
   } as ScoreElementSelectionRange;
 }
 
+const selectedRangeElements = computed(() => {
+  const range = getNormalizedSelectionRange();
+  return new Set(
+    range === null
+      ? []
+      : activeElements.value.slice(range.start, range.end + 1),
+  );
+});
+
 function isSelected(element: ScoreElement) {
-  if (selectedElement.value === element) {
-    return true;
-  }
-  if (selectionRange.value != null) {
-    const start = Math.min(
-      selectionRange.value.start,
-      selectionRange.value.end,
-    );
-    const end = Math.max(selectionRange.value.start, selectionRange.value.end);
-
-    return start <= getElementIndex(element) && getElementIndex(element) <= end;
-  }
-
-  return false;
+  return (
+    selectedElement.value === element ||
+    selectedRangeElements.value.has(element)
+  );
 }
 
 function setSelectedAnnotation(
@@ -3258,10 +2898,6 @@ function setSelectedAlternateLine(
 
 function isAudioSelected(element: ScoreElement) {
   return audioElement.value === element;
-}
-
-function isMelisma(element: NoteElement) {
-  return element.melismaWidth > 0;
 }
 
 function openModeKeyDialog() {
@@ -3393,6 +3029,34 @@ function getSelectedRichTextOwner() {
   );
 }
 
+const selectedRichTextEditor = useActiveEditorForOwner(
+  getSelectedRichTextOwner,
+);
+
+watch(
+  selectedRichTextEditor,
+  (editor, _, onCleanup) => {
+    if (liveLayout.waitingForBlur) {
+      invalidateLiveLayout();
+      refineLayoutDebounced();
+    }
+    if (
+      editor == null ||
+      getSelectedRichTextOwner() !== selectedRichTextBoxElement.value
+    ) {
+      return;
+    }
+    const changed = () => {
+      // Cancel the stale settlement now; the refresh starts after typing pauses.
+      invalidateLiveLayout();
+      refineLayoutDebounced();
+    };
+    editor.model.document.on('change:data', changed);
+    onCleanup(() => editor.model.document.off('change:data', changed));
+  },
+  { flush: 'sync' },
+);
+
 function refocusSelectedRichTextEditorAfterShowingPane(
   paneId: WorkspacePaneId,
   isVisible: boolean,
@@ -3491,8 +3155,6 @@ function updateEditorPreferences(form: EditorPreferences) {
     );
     EventBus.$emit(IpcRendererChannels.SetLanguage, form.language);
   }
-
-  editorPreferencesDialogIsOpen.value = false;
 }
 
 function saveEditorPreferences() {
@@ -3581,7 +3243,9 @@ function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
 }
 
 function isLastElement(element: ScoreElement) {
-  return elements.value.indexOf(element) === elements.value.length - 1;
+  return (
+    activeElements.value.indexOf(element) === activeElements.value.length - 1
+  );
 }
 
 function insertPelastikon() {
@@ -3715,12 +3379,14 @@ function addQuantitativeNeume(
 
 function addNeumeCombination(combo: NeumeCombination) {
   const backup: ClipboardState = {
+    footnotes: clipboard.value.footnotes.slice(),
     elements: clipboard.value.elements.slice(),
     paragraphStyleIds: clipboard.value.paragraphStyleIds.slice(),
     paragraphStyles: clipboard.value.paragraphStyles.slice(),
     initialMartyriaStyles: clipboard.value.initialMartyriaStyles.slice(),
   };
   clipboard.value = {
+    footnotes: [],
     elements: combo.elements,
     paragraphStyleIds: [],
     paragraphStyles: [],
@@ -3850,10 +3516,16 @@ function addDropCap(after: boolean) {
   selectedElement.value = element;
   save();
 
-  nextTick(() => {
-    const index = elements.value.indexOf(element);
+  focusInsertedTextElement(element);
+}
 
-    getTemplateRef<any[]>(`element-${index}`)[0].focus();
+function focusInsertedTextElement(element: DropCapElement | TextBoxElement) {
+  nextTick(() => {
+    if (toRaw(selectedElement.value) === element) {
+      getElementComponentForElement<
+        InstanceType<typeof DropCap | typeof TextBox>
+      >(element)?.focus();
+    }
   });
 }
 
@@ -3870,22 +3542,109 @@ function onClickPrintScore() {
     return;
   }
 
-  if (isBrowser.value) {
-    window.print();
-  } else {
-    void onFileMenuPrint();
+  if (
+    !isBrowser.value &&
+    !settleFootnoteReferences.value &&
+    pages.value.some((page) => page.footnoteOverflow)
+  ) {
+    toast.error(t(($) => $.menu.footnotes.overflow, { ns: 'menu' }));
+    return;
   }
+  void onFileMenuPrint();
 }
 
-function onSetCanUndo(value: boolean) {
-  canUndo.value = value;
+function observeSelectedHistory() {
+  unsubscribeHistory?.();
+  unsubscribeHistory =
+    selectedWorkspace.value.commandService.subscribe(publishHistoryState);
 }
 
-function onSetCanRedo(value: boolean) {
-  canRedo.value = value;
+function publishHistoryState(state: HistoryState) {
+  const workspace = selectedWorkspace.value;
+  if (
+    workspace.activeFootnoteId !== null &&
+    !workspace.score.footnotes.some(
+      (body) => body.id === workspace.activeFootnoteId,
+    )
+  ) {
+    workspace.activeFootnoteId = null;
+    workspace.selectedElement = workspace.score.staff.elements.at(-1)!;
+    workspace.selectedLyrics = null;
+    workspace.selectedAnnotationElement = null;
+    workspace.selectedAlternateLineElement = null;
+    workspace.selectionRange = null;
+  }
+  canUndo.value = state.canUndo;
+  canRedo.value = state.canRedo;
+  EventBus.$emit(IpcRendererChannels.SetCanUndo, state.canUndo);
+  EventBus.$emit(IpcRendererChannels.SetCanRedo, state.canRedo);
+}
+
+async function openFootnoteFromContextMenu(reference: ScoreElement) {
+  // Reka releases its focus scope in a timer during menu unmount. Wait for
+  // that unmount before queuing navigation so the menu cannot reclaim focus.
+  await nextTick();
+  setTimeout(() => openFootnote(reference), 0);
+}
+
+function openFootnote(
+  reference: ScoreElement,
+  id = elementFootnoteIds(reference)[0],
+) {
+  const workspace = selectedWorkspace.value;
+  const footnote = workspace.score.footnotes.find((body) => body.id === id);
+  if (footnote === undefined) {
+    return;
+  }
+  const editor = selectedRichTextEditor.value;
+  if (editor !== null) {
+    editor.ui.getEditableElement()!.blur();
+    clearActiveEditor();
+  }
+  const page = pages.value[reference.page - 1];
+  if (page === undefined) {
+    return;
+  }
+  page.isVisible = true;
+  selectedElement.value = footnote.staff.elements.at(
+    footnote.staff.elements.length > 1 ? -2 : -1,
+  )!;
+  if (selectedElement.value instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(selectedElement.value);
+  }
+  nextTick(() =>
+    pageBackgroundRef.value
+      ?.querySelector(`#${CSS.escape(`footnote-${footnote.id}`)}`)
+      ?.scrollIntoView({ block: 'nearest' }),
+  );
+}
+
+function openFootnoteProperties(id: string) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  showFootnoteProperties(id);
+}
+
+function insertFootnote(reference: FootnoteAnchorElement) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  const plan = planFootnoteInsertion(selectedWorkspace.value, reference);
+  commandService.value.executeAsBatch(plan.commands);
+  save();
+  openFootnote(reference);
+}
+
+function removeFootnote(reference: FootnoteAnchorElement) {
+  flushPendingRichTextEditors(selectedWorkspace.value);
+  selectedElement.value = reference;
+  commandService.value.executeAsBatch(
+    planFootnoteRemoval(score.value, reference),
+  );
+  save();
 }
 
 function togglePageBreak() {
+  if (!isMainStaff.value) {
+    return;
+  }
   if (selectedElement.value && !isLastElement(selectedElement.value)) {
     commandService.value.execute(
       scoreElementCommandFactory.create('update-properties', {
@@ -3927,7 +3686,7 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
 }
 
 function switchToMartyria(element: ScoreElement) {
-  const index = elements.value.indexOf(element);
+  const index = activeElements.value.indexOf(element);
 
   const newElement = new MartyriaElement();
   newElement.copyBreakStateFrom(element);
@@ -3938,7 +3697,7 @@ function switchToMartyria(element: ScoreElement) {
 }
 
 function switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
-  const index = elements.value.indexOf(oldElement);
+  const index = activeElements.value.indexOf(oldElement);
 
   newElement.copyBreakStateFrom(oldElement);
 
@@ -3948,7 +3707,7 @@ function switchToTempo(oldElement: ScoreElement, newElement: TempoElement) {
 }
 
 function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
-  const index = elements.value.indexOf(oldElement);
+  const index = activeElements.value.indexOf(oldElement);
 
   newElement.copyBreakStateFrom(oldElement);
 
@@ -3957,53 +3716,60 @@ function switchToSyllable(oldElement: ScoreElement, newElement: NoteElement) {
   return newElement;
 }
 
-function focusLyrics(index: number, selectAll: boolean = false) {
-  getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${index}`,
-  )[0].focus(selectAll);
-}
+async function focusSelectedNoteLyrics(note: NoteElement) {
+  const workspace = selectedWorkspace.value;
+  const initialFocus = document.activeElement;
+  const isCurrent = () =>
+    workspace === selectedWorkspace.value &&
+    selectedElement.value === note &&
+    activeElements.value.includes(note) &&
+    document.activeElement === initialFocus &&
+    document.hasFocus();
 
-function setLyrics(index: number, lyrics: string) {
-  const elements = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${index}`,
-  );
+  let component = getLyricsComponentForElement(note);
+  if (component === undefined) {
+    await nextTick();
+    if (!isCurrent()) {
+      return;
+    }
 
-  if (elements?.length > 0) {
-    elements[0].setInnerText(lyrics);
+    const page = pages.value[note.page - 1];
+    if (page !== undefined && !page.isVisible) {
+      page.isVisible = true;
+      await nextTick();
+    }
+    component = getLyricsComponentForElement(note);
+  }
+
+  if (!isCurrent() || component === undefined) {
+    return;
+  }
+  const { htmlElement } = component;
+  if (!htmlElement.isContentEditable) {
+    return;
+  }
+  component.focus(true);
+  // Select the syllable again after the focus event updates the selection.
+  await nextTick();
+  if (
+    workspace === selectedWorkspace.value &&
+    selectedLyrics.value === note &&
+    document.activeElement === htmlElement
+  ) {
+    component.focus(true);
   }
 }
 
-function isSyllableElement(element: ScoreElement): element is NoteElement {
-  return element.elementType == ElementType.Note;
-}
-
-function isMartyriaElement(element: ScoreElement): element is MartyriaElement {
-  return element.elementType == ElementType.Martyria;
-}
-
-function isTempoElement(element: ScoreElement): element is TempoElement {
-  return element.elementType == ElementType.Tempo;
-}
-
-function isEmptyElement(element: ScoreElement): element is EmptyElement {
-  return element.elementType == ElementType.Empty;
-}
-
-function isTextBoxElement(element: ScoreElement): element is TextBoxElement {
-  return element.elementType == ElementType.TextBox;
-}
-
-function isRichTextBoxElement(
-  element: ScoreElement,
-): element is RichTextBoxElement {
-  return element.elementType == ElementType.RichTextBox;
+function focusClickedLyric(element: NoteElement) {
+  activateContent(element);
+  getLyricsComponentForElement(element)?.focus(false);
 }
 
 function selectHeaderRichTextBox(pageIndex: number) {
   const element = getHeaderForPageIndex(pageIndex);
 
   if (isRichTextBoxElement(element)) {
-    selectHeaderFooterRichTextBox(element, `header-${pageIndex}`);
+    selectHeaderFooterRichTextBox(element, pageIndex, 'header');
   }
 }
 
@@ -4011,17 +3777,18 @@ function selectFooterRichTextBox(pageIndex: number) {
   const element = getFooterForPageIndex(pageIndex);
 
   if (isRichTextBoxElement(element)) {
-    selectHeaderFooterRichTextBox(element, `footer-${pageIndex}`);
+    selectHeaderFooterRichTextBox(element, pageIndex, 'footer');
   }
 }
 
 function selectHeaderFooterRichTextBox(
   element: RichTextBoxElement,
-  refName: string,
+  pageIndex: number,
+  region: 'header' | 'footer',
 ) {
   const alreadySelected = selectedRichTextBoxElement.value === element;
 
-  preferredRichTextBoxFocusTarget.value = { element, refName };
+  preferredRichTextBoxFocusTarget.value = { element, pageIndex, region };
   selectedHeaderFooterElement.value = element;
 
   if (alreadySelected) {
@@ -4053,41 +3820,42 @@ function getRichTextBoxComponentRef(element: RichTextBoxElement) {
 }
 
 function getRichTextBoxComponentRefs(element: RichTextBoxElement) {
-  const components: RichTextBoxComponent[] = [];
-  const scoreElementIndex = getElementIndex(element);
+  return getTextBoxComponentRefs<RichTextBoxComponent>(element);
+}
 
-  if (elements.value[scoreElementIndex] === element) {
-    components.push(
-      ...getTemplateRef<RichTextBoxComponent[]>(`element-${scoreElementIndex}`),
-    );
+function getTextBoxComponentRefs<T>(
+  element: TextBoxElement | RichTextBoxElement,
+) {
+  const components: T[] = [];
+  const component = getElementComponentForElement<T>(element);
+  if (component != null) {
+    components.push(component);
   }
 
   for (let pageIndex = 0; pageIndex < filteredPages.value.length; pageIndex++) {
-    const page = filteredPages.value[pageIndex];
-
-    if (!page.isVisible && !printMode.value) {
+    const pageContent = getPageContent(pageIndex);
+    if (pageContent == null) {
       continue;
     }
-
     if (
       score.value.pageSetup.showHeader &&
       getHeaderForPageIndex(pageIndex) === element
     ) {
-      components.push(
-        ...getTemplateRef<RichTextBoxComponent[]>(`header-${pageIndex}`),
-      );
+      const component = pageContent.getHeaderFooterRef<T>('header');
+      if (component != null) {
+        components.push(component);
+      }
     }
-
     if (
       score.value.pageSetup.showFooter &&
       getFooterForPageIndex(pageIndex) === element
     ) {
-      components.push(
-        ...getTemplateRef<RichTextBoxComponent[]>(`footer-${pageIndex}`),
-      );
+      const component = pageContent.getHeaderFooterRef<T>('footer');
+      if (component != null) {
+        components.push(component);
+      }
     }
   }
-
   return components;
 }
 
@@ -4098,7 +3866,9 @@ function getPreferredRichTextBoxComponentRef(element: RichTextBoxElement) {
     return undefined;
   }
 
-  return getTemplateRef<RichTextBoxComponent[]>(target.refName)[0];
+  return getPageContent(
+    target.pageIndex,
+  )?.getHeaderFooterRef<RichTextBoxComponent>(target.region);
 }
 
 function clearPreferredRichTextBoxFocusTarget(element?: RichTextBoxElement) {
@@ -4114,7 +3884,7 @@ function getAnnotationComponentRef(annotation: AnnotationElement) {
 }
 
 function getAnnotationContext(annotation: AnnotationElement) {
-  for (const element of elements.value) {
+  for (const element of allElements.value) {
     if (!isSyllableElement(element)) {
       continue;
     }
@@ -4122,27 +3892,15 @@ function getAnnotationContext(annotation: AnnotationElement) {
     const annotationIndex = element.annotations.indexOf(annotation);
 
     if (annotationIndex >= 0) {
-      const component = getTemplateRef<AnnotationComponent[]>(
-        `annotation-${getElementIndex(element)}-${annotationIndex}`,
-      )[0];
+      const component = scorePageContents.value
+        ?.map((page) => page.getAnnotationRef(element, annotationIndex))
+        .find((component) => component != null);
 
       return { component, parent: element };
     }
   }
 
   return undefined;
-}
-
-function isDropCapElement(element: ScoreElement): element is DropCapElement {
-  return element.elementType == ElementType.DropCap;
-}
-
-function isModeKeyElement(element: ScoreElement): element is ModeKeyElement {
-  return element.elementType == ElementType.ModeKey;
-}
-
-function isImageBoxElement(element: ScoreElement): element is ImageBoxElement {
-  return element.elementType == ElementType.ImageBox;
 }
 
 function isTextInputFocused() {
@@ -4397,6 +4155,18 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
+  if (
+    event.code === 'Escape' &&
+    selectedWorkspace.value.activeFootnoteId !== null &&
+    selectedElement.value instanceof RichTextBoxElement &&
+    isTextInputFocused()
+  ) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    blurActiveElement();
+    event.preventDefault();
+    return;
+  }
+
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
   if (platformService.isMac && isTextInputFocused()) {
@@ -4507,6 +4277,12 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
   } else {
     switch (event.code) {
+      case 'End':
+        if (selectedWorkspace.value.activeFootnoteId !== null) {
+          selectedElement.value = activeElements.value.at(-1)!;
+          handled = true;
+        }
+        break;
       case 'ArrowLeft':
         if (!rtl.value) {
           throttled.moveLeft();
@@ -4523,24 +4299,18 @@ function onKeydownNeume(event: KeyboardEvent) {
         }
         handled = true;
         break;
-      case 'ArrowDown':
+      case 'ArrowDown': {
+        const element = selectedElement.value;
         if (
           (event.ctrlKey || event.metaKey) &&
-          selectedElement.value?.elementType === ElementType.Note
+          element != null &&
+          isSyllableElement(element)
         ) {
-          const index = selectedElementIndex.value;
-
-          focusLyrics(index, true);
-
-          // Select All doesn't work until after the lyrics have been selected,
-          // hence we call focus lyrics twice
-          nextTick(() => {
-            focusLyrics(index, true);
-          });
-
+          void focusSelectedNoteLyrics(element);
           handled = true;
         }
         break;
+      }
       case 'Space':
         if (!event.repeat) {
           if (audioService.state === AudioState.Stopped || event.ctrlKey) {
@@ -4965,10 +4735,8 @@ function onKeydownLyrics(event: KeyboardEvent) {
           // so that the melisma is registered and
           // the user doesn't accidentally type more
           // characters into box
-          const index = elements.value.indexOf(selectedLyrics.value!);
-          getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-            `lyrics-${index}`,
-          )[0].blur();
+          const index = activeElements.value.indexOf(selectedLyrics.value!);
+          getLyricsComponent(index)!.blur();
         }
       }
 
@@ -5001,10 +4769,8 @@ function onKeydownLyrics(event: KeyboardEvent) {
           // so that the melisma is registered and
           // the user doesn't accidentally type more
           // characters into box
-          const index = elements.value.indexOf(selectedLyrics.value!);
-          getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-            `lyrics-${index}`,
-          )[0].blur();
+          const index = activeElements.value.indexOf(selectedLyrics.value!);
+          getLyricsComponent(index)!.blur();
         }
       }
 
@@ -5019,13 +4785,13 @@ function onKeydownLyrics(event: KeyboardEvent) {
 }
 
 function onKeydownDropCap(event: KeyboardEvent) {
+  const index = activeElements.value.indexOf(selectedElement.value!);
+  const htmlElement = getElementComponent<InstanceType<typeof DropCap>>(index);
+  if (htmlElement === undefined) {
+    return;
+  }
+
   let handled = false;
-
-  const index = elements.value.indexOf(selectedElement.value!);
-  const htmlElement = getTemplateRef<InstanceType<typeof DropCap>[]>(
-    `element-${index}`,
-  )[0];
-
   switch (event.code) {
     case 'Enter':
       // Do not allow enter key in drop caps
@@ -5067,13 +4833,13 @@ function onKeydownDropCap(event: KeyboardEvent) {
 }
 
 function onKeydownTextBox(event: KeyboardEvent) {
+  const index = activeElements.value.indexOf(selectedElement.value!);
+  const htmlElement = getElementComponent<InstanceType<typeof TextBox>>(index);
+  if (htmlElement === undefined) {
+    return;
+  }
+
   let handled = false;
-
-  const index = elements.value.indexOf(selectedElement.value!);
-  const htmlElement = getTemplateRef<InstanceType<typeof TextBox>[]>(
-    `element-${index}`,
-  )[0];
-
   switch (event.code) {
     case 'Tab':
       throttled.moveRight();
@@ -5224,20 +4990,25 @@ function flushAndCloneForClipboard(
 
 function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   const elements = flushAndCloneForClipboard(elementsToCopy);
+  const footnotes = captureFootnotes(score.value, elementsToCopy);
+  const content = [
+    ...elementsToCopy,
+    ...footnotes.flatMap((body) => body.staff.elements),
+  ];
   const initialMartyriaStyles =
     collectClipboardInitialMartyriaStylesFromElements(
-      elementsToCopy,
+      content,
       score.value.initialMartyriaStyles,
     );
-
   return {
     elements,
+    footnotes,
     paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(
-      elementsToCopy,
+      content,
       initialMartyriaStyles,
     ),
     paragraphStyles: collectClipboardParagraphStylesFromElements(
-      elementsToCopy,
+      content,
       initialMartyriaStyles,
       score.value.paragraphStyles,
     ),
@@ -5254,14 +5025,15 @@ const canPasteSelected = computed(
 );
 
 const canSelectAllElements = computed(() =>
-  elements.value.some((element) => element.elementType !== ElementType.Empty),
+  activeElements.value.some(
+    (element) => element.elementType !== ElementType.Empty,
+  ),
 );
 
 function getSelectedNonEmptyElements() {
   if (selectionRange.value != null) {
-    return elements.value.filter(
-      (element) =>
-        element.elementType !== ElementType.Empty && isSelected(element),
+    return [...selectedRangeElements.value].filter(
+      (element) => element.elementType !== ElementType.Empty,
     );
   }
 
@@ -5286,19 +5058,12 @@ function onCutScoreElements() {
 
     clipboard.value = createClipboardState(elementsToCut);
 
-    commandService.value.executeAsBatch(
-      elementsToCut.map((element) =>
-        scoreElementCommandFactory.create('remove-from-collection', {
-          element,
-          collection: elements.value,
-        }),
-      ),
-    );
+    commandService.value.executeAsBatch(removalCommands(elementsToCut));
 
     refreshStaffLyrics();
 
     selectedElement.value =
-      elements.value[Math.min(start, elements.value.length - 1)];
+      activeElements.value[Math.min(start, activeElements.value.length - 1)];
 
     save();
   } else if (
@@ -5312,7 +5077,9 @@ function onCutScoreElements() {
     removeScoreElement(selectedElement.value);
 
     selectedElement.value =
-      elements.value[Math.min(currentIndex, elements.value.length - 1)];
+      activeElements.value[
+        Math.min(currentIndex, activeElements.value.length - 1)
+      ];
 
     save();
   }
@@ -5357,7 +5124,7 @@ function cloneClipboardForPaste(
   initialMartyriaStyles: InitialMartyriaStyle[],
   initialMartyriaStyleIdRemap: Map<string, string>,
 ) {
-  return clipboard.value.elements.map((element) =>
+  const elements = clipboard.value.elements.map((element) =>
     cloneScoreElementForPaste(
       element,
       includeLyrics,
@@ -5366,14 +5133,31 @@ function cloneClipboardForPaste(
       initialMartyriaStyleIdRemap,
     ),
   );
+  const footnotes = prepareFootnotePaste(elements, clipboard.value.footnotes);
+  for (const footnote of footnotes) {
+    footnote.staff.elements.forEach((element) => {
+      rewriteClipboardElementInitialMartyriaStyleId(
+        element,
+        initialMartyriaStyles,
+        initialMartyriaStyleIdRemap,
+      );
+      rewriteClipboardElementParagraphStyleIds(
+        element,
+        score.value.paragraphStyles,
+        paragraphStyleIdRemap,
+      );
+    });
+  }
+  return { elements, footnotes };
 }
 
 function collectClipboardParagraphStylesForPaste(includeLyrics: boolean) {
-  return collectClipboardParagraphStylesFromPasteElements(
+  return collectClipboardParagraphStylesForPassageAndFootnotes(
     clipboard.value.elements,
-    clipboard.value.initialMartyriaStyles,
+    clipboard.value.footnotes.flatMap((body) => body.staff.elements),
     includeLyrics,
     clipboard.value.paragraphStyles,
+    clipboard.value.initialMartyriaStyles,
   );
 }
 
@@ -5440,7 +5224,23 @@ function createImportedStylesCommand(
   });
 }
 
+function footnotePasteCommands(footnotes: Footnote[]): Command[] {
+  if (footnotes.length === 0) {
+    return [];
+  }
+  return [
+    new CommandFactory<Footnote>().create('add-to-collection', {
+      collection: score.value.footnotes,
+      elements: footnotes,
+    }),
+  ];
+}
+
 function onPasteScoreElements(includeLyrics: boolean) {
+  if (!isMainStaff.value && clipboard.value.footnotes.length > 0) {
+    toast.error(t(($) => $.menu.footnotes.nested, { ns: 'menu' }));
+    return;
+  }
   if (clipboard.value.elements.length > 0 && selectedElement.value != null) {
     switch (entryMode.value) {
       case EntryMode.Insert:
@@ -5468,9 +5268,9 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
   const {
     importedParagraphStyles,
     importedInitialMartyriaStyles,
-    pastedElements: newElements,
+    pastedElements: { elements: newElements, footnotes },
   } = resolveClipboardStylesForPaste(includeLyrics);
-  const commands: Command[] = [];
+  const commands: Command[] = footnotePasteCommands(footnotes);
   const importedStylesCommand = createImportedStylesCommand(
     importedParagraphStyles,
     importedInitialMartyriaStyles,
@@ -5483,7 +5283,7 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
   commands.push(
     scoreElementCommandFactory.create('add-to-collection', {
       elements: newElements,
-      collection: elements.value,
+      collection: activeElements.value,
       insertAtIndex,
     }),
   );
@@ -5507,12 +5307,13 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   const {
     importedParagraphStyles,
     importedInitialMartyriaStyles,
-    pastedElements,
+    pastedElements: { elements: pastedElements, footnotes },
   } = resolveClipboardStylesForPaste(includeLyrics);
   const importedStylesCommand = createImportedStylesCommand(
     importedParagraphStyles,
     importedInitialMartyriaStyles,
   );
+  commands.push(...footnotePasteCommands(footnotes));
 
   if (importedStylesCommand != null) {
     commands.push(importedStylesCommand);
@@ -5521,13 +5322,22 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   let currentIndex = selectedElementIndex.value;
 
   for (const clipboardElement of pastedElements) {
-    const currentElement = elements.value[currentIndex];
+    const currentElement = activeElements.value[currentIndex];
+    if (
+      currentElement instanceof FootnoteAnchorElement &&
+      clipboardElement instanceof FootnoteAnchorElement &&
+      clipboardElement.footnoteId === null
+    ) {
+      transferFootnoteReference(currentElement, clipboardElement);
+    } else if (currentElement !== undefined) {
+      commands.push(...footnoteRemovalCommands(score.value, [currentElement]));
+    }
 
-    if (currentIndex >= elements.value.length - 1) {
+    if (currentIndex >= activeElements.value.length - 1) {
       commands.push(
         scoreElementCommandFactory.create('add-to-collection', {
           elements: [clipboardElement],
-          collection: elements.value,
+          collection: activeElements.value,
           insertAtIndex: currentIndex,
         }),
       );
@@ -5640,12 +5450,34 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
               );
             }
             break;
+          case ElementType.RichTextBox:
+            if (
+              !shallowEquals(
+                (currentElement as RichTextBoxElement).getClipboardProperties(),
+                (
+                  clipboardElement as RichTextBoxElement
+                ).getClipboardProperties(),
+              )
+            ) {
+              commands.push(
+                new CommandFactory<RichTextBoxElement>().create(
+                  'update-properties',
+                  {
+                    target: currentElement as RichTextBoxElement,
+                    newValues: (
+                      clipboardElement as RichTextBoxElement
+                    ).getClipboardProperties(),
+                  },
+                ),
+              );
+            }
+            break;
         }
       } else {
         commands.push(
           scoreElementCommandFactory.create('replace-element-in-collection', {
             element: clipboardElement,
-            collection: elements.value,
+            collection: activeElements.value,
             replaceAtIndex: currentIndex,
           }),
         );
@@ -5677,58 +5509,53 @@ function onPasteScoreElementsAuto(includeLyrics: boolean) {
 
   // Set the selected element to the last element that was pasted
   selectedElement.value =
-    elements.value[currentIndex + clipboard.value.elements.length - 1];
+    activeElements.value[currentIndex + clipboard.value.elements.length - 1];
 }
 
 function getLyricLength(element: NoteElement) {
-  return getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-    `lyrics-${elements.value.indexOf(element)}`,
-  )[0].getInnerText().length;
+  return getLyricsComponent(
+    activeElements.value.indexOf(element),
+  )!.getInnerText().length;
 }
 
 function getNextScoreElement(element: ScoreElement) {
-  return elements.value[element.index + 1] ?? null;
+  return activeElements.value[element.index + 1] ?? null;
 }
 
-function hasActiveKeepWithNext(element: ScoreElement) {
-  return isKeepWithNextActive(element, getNextScoreElement(element));
+function isNavigableElement(element: ScoreElement) {
+  return (
+    navigableElements.includes(element.elementType) ||
+    (selectedWorkspace.value.activeFootnoteId !== null &&
+      element.elementType === ElementType.RichTextBox)
+  );
 }
 
 function moveLeft() {
   let index = -1;
 
   if (selectedElement.value) {
-    index = elements.value.indexOf(selectedElement.value);
+    index = activeElements.value.indexOf(selectedElement.value);
   } else if (selectionRange.value) {
     index = selectionRange.value.end;
   }
 
-  if (
-    index - 1 >= 0 &&
-    navigableElements.includes(elements.value[index - 1].elementType)
-  ) {
+  if (index - 1 >= 0 && isNavigableElement(activeElements.value[index - 1])) {
     // If the currently selected element is a drop cap or text box, blur it first
     if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
     } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
     }
 
-    selectedElement.value = elements.value[index - 1];
+    selectedElement.value = activeElements.value[index - 1];
 
     // If the newly selected element is a drop cap or text box, focus it
     if (selectedElement.value.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index - 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof DropCap>>(index - 1)!.focus();
     } else if (selectedElement.value.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index - 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof TextBox>>(index - 1)!.focus();
+    } else if (selectedElement.value instanceof RichTextBoxElement) {
+      focusSelectedRichTextBoxEditor(selectedElement.value);
     }
 
     return true;
@@ -5741,38 +5568,32 @@ function moveRight() {
   let index = -1;
 
   if (selectedElement.value) {
-    index = elements.value.indexOf(selectedElement.value);
+    index = activeElements.value.indexOf(selectedElement.value);
   } else if (selectionRange.value) {
     index = selectionRange.value.end;
   }
 
   if (
     index >= 0 &&
-    index + 1 < elements.value.length &&
-    navigableElements.includes(elements.value[index + 1].elementType)
+    index + 1 < activeElements.value.length &&
+    isNavigableElement(activeElements.value[index + 1])
   ) {
     // If the currently selected element is a drop cap, blur it first
     if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
     } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index}`,
-      )[0].blur();
+      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
     }
 
-    selectedElement.value = elements.value[index + 1];
+    selectedElement.value = activeElements.value[index + 1];
 
     // If the newly selected element is a drop cap, focus it
     if (selectedElement.value.elementType === ElementType.DropCap) {
-      getTemplateRef<InstanceType<typeof DropCap>[]>(
-        `element-${index + 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof DropCap>>(index + 1)!.focus();
     } else if (selectedElement.value.elementType === ElementType.TextBox) {
-      getTemplateRef<InstanceType<typeof TextBox>[]>(
-        `element-${index + 1}`,
-      )[0].focus();
+      getElementComponent<InstanceType<typeof TextBox>>(index + 1)!.focus();
+    } else if (selectedElement.value instanceof RichTextBoxElement) {
+      focusSelectedRichTextBoxEditor(selectedElement.value);
     }
 
     return true;
@@ -5786,50 +5607,50 @@ function moveSelectionLeft() {
     if (
       selectionRange.value.end > 0 &&
       navigableElements.includes(
-        elements.value[selectionRange.value.end - 1].elementType,
+        activeElements.value[selectionRange.value.end - 1].elementType,
       )
     ) {
-      setSelectionRange(elements.value[selectionRange.value.end - 1]);
+      setSelectionRange(activeElements.value[selectionRange.value.end - 1]);
     }
   } else if (
     selectedElement.value != null &&
     selectedElementIndex.value > 0 &&
     navigableElements.includes(
-      elements.value[selectedElementIndex.value - 1].elementType,
+      activeElements.value[selectedElementIndex.value - 1].elementType,
     )
   ) {
-    setSelectionRange(elements.value[selectedElementIndex.value - 1]);
+    setSelectionRange(activeElements.value[selectedElementIndex.value - 1]);
   }
 }
 
 function moveSelectionRight() {
   if (selectionRange.value != null) {
     if (
-      selectionRange.value.end + 1 < elements.value.length - 1 &&
+      selectionRange.value.end + 1 < activeElements.value.length - 1 &&
       navigableElements.includes(
-        elements.value[selectionRange.value.end + 1].elementType,
+        activeElements.value[selectionRange.value.end + 1].elementType,
       )
     ) {
-      setSelectionRange(elements.value[selectionRange.value.end + 1]);
+      setSelectionRange(activeElements.value[selectionRange.value.end + 1]);
     }
   } else if (
     selectedElement.value != null &&
-    selectedElementIndex.value + 1 < elements.value.length - 1 &&
+    selectedElementIndex.value + 1 < activeElements.value.length - 1 &&
     navigableElements.includes(
-      elements.value[selectedElementIndex.value + 1].elementType,
+      activeElements.value[selectedElementIndex.value + 1].elementType,
     )
   ) {
-    setSelectionRange(elements.value[selectedElementIndex.value + 1]);
+    setSelectionRange(activeElements.value[selectedElementIndex.value + 1]);
   }
 }
 
 function getNextLyricBoxIndex() {
   if (selectedLyrics.value) {
-    const currentIndex = elements.value.indexOf(selectedLyrics.value);
+    const currentIndex = activeElements.value.indexOf(selectedLyrics.value);
 
     // Find the index of the next note
-    for (let i = currentIndex + 1; i < elements.value.length; i++) {
-      if (elements.value[i].elementType === ElementType.Note) {
+    for (let i = currentIndex + 1; i < activeElements.value.length; i++) {
+      if (activeElements.value[i].elementType === ElementType.Note) {
         return i;
       }
     }
@@ -5839,54 +5660,80 @@ function getNextLyricBoxIndex() {
 }
 
 function moveToNextLyricBox(clearMelisma: boolean = false) {
+  const current = selectedLyrics.value;
   const nextIndex = getNextLyricBoxIndex();
+  if (current === null || nextIndex < 0) {
+    return false;
+  }
+  return moveToLyricBox(current, activeElements.value[nextIndex], clearMelisma);
+}
 
-  if (nextIndex >= 0) {
-    // If the lyrics for the last neume on the line have been updated to be so long
-    // that the neume is moved to the next line by processPages(), then focusLyrics()
-    // will fail if called on its own. This is because the order of events would
-    // be the following:
-    // focus next element => blur previous element => updateLyrics => processPages
-    // and finally the newly selected element would lose focus because processPages
-    // moves the element to the next line.
-
-    // To prevent this we, preemptively call updateLyrics and then use nextTick
-    // to only focus the next lyrics after the UI has been redrawn.
-
-    const noteElement = selectedLyrics.value!;
-
-    const text = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-      `lyrics-${elements.value.indexOf(noteElement)}`,
-    )[0].getInnerText();
-
-    updateLyrics(noteElement, text, clearMelisma);
-
-    nextTick(() => {
-      focusLyrics(nextIndex, true);
-    });
-
-    return true;
+function moveToLyricBox(
+  current: NoteElement,
+  destination: ScoreElement,
+  clearMelisma = false,
+) {
+  const currentBox = getLyricsComponentForElement(current);
+  if (currentBox === undefined) {
+    return false;
   }
 
-  return false;
+  // Commit before moving focus. Repagination can remount the destination.
+  const workspace = selectedWorkspace.value;
+  const source = currentBox.htmlElement;
+  const initialFocus = document.activeElement;
+  updateLyrics(current, currentBox.getInnerText(), clearMelisma);
+
+  const isCurrent = () =>
+    workspace === selectedWorkspace.value &&
+    selectedLyrics.value === current &&
+    activeElements.value.includes(destination);
+  const canMoveFocus = () =>
+    isCurrent() &&
+    document.hasFocus() &&
+    (document.activeElement === initialFocus ||
+      (document.activeElement === document.body && !source.isConnected));
+  const focusDestination = () => {
+    const component = getLyricsComponentForElement(destination);
+    component?.focus(true);
+    return component !== undefined;
+  };
+  const revealDestinationPage = async () => {
+    const page = pages.value[destination.page - 1];
+    if (page !== undefined && !page.isVisible) {
+      page.isVisible = true;
+      await nextTick();
+    }
+  };
+  nextTick(async () => {
+    if (!canMoveFocus() || focusDestination()) {
+      return;
+    }
+    await revealDestinationPage();
+    if (canMoveFocus()) {
+      focusDestination();
+    }
+  });
+
+  return true;
 }
 
 function moveToPreviousLyricBox() {
-  if (selectedLyrics.value) {
-    const currentIndex = elements.value.indexOf(selectedLyrics.value);
-    let nextIndex = -1;
+  const current = selectedLyrics.value;
+  if (current === null) {
+    return false;
+  }
 
-    // Find the index of the previous note
-    for (let i = currentIndex - 1; i >= 0; i--) {
-      if (elements.value[i].elementType === ElementType.Note) {
-        nextIndex = i;
-        break;
+  const currentIndex = activeElements.value.indexOf(current);
+  for (let i = currentIndex - 1; i >= 0; i--) {
+    const destination = activeElements.value[i];
+    if (destination.elementType === ElementType.Note) {
+      const component = getLyricsComponentForElement(destination);
+      if (component !== undefined) {
+        component.focus(true);
+        return true;
       }
-    }
-
-    if (nextIndex >= 0) {
-      focusLyrics(nextIndex, true);
-      return true;
+      return moveToLyricBox(current, destination);
     }
   }
 
@@ -5926,39 +5773,149 @@ function calculatePageNumber() {
   }
 }
 
-function onModeKeyFontsLoaded() {
-  // System-face aliases can finish loading after a typography change. Let
-  // the metrics service invalidate its profiles before recomputing layout.
-  queueMicrotask(() => {
-    if (
-      !isLoading.value &&
-      elements.value.some(
-        (element) => element.elementType === ElementType.ModeKey,
-      )
-    ) {
-      save(false);
-    }
-  });
+function layoutOptions() {
+  return { collectDiagnostics: shouldCollectLayoutDiagnostics.value };
 }
 
-function save(markUnsavedChanges: boolean = true) {
-  if (markUnsavedChanges) {
-    hasUnsavedChanges.value = true;
+async function runLiveSettlement(
+  workspace: Workspace,
+  { isCurrent, measure }: LiveLayoutTrial,
+): Promise<LiveLayoutOutcome> {
+  const source = toRaw(workspace);
+  const { score } = source;
+  const owner = selectedRichTextBoxElement.value;
+  // Include in-progress typing without committing it into score history.
+  const liveContent = owner == null ? {} : getPendingRichTextBoxUpdates(owner);
+  if (
+    owner !== null &&
+    isActiveEditorForOwner(owner) &&
+    hasPendingFootnotePaste(owner, liveContent)
+  ) {
+    return 'deferred';
+  }
+  const rawOwner = owner == null ? null : toRaw(owner);
+  const contentKeys = RICH_TEXT_BOX_CONTENT_KEYS.filter(
+    (key) => liveContent[key] !== undefined,
+  );
+  const options = layoutOptions();
+  const result = await measure(options, (copies) => {
+    const trialOwner = rawOwner == null ? undefined : copies.get(rawOwner);
+    if (trialOwner instanceof RichTextBoxElement) {
+      for (const key of contentKeys) {
+        trialOwner[key] = liveContent[key] ?? trialOwner[key];
+      }
+    }
+  });
+  if (!isCurrent()) {
+    return 'superseded';
   }
 
-  const lyricSelection = captureSelectedLyricSelection();
+  // Keep focused plain-text editors mounted until blur commits their drafts.
+  const focused = document.activeElement;
+  if (
+    focused?.matches('.drop-cap, .text-box') &&
+    pageBackgroundRef.value?.contains(focused)
+  ) {
+    return 'deferred';
+  }
 
-  // Save the indexes of the visible pages
+  const activeBox = selectedRichTextBoxElement.value;
+  if (
+    !printMode.value &&
+    activeBox != null &&
+    isActiveEditorForOwner(activeBox)
+  ) {
+    const activeRaw = toRaw(activeBox);
+    const trialBox = result.copies.get(activeRaw);
+    // The live component is keyed under its page and line. Defer moves
+    // until blur so publishing cannot destroy the active CKEditor.
+    const pageIndex = activeRaw.page - 1;
+    const lineIndex =
+      pages.value[pageIndex]?.allLines.findIndex((line) =>
+        line.elements.some((element) => toRaw(element) === activeRaw),
+      ) ?? -1;
+    if (
+      score.headersAndFooters.includes(activeRaw) ||
+      (lineIndex >= 0 &&
+        (trialBox === undefined ||
+          !result.pages[pageIndex]?.allLines[lineIndex]?.elements.includes(
+            trialBox,
+          )))
+    ) {
+      return 'deferred';
+    }
+  }
+
+  const lyricSelection = captureSelectedLyricSelection(true);
+  const resized = result.applyHeights();
+  // Replay only the settled pass on the original elements. Preserve their
+  // identities and compare update flags with the last published geometry.
+  const trialOwner = rawOwner == null ? undefined : result.copies.get(rawOwner);
+  const previousContent =
+    rawOwner == null ? [] : contentKeys.map((key) => rawOwner[key]);
+  let processedPages: Page[];
+  try {
+    if (rawOwner !== null && trialOwner instanceof RichTextBoxElement) {
+      for (const key of contentKeys) {
+        rawOwner[key] = trialOwner[key];
+      }
+    }
+    processedPages = LayoutService.processPages(source, {
+      ...options,
+      breaksBefore: result.breaksBefore,
+    });
+  } finally {
+    if (rawOwner !== null) {
+      contentKeys.forEach((key, index) => {
+        rawOwner[key] = previousContent[index];
+      });
+    }
+  }
+  for (const box of resized) {
+    box.updated = true;
+  }
+  publishLayout(processedPages, activeBox, lyricSelection);
+  return 'settled';
+}
+
+function save() {
+  // Settling scores used to publish only through settlement, which keeps an
+  // uncommitted lyric draft across a remount. Keep that for them; other scores
+  // keep their previous synchronous behavior, which never restored drafts.
+  publishAndSettleLayout(settleFootnoteReferences.value);
+}
+
+// After a lyric commit, the focused box no longer holds a draft. Its committed
+// text can differ from the typed text (e.g. locked lyrics reassign syllables),
+// so restoring the typed text would overwrite the model.
+function saveCommittedLyrics() {
+  publishAndSettleLayout(false);
+}
+
+function publishAndSettleLayout(preserveLyricDraft: boolean) {
+  refineLayoutDebounced.cancel({ upcomingOnly: true });
+  // Always publish a layout immediately. Settlement only refines it.
+  const workspace = toRaw(selectedWorkspace.value);
+  const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
+  publishLayout(
+    LayoutService.processPages(workspace, layoutOptions()),
+    null,
+    lyricSelection,
+  );
+  liveLayout.refresh(workspace);
+
+  persistLayoutRecovery();
+}
+
+function publishLayout(
+  processedPages: Page[],
+  activeBox: RichTextBoxElement | null,
+  lyricSelection: ReturnType<typeof captureSelectedLyricSelection>,
+) {
   const visiblePages = pages.value
     .map((_, i) => i)
     .filter((i) => pages.value[i].isVisible);
-
-  const processedPages = LayoutService.processPages(
-    toRaw(selectedWorkspace.value),
-    shouldCollectLayoutDiagnostics.value
-      ? { collectDiagnostics: true }
-      : undefined,
-  );
+  const activeRaw = activeBox === null ? null : toRaw(activeBox);
 
   if (
     inspectorContext.value.kind === 'martyria' &&
@@ -5971,14 +5928,20 @@ function save(markUnsavedChanges: boolean = true) {
   processedPages.forEach(
     (x, index) => (x.isVisible = visiblePages.includes(index)),
   );
+  if (lyricSelection?.draft !== undefined) {
+    const lyricPage = processedPages[lyricSelection.element.page - 1];
+    if (lyricPage !== undefined) {
+      lyricPage.isVisible = true;
+    }
+  }
 
   // Only re-render elements that are visible and that have been updated by processPages
   processedPages
     .filter((x) => x.isVisible)
     .forEach((page) => {
-      page.lines.forEach((line) =>
+      page.allLines.forEach((line) =>
         line.elements
-          .filter((x) => x.updated)
+          .filter((x) => x.updated && x !== activeRaw)
           .forEach((element) => {
             element.keyHelper++;
           }),
@@ -5987,7 +5950,7 @@ function save(markUnsavedChanges: boolean = true) {
 
   // Re-render headers and footers if they changed
   score.value.headersAndFooters
-    .filter((x) => x.updated)
+    .filter((x) => x.updated && toRaw(x) !== activeRaw)
     .forEach((element) => {
       element.keyHelper++;
     });
@@ -5999,7 +5962,9 @@ function save(markUnsavedChanges: boolean = true) {
       restoreLyricSelection(lyricSelection);
     });
   }
+}
 
+function persistLayoutRecovery() {
   // Persist a background recovery snapshot. This deliberately serializes
   // WITHOUT flushing the live rich-text editors: `save()` runs frequently --
   // often via the 250 ms-debounced `saveDebounced` (e.g. on every height change
@@ -6041,12 +6006,16 @@ async function load() {
           );
           const workspace = new Workspace();
           workspace.id = localStorageWorkspace.id;
-          workspace.hasUnsavedChanges = localStorageWorkspace.hasUnsavedChanges;
+          const { score, repairedFootnoteReferences } =
+            SaveService.LoadScoreFromJsonWithRepairs(
+              JSON.parse(localStorageWorkspace.score),
+            );
+          workspace.hasUnsavedChanges =
+            localStorageWorkspace.hasUnsavedChanges ||
+            repairedFootnoteReferences;
           workspace.filePath = localStorageWorkspace.filePath;
           workspace.tempFileName = localStorageWorkspace.tempFileName;
-          workspace.score = SaveService.LoadScoreFromJson(
-            JSON.parse(localStorageWorkspace.score),
-          );
+          workspace.score = score;
 
           addWorkspace(workspace);
         } catch (error) {
@@ -6069,7 +6038,9 @@ async function load() {
 
   if (openWorkspaceResults.silentPdf) {
     for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
+      if (!openScore(file)) {
+        continue;
+      }
       await onFileMenuExportAsPdf();
       removeWorkspace(selectedWorkspace.value);
     }
@@ -6077,7 +6048,9 @@ async function load() {
 
   if (openWorkspaceResults.silentHtml) {
     for (const file of openWorkspaceResults.files.filter((x) => x.success)) {
-      openScore(file);
+      if (!openScore(file)) {
+        continue;
+      }
       await onFileMenuExportAsHtml();
       removeWorkspace(selectedWorkspace.value);
     }
@@ -6090,21 +6063,26 @@ async function load() {
         openWorkspaceResults.silentLatexIncludeModeKeys ?? false;
       options.includeTextBoxes =
         openWorkspaceResults.silentLatexIncludeTextBoxes ?? false;
-      openScore(file);
+      if (!openScore(file)) {
+        continue;
+      }
       await nextTick();
+      const workspace = selectedWorkspace.value;
       await ipcService.exportWorkspaceAsLatex(
-        selectedWorkspace.value,
-        JSON.stringify(
-          latexExporter.export(
-            pages.value,
-            score.value.pageSetup,
-            score.value.paragraphStyles,
-            score.value.initialMartyriaStyles,
-            options,
-          ),
-          null,
-          2,
-        ),
+        workspace,
+        workspace.score.footnotes.length > 0
+          ? null
+          : JSON.stringify(
+              latexExporter.export(
+                pages.value,
+                workspace.score.pageSetup,
+                workspace.score.paragraphStyles,
+                workspace.score.initialMartyriaStyles,
+                options,
+              ),
+              null,
+              2,
+            ),
       );
       removeWorkspace(selectedWorkspace.value);
     }
@@ -6138,7 +6116,7 @@ async function load() {
         if (
           workspace != null &&
           candidate.sourceMatches &&
-          !candidate.hasUnsavedChanges
+          !workspace.hasUnsavedChanges
         ) {
           workspace.isRecovered = false;
           await discardRecoverySnapshot(workspace.id);
@@ -6150,9 +6128,16 @@ async function load() {
     recoveryDialogIsOpen.value = pendingRecoveryCandidates.length > 0;
   }
 
-  if (workspaces.value.length > 0) {
-    selectedWorkspace.value = workspaces.value[0] as Workspace;
-    return;
+  // Select the first restored workspace that lays out. One that cannot is
+  // dropped, like any other workspace that fails to open. Detaching never
+  // selects a replacement: the next pass, or the new score below, does.
+  for (const workspace of [...workspaces.value] as Workspace[]) {
+    try {
+      selectWorkspaceOrRestore(workspace, () => detachWorkspace(workspace));
+      return;
+    } catch (error) {
+      showOpenFailedToast(error);
+    }
   }
 
   const workspace = new Workspace();
@@ -6179,8 +6164,10 @@ function prepareWorkspaceForSerialization(workspace: Workspace) {
   flushPendingRichTextEditors(workspace);
   flushLyricsAssignment(workspace);
 
-  if (!workspace.score.staff.lyrics.locked) {
-    extractStaffLyrics(workspace);
+  for (const staff of workspace.score.staves) {
+    if (!staff.lyrics.locked) {
+      extractStaffLyrics(workspace, staff);
+    }
   }
 }
 
@@ -6198,7 +6185,11 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
 }
 
 function scheduleRecoverySnapshot(workspace: Workspace) {
-  if (isBrowser.value || workspace == null) {
+  if (
+    isBrowser.value ||
+    workspace == null ||
+    editorAutomation.ownsPrivateWorkspace(workspace)
+  ) {
     return;
   }
 
@@ -6223,6 +6214,9 @@ function clearRecoverySnapshotTimer(workspaceId: string) {
 }
 
 async function persistRecoverySnapshot(workspace: Workspace) {
+  if (editorAutomation.ownsPrivateWorkspace(workspace)) {
+    return;
+  }
   if (isBrowser.value) {
     return;
   }
@@ -6243,7 +6237,7 @@ async function persistRecoverySnapshot(workspace: Workspace) {
 
 async function discardRecoverySnapshot(workspaceId: string) {
   if (isBrowser.value) {
-    return;
+    return true;
   }
 
   clearRecoverySnapshotTimer(workspaceId);
@@ -6255,35 +6249,51 @@ async function discardRecoverySnapshot(workspaceId: string) {
       result.errorMessage ?? 'Unable to discard recovery snapshot.',
     );
   }
+  return result.success;
 }
 
-async function saveWorkspace(workspace: Workspace) {
-  prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspace(workspace);
-
-  if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
-  }
-
-  return result;
+function saveWorkspace(workspace: Workspace) {
+  return saveWorkspaceWithRevision(workspace, () =>
+    ipcService.saveWorkspace(workspace),
+  );
 }
 
-async function saveWorkspaceAs(workspace: Workspace) {
-  prepareWorkspaceForSerialization(workspace);
-  const result = await ipcService.saveWorkspaceAs(workspace);
-
-  if (result.success) {
-    workspace.sourceMtimeMs = result.sourceMtimeMs ?? null;
-    workspace.sourceSize = result.sourceSize ?? null;
-  }
-
-  return result;
+function saveWorkspaceAs(workspace: Workspace) {
+  return saveWorkspaceWithRevision(workspace, () =>
+    ipcService.saveWorkspaceAs(workspace),
+  );
 }
 
+function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
+  workspace: Workspace,
+  persist: () => Promise<T>,
+) {
+  return saveDocument(workspace, persist, {
+    prepare: prepareWorkspaceForSerialization,
+    saved: async (workspace) => {
+      await discardRecoverySnapshot(workspace.id);
+    },
+    recover: persistRecoverySnapshot,
+  });
+}
+
+const closingWorkspaceIds = new Set<string>();
 async function closeWorkspace(workspace: Workspace) {
+  if (closingWorkspaceIds.has(workspace.id)) {
+    return false;
+  }
+  closingWorkspaceIds.add(workspace.id);
+  try {
+    return await closeWorkspaceImpl(workspace);
+  } finally {
+    closingWorkspaceIds.delete(workspace.id);
+  }
+}
+
+async function closeWorkspaceImpl(workspace: Workspace) {
   let shouldClose = true;
   let shouldDiscardRecoverySnapshot = false;
+  let savedDuringClose = false;
 
   flushPendingRichTextEditors(workspace);
 
@@ -6327,9 +6337,9 @@ async function closeWorkspace(workspace: Workspace) {
             ? await saveWorkspace(workspace)
             : await saveWorkspaceAs(workspace);
 
-        // If they successfully saved, then we can close the workspace
-        shouldClose = saveResult.success;
-        shouldDiscardRecoverySnapshot = saveResult.success;
+        // A completed write must not close over edits made while saving.
+        shouldClose = saveResult.success && saveResult.savedContentUnchanged;
+        savedDuringClose = shouldClose;
 
         if (!saveResult.success && !saveResult.canceled) {
           showReplyErrorToast(
@@ -6361,7 +6371,11 @@ async function closeWorkspace(workspace: Workspace) {
   }
 
   if (shouldClose) {
-    if (shouldDiscardRecoverySnapshot || !workspace.isRecovered) {
+    // Successful saves already cleaned up recovery and checked for newer edits.
+    if (
+      !savedDuringClose &&
+      (shouldDiscardRecoverySnapshot || !workspace.isRecovered)
+    ) {
       await discardRecoverySnapshot(workspace.id);
     }
 
@@ -6775,7 +6789,7 @@ function addScoreElement(
   commandService.value.execute(
     scoreElementCommandFactory.create('add-to-collection', {
       elements: [element],
-      collection: collection ?? elements.value,
+      collection: collection ?? activeElements.value,
       insertAtIndex,
     }),
   );
@@ -6784,34 +6798,50 @@ function addScoreElement(
 }
 
 function replaceScoreElement(element: ScoreElement, replaceAtIndex: number) {
-  const previousElement = elements.value[replaceAtIndex];
-
-  commandService.value.execute(
+  const previousElement = activeElements.value[replaceAtIndex];
+  const commands: Command[] = [];
+  if (
+    previousElement instanceof FootnoteAnchorElement &&
+    element instanceof FootnoteAnchorElement
+  ) {
+    transferFootnoteReference(previousElement, element);
+  } else {
+    commands.push(...footnoteRemovalCommands(score.value, [previousElement]));
+  }
+  commands.push(
     scoreElementCommandFactory.create('replace-element-in-collection', {
       element,
-      collection: elements.value,
+      collection: activeElements.value,
       replaceAtIndex,
     }),
   );
-
+  commandService.value.executeAsBatch(commands);
   if (selectedElement.value === previousElement) {
     selectedElement.value = element;
   }
-
   refreshStaffLyrics();
+}
+
+function removalCommands(
+  removed: ScoreElement[],
+  collection: ScoreElement[] = activeElements.value,
+): Command[] {
+  return [
+    ...footnoteRemovalCommands(score.value, removed),
+    ...removed.map((element) =>
+      scoreElementCommandFactory.create('remove-from-collection', {
+        element,
+        collection,
+      }),
+    ),
+  ];
 }
 
 function removeScoreElement(
   element: ScoreElement,
   collection?: ScoreElement[],
 ) {
-  commandService.value.execute(
-    scoreElementCommandFactory.create('remove-from-collection', {
-      element,
-      collection: collection ?? elements.value,
-    }),
-  );
-
+  commandService.value.executeAsBatch(removalCommands([element], collection));
   refreshStaffLyrics();
 }
 
@@ -6849,31 +6879,7 @@ function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
 }
 
 function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, { fthora, chromaticFthoraNote });
+  updateNote(element, getFthoraChange('fthora', fthora));
   save();
 }
 
@@ -6881,22 +6887,7 @@ function updateNoteFthoraSecondary(
   element: NoteElement,
   secondaryFthora: Fthora | null,
 ) {
-  let secondaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (secondaryFthora === Fthora.SoftChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.SoftChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (secondaryFthora === Fthora.HardChromaticThi_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (secondaryFthora === Fthora.HardChromaticPa_TopSecondary) {
-    secondaryChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, {
-    secondaryFthora,
-    secondaryChromaticFthoraNote,
-  });
+  updateNote(element, getFthoraChange('secondaryFthora', secondaryFthora));
   save();
 }
 
@@ -6904,19 +6895,7 @@ function updateNoteFthoraTertiary(
   element: NoteElement,
   tertiaryFthora: Fthora | null,
 ) {
-  let tertiaryChromaticFthoraNote: ScaleNote | null = null;
-
-  if (tertiaryFthora === Fthora.SoftChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.SoftChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Ga;
-  } else if (tertiaryFthora === Fthora.HardChromaticThi_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Thi;
-  } else if (tertiaryFthora === Fthora.HardChromaticPa_TopTertiary) {
-    tertiaryChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateNote(element, { tertiaryFthora, tertiaryChromaticFthoraNote });
+  updateNote(element, getFthoraChange('tertiaryFthora', tertiaryFthora));
   save();
 }
 
@@ -6930,7 +6909,7 @@ function updateNoteExpression(
     const index = getElementIndex(element);
 
     if (index > 0) {
-      const previousElement = elements.value[index - 1];
+      const previousElement = activeElements.value[index - 1];
 
       if (previousElement.elementType === ElementType.Note) {
         const previousNote = previousElement as NoteElement;
@@ -6949,123 +6928,11 @@ function updateNoteExpression(
   save();
 }
 
-function updateLyricsLocked(locked: boolean) {
-  lyricsLocked.value = locked;
-  hasUnsavedChanges.value = true;
-}
-
-function updateStaffLyrics(staffLyrics: string) {
-  const workspace = selectedWorkspace.value;
-
-  workspace.score.staff.lyrics.text = staffLyrics;
-  scheduleLyricsAssignment(workspace);
-  hasUnsavedChanges.value = true;
-}
-
-function scheduleLyricsAssignment(workspace: Workspace) {
-  cancelLyricsAssignment(workspace);
-
-  pendingLyricsAssignmentTimers.set(
-    workspace.id,
-    window.setTimeout(() => {
-      pendingLyricsAssignmentTimers.delete(workspace.id);
-      assignLyrics(workspace);
-    }, keydownThrottleIntervalMs),
-  );
-}
-
-function flushLyricsAssignment(workspace: Workspace) {
-  if (!pendingLyricsAssignmentTimers.has(workspace.id)) {
-    return;
-  }
-
-  cancelLyricsAssignment(workspace);
-  assignLyrics(workspace);
-}
-
-function cancelLyricsAssignment(workspace: Workspace) {
-  const timer = pendingLyricsAssignmentTimers.get(workspace.id);
-
-  if (timer == null) {
-    return;
-  }
-
-  window.clearTimeout(timer);
-  pendingLyricsAssignmentTimers.delete(workspace.id);
-}
-
-function clearPendingLyricsAssignments() {
-  for (const timer of pendingLyricsAssignmentTimers.values()) {
-    window.clearTimeout(timer);
-  }
-
-  pendingLyricsAssignmentTimers.clear();
-}
-
-function assignLyrics(workspace: Workspace = selectedWorkspace.value) {
-  const workspaceScore = workspace.score;
-  const workspaceElements = workspaceScore.staff.elements;
-  const workspaceIsSelected = workspace === selectedWorkspace.value;
-  const updateCommands: Command[] = [];
-
-  lyricService.assignLyrics(
-    workspaceScore.staff.lyrics.text,
-    workspaceElements,
-    workspaceScore.pageSetup.melkiteRtl,
-    workspaceScore.pageSetup.disableGreekMelismata,
-    (note, lyrics) => {
-      if (workspaceIsSelected) {
-        setLyrics(getElementIndex(note), lyrics);
-      }
-    },
-    (note, newValues) => {
-      note.updated = true;
-      updateCommands.push(
-        noteElementCommandFactory.create('update-properties', {
-          target: note,
-          newValues,
-        }),
-      );
-    },
-    (dropCap, token) => {
-      updateCommands.push(
-        dropCapCommandFactory.create('update-properties', {
-          target: dropCap,
-          newValues: { content: token },
-        }),
-      );
-    },
-  );
-
-  if (updateCommands.length === 0) {
-    return;
-  }
-
-  workspace.commandService.executeAsBatch(
-    updateCommands,
-    workspaceScore.staff.lyrics.locked,
-  );
-
-  if (workspaceIsSelected) {
-    save();
-  } else {
-    workspace.hasUnsavedChanges = true;
-    selectedWorkspace.value.commandService.notify();
-  }
-}
-
-function extractStaffLyrics(workspace: Workspace) {
-  workspace.score.staff.lyrics.text = lyricService.extractLyrics(
-    workspace.score.staff.elements,
-    workspace.score.pageSetup.disableGreekMelismata,
-  );
-}
-
 function assignAcceptsLyricsFromCurrentLyrics() {
   const commands: Command[] = [];
 
   lyricService.assignAcceptsLyricsFromCurrentLyrics(
-    elements.value,
+    activeElements.value,
     score.value.pageSetup.disableGreekMelismata,
     (note, acceptsLyrics) => {
       commands.push(
@@ -7091,12 +6958,16 @@ function updateLyrics(
   lyrics: string,
   clearMelisma: boolean = false,
 ) {
+  const staff = staffForElement(element);
+  if (staff === undefined) {
+    return;
+  }
   const newValues = lyricService.getLyricUpdateValues(
     element,
     lyrics,
-    elements.value,
+    staff.elements,
     rtl.value,
-    (note, lyrics) => setLyrics(getElementIndex(note), lyrics),
+    (note, lyrics) => getLyricsComponentForElement(note)?.setInnerText(lyrics),
     clearMelisma,
   );
 
@@ -7107,8 +6978,22 @@ function updateLyrics(
         newValues,
       }),
     );
-    refreshStaffLyrics();
-    save();
+    if (staff.lyrics.locked) {
+      assignLyrics(selectedWorkspace.value, staff);
+    } else {
+      extractStaffLyrics(selectedWorkspace.value, staff);
+    }
+    saveCommittedLyrics();
+  }
+}
+
+function initializeStaffLyricsPane() {
+  flushLyricsAssignment(selectedWorkspace.value);
+
+  // Locked text can include syllables that do not yet fit on the staff.
+  // Display it as saved without reassigning lyrics just to open the pane.
+  if (!lyricsLocked.value) {
+    extractStaffLyrics(selectedWorkspace.value);
   }
 }
 
@@ -7122,24 +7007,43 @@ function refreshStaffLyrics() {
   }
 }
 
+function refreshLyricsAfterHistoryReplay() {
+  const workspace = selectedWorkspace.value;
+
+  // History can edit any staff regardless of the current selection.
+  for (const staff of workspace.score.staves) {
+    if (staff.lyrics.locked) {
+      assignLyrics(workspace, staff, false);
+    }
+  }
+
+  if (!lyricsLocked.value && isLyricsManagerOpen.value) {
+    extractStaffLyrics(workspace);
+  }
+}
+
 function updateAnnotation(
   element: AnnotationElement,
   newValues: Partial<AnnotationElement>,
 ) {
   const annotationContext = getAnnotationContext(element);
 
+  // Unmounting after removal can flush an editor update. It must not create
+  // a command for a detached element or replace the history's redo entries.
+  if (annotationContext == null) {
+    return;
+  }
+
   if (
     newValues.text != null &&
     !hasMeaningfulRichTextHtmlContent(newValues.text)
   ) {
-    if (annotationContext != null) {
-      removeAnnotation(annotationContext.parent, element);
-    }
+    removeAnnotation(annotationContext.parent, element);
 
     return;
   }
 
-  if (newValues.text == null && annotationContext?.component != null) {
+  if (newValues.text == null && annotationContext.component != null) {
     const currentText = annotationContext.component.getCurrentText();
 
     if (!hasMeaningfulRichTextHtmlContent(currentText)) {
@@ -7219,23 +7123,34 @@ function updateRichTextBox(
   element: RichTextBoxElement,
   newValues: Partial<RichTextBoxElement>,
 ) {
+  // Removed boxes can emit a final content update while their editors unmount.
+  if (
+    !allElements.value.includes(element) &&
+    !score.value.headersAndFooters.includes(element)
+  ) {
+    return;
+  }
+
   newValues = {
     ...getPendingRichTextBoxUpdates(element),
     ...newValues,
   };
 
-  const heightProp: keyof RichTextBoxElement = 'height';
+  if (settleFootnoteReferences.value) {
+    delete newValues.height;
+    if (Object.keys(newValues).length === 0) {
+      return;
+    }
+  }
 
-  const noHistory =
-    Object.keys(newValues).length === 1 && heightProp in newValues;
+  // Measured height is a cache, not a content edit or undo step.
+  if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
+    element.height = newValues.height;
+    save();
+    return;
+  }
 
-  commandService.value.execute(
-    richTextBoxCommandFactory.create('update-properties', {
-      target: element,
-      newValues: newValues,
-    }),
-    noHistory,
-  );
+  commitRichTextFootnotes(element, newValues);
 
   const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
   const richTextContentProps = new Set<keyof RichTextBoxElement>(
@@ -7251,7 +7166,7 @@ function updateRichTextBox(
     refreshStaffLyrics();
   }
 
-  save(!noHistory);
+  save();
 }
 
 function getPendingRichTextBoxUpdates(element: RichTextBoxElement) {
@@ -7321,37 +7236,55 @@ function flushPendingAnnotationEditor() {
 }
 
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
+  if (settleFootnoteReferences.value) {
+    return;
+  }
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
   richTextBoxCalculationCount.value++;
-  saveDebounced(false);
+  saveDebounced();
 }
 
 function updateTextBox(
   element: TextBoxElement,
   newValues: Partial<TextBoxElement>,
 ) {
-  const noHistory =
-    Object.keys(newValues).length === 1 && 'height' in newValues;
+  // Measured height is a cache, not a content edit or undo step.
+  if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
+    if (settleFootnoteReferences.value) {
+      return;
+    }
+    element.height = newValues.height;
+    save();
+    return;
+  }
 
   commandService.value.execute(
     textBoxCommandFactory.create('update-properties', {
       target: element,
       newValues: newValues,
     }),
-    noHistory,
   );
 
-  save(!noHistory);
+  save();
+}
+
+function resumeLayoutAfterTextBlur() {
+  if (liveLayout.waitingForBlur) {
+    liveLayout.refresh(selectedWorkspace.value);
+  }
 }
 
 function updateTextBoxHeight(element: TextBoxElement, height: number) {
+  if (settleFootnoteReferences.value) {
+    return;
+  }
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
   textBoxCalculationCount.value++;
-  saveDebounced(false);
+  saveDebounced();
 }
 
 function updateModeKey(
@@ -7453,10 +7386,15 @@ function updateMartyria(
   newValues: Partial<MartyriaElement>,
 ) {
   const values =
-    newValues.alignRight !== undefined &&
-    newValues.alignRight !== element.alignRight
-      ? { ...newValues, quantitativeNeume: null }
-      : newValues;
+    newValues.alignRight === undefined
+      ? newValues
+      : {
+          ...newValues,
+          ...getMartyriaAlignmentChange(
+            element.alignRight,
+            newValues.alignRight,
+          ),
+        };
 
   commandService.value.execute(
     martyriaCommandFactory.create('update-properties', {
@@ -7469,53 +7407,17 @@ function updateMartyria(
 }
 
 function updateMartyriaFthora(element: MartyriaElement, fthora: Fthora | null) {
-  let chromaticFthoraNote: ScaleNote | null = null;
-
-  if (
-    fthora === Fthora.SoftChromaticThi_Top ||
-    fthora === Fthora.SoftChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.SoftChromaticPa_Top ||
-    fthora === Fthora.SoftChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Ga;
-  } else if (
-    fthora === Fthora.HardChromaticThi_Top ||
-    fthora === Fthora.HardChromaticThi_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Thi;
-  } else if (
-    fthora === Fthora.HardChromaticPa_Top ||
-    fthora === Fthora.HardChromaticPa_Bottom
-  ) {
-    chromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateMartyria(element, { fthora, chromaticFthoraNote });
+  updateMartyria(element, getFthoraChange('fthora', fthora));
 }
 
 function updateMartyriaQuantitativeNeumeFthora(
   element: MartyriaElement,
   quantitativeNeumeFthora: Fthora | null,
 ) {
-  let quantitativeNeumeChromaticFthoraNote: ScaleNote | null = null;
-
-  if (quantitativeNeumeFthora?.startsWith('SoftChromaticThi')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
-  } else if (quantitativeNeumeFthora?.startsWith('SoftChromaticPa')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Ga;
-  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticThi')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Thi;
-  } else if (quantitativeNeumeFthora?.startsWith('HardChromaticPa')) {
-    quantitativeNeumeChromaticFthoraNote = ScaleNote.Pa;
-  }
-
-  updateMartyria(element, {
-    quantitativeNeumeFthora,
-    quantitativeNeumeChromaticFthoraNote,
-  });
+  updateMartyria(
+    element,
+    getFthoraChange('quantitativeNeumeFthora', quantitativeNeumeFthora),
+  );
 }
 
 function updateMartyriaTempoLeft(
@@ -7604,6 +7506,11 @@ function updateDropCap(
 }
 
 function updateDropCapContent(element: DropCapElement, content: string) {
+  if (element.content === content) {
+    resumeLayoutAfterTextBlur();
+    return;
+  }
+
   // Replace newlines. This should only happen if the user pastes
   // text containing new lines.
   const sanitizedContent = content.replace(/(?:\r\n|\r|\n)/g, ' ');
@@ -7615,7 +7522,7 @@ function updateDropCapContent(element: DropCapElement, content: string) {
   }
 
   if (content === '') {
-    const index = elements.value.indexOf(element);
+    const index = activeElements.value.indexOf(element);
 
     if (index > -1) {
       if (selectedElement.value === element) {
@@ -7682,20 +7589,19 @@ function deleteSelectedElement() {
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value = elements.value[index];
+    selectedElement.value =
+      activeElements.value[
+        selectedWorkspace.value.activeFootnoteId !== null &&
+        activeElements.value.length > 1
+          ? Math.min(index, activeElements.value.length - 2)
+          : index
+      ];
 
     save();
   } else if (selectionRange.value != null) {
     const elementsToDelete = getSelectedNonEmptyElements();
 
-    commandService.value.executeAsBatch(
-      elementsToDelete.map((element) =>
-        scoreElementCommandFactory.create('remove-from-collection', {
-          element,
-          collection: elements.value,
-        }),
-      ),
-    );
+    commandService.value.executeAsBatch(removalCommands(elementsToDelete));
 
     refreshStaffLyrics();
 
@@ -7705,7 +7611,7 @@ function deleteSelectedElement() {
     );
 
     selectedElement.value =
-      elements.value[Math.min(start, elements.value.length - 1)];
+      activeElements.value[Math.min(start, activeElements.value.length - 1)];
 
     save();
   }
@@ -7726,11 +7632,9 @@ function deletePreviousElement() {
   if (
     selectedElement.value &&
     selectedElementIndex.value > 0 &&
-    navigableElements.includes(
-      elements.value[selectedElementIndex.value - 1].elementType,
-    )
+    isNavigableElement(activeElements.value[selectedElementIndex.value - 1])
   ) {
-    removeScoreElement(elements.value[selectedElementIndex.value - 1]);
+    removeScoreElement(activeElements.value[selectedElementIndex.value - 1]);
 
     save();
   }
@@ -7750,27 +7654,12 @@ const resolvedDefaultParagraphStyle = computed(() =>
   ),
 );
 
-const resolvedDefaultLyricsStyle = computed(() =>
-  resolveParagraphStyle(
-    score.value.paragraphStyles,
-    BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
-  ),
-);
-
 // Global stylesheet for the rich text paragraph classes. Rendered once here
 // rather than per editor instance; the CSS depends only on score-level state
 // and applies to every .ck-content in the document, including print.
 const richTextParagraphStyleCss = computed(() =>
   buildRichTextParagraphStyleCss(score.value.paragraphStyles, '.ck-content'),
 );
-
-function getResolvedLyricsStyle(element: NoteElement) {
-  return resolveParagraphStyle(
-    score.value.paragraphStyles,
-    element.lyricsParagraphStyleId,
-    element.getParagraphStyleOverrides(),
-  );
-}
 
 function getDefaultLyricsFont() {
   return resolveFontCss(resolvedDefaultLyricsStyle.value);
@@ -8006,7 +7895,7 @@ function confirmInitialMartyriaStyles(payload: {
 
     if (Object.keys(newValues).length > 0) {
       commands.push(
-        richTextBoxCommandFactory.create('update-properties', {
+        new CommandFactory<RichTextBoxElement>().create('update-properties', {
           target: richTextBox,
           newValues,
         }),
@@ -8033,114 +7922,13 @@ function updateDocumentProperties(documentProperties: DocumentProperties) {
   save();
 }
 
-function getDeletedStyleFallbacks(
-  previousStylesById: Map<string, ParagraphStyle>,
-  nextStyleIds: Set<string>,
-) {
-  const deletedStyleFallbacks = new Map<string, string | null>();
-
-  for (const [styleId, style] of previousStylesById.entries()) {
-    if (nextStyleIds.has(styleId)) {
-      continue;
-    }
-
-    const visited = new Set<string>();
-    let parentStyleId = style.parentStyleId;
-
-    while (parentStyleId != null && !visited.has(parentStyleId)) {
-      if (nextStyleIds.has(parentStyleId)) {
-        deletedStyleFallbacks.set(styleId, parentStyleId);
-        break;
-      }
-
-      visited.add(parentStyleId);
-      parentStyleId =
-        previousStylesById.get(parentStyleId)?.parentStyleId ?? null;
-    }
-
-    if (!deletedStyleFallbacks.has(styleId)) {
-      deletedStyleFallbacks.set(styleId, null);
-    }
-  }
-
-  return deletedStyleFallbacks;
-}
-
 function updateParagraphStyles(paragraphStyles: ParagraphStyle[]) {
   flushPendingRichTextEditors(selectedWorkspace.value);
 
-  const previousStylesById = new Map(
-    score.value.paragraphStyles.map((style) => [style.id, style]),
-  );
-  const clonedStyles = paragraphStyles.map((style) => style.clone());
-  const nextStyleIds = new Set(clonedStyles.map((style) => style.id));
-  const deletedStyleFallbacks = getDeletedStyleFallbacks(
-    previousStylesById,
-    nextStyleIds,
-  );
-  // References to a deleted style move to its nearest surviving ancestor,
-  // then to the surface default. Rich text classes whose ids this deletion
-  // did not remove are left untouched.
-  const remapResolvers: ParagraphStyleReferenceResolvers = {
-    resolveStyleId: (styleId, fallbackStyleId) =>
-      nextStyleIds.has(styleId)
-        ? null
-        : (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId),
-    resolveRichTextStyleId: (styleId, fallbackStyleId) =>
-      deletedStyleFallbacks.has(styleId)
-        ? (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId)
-        : null,
-  };
-  // Initial martyria styles reference regular and Greek paragraph styles too;
-  // a deleted one moves to the same fallback chain, ending at its built-in
-  // style.
-  const initialMartyriaStyles = score.value.initialMartyriaStyles.map(
-    (style) => {
-      const paragraphStyleId = remapResolvers.resolveStyleId(
-        style.paragraphStyleId,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-      );
-      const greekParagraphStyleId = remapResolvers.resolveStyleId(
-        style.greekParagraphStyleId,
-        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
-      );
-
-      return paragraphStyleId == null && greekParagraphStyleId == null
-        ? style
-        : {
-            ...style,
-            paragraphStyleId: paragraphStyleId ?? style.paragraphStyleId,
-            greekParagraphStyleId:
-              greekParagraphStyleId ?? style.greekParagraphStyleId,
-          };
-    },
-  );
-  const commands: Command[] = [
-    scoreCommandFactory.create('update-properties', {
-      target: score.value,
-      newValues: { paragraphStyles: clonedStyles, initialMartyriaStyles },
-    }),
-  ];
-
-  for (const element of [
-    ...score.value.staff.elements,
-    ...score.value.headersAndFooters,
-  ]) {
-    for (const remap of planParagraphStyleReferenceRemap(
-      element,
-      remapResolvers,
-    )) {
-      commands.push(
-        scoreElementCommandFactory.create('update-properties', {
-          target: remap.target,
-          newValues: remap.newValues,
-        }),
-      );
-    }
-  }
-
   runWithResizableParagraphStyleRecalc(() =>
-    commandService.value.executeAsBatch(commands),
+    commandService.value.executeAsBatch(
+      createParagraphStyleUpdateCommands(score.value, paragraphStyles),
+    ),
   );
 
   save();
@@ -8612,7 +8400,7 @@ async function playAudio() {
   try {
     if (audioService.state === AudioState.Stopped) {
       playbackEvents.value = playbackService.computePlaybackSequence(
-        elements.value,
+        score.value.staff.elements,
         audioOptions,
         score.value.pageSetup.chrysanthineAccidentals,
       );
@@ -8622,7 +8410,9 @@ async function playAudio() {
       }
 
       const startAt = playbackEvents.value.find(
-        (x) => x.elementIndex >= selectedElementIndex.value,
+        (x) =>
+          x.elementIndex >=
+          (isMainStaff.value ? selectedElementIndex.value : 0),
       );
 
       await audioService.play(playbackEvents.value, audioOptions, startAt);
@@ -8751,14 +8541,12 @@ function onAudioServiceEventPlay(event: PlaybackSequenceEvent) {
     selectedWorkspace.value.playbackTime = event.absoluteTime;
     selectedWorkspace.value.playbackBpm = event.bpm;
 
-    audioElement.value = elements.value[event.elementIndex];
+    audioElement.value = score.value.staff.elements[event.elementIndex];
 
     // Scroll the currently playing element into view
-    const lyrics = getTemplateRef<InstanceType<typeof ContentEditable>[]>(
-      `lyrics-${event.elementIndex}`,
-    )[0];
+    const lyrics = getLyricsComponentForElement(audioElement.value)!;
 
-    const neumeBox = getTemplateRef<any[]>(`element-${event.elementIndex}`)[0];
+    const neumeBox = getElementComponentForElement<any>(audioElement.value)!;
 
     if ((lyrics?.htmlElement as any)?.scrollIntoViewIfNeeded) {
       (lyrics?.htmlElement as any).scrollIntoViewIfNeeded(false);
@@ -8777,6 +8565,9 @@ function onAudioServiceStop() {
 }
 
 function recalculateRichTextBoxHeights() {
+  if (settleFootnoteReferences.value) {
+    return;
+  }
   if (richTextBoxCalculation.value) {
     richTextBoxCalculation.value = false;
   }
@@ -8808,11 +8599,14 @@ function recalculateRichTextBoxHeights() {
     await new Promise(poll);
 
     richTextBoxCalculation.value = false;
-    saveDebounced(false);
+    saveDebounced();
   });
 }
 
 function recalculateTextBoxHeights() {
+  if (settleFootnoteReferences.value) {
+    return;
+  }
   if (textBoxCalculation.value) {
     textBoxCalculation.value = false;
   }
@@ -8844,7 +8638,7 @@ function recalculateTextBoxHeights() {
     await new Promise(poll);
 
     textBoxCalculation.value = false;
-    saveDebounced(false);
+    saveDebounced();
   });
 }
 
@@ -8859,7 +8653,7 @@ function onFileMenuNewScore() {
 
   selectedElement.value =
     score.value.staff.elements[score.value.staff.elements.length - 1];
-  save(false);
+  save();
 }
 
 async function onFileMenuOpenScore(args: FileMenuOpenScoreArgs) {
@@ -8876,15 +8670,12 @@ function onFileMenuImportOcr(args: FileMenuImportOcrArgs) {
       const workspace = new Workspace();
       workspace.tempFileName = getTempFilename();
       workspace.score = new Score();
+      workspace.score.staff.elements.unshift(...elements);
+      workspace.hasUnsavedChanges = true;
 
-      addWorkspace(workspace);
-
-      selectedWorkspace.value = workspace;
+      addAndSelectWorkspace(workspace);
 
       currentFilePath.value = null;
-      score.value.staff.elements.unshift(...elements);
-
-      save();
     } catch (error) {
       console.error(error);
 
@@ -8921,55 +8712,227 @@ function onFileMenuDocumentProperties() {
   documentPropertiesDialogIsOpen.value = true;
 }
 
-async function onFileMenuPrint() {
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
+async function awaitBrowserOutputLayout(workspace: Workspace) {
+  const source = toRaw(workspace);
+  const score = source.score;
+  if (source !== toRaw(selectedWorkspace.value)) {
+    throw new Error('LAYOUT_CONFLICT');
+  }
+  if (settleFootnoteReferences.value) {
+    invalidateLiveLayout();
+    const outcome = await awaitSettledLayout(workspace);
+    if (outcome !== 'settled') {
+      throw new Error('LAYOUT_CONFLICT');
+    }
+  } else {
+    await nextTick();
+  }
+  if (source !== toRaw(selectedWorkspace.value) || source.score !== score) {
+    throw new Error('LAYOUT_CONFLICT');
+  }
+}
 
-  printMode.value = true;
+async function awaitBrowserPrintPages(workspace: Workspace) {
+  const printScore = workspace.score;
+  const revision = workspace.contentRevision;
+  const isScoreCurrent = () =>
+    workspace === selectedWorkspace.value &&
+    printScore === workspace.score &&
+    revision === workspace.contentRevision;
 
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
+  await awaitBrowserOutputLayout(workspace);
+  if (!settleFootnoteReferences.value) {
+    return isScoreCurrent;
+  }
 
-  const previousTitle = window.document.title;
-  window.document.title = getFileName(selectedWorkspace.value, false);
+  const deadline = Promise.withResolvers<never>();
+  // A rich-text editor that fails to initialize may never report readiness.
+  const timer = setTimeout(
+    () => deadline.reject(new Error('PRINT_RENDER_TIMEOUT')),
+    45_000,
+  );
+  try {
+    while (isScoreCurrent()) {
+      const layout = pages.value;
+      const isLayoutCurrent = () =>
+        isScoreCurrent() &&
+        layout === pages.value &&
+        (!settleFootnoteReferences.value || liveLayout.isSettled);
+      if (layout.some((page) => page.footnoteOverflow)) {
+        return isLayoutCurrent;
+      }
+      const pageContents = scorePageContents.value ?? [];
+      if (pageContents.length !== filteredPages.value.length) {
+        break;
+      }
+
+      // Mounting offscreen pages for print can change measured box heights.
+      const interrupted = Promise.withResolvers<void>();
+      const stop = watch(
+        [pages, selectedWorkspace, score, () => workspace.contentRevision],
+        () => interrupted.resolve(),
+      );
+      try {
+        await Promise.race([
+          Promise.all(pageContents.map((page) => page.whenReady())),
+          interrupted.promise,
+          deadline.promise,
+        ]);
+      } finally {
+        stop();
+      }
+      if (isLayoutCurrent()) {
+        return isLayoutCurrent;
+      }
+      if (layout === pages.value) {
+        break;
+      }
+      await nextTick();
+    }
+    throw new Error('LAYOUT_CONFLICT');
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function showBrowserPrintWarning(
+  message = t(($) => $.menu.file.printLayoutPending, { ns: 'menu' }),
+) {
+  const warning = browserPrintWarning.value;
+  if (warning === null) {
+    return;
+  }
+  // beforeprint cannot wait for Vue to update the DOM.
+  warning.textContent = message;
+  warning.hidden = false;
+  window.addEventListener(
+    'afterprint',
+    () => {
+      warning.hidden = true;
+    },
+    { once: true },
+  );
+}
+
+async function onFileMenuPrint(browserInitiated = false) {
+  if (!isBrowser.value) {
+    if (nativePrintInProgress) {
+      return;
+    }
+    nativePrintInProgress = true;
+    try {
+      const workspace = selectedWorkspace.value;
+      prepareWorkspaceForSerialization(workspace);
+      await ipcService.printWorkspace(
+        workspace,
+        createScoreRenderSnapshot(workspace),
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      nativePrintInProgress = false;
+    }
+    return;
+  }
+  if (browserInitiated && browserPrintPrepared) {
+    return;
+  }
+  if (printMode.value || isLoading.value) {
+    if (browserInitiated) {
+      showBrowserPrintWarning();
+    }
+    return;
+  }
+  const workspace = selectedWorkspace.value;
+  let activeElement: Element | null = null;
 
   try {
-    await nextTick();
-    await ipcService.printWorkspace(selectedWorkspace.value);
+    prepareWorkspaceForSerialization(workspace);
+    printMode.value = true;
+    // Keep focus outlines and blinking cursors out of the printed page.
+    activeElement = blurActiveElement();
+
+    if (browserInitiated) {
+      if (settleFootnoteReferences.value && !liveLayout.isSettled) {
+        showBrowserPrintWarning();
+        return;
+      }
+    } else {
+      const isLayoutCurrent = await awaitBrowserPrintPages(workspace);
+      if (!isLayoutCurrent()) {
+        throw new Error('LAYOUT_CONFLICT');
+      }
+    }
+    if (pages.value.some((page) => page.footnoteOverflow)) {
+      const message = t(($) => $.menu.footnotes.overflow, { ns: 'menu' });
+      if (browserInitiated) {
+        showBrowserPrintWarning(message);
+      } else {
+        toast.error(message);
+      }
+      return;
+    }
+    window.document.title = getFileName(workspace, false);
+    const printed = ipcService.printWorkspace(
+      workspace,
+      createScoreRenderSnapshot(workspace),
+    );
+    if (!browserInitiated) {
+      browserPrintPrepared = true;
+      window.print();
+    }
+    await printed;
   } catch (error) {
     console.error(error);
+    const message = t(($) => $.toast.editor.printFailed, { ns: 'toast' });
+    if (browserInitiated) {
+      showBrowserPrintWarning(message);
+    } else {
+      toast.error(message);
+    }
   } finally {
+    browserPrintPrepared = false;
     printMode.value = false;
-    window.document.title = previousTitle;
+    window.document.title = windowTitle.value;
 
     // Re-focus the active element
     focusElement(activeElement);
   }
 }
 
+function createScoreRenderSnapshot(workspace: Workspace): ScoreRenderSnapshot {
+  return {
+    score: SaveService.SaveScoreToJson(workspace.score),
+    filePath: workspace.filePath,
+    fileName: workspace.tempFileName,
+    title: getFileName(workspace, false),
+    editorLanguage: ckeditorLanguage.value,
+    systemFonts: fontCatalog.snapshotSystemFonts(),
+    overlays: { ...pageOverlaySettings.value },
+  };
+}
+
 async function onFileMenuExportAsPdf() {
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
-
-  printMode.value = true;
-
-  // Blur the active element so that focus outlines and
-  // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
-
-  const previousTitle = window.document.title;
-  window.document.title = getFileName(selectedWorkspace.value, false);
+  if (pdfExportInProgress) {
+    return;
+  }
+  pdfExportInProgress = true;
+  const toastId = toast.loading(
+    t(($) => $.toast.export.pdfLoading, { ns: 'toast' }),
+  );
 
   try {
-    await nextTick();
-    const reply = await ipcService.exportWorkspaceAsPdf(
-      selectedWorkspace.value,
-    );
+    const workspace = selectedWorkspace.value;
+    prepareWorkspaceForSerialization(workspace);
+    const snapshot = createScoreRenderSnapshot(workspace);
+    const reply = await ipcService.exportWorkspaceAsPdf(workspace, snapshot);
 
     showExportReplyToast(
       reply,
       t(($) => $.toast.export.pdfSuccess, { ns: 'toast' }),
       t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
       t(($) => $.toast.export.pdfFailedDescription, { ns: 'toast' }),
+      toastId,
     );
   } catch (error) {
     console.error(error);
@@ -8977,17 +8940,14 @@ async function onFileMenuExportAsPdf() {
       t(($) => $.toast.export.pdfFailed, { ns: 'toast' }),
       error,
       {
+        id: toastId,
         fallback: t(($) => $.toast.export.pdfFailedDescription, {
           ns: 'toast',
         }),
       },
     );
   } finally {
-    printMode.value = false;
-    window.document.title = previousTitle;
-
-    // Re-focus the active element
-    focusElement(activeElement);
+    pdfExportInProgress = false;
   }
 }
 
@@ -8998,14 +8958,13 @@ async function onFileMenuExportAsImage() {
 
 async function exportAsPng(args: ExportAsPngSettings) {
   let reply: ExportWorkspaceAsImageReplyArgs;
-
-  prepareWorkspaceForSerialization(selectedWorkspace.value);
+  const workspace = selectedWorkspace.value;
+  let snapshot: ScoreRenderSnapshot;
 
   try {
-    reply = await ipcService.exportWorkspaceAsImage(
-      selectedWorkspace.value,
-      'png',
-    );
+    prepareWorkspaceForSerialization(workspace);
+    snapshot = createScoreRenderSnapshot(workspace);
+    reply = await ipcService.exportWorkspaceAsImage(workspace, 'png');
 
     if (!reply.success) {
       if (!reply.canceled) {
@@ -9033,7 +8992,7 @@ async function exportAsPng(args: ExportAsPngSettings) {
     return;
   }
 
-  printMode.value = true;
+  printMode.value = isBrowser.value;
   exportInProgress.value = true;
   const toastId = toast.loading(
     t(($) => $.toast.export.pngLoading, { ns: 'toast' }),
@@ -9046,71 +9005,81 @@ async function exportAsPng(args: ExportAsPngSettings) {
 
   // Blur the active element so that focus outlines and
   // blinking cursors don't show up in the printed page
-  const activeElement = blurActiveElement();
+  const activeElement = isBrowser.value ? blurActiveElement() : null;
 
   try {
-    await nextTick();
-
-    const pageElements = pagesRef.value as HTMLElement[];
-    const selectedPages = pageElements
-      .map((page, index) => ({ page, pageNumber: index + 1 }))
-      .filter(
-        ({ pageNumber }) =>
-          args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
-      );
     let exportedPageCount = 0;
     let firstExportedPagePath = '';
+    if (!isBrowser.value) {
+      ({ exportedPageCount, firstExportedPagePath } =
+        await ipcService.exportSnapshotAsPng({
+          snapshot,
+          filePath: reply.filePath,
+          options: args,
+        }));
+    } else {
+      await awaitBrowserOutputLayout(workspace);
 
-    if (selectedPages.length > 0) {
-      const fontEmbedCSS =
-        (await getFontEmbedCSS(selectedPages[0].page)) +
-        fontCatalog.getExportFontFeatureValuesCss();
+      assertVisualExportFits(pages.value as Page[]);
 
-      for (const { page, pageNumber } of selectedPages) {
-        const options = {
-          fontEmbedCSS,
-          pixelRatio: args.dpi / 96,
-          style: { margin: '0' },
-        } as any;
-
-        if (args.transparentBackground) {
-          options.style.backgroundColor = 'transparent';
-        }
-
-        const fileName = reply.filePath.replace(
-          /\.png$/i,
-          `-${pageNumber}.png`,
+      const pageElements = pagesRef.value as HTMLElement[];
+      const selectedPages = pageElements
+        .map((page, index) => ({ page, pageNumber: index + 1 }))
+        .filter(
+          ({ pageNumber }) =>
+            args.pageNumbers == null || args.pageNumbers.includes(pageNumber),
         );
+      if (selectedPages.length > 0) {
+        const fontEmbedCSS =
+          (await getFontEmbedCSS(selectedPages[0].page)) +
+          fontCatalog.getExportFontFeatureValuesCss();
 
-        const data = (await toPng(page, options)).replace(
-          /^data:image\/png;base64,/,
-          '',
-        );
+        for (const { page, pageNumber } of selectedPages) {
+          const options = {
+            fontEmbedCSS,
+            pixelRatio: args.dpi / 96,
+            style: { margin: '0' },
+          } as any;
 
-        const pageReply = await ipcService.exportPageAsImage(fileName, data);
-
-        if (!pageReply.success) {
-          if (pageReply.skipped) {
-            continue;
+          if (args.transparentBackground) {
+            options.style.backgroundColor = 'transparent';
           }
 
-          if (pageReply.canceled) {
-            break;
-          }
-
-          throw new Error(
-            pageReply.errorMessage ??
-              t(($) => $.toast.export.pngFileFailedDescription, {
-                ns: 'toast',
-              }),
+          const fileName = reply.filePath.replace(
+            /\.png$/i,
+            `-${pageNumber}.png`,
           );
-        }
 
-        if (!firstExportedPagePath) {
-          firstExportedPagePath = fileName;
-        }
+          const data = (await toPng(page, options)).replace(
+            /^data:image\/png;base64,/,
+            '',
+          );
 
-        exportedPageCount++;
+          const pageReply = await ipcService.exportPageAsImage(fileName, data);
+
+          if (!pageReply.success) {
+            if (pageReply.skipped) {
+              continue;
+            }
+
+            if (pageReply.canceled) {
+              break;
+            }
+
+            throw new Error(
+              pageReply.errorMessage ??
+                t(($) => $.toast.export.pngFileFailedDescription, {
+                  ns: 'toast',
+                }),
+            );
+          }
+
+          if (!firstExportedPagePath) {
+            firstExportedPagePath = fileName;
+          }
+
+          exportedPageCount++;
+        }
       }
     }
 
@@ -9159,12 +9128,19 @@ async function exportAsPng(args: ExportAsPngSettings) {
     exportInProgress.value = false;
     closeExportDialog();
     // Re-focus the active element
-    focusElement(activeElement);
+    if (activeElement) {
+      focusElement(activeElement);
+    }
   }
 }
 
 async function onFileMenuExportAsHtml() {
   try {
+    if (score.value.footnotes.length > 0) {
+      throw new Error(
+        t(($) => $.menu.footnotes.unsupportedExport, { ns: 'menu' }),
+      );
+    }
     prepareWorkspaceForSerialization(selectedWorkspace.value);
 
     const reply = await ipcService.exportWorkspaceAsHtml(
@@ -9204,6 +9180,11 @@ function onFileMenuExportAsLatex() {
 
 async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
   try {
+    if (score.value.footnotes.length > 0) {
+      throw new Error(
+        t(($) => $.menu.footnotes.unsupportedExport, { ns: 'menu' }),
+      );
+    }
     prepareWorkspaceForSerialization(selectedWorkspace.value);
 
     const reply = await ipcService.exportWorkspaceAsMusicXml(
@@ -9241,6 +9222,11 @@ async function exportAsMusicXml(args: ExportAsMusicXmlSettings) {
 
 async function exportAsLatex(args: ExportAsLatexSettings) {
   try {
+    if (score.value.footnotes.length > 0) {
+      throw new Error(
+        t(($) => $.menu.footnotes.unsupportedExport, { ns: 'menu' }),
+      );
+    }
     prepareWorkspaceForSerialization(selectedWorkspace.value);
 
     const reply = await ipcService.exportWorkspaceAsLatex(
@@ -9316,7 +9302,13 @@ function onFileMenuInsertAnnotation() {
     );
     el.x = 0;
     el.y = -fontHeight;
-    (selectedElement.value as NoteElement).annotations.push(el);
+    commandService.value.execute(
+      annotationCommandFactory.create('add-to-collection', {
+        collection: (selectedElement.value as NoteElement).annotations,
+        elements: [el],
+      }),
+      true,
+    );
     selectedWorkspace.value.selectedAnnotationElement = el;
     save();
   }
@@ -9330,33 +9322,53 @@ function onFileMenuInsertAlternateLine() {
     );
     el.x = 0;
     el.y = -fontHeight;
-    (selectedElement.value as NoteElement).alternateLines.push(el);
+    commandService.value.execute(
+      alternateLineCommandFactory.create('add-to-collection', {
+        collection: (selectedElement.value as NoteElement).alternateLines,
+        elements: [el],
+      }),
+      true,
+    );
     selectedWorkspace.value.selectedAlternateLineElement = el;
     save();
   }
 }
 
+function contentInsertionIndex() {
+  return (
+    selectedElementIndex.value +
+    (selectedWorkspace.value.activeFootnoteId !== null &&
+    selectedElement.value !== null &&
+    !isLastElement(selectedElement.value)
+      ? 1
+      : 0)
+  );
+}
+
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
-  element.paragraphStyleId = getTextBoxParagraphStyleFallbackId(element.inline);
+  element.paragraphStyleId =
+    selectedWorkspace.value.activeFootnoteId !== null
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
+      : getTextBoxParagraphStyleFallbackId(element.inline);
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
   save();
 
-  nextTick(() => {
-    const index = elements.value.indexOf(element);
-
-    getTemplateRef<any[]>(`element-${index}`)[0].focus();
-  });
+  focusInsertedTextElement(element);
 }
 
 function onFileMenuInsertRichTextBox() {
   const element = new RichTextBoxElement();
-  element.content = `<p class="${richTextParagraphStyleClassName(BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText)}"></p>`;
+  const styleId =
+    selectedWorkspace.value.activeFootnoteId !== null
+      ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
+      : BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText;
+  element.content = `<p class="${richTextParagraphStyleClassName(styleId)}"></p>`;
   if (
     score.value.pageSetup.melkiteRtl ||
     score.value.pageSetup.numerals === 'easternArabic'
@@ -9364,7 +9376,7 @@ function onFileMenuInsertRichTextBox() {
     setRichTextLanguage(element, 'ar', 'rtl');
   }
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
@@ -9374,7 +9386,7 @@ function onFileMenuInsertRichTextBox() {
 function onFileMenuInsertModeKey() {
   const element = createDefaultModeKey(score.value.pageSetup);
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
@@ -9398,7 +9410,7 @@ function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
   element.imageWidth = args.imageWidth;
   element.imageHeight = args.imageHeight;
 
-  addScoreElement(element, selectedElementIndex.value);
+  addScoreElement(element, contentInsertionIndex());
 
   selectedElement.value = element;
 
@@ -9410,9 +9422,9 @@ function onFileMenuInsertHeader() {
     return;
   }
 
-  score.value.pageSetup.showHeader = true;
-
-  updatePageSetup(score.value.pageSetup);
+  updatePageSetup(
+    Object.assign(new PageSetup(), score.value.pageSetup, { showHeader: true }),
+  );
 }
 
 function onFileMenuInsertFooter() {
@@ -9420,9 +9432,9 @@ function onFileMenuInsertFooter() {
     return;
   }
 
-  score.value.pageSetup.showFooter = true;
-
-  updatePageSetup(score.value.pageSetup);
+  updatePageSetup(
+    Object.assign(new PageSetup(), score.value.pageSetup, { showFooter: true }),
+  );
 }
 
 async function onFileMenuEditCopyElementLink() {
@@ -9456,9 +9468,6 @@ async function onFileMenuSave() {
     if (workspace.filePath != null) {
       const result = await saveWorkspace(workspace);
       if (result.success) {
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -9475,10 +9484,6 @@ async function onFileMenuSave() {
     } else {
       const result = await saveWorkspaceAs(workspace);
       if (result.success) {
-        workspace.filePath = result.filePath;
-        workspace.hasUnsavedChanges = false;
-        workspace.isRecovered = false;
-        await discardRecoverySnapshot(workspace.id);
         toast.success(
           t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
           {
@@ -9513,10 +9518,6 @@ async function onFileMenuSaveAs() {
   try {
     const result = await saveWorkspaceAs(workspace);
     if (result.success) {
-      workspace.filePath = result.filePath;
-      workspace.hasUnsavedChanges = false;
-      workspace.isRecovered = false;
-      await discardRecoverySnapshot(workspace.id);
       toast.success(
         t(($) => $.toast.editor.saveSuccess, { ns: 'toast' }),
         {
@@ -9545,21 +9546,24 @@ async function onFileMenuSaveAs() {
 }
 
 function onFileMenuUndo() {
+  // Commit debounced lyrics before replay so they cannot overwrite restored notes.
+  flushLyricsAssignment(selectedWorkspace.value);
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
     commandService.value.undo();
 
-    // TODO this may be overkill, but the alternative is putting in place
-    // an event system to only refresh on certain undo actions
-    refreshStaffLyrics();
+    refreshLyricsAfterHistoryReplay();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the undo process, choose a new one
-      const clampedIndex = Math.min(currentIndex, elements.value.length - 1);
+      const clampedIndex = Math.min(
+        currentIndex,
+        activeElements.value.length - 1,
+      );
 
-      if (selectedElement.value !== elements.value[clampedIndex]) {
-        selectedElement.value = elements.value[clampedIndex];
+      if (selectedElement.value !== activeElements.value[clampedIndex]) {
+        selectedElement.value = activeElements.value[clampedIndex];
       }
 
       // Undo can affect the note display in the neume toolbar, so force a refresh here.
@@ -9571,21 +9575,24 @@ function onFileMenuUndo() {
 }
 
 function onFileMenuRedo() {
+  // Commit debounced lyrics before replay so they cannot overwrite restored notes.
+  flushLyricsAssignment(selectedWorkspace.value);
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
     commandService.value.redo();
 
-    // TODO this may be overkill, but the alternative is putting in place
-    // an event system to only refresh on certain undo actions
-    refreshStaffLyrics();
+    refreshLyricsAfterHistoryReplay();
 
     if (currentIndex > -1) {
       // If the selected element was removed during the redo process, choose a new one
-      const clampedIndex = Math.min(currentIndex, elements.value.length - 1);
+      const clampedIndex = Math.min(
+        currentIndex,
+        activeElements.value.length - 1,
+      );
 
-      if (selectedElement.value !== elements.value[clampedIndex]) {
-        selectedElement.value = elements.value[clampedIndex];
+      if (selectedElement.value !== activeElements.value[clampedIndex]) {
+        selectedElement.value = activeElements.value[clampedIndex];
       }
 
       // Redo can affect the note display in the neume toolbar, so force a refresh here.
@@ -9764,8 +9771,12 @@ function onFileMenuPasteFormat() {
 
   if (normalizedRange != null) {
     for (let i = normalizedRange.start; i <= normalizedRange.end; i++) {
-      if (elements.value[i].elementType === formatType.value) {
-        applyCopiedFormat(elements.value[i], targetCommands, styleIdRemap);
+      if (activeElements.value[i].elementType === formatType.value) {
+        applyCopiedFormat(
+          activeElements.value[i],
+          targetCommands,
+          styleIdRemap,
+        );
       }
     }
   } else if (
@@ -9913,6 +9924,12 @@ function onFileMenuPreferences() {
   }
 }
 
+function onOpenMcpSetupDialog() {
+  if (isElectron() && !dialogOpen.value) {
+    mcpSetupDialogIsOpen.value = true;
+  }
+}
+
 function onOpenAboutDialog() {
   aboutDialogIsOpen.value = true;
 }
@@ -9928,49 +9945,42 @@ function onFileMenuGenerateTestFile(testFileType: TestFileType) {
     workspace.score.pageSetup.alignIsonIndicators = false;
   }
 
-  addWorkspace(workspace);
-
-  selectedWorkspace.value = workspace;
-
-  currentFilePath.value = null;
-  score.value.staff.elements.unshift(
+  workspace.score.staff.elements.unshift(
     ...(TestFileGenerator.generateTestFile(testFileType, fonts.value) || []),
   );
-  save();
+  workspace.hasUnsavedChanges = true;
+
+  addAndSelectWorkspace(workspace);
+
+  currentFilePath.value = null;
 }
 
-function onSearchText(args: { query: string; reverse?: boolean }) {
+async function onSearchText(args: { query: string; reverse?: boolean }) {
+  const workspace = selectedWorkspace.value;
   const result = textSearchService.findTextInElements(
     args.query,
-    elements.value,
+    activeElements.value,
     selectedElementIndex.value,
     args.reverse ?? false,
   );
 
-  if (result != null) {
-    selectedElement.value = result;
-
-    (pagesRef.value as HTMLElement[])[
-      selectedElement.value.page - 1
-    ].scrollIntoView();
-
-    pages.value[selectedElement.value.page - 1].isVisible = true;
-
-    nextTick(() => {
-      if (selectedElement.value?.elementType === ElementType.Note) {
-        getTemplateRef<HTMLElement[]>(
-          `element-${selectedElementIndex.value}`,
-        )[0].scrollIntoView();
-      } else if (selectedElement.value?.elementType === ElementType.DropCap) {
-        getTemplateRef<InstanceType<typeof DropCap>[]>(
-          `element-${selectedElementIndex.value}`,
-        )[0].htmlElement.scrollIntoView();
-      } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-        getTemplateRef<InstanceType<typeof TextBox>[]>(
-          `element-${selectedElementIndex.value}`,
-        )[0].htmlElement.scrollIntoView();
-      }
-    });
+  if (result == null) {
+    return;
+  }
+  selectedElement.value = result;
+  const isCurrent = () =>
+    workspace === selectedWorkspace.value && selectedElement.value === result;
+  const pageIndex = result.page - 1;
+  const page = pages.value[pageIndex];
+  const pageElement = pagesRef.value?.[pageIndex];
+  if (page === undefined || pageElement === undefined) {
+    return;
+  }
+  pageElement.scrollIntoView();
+  page.isVisible = true;
+  await nextTick();
+  if (isCurrent()) {
+    pageElement.querySelector(`#element-${result.id}`)?.scrollIntoView();
   }
 }
 
@@ -10025,55 +10035,58 @@ function createDefaultScore() {
   return score;
 }
 
+// Returns whether the score is now open and selected.
 function openScore(args: FileMenuOpenScoreArgs) {
   if (!args.success) {
-    return;
-  }
-
-  // First make sure we don't already have the score open
-  const existingWorkspace = workspaces.value.find(
-    (x) => x.filePath === args.filePath,
-  ) as Workspace;
-  if (existingWorkspace != null) {
-    selectedWorkspace.value = existingWorkspace;
-    return;
+    return false;
   }
 
   try {
-    const score: Score = SaveService.LoadScoreFromJson(JSON.parse(args.data));
+    // First make sure we don't already have the score open
+    const existingWorkspace = workspaces.value.find(
+      (x) => x.filePath === args.filePath,
+    ) as Workspace;
+    if (existingWorkspace != null) {
+      selectedWorkspace.value = existingWorkspace;
+      return true;
+    }
+
+    const { score, repairedFootnoteReferences } =
+      SaveService.LoadScoreFromJsonWithRepairs(JSON.parse(args.data));
 
     // if (score.version !== ScoreVersion) {
     //   alert('This score was created by an older version of the application. It may not work properly');
     // }
 
     const workspace = new Workspace();
+    workspace.hasUnsavedChanges = repairedFootnoteReferences;
     workspace.filePath = args.filePath;
     workspace.tempFileName = getTempFilename();
     workspace.sourceMtimeMs = args.sourceMtimeMs ?? null;
     workspace.sourceSize = args.sourceSize ?? null;
     workspace.score = score;
 
-    addWorkspace(workspace);
-
-    selectedWorkspace.value = workspace;
+    addAndSelectWorkspace(workspace);
 
     selectedElement.value = null;
-
-    save(false);
+    return true;
   } catch (error) {
+    // Later passes over the same open results skip this file.
     args.success = false;
-    console.error(error);
-
-    showErrorToast(
-      t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
-      error,
-      {
-        fallback: t(($) => $.toast.editor.openFailedDescription, {
-          ns: 'toast',
-        }),
-      },
-    );
+    showOpenFailedToast(error);
+    return false;
   }
+}
+
+function showOpenFailedToast(error: unknown) {
+  console.error(error);
+  showErrorToast(
+    t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
+    error,
+    {
+      fallback: t(($) => $.toast.editor.openFailedDescription, { ns: 'toast' }),
+    },
+  );
 }
 
 function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
@@ -10086,51 +10099,49 @@ function openRecoveryCandidate(candidate: RecoveryCandidateArgs) {
       return workspace.id === candidate.workspaceId;
     }) as Workspace | undefined;
 
+    const { score, repairedFootnoteReferences } =
+      SaveService.LoadScoreFromJsonWithRepairs(JSON.parse(candidate.score));
+
     if (existingWorkspace != null) {
-      existingWorkspace.isRecovered = true;
-      existingWorkspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
-      existingWorkspace.sourceMtimeMs = candidate.sourceMtimeMs;
-      existingWorkspace.sourceSize = candidate.sourceSize;
-      existingWorkspace.score = SaveService.LoadScoreFromJson(
-        JSON.parse(candidate.score),
+      const previousState = {
+        isRecovered: existingWorkspace.isRecovered,
+        hasUnsavedChanges: existingWorkspace.hasUnsavedChanges,
+        sourceMtimeMs: existingWorkspace.sourceMtimeMs,
+        sourceSize: existingWorkspace.sourceSize,
+        score: existingWorkspace.score,
+      };
+      Object.assign(existingWorkspace, {
+        isRecovered: true,
+        hasUnsavedChanges:
+          candidate.hasUnsavedChanges || repairedFootnoteReferences,
+        sourceMtimeMs: candidate.sourceMtimeMs,
+        sourceSize: candidate.sourceSize,
+        score,
+      });
+      // Keep the open document usable when its recovered score cannot lay out.
+      selectWorkspaceOrRestore(existingWorkspace, () =>
+        Object.assign(existingWorkspace, previousState),
       );
-      selectedWorkspace.value = existingWorkspace;
       selectedElement.value = null;
-      save(false);
       return existingWorkspace;
     }
-
-    const score: Score = SaveService.LoadScoreFromJson(
-      JSON.parse(candidate.score),
-    );
 
     const workspace = new Workspace();
     workspace.id = candidate.workspaceId;
     workspace.filePath = candidate.filePath;
     workspace.tempFileName = candidate.tempFileName;
-    workspace.hasUnsavedChanges = candidate.hasUnsavedChanges;
+    workspace.hasUnsavedChanges =
+      candidate.hasUnsavedChanges || repairedFootnoteReferences;
     workspace.isRecovered = true;
     workspace.sourceMtimeMs = candidate.sourceMtimeMs;
     workspace.sourceSize = candidate.sourceSize;
     workspace.score = score;
 
-    addWorkspace(workspace);
-
-    selectedWorkspace.value = workspace;
+    addAndSelectWorkspace(workspace);
     selectedElement.value = null;
-    save(false);
     return workspace;
   } catch (error) {
-    console.error(error);
-    showErrorToast(
-      t(($) => $.toast.editor.openFailed, { ns: 'toast' }),
-      error,
-      {
-        fallback: t(($) => $.toast.editor.openFailedDescription, {
-          ns: 'toast',
-        }),
-      },
-    );
+    showOpenFailedToast(error);
     return null;
   }
 }
@@ -10228,7 +10239,40 @@ function addWorkspace(workspace: Workspace) {
   }
 }
 
-function removeWorkspace(workspace: Workspace) {
+// Selects the workspace, which lays it out. If layout throws, the previous
+// selection stays, `restore` undoes whatever the caller changed so the
+// workspace can render again, and the layout error propagates.
+function selectWorkspaceOrRestore(workspace: Workspace, restore: () => void) {
+  const wasSelected = selectedWorkspace.value === workspace;
+  try {
+    selectedWorkspace.value = workspace;
+  } catch (error) {
+    try {
+      restore();
+      // The selection did not change, so lay the restored workspace back out
+      // unless `restore` removed it.
+      if (wasSelected && workspaces.value.includes(workspace)) {
+        save();
+      }
+    } catch (restoreError) {
+      // Report the selection failure, not this one.
+      console.error(restoreError);
+    }
+    throw error;
+  }
+}
+
+// A new workspace that cannot lay out must not stay behind as a tab that can
+// never render.
+function addAndSelectWorkspace(workspace: Workspace) {
+  addWorkspace(workspace);
+  selectWorkspaceOrRestore(workspace, () => detachWorkspace(workspace));
+}
+
+// Removes the workspace without selecting another in its place. A caller that
+// detaches the selected workspace must select another one.
+function detachWorkspace(workspace: Workspace) {
+  disposeAutomationWorkspace(workspace);
   cancelLyricsAssignment(workspace);
   clearRecoverySnapshotTimer(workspace.id);
 
@@ -10245,6 +10289,12 @@ function removeWorkspace(workspace: Workspace) {
       tabs.value.splice(tabIndex, 1);
     }
   }
+
+  return index;
+}
+
+function removeWorkspace(workspace: Workspace) {
+  const index = detachWorkspace(workspace);
 
   if (selectedWorkspace.value === workspace) {
     if (workspaces.value.length > 0) {
@@ -10351,10 +10401,26 @@ function resetScoreContextMenu(event: MouseEvent) {
   scoreContextMenuTarget.value = null;
   scoreMenuPointerDownInside.value = false;
 
+  const target =
+    event.target instanceof Element
+      ? event.target.closest('.footnote-label, .neanes-footnote')
+      : null;
+  contextMenuFootnoteId.value =
+    target?.getAttribute('data-footnote-id') ?? null;
+  if (contextMenuFootnoteId.value !== null) {
+    scoreContextMenuTarget.value =
+      orderedFootnotes(score.value).find(
+        ({ footnote }) => footnote.id === contextMenuFootnoteId.value,
+      )?.reference ?? null;
+  }
+
   // Right-clicks inside editable text keep the native context menu: stop the
   // event in the capture phase so reka's trigger on .page-background never opens
   // the score menu, and do NOT preventDefault so the browser's own menu shows.
-  if (isEditableContextMenuTarget(event)) {
+  if (
+    contextMenuFootnoteId.value === null &&
+    isEditableContextMenuTarget(event)
+  ) {
     event.stopImmediatePropagation();
   }
 }
@@ -10371,7 +10437,17 @@ function onScoreContextMenu(event: MouseEvent) {
 function onScoreContextMenuOpenChange(open: boolean) {
   if (!open) {
     scoreContextMenuTarget.value = null;
+    contextMenuFootnoteId.value = null;
     scoreMenuPointerDownInside.value = false;
+  }
+}
+
+function onScoreMenuCloseAutoFocus(event: Event) {
+  if (
+    selectedWorkspace.value.activeFootnoteId !== null &&
+    selectedRichTextBoxElement.value !== null
+  ) {
+    event.preventDefault();
   }
 }
 
@@ -10394,6 +10470,13 @@ function onScoreMenuContentPointerUp(event: PointerEvent) {
 const contextMenuNote = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isSyllableElement);
 });
+
+const contextMenuFootnoteAnchor = computed(() =>
+  getContextMenuTargetForHomogeneousSelection(
+    (element): element is FootnoteAnchorElement =>
+      element instanceof FootnoteAnchorElement,
+  ),
+);
 
 const contextMenuMartyria = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isMartyriaElement);
@@ -10505,6 +10588,12 @@ function renderTabLabel(tab: Tab) {
 
 <template>
   <div class="editor">
+    <div
+      v-if="isBrowser"
+      ref="browserPrintWarning"
+      class="browser-print-warning"
+      hidden
+    />
     <div v-if="isLoading" class="loading-overlay">
       <Spinner class="size-16" />
     </div>
@@ -10520,6 +10609,7 @@ function renderTabLabel(tab: Tab) {
       :zoom-fit-mode="zoomFitMode"
     />
     <ToolbarMain
+      :can-insert-page-break="isMainStaff"
       :entry-mode="entryMode"
       :zoom="zoom"
       :zoom-fit-mode="zoomFitMode"
@@ -10616,6 +10706,7 @@ function renderTabLabel(tab: Tab) {
 
         <template #lyrics>
           <LyricsPane
+            :context-label="activeLyricsLabel"
             :locked="lyricsLocked"
             :lyrics="lyrics"
             @activate-staff-lyrics="
@@ -10763,115 +10854,31 @@ function renderTabLabel(tab: Tab) {
                       intersection: pageVisibilityIntersection,
                     }"
                     class="page"
-                    :style="pageStyle"
+                    :style="getPageStyle(page)"
                     :class="{ print: printMode }"
                   >
-                    <template v-if="page.isVisible || printMode">
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          showGuides &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <span
-                          class="guide-line-vl"
-                          :style="getGuideStyleLeft(page)"
-                        />
-                        <span
-                          class="guide-line-vr"
-                          :style="getGuideStyleRight(page)"
-                        />
-                        <span class="guide-line-ht" :style="guideStyleTop" />
-                        <span class="guide-line-hb" :style="guideStyleBottom" />
-                      </template>
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          showLyricBaselines &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <span
-                          v-for="baseline in getDeveloperLyricBaselines(page)"
-                          :key="`developer-lyric-baseline-${pageIndex}-${baseline.key}`"
-                          class="developer-lyric-baseline"
-                          :style="baseline.style"
-                        />
-                      </template>
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          showGlueWidths &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <div
-                          v-for="(line, lineIndex) in page.lines"
-                          :key="`developer-glue-line-${pageIndex}-${lineIndex}`"
-                        >
-                          <div
-                            v-for="overlay in getDeveloperGlueOverlays(
-                              page,
-                              line,
-                              lineIndex,
-                              pageIndex,
-                            )"
-                            :key="`developer-glue-${overlay.key}`"
-                            class="developer-glue-overlay"
-                            :class="{
-                              shrink: overlay.delta < 0,
-                              stretch: overlay.delta > 0,
-                            }"
-                            :style="overlay.wrapperStyle"
-                          >
-                            <div
-                              class="developer-glue-preferred"
-                              :class="{
-                                negative: overlay.preferredNegative,
-                              }"
-                              :style="overlay.preferredStyle"
-                            ></div>
-                            <div
-                              class="developer-glue-actual"
-                              :class="{
-                                negative: overlay.actualNegative,
-                              }"
-                              :style="overlay.actualStyle"
-                            ></div>
-                          </div>
-                        </div>
-                      </template>
-                      <template
-                        v-if="
-                          showDeveloperPanels &&
-                          overlaysEnabled &&
-                          (showAnonymousBoxes || showElementBoxes) &&
-                          (!printMode || shouldRenderDeveloperOverlaysInPrint)
-                        "
-                      >
-                        <div
-                          v-for="(line, lineIndex) in page.lines"
-                          :key="`developer-anonymous-line-${pageIndex}-${lineIndex}`"
-                        >
-                          <div
-                            v-for="overlay in getDeveloperBoxOverlays(
-                              page,
-                              line,
-                              lineIndex,
-                            )"
-                            :key="`developer-anonymous-${pageIndex}-${overlay.key}`"
-                            class="developer-box-overlay"
-                            :class="overlay.kind"
-                            :style="overlay.style"
-                            :title="overlay.label"
-                          ></div>
-                        </div>
-                      </template>
-                      <template v-if="score.pageSetup.showHeader">
+                    <ScorePageContent
+                      v-if="page.isVisible || printMode"
+                      ref="scorePageContents"
+                      :score="score"
+                      :page="page"
+                      :page-index="pageIndex"
+                      :workspace-id="selectedWorkspace.id"
+                      :metadata="getTokenMetadata(pageIndex)"
+                      :is-chapter-opening="
+                        runningMarkerPageMetadata[pageIndex]
+                          ?.isChapterOpening ?? false
+                      "
+                      :fonts="fonts"
+                      :editor-language="ckeditorLanguage"
+                      :zoom="zoom"
+                      :print-mode="printMode"
+                      :interaction="pageInteraction"
+                      :settled-text-boxes="settleFootnoteReferences"
+                      :overlays="pageOverlaySettings"
+                      v-on="pageHandlers"
+                    >
+                      <template #header-badge>
                         <Badge
                           v-if="
                             !printMode &&
@@ -10886,681 +10893,9 @@ function renderTabLabel(tab: Tab) {
                         >
                           {{ getHeaderFooterBadgeLabel(pageIndex, 'header') }}
                         </Badge>
-                        <template
-                          v-if="
-                            isRichTextBoxElement(
-                              getHeaderForPageIndex(pageIndex),
-                            )
-                          "
-                        >
-                          <TextBoxRich
-                            :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                              getHeaderForPageIndex(pageIndex).keyHelper
-                            }`"
-                            :ref="setTemplateRef(`header-${pageIndex}`)"
-                            class="element-box"
-                            :element="
-                              getHeaderForPageIndex(
-                                pageIndex,
-                              ) as RichTextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getHeaderForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="header"
-                            :page-setup="score.pageSetup"
-                            :fonts="fonts"
-                            :paragraph-styles="score.paragraphStyles"
-                            :initial-martyria-styles="
-                              score.initialMartyriaStyles
-                            "
-                            :editor-language="ckeditorLanguage"
-                            :selected="
-                              getHeaderForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :style="getHeaderStyle(page)"
-                            @click="selectHeaderRichTextBox(pageIndex)"
-                            @select-neume="
-                              selectHeaderRichTextBox(pageIndex);
-                              showPropertiesPaneForRichTextNeume();
-                            "
-                            @edit-mode-key="
-                              (editor, modeKey) => {
-                                selectHeaderRichTextBox(pageIndex);
-                                openRichTextModeKeyEditDialog(editor, modeKey);
-                              }
-                            "
-                            @update="
-                              updateRichTextBox(
-                                getHeaderForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                            @update:height="
-                              updateRichTextBoxHeight(
-                                getHeaderForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                          />
-                        </template>
-                        <template
-                          v-else-if="
-                            isTextBoxElement(getHeaderForPageIndex(pageIndex))
-                          "
-                        >
-                          <TextBox
-                            :key="`element-${selectedWorkspace.id}-${getHeaderForPageIndex(pageIndex).id}-${
-                              getHeaderForPageIndex(pageIndex).keyHelper
-                            }`"
-                            :ref="setTemplateRef(`header-${pageIndex}`)"
-                            class="element-box"
-                            :element="
-                              getHeaderForPageIndex(pageIndex) as TextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getHeaderForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="header"
-                            :page-setup="score.pageSetup"
-                            :selected="
-                              getHeaderForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :class="[
-                              {
-                                selectedTextbox:
-                                  getHeaderForPageIndex(pageIndex) ==
-                                  selectedHeaderFooterElement,
-                              },
-                            ]"
-                            :style="getHeaderStyle(page)"
-                            @click="
-                              selectedHeaderFooterElement =
-                                getHeaderForPageIndex(pageIndex)
-                            "
-                            @update="
-                              updateTextBox(
-                                getHeaderForPageIndex(
-                                  pageIndex,
-                                )! as TextBoxElement,
-                                $event,
-                              )
-                            "
-                          />
-                        </template>
-                        <div
-                          v-if="shouldShowHeaderRuleForPageIndex(pageIndex)"
-                          class="header-footer-hr"
-                          :style="
-                            getHeaderHorizontalRuleStyle(
-                              page,
-                              getHeaderForPageIndex(pageIndex).height,
-                            )
-                          "
-                        ></div>
                       </template>
-                      <div
-                        v-for="(line, lineIndex) in page.lines"
-                        :key="`line-${pageIndex}-${lineIndex}`"
-                        :ref="`line-${lineIndex}`"
-                        class="line"
-                      >
-                        <div
-                          v-for="element in line.elements"
-                          :id="`element-${element.id}`"
-                          :key="`element-${selectedWorkspace.id}-${element.id}-${element.keyHelper}`"
-                          class="element-box"
-                          :style="getElementStyle(element)"
-                          @contextmenu="onScoreElementContextMenu(element)"
-                        >
-                          <template v-if="isSyllableElement(element)">
-                            <div
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              class="neume-box"
-                            >
-                              <span v-if="element.pageBreak" class="page-break"
-                                ><PhFile
-                              /></span>
-                              <span
-                                v-if="hasActiveKeepWithNext(element)"
-                                class="keep-with-next"
-                                :title="
-                                  $t(($) => $.toolbar.common.keepWithNext, {
-                                    ns: 'toolbar',
-                                  })
-                                "
-                                ><PhLinkSimpleHorizontal weight="bold"
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><svg
-                                  v-if="
-                                    element.lineBreakType ===
-                                    LineBreakType.Center
-                                  "
-                                  viewBox="0 0 24 24"
-                                >
-                                  <PhParagraph
-                                    size="24"
-                                    weight="fill"
-                                    transform="matrix(0.75 0 0 1 -2 0)"
-                                  />
-                                  <PhTextAlignCenter
-                                    size="12"
-                                    x="12"
-                                    y="12"
-                                  /></svg
-                                ><PhParagraph v-else weight="fill"
-                              /></span>
-                              <AlternateLine
-                                v-for="(alternateLine, index) in (
-                                  element as NoteElement
-                                ).alternateLines"
-                                :key="index"
-                                :element="alternateLine"
-                                :page-setup="score.pageSetup"
-                                :class="{
-                                  selectedAlternateLine:
-                                    selectedWorkspace.selectedAlternateLineElement ===
-                                    alternateLine,
-                                }"
-                                @update="
-                                  updateAlternateLine(alternateLine, $event)
-                                "
-                                @mousedown="
-                                  setSelectedAlternateLine(
-                                    element,
-                                    alternateLine,
-                                  )
-                                "
-                              />
-                              <Annotation
-                                v-for="(annotation, index) in (
-                                  element as NoteElement
-                                ).annotations"
-                                :key="index"
-                                :ref="
-                                  setTemplateRef(
-                                    `annotation-${getElementIndex(element)}-${index}`,
-                                  )
-                                "
-                                :element="annotation"
-                                :page-setup="score.pageSetup"
-                                :fonts="fonts"
-                                :paragraph-styles="score.paragraphStyles"
-                                :editor-language="ckeditorLanguage"
-                                :selected="
-                                  selectedWorkspace.selectedAnnotationElement ===
-                                  annotation
-                                "
-                                @update="updateAnnotation(annotation, $event)"
-                                @delete="
-                                  removeAnnotation(
-                                    element as NoteElement,
-                                    annotation,
-                                    true,
-                                  )
-                                "
-                                @select-neume="
-                                  setSelectedAnnotation(element, annotation);
-                                  showPropertiesPaneForRichTextNeume();
-                                "
-                                @mousedown="
-                                  setSelectedAnnotation(element, annotation)
-                                "
-                              />
-                              <SyllableNeumeBox
-                                class="syllable-box"
-                                :note="element as NoteElement"
-                                :page-setup="score.pageSetup"
-                                :class="[
-                                  {
-                                    selected: isSelected(element),
-                                    'audio-selected': isAudioSelected(element),
-                                  },
-                                ]"
-                                @select-single="selectedElement = element"
-                                @select-range="setSelectionRange(element)"
-                                @dblclick="openSyllablePositioningDialog"
-                              />
-                              <span
-                                v-if="
-                                  (element as NoteElement)
-                                    .showLeadingLyricHyphen
-                                "
-                                class="leading-lyric-hyphen"
-                                contenteditable="false"
-                                aria-hidden="true"
-                                :style="
-                                  getLeadingLyricHyphenStyle(
-                                    element as NoteElement,
-                                  )
-                                "
-                                >-</span
-                              >
-                              <div
-                                class="lyrics-container"
-                                dir="auto"
-                                :style="getLyricStyle(element as NoteElement)"
-                              >
-                                <ContentEditable
-                                  :ref="
-                                    setTemplateRef(
-                                      `lyrics-${getElementIndex(element)}`,
-                                    )
-                                  "
-                                  class="lyrics"
-                                  :class="{
-                                    selectedLyrics: element === selectedLyrics,
-                                  }"
-                                  :style="{ minWidth: withZoom(element.width) }"
-                                  :content="(element as NoteElement).lyrics"
-                                  :editable="!lyricsLocked"
-                                  white-space="nowrap"
-                                  @click="focusLyrics(element.index)"
-                                  @focus="
-                                    selectedLyrics = element as NoteElement
-                                  "
-                                  @blur="
-                                    updateLyrics(element as NoteElement, $event)
-                                  "
-                                />
-                                <template
-                                  v-if="
-                                    isMelisma(element as NoteElement) &&
-                                    (element as NoteElement).isHyphen &&
-                                    (element as NoteElement).melismaText === ''
-                                  "
-                                >
-                                  <div
-                                    class="melisma"
-                                    :class="{
-                                      full: (element as NoteElement)
-                                        .isFullMelisma,
-                                    }"
-                                    :style="
-                                      getMelismaStyle(element as NoteElement)
-                                    "
-                                  >
-                                    <span
-                                      v-for="(offset, index) in (
-                                        element as NoteElement
-                                      ).hyphenOffsets"
-                                      :key="index"
-                                      class="melisma-hyphen"
-                                      :style="
-                                        getMelismaHyphenStyle(
-                                          element as NoteElement,
-                                          index,
-                                        )
-                                      "
-                                      >-</span
-                                    >
-                                  </div>
-                                </template>
-                                <template
-                                  v-else-if="
-                                    isMelisma(element as NoteElement) &&
-                                    !(element as NoteElement).isHyphen &&
-                                    !rtl &&
-                                    (element as NoteElement).melismaText === ''
-                                  "
-                                >
-                                  <span
-                                    class="melisma-underscore"
-                                    aria-hidden="true"
-                                  >
-                                    <span
-                                      class="melisma-inner"
-                                      :style="
-                                        getMelismaUnderscoreStyleInner(
-                                          element as NoteElement,
-                                        )
-                                      "
-                                    ></span>
-                                  </span>
-                                </template>
-                                <template
-                                  v-else-if="
-                                    isMelisma(element as NoteElement) &&
-                                    !(element as NoteElement).isHyphen &&
-                                    rtl
-                                  "
-                                >
-                                  <div
-                                    class="melisma"
-                                    :class="{
-                                      fullRtl: (element as NoteElement)
-                                        .isFullMelisma,
-                                    }"
-                                    :style="
-                                      getMelismaStyle(element as NoteElement)
-                                    "
-                                    v-text="
-                                      (element as NoteElement).melismaText
-                                    "
-                                  ></div>
-                                </template>
-                                <template
-                                  v-else-if="
-                                    (element as NoteElement).isMelisma &&
-                                    (element as NoteElement).melismaText !==
-                                      '' &&
-                                    !rtl
-                                  "
-                                >
-                                  <span
-                                    class="melisma-text"
-                                    :class="{
-                                      selectedMelisma:
-                                        element === selectedLyrics,
-                                    }"
-                                    @click="focusLyrics(element.index)"
-                                    @focus="
-                                      selectedLyrics = element as NoteElement
-                                    "
-                                    v-text="
-                                      (element as NoteElement).melismaText
-                                    "
-                                  ></span>
-                                </template>
-                              </div>
-                            </div>
-                          </template>
-                          <template v-else-if="isMartyriaElement(element)">
-                            <div class="neume-box">
-                              <span v-if="element.pageBreak" class="page-break">
-                                <PhFile
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><PhParagraph weight="fill"
-                              /></span>
-                              <MartyriaNeumeBox
-                                :ref="
-                                  setTemplateRef(
-                                    `element-${getElementIndex(element)}`,
-                                  )
-                                "
-                                class="marytria-neume-box"
-                                :neume="element as MartyriaElement"
-                                :page-setup="score.pageSetup"
-                                :class="[
-                                  {
-                                    selected: isSelected(element),
-                                  },
-                                ]"
-                                @select-single="selectedElement = element"
-                                @select-range="setSelectionRange(element)"
-                              />
-                              <div class="lyrics"></div>
-                            </div>
-                          </template>
-                          <template v-else-if="isTempoElement(element)">
-                            <div
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              class="neume-box"
-                            >
-                              <span v-if="element.pageBreak" class="page-break">
-                                <PhFile
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><PhParagraph weight="fill"
-                              /></span>
-                              <TempoNeumeBox
-                                class="tempo-neume-box"
-                                :neume="element as TempoElement"
-                                :page-setup="score.pageSetup"
-                                :class="[{ selected: isSelected(element) }]"
-                                @select-single="selectedElement = element"
-                                @select-range="setSelectionRange(element)"
-                              />
-                              <div class="lyrics"></div>
-                            </div>
-                          </template>
-                          <template v-else-if="isEmptyElement(element)">
-                            <div
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              class="neume-box"
-                            >
-                              <span v-if="element.pageBreak" class="page-break">
-                                <PhFile
-                              /></span>
-                              <span v-if="element.lineBreak" class="line-break"
-                                ><PhParagraph weight="fill"
-                              /></span>
-                              <EmptyNeumeBox
-                                class="empty-neume-box"
-                                :class="[{ selected: isSelected(element) }]"
-                                :style="
-                                  getEmptyBoxStyle(element as EmptyElement)
-                                "
-                                @select-single="selectedElement = element"
-                              ></EmptyNeumeBox>
-                              <div class="lyrics"></div>
-                            </div>
-                          </template>
-                          <template v-else-if="isTextBoxElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <TextBox
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as TextBoxElement"
-                              :edit-mode="true"
-                              :metadata="getTokenMetadata(pageIndex)"
-                              :page-setup="score.pageSetup"
-                              :selected="isSelected(element)"
-                              @select-single="selectedElement = element"
-                              @update="
-                                updateTextBox(element as TextBoxElement, $event)
-                              "
-                              @update:height="
-                                updateTextBoxHeight(
-                                  element as TextBoxElement,
-                                  $event,
-                                )
-                              "
-                            />
-                          </template>
-                          <template v-else-if="isRichTextBoxElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <TextBoxRich
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as RichTextBoxElement"
-                              :page-setup="score.pageSetup"
-                              :fonts="fonts"
-                              :paragraph-styles="score.paragraphStyles"
-                              :initial-martyria-styles="
-                                score.initialMartyriaStyles
-                              "
-                              :editor-language="ckeditorLanguage"
-                              :selected="isSelected(element)"
-                              @select-single="selectedElement = element"
-                              @select-neume="
-                                selectedElement = element;
-                                showPropertiesPaneForRichTextNeume();
-                              "
-                              @edit-mode-key="
-                                (editor, modeKey) => {
-                                  selectedElement = element;
-                                  openRichTextModeKeyEditDialog(
-                                    editor,
-                                    modeKey,
-                                  );
-                                }
-                              "
-                              @update="
-                                updateRichTextBox(
-                                  element as RichTextBoxElement,
-                                  $event,
-                                )
-                              "
-                              @update:height="
-                                updateRichTextBoxHeight(
-                                  element as RichTextBoxElement,
-                                  $event,
-                                )
-                              "
-                            />
-                          </template>
-                          <template v-else-if="isModeKeyElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <ModeKey
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as ModeKeyElement"
-                              :page-setup="score.pageSetup"
-                              :class="[
-                                {
-                                  selectedTextbox: isSelected(element),
-                                },
-                              ]"
-                              @select-single="selectedElement = element"
-                              @dblclick="openModeKeyDialog"
-                            />
-                          </template>
-                          <template v-else-if="isDropCapElement(element)">
-                            <span v-if="element.pageBreak" class="page-break"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <DropCap
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as DropCapElement"
-                              :page-setup="score.pageSetup"
-                              :editable="!lyricsLocked"
-                              :class="[
-                                {
-                                  selectedTextbox: isSelected(element),
-                                },
-                              ]"
-                              @select-single="selectedElement = element"
-                              @update:content="
-                                updateDropCapContent(
-                                  element as DropCapElement,
-                                  $event,
-                                )
-                              "
-                            />
-                          </template>
-                          <template v-else-if="isImageBoxElement(element)">
-                            <span v-if="element.pageBreak" class="page-break-2"
-                              ><PhFile
-                            /></span>
-                            <span v-if="element.lineBreak" class="line-break-2"
-                              ><PhParagraph weight="fill"
-                            /></span>
-                            <ImageBox
-                              :ref="
-                                setTemplateRef(
-                                  `element-${getElementIndex(element)}`,
-                                )
-                              "
-                              :element="element as ImageBoxElement"
-                              :zoom="zoom"
-                              :print-mode="printMode"
-                              :class="[
-                                { selectedImagebox: isSelected(element) },
-                              ]"
-                              @select-single="selectedElement = element"
-                              @update:size="
-                                updateImageBox(
-                                  selectedElement as ImageBoxElement,
-                                  {
-                                    imageWidth: $event.width,
-                                    imageHeight: $event.height,
-                                  },
-                                )
-                              "
-                            />
-                          </template>
-                          <div
-                            v-for="(box, boxIndex) in getDeveloperOverlayBoxes(
-                              element,
-                            )"
-                            v-show="
-                              !printMode || shouldRenderDeveloperOverlaysInPrint
-                            "
-                            :key="`developer-overlay-${element.id}-${boxIndex}`"
-                            class="developer-overlay-box"
-                            :class="{
-                              collision: box.kind === 'collision',
-                              ink: box.kind === 'ink',
-                              lyric: box.kind === 'lyric',
-                              neume: box.kind === 'neume',
-                            }"
-                            :style="getDeveloperOverlayStyle(box)"
-                          ></div>
-                        </div>
-                        <span
-                          v-if="
-                            showDeveloperPanels &&
-                            overlaysEnabled &&
-                            showAdjustmentRatios &&
-                            (!printMode ||
-                              shouldRenderDeveloperOverlaysInPrint) &&
-                            line.adjustmentRatio != null &&
-                            line.elements.length > 0
-                          "
-                          class="adjustment-ratio"
-                          :style="getAdjustmentRatioStyle(line, page)"
-                          >{{ line.adjustmentRatio.toFixed(2) }}</span
-                        >
-                      </div>
-                      <template v-if="score.pageSetup.showFooter">
+
+                      <template #footer-badge>
                         <Badge
                           v-if="
                             !printMode &&
@@ -11575,262 +10910,50 @@ function renderTabLabel(tab: Tab) {
                         >
                           {{ getHeaderFooterBadgeLabel(pageIndex, 'footer') }}
                         </Badge>
-                        <div
-                          v-if="shouldShowFooterRuleForPageIndex(pageIndex)"
-                          class="header-footer-hr"
-                          :style="
-                            getFooterHorizontalRuleStyle(
-                              page,
-                              getFooterForPageIndex(pageIndex).height,
-                            )
-                          "
-                        ></div>
-                        <template
-                          v-if="
-                            isRichTextBoxElement(
-                              getFooterForPageIndex(pageIndex),
-                            )
-                          "
-                        >
-                          <TextBoxRich
-                            :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                              getFooterForPageIndex(pageIndex).keyHelper
-                            }`"
-                            :ref="setTemplateRef(`footer-${pageIndex}`)"
-                            class="element-box"
-                            :element="
-                              getFooterForPageIndex(
-                                pageIndex,
-                              ) as RichTextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getFooterForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="footer"
-                            :page-setup="score.pageSetup"
-                            :fonts="fonts"
-                            :paragraph-styles="score.paragraphStyles"
-                            :initial-martyria-styles="
-                              score.initialMartyriaStyles
-                            "
-                            :editor-language="ckeditorLanguage"
-                            :selected="
-                              getFooterForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :style="getFooterStyle(page)"
-                            @click="selectFooterRichTextBox(pageIndex)"
-                            @select-neume="
-                              selectFooterRichTextBox(pageIndex);
-                              showPropertiesPaneForRichTextNeume();
-                            "
-                            @edit-mode-key="
-                              (editor, modeKey) => {
-                                selectFooterRichTextBox(pageIndex);
-                                openRichTextModeKeyEditDialog(editor, modeKey);
-                              }
-                            "
-                            @update="
-                              updateRichTextBox(
-                                getFooterForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                            @update:height="
-                              updateRichTextBoxHeight(
-                                getFooterForPageIndex(
-                                  pageIndex,
-                                ) as RichTextBoxElement,
-                                $event,
-                              )
-                            "
-                          />
-                        </template>
-                        <template
-                          v-else-if="
-                            isTextBoxElement(getFooterForPageIndex(pageIndex))
-                          "
-                        >
-                          <TextBox
-                            :ref="setTemplateRef(`footer-${pageIndex}`)"
-                            :key="`element-${selectedWorkspace.id}-${getFooterForPageIndex(pageIndex).id}-${
-                              getFooterForPageIndex(pageIndex).keyHelper
-                            }`"
-                            class="element-box"
-                            :element="
-                              getFooterForPageIndex(pageIndex) as TextBoxElement
-                            "
-                            :edit-mode="
-                              !printMode &&
-                              getFooterForPageIndex(pageIndex) ==
-                                selectedHeaderFooterElement
-                            "
-                            :metadata="getTokenMetadata(pageIndex)"
-                            token-scope="footer"
-                            :page-setup="score.pageSetup"
-                            :selected="
-                              getFooterForPageIndex(pageIndex) ==
-                              selectedHeaderFooterElement
-                            "
-                            :class="[
-                              {
-                                selectedTextbox:
-                                  getFooterForPageIndex(pageIndex) ==
-                                  selectedHeaderFooterElement,
-                              },
-                            ]"
-                            :style="getFooterStyle(page)"
-                            @click="
-                              selectedHeaderFooterElement =
-                                getFooterForPageIndex(pageIndex)
-                            "
-                            @update="
-                              updateTextBox(
-                                getFooterForPageIndex(
-                                  pageIndex,
-                                )! as TextBoxElement,
-                                $event,
-                              )
-                            "
-                        /></template>
                       </template>
-                    </template>
+                    </ScorePageContent>
                   </div>
                 </div>
               </ContextMenuTrigger>
-              <ContextMenuContent
-                class="chrome-menu"
-                @pointerdown.capture="onScoreMenuContentPointerDown"
-                @pointerup.capture="onScoreMenuContentPointerUp"
-              >
-                <ContextMenuItem
-                  :disabled="!canCutCopySelected"
-                  @select="onCutScoreElements"
-                >
-                  <PhScissors />
-                  {{ $t(($) => $.menu.edit.cut, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  :disabled="!canCutCopySelected"
-                  @select="onCopyScoreElements"
-                >
-                  <PhCopy />
-                  {{ $t(($) => $.menu.edit.copy, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  :disabled="!canPasteSelected"
-                  @select="onPasteScoreElements(false)"
-                >
-                  <PhClipboardText />
-                  {{ $t(($) => $.menu.edit.paste, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  :disabled="!canPasteSelected"
-                  @select="onPasteScoreElements(true)"
-                >
-                  <PhClipboardText />
-                  {{ $t(($) => $.menu.edit.pasteWithLyrics, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  :disabled="!canSelectAllElements"
-                  @select="onSelectAllScoreElements"
-                >
-                  <PhSelectionAll />
-                  {{ $t(($) => $.menu.edit.selectAll, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <template v-if="contextMenuHasElementProperties">
-                  <ContextMenuSeparator />
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuMartyria != null"
-                    :model-value="contextMenuMartyria.alignRight"
-                    @update:model-value="
-                      updateMartyria(contextMenuMartyria, {
-                        alignRight: $event === true,
-                      })
-                    "
-                  >
-                    <PhAlignRight class="h-4 w-4" weight="duotone" />
-                    {{
-                      $t(($) => $.toolbar.common.alignRight, { ns: 'toolbar' })
-                    }}
-                  </ContextMenuCheckboxItem>
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuModeKey != null"
-                    :model-value="contextMenuModeKey.showAmbitus"
-                    @update:model-value="
-                      updateModeKey(contextMenuModeKey, {
-                        showAmbitus: $event === true,
-                      })
-                    "
-                  >
-                    {{
-                      $t(($) => $.toolbar.initialMartyria.showAmbitus, {
-                        ns: 'toolbar',
-                      })
-                    }}
-                  </ContextMenuCheckboxItem>
-                  <ContextMenuCheckboxItem
-                    v-if="contextMenuImageBox != null"
-                    :model-value="contextMenuImageBox.lockAspectRatio"
-                    @update:model-value="
-                      updateImageBox(contextMenuImageBox, {
-                        lockAspectRatio: $event === true,
-                      })
-                    "
-                  >
-                    {{
-                      $t(($) => $.toolbar.imageBox.maintainAspectRatio, {
-                        ns: 'toolbar',
-                      })
-                    }}
-                  </ContextMenuCheckboxItem>
-                </template>
-                <ContextMenuSeparator />
-                <ContextMenuItem
-                  v-if="canSaveContextMenuSelectionAsCombo"
-                  @select="saveContextMenuSelectionAsCombo"
-                >
-                  <PhBookmarkSimple />
-                  {{ $t(($) => $.menu.edit.saveAsCombo, { ns: 'menu' }) }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  v-if="contextMenuNote != null"
-                  @select="openContextMenuPositioning(contextMenuNote)"
-                >
-                  <PhCrosshair />
-                  {{
-                    $t(($) => $.toolbar.neume.positioning, { ns: 'toolbar' })
-                  }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  v-if="contextMenuModeKey != null"
-                  @select="openContextMenuChangeKey(contextMenuModeKey)"
-                >
-                  <span
-                    class="inline-grid size-4 shrink-0 place-items-center font-['Source_Serif'] text-sm leading-none"
-                    aria-hidden="true"
-                  >
-                    Ηχ
-                  </span>
-                  {{
-                    $t(($) => $.toolbar.initialMartyria.changeInitialMartyria, {
-                      ns: 'toolbar',
-                    })
-                  }}
-                </ContextMenuItem>
-                <ContextMenuItem
-                  @select="setPaneVisibility('properties', true)"
-                >
-                  <PhSlidersHorizontal />
-                  {{ $t(($) => $.menu.view.properties, { ns: 'menu' }) }}
-                </ContextMenuItem>
-              </ContextMenuContent>
+              <FootnoteContextMenu
+                :context-menu-footnote-id="contextMenuFootnoteId"
+                :context-menu-footnote-anchor="contextMenuFootnoteAnchor"
+                :context-menu-martyria="contextMenuMartyria"
+                :context-menu-mode-key="contextMenuModeKey"
+                :context-menu-image-box="contextMenuImageBox"
+                :context-menu-note="contextMenuNote"
+                :can-cut-copy-selected="canCutCopySelected"
+                :can-paste-selected="canPasteSelected"
+                :can-select-all-elements="canSelectAllElements"
+                :context-menu-has-element-properties="
+                  contextMenuHasElementProperties
+                "
+                :can-save-context-menu-selection-as-combo="
+                  canSaveContextMenuSelectionAsCombo
+                "
+                :is-main-staff-anchor="
+                  contextMenuFootnoteAnchor !== null &&
+                  score.staff.elements.includes(contextMenuFootnoteAnchor)
+                "
+                @close-auto-focus="onScoreMenuCloseAutoFocus"
+                @pointer-down="onScoreMenuContentPointerDown"
+                @pointer-up="onScoreMenuContentPointerUp"
+                @footnote-properties="openFootnoteProperties"
+                @cut="onCutScoreElements"
+                @copy="onCopyScoreElements"
+                @paste="onPasteScoreElements"
+                @select-all="onSelectAllScoreElements"
+                @update-martyria="updateMartyria"
+                @update-mode-key="updateModeKey"
+                @update-image-box="updateImageBox"
+                @save-combo="saveContextMenuSelectionAsCombo"
+                @insert-footnote="insertFootnote"
+                @edit-footnote="openFootnoteFromContextMenu"
+                @remove-footnote="removeFootnote"
+                @positioning="openContextMenuPositioning"
+                @change-key="openContextMenuChangeKey"
+                @show-properties="setPaneVisibility('properties', true)"
+              />
             </ContextMenu>
           </div>
         </template>
@@ -12030,6 +11153,25 @@ function renderTabLabel(tab: Tab) {
         </ButtonGroupText>
       </ButtonGroup>
     </div>
+    <FootnotePropertiesDialog
+      v-if="footnotePropertiesDialogIsOpen && editedFootnote !== undefined"
+      v-model:open="footnotePropertiesDialogIsOpen"
+      :footnote="editedFootnote.footnote"
+      :surrounding-elements="footnotePreviewNeighbors"
+      :line-elements="footnotePreviewLineElements"
+      :anchor="
+        editedFootnote.reference instanceof FootnoteAnchorElement
+          ? editedFootnote.reference
+          : null
+      "
+      :page-setup="score.pageSetup"
+      :paragraph-styles="score.paragraphStyles"
+      :automatic-marker="editedFootnote.automaticMarker"
+      :rich-text-reference="
+        editedFootnote.reference instanceof RichTextBoxElement
+      "
+      @update="updateFootnoteMarker"
+    />
     <ModeKeyDialog
       v-if="modeKeyDialogIsOpen && modeKeyDialogElement != null"
       v-model:open="modeKeyDialogIsOpen"
@@ -12066,6 +11208,10 @@ function renderTabLabel(tab: Tab) {
       @update="updateEditorPreferences"
     />
     <AboutDialog v-if="aboutDialogIsOpen" v-model:open="aboutDialogIsOpen" />
+    <McpSetupDialog
+      v-if="mcpSetupDialogIsOpen"
+      v-model:open="mcpSetupDialogIsOpen"
+    />
     <RecoveryDialog
       v-if="recoveryDialogIsOpen"
       v-model:open="recoveryDialogIsOpen"
@@ -12123,12 +11269,14 @@ function renderTabLabel(tab: Tab) {
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
     />
-    <template v-if="richTextBoxCalculation">
+    <template v-if="richTextBoxCalculation && !settleFootnoteReferences">
       <TextBoxRich
         v-for="element in resizableRichTextBoxElements"
         :key="element.id!"
         class="richTextBoxCalculation"
         :element="element as RichTextBoxElement"
+        :footnote-body="footnoteBodyElements.has(element)"
+        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
         :page-setup="score.pageSetup"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
@@ -12140,7 +11288,7 @@ function renderTabLabel(tab: Tab) {
         "
       />
     </template>
-    <template v-if="textBoxCalculation">
+    <template v-if="textBoxCalculation && !settleFootnoteReferences">
       <TextBox
         v-for="element in resizableTextBoxElements"
         :key="element.id!"
@@ -12151,6 +11299,35 @@ function renderTabLabel(tab: Tab) {
         @update:height="updateTextBoxHeight(element as TextBoxElement, $event)"
       />
     </template>
+    <WorkspaceTextBoxMeasurement
+      v-if="liveTextBoxMeasurement"
+      :key="liveTextBoxMeasurement.id"
+      :workspace="liveTextBoxMeasurement.workspace"
+      :template-pages="liveTextBoxMeasurement.templatePages"
+      :measurement-boxes="liveTextBoxMeasurement.measurementBoxes"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="liveLayoutMeasurement.complete"
+      @failed="liveLayoutMeasurement.fail"
+    />
+    <WorkspacePageMeasurement
+      v-if="workspacePageMeasurement"
+      :workspace="workspacePageMeasurement.workspace"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @ready="completePageMeasurement"
+      @failed="failPageMeasurement"
+    />
+    <WorkspaceTextBoxMeasurement
+      v-if="workspaceTextBoxMeasurement"
+      :key="workspaceTextBoxMeasurement.id"
+      :workspace="workspaceTextBoxMeasurement.workspace"
+      :template-pages="workspaceTextBoxMeasurement.templatePages"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="completeWorkspaceTextBoxMeasurement"
+      @failed="failWorkspaceTextBoxMeasurement"
+    />
   </div>
 </template>
 
@@ -12179,223 +11356,10 @@ function renderTabLabel(tab: Tab) {
   color: white;
 }
 
-.lyrics {
-  min-height: 1.6rem;
-  text-align: center;
-  position: relative;
-}
-
-.lyrics:focus {
-  outline: none;
-}
-.guide-line-vl {
-  border-left: 1px solid black;
-  position: absolute;
-}
-
-.guide-line-vr {
-  border-right: 1px solid black;
-  position: absolute;
-}
-
-.guide-line-ht {
-  border-top: 1px solid black;
-  position: absolute;
-}
-
-.guide-line-hb {
-  border-bottom: 1px solid black;
-  position: absolute;
-}
-
-.header-footer-hr {
-  position: absolute;
-  border-top-style: solid;
-}
-
-.neume-box .selected {
-  background-color: rgb(238, 232, 170, 0.7);
-}
-
-.neume-box .audio-selected {
-  background-color: rgba(152, 251, 152, 0.5);
-}
-
-.selectedTextbox {
-  outline: 1px solid goldenrod;
-}
-
-.selectedTextbox:deep(.handle) {
-  display: inline;
-}
-
-.selectedImagebox {
-  border: 1px solid goldenrod;
-}
-
-.selectedAlternateLine {
-  outline: 1px solid goldenrod;
-}
-
-.selectedLyrics {
-  border: 1px solid goldenrod;
-}
-
-.selectedMelisma {
-  display: none;
-}
-
 .richTextBoxCalculation,
 .textBoxCalculation {
   position: absolute;
   left: -99999999px;
-}
-
-.line {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.element-box {
-  position: absolute;
-}
-
-.keep-with-next {
-  position: absolute;
-  top: calc(-10px * var(--zoom, 1));
-}
-
-.keep-with-next > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.developer-overlay-box {
-  position: absolute;
-  pointer-events: none;
-  border: 1px dashed #2563eb;
-}
-
-.developer-lyric-baseline {
-  position: absolute;
-  z-index: 30;
-  pointer-events: none;
-  border-top: 1px solid #d946ef;
-  transform: translateY(-100%);
-}
-
-.developer-glue-overlay {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.75;
-}
-
-.developer-glue-preferred {
-  --developer-glue-preferred-border: rgb(14 116 144 / 80%);
-  position: absolute;
-  box-sizing: border-box;
-  border: 1px solid var(--developer-glue-preferred-border);
-  background-size: 100% 100%;
-}
-
-.developer-glue-actual {
-  --developer-glue-actual-fill: rgb(14 116 144 / 35%);
-  position: absolute;
-  border: 1px solid rgb(14 116 144 / 55%);
-  background: var(--developer-glue-actual-fill);
-}
-
-.developer-glue-overlay.stretch .developer-glue-preferred {
-  --developer-glue-preferred-border: rgb(3 105 161 / 85%);
-}
-
-.developer-glue-overlay.stretch .developer-glue-actual {
-  --developer-glue-actual-fill: rgb(3 105 161 / 28%);
-}
-
-.developer-glue-overlay.shrink .developer-glue-preferred {
-  --developer-glue-preferred-border: rgb(180 83 9 / 85%);
-}
-
-.developer-glue-overlay.shrink .developer-glue-actual {
-  --developer-glue-actual-fill: rgb(217 119 6 / 24%);
-}
-
-.developer-glue-preferred.negative {
-  background-image: repeating-linear-gradient(
-    135deg,
-    transparent 0 4px,
-    var(--developer-glue-preferred-border) 4px 7px
-  );
-}
-
-.developer-glue-actual.negative {
-  background-image:
-    repeating-linear-gradient(
-      135deg,
-      transparent 0 4px,
-      rgb(255 255 255 / 45%) 4px 7px
-    ),
-    linear-gradient(
-      var(--developer-glue-actual-fill),
-      var(--developer-glue-actual-fill)
-    );
-}
-
-.developer-box-overlay {
-  position: absolute;
-  pointer-events: none;
-  border: 1px solid rgb(190 24 93 / 75%);
-  background: rgb(244 114 182 / 16%);
-}
-
-.developer-box-overlay.owned {
-  border-color: rgb(37 99 235 / 75%);
-  background: rgb(96 165 250 / 16%);
-}
-
-.developer-box-overlay.line-start-reservation {
-  border-color: rgb(147 51 234 / 75%);
-  background: rgb(192 132 252 / 16%);
-}
-
-.developer-box-overlay.martyria-shift {
-  border-color: rgb(217 119 6 / 80%);
-  background: rgb(251 191 36 / 16%);
-}
-
-.developer-box-overlay.lyric-collision {
-  border-color: rgb(22 163 74 / 80%);
-  background: rgb(74 222 128 / 16%);
-}
-
-.developer-overlay-box.ink {
-  border-color: #ef4444;
-}
-
-.developer-overlay-box.lyric {
-  border-color: #16a34a;
-}
-
-.developer-overlay-box.collision {
-  border-color: #f59e0b;
-}
-
-.adjustment-ratio {
-  pointer-events: none;
-  white-space: nowrap;
-  font-variant-numeric: lining-nums tabular-nums;
-}
-
-.neume-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  position: relative;
 }
 
 .page-container {
@@ -12592,147 +11556,25 @@ function renderTabLabel(tab: Tab) {
   text-align: center;
 }
 
-.lyrics-container {
-  min-height: 1.6rem;
-  min-width: 100%;
-  text-align: center;
-  position: absolute;
-  white-space: nowrap;
-}
-
-.leading-lyric-hyphen {
-  position: absolute;
-  pointer-events: none;
-}
-
-.melisma {
-  position: absolute;
-  display: inline;
-  overflow: hidden !important;
-  white-space: pre;
-}
-
-.melisma-underscore {
-  /* Anchor to the rendered baseline without changing lyric alignment. */
-  display: inline-block;
-  width: 0;
-  height: 0;
-}
-
-.melisma.full {
-  left: 0;
-}
-
-.melisma.fullRtl {
-  right: 0;
-}
-
-.melisma-hyphen {
-  position: absolute;
-}
-
-.melisma-inner {
-  /* The static position follows the baseline anchor. Keep the containing
-     block at lyrics-container so full melismas can start at its left edge. */
-  position: absolute;
-  height: 0;
-  transform: translateY(-100%);
-}
-
-.melisma-text {
-  opacity: 0.5;
-}
-
-.page-break {
-  position: absolute;
-  top: calc(-10px * var(--zoom, 1));
-}
-
-.page-break > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.line-break {
-  position: absolute;
-  top: calc(-10px * var(--zoom, 1));
-}
-
-.line-break > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.page-break-2 {
-  position: absolute;
-  top: calc(-16px * var(--zoom, 1));
-}
-
-.page-break-2 > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
-.line-break-2 {
-  position: absolute;
-  top: calc(-18px * var(--zoom, 1));
-}
-
-.line-break-2 > svg {
-  height: calc(16px * var(--zoom, 1));
-  width: calc(16px * var(--zoom, 1));
-}
-
 .print-only {
   display: none;
 }
 
-.page.print .empty-neume-box {
-  visibility: hidden;
-}
-
-.page.print .text-box-container,
-.page.print .rich-text-box-container,
-.page.print .drop-cap-container,
-.page.print .mode-key-container,
-.page.print .image-box-container,
-.page.print .selectedAnnotation,
-.page.print .selectedAlternateLine,
-.page.print :deep(.text-box),
-.page.print :deep(.rich-text-editor),
-.page.print :deep(.inline-container),
-.page.print :deep(.text-box.multipanel) {
-  border: none;
-  outline: none;
-}
-
-.page.print .page-break,
-.page.print .line-break,
-.page.print .page-break-2,
-.page.print .line-break-2,
-.page.print .keep-with-next,
-.page.print :deep(.handle),
-.page.print :deep(.ck-widget__type-around) {
-  display: none !important;
-}
-
-.page.print :deep(.ck-widget) {
-  outline: none !important;
-}
-
-.page.print .neume-box .selected {
-  background-color: initial;
-}
-
-.page.print .melisma-text {
-  opacity: 1;
-}
-
-.page.print :deep(.rich-text-editor) {
-  overflow: visible !important;
+.browser-print-warning {
+  display: none;
 }
 
 @media print {
+  .editor:has(> .browser-print-warning:not([hidden]))
+    > :not(.browser-print-warning) {
+    display: none !important;
+  }
+
+  .browser-print-warning:not([hidden]) {
+    display: block;
+    visibility: visible;
+  }
+
   .content {
     display: block;
     height: auto;
@@ -12740,7 +11582,7 @@ function renderTabLabel(tab: Tab) {
   }
 
   .page,
-  .page * {
+  .page :deep(*) {
     visibility: visible;
   }
 
@@ -12765,39 +11607,6 @@ function renderTabLabel(tab: Tab) {
     margin-bottom: 0;
     padding: 0;
     break-after: page;
-  }
-
-  .empty-neume-box {
-    visibility: hidden;
-  }
-
-  .text-box-container {
-    border: none;
-    outline: none;
-  }
-
-  .drop-cap-container {
-    border: none;
-    outline: none;
-  }
-
-  .mode-key-container {
-    border: none;
-    outline: none;
-  }
-
-  .image-box-container {
-    border: none;
-    outline: none;
-  }
-
-  .selectedLyrics {
-    border: none;
-    outline: none;
-  }
-
-  .melisma-text {
-    opacity: 1;
   }
 
   .workspace-tab-container,

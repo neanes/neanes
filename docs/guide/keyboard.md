@@ -288,6 +288,7 @@ Press <kbd>Y</kbd> to insert an auto-calculated martyria. Hold <kbd>Shift</kbd> 
 | <span class="neume" aria-hidden="true">&#xe000;&#xe263;</span> | Ison: Zo         | <kbd>A</kbd> + <kbd>N</kbd> |
 | <span class="neume" aria-hidden="true">&#xe000;&#xe262;</span> | Ison: Ke (low)   | <kbd>A</kbd> + <kbd>M</kbd> |
 | <span class="neume" aria-hidden="true">&#xe000;&#xe261;</span> | Ison: Di (low)   | <kbd>A</kbd> + <kbd>,</kbd> |
+| <span class="neume" aria-hidden="true">&#xe000;&#xe26b;</span> | Ison: Ga (low)   | <kbd>A</kbd> + <kbd>.</kbd> |
 
 ## Note Indicators
 

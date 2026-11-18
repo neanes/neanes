@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { PhX } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { TagsInputItemDeleteProps } from 'reka-ui';
 import { TagsInputItemDelete, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   TagsInputItemDeleteProps & { class?: HTMLAttributes['class'] }

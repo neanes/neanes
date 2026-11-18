@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { TooltipContentEmits, TooltipContentProps } from 'reka-ui';
 import {
   TooltipArrow,
@@ -8,8 +9,6 @@ import {
   useForwardPropsEmits,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 defineOptions({
   inheritAttrs: false,

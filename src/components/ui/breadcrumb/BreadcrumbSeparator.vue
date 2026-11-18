@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import { PhCaretRight } from '@phosphor-icons/vue';
+import { cn } from 'cn';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<{
   class?: HTMLAttributes['class'];

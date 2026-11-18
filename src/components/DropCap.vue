@@ -13,7 +13,7 @@
       :style="style"
       :content="element.content"
       :editable="editable"
-      @blur="updateContent"
+      @blur="$emit('update:content', $event)"
     ></ContentEditable>
   </div>
 </template>
@@ -29,7 +29,7 @@ import type { PageSetup } from '@/models/PageSetup';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { withZoom } from '@/utils/withZoom';
 
-const emit = defineEmits(['update:content', 'select-single']);
+defineEmits(['update:content', 'select-single']);
 const props = defineProps({
   element: {
     type: Object as PropType<DropCapElement>,
@@ -78,15 +78,6 @@ function focus() {
 
 function blur() {
   textElement.value.blur();
-}
-
-function updateContent(content: string) {
-  // Nothing actually changed, so do nothing
-  if (props.element.content === content) {
-    return;
-  }
-
-  emit('update:content', content);
 }
 
 defineExpose({

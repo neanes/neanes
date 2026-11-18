@@ -163,10 +163,10 @@ export class LyricService {
             // If this note's acceptsLyrics is not MelismaOnly,
             // then we append a hyphen for non-Greek lyrics,
             // and an underscore for Greek lyrics.
+            // mergeVowels tracks the source syllable even when layout hides vowels.
             if (
               !disableGreekMelismata &&
-              (MelismaHelperGreek.isGreek(note.lyrics) ||
-                MelismaHelperGreek.isGreek(note.melismaText))
+              (MelismaHelperGreek.isGreek(note.lyrics) || mergeVowels != null)
             ) {
               mergeUnderscores += '_';
             } else {
@@ -238,12 +238,16 @@ export class LyricService {
 
   /**
    * Assigns lyrics to score elements. This method does not directly alter the elements. Instead, the caller should provide callbacks to handle the updates.
-   * @param lyrics The lyrics
+   * Hyphens and underscores are parser syntax for syllables and melismas.
+   * Direct note.lyrics updates are literal text and do not invoke this parser
+   * or infer melisma flags. Callers manage lyric locks and history separately.
+   * @param lyrics The lyrics in parser syntax
    * @param elements The elements to assign lyrics to
    * @param rtl Whether the score is in RTL mode
    * @param setLyrics A callback that is invoked whenever lyrics should be immediately changed
    * @param updateNote A callback that is called when lyrics should be updated
    * @param updateDropCap A callback that is called when drop caps should be updated
+   * @returns Text that the available elements did not consume, excluding surrounding whitespace.
    */
   assignLyrics(
     lyrics: string,
@@ -259,6 +263,9 @@ export class LyricService {
     let previousToken = '';
     let previousNote: NoteElement | null = null;
     let melismaSyllables: MelismaSyllables | null = null;
+    const followingElements = new Map(
+      elements.map((element, index) => [element, elements[index + 1]]),
+    );
 
     // Only assign lyrics to notes and drop caps
     const filteredElements = elements.filter(
@@ -356,12 +363,41 @@ export class LyricService {
             nextNote != null
               ? runningElaphronNeumes.includes(nextNote.quantitativeNeume)
               : false;
+          const nextNoteAcceptsLyrics =
+            nextNote == null
+              ? AcceptsLyricsOption.No
+              : this.getEffectiveAcceptsLyrics(nextNote, note);
+          const afterPair = this.findNextNote(filteredElements, i + 1);
+          const sharedGreekPair =
+            !disableGreekMelismata &&
+            !rtl &&
+            MelismaHelperGreek.isGreek(token) &&
+            !token.endsWith('-') &&
+            note.quantitativeNeume === QuantitativeNeume.Apostrophos &&
+            !note.lineBreak &&
+            !note.pageBreak &&
+            followingElements.get(note) === nextNote &&
+            nextNote?.quantitativeNeume === QuantitativeNeume.Hyporoe &&
+            (afterPair == null ||
+              this.getEffectiveAcceptsLyrics(afterPair, nextNote) !==
+                AcceptsLyricsOption.MelismaOnly) &&
+            (nextNoteAcceptsLyrics === AcceptsLyricsOption.MelismaOnly
+              ? tokenizer.peekNextToken() !== '_'
+              : nextNoteAcceptsLyrics === AcceptsLyricsOption.Yes &&
+                token.endsWith('_') &&
+                tokenizer.peekNextToken() === '_' &&
+                tokenizer.peekNextToken(2) !== '_');
 
           // Finally, we check the next note to handle some special cases.
           // (Greek) Calculate melisma syllables.
           // If the lyrics are Greek and the next note is a melisma,
           // then calculate the melismatic syllables.
-          if (
+          if (sharedGreekPair) {
+            // Keep the complete syllable on the shared two-neume span rather
+            // than moving its consonant ending onto the hyporoe.
+            token = token.replace(/_$/, '') + '_';
+            melismaSyllables = null;
+          } else if (
             !disableGreekMelismata &&
             (nextNoteIsMelisma || token.endsWith('_')) &&
             MelismaHelperGreek.isGreek(token)
@@ -425,6 +461,8 @@ export class LyricService {
       previousToken = token;
       previousNote = note;
     }
+
+    return { unassignedText: tokenizer.getRemainingText() };
   }
 
   /**
@@ -455,6 +493,11 @@ export class LyricService {
         acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
       } else if (note.lyrics.trim() === '') {
         acceptsLyrics = AcceptsLyricsOption.No;
+      } else if (
+        this.getDefaultAcceptsLyrics(note, previousNote) !==
+        AcceptsLyricsOption.Yes
+      ) {
+        acceptsLyrics = AcceptsLyricsOption.Yes;
       }
 
       if (note.acceptsLyrics != acceptsLyrics) {
@@ -468,7 +511,7 @@ export class LyricService {
   /**
    * Returns all the values that should be updated if the `element` were assigned the `lyrics`.
    * @param element The note element that would be updated.
-   * @param lyrics The lyrics
+   * @param lyrics The lyric token, including any melisma suffix syntax.
    * @param elements All the elements in the score. Needed for RTL calculations.
    * @param rtl Whether the score is RTL
    * @param setLyrics A callback that is invoked whenever lyrics should be immediately changed.
@@ -572,33 +615,38 @@ export class LyricService {
     note: NoteElement,
     previousNote: NoteElement | null,
   ) {
-    let acceptsLyrics = note.acceptsLyrics;
+    return note.acceptsLyrics === AcceptsLyricsOption.Default
+      ? this.getDefaultAcceptsLyrics(note, previousNote)
+      : note.acceptsLyrics;
+  }
 
-    if (note.acceptsLyrics === AcceptsLyricsOption.Default) {
-      const noLyricsAccepted = [
-        QuantitativeNeume.Cross,
-        QuantitativeNeume.Breath,
-        QuantitativeNeume.VareiaDotted,
-        QuantitativeNeume.VareiaDotted2,
-        QuantitativeNeume.VareiaDotted3,
-        QuantitativeNeume.VareiaDotted4,
-      ];
+  private getDefaultAcceptsLyrics(
+    note: NoteElement,
+    previousNote: NoteElement | null,
+  ) {
+    const noLyricsAccepted = [
+      QuantitativeNeume.Cross,
+      QuantitativeNeume.Breath,
+      QuantitativeNeume.VareiaDotted,
+      QuantitativeNeume.VareiaDotted2,
+      QuantitativeNeume.VareiaDotted3,
+      QuantitativeNeume.VareiaDotted4,
+    ];
 
-      const melismaOnly = [QuantitativeNeume.Kentemata];
+    // Keep saved Default settings stable. Use explicit MelismaOnly settings
+    // when a hyporoe or kentemata below oligon should extend a syllable.
+    const melismaOnly = [QuantitativeNeume.Kentemata];
 
-      if (noLyricsAccepted.includes(note.quantitativeNeume)) {
-        acceptsLyrics = AcceptsLyricsOption.No;
-      } else if (
-        melismaOnly.includes(note.quantitativeNeume) ||
-        previousNote?.tie != null
-      ) {
-        acceptsLyrics = AcceptsLyricsOption.MelismaOnly;
-      } else {
-        acceptsLyrics = AcceptsLyricsOption.Yes;
-      }
+    if (noLyricsAccepted.includes(note.quantitativeNeume)) {
+      return AcceptsLyricsOption.No;
+    } else if (
+      melismaOnly.includes(note.quantitativeNeume) ||
+      previousNote?.tie != null
+    ) {
+      return AcceptsLyricsOption.MelismaOnly;
+    } else {
+      return AcceptsLyricsOption.Yes;
     }
-
-    return acceptsLyrics;
   }
 
   /**
@@ -667,6 +715,10 @@ export class LyricTokenizer {
     this.lyrics = lyrics;
   }
 
+  getRemainingText() {
+    return this.lyrics.slice(this.index).trim();
+  }
+
   /**
    * Returns the next token in the lyrics.
    * @returns The next token
@@ -702,12 +754,16 @@ export class LyricTokenizer {
 
   /**
    * Peeks ahead at the next token without changing the tokenizer's index.
+   * @param offset One-based token position to inspect.
    * @returns The next token
    */
-  peekNextToken() {
+  peekNextToken(offset = 1) {
     const previousIndex = this.index;
 
-    const token = this.getNextToken();
+    let token = '';
+    for (let i = 0; i < offset; i++) {
+      token = this.getNextToken();
+    }
 
     this.index = previousIndex;
 

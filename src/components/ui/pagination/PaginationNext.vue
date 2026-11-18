@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { PhCaretRight } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { PaginationNextProps } from 'reka-ui';
 import { PaginationNext, useForwardProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 
 import type { ButtonVariants } from '@/components/ui/button';
 import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 
 const props = withDefaults(
   defineProps<

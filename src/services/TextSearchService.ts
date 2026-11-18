@@ -1,94 +1,223 @@
-import type {
-  DropCapElement,
-  NoteElement,
-  RichTextBoxElement,
-  ScoreElement,
-  TextBoxElement,
-} from '@/models/Element';
-import { ElementType } from '@/models/Element';
+import { Parser } from 'htmlparser2';
+
+import { ElementType, type ScoreElement } from '@/models/Element';
 import { TATWEEL } from '@/utils/constants';
+import {
+  normalizeSearchRun,
+  normalizeSearchText,
+} from '@/utils/searchNormalization';
+
+// Extract rich text without creating DOM nodes or consulting rendered pages.
+export function searchPlainText(html: string) {
+  let text = '';
+  let suppressed = 0;
+  const blocks = new Set([
+    'p',
+    'div',
+    'br',
+    'li',
+    'tr',
+    'td',
+    'th',
+    'hr',
+    'blockquote',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+  ]);
+  const parser = new Parser(
+    {
+      onopentag(name) {
+        if (name === 'script' || name === 'style') {
+          suppressed++;
+        }
+        if (!suppressed && blocks.has(name)) {
+          text += ' ';
+        }
+      },
+      ontext(value) {
+        if (!suppressed) {
+          text += value;
+        }
+      },
+      onclosetag(name) {
+        if (name === 'script' || name === 'style') {
+          suppressed--;
+        }
+        if (!suppressed && blocks.has(name)) {
+          text += ' ';
+        }
+      },
+    },
+    { decodeEntities: true },
+  );
+  parser.end(html);
+  return text;
+}
+
+export const searchableTextFields = [
+  'lyrics',
+  'content',
+  'contentBottom',
+  'contentLeft',
+  'contentCenter',
+  'contentRight',
+  'text',
+] as const;
+export type SearchableTextField = (typeof searchableTextFields)[number];
+
+export function elementSearchTexts(
+  element: ScoreElement,
+): { field: SearchableTextField; text: string; lyric: boolean }[] {
+  let fields: readonly SearchableTextField[];
+  const lyric =
+    element.elementType === ElementType.Note ||
+    element.elementType === ElementType.DropCap;
+  switch (element.elementType) {
+    case ElementType.Note:
+      fields = ['lyrics'];
+      break;
+    case ElementType.DropCap:
+      fields = ['content'];
+      break;
+    case ElementType.Annotation:
+      fields = ['text'];
+      break;
+    case ElementType.TextBox:
+    case ElementType.RichTextBox:
+      fields = Reflect.get(element, 'multipanel')
+        ? ['contentLeft', 'contentCenter', 'contentRight']
+        : Reflect.get(element, 'inline')
+          ? ['content', 'contentBottom']
+          : ['content'];
+      break;
+    default:
+      return [];
+  }
+  return fields.map((field) => ({
+    field,
+    text: searchPlainText(Reflect.get(element, field) as string),
+    lyric,
+  }));
+}
+
+export interface TextSearchPart {
+  element: ScoreElement;
+  index: number;
+  field: SearchableTextField;
+}
+export interface CollectionTextMatch {
+  text: string;
+  start: number;
+  end: number;
+  parts: TextSearchPart[];
+}
+
+type RunPart = TextSearchPart & { text: string };
+function* matchRun(
+  parts: RunPart[],
+  query: string,
+  caseSensitive = false,
+  lyrics = false,
+): Generator<CollectionTextMatch> {
+  const { text, ranges } = normalizeSearchRun(parts, { caseSensitive, lyrics });
+  let firstRange = 0;
+  for (
+    let start = text.indexOf(query);
+    start !== -1;
+    start = text.indexOf(query, start + 1)
+  ) {
+    const end = start + query.length;
+    while (firstRange < ranges.length && ranges[firstRange].end <= start) {
+      firstRange++;
+    }
+    const matchingParts: TextSearchPart[] = [];
+    for (let i = firstRange; i < ranges.length && ranges[i].start < end; i++) {
+      const { element, index, field } = ranges[i].part;
+      matchingParts.push({ element, index, field });
+    }
+    yield {
+      text,
+      start,
+      end,
+      parts: matchingParts,
+    };
+  }
+}
+
+// A run may pass over notation without lyrics, but never over a text box or
+// into a different collection. Each text-box panel is an independent run.
+export function* matchTextInCollection(
+  elements: ScoreElement[],
+  query: string,
+  options: { caseSensitive?: boolean; fields?: SearchableTextField[] } = {},
+): Generator<CollectionTextMatch> {
+  const ordinaryQuery = normalizeSearchText(query, {
+    caseSensitive: options.caseSensitive,
+  }).trim();
+  const lyricQuery = normalizeSearchText(query, {
+    caseSensitive: options.caseSensitive,
+    lyrics: true,
+  });
+  if (!ordinaryQuery || !lyricQuery) {
+    return;
+  }
+  let run: (TextSearchPart & { text: string })[] = [];
+  for (const [index, element] of elements.entries()) {
+    const texts = elementSearchTexts(element);
+    if (texts.some((entry) => !entry.lyric)) {
+      yield* matchRun(run, lyricQuery, options.caseSensitive, true);
+      run = [];
+    }
+    for (const { field, text, lyric } of texts) {
+      if (options.fields && !options.fields.includes(field)) {
+        continue;
+      }
+      const part = {
+        element,
+        index,
+        field,
+        // Remove ignored lyric characters before joining, so they cannot
+        // interrupt composition across element boundaries.
+        text: lyric ? text.replaceAll(TATWEEL, '').replace(/\s+/gu, '') : text,
+      };
+      if (lyric) {
+        if (part.text.length > 0) {
+          run.push(part);
+        }
+      } else {
+        yield* matchRun([part], ordinaryQuery, options.caseSensitive);
+      }
+    }
+  }
+  yield* matchRun(run, lyricQuery, options.caseSensitive, true);
+}
 
 export class TextSearchService {
   findTextInElements(
-    q: string,
+    query: string,
     elements: ScoreElement[],
-    index: number = 0,
-    reverse: boolean = false,
+    index = 0,
+    reverse = false,
   ): ScoreElement | null {
-    q = q.replace(/\s+/g, '').toLowerCase().replaceAll(TATWEEL, '');
-
-    if (q === '') {
-      return null;
-    }
-
-    const start = reverse ? elements.length - index + 1 : index + 1;
-
-    for (let i = start; i < elements.length; i++) {
-      const currentElement = reverse
-        ? elements.at(elements.length - i - 1)
-        : elements.at(i);
-
-      if (currentElement == null) {
-        continue;
+    let first: number | undefined;
+    let last: number | undefined;
+    let previous: number | undefined;
+    for (const occurrence of matchTextInCollection(elements, query)) {
+      const match = occurrence.parts[0].index;
+      first ??= match;
+      last = match;
+      if (!reverse && match > index) {
+        return elements[match];
       }
-
-      const text = this.getElementText(currentElement);
-
-      if (text != '' && (q.includes(text) || text.includes(q))) {
-        let run = '';
-
-        for (let j = i; j < elements.length; j++) {
-          const nextElement = reverse
-            ? elements.at(elements.length - 1 - j)
-            : elements.at(j);
-
-          if (nextElement == null) {
-            continue;
-          }
-
-          const text = this.getElementText(nextElement);
-
-          if (text != '') {
-            if (reverse) {
-              run = text + run;
-            } else {
-              run += text;
-            }
-
-            if (run.includes(q)) {
-              return reverse ? nextElement : currentElement;
-            }
-
-            if (!q.includes(run)) {
-              break;
-            }
-          }
-        }
+      if (reverse && match < index) {
+        previous = match;
       }
     }
-
-    if (reverse && index !== elements.length + 1) {
-      return this.findTextInElements(q, elements, elements.length + 1, reverse);
-    } else if (!reverse && index !== -1) {
-      return this.findTextInElements(q, elements, -1, reverse);
-    }
-
-    return null;
-  }
-
-  private getElementText(element: ScoreElement) {
-    let text = '';
-
-    if (element.elementType === ElementType.Note) {
-      text = (element as NoteElement).lyrics;
-    } else if (element.elementType === ElementType.DropCap) {
-      text = (element as DropCapElement).content;
-    } else if (element.elementType === ElementType.TextBox) {
-      text = (element as TextBoxElement).content;
-    } else if (element.elementType === ElementType.RichTextBox) {
-      text = (element as RichTextBoxElement).content;
-    }
-
-    return text.toLowerCase().replaceAll(TATWEEL, '');
+    const match = reverse ? (previous ?? last) : first;
+    return match == null ? null : elements[match];
   }
 }

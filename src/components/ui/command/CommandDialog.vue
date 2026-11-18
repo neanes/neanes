@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cn } from 'cn';
 import type { DialogRootEmits, DialogRootProps } from 'reka-ui';
 import { useForwardPropsEmits } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
@@ -10,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
 
 import Command from './Command.vue';
 

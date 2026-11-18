@@ -16,12 +16,32 @@ Enable the pinned npm first with `corepack enable npm`.
 - `npm run build` - type-check (`vue-tsc --noEmit`), Vite build, then `electron-builder` package into `release/` (no publish).
 - `npm run lint` - `eslint` plus `prettier --check`. `npm run lint:fix` autofixes both.
 - `npm test` - run the full Vitest suite once. `npm run test:dev` watches.
+- `npm run test:integration:mcp` - run self-launching Electron MCP scenarios after `npx vite build`; append `-- --list` to list scenarios.
+- `npm run test:integration:rendering` - run real Electron PDF, PNG, and print-preparation checks after `npx vite build`.
+- `npm run test:integration:saving` - run editor save/recovery checks with a disposable Vite/Electron instance (POSIX desktop session required).
+- Integration test setup and fixtures are documented in `tests/README.md`.
 - Single test file: `npx vitest run src/services/LayoutService.test.ts`
 - Single test by name: `npx vitest run -t "part of the test title"`
 - `npm run coverage` - Vitest with `istanbul` coverage.
 - `npm run docs:dev` - VitePress docs site (`docs/`).
 
 Useful development environment variables (put in `.env.local`, or `.env.web.local` for web): `FAKE_UPDATE_AVAILABLE=1` simulates the updater flow without publishing; `VITE_ENABLE_DEV_TOOLS=true` enables Vue Devtools; `VITE_PSEUDOLOCALIZATION=true` pseudolocalizes all strings; `VITE_AUDIO_SERVICE_LOGGING_ENABLED`, `VITE_PLAYBACK_SERVICE_LOGGING_ENABLED`, and `VITE_LAYOUT_SERVICE_LOGGING_ENABLED` enable audio/playback/layout logs.
+
+### macOS: launch Electron outside the agent command sandbox
+
+**Use unsandboxed execution on the first attempt for any command that launches Electron on macOS. Do not try a sandboxed launch first.** The agent command sandbox can block macOS Launch Services registration, causing Electron to abort with `SIGABRT` in `_RegisterApplication` before Neanes JavaScript runs. Each attempt can produce a macOS crash-report dialog.
+
+- With `exec_command`, set `sandbox_permissions: "require_escalated"` and provide a justification explaining that the test launches disposable Electron processes and needs macOS application registration. Apply this to the entire launching command so its child processes inherit the correct execution context. Follow the environment's approval policy; if unsandboxed execution is unavailable or denied, report the limitation instead of launching inside the sandbox.
+- This includes `npm run dev`, direct Electron executable invocations, smoke tests under `tests/integration/mcp/`, `tests/integration/rendering/`, and `tests/integration/saving/` that spawn Electron, and custom test harnesses. MCP bridge tests can launch Electron indirectly; private/headless workers and hidden windows still require native application registration.
+- For example, run `node tests/integration/mcp/text-search-smoke.mjs` with `sandbox_permissions: "require_escalated"` from the outset. The same applies to `headless-launch-smoke.mjs`, `agent-access-smoke.mjs`, `preview-smoke.mjs`, and `rich-text-update-smoke.mjs`.
+- Use the documented disposable profiles and output directories. Run tests against a disposable app, preserving the user's normal Neanes instance and documents. See `electron/mcp/README.md`, `tests/integration/rendering/README.md`, and `tests/integration/saving/README.md` for setup.
+- If a launch still fails, inspect the child exit signal and logs before retrying. A startup `SIGABRT` with `_RegisterApplication` indicates the launch environment; do not repeatedly retry it or change application code to work around it. A missing MCP endpoint or readiness timeout alone does not establish an application bug.
+- This concerns the agent command sandbox. Do not add Electron's `--no-sandbox` flag or disable renderer security. Pure unit tests, linting, type-checking, and build-only commands can run in the normal agent sandbox; clients that only connect to an existing disposable app do not need this GUI-launch exception.
+
+### Unix socket tests and the agent command sandbox
+
+- Tests that create real Unix socket listeners, including `electron/main/automation/editorConnection.test.ts`, need unsandboxed execution in this environment even though they do not launch Electron. Use `sandbox_permissions: "require_escalated"` on the first attempt and explain that the test creates disposable Unix socket listeners.
+- A `listen EPERM: operation not permitted` error for a temporary socket path indicates a sandbox restriction. Do not change application code to work around it; rerun outside the sandbox. If execution is unavailable or denied, report the limitation.
 
 ## Architecture
 
@@ -60,6 +80,14 @@ Forward compatibility (an older app opening a newer file) is explicitly out of s
 
 Vue 3 (`script setup` / Composition API), Tailwind CSS v4, `shadcn-vue` components (vendored under `src/components/ui/`), `reka-ui` primitives, `dockview` for the pane layout, and CKEditor 5 for rich text (custom plugins in `src/ckeditor-plugins/`: `insertneume`, `fontstyle`, `alignmentoverride`, `opentype`, `richtextselection`).
 `i18n` is `i18next` with locales under `src/i18n/` (`en`, `el`, `ro`, `id`, `ru`), managed via Crowdin.
+
+### Keep MCP in sync with application changes
+
+When changing score models, editable properties, element types, serialization, editor commands, document lifecycle, layout, or export behavior, consider whether the MCP API needs corresponding updates.
+
+If affected, update the relevant contracts, schemas, discovery/read projections, edit handlers, documentation, and tests in `src/automation/`, `electron/main/automation/`, and `tests/integration/mcp/`.
+
+Reuse existing application services rather than duplicating behavior in MCP handlers. See `src/automation/README.md` for ownership boundaries and `electron/mcp/README.md` for connection and launch documentation.
 
 ## Conventions
 

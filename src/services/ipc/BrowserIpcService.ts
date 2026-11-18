@@ -5,9 +5,11 @@ import type {
   DiscardRecoverySnapshotReplyArgs,
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsImageReplyArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
+  McpLaunchConfiguration,
   OpenWorkspaceFromArgvArgs,
   RecoverySnapshotArgs,
   SaveRecoverySnapshotReplyArgs,
@@ -15,6 +17,7 @@ import type {
   SaveWorkspaceReplyArgs,
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
+import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
 import { SaveService } from '@/services/SaveService';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
@@ -45,19 +48,25 @@ function getExportDownloadFileName(
 }
 
 export class BrowserIpcService implements IIpcService {
+  public async getMcpLaunchConfiguration(): Promise<McpLaunchConfiguration | null> {
+    return null;
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceReplyArgs> {
     // Note: in the browser, this is probably never going
     // to be called
-    await this.doSave(workspace);
+    await this.doSave(workspace, data);
     return Promise.resolve({ success: true });
   }
 
   public async saveWorkspaceAs(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceAsReplyArgs> {
-    const filePath = await this.doSave(workspace);
+    const filePath = await this.doSave(workspace, data);
     return Promise.resolve({
       success: true,
       filePath: filePath,
@@ -119,8 +128,11 @@ export class BrowserIpcService implements IIpcService {
 
   public async exportWorkspaceAsLatex(
     workspace: Workspace,
-    data: string,
+    data: string | null,
   ): Promise<ExportWorkspaceReplyArgs> {
+    if (data === null) {
+      return { success: false };
+    }
     const file = new Blob([data], { type: 'application/json' });
 
     const downloadFileName = getExportDownloadFileName(
@@ -165,6 +177,10 @@ export class BrowserIpcService implements IIpcService {
     this.downloadFile(fileName, file);
 
     return Promise.resolve({ success: true });
+  }
+
+  public async exportSnapshotAsPng(): Promise<ExportSnapshotAsPngReplyArgs> {
+    throw new Error('Detached PNG export requires Electron');
   }
 
   public async printWorkspace(): Promise<void> {
@@ -232,8 +248,10 @@ export class BrowserIpcService implements IIpcService {
     return Promise.resolve();
   }
 
-  private async doSave(workspace: Workspace) {
-    const score = SaveService.SaveScoreToJson(workspace.score);
+  private async doSave(
+    workspace: Workspace,
+    score: SavedScore = SaveService.SaveScoreToJson(workspace.score),
+  ) {
     const data = JSON.stringify(score, null, 2);
     let file: Blob;
 

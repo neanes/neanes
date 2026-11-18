@@ -2,6 +2,7 @@ import type { ScoreElement } from '@/models/save/v1/Element';
 import { EmptyElement } from '@/models/save/v1/Element';
 
 import { Footers } from './Footers';
+import type { Footnote } from './Footnote';
 import { Headers } from './Headers';
 import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
@@ -26,6 +27,7 @@ export class Score {
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();
+  public footnotes: Footnote[] | undefined = undefined;
 }
 
 export class Staff {

@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-- Node.js 22.x or later
+- Node.js 24.x or later
 
 ### Project Setup
 
@@ -80,6 +80,10 @@ To run tests before committing, type:
 ```sh
 npm test
 ```
+
+Vitest tests live beside their implementation. Real Electron scenarios and test
+helpers live separately in `tests/integration/`; see the [test guide](tests/README.md)
+for setup, commands, and disposable-profile requirements.
 
 ## IDE Support
 

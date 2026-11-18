@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { ListboxGroupProps } from 'reka-ui';
 import { ListboxGroup, ListboxGroupLabel, useId } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 import { computed, onMounted, onUnmounted } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 import { provideCommandGroupContext, useCommand } from '.';
 

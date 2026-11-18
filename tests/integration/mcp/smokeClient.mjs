@@ -1,0 +1,165 @@
+import assert from 'node:assert/strict';
+import { request as httpRequest } from 'node:http';
+import path from 'node:path';
+
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
+import electron from 'electron';
+
+export async function requestEditor(connection, request) {
+  const response = await new Promise((resolve, reject) => {
+    const outgoing = httpRequest(
+      {
+        socketPath: connection.socket,
+        path: '/operation',
+        method: 'POST',
+        agent: false,
+        signal: AbortSignal.timeout(70_000),
+      },
+      resolve,
+    );
+    outgoing.once('error', reject);
+    outgoing.end(JSON.stringify({ ...connection, request }));
+  });
+  assert.equal(response.statusCode, 200);
+  response.setEncoding('utf8');
+  let body = '';
+  for await (const chunk of response) {
+    body += chunk;
+  }
+  return JSON.parse(body);
+}
+
+export async function connectEditorClient(name, options = {}) {
+  const client = await connectStdioClient(name, options);
+  const tools = (await client.listTools()).tools;
+  const call = client.callTool.bind(client);
+  client.callTool = (params, ...rest) =>
+    call(
+      {
+        ...params,
+        arguments: {
+          ...params.arguments,
+          ...(tools.find((tool) => tool.name === params.name)?.inputSchema
+            .properties?.documentScope
+            ? { documentScope: 'editor' }
+            : {}),
+        },
+      },
+      ...rest,
+    );
+  return client;
+}
+
+export async function callTool(client, name, args = {}, error) {
+  const reply = await client.callTool({ name, arguments: args });
+  assert.deepEqual(reply.structuredContent, JSON.parse(reply.content[0].text));
+  assert.equal(reply.structuredContent.success, !error, JSON.stringify(reply));
+  if (error) {
+    assert.equal(reply.isError, true, JSON.stringify(reply));
+    assert.equal(reply.structuredContent.error.code, error);
+  } else {
+    assert.ok(!reply.isError, JSON.stringify(reply));
+  }
+  return reply;
+}
+
+// Pass the discovered inventory only in scenarios that check published schemas.
+export function createToolCaller(client, tools) {
+  const validator = tools && new AjvJsonSchemaValidator();
+  const inputs =
+    tools &&
+    new Map(
+      tools.map((tool) => [
+        tool.name,
+        validator.getValidator(tool.inputSchema),
+      ]),
+    );
+  const outputs =
+    tools &&
+    new Map(
+      tools.map((tool) => [
+        tool.name,
+        validator.getValidator(tool.outputSchema),
+      ]),
+    );
+  return async (name, args = {}, error) => {
+    if (tools && !error) {
+      assert.equal(
+        inputs.get(name)(args).valid,
+        true,
+        `Invalid published input: ${name}`,
+      );
+    }
+    const reply = await callTool(client, name, args, error);
+    if (tools) {
+      assert.equal(
+        outputs.get(name)(reply.structuredContent).valid,
+        true,
+        `Invalid published output: ${name}: ${JSON.stringify(reply)}`,
+      );
+    }
+    return error ? undefined : reply.structuredContent.result;
+  };
+}
+
+export async function closeDocument(call, args) {
+  const current = await call('get_document_properties', args);
+  return call('close_document', {
+    ...args,
+    expectedRevision: current.revision,
+    discardUnsavedChanges: true,
+  });
+}
+
+export function stdioConfiguration(
+  profile = process.env.NEANES_DEV_USER_DATA_DIR,
+) {
+  assert.ok(
+    profile,
+    'Set NEANES_DEV_USER_DATA_DIR to the disposable editor profile.',
+  );
+  const env = {
+    ...process.env,
+    IS_TEST: '1',
+    NEANES_DEV_USER_DATA_DIR: profile,
+  };
+  delete env.ELECTRON_RUN_AS_NODE;
+  const useLauncher =
+    process.platform === 'win32' ||
+    process.env.NEANES_TEST_USE_MCP_LAUNCHER === '1';
+  if (useLauncher) {
+    env.ELECTRON_RUN_AS_NODE = '1';
+  }
+  return {
+    command: process.env.NEANES_TEST_EXECUTABLE || electron,
+    args: [
+      ...(useLauncher
+        ? [
+            process.env.NEANES_TEST_EXECUTABLE
+              ? path.join(
+                  path.dirname(process.env.NEANES_TEST_EXECUTABLE),
+                  'resources/mcp/stdio-launcher.mjs',
+                )
+              : path.join(process.cwd(), 'electron/mcp/stdio-launcher.mjs'),
+          ]
+        : []),
+      ...(!process.env.NEANES_TEST_EXECUTABLE ? [process.cwd()] : []),
+      '--mcp',
+    ],
+    env,
+    stderr: 'inherit',
+  };
+}
+
+export async function connectStdioClient(
+  name,
+  { profile = process.env.NEANES_DEV_USER_DATA_DIR } = {},
+) {
+  const client = new Client({ name, version: '1.0.0' });
+  await client.connect(new StdioClientTransport(stdioConfiguration(profile)), {
+    timeout: 70_000,
+  });
+  return client;
+}

@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import { cn } from 'cn';
 import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
@@ -51,7 +52,6 @@ import {
   PARAGRAPH_STYLE_MIXED_VALUE,
   PARAGRAPH_STYLE_NONE_VALUE,
 } from '@/composables/useRichTextStyleCommands';
-import { cn } from '@/lib/utils';
 import {
   getParagraphStyleDisplayName,
   type ParagraphStyle,

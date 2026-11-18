@@ -864,6 +864,10 @@ const isonMenuOptions: ButtonWithMenuOption[] = [
     icon: 'ison-di-low',
   },
   {
+    neume: Ison.GaLow,
+    icon: 'ison-ga-low',
+  },
+  {
     neume: Ison.Unison,
     icon: 'ison-unison',
   },

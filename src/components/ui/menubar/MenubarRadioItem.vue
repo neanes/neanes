@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { PhCheck } from '@phosphor-icons/vue';
 import { reactiveOmit } from '@vueuse/core';
+import { cn } from 'cn';
 import type { MenubarRadioItemEmits, MenubarRadioItemProps } from 'reka-ui';
 import {
   MenubarItemIndicator,
@@ -8,8 +9,6 @@ import {
   useForwardPropsEmits,
 } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
-
-import { cn } from '@/lib/utils';
 
 const props = defineProps<
   MenubarRadioItemProps & { class?: HTMLAttributes['class'] }

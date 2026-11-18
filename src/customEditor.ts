@@ -54,6 +54,7 @@ import ruTranslations from 'ckeditor5/translations/ru.js';
 
 import AlignmentOverride from './ckeditor-plugins/alignmentoverride/alignmentoverride';
 import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
+import { Footnotes } from './ckeditor-plugins/footnotes/footnotes';
 import InsertModeKey from './ckeditor-plugins/insertmodekey/insertmodekey';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import OpenType from './ckeditor-plugins/opentype/opentype';
@@ -108,6 +109,7 @@ InlineEditor.builtinPlugins = [
   OpenType,
   InsertModeKey,
   InsertNeume,
+  Footnotes,
   Link,
   ListEditing,
   ListProperties,

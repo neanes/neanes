@@ -1,7 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
+import { toRaw } from 'vue';
 
 import { EntryMode } from '@/models/EntryMode';
-import { CommandService } from '@/services/history/CommandService';
+import { ContentChangeTracker } from '@/services/ContentChangeTracker';
+import {
+  CommandFactory,
+  CommandService,
+} from '@/services/history/CommandService';
 
 import type {
   AlternateLineElement,
@@ -9,13 +14,17 @@ import type {
   NoteElement,
   ScoreElement,
 } from './Element';
+import { ElementType } from './Element';
+import type { LyricSetup } from './LyricSetup';
 import { Score } from './Score';
 import type { ScoreElementSelectionRange } from './ScoreElementSelectionRange';
+import type { Staff } from './Staff';
 
 export type ZoomFitMode = 'page-width' | 'text-width' | 'whole-page';
 
 const ZOOM_MIN_BOUNDARY = 0.05;
 const ZOOM_MAX_BOUNDARY = 40;
+const lyricSetupCommandFactory = new CommandFactory<LyricSetup>();
 
 function integerRange(start: number, end: number) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
@@ -55,20 +64,24 @@ export function formatZoomPercent(zoom: number) {
 }
 
 export class Workspace {
+  private contentChanges = new ContentChangeTracker();
+
   public id: string = uuidv4();
-  public score: Score = new Score();
+  private _score: Score = new Score();
   public filePath: string | null = null;
   public tempFileName: string = '';
-  public hasUnsavedChanges: boolean = false;
   public isRecovered: boolean = false;
   public sourceMtimeMs: number | null = null;
   public sourceSize: number | null = null;
-  public commandService: CommandService = new CommandService();
+  public commandService: CommandService = new CommandService(
+    this.contentChanges,
+  );
   public selectedElement: ScoreElement | null = null;
   public selectedAnnotationElement: AnnotationElement | null = null;
   public selectedAlternateLineElement: AlternateLineElement | null = null;
   public selectedHeaderFooterElement: ScoreElement | null = null;
   public selectedLyrics: NoteElement | null = null;
+  public activeFootnoteId: string | null = null;
   public selectionRange: ScoreElementSelectionRange | null = null;
   public zoom: number = 1;
   public zoomFitMode: ZoomFitMode | null = null;
@@ -79,6 +92,75 @@ export class Workspace {
   public playbackBpm: number = 0;
   public exportPageRange: string = '';
 
+  public get score() {
+    return this._score;
+  }
+
+  public get activeStaff() {
+    return (
+      this.score.footnotes.find(
+        (footnote) => footnote.id === this.activeFootnoteId,
+      )?.staff ?? this.score.staff
+    );
+  }
+
+  public selectContentForElement(element: ScoreElement) {
+    this.activeFootnoteId =
+      this.score.footnotes.find((footnote) =>
+        footnote.staff.elements.includes(element),
+      )?.id ?? null;
+  }
+
+  public set score(score: Score) {
+    if (toRaw(this._score) !== toRaw(score)) {
+      this._score = score;
+      this.activeFootnoteId = null;
+      this._nextId = null;
+      this.contentChanges.invalidate();
+      this.commandService.clearHistory();
+    }
+  }
+
+  public get contentRevision() {
+    return this.contentChanges.revision;
+  }
+
+  public get contentStateId() {
+    return this.contentChanges.stateId;
+  }
+
+  public markContentSaved(stateId: number) {
+    this.contentChanges.markSaved(stateId);
+  }
+
+  public get hasUnsavedChanges() {
+    return this.contentChanges.hasUnsavedChanges;
+  }
+
+  public set hasUnsavedChanges(value: boolean) {
+    this.contentChanges.hasUnsavedChanges = value;
+  }
+
+  public updateStaffLyrics(text: string, staff: Staff = this.score.staff) {
+    this.commandService.execute(
+      lyricSetupCommandFactory.create('update-properties', {
+        target: staff.lyrics,
+        newValues: { text },
+      }),
+      true,
+    );
+  }
+
+  public updateLyricsLocked(locked: boolean, staff: Staff = this.score.staff) {
+    this.commandService.execute(
+      lyricSetupCommandFactory.create('update-properties', {
+        target: staff.lyrics,
+        newValues: { locked },
+      }),
+      true,
+    );
+  }
+
   private _nextId: number | null = null;
 
   public get nextId(): number {
@@ -86,7 +168,9 @@ export class Workspace {
     if (this._nextId == null) {
       let maxId = 0;
 
-      for (const element of this.score.staff.elements) {
+      for (const element of this.score.staves.flatMap(
+        (staff) => staff.elements,
+      )) {
         if (element.id != null && element.id > maxId) {
           maxId = element.id;
         }
@@ -97,6 +181,18 @@ export class Workspace {
 
     // return the ID and increment the next ID so we are ready for the next element
     return this._nextId++;
+  }
+}
+
+export function assignMissingElementIds(
+  workspace: Pick<Workspace, 'score' | 'nextId'>,
+) {
+  for (const staff of workspace.score.staves) {
+    for (const element of staff.elements) {
+      if (element.id == null && element.elementType !== ElementType.Empty) {
+        element.id = workspace.nextId;
+      }
+    }
   }
 }
 

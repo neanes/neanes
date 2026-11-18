@@ -1,4 +1,4 @@
-import { NoteElement } from './Element';
+import { AcceptsLyricsOption, NoteElement } from './Element';
 import type {
   Accidental,
   Fthora,
@@ -29,6 +29,7 @@ export type NeumeCombinationSource = 'built-in' | 'user';
 
 export interface NeumeCombinationNotePayload {
   quantitativeNeume: QuantitativeNeume;
+  acceptsLyrics?: AcceptsLyricsOption;
   timeNeume: TimeNeume | null;
   gorgonNeume: GorgonNeume | null;
   secondaryGorgonNeume: GorgonNeume | null;
@@ -105,14 +106,17 @@ const ending1: NeumeCombination = {
     createNote({
       quantitativeNeume: QuantitativeNeume.Hyporoe,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Oligon,
       gorgonNeume: GorgonNeume.Gorgon_Top,
       vocalExpressionNeume: VocalExpressionNeume.Antikenoma,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,
@@ -135,14 +139,17 @@ const ending2: NeumeCombination = {
     createNote({
       quantitativeNeume: QuantitativeNeume.Hyporoe,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Oligon,
       gorgonNeume: GorgonNeume.Gorgon_Top,
       vocalExpressionNeume: VocalExpressionNeume.Antikenoma,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,
@@ -164,10 +171,12 @@ const ornament1: NeumeCombination = {
     createNote({
       vareia: true,
       quantitativeNeume: QuantitativeNeume.Ison,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,
@@ -189,10 +198,12 @@ const ornament1Alt: NeumeCombination = {
     createNote({
       vareia: true,
       quantitativeNeume: QuantitativeNeume.Ison,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Apostrophos,
       gorgonNeume: GorgonNeume.Gorgon_Top,
+      acceptsLyrics: AcceptsLyricsOption.MelismaOnly,
     }),
     createNote({
       quantitativeNeume: QuantitativeNeume.Ison,
@@ -212,6 +223,7 @@ export function serializeNeumeCombinationNote(
 ): NeumeCombinationNotePayload {
   return {
     quantitativeNeume: note.quantitativeNeume,
+    acceptsLyrics: note.acceptsLyrics,
     timeNeume: note.timeNeume,
     gorgonNeume: note.gorgonNeume,
     secondaryGorgonNeume: note.secondaryGorgonNeume,
@@ -280,6 +292,7 @@ export function hydrateNeumeCombinationNote(
 ): NoteElement {
   const note = new NoteElement();
   Object.assign(note, payload);
+  note.acceptsLyrics = payload.acceptsLyrics ?? AcceptsLyricsOption.Default;
   return note as NoteElement;
 }
 

@@ -330,7 +330,8 @@
       "isonIndicatorGa",
       "isonIndicatorDi",
       "isonIndicatorKe",
-      "isonIndicatorZoHigh"
+      "isonIndicatorZoHigh",
+      "isonIndicatorGaLow"
     ],
     "rangeStart": "U+E260",
     "rangeEnd": "U+E27F"

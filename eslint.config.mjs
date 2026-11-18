@@ -6,6 +6,7 @@ import pluginVue from 'eslint-plugin-vue';
 export default [
   {
     ignores: [
+      '.test-files/**/*',
       'dist/**/*',
       'dist-electron/**/*',
       'release/**/*',
@@ -28,6 +29,30 @@ export default [
       'simple-import-sort/exports': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    files: [
+      'src/services/**/*.ts',
+      'src/models/**/*.ts',
+      'src/utils/**/*.ts',
+      'src/composables/**/*.ts',
+      'electron/main/files/**/*.ts',
+      'electron/main/export/**/*.ts',
+    ],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/automation/**', '**/automation/**'],
+              message:
+                'Shared application code must not depend on automation. Supply application hooks from the automation integration instead.',
+            },
+          ],
+        },
+      ],
     },
   },
   {

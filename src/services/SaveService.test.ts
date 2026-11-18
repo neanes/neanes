@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  AcceptsLyricsOption,
   DropCapElement,
   EmptyElement,
   LineBreakType,
@@ -25,7 +26,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
-import { Fthora, QuantitativeNeume } from '@/models/Neumes';
+import { Fthora, Ison, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -123,6 +124,42 @@ function loadLegacyElements(...legacyElements: ScoreElement_v1[]) {
 
   return SaveService.LoadScore_v1(saved);
 }
+
+describe('stable lyric acceptance serialization', () => {
+  it.each([QuantitativeNeume.Hyporoe, QuantitativeNeume.KentemataPlusOligon])(
+    'preserves empty Default notes and explicit settings on %s',
+    (neume) => {
+      (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+      const score = new Score();
+      const settings = [
+        AcceptsLyricsOption.Default,
+        AcceptsLyricsOption.Yes,
+        AcceptsLyricsOption.No,
+        AcceptsLyricsOption.MelismaOnly,
+      ];
+      score.staff.elements = settings.map((acceptsLyrics) => {
+        const note = new NoteElement();
+        note.quantitativeNeume = neume;
+        note.acceptsLyrics = acceptsLyrics;
+        return note;
+      });
+
+      const saved = SaveService.SaveScoreToJson(score);
+      expect(
+        (saved.staff.elements[0] as NoteElement_v1).acceptsLyrics,
+      ).toBeUndefined();
+      const loaded = SaveService.LoadScoreFromJson(saved);
+      expect(
+        loaded.staff.elements.map(
+          (element) => (element as NoteElement).acceptsLyrics,
+        ),
+      ).toEqual(settings);
+      expect(
+        loaded.staff.elements.map((element) => (element as NoteElement).lyrics),
+      ).toEqual(['', '', '', '']);
+    },
+  );
+});
 
 describe('martyria quantitative-neume fthora serialization', () => {
   it('round trips the fthora and its chromatic note', () => {
@@ -2224,5 +2261,21 @@ describe('SaveService font styles', () => {
 
     expect(saved.pageSetup.dropCapDefaultLineSpan).toBe(4);
     expect(loaded.pageSetup.dropCapDefaultLineSpan).toBe(4);
+  });
+});
+
+describe('ison indicator serialization', () => {
+  it('preserves the low Ga indicator when saving and loading a score', () => {
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+    const score = new Score();
+    const note = new NoteElement();
+    note.ison = Ison.GaLow;
+    score.staff.elements = [note];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    expect((saved.staff.elements[0] as NoteElement_v1).ison).toBe('Ison.GaLow');
+
+    const loaded = SaveService.LoadScoreFromJson(saved);
+    expect((loaded.staff.elements[0] as NoteElement).ison).toBe(Ison.GaLow);
   });
 });

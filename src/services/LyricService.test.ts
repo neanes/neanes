@@ -1,17 +1,49 @@
 import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
 
-import type { DropCapElement, ScoreElement } from '../models/Element';
+import type { ScoreElement } from '../models/Element';
 import {
   AcceptsLyricsOption,
+  DropCapElement,
   ElementType,
   NoteElement,
 } from '../models/Element';
-import { QuantitativeNeume } from '../models/Neumes';
+import { QuantitativeNeume, Tie } from '../models/Neumes';
 import { LyricService } from './LyricService';
 import { SaveService } from './SaveService';
 
 describe('LyricService (English)', () => {
+  it('assigns and extracts a drop cap as part of the following syllable', () => {
+    const lyricService = new LyricService();
+    const dropCap = new DropCapElement();
+    const first = createNote('');
+    const second = createNote('');
+    const elements = [dropCap, first, second];
+
+    const remaining = lyricService.assignLyrics(
+      'Al-le',
+      elements,
+      false,
+      false,
+      (note, lyrics) => {
+        note.lyrics = lyrics;
+      },
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      (element, content) => {
+        element.content = content;
+      },
+    );
+
+    expect(remaining.unassignedText).toBe('');
+    expect(dropCap.content).toBe('A');
+    expect(first.lyrics).toBe('l');
+    expect(first.isHyphen).toBe(true);
+    expect(second.lyrics).toBe('le');
+    expect(lyricService.extractLyrics(elements, false)).toBe('Al-le');
+  });
+
   it('should extract single word', () => {
     const lyricService = new LyricService();
 
@@ -353,6 +385,23 @@ describe('LyricService (Greek)', () => {
     expect(lyricService.extractLyrics(scoreElements, false)).toEqual('των___');
   });
 
+  it.each(['ω', ''])(
+    'should extract Greek continuations with melismaText %j',
+    (melismaText) => {
+      const lyricService = new LyricService();
+      const scoreElements = [
+        createNote('τω', true, true, true),
+        createNote('', true, false, true, melismaText),
+        createNote('ων'),
+      ];
+
+      expect(lyricService.extractLyrics(scoreElements, false)).toEqual(
+        'των___',
+      );
+      expect(lyricService.extractLyrics(scoreElements, true)).toEqual('τω--ων');
+    },
+  );
+
   it('should extract word after melisma', () => {
     const lyricService = new LyricService();
 
@@ -394,10 +443,6 @@ describe('LyricService (Greek)', () => {
       },
       () => {},
     );
-
-    // The layout service should assign melismaText so we do that here.
-    // This process should probably be improved to be more testable.
-    (scoreElements[8] as NoteElement).melismaText = 'α';
 
     expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
   });
@@ -504,6 +549,361 @@ describe('LyricService (Arab phonetics)', () => {
     );
 
     expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
+  });
+});
+
+describe('Stable lyric defaults', () => {
+  it.each([QuantitativeNeume.Hyporoe, QuantitativeNeume.KentemataPlusOligon])(
+    'keeps Default syllable acceptance on %s through lyric and neume edits',
+    (neume) => {
+      const service = new LyricService();
+      const notes = [createNote(''), createNote(''), createNote('')];
+      notes[1].quantitativeNeume = neume;
+      const assign = (text: string) =>
+        service.assignLyrics(
+          text,
+          notes,
+          false,
+          false,
+          () => {},
+          (note, values) => Object.assign(note, values),
+          () => {},
+        );
+
+      expect(service.getEffectiveAcceptsLyrics(notes[1], notes[0])).toBe(
+        AcceptsLyricsOption.Yes,
+      );
+      assign('one two three');
+      expect(notes.map((note) => note.lyrics)).toEqual(['one', 'two', 'three']);
+      expect(notes.map((note) => note.isMelisma)).toEqual([
+        false,
+        false,
+        false,
+      ]);
+
+      service.assignAcceptsLyricsFromCurrentLyrics(
+        notes,
+        false,
+        (note, value) => {
+          note.acceptsLyrics = value;
+        },
+      );
+      expect(notes[1].acceptsLyrics).toBe(AcceptsLyricsOption.Default);
+
+      notes[1].quantitativeNeume = QuantitativeNeume.Ison;
+      assign('new words here');
+      expect(notes.map((note) => note.lyrics)).toEqual([
+        'new',
+        'words',
+        'here',
+      ]);
+    },
+  );
+
+  it.each(['', ' unused trailing words'])(
+    'preserves historical Greek syllable positions through edits and saves: %s',
+    async (suffix) => {
+      (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+      const saved = JSON.parse(
+        await readFile('tests/data/lyrics-before-2723.byzx', 'utf8'),
+      );
+      saved.staff.lyrics.text += suffix;
+      let score = SaveService.LoadScoreFromJson(saved);
+      expect(
+        score.staff.elements.map((element) => (element as NoteElement).lyrics),
+      ).toEqual(['τω', 'ων', 'σου', 'μου', 'one', 'two']);
+      expect((score.staff.elements[1] as NoteElement).acceptsLyrics).toBe(
+        AcceptsLyricsOption.Default,
+      );
+      expect((score.staff.elements[3] as NoteElement).acceptsLyrics).toBe(
+        AcceptsLyricsOption.Default,
+      );
+
+      for (const text of [
+        'των__ σου μου one two' + suffix,
+        'των__ σου μου new words' + suffix,
+      ]) {
+        score.staff.lyrics.text = text;
+        new LyricService().assignLyrics(
+          text,
+          score.staff.elements,
+          false,
+          false,
+          () => {},
+          (note, values) => Object.assign(note, values),
+          () => {},
+        );
+        // Current shared-pair rendering keeps the complete Greek syllable on
+        // the apostrophos, while subsequent syllables retain their positions.
+        expect(
+          score.staff.elements
+            .slice(0, 4)
+            .map((element) => (element as NoteElement).lyrics),
+        ).toEqual(['των', '', 'σου', 'μου']);
+        expect(
+          score.staff.elements
+            .slice(4)
+            .map((element) => (element as NoteElement).lyrics),
+        ).toEqual(
+          text.includes('new words') ? ['new', 'words'] : ['one', 'two'],
+        );
+        score = SaveService.LoadScoreFromJson(
+          SaveService.SaveScoreToJson(score),
+        );
+        expect(score.staff.lyrics.text).toBe(text);
+        expect((score.staff.elements[1] as NoteElement).acceptsLyrics).toBe(
+          AcceptsLyricsOption.Default,
+        );
+      }
+    },
+  );
+});
+
+describe('Save current melismas', () => {
+  it.each([
+    QuantitativeNeume.Kentemata,
+    QuantitativeNeume.Cross,
+    QuantitativeNeume.Breath,
+    QuantitativeNeume.VareiaDotted,
+    QuantitativeNeume.VareiaDotted2,
+    QuantitativeNeume.VareiaDotted3,
+    QuantitativeNeume.VareiaDotted4,
+  ])('preserves syllables on %s when replacing lyrics', (neume) => {
+    const service = new LyricService();
+    const notes = [createNote('one'), createNote('two'), createNote('three')];
+    notes[1].quantitativeNeume = neume;
+    notes[1].acceptsLyrics = AcceptsLyricsOption.Yes;
+
+    service.assignAcceptsLyricsFromCurrentLyrics(
+      notes,
+      false,
+      (note, value) => {
+        note.acceptsLyrics = value;
+      },
+    );
+
+    expect(notes.map((note) => note.acceptsLyrics)).toEqual([
+      AcceptsLyricsOption.Default,
+      AcceptsLyricsOption.Yes,
+      AcceptsLyricsOption.Default,
+    ]);
+
+    service.assignLyrics(
+      'new words here',
+      notes,
+      false,
+      false,
+      (note, lyrics) => {
+        note.lyrics = lyrics;
+      },
+      (note, values) => {
+        Object.assign(note, values);
+      },
+      () => {},
+    );
+
+    expect(notes.map((note) => note.lyrics)).toEqual(['new', 'words', 'here']);
+    expect(service.extractLyrics(notes, false)).toBe('new words here');
+  });
+
+  it.each([Tie.YfenAbove, Tie.YfenBelow])(
+    'preserves syllables after %s when replacing lyrics',
+    (tie) => {
+      const service = new LyricService();
+      const notes = [createNote('one'), createNote('two'), createNote('three')];
+      notes[0].tie = tie;
+
+      expect(service.getEffectiveAcceptsLyrics(notes[1], notes[0])).toBe(
+        AcceptsLyricsOption.MelismaOnly,
+      );
+
+      service.assignAcceptsLyricsFromCurrentLyrics(
+        notes,
+        false,
+        (note, value) => {
+          note.acceptsLyrics = value;
+        },
+      );
+
+      expect(notes.map((note) => note.acceptsLyrics)).toEqual([
+        AcceptsLyricsOption.Default,
+        AcceptsLyricsOption.Yes,
+        AcceptsLyricsOption.Default,
+      ]);
+
+      service.assignLyrics(
+        'new words here',
+        notes,
+        false,
+        false,
+        (note, lyrics) => {
+          note.lyrics = lyrics;
+        },
+        (note, values) => {
+          Object.assign(note, values);
+        },
+        () => {},
+      );
+
+      expect(notes.map((note) => note.lyrics)).toEqual([
+        'new',
+        'words',
+        'here',
+      ]);
+      expect(service.extractLyrics(notes, false)).toBe('new words here');
+    },
+  );
+
+  it.each([QuantitativeNeume.Hyporoe, QuantitativeNeume.KentemataPlusOligon])(
+    'preserves continuations and blank notes on %s',
+    (neume) => {
+      const service = new LyricService();
+      const notes = [
+        createNote('one', true, true),
+        createNote('', true),
+        createNote(''),
+      ];
+      notes[1].quantitativeNeume = neume;
+      notes[2].quantitativeNeume = neume;
+
+      expect(service.getEffectiveAcceptsLyrics(notes[1], notes[0])).toBe(
+        AcceptsLyricsOption.Yes,
+      );
+      service.assignAcceptsLyricsFromCurrentLyrics(
+        notes,
+        false,
+        (note, value) => {
+          note.acceptsLyrics = value;
+        },
+      );
+
+      expect(notes.map((note) => note.acceptsLyrics)).toEqual([
+        AcceptsLyricsOption.Default,
+        AcceptsLyricsOption.MelismaOnly,
+        AcceptsLyricsOption.No,
+      ]);
+    },
+  );
+});
+
+describe('Greek shared apostrophos-hyporoe assignment', () => {
+  function setup(acceptsLyrics = AcceptsLyricsOption.Yes) {
+    const service = new LyricService();
+    const start = createNote('μην', true, true);
+    start.quantitativeNeume = QuantitativeNeume.Apostrophos;
+    const end = createNote('', true);
+    end.quantitativeNeume = QuantitativeNeume.Hyporoe;
+    end.acceptsLyrics = acceptsLyrics;
+    const following = createNote('σου');
+    const notes: ScoreElement[] = [start, end, following];
+    const assign = (text: string, disabled = false) =>
+      service.assignLyrics(
+        text,
+        notes,
+        false,
+        disabled,
+        () => {},
+        (note, values) => Object.assign(note, values),
+        () => {},
+      );
+    return { service, start, end, following, notes, assign };
+  }
+
+  it('preserves μην__ through repeated panel round trips and an unrelated edit', () => {
+    const data = setup();
+    expect(data.service.extractLyrics(data.notes, false)).toBe('μην__ σου');
+    for (const text of ['μην__ σου', 'μην__ μου', 'μην__ μου']) {
+      data.assign(text);
+      expect(data.start.lyrics).toBe('μην');
+      expect(data.start.isMelismaStart).toBe(true);
+      expect(data.start.isHyphen).toBe(false);
+      expect(data.end.lyrics).toBe('');
+      expect(data.end.isMelisma).toBe(true);
+      expect(data.end.isMelismaStart).toBe(false);
+      expect(data.service.extractLyrics(data.notes, false)).toBe(text);
+    }
+    data.assign('των__ μου');
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'των',
+      '',
+      'μου',
+    ]);
+  });
+
+  it('preserves the pair when MelismaOnly takes an implicit continuation', () => {
+    const data = setup(AcceptsLyricsOption.MelismaOnly);
+    const text = data.service.extractLyrics(data.notes, false);
+    expect(text).toBe('μην σου');
+    data.assign(text);
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μην',
+      '',
+      'σου',
+    ]);
+    expect(data.end.isMelisma).toBe(true);
+  });
+
+  it.each(['lineBreak', 'pageBreak'] as const)(
+    'does not share across an explicit %s',
+    (property) => {
+      const data = setup();
+      data.start[property] = true;
+      data.assign('μην__ σου');
+      expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+        'μη',
+        'ην',
+        'σου',
+      ]);
+    },
+  );
+
+  it('preserves separately entered syllables on the hyporoe', () => {
+    const data = setup();
+    data.assign('μη ην σου');
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μη',
+      'ην',
+      'σου',
+    ]);
+    expect(data.end.isMelisma).toBe(false);
+  });
+
+  it('does not use the shared span when the melisma continues beyond the pair', () => {
+    const data = setup();
+    const continuation = createNote('');
+    data.notes.splice(2, 0, continuation);
+    data.assign('μην___ σου');
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μη',
+      '',
+      'ην',
+      'σου',
+    ]);
+  });
+
+  it('keeps the existing treatment of a hyphenated consonant ending', () => {
+    const data = setup(AcceptsLyricsOption.Default);
+    data.assign('μη-ην σου');
+    expect(data.start.lyrics).toBe('μη');
+    expect(data.start.isHyphen).toBe(true);
+  });
+
+  it('does not share across an intervening element', () => {
+    const data = setup();
+    const dropCap = new DropCapElement();
+    data.notes.splice(1, 0, dropCap);
+    data.assign('μην__ σου');
+    expect(data.start.lyrics).toBe('μη');
+  });
+
+  it('keeps literal Greek syllables when Greek melismas are disabled', () => {
+    const data = setup();
+    data.assign('μην__ σου', true);
+    expect(data.notes.map((note) => (note as NoteElement).lyrics)).toEqual([
+      'μην',
+      '',
+      'σου',
+    ]);
   });
 });
 

@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
 import { serializeModeKeyAttributes } from '@/ckeditor-plugins/insertmodekey/modekeydata';
-import { MartyriaElement, RichTextBoxElement } from '@/models/Element';
-import { Fthora, Note, QuantitativeNeume } from '@/models/Neumes';
+import {
+  MartyriaElement,
+  NoteElement,
+  RichTextBoxElement,
+} from '@/models/Element';
+import {
+  Fthora,
+  Ison,
+  Note,
+  QuantitativeNeume,
+  TempoSign,
+} from '@/models/Neumes';
 import { getNeumeValue } from '@/models/NeumeValues';
 import {
   getNoteValue,
@@ -14,6 +24,7 @@ import {
 import {
   AnalysisService,
   type FthoraNode,
+  type IsonNode,
   type ModeKeyNode,
   NodeType,
   type TempoNode,
@@ -91,5 +102,55 @@ describe('AnalysisService rich text mode keys', () => {
       scale: Scale.HardChromatic,
     });
     expect(tempo?.bpm).toBe(72);
+  });
+});
+
+describe('AnalysisService martyria tempos', () => {
+  it.each([
+    ['tempoLeft', TempoSign.Slow],
+    ['tempo', TempoSign.SlowAbove],
+    ['tempoRight', TempoSign.Slow],
+  ] as const)('uses the default BPM for %s', (placement, sign) => {
+    const martyria = new MartyriaElement();
+    martyria.alignRight = true;
+    martyria.index = 3;
+    martyria[placement] = sign;
+
+    const nodes = AnalysisService.analyze([martyria], false);
+    const tempoNodes = nodes.filter(
+      (node): node is TempoNode => node.nodeType === NodeType.TempoNode,
+    );
+
+    expect(tempoNodes).toEqual([
+      { nodeType: NodeType.TempoNode, elementIndex: 3, bpm: 80 },
+    ]);
+  });
+
+  it('does not change tempo for a martyria without a tempo sign', () => {
+    const martyria = new MartyriaElement();
+    martyria.alignRight = true;
+    martyria.bpm = 60;
+
+    const nodes = AnalysisService.analyze([martyria], false);
+
+    expect(nodes.some((node) => node.nodeType === NodeType.TempoNode)).toBe(
+      false,
+    );
+  });
+});
+
+describe('AnalysisService ison indicators', () => {
+  it('resolves low Ga to its physical and virtual playback notes', () => {
+    const note = new NoteElement();
+    note.ison = Ison.GaLow;
+
+    const nodes = AnalysisService.analyze([note], false);
+    const isonNode = nodes.find(
+      (node): node is IsonNode => node.nodeType === NodeType.IsonNode,
+    );
+
+    expect(isonNode?.unison).toBe(false);
+    expect(isonNode?.physicalNote).toBe(ScaleNote.GaLow);
+    expect(isonNode?.virtualNote).toBe(ScaleNote.GaLow);
   });
 });

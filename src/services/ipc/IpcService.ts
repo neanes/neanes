@@ -4,6 +4,8 @@ import type {
   DiscardRecoverySnapshotsReplyArgs,
   ExportPageAsImageArgs,
   ExportPageAsImageReplyArgs,
+  ExportSnapshotAsPngArgs,
+  ExportSnapshotAsPngReplyArgs,
   ExportWorkspaceAsHtmlArgs,
   ExportWorkspaceAsImageArgs,
   ExportWorkspaceAsLatexArgs,
@@ -11,6 +13,7 @@ import type {
   ExportWorkspaceAsPdfArgs,
   ExportWorkspaceReplyArgs,
   ListRecoveryCandidatesReplyArgs,
+  McpLaunchConfiguration,
   OpenWorkspaceFromArgvArgs,
   PrintWorkspaceArgs,
   RecoverySnapshotArgs,
@@ -23,42 +26,54 @@ import type {
   ShowMessageBoxReplyArgs,
 } from '@/ipc/ipcChannels';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
+import type { Score as SavedScore } from '@/models/save/v1/Score';
 import type { Workspace } from '@/models/Workspace';
+import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import { Unit } from '@/utils/Unit';
 
 import { SaveService } from '../SaveService';
 import type { IIpcService } from './IIpcService';
 
 export class IpcService implements IIpcService {
+  public async getMcpLaunchConfiguration(): Promise<McpLaunchConfiguration> {
+    return await window.ipcRenderer.invoke(
+      IpcRendererChannels.GetMcpLaunchConfiguration,
+    );
+  }
+
   public async saveWorkspace(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(IpcRendererChannels.SaveWorkspace, {
       filePath: workspace.filePath,
       tempFileName: workspace.tempFileName,
-      data: SaveService.SaveScoreToJson(workspace.score),
+      data: data ?? SaveService.SaveScoreToJson(workspace.score),
     } as SaveWorkspaceArgs);
   }
 
   public async saveWorkspaceAs(
     workspace: Workspace,
+    data?: SavedScore,
   ): Promise<SaveWorkspaceAsReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.SaveWorkspaceAs,
       {
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
-        data: SaveService.SaveScoreToJson(workspace.score),
+        data: data ?? SaveService.SaveScoreToJson(workspace.score),
       } as SaveWorkspaceAsArgs,
     );
   }
 
   public async exportWorkspaceAsPdf(
     workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
   ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsPdf,
       {
+        snapshot,
         filePath: workspace.filePath,
         tempFileName: workspace.tempFileName,
         landscape: workspace.score.pageSetup.landscape,
@@ -132,7 +147,7 @@ export class IpcService implements IIpcService {
 
   public async exportWorkspaceAsLatex(
     workspace: Workspace,
-    data: string,
+    data: string | null,
   ): Promise<ExportWorkspaceReplyArgs> {
     return await window.ipcRenderer.invoke(
       IpcRendererChannels.ExportWorkspaceAsLatex,
@@ -144,8 +159,21 @@ export class IpcService implements IIpcService {
     );
   }
 
-  public async printWorkspace(workspace: Workspace) {
+  public async exportSnapshotAsPng(
+    args: ExportSnapshotAsPngArgs,
+  ): Promise<ExportSnapshotAsPngReplyArgs> {
+    return window.ipcRenderer.invoke(
+      IpcRendererChannels.ExportSnapshotAsPng,
+      args,
+    );
+  }
+
+  public async printWorkspace(
+    workspace: Workspace,
+    snapshot: ScoreRenderSnapshot,
+  ) {
     return await window.ipcRenderer.invoke(IpcRendererChannels.PrintWorkspace, {
+      snapshot,
       landscape: workspace.score.pageSetup.landscape,
       pageSize: workspace.score.pageSetup.pageSize,
       pageWidthInches: Unit.toInch(workspace.score.pageSetup.pageWidthCustom),

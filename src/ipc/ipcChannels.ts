@@ -2,8 +2,16 @@ import type { PageSize } from '@/models/PageSetup';
 import type { Score } from '@/models/save/v1/Score';
 import type { ZoomFitMode } from '@/models/Workspace';
 import type { WorkspacePaneId } from '@/models/WorkspacePane';
+import type {
+  PngRenderOptions,
+  ScoreRenderSnapshot,
+} from '@/services/rendering/scoreRenderSnapshot';
 
 export enum IpcMainChannels {
+  ExportRendererSnapshot = 'ExportRendererSnapshot',
+  // Automation-only bridge; names stay centralized for preload validation.
+  AutomationRequest = 'AutomationRequest',
+  AutomationReset = 'AutomationReset',
   UpdateAvailable = 'UpdateAvailable',
   UpdateDownloadStarted = 'UpdateDownloadStarted',
   UpdateDownloadProgress = 'UpdateDownloadProgress',
@@ -52,6 +60,7 @@ export enum IpcMainChannels {
 
   FileMenuPreferences = 'FileMenuPreferences',
   OpenAboutDialog = 'OpenAboutDialog',
+  OpenMcpSetupDialog = 'OpenMcpSetupDialog',
 
   FileMenuInsertAnnotation = 'FileMenuInsertAnnotation',
   FileMenuInsertAlternateLine = 'FileMenuInsertAlternateLine',
@@ -74,7 +83,29 @@ export enum IpcMainChannels {
   CloseApplication = 'CloseApplication',
 }
 
+export interface McpLaunchConfiguration {
+  command: string;
+  args: string[];
+  env?: Record<string, string>;
+}
+
 export enum IpcRendererChannels {
+  GetMcpLaunchConfiguration = 'GetMcpLaunchConfiguration',
+  ExportSnapshotAsPng = 'ExportSnapshotAsPng',
+  ExportRendererImage = 'ExportRendererImage',
+  ExportRendererReady = 'ExportRendererReady',
+  ExportRendererResult = 'ExportRendererResult',
+  // Automation-only bridge; implemented under src/automation/ and main/automation/.
+  AutomationReady = 'AutomationReady',
+  AutomationAuthorizeRequest = 'AutomationAuthorizeRequest',
+  AutomationReply = 'AutomationReply',
+  AutomationPlanBatch = 'AutomationPlanBatch',
+  AutomationReadScore = 'AutomationReadScore',
+  AutomationWriteScore = 'AutomationWriteScore',
+  AutomationExportPdf = 'AutomationExportPdf',
+  AutomationReadImage = 'AutomationReadImage',
+  AutomationExportImage = 'AutomationExportImage',
+  AutomationPreviewPage = 'AutomationPreviewPage',
   DownloadUpdate = 'DownloadUpdate',
   RestartToInstallUpdate = 'RestartToInstallUpdate',
 
@@ -242,6 +273,7 @@ export interface ExportWorkspaceReplyArgs {
 }
 
 export interface ExportWorkspaceAsPdfArgs {
+  snapshot: ScoreRenderSnapshot;
   filePath: string | null;
   tempFileName: string;
   pageSize: PageSize;
@@ -267,7 +299,18 @@ export interface ExportWorkspaceAsMusicXmlArgs {
 export interface ExportWorkspaceAsLatexArgs {
   filePath: string | null;
   tempFileName: string;
-  data: string;
+  data: string | null;
+}
+
+export interface ExportSnapshotAsPngArgs {
+  snapshot: ScoreRenderSnapshot;
+  filePath: string;
+  options: PngRenderOptions;
+}
+
+export interface ExportSnapshotAsPngReplyArgs {
+  exportedPageCount: number;
+  firstExportedPagePath: string;
 }
 
 export interface ExportWorkspaceAsImageArgs {
@@ -347,6 +390,7 @@ export interface ListRecoveryCandidatesReplyArgs {
 }
 
 export interface PrintWorkspaceArgs {
+  snapshot: ScoreRenderSnapshot;
   pageSize: PageSize;
   pageWidthInches: number;
   pageHeightInches: number;

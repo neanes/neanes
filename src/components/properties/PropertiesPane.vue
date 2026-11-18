@@ -64,6 +64,7 @@
       :paragraph-styles="paragraphStyles"
       :initial-martyria-styles="initialMartyriaStyles"
       :source="richTextBoxSource"
+      :footnote-body="context.kind === 'rich-text-box' && context.footnoteBody"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:rich-text-box', richTextBoxElement, $event)"
       @open-paragraph-styles-dialog="

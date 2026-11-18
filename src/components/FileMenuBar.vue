@@ -754,7 +754,7 @@ function onClickExportAsImage() {
 }
 
 function onClickPrint() {
-  window.print();
+  EventBus.$emit(IpcMainChannels.FileMenuPrint);
 }
 
 function onClickPageSetup() {

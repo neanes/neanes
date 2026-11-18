@@ -58,6 +58,7 @@ import type {
   ResolvedInitialMartyriaRun,
   ResolvedInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
+import { getInitialMartyriaNoteAppearance } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayDiagnostics,
@@ -3181,7 +3182,7 @@ export class LayoutService {
       run: ResolvedInitialMartyriaRun | undefined,
     ): InitialMartyriaAppearance | null => {
       if (run?.kind === 'startingPitch') {
-        return run.noteText.appearance;
+        return run.noteText?.appearance ?? null;
       }
       if (run?.kind === 'text') {
         return run.appearance;
@@ -3232,7 +3233,9 @@ export class LayoutService {
       );
       width += separatorBefore.width;
       const appearance =
-        run.kind === 'startingPitch' ? run.noteText.appearance : run.appearance;
+        run.kind === 'startingPitch'
+          ? getInitialMartyriaNoteAppearance(run)
+          : run.appearance;
       const { fontFamily, fontStyle, fontSize } = appearance;
       const strokeOverflow = appearance.strokeWidth / 2;
 
@@ -3282,12 +3285,18 @@ export class LayoutService {
           -TextMeasurementService.getFontBoundingBoxAscent(glyphFont),
           -TextMeasurementService.getFontBoundingBoxAscent(noteTextFont),
         );
+        // Glyph notes sit on the neume baseline like every other glyph; the
+        // marks above them move with them.
+        const noteBaselineShift =
+          run.noteText == null ? -neumeBaselineCorrection : 0;
         const measureNote = (note: InitialMartyriaPitchNote | null) =>
           note == null
             ? null
             : measureInitialMartyriaPitchGeometry(
                 note,
-                run.noteText.names[note.note],
+                run.noteText == null
+                  ? glyphText(note.note, glyphAppearance.fontFamily)
+                  : run.noteText.names[note.note],
                 {
                   textFontFamily: fontFamily,
                   textFontStyle: fontStyle,
@@ -3306,8 +3315,9 @@ export class LayoutService {
           if (geometry == null) {
             continue;
           }
-          includeInk(geometry.top, geometry.bottom);
-          flowTop = Math.min(flowTop, geometry.top);
+          const top = geometry.top - noteBaselineShift;
+          includeInk(top, geometry.bottom - noteBaselineShift);
+          flowTop = Math.min(flowTop, top);
           width += geometry.width;
         }
         const clusterSeparatorWidth = getInitialMartyriaFixedSeparatorSize(
@@ -3349,6 +3359,7 @@ export class LayoutService {
           stackedCharacters: null,
           pitch: {
             textFontSize: fontSize,
+            noteBaselineShift,
             primary,
             secondary,
             clusterSeparatorWidth,

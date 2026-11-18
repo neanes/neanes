@@ -18,7 +18,9 @@ import {
 } from '@/models/ParagraphStyle';
 export function encodeRun(run: ResolvedInitialMartyriaRun) {
   if (run.kind === 'glyph') {
-    return '<modeSign>';
+    return run.semantic === 'modeSign'
+      ? '<modeSign>'
+      : `<${run.semantic}:${run.glyphs.join(',')}>`;
   }
   if (run.kind === 'startingPitch') {
     return '<pitch>';

@@ -4,19 +4,23 @@ import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaLanguageId,
+  type InitialMartyriaLettering,
   type InitialMartyriaModeSignStructure,
   type InitialMartyriaStyle,
   type InitialMartyriaStyleTypography,
   type InitialMartyriaTextStructure,
+  isInitialMartyriaStyleUserCreatable,
 } from './InitialMartyriaStyle';
 
 export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
+  Classic: 'builtin:classic-v1',
   GreekTraditionalSign: 'builtin:traditional-greek-v1',
   GreekAlphabeticNumerals: 'builtin:greek-mode-names-v1',
   EnglishTraditionalSign: 'builtin:english-plagal-first-v1',
@@ -64,6 +68,7 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
   BuiltInInitialMartyriaStyleId,
   InitialMartyriaStyleNameSelector
 > = {
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic]: styleName('classic'),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign]: styleName(
     'greekTraditionalSign',
   ),
@@ -140,6 +145,7 @@ export function createDefaultInitialMartyriaTypography(): InitialMartyriaStyleTy
     paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     useOrdinalForms: true,
+    lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
   };
 }
 
@@ -154,6 +160,7 @@ type BuiltInInitialMartyriaStyleDefinition = (
 ) & {
   transliterateNoteNames?: boolean;
   id: BuiltInInitialMartyriaStyleId;
+  lettering?: InitialMartyriaLettering;
 };
 
 /** A curated style, whose id names one of the built-in styles. */
@@ -163,6 +170,7 @@ export interface BuiltInInitialMartyriaStyle extends InitialMartyriaStyle {
 
 function builtIn({
   id,
+  lettering = INITIAL_MARTYRIA_LETTERINGS.Text,
   ...structure
 }: BuiltInInitialMartyriaStyleDefinition): BuiltInInitialMartyriaStyle {
   return {
@@ -176,6 +184,7 @@ function builtIn({
       ...structure,
     },
     ...createDefaultInitialMartyriaTypography(),
+    lettering,
   };
 }
 
@@ -187,6 +196,17 @@ function builtIn({
 export const builtInInitialMartyriaStyles: BuiltInInitialMartyriaStyle[] = [
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+  }),
+  // Traditional Greek set in the music font's own lettering glyphs.
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
+    lettering: INITIAL_MARTYRIA_LETTERINGS.MusicFont,
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
@@ -472,11 +492,12 @@ const builtInInitialMartyriaStylesById = new Map<
 >(builtInInitialMartyriaStyles.map((style) => [style.id, style]));
 
 /**
- * The style of a new score, and the style that replaces the glyph-based
- * initial martyria of scores saved before styles existed.
+ * The style of a new score, of scores saved before initial martyria styles
+ * existed (it reproduces their glyph-based mode keys), and the fallback for
+ * unresolved style references.
  */
 export const DEFAULT_INITIAL_MARTYRIA_STYLE_ID: BuiltInInitialMartyriaStyleId =
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign;
+  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic;
 
 export function isBuiltInInitialMartyriaStyleId(
   id: string,
@@ -490,12 +511,17 @@ export function getBuiltInInitialMartyriaStyle(
   return builtInInitialMartyriaStylesById.get(id)!;
 }
 
-/** The first curated style of a language seeds new styles in that language. */
+/**
+ * The first curated style of a language that the dialog can create styles
+ * from seeds new styles in that language.
+ */
 export function getDefaultBuiltInInitialMartyriaStyle(
   languageId: InitialMartyriaLanguageId,
 ) {
   return builtInInitialMartyriaStyles.find(
-    (style) => style.structure.languageId === languageId,
+    (style) =>
+      style.structure.languageId === languageId &&
+      isInitialMartyriaStyleUserCreatable(style),
   )!;
 }
 

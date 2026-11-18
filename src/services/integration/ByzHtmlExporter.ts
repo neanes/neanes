@@ -33,6 +33,7 @@ import type {
   InitialMartyriaStyle,
   ResolvedInitialMartyriaRun,
 } from '@/models/InitialMartyriaStyle';
+import { getInitialMartyriaNoteAppearance } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
@@ -1546,11 +1547,19 @@ export class ByzHtmlExporter {
       }
 
       const noteCss = this.getInitialMartyriaAppearanceCss(
-        run.noteText.appearance,
+        getInitialMartyriaNoteAppearance(run),
         pitchLayout.textFontSize,
       );
-      cell += `<span lang="${escapeHtml(run.noteText.languageTag)}" dir="${run.noteText.direction}" style="${noteCss}left: ${Unit.toPt(geometry.text.left)}pt;position: relative;white-space: nowrap;">${escapeHtml(run.noteText.names[pitchNote.note])}</span>`;
-      inner += `<span class="byz--initial-martyria-pitch-note" style="direction: ltr;position: relative;text-align: left;width: ${Unit.toPt(geometry.width)}pt;">${cell}</span>`;
+      const notePosition = `left: ${Unit.toPt(geometry.text.left)}pt;position: relative;white-space: nowrap;`;
+      cell +=
+        run.noteText == null
+          ? `<span style="${noteCss}${notePosition}">${this.exportNeume(pitchNote.note, indentation + 2)}</span>`
+          : `<span lang="${escapeHtml(run.noteText.languageTag)}" dir="${run.noteText.direction}" style="${noteCss}${notePosition}">${escapeHtml(run.noteText.names[pitchNote.note])}</span>`;
+      const cellTop =
+        pitchLayout.noteBaselineShift === 0
+          ? ''
+          : `top: ${Unit.toPt(-pitchLayout.noteBaselineShift)}pt;`;
+      inner += `<span class="byz--initial-martyria-pitch-note" style="direction: ltr;position: relative;${cellTop}text-align: left;width: ${Unit.toPt(geometry.width)}pt;">${cell}</span>`;
 
       if (
         role === 'primary' &&

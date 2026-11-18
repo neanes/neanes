@@ -157,7 +157,9 @@
       "romanian": "Румынский",
       "indonesian": "Индонезийский"
     },
+    "classicHint": "Использует шрифт невм документа. У этого стиля нет параметров настройки.",
     "builtInStyles": {
+      "classic": "Шрифт невм",
       "greekTraditionalSign": "Традиционный знак",
       "greekAlphabeticNumerals": "Буквенные числа",
       "englishTraditionalSign": "Традиционный знак",

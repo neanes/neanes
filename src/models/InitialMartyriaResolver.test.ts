@@ -12,7 +12,10 @@ import {
   resolveInitialMartyriaStyleAppearances,
   resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaResolver';
-import { INITIAL_MARTYRIA_NUMERAL_STYLES } from '@/models/InitialMartyriaStyle';
+import {
+  INITIAL_MARTYRIA_LETTERINGS,
+  INITIAL_MARTYRIA_NUMERAL_STYLES,
+} from '@/models/InitialMartyriaStyle';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -241,7 +244,7 @@ describe('InitialMartyriaResolver', () => {
     );
     expect(originalPitch?.kind).toBe('startingPitch');
     if (originalPitch?.kind === 'startingPitch') {
-      expect(originalPitch.noteText.appearance.fontFamily).toBe('GFS Didot');
+      expect(originalPitch.noteText!.appearance.fontFamily).toBe('GFS Didot');
     }
 
     const plagal = originalRuns.find(
@@ -274,7 +277,7 @@ describe('InitialMartyriaResolver', () => {
     const originalPitch = runs.find((run) => run.kind === 'startingPitch');
     expect(originalPitch?.kind).toBe('startingPitch');
     if (originalPitch?.kind === 'startingPitch') {
-      expect(originalPitch.noteText.appearance.fontFamily).toBe('GFS Didot');
+      expect(originalPitch.noteText!.appearance.fontFamily).toBe('GFS Didot');
     }
     const plagal = runs.find(
       (run) => run.kind === 'text' && run.semantic === 'plagalAbbreviation',
@@ -306,7 +309,7 @@ describe('InitialMartyriaResolver', () => {
     const startingPitch = runs.find((run) => run.kind === 'startingPitch');
     expect(startingPitch?.kind).toBe('startingPitch');
     if (startingPitch?.kind === 'startingPitch') {
-      expect(startingPitch.noteText.appearance.fontFamily).toBe('GFS Porson');
+      expect(startingPitch.noteText!.appearance.fontFamily).toBe('GFS Porson');
     }
   });
 
@@ -338,6 +341,45 @@ describe('InitialMartyriaResolver', () => {
     });
     expect(glyphRuns.length).toBeGreaterThan(0);
     for (const run of glyphRuns) {
+      expect(run.appearance).toMatchObject({
+        color: '#123456',
+        strokeWidth: 0.5,
+        strokeColor: '#654321',
+      });
+    }
+  });
+
+  it('paints music-font lettering with the regular paragraph style', () => {
+    const style = {
+      ...styleFor(attestedStructures['traditional-greek']),
+      lettering: INITIAL_MARTYRIA_LETTERINGS.MusicFont,
+    };
+    const customRegular = createInitialMartyriaParagraphStyle(
+      'custom-regular',
+      { color: '#123456', strokeWidth: 0.5, strokeColor: '#654321' },
+    );
+    const customGreek = createInitialMartyriaParagraphStyle('custom-greek', {
+      color: '#ABCDEF',
+      strokeWidth: 1.5,
+      strokeColor: '#FEDCBA',
+    });
+    style.paragraphStyleId = customRegular.id;
+    style.greekParagraphStyleId = customGreek.id;
+    const styles = [...paragraphStyles, customRegular, customGreek];
+
+    const resolved = resolveInitialMartyriaStyleAppearances(style, styles);
+    expect(resolved.primaryAppearance).toMatchObject({
+      fontFamily: resolved.greekAppearance.fontFamily,
+      fontSize: resolved.greekAppearance.fontSize,
+      color: '#123456',
+      strokeWidth: 0.5,
+      strokeColor: '#654321',
+    });
+
+    const runs = resolve(style, elementForTemplate(500), styles).runs;
+    expect(runs.length).toBeGreaterThan(0);
+    for (const run of runs) {
+      expect(run.kind).not.toBe('text');
       expect(run.appearance).toMatchObject({
         color: '#123456',
         strokeWidth: 0.5,

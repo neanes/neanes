@@ -157,7 +157,9 @@
       "romanian": "Ρουμανικά",
       "indonesian": "Ινδονησιακά"
     },
+    "classicHint": "Χρησιμοποιεί τη γραμματοσειρά νευμάτων του εγγράφου. Αυτό το στυλ δεν έχει επιλογές διαμόρφωσης.",
     "builtInStyles": {
+      "classic": "Γραμματοσειρά νευμάτων",
       "greekTraditionalSign": "Παραδοσιακή μαρτυρία",
       "greekAlphabeticNumerals": "Αλφαβητικοί αριθμοί",
       "englishTraditionalSign": "Παραδοσιακή μαρτυρία",

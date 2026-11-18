@@ -76,6 +76,7 @@ export class ModeKeyMetricsService {
     const key = JSON.stringify({
       structure: resolvedStyle.style.structure,
       useOrdinalForms: resolvedStyle.style.useOrdinalForms,
+      lettering: resolvedStyle.style.lettering,
       appearances,
       neumeFont,
       accessoryBaselineOffset: options.accessoryBaselineOffset,

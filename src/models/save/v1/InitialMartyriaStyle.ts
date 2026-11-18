@@ -13,4 +13,5 @@ export interface InitialMartyriaStyle {
   paragraphStyleId: string;
   greekParagraphStyleId: string;
   useOrdinalForms: boolean | undefined;
+  lettering?: string;
 }

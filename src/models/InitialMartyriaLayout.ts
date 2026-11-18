@@ -61,6 +61,8 @@ export interface InitialMartyriaStackedCharactersLayout {
 
 export interface InitialMartyriaPitchRunLayout {
   textFontSize: number;
+  /** How far each note and its marks are raised; non-zero for glyph notes. */
+  noteBaselineShift: number;
   primary: InitialMartyriaPitchGeometry | null;
   secondary: InitialMartyriaPitchGeometry | null;
   clusterSeparatorWidth: number;

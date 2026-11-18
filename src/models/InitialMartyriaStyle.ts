@@ -109,11 +109,31 @@ export interface InitialMartyriaNoteNames {
 export type InitialMartyriaTextSemantic =
   'label' | 'numeral' | 'plagalWord' | 'plagalAbbreviation' | 'graveWord';
 
+/** How the words and note names of an initial martyria are set. */
+export const INITIAL_MARTYRIA_LETTERINGS = {
+  /** Text in the style's paragraph styles. */
+  Text: 'text',
+  /** The music font's own Greek lettering and pitch-name glyphs. */
+  MusicFont: 'music-font',
+} as const;
+
+export type InitialMartyriaLettering =
+  (typeof INITIAL_MARTYRIA_LETTERINGS)[keyof typeof INITIAL_MARTYRIA_LETTERINGS];
+
 /**
  * The paragraph styles an initial martyria uses for regular and Greek text.
  * Typography is configured on those paragraph styles, not duplicated here.
  */
 export interface InitialMartyriaStyleTypography {
+  /**
+   * Music-font lettering takes only the color and stroke of the regular
+   * paragraph style; the Greek paragraph style and ordinal forms apply to
+   * text lettering alone. Music-font lettering is only ever paired with a
+   * structure the font can letter: styles are created and loaded through
+   * getSupportedInitialMartyriaLettering, and the built-in styles are pinned
+   * by a test. Consumers read this field as is.
+   */
+  lettering: InitialMartyriaLettering;
   paragraphStyleId: string;
   greekParagraphStyleId: string;
   /** Apply the OpenType ordinal feature to digit-ordinal numeral runs only. */
@@ -207,6 +227,18 @@ export function withInitialMartyriaNumeralForm(
   };
 }
 
+/**
+ * Whether new styles can be made from this one in the styles dialog. Only
+ * built-in styles and saved files carry music-font lettering; the dialog
+ * neither creates nor duplicates such styles, since they have no options to
+ * configure.
+ */
+export function isInitialMartyriaStyleUserCreatable(
+  style: Pick<InitialMartyriaStyle, 'lettering'>,
+) {
+  return style.lettering === INITIAL_MARTYRIA_LETTERINGS.Text;
+}
+
 /** Whether the rendered mode name contains a digit ordinal such as "5th". */
 export function initialMartyriaStructureHasOrdinalDigits(
   structure: InitialMartyriaStructure,
@@ -253,7 +285,11 @@ export interface ResolvedInitialMartyriaStyle {
   style: InitialMartyriaStyle;
   mainAppearance: InitialMartyriaAppearance;
   greekAppearance: InitialMartyriaAppearance;
-  /** The appearance matching the script of the style's language. */
+  /**
+   * The appearance matching the script of the style's language. Under
+   * music-font lettering its color and stroke come from the regular
+   * paragraph style.
+   */
   primaryAppearance: InitialMartyriaAppearance;
 }
 
@@ -284,10 +320,13 @@ type ResolvedInitialMartyriaTextContent =
       bottomCharacter: string;
     };
 
+export type InitialMartyriaGlyphSemantic =
+  'modeSign' | InitialMartyriaTextSemantic;
+
 export type ResolvedInitialMartyriaRun =
   | {
       kind: 'glyph';
-      semantic: 'modeSign';
+      semantic: InitialMartyriaGlyphSemantic;
       appearance: InitialMartyriaAppearance;
       direction: 'ltr' | 'rtl';
       glyphs: Neume[];
@@ -302,10 +341,18 @@ export type ResolvedInitialMartyriaRun =
     }
   | {
       kind: 'startingPitch';
+      /** The music-font glyphs: pitch marks, trailing glyphs, glyph notes. */
       appearance: InitialMartyriaAppearance;
-      noteText: InitialMartyriaNoteNames & {
-        appearance: InitialMartyriaAppearance;
-      };
+      /**
+       * The note names, or null when each note is drawn as its own music-font
+       * glyph in the run's appearance. Pitch marks are centered on the note
+       * either way.
+       */
+      noteText:
+        | (InitialMartyriaNoteNames & {
+            appearance: InitialMartyriaAppearance;
+          })
+        | null;
       direction: 'ltr' | 'rtl';
       cluster: InitialMartyriaPitchCluster;
     };
@@ -314,6 +361,13 @@ export type InitialMartyriaStartingNoteRun = Extract<
   ResolvedInitialMartyriaRun,
   { kind: 'startingPitch' }
 >;
+
+/** The appearance a starting pitch run sets its notes in. */
+export function getInitialMartyriaNoteAppearance(
+  run: InitialMartyriaStartingNoteRun,
+): InitialMartyriaAppearance {
+  return run.noteText?.appearance ?? run.appearance;
+}
 
 export interface InitialMartyriaStyleResolution {
   structure: InitialMartyriaStructure;

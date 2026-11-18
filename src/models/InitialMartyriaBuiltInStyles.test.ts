@@ -110,7 +110,7 @@ describe('InitialMartyriaBuiltInStyles', () => {
     );
     expect(startingPitch?.kind).toBe('startingPitch');
     if (startingPitch?.kind === 'startingPitch') {
-      expect(startingPitch.noteText.appearance.fontVariantNumeric).toBe(
+      expect(startingPitch.noteText!.appearance.fontVariantNumeric).toBe(
         'normal',
       );
     }

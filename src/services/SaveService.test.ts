@@ -20,6 +20,7 @@ import {
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
 import {
+  INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
@@ -1407,6 +1408,7 @@ describe('SaveService font styles', () => {
       paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
       greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
       useOrdinalForms: false,
+      lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
     });
     score.initialMartyriaStyles = [customStyle];
     score.pageSetup.initialMartyriaStyleId = customStyle.id;
@@ -1435,6 +1437,7 @@ describe('SaveService font styles', () => {
       paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
       greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
       useOrdinalForms: false,
+      lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
     });
     expect(saved.pageSetup.initialMartyriaStyleId).toBe(customStyle.id);
     expect(saved.pageSetup.modeKeyDefaultColor).toBeUndefined();
@@ -1487,6 +1490,7 @@ describe('SaveService font styles', () => {
       paragraphStyleId: base.paragraphStyleId,
       greekParagraphStyleId: greekParagraphStyle.id,
       useOrdinalForms: true,
+      lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
     });
     score.initialMartyriaStyles = [customStyle];
 
@@ -1587,7 +1591,18 @@ describe('SaveService font styles', () => {
     );
   });
 
-  it('loads scores without Initial Martyria style references as the default style', () => {
+  it('keeps Neume Font as the default for new scores and saved style references', () => {
+    const score = new Score();
+    expect(score.pageSetup.initialMartyriaStyleId).toBe(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
+    );
+    const loaded = SaveService.LoadScore_v1(SaveService.SaveScoreToJson(score));
+    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
+    );
+  });
+
+  it('loads scores without Initial Martyria style references as Neume Font', () => {
     const score = new Score();
     score.staff.elements = [new ModeKeyElement()];
     const saved = SaveService.SaveScoreToJson(score);
@@ -1598,7 +1613,7 @@ describe('SaveService font styles', () => {
     const loaded = SaveService.LoadScore_v1(saved);
 
     expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
     );
     expect(
       (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,
@@ -1658,7 +1673,7 @@ describe('SaveService font styles', () => {
     );
   });
 
-  it('loads a legacy score without mode key styling as the default Initial Martyria style', () => {
+  it('loads a legacy score without mode key styling as Neume Font', () => {
     const modeKey = new ModeKeyElement_v1();
     modeKey.useDefaultStyle = true;
     modeKey.color = '#ED0000';
@@ -1677,7 +1692,7 @@ describe('SaveService font styles', () => {
     const loadedModeKey = loaded.staff.elements[0] as ModeKeyElement;
 
     expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
     );
     expect(loaded.initialMartyriaStyles).toEqual([]);
     expect(
@@ -1722,7 +1737,7 @@ describe('SaveService font styles', () => {
     },
   );
 
-  it('migrates legacy color and size to Initial Martyria and outline to its Greek child', () => {
+  it('migrates legacy color, size, and outline to Initial Martyria', () => {
     const initialMartyriaStyle = loadLegacyBuiltInStyle(
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       {
@@ -1737,7 +1752,7 @@ describe('SaveService font styles', () => {
     expect(initialMartyriaStyle.fontSize).toBeCloseTo(
       (Unit.fromPt(24) * 14.5) / 20,
     );
-    expect(initialMartyriaStyle.strokeWidth).toBe(0);
+    expect(initialMartyriaStyle.strokeWidth).toBe(2);
     expect(initialMartyriaStyle.fontFamily).toBe('Source Serif');
 
     const greekInitialMartyriaStyle = loadLegacyBuiltInStyle(
@@ -1769,16 +1784,16 @@ describe('SaveService font styles', () => {
       score.paragraphStyles.find(
         (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       )!.overrides,
-    ).toEqual({ fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20) });
+    ).toEqual({
+      fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
+      strokeWidth: 2,
+    });
     expect(
       score.paragraphStyles.find(
         (style) =>
           style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
       )!.overrides,
-    ).toEqual({
-      fontFamily: 'GFS Didot',
-      strokeWidth: 2,
-    });
+    ).toEqual({ fontFamily: 'GFS Didot' });
     expect(
       resolveScoreInitialMartyriaStyle({
         pageSetup: score.pageSetup,

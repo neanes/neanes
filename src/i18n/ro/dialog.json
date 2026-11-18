@@ -157,7 +157,9 @@
       "romanian": "Română",
       "indonesian": "Indoneziană"
     },
+    "classicHint": "Folosește fontul de neume al documentului. Acest stil nu are opțiuni de configurare.",
     "builtInStyles": {
+      "classic": "Font de neume",
       "greekTraditionalSign": "Mărturie tradițională",
       "greekAlphabeticNumerals": "Numerale alfabetice",
       "englishTraditionalSign": "Mărturie tradițională",

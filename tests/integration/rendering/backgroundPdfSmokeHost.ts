@@ -10,6 +10,7 @@ import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreR
 import { checkPdfSettling } from './backgroundPdfSettlingChecks';
 import { checkBackgroundPng } from './backgroundPngChecks';
 import { checkPrintPreparation } from './backgroundPrintChecks';
+import { checkClassicModeKeys } from './classicModeKeyChecks';
 
 const root = process.env.NEANES_PDF_SMOKE_ROOT!;
 const output = process.env.NEANES_PDF_SMOKE_OUTPUT!;
@@ -75,6 +76,8 @@ async function run() {
   );
   const rich = await snapshot('Rich Text.byzx');
   const original = JSON.stringify(english);
+  await checkClassicModeKeys({ snapshot: english, root, output, owner });
+  assert.equal(BrowserWindow.getAllWindows().length, startCount);
   const results = await Promise.all([render(english), render(arabic)]);
   const richPdf = await render(rich);
   for (const [index, data] of [...results, richPdf].entries()) {

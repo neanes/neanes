@@ -2,6 +2,7 @@ import { ModeKeyElement } from '@/models/Element';
 import {
   getInitialMartyriaContext,
   getInitialMartyriaPronunciation,
+  getSupportedInitialMartyriaLettering,
 } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
@@ -65,6 +66,10 @@ export function withInitialMartyriaStyleStructure(
 ) {
   const next = cloneInitialMartyriaStyle(style);
   next.structure = { ...structure };
+  next.lettering = getSupportedInitialMartyriaLettering(
+    style.lettering,
+    structure,
+  );
 
   if (
     !initialMartyriaStructureHasOrdinalDigits(style.structure) &&

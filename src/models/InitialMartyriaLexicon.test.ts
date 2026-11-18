@@ -134,7 +134,7 @@ function encodeCorpusRun(run: ReturnType<typeof resolve>['runs'][number]) {
     return encodeRun(run);
   }
   const note = run.cluster.primary?.note;
-  return note == null ? '<pitch>' : `<pitch:${run.noteText.names[note]}>`;
+  return note == null ? '<pitch>' : `<pitch:${run.noteText!.names[note]}>`;
 }
 
 const expectedRunsByStructure: [string, string[]][] = [
@@ -1340,7 +1340,7 @@ describe('InitialMartyriaLexicon', () => {
       expect(runs.some((run) => run.kind === 'glyph')).toBe(false);
       expect(startingPitch?.kind).toBe('startingPitch');
       if (startingPitch?.kind === 'startingPitch') {
-        expect(startingPitch.noteText.names[ModeSign.Pa]).toBe('Πα');
+        expect(startingPitch.noteText!.names[ModeSign.Pa]).toBe('Πα');
       }
     }
   });

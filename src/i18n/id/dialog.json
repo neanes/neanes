@@ -157,7 +157,9 @@
       "romanian": "Rumania",
       "indonesian": "Indonesia"
     },
+    "classicHint": "Menggunakan fon neuma dokumen. Gaya ini tidak memiliki opsi konfigurasi.",
     "builtInStyles": {
+      "classic": "Fon Neuma",
       "greekTraditionalSign": "Tanda tradisional",
       "greekAlphabeticNumerals": "Angka alfabetis",
       "englishTraditionalSign": "Tanda tradisional",

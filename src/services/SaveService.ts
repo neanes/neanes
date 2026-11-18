@@ -25,6 +25,7 @@ import {
   isBuiltInInitialMartyriaStyleId,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
+import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -227,10 +228,11 @@ function scaleLegacyModeKeyFontSize(fontSize: number) {
 }
 
 /*
- * Folds the shared pre-style mode key color and size into Initial Martyria so
- * Initial Martyria (Greek) inherits them. The old outline belongs only to the
- * Greek appearance. The height adjustment has no equivalent: the replacement
- * measures its own height from font metrics.
+ * Folds the shared pre-style mode key color, size, and outline into Initial
+ * Martyria so Initial Martyria (Greek) inherits them. Legacy scores load with
+ * music-font lettering, which paints with the regular paragraph style. The
+ * height adjustment has no equivalent: the replacement measures its own
+ * height from font metrics.
  */
 function applyLegacyModeKeyStyleDefaults(
   styles: ParagraphStyle[],
@@ -251,6 +253,7 @@ function applyLegacyModeKeyStyleDefaults(
       pageSetup.modeKeyDefaultFontSize == null
         ? undefined
         : scaleLegacyModeKeyFontSize(pageSetup.modeKeyDefaultFontSize),
+    strokeWidth: pageSetup.modeKeyDefaultStrokeWidth,
   });
 
   const initialMartyriaGreek = getRequiredParagraphStyleById(
@@ -272,13 +275,6 @@ function applyLegacyModeKeyStyleDefaults(
       'GFS Porson',
     );
   }
-
-  applyGeneratedParagraphStyleOverride(
-    initialMartyriaGreek,
-    greekInherited,
-    'strokeWidth',
-    pageSetup.modeKeyDefaultStrokeWidth,
-  );
 }
 
 /*
@@ -347,7 +343,7 @@ function migrateLegacyModeKeyStyleOverrides(
     if (
       strokeWidth != null &&
       shouldKeepMigratedParagraphStyleOverride(
-        fallbackGreekStyle,
+        fallbackSharedStyle,
         'strokeWidth',
         strokeWidth,
       )
@@ -1068,6 +1064,7 @@ function saveInitialMartyriaStyle(
     paragraphStyleId: style.paragraphStyleId,
     greekParagraphStyleId: style.greekParagraphStyleId,
     useOrdinalForms: style.useOrdinalForms,
+    lettering: style.lettering,
   };
 }
 
@@ -1165,6 +1162,7 @@ function loadInitialMartyriaStyle(
       ? saved.greekParagraphStyleId
       : BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
     useOrdinalForms: saved.useOrdinalForms !== false,
+    lettering: getSupportedInitialMartyriaLettering(saved.lettering, structure),
   };
 }
 

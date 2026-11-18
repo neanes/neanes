@@ -34,7 +34,10 @@
         </template>
       </div>
 
-      <div class="flex shrink-0 items-center gap-2">
+      <div
+        v-if="!usesMusicFontLettering"
+        class="flex shrink-0 items-center gap-2"
+      >
         <FieldLabel for="initial-martyria-style-language">
           {{ $t(($) => $.dialog.initialMartyriaStyles.language, { ns }) }}
         </FieldLabel>
@@ -63,6 +66,9 @@
       >
         <template v-if="!nameValid">
           {{ $t(($) => $.dialog.initialMartyriaStyles.nameInvalid, { ns }) }}
+        </template>
+        <template v-else-if="usesMusicFontLettering">
+          {{ $t(($) => $.dialog.initialMartyriaStyles.classicHint, { ns }) }}
         </template>
         <template v-else-if="builtIn">
           {{ $t(($) => $.dialog.initialMartyriaStyles.builtInHint, { ns }) }}
@@ -158,7 +164,7 @@
       </AlertDescription>
     </Alert>
 
-    <ScrollArea class="min-h-0 flex-1">
+    <ScrollArea v-if="!usesMusicFontLettering" class="min-h-0 flex-1">
       <div class="space-y-4 p-3">
         <section
           v-for="strip in strips"
@@ -328,6 +334,7 @@ import {
 import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
 import { getInitialMartyriaStructureStrips } from '@/models/InitialMartyriaStructureStrips';
 import {
+  INITIAL_MARTYRIA_LETTERINGS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStructure,
@@ -389,6 +396,9 @@ const nameInput = useTemplateRef<{ $el: HTMLInputElement }>('nameInput');
 
 const builtIn = computed(() =>
   isBuiltInInitialMartyriaStyleId(props.martyriaStyle.id),
+);
+const usesMusicFontLettering = computed(
+  () => props.martyriaStyle.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont,
 );
 const displayName = computed(() =>
   getInitialMartyriaStyleDisplayName(props.martyriaStyle, t),

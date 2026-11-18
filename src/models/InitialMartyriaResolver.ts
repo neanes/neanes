@@ -1,6 +1,6 @@
 import type { ModeKeyElement } from '@/models/Element';
 import type { Neume } from '@/models/Neumes';
-import type { ModeSign } from '@/models/Neumes';
+import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   type ParagraphStyle,
@@ -28,6 +28,8 @@ import {
 } from './InitialMartyriaLexicon';
 import { initialMartyriaRenderingConventions } from './InitialMartyriaRenderingConventions';
 import {
+  INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
@@ -37,6 +39,7 @@ import {
   type InitialMartyriaAppearance,
   type InitialMartyriaCanonicalNote,
   type InitialMartyriaContext,
+  type InitialMartyriaLettering,
   type InitialMartyriaModeNameSemantics,
   type InitialMartyriaStructure,
   initialMartyriaStructureHasOrdinalDigits,
@@ -679,14 +682,26 @@ export function resolveInitialMartyriaStyleAppearances(
   );
   const mainAppearance = toInitialMartyriaAppearance(main);
   const greekAppearance = toInitialMartyriaAppearance(greek);
+  const scriptAppearance = initialMartyriaLexicons[style.structure.languageId]
+    .usesGreekScript
+    ? greekAppearance
+    : mainAppearance;
+  // Music-font lettering keeps the script's metrics for glyph sizing but
+  // paints with the regular paragraph style's color and stroke.
+  const primaryAppearance =
+    style.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont
+      ? {
+          ...scriptAppearance,
+          color: mainAppearance.color,
+          strokeWidth: mainAppearance.strokeWidth,
+          strokeColor: mainAppearance.strokeColor,
+        }
+      : scriptAppearance;
   return {
     style,
     mainAppearance,
     greekAppearance,
-    primaryAppearance: initialMartyriaLexicons[style.structure.languageId]
-      .usesGreekScript
-      ? greekAppearance
-      : mainAppearance,
+    primaryAppearance,
   };
 }
 
@@ -760,6 +775,63 @@ export function getInitialMartyriaPronunciation(
   return `${modeName} ${startingNote}`;
 }
 
+/*
+ * The music font's lettering glyph for each word of a mode name, or null for
+ * words it has no glyph for.
+ */
+const musicFontLetteringGlyphs: Record<
+  InitialMartyriaTextSemantic,
+  ModeSign | null
+> = {
+  label: ModeSign.Ekhos,
+  graveWord: ModeSign.Varys,
+  plagalAbbreviation: ModeSign.Plagal,
+  numeral: null,
+  plagalWord: null,
+};
+
+const musicFontLetteringSupportCache = new Map<string, boolean>();
+
+/*
+ * The music font letters Greek only, and only a structure whose every word,
+ * in every mode, has a lettering glyph.
+ */
+function initialMartyriaStructureSupportsMusicFontLettering(
+  structure: InitialMartyriaStructure,
+) {
+  if (structure.languageId !== INITIAL_MARTYRIA_LANGUAGE_IDS.Greek) {
+    return false;
+  }
+  const cacheKey = getInitialMartyriaStructureAxisSignature(structure);
+  const cached = musicFontLetteringSupportCache.get(cacheKey);
+  if (cached != null) {
+    return cached;
+  }
+  const supported = modeKeyModes.every((mode) =>
+    getInitialMartyriaComponents(structure, mode).every(
+      (component) =>
+        (component.kind !== 'text' && component.kind !== 'stackedCharacters') ||
+        musicFontLetteringGlyphs[component.semantic] != null,
+    ),
+  );
+  musicFontLetteringSupportCache.set(cacheKey, supported);
+  return supported;
+}
+
+/**
+ * The lettering a style can keep for its structure. Accepts unvalidated saved
+ * values; anything other than supported music-font lettering becomes text.
+ */
+export function getSupportedInitialMartyriaLettering(
+  lettering: string | undefined,
+  structure: InitialMartyriaStructure,
+): InitialMartyriaLettering {
+  return lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont &&
+    initialMartyriaStructureSupportsMusicFontLettering(structure)
+    ? INITIAL_MARTYRIA_LETTERINGS.MusicFont
+    : INITIAL_MARTYRIA_LETTERINGS.Text;
+}
+
 export function resolveInitialMartyriaStyle(options: {
   context: InitialMartyriaContext;
   resolvedStyle: ResolvedInitialMartyriaStyle;
@@ -795,6 +867,11 @@ export function resolveInitialMartyriaStyle(options: {
     fontVariantAlternates: 'normal',
   };
 
+  // Music-font lettering sets every word and note in the music font's own
+  // glyphs; the shared pitch run centers the marks on each note glyph.
+  const usesMusicFontLettering =
+    style.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont;
+
   const runs: ResolvedInitialMartyriaRun[] = [];
   for (const component of getInitialMartyriaComponents(
     structure,
@@ -802,6 +879,18 @@ export function resolveInitialMartyriaStyle(options: {
     flowDirection,
   )) {
     if (component.kind === 'text' || component.kind === 'stackedCharacters') {
+      if (usesMusicFontLettering) {
+        // Music-font lettering is only kept for structures with a glyph for
+        // every word they print (getSupportedInitialMartyriaLettering).
+        runs.push({
+          kind: 'glyph',
+          semantic: component.semantic,
+          appearance: glyphAppearance,
+          direction: 'ltr',
+          glyphs: [musicFontLetteringGlyphs[component.semantic]!],
+        });
+        continue;
+      }
       const usesGreekFont =
         lexicon.usesGreekScript || component.semantic === 'plagalAbbreviation';
       const appearance =
@@ -835,7 +924,7 @@ export function resolveInitialMartyriaStyle(options: {
         kind: 'glyph',
         semantic: 'modeSign',
         appearance: glyphAppearance,
-        direction: flowDirection,
+        direction: usesMusicFontLettering ? 'ltr' : flowDirection,
         glyphs: [options.context.traditionalModeSign],
       });
       continue;
@@ -843,8 +932,10 @@ export function resolveInitialMartyriaStyle(options: {
     runs.push({
       kind: 'startingPitch',
       appearance: glyphAppearance,
-      noteText: { ...noteNames, appearance: noteAppearance },
-      direction: noteNames.direction,
+      noteText: usesMusicFontLettering
+        ? null
+        : { ...noteNames, appearance: noteAppearance },
+      direction: usesMusicFontLettering ? 'ltr' : noteNames.direction,
       cluster: options.context.pitchCluster,
     });
   }
@@ -864,8 +955,12 @@ export function getInitialMartyriaFixedSeparatorSize(
   return 0.43 * primaryTextFontSize;
 }
 
+/** The plagal abbreviation, whether set as text or as a music-font glyph. */
 function isPlagalAbbreviationRun(run: ResolvedInitialMartyriaRun) {
-  return run.kind === 'text' && run.semantic === 'plagalAbbreviation';
+  return (
+    (run.kind === 'text' || run.kind === 'glyph') &&
+    run.semantic === 'plagalAbbreviation'
+  );
 }
 
 /*
@@ -885,6 +980,11 @@ function isWordLikeRun(
     case 'startingPitch':
       return true;
     case 'glyph':
+      // Music-font lettering glyphs are set with fixed gaps, like the
+      // pre-style glyph mode keys they reproduce.
+      if (run.semantic !== 'modeSign') {
+        return false;
+      }
       return (
         resolution.structure.modeIdentificationMethod ===
           INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&

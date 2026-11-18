@@ -84,11 +84,25 @@
                   />
                 </span>
                 <span
+                  v-if="run.noteText != null"
                   :dir="run.noteText.direction"
                   :lang="run.noteText.languageTag"
-                  :style="getPitchTextStyle(run, runLayouts[index], role)"
+                  :style="
+                    getPitchTextStyle(
+                      run.noteText.appearance,
+                      runLayouts[index],
+                      role,
+                    )
+                  "
                   >{{ run.noteText.names[pitchNote.note] }}</span
                 >
+                <Neume
+                  v-else
+                  :neume="pitchNote.note"
+                  :style="
+                    getPitchTextStyle(run.appearance, runLayouts[index], role)
+                  "
+                />
               </span>
               <span
                 v-if="
@@ -494,19 +508,24 @@ function getPitchCellStyle(
   runLayout: InitialMartyriaRunLayout,
   role: PitchRole,
 ) {
+  const pitch = runLayout.pitch!;
   return {
-    width: withZoom(runLayout.pitch![role]!.width),
+    top:
+      pitch.noteBaselineShift === 0
+        ? undefined
+        : withZoom(-pitch.noteBaselineShift),
+    width: withZoom(pitch[role]!.width),
   } as CSSProperties;
 }
 
+/** The note name, or the note glyph, set at the run's note size. */
 function getPitchTextStyle(
-  run: InitialMartyriaStartingNoteRun,
+  appearance: InitialMartyriaAppearance,
   runLayout: InitialMartyriaRunLayout,
   role: PitchRole,
 ) {
   const pitch = runLayout.pitch!;
   const geometry = pitch[role]!;
-  const appearance = run.noteText.appearance;
 
   return {
     color: appearance.color,

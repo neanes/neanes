@@ -157,7 +157,9 @@
       "romanian": "Romanian",
       "indonesian": "Indonesian"
     },
+    "classicHint": "Uses the document's neume font. This style has no configuration options.",
     "builtInStyles": {
+      "classic": "Neume Font",
       "greekTraditionalSign": "Traditional sign",
       "greekAlphabeticNumerals": "Alphabetic numerals",
       "englishTraditionalSign": "Traditional sign",

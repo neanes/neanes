@@ -40,6 +40,21 @@ use the Electron debugging endpoint as their test driver.
 Future automation jobs and export transformations belong in this feature area
 (and its Electron counterpart), reusing shared document and rendering behavior.
 
+## Initial martyria styles
+
+ModeKey edits accept `initialMartyriaStyleId`. Use `builtin:classic-v1` for the
+Neume Font style or `builtin:traditional-greek-v1` for Traditional Greek. Both
+share one structure and differ only in the style's `lettering`: Neume Font uses
+`music-font` (the music font's own Greek lettering and pitch-name glyphs),
+Traditional Greek uses `text`. Both use the shared mode-key renderer and the
+existing template catalog. Scores saved before initial martyria styles existed
+load as Neume Font; new scores also default to Neume Font.
+
+Only Greek sign-identified structures support `music-font` lettering; any other
+structure falls back to `text` when a style is created or loaded. Custom styles
+supplied through saved files keep their `lettering` through score serialization
+and document copying. The UI does not create or duplicate Neume Font styles.
+
 ## Footnotes
 
 Clients can request `get_rich_text_format` with `topics: ["footnotes"]` for the

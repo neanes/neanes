@@ -4,6 +4,7 @@ import {
 } from './InitialMartyriaLexicon';
 import {
   getInitialMartyriaStructureKey,
+  getSupportedInitialMartyriaLettering,
   isInitialMartyriaModeNameSupported,
 } from './InitialMartyriaResolver';
 import {
@@ -704,9 +705,14 @@ export function enumerateInitialMartyriaStructures(
 export function createInitialMartyriaStyle(
   options: Omit<InitialMartyriaStyle, 'id'>,
 ): InitialMartyriaStyle {
+  const structure = normalizeInitialMartyriaStructure(options.structure);
   return cloneInitialMartyriaStyle({
     ...options,
     id: crypto.randomUUID(),
-    structure: normalizeInitialMartyriaStructure(options.structure),
+    structure,
+    lettering: getSupportedInitialMartyriaLettering(
+      options.lettering,
+      structure,
+    ),
   });
 }

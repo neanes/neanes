@@ -75,6 +75,7 @@
                   variant="ghost"
                   size="icon-sm"
                   :aria-label="action.label"
+                  :disabled="action.disabled"
                   @click="action.onClick"
                 >
                   <component :is="action.icon" />
@@ -218,6 +219,7 @@ import {
   initialMartyriaLanguageIds,
   initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
+  isInitialMartyriaStyleUserCreatable,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
@@ -339,6 +341,7 @@ const duplicateOfSelectedStyle = computed(() =>
 function hasSameTypography(a: InitialMartyriaStyle, b: InitialMartyriaStyle) {
   return (
     a.paragraphStyleId === b.paragraphStyleId &&
+    a.lettering === b.lettering &&
     a.greekParagraphStyleId === b.greekParagraphStyleId &&
     // Ordinal forms are only ever visible in a structure that prints one.
     (a.useOrdinalForms === b.useOrdinalForms ||
@@ -447,6 +450,7 @@ const creationActions = computed(() => [
     key: 'duplicate',
     label: t(($) => $.dialog.initialMartyriaStyles.duplicate, { ns }),
     icon: PhCopy,
+    disabled: !isInitialMartyriaStyleUserCreatable(selectedStyle.value),
     onClick: duplicateSelectedStyle,
   },
 ]);
@@ -537,6 +541,9 @@ function createStyle() {
 
 function duplicateSelectedStyle() {
   const style = selectedStyle.value;
+  if (!isInitialMartyriaStyleUserCreatable(style)) {
+    return;
+  }
   addStyle(
     createInitialMartyriaStyle({
       ...style,
@@ -560,6 +567,7 @@ function resetSelectedStyleToBase() {
     paragraphStyleId: base.paragraphStyleId,
     greekParagraphStyleId: base.greekParagraphStyleId,
     useOrdinalForms: base.useOrdinalForms,
+    lettering: base.lettering,
   });
 }
 

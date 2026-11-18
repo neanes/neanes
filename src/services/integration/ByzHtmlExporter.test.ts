@@ -267,7 +267,8 @@ describe('ByzHtmlExporter', () => {
         pitch:
           run.kind === 'startingPitch'
             ? {
-                textFontSize: run.noteText.appearance.fontSize,
+                textFontSize: run.noteText!.appearance.fontSize,
+                noteBaselineShift: 0,
                 primary: run.cluster.primary == null ? null : pitchGeometry,
                 secondary: run.cluster.secondary == null ? null : pitchGeometry,
                 clusterSeparatorWidth: 4,

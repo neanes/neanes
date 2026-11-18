@@ -215,20 +215,9 @@ const initialMartyriaGrammarRules: Record<
     text: [
       withNumeralStyles(cardinalPostAbsoluteRule, [
         INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-        INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
-      ]),
-      withNumeralStyles(ordinalEveryAbsoluteRule, [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-        INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
       ]),
     ],
-    modeSign: [
-      cardinalPostAbsoluteRule,
-      ordinalEveryAbsoluteRule,
-      ordinalPostAuthenticRule,
-    ],
+    modeSign: [ordinalPostAbsoluteRule],
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: {
     text: [
@@ -514,11 +503,16 @@ function getInitialMartyriaGrammarStructures(
   return candidates;
 }
 
+/** Axes of a printed numeral, which a sign does not have. */
+function isPrintedNumeralAxis(axis: InitialMartyriaGrammarAxis) {
+  return axis === 'numeralStyle' || axis === 'numberingSystem';
+}
+
 function getGrammarAxisValue(
   structure: InitialMartyriaStructure,
   axis: InitialMartyriaGrammarAxis,
 ) {
-  if (axis === 'numeralStyle' || axis === 'numberingSystem') {
+  if (isPrintedNumeralAxis(axis)) {
     return structure.modeIdentificationMethod ===
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
       ? undefined
@@ -631,6 +625,11 @@ export function getInitialMartyriaStructureVariations<
   apply: (structure: TStructure, value: TValue) => InitialMartyriaStructure,
 ): InitialMartyriaStructureVariation<TValue>[] {
   const currentKey = getInitialMartyriaStructureKey(current);
+  // Leaving a sign adds a printed numeral whose style is only a default,
+  // so normalization may still replace it.
+  const leavesSign =
+    current.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
   const byKey = new Map<string, InitialMartyriaStructureVariation<TValue>>();
   for (const value of values) {
     const requested = apply(current, value);
@@ -646,8 +645,9 @@ export function getInitialMartyriaStructureVariations<
     if (
       requestedAxes.some(
         (axis) =>
+          !(leavesSign && isPrintedNumeralAxis(axis)) &&
           getGrammarAxisValue(structure, axis) !==
-          getGrammarAxisValue(requested, axis),
+            getGrammarAxisValue(requested, axis),
       )
     ) {
       continue;

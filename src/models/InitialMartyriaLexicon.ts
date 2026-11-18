@@ -163,13 +163,13 @@ interface InitialMartyriaLexiconBase {
   ordinalWordsPrenominal?: InitialMartyriaModeTexts;
   cardinalWords?: InitialMartyriaModeTexts;
   alphabeticNumerals?: InitialMartyriaModeTexts;
-  /** Spells an ordinal from a digit or Roman numeral (1o, al 1-lea). */
+  /** Spells an ordinal from a digit or Roman numeral (1o, 1st). */
   formatOrdinal?: (
     base: string,
     numeralStyle: InitialMartyriaNumeralStyle,
     numeralQualifier: InitialMartyriaNumeralQualifier,
   ) => string;
-  /** Standalone plagal word (Plagal, laturas). */
+  /** Standalone plagal word (Plagal, Πλάγιος). */
   plagalWord?: string;
   /** Word form that identifies an authentic mode's plagal counterpart. */
   plagalCounterpartWord?: string;
@@ -545,20 +545,21 @@ export const initialMartyriaLexicons: Record<
     },
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: {
-    // Cardinals follow glas. Ordinals 2-8 use the al ... -lea construction;
-    // first is the exceptional primul/intai, not *al unu-lea. DOOM3 attests
-    // al II-lea/al 2-lea and cardinal identifiers such as pagina unu. Church
-    // sources attest Glasul intai and Glasul al II-lea. The laturas vocabulary
-    // is modeled only for its sign.
+    // Romanian chant books write bare Glas with an Arabic digit, read as a
+    // cardinal (Glas 1, glas unu), or Glas beside the mode sign alone, read as
+    // a definite ordinal (Glasul intai, Glasul al doilea). Glas comes from the
+    // Slavic tradition, which counts 1-8 and has no plagal term, so the
+    // plagal modes are read as fifth, sixth, and eighth. A Romanian psaltic
+    // reviewer rejected Roman numerals with bare Glas, written ordinals
+    // (Glasul al II-lea), prenominal ordinals (Primul glas), laturas, which
+    // appears only in theory books, and terminal punctuation.
     // https://doom.lingv.ro/cautare/q/al%20doilea
-    // https://doom.lingv.ro/cautare/q/%27i/?orderBy=%27i
     // https://arhiepiscopiabucurestilor.ro/stiri/evenimente-bisericesti/cantarile-sfintei-liturghii-glasurile-i-si-al-vii-lea
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: romanianTransliteratedNoteNames,
     startingNotePrefix: 'de la',
     label: 'Glas',
-    lowercaseTrailingLabel: true,
     labelWithOrdinal: 'Glasul',
     ordinalWords: {
       1: 'întâi',
@@ -570,16 +571,6 @@ export const initialMartyriaLexicons: Record<
       7: 'al șaptelea',
       8: 'al optulea',
     },
-    ordinalWordsPrenominal: {
-      1: 'Primul',
-      2: 'Al doilea',
-      3: 'Al treilea',
-      4: 'Al patrulea',
-      5: 'Al cincilea',
-      6: 'Al șaselea',
-      7: 'Al șaptelea',
-      8: 'Al optulea',
-    },
     cardinalWords: {
       1: 'unu',
       2: 'doi',
@@ -590,20 +581,7 @@ export const initialMartyriaLexicons: Record<
       7: 'șapte',
       8: 'opt',
     },
-    formatOrdinal: (base, _numeralStyle, numeralQualifier) => {
-      if (base === '1' || base === 'I') {
-        return numeralQualifier ===
-          INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
-          ? 'Primul'
-          : 'întâi';
-      }
-      return `${
-        numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
-          ? 'Al'
-          : 'al'
-      } ${base}-lea`;
-    },
-    plagalWord: 'lăturaș',
+    // The stacked plagal sign follows Glas, beside the mode sign.
     plagalCounterpartMarkerPosition: 'beforeNumeral',
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: {

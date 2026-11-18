@@ -65,6 +65,27 @@ export type InitialMartyriaStructureStrip =
 export function getInitialMartyriaStructureStrips(
   structure: InitialMartyriaStructure,
 ): InitialMartyriaStructureStrip[] {
+  /*
+   * The mode identification row is the only one that changes the method. A
+   * tile in another row that could only be honored by switching the method
+   * (Romanian ordinals exist only for a sign, cardinals only in text) would
+   * make the two rows rewrite each other, so it is left out; the structure it
+   * led to stays reachable from the mode identification row.
+   */
+  const variationsKeepingMethod = <
+    TStructure extends InitialMartyriaStructure,
+    T,
+  >(
+    current: TStructure,
+    values: T[],
+    apply: (structure: TStructure, value: T) => InitialMartyriaStructure,
+  ) =>
+    getInitialMartyriaStructureVariations(current, values, apply).filter(
+      (variation) =>
+        variation.structure.modeIdentificationMethod ===
+        current.modeIdentificationMethod,
+    );
+
   const strips: InitialMartyriaStructureStrip[] = [
     {
       key: 'modeIdentificationMethod',
@@ -83,7 +104,7 @@ export function getInitialMartyriaStructureStrips(
     // A sign prints no number, so only its spoken reading varies.
     strips.push({
       key: 'numeralKind',
-      variations: getInitialMartyriaStructureVariations(
+      variations: variationsKeepingMethod(
         structure,
         initialMartyriaNumeralKinds,
         (current, numeralKind) => ({ ...current, numeralKind }),
@@ -92,7 +113,7 @@ export function getInitialMartyriaStructureStrips(
   } else {
     strips.push({
       key: 'numeralForm',
-      variations: getInitialMartyriaStructureVariations(
+      variations: variationsKeepingMethod(
         structure,
         initialMartyriaNumeralForms,
         withInitialMartyriaNumeralForm,
@@ -107,7 +128,7 @@ export function getInitialMartyriaStructureStrips(
     if (structure.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits) {
       strips.push({
         key: 'numberingSystem',
-        variations: getInitialMartyriaStructureVariations(
+        variations: variationsKeepingMethod(
           structure,
           initialMartyriaNumberingSystems,
           (current, numberingSystem) => ({ ...current, numberingSystem }),
@@ -119,7 +140,7 @@ export function getInitialMartyriaStructureStrips(
   strips.push(
     {
       key: 'numeralQualifier',
-      variations: getInitialMartyriaStructureVariations(
+      variations: variationsKeepingMethod(
         structure,
         initialMartyriaNumeralQualifiers,
         (current, numeralQualifier) => ({ ...current, numeralQualifier }),
@@ -127,7 +148,7 @@ export function getInitialMartyriaStructureStrips(
     },
     {
       key: 'modeNamingScheme',
-      variations: getInitialMartyriaStructureVariations(
+      variations: variationsKeepingMethod(
         structure,
         initialMartyriaModeNamingSchemes,
         (current, modeNamingScheme) => ({ ...current, modeNamingScheme }),

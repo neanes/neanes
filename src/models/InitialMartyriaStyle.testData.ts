@@ -405,43 +405,13 @@ export const attestedStructures = {
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
   },
-  'romanian-glas-roman-numeral': {
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    transliterateNoteNames: false,
-  },
-  'romanian-glas-ordinal-number': {
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    transliterateNoteNames: false,
-  },
-  'romanian-glas-ordinal-roman-numeral': {
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    transliterateNoteNames: false,
-  },
   'romanian-glas': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
   },
   'indonesian-mode-names': {

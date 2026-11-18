@@ -39,6 +39,9 @@ export const initialMartyriaRenderingConventions: Record<
     terminalPunctuation: '',
     modeSignGroupPlacement: 'after-starting-pitch',
   },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: defaultRenderingConvention,
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: {
+    ...defaultRenderingConvention,
+    terminalPunctuation: '',
+  },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: defaultRenderingConvention,
 };

@@ -182,15 +182,7 @@ describe('InitialMartyriaGrammar', () => {
       'words/ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
-      'digits/ordinal/prenominal/absolute',
-      'digits/ordinal/postnominal/absolute',
       'digits/cardinal/postnominal/absolute',
-      'roman-numerals/ordinal/prenominal/absolute',
-      'roman-numerals/ordinal/postnominal/absolute',
-      'roman-numerals/cardinal/postnominal/absolute',
-      'words/ordinal/prenominal/absolute',
-      'words/ordinal/postnominal/absolute',
-      'words/cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
       'digits/ordinal/postnominal/authentic-counterpart',
@@ -227,12 +219,7 @@ describe('InitialMartyriaGrammar', () => {
       'ordinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: ['ordinal/postnominal/absolute'],
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
-      'ordinal/prenominal/absolute',
-      'ordinal/postnominal/authentic-counterpart',
-      'ordinal/postnominal/absolute',
-      'cardinal/postnominal/absolute',
-    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
       'ordinal/postnominal/authentic-counterpart',
       'ordinal/postnominal/absolute',
@@ -273,14 +260,7 @@ describe('InitialMartyriaGrammar', () => {
       cu: ['digits/ordinal', 'alphabetic-numerals/ordinal', 'words/ordinal'],
       ru: ['digits/ordinal', 'roman-numerals/ordinal', 'words/ordinal'],
       ar: ['digits/ordinal', 'words/ordinal'],
-      ro: [
-        'digits/ordinal',
-        'digits/cardinal',
-        'roman-numerals/ordinal',
-        'roman-numerals/cardinal',
-        'words/ordinal',
-        'words/cardinal',
-      ],
+      ro: ['digits/cardinal'],
       id: [
         'digits/ordinal',
         'digits/cardinal',
@@ -562,9 +542,37 @@ describe('InitialMartyriaGrammar', () => {
         false,
       ],
       [
-        'Romanian postnominal cardinal Roman numeral',
-        attestedStructures['romanian-glas-roman-numeral'],
+        'Romanian postnominal cardinal digit',
+        attestedStructures['romanian-glas-number'],
         true,
+      ],
+      [
+        'Romanian postnominal cardinal Roman numeral',
+        {
+          ...attestedStructures['romanian-glas-number'],
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        },
+        false,
+      ],
+      [
+        'Romanian postnominal cardinal word',
+        {
+          ...attestedStructures['romanian-glas-number'],
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+        },
+        false,
+      ],
+      [
+        'Romanian written ordinal',
+        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian, {
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        }),
+        false,
       ],
       [
         'Romanian prenominal ordinal digit',
@@ -576,12 +584,29 @@ describe('InitialMartyriaGrammar', () => {
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
           modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
         }),
+        false,
+      ],
+      [
+        'Romanian sign-only absolute ordinal name',
+        attestedStructures['romanian-glas'],
         true,
       ],
       [
         'Romanian sign-only laturas name',
-        attestedStructures['romanian-glas'],
-        true,
+        {
+          ...attestedStructures['romanian-glas'],
+          modeNamingScheme:
+            INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+        },
+        false,
+      ],
+      [
+        'Romanian sign-only prenominal name',
+        {
+          ...attestedStructures['romanian-glas'],
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        },
+        false,
       ],
       [
         'Romanian prenominal cardinal',
@@ -1038,78 +1063,19 @@ describe('InitialMartyriaGrammar', () => {
         'اللحن السادس من با',
       ],
       [
-        grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian, {
-          modeIdentificationMethod:
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-        }),
-        'Al 6-lea | glas.',
-        'Al șaselea glas de la Pa',
+        attestedStructures['romanian-glas-number'],
+        'Glas | 6 | λ | π',
+        'Glas șase de la Pa',
+      ],
+      [
+        attestedStructures['romanian-glas'],
+        'Glas | λ | π',
+        'Glasul al șaselea de la Pa',
       ],
     ];
 
     for (const [structure, expectedText, expectedPronunciation] of examples) {
       const resolution = resolve(styleFor(structure), elementForMode(6));
-      expect(textOf(resolution.runs).join(' | ')).toBe(expectedText);
-      expect(resolution.pronunciation).toBe(expectedPronunciation);
-    }
-  });
-
-  it('handles the exceptional Romanian first ordinal in either position', () => {
-    const cases = [
-      [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        1,
-        'Glasul | întâi.',
-        'Glasul întâi de la Pa',
-      ],
-      [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        2,
-        'Glasul | al II-lea.',
-        'Glasul al doilea de la Di',
-      ],
-      [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        1,
-        'Primul | glas.',
-        'Primul glas de la Pa',
-      ],
-      [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        2,
-        'Al II-lea | glas.',
-        'Al doilea glas de la Di',
-      ],
-    ] as const;
-
-    for (const [
-      numeralStyle,
-      numeralQualifier,
-      mode,
-      expectedText,
-      expectedPronunciation,
-    ] of cases) {
-      const structure = grammarStructure(
-        INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-        {
-          modeIdentificationMethod:
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-          numeralStyle,
-          numeralQualifier,
-          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-        },
-      );
-      const resolution = resolve(styleFor(structure), elementForMode(mode));
-
       expect(textOf(resolution.runs).join(' | ')).toBe(expectedText);
       expect(resolution.pronunciation).toBe(expectedPronunciation);
     }

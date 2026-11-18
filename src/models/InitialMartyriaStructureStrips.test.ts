@@ -112,6 +112,38 @@ describe('InitialMartyriaStructureStrips', () => {
     expect(unreachable).toEqual({});
   });
 
+  /*
+   * Romanian prints cardinals only in text and reads ordinals only for a
+   * sign. A number form tile that switched the method would make the two
+   * rows rewrite each other, so only the mode identification row may.
+   */
+  it('changes the mode identification only from its own strip', () => {
+    for (const languageId of initialMartyriaLanguageIds) {
+      for (const {
+        structure,
+      } of initialMartyriaModeIdentificationMethods.flatMap(
+        (modeIdentificationMethod) =>
+          enumerateInitialMartyriaStructures({
+            languageId,
+            modeIdentificationMethod,
+            transliterateNoteNames: false,
+          }),
+      )) {
+        for (const strip of getInitialMartyriaStructureStrips(structure).filter(
+          (strip) => strip.key !== 'modeIdentificationMethod',
+        )) {
+          for (const variation of strip.variations) {
+            expect(
+              `${languageId} ${strip.key}: ${variation.structure.modeIdentificationMethod}`,
+            ).toBe(
+              `${languageId} ${strip.key}: ${structure.modeIdentificationMethod}`,
+            );
+          }
+        }
+      }
+    }
+  });
+
   it('offers no strip that has nothing to choose between', () => {
     for (const style of builtInInitialMartyriaStyles) {
       for (const strip of getInitialMartyriaStructureStrips(style.structure)) {

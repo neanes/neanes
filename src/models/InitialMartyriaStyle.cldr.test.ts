@@ -200,11 +200,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
         INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
       ],
-      [
-        INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-        INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-      ],
     ] as const;
 
     for (const [languageId, numeralKind, numeralQualifier] of cases) {
@@ -579,13 +574,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
       ),
     );
-    const prenominal = numeralsFor(
-      absoluteWordStyle(
-        INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-        INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-      ),
-    );
     expect(postnominal).toEqual([
       'întâi',
       'al doilea',
@@ -596,50 +584,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
       'al șaptelea',
       'al optulea',
     ]);
-    expect(prenominal[0]).toBe('Primul');
-    expect(caseFold(prenominal.slice(1), 'ro')).toEqual(
-      caseFold(postnominal.slice(1), 'ro'),
-    );
-  });
-
-  it('wraps CLDR decimal and Roman bases in Romanian church ordinal forms', () => {
-    const cases = [
-      [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits, cldrDigits('latn')],
-      [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        cldrValues('root', 'renderRomanUpper'),
-      ],
-    ] as const;
-
-    for (const [numeralStyle, bases] of cases) {
-      const postnominal = styleFor({
-        languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-        modeIdentificationMethod:
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-        numeralStyle,
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-      });
-      const prenominal = styleFor({
-        languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-        modeIdentificationMethod:
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-        numeralStyle,
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-      });
-
-      expect(numeralsFor(postnominal)).toEqual([
-        'întâi',
-        ...bases.slice(1).map((base) => `al ${base}-lea`),
-      ]);
-      expect(numeralsFor(prenominal)).toEqual([
-        'Primul',
-        ...bases.slice(1).map((base) => `Al ${base}-lea`),
-      ]);
-    }
   });
 
   it('uses CLDR Cyrillic numerals for the Church Slavonic forms', () => {

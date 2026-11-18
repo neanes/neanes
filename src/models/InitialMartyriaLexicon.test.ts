@@ -661,53 +661,14 @@ const expectedRunsByStructure: [string, string[]][] = [
   [
     'romanian-glas-number',
     [
-      'Glas | 1. | <modeSign> | <pitch>',
-      'Glas | 2. | <modeSign> | <pitch>',
-      'Glas | 3. | <modeSign> | <pitch>',
-      'Glas | 4. | <modeSign> | <pitch>',
-      'Glas | 5. | greek:λ/π | <modeSign> | <pitch>',
-      'Glas | 6. | greek:λ/π | <modeSign> | <pitch>',
-      'Glas | 7. | <modeSign> | <pitch>',
-      'Glas | 8. | greek:λ/π | <modeSign> | <pitch>',
-    ],
-  ],
-  [
-    'romanian-glas-roman-numeral',
-    [
-      'Glas | I. | <modeSign> | <pitch>',
-      'Glas | II. | <modeSign> | <pitch>',
-      'Glas | III. | <modeSign> | <pitch>',
-      'Glas | IV. | <modeSign> | <pitch>',
-      'Glas | V. | greek:λ/π | <modeSign> | <pitch>',
-      'Glas | VI. | greek:λ/π | <modeSign> | <pitch>',
-      'Glas | VII. | <modeSign> | <pitch>',
-      'Glas | VIII. | greek:λ/π | <modeSign> | <pitch>',
-    ],
-  ],
-  [
-    'romanian-glas-ordinal-number',
-    [
-      'Glasul | întâi. | <modeSign> | <pitch>',
-      'Glasul | al 2-lea. | <modeSign> | <pitch>',
-      'Glasul | al 3-lea. | <modeSign> | <pitch>',
-      'Glasul | al 4-lea. | <modeSign> | <pitch>',
-      'Glasul | al 5-lea. | greek:λ/π | <modeSign> | <pitch>',
-      'Glasul | al 6-lea. | greek:λ/π | <modeSign> | <pitch>',
-      'Glasul | al 7-lea. | <modeSign> | <pitch>',
-      'Glasul | al 8-lea. | greek:λ/π | <modeSign> | <pitch>',
-    ],
-  ],
-  [
-    'romanian-glas-ordinal-roman-numeral',
-    [
-      'Glasul | întâi. | <modeSign> | <pitch>',
-      'Glasul | al II-lea. | <modeSign> | <pitch>',
-      'Glasul | al III-lea. | <modeSign> | <pitch>',
-      'Glasul | al IV-lea. | <modeSign> | <pitch>',
-      'Glasul | al V-lea. | greek:λ/π | <modeSign> | <pitch>',
-      'Glasul | al VI-lea. | greek:λ/π | <modeSign> | <pitch>',
-      'Glasul | al VII-lea. | <modeSign> | <pitch>',
-      'Glasul | al VIII-lea. | greek:λ/π | <modeSign> | <pitch>',
+      'Glas | 1 | <modeSign> | <pitch>',
+      'Glas | 2 | <modeSign> | <pitch>',
+      'Glas | 3 | <modeSign> | <pitch>',
+      'Glas | 4 | <modeSign> | <pitch>',
+      'Glas | 5 | greek:λ/π | <modeSign> | <pitch>',
+      'Glas | 6 | greek:λ/π | <modeSign> | <pitch>',
+      'Glas | 7 | <modeSign> | <pitch>',
+      'Glas | 8 | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -907,18 +868,6 @@ const romanianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
   'Glasul al optulea',
 ];
 
-const romanianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
-  [
-    'Glasul întâi',
-    'Glasul al doilea',
-    'Glasul al treilea',
-    'Glasul al patrulea',
-    'Glasul lăturaș întâi',
-    'Glasul lăturaș al doilea',
-    'Glasul al șaptelea',
-    'Glasul lăturaș al patrulea',
-  ];
-
 const indonesianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
   [
     'Modus Pertama',
@@ -1104,13 +1053,7 @@ const expectedPronunciationsByStructure: [
   ['arabic-ordinal-digits', arabicAbsoluteOrdinalPronunciations],
   ['arabic-ordinal-arabic-indic-digits', arabicAbsoluteOrdinalPronunciations],
   ['romanian-glas-number', romanianAbsoluteCardinalPronunciations],
-  ['romanian-glas-roman-numeral', romanianAbsoluteCardinalPronunciations],
-  ['romanian-glas-ordinal-number', romanianAbsoluteOrdinalPronunciations],
-  [
-    'romanian-glas-ordinal-roman-numeral',
-    romanianAbsoluteOrdinalPronunciations,
-  ],
-  ['romanian-glas', romanianAuthenticCounterpartOrdinalPronunciations],
+  ['romanian-glas', romanianAbsoluteOrdinalPronunciations],
   [
     'indonesian-mode-names',
     indonesianAuthenticCounterpartOrdinalPronunciations,
@@ -1192,7 +1135,7 @@ describe('InitialMartyriaLexicon', () => {
       ['church-slavonic-glas-ordinal', 'Гла́съ пѧ́тый ѿ Ке'],
       ['russian-glas-ordinal', 'Глас пятый от Ке'],
       ['arabic-ordinal', 'اللحن الخامس من كه'],
-      ['romanian-glas', 'Glasul lăturaș întâi de la Ke'],
+      ['romanian-glas', 'Glasul al cincilea de la Ke'],
     ];
 
     expect(context).toMatchObject({

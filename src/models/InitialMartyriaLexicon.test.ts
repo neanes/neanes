@@ -574,10 +574,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Глас | 2. | <modeSign> | <pitch>',
       'Глас | 3. | <modeSign> | <pitch>',
       'Глас | 4. | <modeSign> | <pitch>',
-      'Глас | 5. | greek:λ/π | <modeSign> | <pitch>',
-      'Глас | 6. | greek:λ/π | <modeSign> | <pitch>',
+      'Глас | 5. | <modeSign> | <pitch>',
+      'Глас | 6. | <modeSign> | <pitch>',
       'Глас | 7. | <modeSign> | <pitch>',
-      'Глас | 8. | greek:λ/π | <modeSign> | <pitch>',
+      'Глас | 8. | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -587,10 +587,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Глас | второй. | <modeSign> | <pitch>',
       'Глас | третий. | <modeSign> | <pitch>',
       'Глас | четвёртый. | <modeSign> | <pitch>',
-      'Глас | пятый. | greek:λ/π | <modeSign> | <pitch>',
-      'Глас | шестой. | greek:λ/π | <modeSign> | <pitch>',
+      'Глас | пятый. | <modeSign> | <pitch>',
+      'Глас | шестой. | <modeSign> | <pitch>',
       'Глас | седьмой. | <modeSign> | <pitch>',
-      'Глас | восьмой. | greek:λ/π | <modeSign> | <pitch>',
+      'Глас | восьмой. | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -1061,10 +1061,12 @@ const expectedPronunciationsByStructure: [
 ];
 
 describe('InitialMartyriaLexicon', () => {
-  it('omits the plagal abbreviation in every Church Slavonic structure', () => {
+  it.each([
+    ['Church Slavonic', INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic],
+    ['Russian', INITIAL_MARTYRIA_LANGUAGE_IDS.Russian],
+  ])('omits the plagal abbreviation in every %s structure', (_, languageId) => {
     const structures = getLegalInitialMartyriaStructures().filter(
-      (structure) =>
-        structure.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+      (structure) => structure.languageId === languageId,
     );
 
     for (const structure of structures) {

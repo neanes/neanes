@@ -211,10 +211,7 @@ describe('InitialMartyriaGrammar', () => {
     [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
       'ordinal/postnominal/absolute',
     ],
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
-      'ordinal/prenominal/absolute',
-      'ordinal/postnominal/absolute',
-    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [

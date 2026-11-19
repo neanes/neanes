@@ -38,7 +38,10 @@ export const initialMartyriaRenderingConventions: Record<
     ...defaultRenderingConvention,
     showPlagalAbbreviationWithModeSign: false,
   },
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: defaultRenderingConvention,
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: {
+    ...defaultRenderingConvention,
+    showPlagalAbbreviationWithModeSign: false,
+  },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
     ...defaultRenderingConvention,
     terminalPunctuation: '',

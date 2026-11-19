@@ -1125,7 +1125,8 @@ function loadInitialMartyriaStyle(
       ...common,
       modeIdentificationMethod: saved.modeIdentificationMethod,
       numeralQualifier:
-        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic
+        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic ||
+        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Russian
           ? INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal
           : common.numeralQualifier,
     };

@@ -682,21 +682,12 @@ export function resolveInitialMartyriaStyleAppearances(
   );
   const mainAppearance = toInitialMartyriaAppearance(main);
   const greekAppearance = toInitialMartyriaAppearance(greek);
-  const scriptAppearance = initialMartyriaLexicons[style.structure.languageId]
+  // The primary text, and with it every music-font glyph, follows the
+  // paragraph style of the language's script, whatever the lettering.
+  const primaryAppearance = initialMartyriaLexicons[style.structure.languageId]
     .usesGreekScript
     ? greekAppearance
     : mainAppearance;
-  // Music-font lettering keeps the script's metrics for glyph sizing but
-  // paints with the regular paragraph style's color and stroke.
-  const primaryAppearance =
-    style.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont
-      ? {
-          ...scriptAppearance,
-          color: mainAppearance.color,
-          strokeWidth: mainAppearance.strokeWidth,
-          strokeColor: mainAppearance.strokeColor,
-        }
-      : scriptAppearance;
   return {
     style,
     mainAppearance,
@@ -832,6 +823,75 @@ export function getSupportedInitialMartyriaLettering(
     : INITIAL_MARTYRIA_LETTERINGS.Text;
 }
 
+/**
+ * Whether ordinal forms can change how a structure renders: its mode name
+ * prints digit ordinals whose suffix the font's ordinal forms can raise.
+ */
+export function initialMartyriaStructureSupportsOrdinalForms(
+  structure: InitialMartyriaStructure,
+) {
+  return (
+    initialMartyriaLexicons[structure.languageId].hasRaisableOrdinalSuffix ===
+      true && initialMartyriaStructureHasOrdinalDigits(structure)
+  );
+}
+
+/*
+ * Whether a text run is set in the Greek paragraph style: all text of a
+ * Greek-script language, and the stacked plagal abbreviation in any language.
+ */
+function textUsesGreekParagraphStyle(
+  lexicon: InitialMartyriaLexicon,
+  semantic: InitialMartyriaTextSemantic,
+) {
+  return lexicon.usesGreekScript || semantic === 'plagalAbbreviation';
+}
+
+/** The paragraph styles a style's rendering reads, in any mode. */
+export interface InitialMartyriaParagraphStyleUsage {
+  regular: boolean;
+  greek: boolean;
+}
+
+/**
+ * Which of a style's paragraph styles affect how it renders. The primary
+ * text's style (the one matching the language's script) always does, since
+ * it sizes and paints the music-font glyphs; music-font lettering reads
+ * nothing else.
+ */
+export function getInitialMartyriaParagraphStyleUsage(
+  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
+): InitialMartyriaParagraphStyleUsage {
+  const structure = style.structure;
+  const lexicon = initialMartyriaLexicons[structure.languageId];
+  const usage = {
+    regular: !lexicon.usesGreekScript,
+    greek: lexicon.usesGreekScript,
+  };
+  if (style.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont) {
+    return usage;
+  }
+  const transliteratesNoteNames =
+    structure.transliterateNoteNames && !lexicon.usesGreekScript;
+  if (transliteratesNoteNames) {
+    usage.regular = true;
+  } else {
+    usage.greek = true;
+  }
+  for (const mode of modeKeyModes) {
+    for (const component of getInitialMartyriaComponents(structure, mode)) {
+      if (component.kind === 'text' || component.kind === 'stackedCharacters') {
+        if (textUsesGreekParagraphStyle(lexicon, component.semantic)) {
+          usage.greek = true;
+        } else {
+          usage.regular = true;
+        }
+      }
+    }
+  }
+  return usage;
+}
+
 export function resolveInitialMartyriaStyle(options: {
   context: InitialMartyriaContext;
   resolvedStyle: ResolvedInitialMartyriaStyle;
@@ -891,13 +951,14 @@ export function resolveInitialMartyriaStyle(options: {
         });
         continue;
       }
-      const usesGreekFont =
-        lexicon.usesGreekScript || component.semantic === 'plagalAbbreviation';
+      const usesGreekFont = textUsesGreekParagraphStyle(
+        lexicon,
+        component.semantic,
+      );
       const appearance =
         component.semantic === 'numeral' &&
         style.useOrdinalForms &&
-        !lexicon.usesGreekScript &&
-        initialMartyriaStructureHasOrdinalDigits(structure)
+        initialMartyriaStructureSupportsOrdinalForms(structure)
           ? withOrdinalForms(usesGreekFont ? greekAppearance : mainAppearance)
           : usesGreekFont
             ? greekAppearance

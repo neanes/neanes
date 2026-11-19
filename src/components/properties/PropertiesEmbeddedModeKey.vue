@@ -40,6 +40,7 @@
         id="properties-embedded-mode-key-style"
         :model-value="element.initialMartyriaStyleId"
         :initial-martyria-styles="initialMartyriaStyles"
+        :default-style-id="pageSetup.initialMartyriaStyleId"
         rich-text-portal
         @update:model-value="update({ initialMartyriaStyleId: $event })"
         @update:open="emit('update:style-selector-open', $event)"

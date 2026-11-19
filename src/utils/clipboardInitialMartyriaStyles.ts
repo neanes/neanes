@@ -11,6 +11,7 @@ import {
 } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   cloneInitialMartyriaStyle,
+  getInitialMartyriaStyleNameKey,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import {
@@ -66,7 +67,8 @@ export function collectClipboardInitialMartyriaStylesFromElements(
 }
 
 // Merges the clipboard's custom styles into the destination. Like paragraph
-// styles, an existing style is reused by id first and then by name. Every
+// styles, an existing style is reused by id first and then by name within
+// its language and lettering (see getInitialMartyriaStyleNameKey). Every
 // other style is imported as its own copy under the same id. An imported
 // style's paragraph style references are rewritten with the remap produced
 // for the pasted content, so they follow the paragraph styles that traveled
@@ -85,7 +87,7 @@ export function resolveClipboardInitialMartyriaStyles(
   );
   const targetInitialMartyriaStylesByName = new Map(
     targetInitialMartyriaStyles.map((style) => [
-      style.displayName.trim(),
+      getInitialMartyriaStyleNameKey(style),
       style,
     ]),
   );
@@ -99,7 +101,7 @@ export function resolveClipboardInitialMartyriaStyles(
     }
 
     const targetStyle = targetInitialMartyriaStylesByName.get(
-      clipboardStyle.displayName.trim(),
+      getInitialMartyriaStyleNameKey(clipboardStyle),
     );
 
     if (targetStyle != null) {

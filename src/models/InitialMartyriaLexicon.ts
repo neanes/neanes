@@ -163,6 +163,13 @@ interface InitialMartyriaLexiconBase {
   ordinalWordsPrenominal?: InitialMartyriaModeTexts;
   cardinalWords?: InitialMartyriaModeTexts;
   alphabeticNumerals?: InitialMartyriaModeTexts;
+  /**
+   * Whether formatOrdinal ends digit ordinals in letters that a font's
+   * OpenType ordinal forms raise (the "st" of 1st). Suffixes that are already
+   * superscript characters (1.º), non-Latin letters (1-й), and prefixes
+   * (ke-1) give the feature nothing to act on.
+   */
+  hasRaisableOrdinalSuffix?: boolean;
   /** Spells an ordinal from a digit or Roman numeral (1o, 1st). */
   formatOrdinal?: (
     base: string,
@@ -337,6 +344,7 @@ export const initialMartyriaLexicons: Record<
       8: 'Eight',
     },
     formatOrdinal: formatEnglishOrdinal,
+    hasRaisableOrdinalSuffix: true,
     plagalWord: 'Plagal',
     plagalCounterpartWord: 'Plagal of',
     graveWord: 'Grave',

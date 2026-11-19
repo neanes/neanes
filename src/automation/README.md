@@ -42,18 +42,29 @@ Future automation jobs and export transformations belong in this feature area
 
 ## Initial martyria styles
 
-ModeKey edits accept `initialMartyriaStyleId`. Use `builtin:classic-v1` for the
-Neume Font style or `builtin:traditional-greek-v1` for Traditional Greek. Both
-share one structure and differ only in the style's `lettering`: Neume Font uses
-`music-font` (the music font's own Greek lettering and pitch-name glyphs),
-Traditional Greek uses `text`. Both use the shared mode-key renderer and the
-existing template catalog. Scores saved before initial martyria styles existed
-load as Neume Font; new scores also default to Neume Font.
+Every score owns its initial martyria styles, and there is always at least one.
+The page setup's `initialMartyriaStyleId` names the score's default style, which
+is always one of them. Built-in styles (`builtin:...` ids) are only presets the
+app's Initial Martyria Styles dialog starts new styles from; scores and mode
+keys never name them. A new score, and a score saved before initial martyria
+styles existed, gets a copy of the Greek "Traditional sign" preset lettered in
+the neume font (`builtin:classic-v1`) as its default.
+
+ModeKey edits accept `initialMartyriaStyleId`, which must name one of the
+score's own styles; any other id, built-in ids included, fails with
+`STYLE_NOT_FOUND`. Reset the property to make the mode key follow the score's
+default style again. MCP does not list, create, or edit initial martyria
+styles: a style's id can be read from a mode key that names it, and styles are
+managed in the app. Copying elements between documents carries the styles their
+mode keys name, reusing a destination style with the same name or importing a
+copy.
 
 Only Greek sign-identified structures support `music-font` lettering; any other
-structure falls back to `text` when a style is created or loaded. Custom styles
-supplied through saved files keep their `lettering` through score serialization
-and document copying. The UI does not create or duplicate Neume Font styles.
+structure falls back to `text` when a style is created or loaded. Styles keep
+their `lettering` through score serialization and document copying. Style names
+are unique within a language and lettering, the qualifiers the UI shows beside
+each name. Every style has a name of its own; a default style made from a
+preset is named after it in the app's language when it is created.
 
 ## Footnotes
 

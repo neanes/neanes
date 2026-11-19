@@ -3,11 +3,11 @@ import {
   getInitialMartyriaContext,
   getInitialMartyriaPronunciation,
   getSupportedInitialMartyriaLettering,
+  initialMartyriaStructureSupportsOrdinalForms,
 } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
   type InitialMartyriaStructure,
-  initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -15,11 +15,9 @@ import type { ModelSelector } from '@/models/NeumeI18nMappings';
 
 /*
  * Sample modes for previews. The plagal first mode exposes the plagal
- * wording of a style and the grave mode its irregular name, so together they
- * show every axis at work.
+ * wording of a style, so it shows every axis at work.
  */
 export const PLAGAL_SAMPLE_MODE = 5;
-export const GRAVE_SAMPLE_MODE = 7;
 
 const sampleModeLabelSelectors: Record<number, ModelSelector> = {
   1: ($) => $.model.mode.first,
@@ -72,8 +70,8 @@ export function withInitialMartyriaStyleStructure(
   );
 
   if (
-    !initialMartyriaStructureHasOrdinalDigits(style.structure) &&
-    initialMartyriaStructureHasOrdinalDigits(structure)
+    !initialMartyriaStructureSupportsOrdinalForms(style.structure) &&
+    initialMartyriaStructureSupportsOrdinalForms(structure)
   ) {
     next.useOrdinalForms = true;
   }

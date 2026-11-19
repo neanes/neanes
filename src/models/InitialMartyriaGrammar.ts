@@ -591,18 +591,6 @@ export function initialMartyriaStructuresEqual(
   );
 }
 
-export function findInitialMartyriaStyleWithStructure(
-  styles: InitialMartyriaStyle[],
-  structure: InitialMartyriaStructure,
-) {
-  const key = getInitialMartyriaStructureKey(structure);
-  return (
-    styles.find(
-      (style) => getInitialMartyriaStructureKey(style.structure) === key,
-    ) ?? null
-  );
-}
-
 export interface InitialMartyriaStructureVariation<T> {
   value: T;
   structure: InitialMartyriaStructure;

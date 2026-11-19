@@ -1,14 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   builtInInitialMartyriaStyles,
   createDefaultInitialMartyriaTypography,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   createInitialMartyriaStyle,
   enumerateInitialMartyriaStructures,
-  findInitialMartyriaStyleWithStructure,
   getInitialMartyriaStructureKey,
   getInitialMartyriaStructureVariations,
   getSupportedInitialMartyriaNumeralForms,
@@ -781,31 +779,6 @@ describe('InitialMartyriaGrammar', () => {
         transliterateNoteNames: true,
       }),
     ).toBe(true);
-  });
-
-  it('finds the style that already renders a structure', () => {
-    const styles = [
-      ...builtInInitialMartyriaStyles,
-      styleFor(
-        attestedStructures['english-authentic-counterpart-roman-numeral-text'],
-      ),
-    ];
-
-    expect(
-      findInitialMartyriaStyleWithStructure(
-        styles,
-        attestedStructures['english-authentic-counterpart-roman-numeral-text'],
-      )?.id,
-    ).toBe('test');
-    expect(findInitialMartyriaStyleWithStructure(styles, greekText)?.id).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekAlphabeticNumerals,
-    );
-    expect(
-      findInitialMartyriaStyleWithStructure(styles, {
-        ...greekText,
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-      }),
-    ).toBeNull();
   });
 
   it('offers a digit repertoire only where one is attested', () => {

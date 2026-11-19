@@ -14,7 +14,10 @@ import {
   createDefaultInitialMartyriaTypography,
   getBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
-import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
+import {
+  INITIAL_MARTYRIA_LETTERINGS,
+  type InitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   createDefaultParagraphStyles,
@@ -190,6 +193,70 @@ describe('clipboardInitialMartyriaStyles', () => {
     expect(result.initialMartyriaStyleIdRemap.get(clipboardParish.id)).toBe(
       targetParish.id,
     );
+  });
+
+  it('does not reuse a destination style of the same name in another language', () => {
+    const clipboardParish = createCustomInitialMartyriaStyle(
+      'clipboard-parish',
+      'Parish',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    const targetParish = createCustomInitialMartyriaStyle(
+      'target-parish',
+      'Parish',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    targetParish.structure = {
+      ...getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumber,
+      ).structure,
+    };
+
+    const result = resolveClipboardInitialMartyriaStyles(
+      [clipboardParish],
+      [targetParish],
+      createDefaultParagraphStyles(),
+      new Map(),
+    );
+
+    expect(result.importedInitialMartyriaStyles).toEqual([clipboardParish]);
+    expect(result.initialMartyriaStyleIdRemap.get(clipboardParish.id)).toBe(
+      clipboardParish.id,
+    );
+  });
+
+  it('does not reuse a destination style of the same name and language in another lettering', () => {
+    const greekStructure = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
+    ).structure;
+    const clipboardTraditional = createCustomInitialMartyriaStyle(
+      'clipboard-traditional',
+      'Traditional sign',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    clipboardTraditional.structure = { ...greekStructure };
+    clipboardTraditional.lettering = INITIAL_MARTYRIA_LETTERINGS.MusicFont;
+    const targetTraditional = createCustomInitialMartyriaStyle(
+      'target-traditional',
+      'Traditional sign',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    targetTraditional.structure = { ...greekStructure };
+    targetTraditional.lettering = INITIAL_MARTYRIA_LETTERINGS.Text;
+
+    const result = resolveClipboardInitialMartyriaStyles(
+      [clipboardTraditional],
+      [targetTraditional],
+      createDefaultParagraphStyles(),
+      new Map(),
+    );
+
+    expect(result.importedInitialMartyriaStyles).toEqual([
+      clipboardTraditional,
+    ]);
+    expect(
+      result.initialMartyriaStyleIdRemap.get(clipboardTraditional.id),
+    ).toBe(clipboardTraditional.id);
   });
 
   it('imports unknown styles as copies under the same id', () => {

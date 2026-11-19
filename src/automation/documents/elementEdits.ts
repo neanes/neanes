@@ -277,6 +277,16 @@ export function planElementEdits(
       ) {
         throw new Error('STYLE_NOT_FOUND');
       }
+      // A mode key names one of the score's own initial martyria styles;
+      // built-in styles are only presets in the app.
+      if (
+        key === 'initialMartyriaStyleId' &&
+        !workspace.score.initialMartyriaStyles.some(
+          (style) => style.id === value,
+        )
+      ) {
+        throw new Error('STYLE_NOT_FOUND');
+      }
     }
   };
   const applyProperties = (

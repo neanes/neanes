@@ -126,10 +126,10 @@ export type InitialMartyriaLettering =
  */
 export interface InitialMartyriaStyleTypography {
   /**
-   * Music-font lettering takes only the color and stroke of the regular
-   * paragraph style; the Greek paragraph style and ordinal forms apply to
-   * text lettering alone. Music-font lettering is only ever paired with a
-   * structure the font can letter: styles are created and loaded through
+   * Music-font lettering takes its size, color, and stroke from the
+   * paragraph style matching the language's script alone (the Greek one for
+   * the neume font's Greek structure); ordinal forms apply to text lettering
+   * alone. Music-font lettering is only ever paired with a structure the font can letter: styles are created and loaded through
    * getSupportedInitialMartyriaLettering, and the built-in styles are pinned
    * by a test. Consumers read this field as is.
    */
@@ -237,6 +237,31 @@ export function isInitialMartyriaStyleUserCreatable(
   style: Pick<InitialMartyriaStyle, 'lettering'>,
 ) {
   return style.lettering === INITIAL_MARTYRIA_LETTERINGS.Text;
+}
+
+/**
+ * The scope a style's name is unique within: its language together with its
+ * lettering, the qualifiers shown beside the name wherever styles are listed.
+ * Styles in different scopes may share a name.
+ */
+export function getInitialMartyriaStyleNameScope(
+  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
+) {
+  return `${style.structure.languageId}:${style.lettering}`;
+}
+
+/**
+ * What identifies a style by name: its name within its name scope. The
+ * styles dialog keeps these unique, and pasting reuses a destination style
+ * with the same key.
+ */
+export function getInitialMartyriaStyleNameKey(
+  style: Pick<InitialMartyriaStyle, 'displayName' | 'lettering' | 'structure'>,
+) {
+  return JSON.stringify([
+    getInitialMartyriaStyleNameScope(style),
+    style.displayName.trim(),
+  ]);
 }
 
 /** Whether the rendered mode name contains a digit ordinal such as "5th". */

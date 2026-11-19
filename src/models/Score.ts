@@ -6,6 +6,7 @@ import { Footers } from './Footers';
 import type { Footnote } from './Footnote';
 import type { Header } from './Header';
 import { Headers } from './Headers';
+import { ensureScoreInitialMartyriaStyle } from './InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
 import {
@@ -23,12 +24,20 @@ export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
   public paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles();
-  /** The score's own initial martyria styles; built-in styles are not stored. */
+  /**
+   * The score's own initial martyria styles. There is always at least one,
+   * and the page setup's default names one of them; built-in styles are only
+   * presets that styles are made from.
+   */
   public initialMartyriaStyles: InitialMartyriaStyle[] = [];
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();
   public footnotes: Footnote[] = [];
+
+  constructor() {
+    ensureScoreInitialMartyriaStyle(this);
+  }
 
   public get staves() {
     return [this.staff, ...this.footnotes.map((footnote) => footnote.staff)];

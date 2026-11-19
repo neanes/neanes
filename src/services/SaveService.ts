@@ -21,6 +21,7 @@ import { Footnote } from '@/models/Footnote';
 import type { Header } from '@/models/Header';
 import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+  ensureScoreInitialMartyriaStyle,
   findInitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
 } from '@/models/InitialMartyriaBuiltInStyles';
@@ -2014,6 +2015,7 @@ export class SaveService {
         s.pageSetup.initialMartyriaStyleId,
         score.initialMartyriaStyles,
       ) ?? DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
+    ensureScoreInitialMartyriaStyle(score);
     this.LoadLyricSetup_v1(
       score.staff.lyrics,
       s.staff.lyrics ?? new LyricSetup(),
@@ -2325,13 +2327,9 @@ export class SaveService {
     pageSetup.alternateLineDefaultFontSize =
       p.alternateLineDefaultFontSize ?? pageSetup.alternateLineDefaultFontSize;
 
-    // Custom styles are only known once the score's styles are loaded; the
-    // score loader re-validates the reference against them.
-    pageSetup.initialMartyriaStyleId =
-      p.initialMartyriaStyleId != null &&
-      isBuiltInInitialMartyriaStyleId(p.initialMartyriaStyleId)
-        ? p.initialMartyriaStyleId
-        : DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
+    // The default initial martyria style names one of the score's own styles,
+    // so it is not a page setting: the score loader resolves it against the
+    // loaded styles, and saved page setup defaults leave it as it is.
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor ?? pageSetup.accidentalDefaultColor;

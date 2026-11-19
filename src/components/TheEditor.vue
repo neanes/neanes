@@ -36,7 +36,10 @@ import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBo
 import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
 import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
 import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
-import { rewriteModeKeyAttributesInHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import {
+  extractModeKeyElementsFromHtml,
+  rewriteModeKeyAttributesInHtml,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
@@ -159,10 +162,7 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type { Footnote } from '@/models/Footnote';
-import {
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  isBuiltInInitialMartyriaStyleId,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { isBuiltInInitialMartyriaStyleId } from '@/models/InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type {
   ElementOverlayBox,
@@ -7782,19 +7782,60 @@ function updatePageSetup(pageSetup: PageSetup) {
   save();
 }
 
+/*
+ * Every mode key of the score, in the staves and embedded in rich text, by
+ * the style it names: null when it follows the score's default style.
+ */
+function getInitialMartyriaStyleUsage() {
+  const counts: Record<string, number> = {};
+  let defaultCount = 0;
+  const count = (styleId: string | null | undefined) => {
+    if (styleId == null) {
+      defaultCount++;
+    } else {
+      counts[styleId] = (counts[styleId] ?? 0) + 1;
+    }
+  };
+
+  for (const item of [
+    ...score.value.staves.flatMap((staff) => staff.elements),
+    ...score.value.headersAndFooters,
+  ]) {
+    if (item.elementType === ElementType.ModeKey) {
+      count((item as ModeKeyElement).initialMartyriaStyleId);
+    } else if (item.elementType === ElementType.RichTextBox) {
+      for (const key of RICH_TEXT_BOX_CONTENT_KEYS) {
+        for (const modeKey of extractModeKeyElementsFromHtml(
+          (item as RichTextBoxElement)[key],
+        )) {
+          count(modeKey.initialMartyriaStyleId);
+        }
+      }
+    }
+  }
+
+  return { counts, defaultCount };
+}
+
+const initialMartyriaStyleUsage = computed(() =>
+  initialMartyriaStylesDialogIsOpen.value
+    ? getInitialMartyriaStyleUsage()
+    : { counts: {}, defaultCount: 0 },
+);
+
 function confirmInitialMartyriaStyles(payload: {
   styles: InitialMartyriaStyle[];
-  styleId: string;
-  action: 'update' | 'use-for-document' | 'apply-to-element';
+  defaultStyleId: string;
+  replacements: Record<string, string>;
 }) {
   const nextStyleIds = new Set(payload.styles.map((style) => style.id));
-  // Update commits the edited styles and nothing else, so the element the
-  // dialog was opened from is left to follow the rules every other element
-  // follows below.
-  const element =
-    payload.action === 'update'
-      ? null
-      : initialMartyriaStylesDialogElement.value;
+  // A mode key of a deleted style takes the style chosen in its place. A
+  // reference that resolves to no style at all follows the default again.
+  const nextModeKeyStyleId = (styleId: string | null) =>
+    styleId == null || isBuiltInInitialMartyriaStyleId(styleId)
+      ? styleId
+      : (payload.replacements[styleId] ??
+        (nextStyleIds.has(styleId) ? styleId : null));
   const commands: Command[] = [];
 
   if (!deepEquals(score.value.initialMartyriaStyles, payload.styles)) {
@@ -7806,66 +7847,34 @@ function confirmInitialMartyriaStyles(payload: {
     );
   }
 
-  // A reference to a deleted style falls back: the score to the default
-  // built-in style, an element to the score's style.
-  const pageStyleId = score.value.pageSetup.initialMartyriaStyleId;
-  const nextPageStyleId =
-    payload.action === 'use-for-document'
-      ? payload.styleId
-      : !isBuiltInInitialMartyriaStyleId(pageStyleId) &&
-          !nextStyleIds.has(pageStyleId)
-        ? DEFAULT_INITIAL_MARTYRIA_STYLE_ID
-        : pageStyleId;
-
-  if (nextPageStyleId !== pageStyleId) {
+  if (payload.defaultStyleId !== score.value.pageSetup.initialMartyriaStyleId) {
     commands.push(
       pageSetupCommandFactory.create('update-properties', {
         target: score.value.pageSetup,
-        newValues: { initialMartyriaStyleId: nextPageStyleId },
+        newValues: { initialMartyriaStyleId: payload.defaultStyleId },
       }),
     );
   }
 
-  if (element != null) {
-    // The element takes the style, or follows the score again when the style
-    // is used for the whole document.
-    const nextElementStyleId =
-      payload.action === 'apply-to-element' ? payload.styleId : null;
+  const staffElements = score.value.staves.flatMap((staff) => staff.elements);
 
-    if (nextElementStyleId !== element.initialMartyriaStyleId) {
-      commands.push(
-        modeKeyCommandFactory.create('update-properties', {
-          target: element,
-          newValues: { initialMartyriaStyleId: nextElementStyleId },
-        }),
-      );
-    }
-  }
-
-  for (const item of score.value.staff.elements) {
-    if (item.elementType !== ElementType.ModeKey || item === element) {
+  for (const item of staffElements) {
+    if (item.elementType !== ElementType.ModeKey) {
       continue;
     }
     const modeKey = item as ModeKeyElement;
-    const styleId = modeKey.initialMartyriaStyleId;
-    if (
-      styleId != null &&
-      !isBuiltInInitialMartyriaStyleId(styleId) &&
-      !nextStyleIds.has(styleId)
-    ) {
+    const styleId = nextModeKeyStyleId(modeKey.initialMartyriaStyleId);
+    if (styleId !== modeKey.initialMartyriaStyleId) {
       commands.push(
         modeKeyCommandFactory.create('update-properties', {
           target: modeKey,
-          newValues: { initialMartyriaStyleId: null },
+          newValues: { initialMartyriaStyleId: styleId },
         }),
       );
     }
   }
 
-  for (const item of [
-    ...score.value.staff.elements,
-    ...score.value.headersAndFooters,
-  ]) {
+  for (const item of [...staffElements, ...score.value.headersAndFooters]) {
     if (item.elementType !== ElementType.RichTextBox) {
       continue;
     }
@@ -7879,12 +7888,14 @@ function confirmInitialMartyriaStyles(payload: {
         content,
         (attributes) => {
           const styleId = attributes.initialMartyriaStyleId;
+          if (typeof styleId !== 'string') {
+            return attributes;
+          }
+          const nextStyleId = nextModeKeyStyleId(styleId);
 
-          return typeof styleId === 'string' &&
-            !isBuiltInInitialMartyriaStyleId(styleId) &&
-            !nextStyleIds.has(styleId)
-            ? { ...attributes, initialMartyriaStyleId: null }
-            : attributes;
+          return nextStyleId === styleId
+            ? attributes
+            : { ...attributes, initialMartyriaStyleId: nextStyleId };
         },
       );
 
@@ -11241,13 +11252,13 @@ function renderTabLabel(tab: Tab) {
       v-if="initialMartyriaStylesDialogIsOpen"
       v-model:open="initialMartyriaStylesDialogIsOpen"
       :styles="score.initialMartyriaStyles"
+      :default-style-id="score.pageSetup.initialMartyriaStyleId"
       :paragraph-styles="score.paragraphStyles"
-      :element-style-id="
-        initialMartyriaStylesDialogElement?.initialMartyriaStyleId
-      "
       :page-setup="score.pageSetup"
-      :target="
-        initialMartyriaStylesDialogElement == null ? 'document' : 'element'
+      :usage-counts="initialMartyriaStyleUsage.counts"
+      :default-usage-count="initialMartyriaStyleUsage.defaultCount"
+      :initial-style-id="
+        initialMartyriaStylesDialogElement?.initialMartyriaStyleId
       "
       @confirm="confirmInitialMartyriaStyles($event)"
     />

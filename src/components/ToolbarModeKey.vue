@@ -4,6 +4,7 @@
       trigger-class="w-48"
       :model-value="element.initialMartyriaStyleId"
       :initial-martyria-styles="initialMartyriaStyles"
+      :default-style-id="pageSetup.initialMartyriaStyleId"
       @update:model-value="
         $emit('update', {
           initialMartyriaStyleId: $event,

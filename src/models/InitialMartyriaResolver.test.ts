@@ -9,12 +9,17 @@ import {
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
   getInitialMartyriaFixedSeparatorSize,
+  getInitialMartyriaParagraphStyleUsage,
+  initialMartyriaStructureSupportsOrdinalForms,
   resolveInitialMartyriaStyleAppearances,
   resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LETTERINGS,
+  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
+  type InitialMartyriaLettering,
+  type InitialMartyriaStructure,
 } from '@/models/InitialMartyriaStyle';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -349,28 +354,29 @@ describe('InitialMartyriaResolver', () => {
     }
   });
 
-  it('paints music-font lettering with the regular paragraph style', () => {
+  it('sets music-font lettering in the Greek paragraph style alone', () => {
     const style = {
       ...styleFor(attestedStructures['traditional-greek']),
       lettering: INITIAL_MARTYRIA_LETTERINGS.MusicFont,
     };
     const customRegular = createInitialMartyriaParagraphStyle(
       'custom-regular',
-      { color: '#123456', strokeWidth: 0.5, strokeColor: '#654321' },
+      { color: '#ABCDEF', strokeWidth: 1.5, strokeColor: '#FEDCBA' },
     );
     const customGreek = createInitialMartyriaParagraphStyle('custom-greek', {
-      color: '#ABCDEF',
-      strokeWidth: 1.5,
-      strokeColor: '#FEDCBA',
+      fontSize: 18,
+      color: '#123456',
+      strokeWidth: 0.5,
+      strokeColor: '#654321',
     });
     style.paragraphStyleId = customRegular.id;
     style.greekParagraphStyleId = customGreek.id;
     const styles = [...paragraphStyles, customRegular, customGreek];
 
     const resolved = resolveInitialMartyriaStyleAppearances(style, styles);
+    expect(resolved.primaryAppearance).toBe(resolved.greekAppearance);
     expect(resolved.primaryAppearance).toMatchObject({
-      fontFamily: resolved.greekAppearance.fontFamily,
-      fontSize: resolved.greekAppearance.fontSize,
+      fontSize: 18,
       color: '#123456',
       strokeWidth: 0.5,
       strokeColor: '#654321',
@@ -385,6 +391,104 @@ describe('InitialMartyriaResolver', () => {
         strokeWidth: 0.5,
         strokeColor: '#654321',
       });
+    }
+  });
+
+  describe('getInitialMartyriaParagraphStyleUsage', () => {
+    function usageFor(
+      structure: InitialMartyriaStructure,
+      lettering: InitialMartyriaLettering = INITIAL_MARTYRIA_LETTERINGS.Text,
+    ) {
+      return getInitialMartyriaParagraphStyleUsage({ structure, lettering });
+    }
+
+    it('reads only the Greek style for music-font lettering', () => {
+      expect(
+        usageFor(
+          attestedStructures['traditional-greek'],
+          INITIAL_MARTYRIA_LETTERINGS.MusicFont,
+        ),
+      ).toEqual({ regular: false, greek: true });
+    });
+
+    it('reads only the Greek style for Greek text', () => {
+      expect(usageFor(attestedStructures['greek-mode-names'])).toEqual({
+        regular: false,
+        greek: true,
+      });
+    });
+
+    it('reads both styles when note names stay in Greek', () => {
+      expect(usageFor(attestedStructures['english-mode-names'])).toEqual({
+        regular: true,
+        greek: true,
+      });
+    });
+
+    it('reads only the regular style for transliterated text', () => {
+      expect(
+        usageFor({
+          ...attestedStructures['english-mode-names'],
+          transliterateNoteNames: true,
+        }),
+      ).toEqual({ regular: true, greek: false });
+    });
+
+    it('still reads the Greek style for a transliterated plagal sign', () => {
+      expect(
+        usageFor({
+          ...attestedStructures['english-sign-first'],
+          transliterateNoteNames: true,
+        }),
+      ).toEqual({ regular: true, greek: true });
+      expect(
+        usageFor({
+          ...attestedStructures['english-plagal-class-ordinal-words'],
+          transliterateNoteNames: true,
+        }),
+      ).toEqual({ regular: true, greek: true });
+    });
+  });
+
+  it('offers ordinal forms only for digit ordinals with a raisable suffix', () => {
+    expect(
+      initialMartyriaStructureSupportsOrdinalForms(
+        attestedStructures['english-ordinal-plagal-text'],
+      ),
+    ).toBe(true);
+    expect(
+      initialMartyriaStructureSupportsOrdinalForms(
+        attestedStructures['english-ordinal'],
+      ),
+    ).toBe(false);
+    for (const structure of [
+      attestedStructures['church-slavonic-glas-number'],
+      attestedStructures['spanish-tono-ordinal-number'],
+      {
+        ...attestedStructures['russian-glas-number'],
+        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      },
+      attestedStructures['arabic-ordinal-digits'],
+    ]) {
+      expect(initialMartyriaStructureSupportsOrdinalForms(structure)).toBe(
+        false,
+      );
+    }
+  });
+
+  it('does not apply ordinal forms to digits without a raisable suffix', () => {
+    const style = styleFor(attestedStructures['church-slavonic-glas-number']);
+    style.useOrdinalForms = true;
+
+    const numeral = resolve(
+      style,
+      elementForTemplate(100),
+      paragraphStyles,
+    ).runs.find((run) => run.kind === 'text' && run.semantic === 'numeral');
+
+    expect(numeral?.kind).toBe('text');
+    if (numeral?.kind === 'text') {
+      expect(numeral.appearance.fontVariantNumeric).not.toContain('ordinal');
     }
   });
 

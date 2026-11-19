@@ -45,6 +45,7 @@ describe('copying staff ranges', () => {
     key.initialMartyriaStyleId = style.id;
     source.score.staff.elements.unshift(key);
     const before = saved(source);
+    const destinationStyles = destination.score.initialMartyriaStyles.slice();
     applyElementEdits(
       destination,
       planElementCopy(source, destination, { start: 0, end: 1 }),
@@ -61,7 +62,7 @@ describe('copying staff ranges', () => {
     );
     expect(saved(source)).toBe(before);
     destination.commandService.undo();
-    expect(destination.score.initialMartyriaStyles).toEqual([]);
+    expect(destination.score.initialMartyriaStyles).toEqual(destinationStyles);
     expect(
       destination.score.paragraphStyles.some(
         (item) => item.id === importedParagraph.id,

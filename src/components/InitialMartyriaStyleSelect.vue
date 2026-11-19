@@ -17,21 +17,20 @@
     >
       <SelectItem :value="DOCUMENT_DEFAULT_VALUE">
         {{
-          $t(($) => $.dialog.initialMartyriaStyles.documentDefault, {
+          $t(($) => $.dialog.initialMartyriaStyles.documentDefaultNamed, {
             ns: 'dialog',
+            name: labelFor(defaultStyle),
           })
         }}
       </SelectItem>
-      <SelectGroup v-for="group in styleGroups" :key="group.key">
-        <SelectLabel>{{ group.label }}</SelectLabel>
-        <SelectItem
-          v-for="style in group.styles"
-          :key="style.id"
-          :value="style.id"
-        >
-          {{ getInitialMartyriaStyleDisplayName(style, t) }}
-        </SelectItem>
-      </SelectGroup>
+      <SelectSeparator />
+      <SelectItem
+        v-for="style in initialMartyriaStyles"
+        :key="style.id"
+        :value="style.id"
+      >
+        {{ labelFor(style) }}
+      </SelectItem>
     </component>
   </Select>
 </template>
@@ -47,21 +46,17 @@ import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
 import {
-  builtInInitialMartyriaStyles,
   getInitialMartyriaStyleDisplayName,
+  getInitialMartyriaStyleOrDefault,
 } from '@/models/InitialMartyriaBuiltInStyles';
-import {
-  initialMartyriaLanguageIds,
-  type InitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
-import { getInitialMartyriaLanguageName } from '@/utils/initialMartyriaLabels';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
+import { getInitialMartyriaStyleQualifiedName } from '@/utils/initialMartyriaLabels';
 
 const props = defineProps({
   id: {
@@ -73,9 +68,14 @@ const props = defineProps({
     type: String as PropType<string | null>,
     default: null,
   },
-  /** The score's own styles; built-in styles are always available. */
+  /** The score's own styles. */
   initialMartyriaStyles: {
     type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultStyleId: {
+    type: String,
     required: true,
   },
   triggerClass: {
@@ -102,35 +102,24 @@ const contentComponent = computed(() =>
   props.richTextPortal ? RichTextSelectContent : SelectContent,
 );
 
-// Grouped as the styles dialog lists them: the score's own styles, then the
-// built-in styles of each language.
-const styleGroups = computed(() => {
-  const groups: {
-    key: string;
-    label: string;
-    styles: InitialMartyriaStyle[];
-  }[] = [];
-  if (props.initialMartyriaStyles.length > 0) {
-    groups.push({
-      key: 'custom',
-      label: t(($) => $.dialog.initialMartyriaStyles.custom, { ns: 'dialog' }),
-      styles: props.initialMartyriaStyles,
-    });
-  }
-  for (const languageId of initialMartyriaLanguageIds) {
-    groups.push({
-      key: languageId,
-      label: t(($) => $.dialog.initialMartyriaStyles.builtInLanguage, {
-        ns: 'dialog',
-        language: getInitialMartyriaLanguageName(t, languageId),
-      }),
-      styles: builtInInitialMartyriaStyles.filter(
-        (style) => style.structure.languageId === languageId,
-      ),
-    });
-  }
-  return groups;
-});
+// Built-in styles are presets in the styles dialog, not styles a mode key
+// can name, so only the score's own styles are offered.
+const defaultStyle = computed(() =>
+  getInitialMartyriaStyleOrDefault(
+    props.initialMartyriaStyles,
+    props.defaultStyleId,
+  ),
+);
+
+// Styles of different languages or letterings may share a name, so the
+// qualifiers are shown with the name.
+function labelFor(style: InitialMartyriaStyle) {
+  return getInitialMartyriaStyleQualifiedName(
+    t,
+    getInitialMartyriaStyleDisplayName(style, t),
+    style,
+  );
+}
 
 function onUpdate(value: AcceptableValue) {
   if (typeof value === 'string') {

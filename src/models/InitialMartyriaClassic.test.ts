@@ -93,6 +93,7 @@ describe('Classic initial martyria', () => {
         basedOn: english.id,
       }),
     ];
+    score.pageSetup.initialMartyriaStyleId = score.initialMartyriaStyles[0].id;
     const saved = SaveService.SaveScoreToJson(score);
     saved.initialMartyriaStyles![0].lettering =
       INITIAL_MARTYRIA_LETTERINGS.MusicFont;
@@ -180,7 +181,7 @@ describe('Classic initial martyria', () => {
     });
   });
 
-  it('round-trips built-in references and custom Classic styles', () => {
+  it('round-trips custom Classic styles', () => {
     const score = new Score();
     const custom = createInitialMartyriaStyle({
       ...classic,
@@ -188,12 +189,12 @@ describe('Classic initial martyria', () => {
       basedOn: classic.id,
     });
     score.initialMartyriaStyles = [custom];
-    score.pageSetup.initialMartyriaStyleId = classic.id;
+    score.pageSetup.initialMartyriaStyleId = custom.id;
     const element = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
     element.initialMartyriaStyleId = custom.id;
     score.staff.elements = [element];
     const loaded = SaveService.LoadScore_v1(SaveService.SaveScoreToJson(score));
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(classic.id);
+    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(custom.id);
     expect(loaded.initialMartyriaStyles).toEqual([custom]);
     expect(
       (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,

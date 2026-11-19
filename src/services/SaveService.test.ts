@@ -14,7 +14,6 @@ import {
 } from '@/models/Element';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   getBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
@@ -360,6 +359,16 @@ describe('SaveService break constraints', () => {
     expect(loaded.staff.elements[1].lineBreakType).toBeNull();
   });
 });
+
+/** The score owns exactly one style, a copy of Neume Font, as its default. */
+function expectDefaultNeumeFontStyle(score: Score) {
+  expect(score.initialMartyriaStyles).toHaveLength(1);
+  const [style] = score.initialMartyriaStyles;
+  expect(style.basedOn).toBe(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic);
+  expect(style.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.MusicFont);
+  expect(style.displayName).toBe('Traditional sign');
+  expect(score.pageSetup.initialMartyriaStyleId).toBe(style.id);
+}
 
 describe('SaveService font styles', () => {
   it('loads legacy text box bold/italic booleans as a font style', () => {
@@ -1493,6 +1502,7 @@ describe('SaveService font styles', () => {
       lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
     });
     score.initialMartyriaStyles = [customStyle];
+    score.pageSetup.initialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1514,6 +1524,7 @@ describe('SaveService font styles', () => {
       basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
     });
     score.initialMartyriaStyles = [customStyle];
+    score.pageSetup.initialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1545,10 +1556,7 @@ describe('SaveService font styles', () => {
 
     const loaded = SaveService.LoadScore_v1(saved);
 
-    expect(loaded.initialMartyriaStyles).toEqual([]);
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-    );
+    expectDefaultNeumeFontStyle(loaded);
   });
 
   it('loads only the first Initial Martyria style with a given id', () => {
@@ -1566,6 +1574,7 @@ describe('SaveService font styles', () => {
     });
     duplicateId.id = first.id;
     score.initialMartyriaStyles = [first, duplicateId];
+    score.pageSetup.initialMartyriaStyleId = first.id;
     const saved = SaveService.SaveScoreToJson(score);
 
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1573,48 +1582,71 @@ describe('SaveService font styles', () => {
     expect(loaded.initialMartyriaStyles).toEqual([first]);
   });
 
-  it('does not save built-in Initial Martyria styles or an empty style list', () => {
+  it('gives a score whose default names a built-in style a copy of it', () => {
     const score = new Score();
+    score.initialMartyriaStyles = [];
     score.pageSetup.initialMartyriaStyleId =
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames;
 
     const saved = SaveService.SaveScoreToJson(score);
 
     expect(saved.initialMartyriaStyles).toBeUndefined();
-    expect(saved.pageSetup.initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-    );
     const loaded = SaveService.LoadScore_v1(saved);
-    expect(loaded.initialMartyriaStyles).toEqual([]);
+    expect(loaded.initialMartyriaStyles).toHaveLength(1);
+    expect(loaded.initialMartyriaStyles[0]).toMatchObject({
+      basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+      structure: getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+      ).structure,
+    });
     expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+      loaded.initialMartyriaStyles[0].id,
     );
   });
 
-  it('keeps Neume Font as the default for new scores and saved style references', () => {
+  it('gives new scores a Neume Font style of their own as the default', () => {
     const score = new Score();
-    expect(score.pageSetup.initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-    );
+    expectDefaultNeumeFontStyle(score);
+
     const loaded = SaveService.LoadScore_v1(SaveService.SaveScoreToJson(score));
+
+    expect(loaded.initialMartyriaStyles).toEqual(score.initialMartyriaStyles);
     expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
+      score.pageSetup.initialMartyriaStyleId,
     );
+  });
+
+  it('keeps a new score its own default style when page setup defaults apply', () => {
+    // Saved page setup defaults carry the default style of the score they
+    // were saved from, which may be a built-in id or another score's style.
+    for (const savedStyleId of [
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+      new Score().pageSetup.initialMartyriaStyleId,
+      undefined,
+    ]) {
+      const score = new Score();
+      const defaults = new PageSetup_v1();
+      SaveService.SavePageSetup(defaults, new PageSetup());
+      defaults.initialMartyriaStyleId = savedStyleId;
+
+      SaveService.LoadPageSetup_v1(score.pageSetup, defaults);
+
+      expectDefaultNeumeFontStyle(score);
+    }
   });
 
   it('loads scores without Initial Martyria style references as Neume Font', () => {
     const score = new Score();
     score.staff.elements = [new ModeKeyElement()];
     const saved = SaveService.SaveScoreToJson(score);
+    delete saved.initialMartyriaStyles;
     delete saved.pageSetup.initialMartyriaStyleId;
     delete (saved.staff.elements[0] as ModeKeyElement_v1)
       .initialMartyriaStyleId;
 
     const loaded = SaveService.LoadScore_v1(saved);
 
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-    );
+    expectDefaultNeumeFontStyle(loaded);
     expect(
       (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,
     ).toBeNull();
@@ -1641,10 +1673,7 @@ describe('SaveService font styles', () => {
 
     const loaded = SaveService.LoadScore_v1(saved);
 
-    expect(loaded.initialMartyriaStyles).toEqual([]);
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-    );
+    expectDefaultNeumeFontStyle(loaded);
     expect(
       (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,
     ).toBeNull();
@@ -1691,10 +1720,7 @@ describe('SaveService font styles', () => {
     const loaded = SaveService.LoadScore_v1(saved);
     const loadedModeKey = loaded.staff.elements[0] as ModeKeyElement;
 
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-    );
-    expect(loaded.initialMartyriaStyles).toEqual([]);
+    expectDefaultNeumeFontStyle(loaded);
     expect(
       loaded.paragraphStyles
         .filter(

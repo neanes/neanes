@@ -3,6 +3,7 @@ import type { Namespace, SelectorParam, TFunction } from 'i18next';
 import type { InitialMartyriaNumeralForm } from '@/models/InitialMartyriaGrammar';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
@@ -16,6 +17,7 @@ import {
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralQualifier,
   type InitialMartyriaNumeralStyle,
+  type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 
 type DialogSelector = SelectorParam<'dialog'>;
@@ -188,4 +190,54 @@ export function getInitialMartyriaModeNamingSchemeLabel(
   scheme: InitialMartyriaModeNamingScheme,
 ) {
   return t(modeNamingSchemeSelectors[scheme], { ns: 'dialog' });
+}
+
+export interface InitialMartyriaStyleQualifiers {
+  language: string;
+  /** Set only for music-font lettering; text lettering is the norm. */
+  lettering: string | null;
+}
+
+/**
+ * The qualifiers shown beside a style's name: its language and, when it is
+ * lettered in the neume font, its lettering. They name the scope the style's
+ * name is unique within.
+ */
+export function getInitialMartyriaStyleQualifiers(
+  t: Translate,
+  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
+): InitialMartyriaStyleQualifiers {
+  return {
+    language: getInitialMartyriaLanguageName(t, style.structure.languageId),
+    lettering:
+      style.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont
+        ? t(($) => $.dialog.initialMartyriaStyles.neumeFontLettering, {
+            ns: 'dialog',
+          })
+        : null,
+  };
+}
+
+/** A style's name with its qualifiers, for lists that show one line. */
+export function getInitialMartyriaStyleQualifiedName(
+  t: Translate,
+  name: string,
+  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
+) {
+  const { language, lettering } = getInitialMartyriaStyleQualifiers(t, style);
+  return lettering == null
+    ? t(($) => $.dialog.initialMartyriaStyles.styleNameWithLanguage, {
+        ns: 'dialog',
+        name,
+        language,
+      })
+    : t(
+        ($) => $.dialog.initialMartyriaStyles.styleNameWithLanguageAndLettering,
+        {
+          ns: 'dialog',
+          name,
+          language,
+          lettering,
+        },
+      );
 }

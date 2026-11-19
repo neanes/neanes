@@ -1,8 +1,12 @@
 import type { Namespace, SelectorParam, TFunction } from 'i18next';
+import i18next from 'i18next';
 
+import { resources } from '@/i18n';
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
+import { getNextAvailableStyleName } from '@/utils/styleNames';
 
 import {
+  getInitialMartyriaStyleNameScope,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -506,11 +510,6 @@ export function getDefaultBuiltInInitialMartyriaStyle(
   )!;
 }
 
-/** Every style available to a score: the built-in styles, then its own. */
-export function getInitialMartyriaStyles(customStyles: InitialMartyriaStyle[]) {
-  return [...builtInInitialMartyriaStyles, ...customStyles];
-}
-
 export function findInitialMartyriaStyle(
   customStyles: InitialMartyriaStyle[],
   styleId: string,
@@ -542,6 +541,7 @@ export function getBuiltInInitialMartyriaStyleNameSelector(
   return BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS[styleId];
 }
 
+/** A built-in style is named through the UI locale. */
 export function getInitialMartyriaStyleDisplayName(
   style: InitialMartyriaStyle,
   t: TFunction<Namespace>,
@@ -549,4 +549,69 @@ export function getInitialMartyriaStyleDisplayName(
   return isBuiltInInitialMartyriaStyleId(style.id)
     ? t(getBuiltInInitialMartyriaStyleNameSelector(style.id), { ns: 'dialog' })
     : style.displayName;
+}
+
+/**
+ * A style of the score's own made from a built-in style, which serves only
+ * as a preset: the new style is the score's to edit and name.
+ */
+export function createInitialMartyriaStyleFromPreset(
+  preset: BuiltInInitialMartyriaStyle,
+  displayName: string,
+): InitialMartyriaStyle {
+  return {
+    ...preset,
+    id: crypto.randomUUID(),
+    displayName,
+    basedOn: preset.id,
+    structure: { ...preset.structure },
+  };
+}
+
+/*
+ * A preset's name in the app's language. Score models are also built where
+ * i18next is not initialized (unit tests, before startup), and there the
+ * English name is used.
+ */
+function getPresetName(preset: BuiltInInitialMartyriaStyle) {
+  const selector = getBuiltInInitialMartyriaStyleNameSelector(preset.id);
+  return i18next.isInitialized
+    ? i18next.t(selector, { ns: 'dialog' })
+    : selector(resources.en);
+}
+
+/**
+ * Every score owns at least one style, and its default names one of them. A
+ * score whose default does not resolve to a style of its own gets a copy of
+ * the default built-in style as its default, named after it.
+ */
+export function ensureScoreInitialMartyriaStyle(score: {
+  initialMartyriaStyles: InitialMartyriaStyle[];
+  pageSetup: { initialMartyriaStyleId: string };
+}) {
+  const defaultStyleId = score.pageSetup.initialMartyriaStyleId;
+  if (
+    score.initialMartyriaStyles.some((style) => style.id === defaultStyleId)
+  ) {
+    return;
+  }
+  const preset = getBuiltInInitialMartyriaStyle(
+    isBuiltInInitialMartyriaStyleId(defaultStyleId)
+      ? defaultStyleId
+      : DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+  );
+  const nameScope = getInitialMartyriaStyleNameScope(preset);
+  const style = createInitialMartyriaStyleFromPreset(
+    preset,
+    getNextAvailableStyleName(
+      getPresetName(preset),
+      score.initialMartyriaStyles
+        .filter(
+          (style) => getInitialMartyriaStyleNameScope(style) === nameScope,
+        )
+        .map((style) => style.displayName),
+    ),
+  );
+  score.initialMartyriaStyles = [style, ...score.initialMartyriaStyles];
+  score.pageSetup.initialMartyriaStyleId = style.id;
 }

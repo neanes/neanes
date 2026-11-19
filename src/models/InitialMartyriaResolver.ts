@@ -1024,35 +1024,11 @@ function isPlagalAbbreviationRun(run: ResolvedInitialMartyriaRun) {
   );
 }
 
-/*
- * Whether runs[index] is spaced like a word. Words and note names are; the
- * stacked plagal abbreviation is not. The mode sign is only where it stands
- * in for the numeral of a sign-only name, and then only after a word, so it
- * never has a word space on one side and a fixed gap on the other.
- */
-function isWordLikeRun(
-  resolution: Pick<InitialMartyriaStyleResolution, 'structure' | 'runs'>,
-  index: number,
-): boolean {
-  const run = resolution.runs[index];
-  switch (run.kind) {
-    case 'text':
-      return !isPlagalAbbreviationRun(run);
-    case 'startingPitch':
-      return true;
-    case 'glyph':
-      // Music-font lettering glyphs are set with fixed gaps, like the
-      // pre-style glyph mode keys they reproduce.
-      if (run.semantic !== 'modeSign') {
-        return false;
-      }
-      return (
-        resolution.structure.modeIdentificationMethod ===
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
-        index > 0 &&
-        isWordLikeRun(resolution, index - 1)
-      );
-  }
+function isWordLikeRun(run: ResolvedInitialMartyriaRun) {
+  return (
+    run.kind === 'startingPitch' ||
+    (run.kind === 'text' && !isPlagalAbbreviationRun(run))
+  );
 }
 
 /**
@@ -1060,20 +1036,19 @@ function isWordLikeRun(
  * a fixed gap beside anything else.
  */
 export function getInitialMartyriaSeparatorBefore(
-  resolution: Pick<InitialMartyriaStyleResolution, 'structure' | 'runs'>,
+  { runs }: Pick<InitialMartyriaStyleResolution, 'runs'>,
   index: number,
 ): InitialMartyriaSeparator {
-  if (index <= 0 || index >= resolution.runs.length) {
+  if (index <= 0 || index >= runs.length) {
     return 'none';
   }
-  return isWordLikeRun(resolution, index - 1) &&
-    isWordLikeRun(resolution, index)
+  return isWordLikeRun(runs[index - 1]) && isWordLikeRun(runs[index])
     ? 'wordSpace'
     : 'fixed';
 }
 
 export function getInitialMartyriaSeparatorAfter(
-  resolution: Pick<InitialMartyriaStyleResolution, 'structure' | 'runs'>,
+  resolution: Pick<InitialMartyriaStyleResolution, 'runs'>,
   index: number,
 ): InitialMartyriaSeparator {
   const { runs } = resolution;

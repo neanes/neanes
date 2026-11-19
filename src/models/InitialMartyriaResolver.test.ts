@@ -10,6 +10,8 @@ import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
   getInitialMartyriaFixedSeparatorSize,
   getInitialMartyriaParagraphStyleUsage,
+  getInitialMartyriaSeparatorAfter,
+  getInitialMartyriaSeparatorBefore,
   initialMartyriaStructureSupportsOrdinalForms,
   resolveInitialMartyriaStyleAppearances,
   resolveModeKeyInitialMartyriaStyle,
@@ -52,6 +54,29 @@ function createInitialMartyriaParagraphStyle(
 describe('InitialMartyriaResolver', () => {
   it('sizes fixed separators from the primary text font size', () => {
     expect(getInitialMartyriaFixedSeparatorSize(20)).toBe(8.6);
+  });
+
+  it.each([
+    'traditional-greek',
+    'romanian-glas',
+    'english-sign-first',
+    'english-plagal-class-ordinal-words',
+  ] as const)('uses fixed gaps beside the mode glyph in %s', (preset) => {
+    const resolution = resolve(
+      styleFor(attestedStructures[preset]),
+      elementForTemplate(100),
+    );
+    const signIndex = resolution.runs.findIndex(
+      (run) => run.kind === 'glyph' && run.semantic === 'modeSign',
+    );
+
+    expect(signIndex).toBeGreaterThanOrEqual(0);
+    expect(getInitialMartyriaSeparatorBefore(resolution, signIndex)).toBe(
+      signIndex === 0 ? 'none' : 'fixed',
+    );
+    expect(getInitialMartyriaSeparatorAfter(resolution, signIndex)).toBe(
+      'fixed',
+    );
   });
 
   it('resolves inherited, explicit, and missing style references', () => {

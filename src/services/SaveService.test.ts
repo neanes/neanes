@@ -25,6 +25,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStyle,
+  withInitialMartyriaModeIdentificationMethod,
 } from '@/models/InitialMartyriaStyle';
 import { Fthora, Ison, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
@@ -1533,6 +1534,36 @@ describe('SaveService font styles', () => {
     expect(savedStyle).not.toHaveProperty('numeralStyle');
     expect(savedStyle).not.toHaveProperty('numberingSystem');
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
+  it('moves a saved Church Slavonic sign after the label and preserves style references', () => {
+    const score = new Score();
+    const base = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumber,
+    );
+    const style = createInitialMartyriaStyle({
+      ...base,
+      structure: withInitialMartyriaModeIdentificationMethod(
+        base.structure,
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+      ),
+    });
+    score.initialMartyriaStyles = [style];
+    score.pageSetup.initialMartyriaStyleId = style.id;
+    const modeKey = new ModeKeyElement();
+    modeKey.initialMartyriaStyleId = style.id;
+    score.staff.elements = [modeKey];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    saved.initialMartyriaStyles![0].numeralQualifier =
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal;
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(loaded.initialMartyriaStyles).toEqual([style]);
+    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(style.id);
+    expect(loaded.staff.elements[0]).toMatchObject({
+      initialMartyriaStyleId: style.id,
+    });
   });
 
   it('drops known but unsupported saved Initial Martyria styles', () => {

@@ -190,7 +190,7 @@ const initialMartyriaGrammarRules: Record<
         INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
       ]),
     ],
-    modeSign: [ordinalEveryAbsoluteRule],
+    modeSign: [ordinalPostAbsoluteRule],
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: {
     text: [

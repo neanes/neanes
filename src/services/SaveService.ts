@@ -28,6 +28,7 @@ import {
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
 import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
 import {
+  INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
@@ -1123,6 +1124,10 @@ function loadInitialMartyriaStyle(
     structure = {
       ...common,
       modeIdentificationMethod: saved.modeIdentificationMethod,
+      numeralQualifier:
+        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic
+          ? INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal
+          : common.numeralQualifier,
     };
   } else {
     if (

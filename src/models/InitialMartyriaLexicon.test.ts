@@ -509,10 +509,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Гла́съ | 2. | <modeSign> | <pitch>',
       'Гла́съ | 3. | <modeSign> | <pitch>',
       'Гла́съ | 4. | <modeSign> | <pitch>',
-      'Гла́съ | 5. | greek:λ/π | <modeSign> | <pitch>',
-      'Гла́съ | 6. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | 5. | <modeSign> | <pitch>',
+      'Гла́съ | 6. | <modeSign> | <pitch>',
       'Гла́съ | 7. | <modeSign> | <pitch>',
-      'Гла́съ | 8. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | 8. | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -522,10 +522,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Гла́съ | в҃. | <modeSign> | <pitch>',
       'Гла́съ | г҃. | <modeSign> | <pitch>',
       'Гла́съ | д҃. | <modeSign> | <pitch>',
-      'Гла́съ | є҃. | greek:λ/π | <modeSign> | <pitch>',
-      'Гла́съ | ѕ҃. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | є҃. | <modeSign> | <pitch>',
+      'Гла́съ | ѕ҃. | <modeSign> | <pitch>',
       'Гла́съ | з҃. | <modeSign> | <pitch>',
-      'Гла́съ | и҃. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | и҃. | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -548,10 +548,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Гла́съ | вторы́й. | <modeSign> | <pitch>',
       'Гла́съ | тре́тїй. | <modeSign> | <pitch>',
       'Гла́съ | четве́ртый. | <modeSign> | <pitch>',
-      'Гла́съ | пѧ́тый. | greek:λ/π | <modeSign> | <pitch>',
-      'Гла́съ | шесты́й. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | пѧ́тый. | <modeSign> | <pitch>',
+      'Гла́съ | шесты́й. | <modeSign> | <pitch>',
       'Гла́съ | седмы́й. | <modeSign> | <pitch>',
-      'Гла́съ | ѻ҆сьмы́й. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | ѻ҆сьмы́й. | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -1061,6 +1061,26 @@ const expectedPronunciationsByStructure: [
 ];
 
 describe('InitialMartyriaLexicon', () => {
+  it('omits the plagal abbreviation in every Church Slavonic structure', () => {
+    const structures = getLegalInitialMartyriaStructures().filter(
+      (structure) =>
+        structure.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
+    );
+
+    for (const structure of structures) {
+      const style = styleFor(structure);
+      for (const mode of [5, 6, 8]) {
+        const { runs } = resolve(style, elementForMode(mode));
+        expect(
+          runs,
+          `${describeStructure(structure)} mode ${mode}`,
+        ).not.toContainEqual(
+          expect.objectContaining({ semantic: 'plagalAbbreviation' }),
+        );
+      }
+    }
+  });
+
   it('renders and pronounces every legal structure', () => {
     const legalKeys = new Set(
       getLegalInitialMartyriaStructures().map(getInitialMartyriaStructureKey),

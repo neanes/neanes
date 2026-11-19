@@ -13,10 +13,14 @@ import {
 import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
 import { getInitialMartyriaStructureStrips } from '@/models/InitialMartyriaStructureStrips';
 import {
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
+  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStructure,
 } from '@/models/InitialMartyriaStyle';
+
+import { attestedStructures } from './InitialMartyriaStyle.testData';
 
 /*
  * Every structure one step away: the tiles of every strip, plus the
@@ -142,6 +146,27 @@ describe('InitialMartyriaStructureStrips', () => {
         }
       }
     }
+  });
+
+  it('only offers a Church Slavonic sign after Glas', () => {
+    const strips = getInitialMartyriaStructureStrips({
+      ...attestedStructures['church-slavonic-glas-ordinal'],
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    });
+    const signOnly = strips
+      .find((strip) => strip.key === 'modeIdentificationMethod')!
+      .variations.find(
+        (variation) =>
+          variation.value ===
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+      )!.structure;
+
+    expect(signOnly.numeralQualifier).toBe(
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    );
+    expect(getInitialMartyriaStructureStrips(signOnly)).not.toContainEqual(
+      expect.objectContaining({ key: 'numeralQualifier' }),
+    );
   });
 
   it('offers no strip that has nothing to choose between', () => {

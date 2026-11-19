@@ -9,6 +9,7 @@ export interface InitialMartyriaRenderingConvention {
   terminalPunctuation: '' | '.';
   modeSignGroupPlacement: 'before-starting-pitch' | 'after-starting-pitch';
   plagalAbbreviationNumeralStyles: readonly InitialMartyriaNumeralStyle[];
+  showPlagalAbbreviationWithModeSign: boolean;
   showGraveWordWithModeSign: boolean;
 }
 
@@ -16,6 +17,7 @@ const defaultRenderingConvention: InitialMartyriaRenderingConvention = {
   terminalPunctuation: '.',
   modeSignGroupPlacement: 'before-starting-pitch',
   plagalAbbreviationNumeralStyles: [],
+  showPlagalAbbreviationWithModeSign: true,
   showGraveWordWithModeSign: false,
 };
 
@@ -32,7 +34,10 @@ export const initialMartyriaRenderingConventions: Record<
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: defaultRenderingConvention,
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: defaultRenderingConvention,
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: defaultRenderingConvention,
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {
+    ...defaultRenderingConvention,
+    showPlagalAbbreviationWithModeSign: false,
+  },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: defaultRenderingConvention,
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
     ...defaultRenderingConvention,

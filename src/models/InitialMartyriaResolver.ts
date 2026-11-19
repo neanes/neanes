@@ -376,6 +376,10 @@ function getInitialMartyriaComponents(
   const convention = initialMartyriaRenderingConventions[structure.languageId];
   const plagal = isPlagalMode(mode);
   const modeSign: InitialMartyriaComponent = { kind: 'modeSign' };
+  const modeSignAbbreviation =
+    plagal && convention.showPlagalAbbreviationWithModeSign
+      ? plagalAbbreviation()
+      : null;
   const startingPitch: InitialMartyriaComponent = {
     kind: 'startingNoteCluster',
   };
@@ -397,19 +401,16 @@ function getInitialMartyriaComponents(
     // Treat the sign as the numeral when ordering the mode name: "plagal first
     // mode", "first plagal mode", and "plagal mode one" place the same sign
     // differently.
-    // The sign group identifies the mode: the stacked plagal abbreviation
-    // (or the grave title, where the language spells one out) plus the sign.
+    // The sign group may include a plagal abbreviation or grave title.
     const graveTitle =
       usesGraveNaming(structure, mode) &&
       convention.showGraveWordWithModeSign &&
       lexicon.graveWord != null
         ? capitalizeInitial(lexicon.graveWord)
         : null;
-    const marker = plagal
-      ? plagalAbbreviation()
-      : graveTitle != null
-        ? text('graveWord', graveTitle)
-        : null;
+    const marker =
+      modeSignAbbreviation ??
+      (graveTitle != null ? text('graveWord', graveTitle) : null);
     const orderingSemantics =
       mode === 7 && graveTitle == null && lexicon.graveWord != null
         ? {
@@ -482,12 +483,11 @@ function getInitialMartyriaComponents(
       // its own conventional reading rather than inheriting the text's number
       // form. For example, the sign beside "Mode 5" is still read as
       // "Plagal First".
-      const indicator = plagal ? plagalAbbreviation() : null;
       const group = orderInitialMartyriaModeName(
         traditionalModeSignPronunciation,
         lexicon,
         modeSign,
-        indicator,
+        modeSignAbbreviation,
         null,
       ).filter(
         (component): component is InitialMartyriaComponent => component != null,

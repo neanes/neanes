@@ -248,16 +248,6 @@ export const attestedStructures = {
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
   },
-  'spanish-tono-ordinal-number': {
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    transliterateNoteNames: false,
-  },
   'spanish-tono-ordinal': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
     modeIdentificationMethod:

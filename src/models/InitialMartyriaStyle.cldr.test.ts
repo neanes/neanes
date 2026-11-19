@@ -186,11 +186,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
       ],
       [
-        INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-        INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-      ],
-      [
         INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
         INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
         INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
@@ -263,29 +258,39 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     }
   });
 
-  it('uses CLDR numerals and readings for prenominal Spanish and Russian Roman ordinals', () => {
+  it('uses CLDR numerals and readings for Spanish and Russian Roman ordinals', () => {
     const expectedNumerals = cldrValues('root', 'renderRomanUpper');
     const cases = [
       [
         INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
         'es',
-        'renderSpelloutOrdinalMasculineAdjective',
+        'renderSpelloutOrdinalMasculine',
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        1,
       ],
       [
         INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
         'ru',
         'renderSpelloutOrdinalMasculine',
+        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        0,
       ],
     ] as const;
 
-    for (const [languageId, locale, ordinalRule] of cases) {
+    for (const [
+      languageId,
+      locale,
+      ordinalRule,
+      numeralQualifier,
+      ordinalIndex,
+    ] of cases) {
       const style = styleFor({
         languageId,
         modeIdentificationMethod:
           INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
         numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
         numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        numeralQualifier,
         modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
       });
 
@@ -299,7 +304,7 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
       }
       expect(
         pronunciationsFor(style).map((pronunciation) =>
-          pronunciation.split(' ')[0].toLocaleLowerCase(locale),
+          pronunciation.split(' ')[ordinalIndex].toLocaleLowerCase(locale),
         ),
       ).toEqual(expectedOrdinals);
     }
@@ -451,25 +456,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
         ),
       ),
     ).toEqual(cldrValues('es', 'renderSpelloutNumbering'));
-  });
-
-  it('uses the matching CLDR Spanish digit ordinal for each position', () => {
-    expect(
-      numeralsFor(
-        absoluteDigitOrdinalStyle(
-          INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-          INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        ),
-      ),
-    ).toEqual(cldrValues('es', 'renderDigitsOrdinalMasculine'));
-    expect(
-      numeralsFor(
-        absoluteDigitOrdinalStyle(
-          INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-          INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        ),
-      ),
-    ).toEqual(cldrValues('es', 'renderDigitsOrdinalMasculineAdjective'));
   });
 
   it('uses CLDR Russian ordinals modulo case and attested yo spelling', () => {

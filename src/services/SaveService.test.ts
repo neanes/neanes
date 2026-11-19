@@ -1537,10 +1537,11 @@ describe('SaveService font styles', () => {
   });
 
   it.each([
+    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumber,
     BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumber,
     BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumber,
   ])(
-    'moves a saved sign after Glas and preserves style references for %s',
+    'moves a saved sign after the label and preserves style references for %s',
     (presetId) => {
       const score = new Score();
       const base = getBuiltInInitialMartyriaStyle(presetId);
@@ -1567,6 +1568,45 @@ describe('SaveService font styles', () => {
       expect(loaded.staff.elements[0]).toMatchObject({
         initialMartyriaStyleId: style.id,
       });
+    },
+  );
+
+  it.each([
+    [
+      INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    ],
+    [
+      INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    ],
+    [
+      INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    ],
+  ] as const)(
+    'loads a saved Spanish %s %s style with Roman numerals after Tono',
+    (numeralStyle, numeralQualifier) => {
+      const score = new Score();
+      const base = getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeral,
+      );
+      const style = createInitialMartyriaStyle({ ...base, basedOn: base.id });
+      score.initialMartyriaStyles = [style];
+      score.pageSetup.initialMartyriaStyleId = style.id;
+
+      const saved = SaveService.SaveScoreToJson(score);
+      const savedStyle = saved.initialMartyriaStyles![0];
+      savedStyle.basedOn =
+        numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
+          ? 'builtin:spanish-tono-ordinal-number-v1'
+          : base.id;
+      savedStyle.numeralStyle = numeralStyle;
+      savedStyle.numeralQualifier = numeralQualifier;
+
+      const loaded = SaveService.LoadScore_v1(saved);
+      expect(loaded.initialMartyriaStyles).toEqual([style]);
+      expect(loaded.pageSetup.initialMartyriaStyleId).toBe(style.id);
     },
   );
 

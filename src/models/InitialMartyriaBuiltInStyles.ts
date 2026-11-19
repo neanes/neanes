@@ -34,7 +34,6 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   EnglishPlagalClassWithSign: 'builtin:english-plagal-class-ordinal-words-v1',
   SpanishTonoNumber: 'builtin:spanish-tono-number-v1',
   SpanishTonoRomanNumeral: 'builtin:spanish-tono-roman-numeral-v1',
-  SpanishTonoOrdinalNumber: 'builtin:spanish-tono-ordinal-number-v1',
   SpanishTonoOrdinal: 'builtin:spanish-tono-ordinal-v1',
   SpanishOrdinalTono: 'builtin:spanish-ordinal-tono-v1',
   ChurchSlavonicGlasNumber: 'builtin:church-slavonic-glas-number-v1',
@@ -96,9 +95,6 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
     styleName('spanishTonoNumber'),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeral]: styleName(
     'spanishTonoRomanNumeral',
-  ),
-  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalNumber]: styleName(
-    'spanishTonoOrdinalNumber',
   ),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinal]:
     styleName('spanishTonoOrdinal'),
@@ -289,16 +285,6 @@ export const builtInInitialMartyriaStyles: BuiltInInitialMartyriaStyle[] = [
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
     numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
     numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-  }),
-  builtIn({
-    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoOrdinalNumber,
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     modeIdentificationMethod:

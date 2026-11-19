@@ -172,13 +172,14 @@ const initialMartyriaGrammarRules: Record<
         INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
         INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
       ]),
-      withNumeralStyles(ordinalEveryAbsoluteRule, [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+      withNumeralStyles(ordinalPostAbsoluteRule, [
         INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+      ]),
+      withNumeralStyles(ordinalEveryAbsoluteRule, [
         INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
       ]),
     ],
-    modeSign: [cardinalPostAbsoluteRule, ordinalEveryAbsoluteRule],
+    modeSign: [cardinalPostAbsoluteRule, ordinalPostAbsoluteRule],
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {
     text: [

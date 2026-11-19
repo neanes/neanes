@@ -488,7 +488,7 @@ describe('InitialMartyriaResolver', () => {
     ).toBe(false);
     for (const structure of [
       attestedStructures['church-slavonic-glas-number'],
-      attestedStructures['spanish-tono-ordinal-number'],
+      attestedStructures['spanish-tono-roman-numeral'],
       {
         ...attestedStructures['russian-glas-number'],
         numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,

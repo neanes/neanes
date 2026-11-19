@@ -148,29 +148,30 @@ describe('InitialMartyriaStructureStrips', () => {
     }
   });
 
-  it.each(['church-slavonic-glas-ordinal', 'russian-glas-ordinal'] as const)(
-    'only offers a sign after Glas for %s',
-    (style) => {
-      const strips = getInitialMartyriaStructureStrips({
-        ...attestedStructures[style],
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-      });
-      const signOnly = strips
-        .find((strip) => strip.key === 'modeIdentificationMethod')!
-        .variations.find(
-          (variation) =>
-            variation.value ===
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-        )!.structure;
+  it.each([
+    'spanish-ordinal-tono',
+    'church-slavonic-glas-ordinal',
+    'russian-glas-ordinal',
+  ] as const)('only offers a sign after the label for %s', (style) => {
+    const strips = getInitialMartyriaStructureStrips({
+      ...attestedStructures[style],
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    });
+    const signOnly = strips
+      .find((strip) => strip.key === 'modeIdentificationMethod')!
+      .variations.find(
+        (variation) =>
+          variation.value ===
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+      )!.structure;
 
-      expect(signOnly.numeralQualifier).toBe(
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-      );
-      expect(getInitialMartyriaStructureStrips(signOnly)).not.toContainEqual(
-        expect.objectContaining({ key: 'numeralQualifier' }),
-      );
-    },
-  );
+    expect(signOnly.numeralQualifier).toBe(
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    );
+    expect(getInitialMartyriaStructureStrips(signOnly)).not.toContainEqual(
+      expect.objectContaining({ key: 'numeralQualifier' }),
+    );
+  });
 
   it('offers no strip that has nothing to choose between', () => {
     for (const style of builtInInitialMartyriaStyles) {

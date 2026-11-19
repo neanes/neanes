@@ -150,10 +150,7 @@ describe('InitialMartyriaGrammar', () => {
       'words/cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
-      'digits/ordinal/prenominal/absolute',
-      'digits/ordinal/postnominal/absolute',
       'digits/cardinal/postnominal/absolute',
-      'roman-numerals/ordinal/prenominal/absolute',
       'roman-numerals/ordinal/postnominal/absolute',
       'roman-numerals/cardinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
@@ -204,7 +201,6 @@ describe('InitialMartyriaGrammar', () => {
       'cardinal/postnominal/plagal-class',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
-      'ordinal/prenominal/absolute',
       'ordinal/postnominal/absolute',
       'cardinal/postnominal/absolute',
     ],
@@ -244,7 +240,6 @@ describe('InitialMartyriaGrammar', () => {
         'words/cardinal',
       ],
       es: [
-        'digits/ordinal',
         'digits/cardinal',
         'roman-numerals/ordinal',
         'roman-numerals/cardinal',
@@ -265,32 +260,19 @@ describe('InitialMartyriaGrammar', () => {
     });
   });
 
-  it('renders prenominal Roman ordinals with the language-specific label form', () => {
-    const structures = [
-      [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish, ['II', 'tono.'], 'Segundo tono'],
-      [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, ['II', 'глас.'], 'Второй глас'],
-    ] as const;
+  it('renders prenominal Roman ordinals with the Russian label form', () => {
+    const structure = grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    });
+    const resolution = resolve(styleFor(structure), elementForMode(2));
 
-    for (const [
-      languageId,
-      expectedText,
-      expectedPronunciation,
-    ] of structures) {
-      const structure = grammarStructure(languageId, {
-        modeIdentificationMethod:
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-        numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-      });
-      const resolution = resolve(styleFor(structure), elementForMode(2));
-
-      expect(textOf(resolution.runs)).toEqual(expectedText);
-      expect(resolution.pronunciation.startsWith(expectedPronunciation)).toBe(
-        true,
-      );
-    }
+    expect(textOf(resolution.runs)).toEqual(['II', 'глас.']);
+    expect(resolution.pronunciation).toMatch(/^Второй глас/);
   });
 
   it('accepts and rejects complete supported mode-name constructions', () => {
@@ -399,6 +381,14 @@ describe('InitialMartyriaGrammar', () => {
         true,
       ],
       [
+        'Spanish prenominal ordinal digits',
+        {
+          ...attestedStructures['spanish-ordinal-tono'],
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+        },
+        false,
+      ],
+      [
         'Spanish cardinal Roman reading',
         {
           ...attestedStructures['spanish-tono-roman-numeral'],
@@ -412,7 +402,7 @@ describe('InitialMartyriaGrammar', () => {
           ...attestedStructures['spanish-tono-roman-numeral'],
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
         },
-        true,
+        false,
       ],
       [
         'Spanish sign-only plagal naming',
@@ -748,7 +738,7 @@ describe('InitialMartyriaGrammar', () => {
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     };
     const spanishSignOrdinal = {
-      ...attestedStructures['spanish-tono-ordinal-number'],
+      ...attestedStructures['spanish-tono-roman-numeral'],
       modeIdentificationMethod:
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     };
@@ -987,11 +977,11 @@ describe('InitialMartyriaGrammar', () => {
           modeIdentificationMethod:
             INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
           numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
         }),
-        '6.º | tono.',
-        'Sexto tono desde Pa',
+        'Tono | VI.',
+        'Tono sexto desde Pa',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic, {

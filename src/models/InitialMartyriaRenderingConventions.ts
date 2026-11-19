@@ -33,7 +33,10 @@ export const initialMartyriaRenderingConventions: Record<
     showGraveWordWithModeSign: true,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: defaultRenderingConvention,
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: defaultRenderingConvention,
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: {
+    ...defaultRenderingConvention,
+    showPlagalAbbreviationWithModeSign: false,
+  },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {
     ...defaultRenderingConvention,
     showPlagalAbbreviationWithModeSign: false,

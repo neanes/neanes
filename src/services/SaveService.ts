@@ -20,6 +20,7 @@ import type { Footer } from '@/models/Footer';
 import { Footnote } from '@/models/Footnote';
 import type { Header } from '@/models/Header';
 import {
+  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   ensureScoreInitialMartyriaStyle,
   findInitialMartyriaStyle,
@@ -1125,6 +1126,7 @@ function loadInitialMartyriaStyle(
       ...common,
       modeIdentificationMethod: saved.modeIdentificationMethod,
       numeralQualifier:
+        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish ||
         common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic ||
         common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Russian
           ? INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal
@@ -1139,10 +1141,20 @@ function loadInitialMartyriaStyle(
     ) {
       return null;
     }
+    const usesSpanishOrdinalNumeral =
+      common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish &&
+      common.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal &&
+      (saved.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits ||
+        saved.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals);
     structure = {
       ...common,
       modeIdentificationMethod: saved.modeIdentificationMethod,
-      numeralStyle: saved.numeralStyle,
+      numeralQualifier: usesSpanishOrdinalNumeral
+        ? INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal
+        : common.numeralQualifier,
+      numeralStyle: usesSpanishOrdinalNumeral
+        ? INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals
+        : saved.numeralStyle,
       numberingSystem: saved.numberingSystem,
     };
   }
@@ -1150,12 +1162,16 @@ function loadInitialMartyriaStyle(
     return null;
   }
 
+  const basedOn =
+    saved.basedOn === 'builtin:spanish-tono-ordinal-number-v1'
+      ? BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeral
+      : saved.basedOn;
   return {
     id: saved.id,
     displayName: saved.displayName,
     basedOn:
-      saved.basedOn != null && isBuiltInInitialMartyriaStyleId(saved.basedOn)
-        ? saved.basedOn
+      basedOn != null && isBuiltInInitialMartyriaStyleId(basedOn)
+        ? basedOn
         : null,
     structure,
     paragraphStyleId: paragraphStyles.some(

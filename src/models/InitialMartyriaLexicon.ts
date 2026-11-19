@@ -399,16 +399,6 @@ export const initialMartyriaLexicons: Record<
       7: 'siete',
       8: 'ocho',
     },
-    formatOrdinal: (base, numeralStyle, numeralQualifier) => {
-      if (numeralStyle !== INITIAL_MARTYRIA_NUMERAL_STYLES.Digits) {
-        return base;
-      }
-      return numeralQualifier ===
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal &&
-        (base === '1' || base === '3')
-        ? `${base}.ᵉʳ`
-        : `${base}.º`;
-    },
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {
     // Gamanovich distinguishes quantity from order and lists the same

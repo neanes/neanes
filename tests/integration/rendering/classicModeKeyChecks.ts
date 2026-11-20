@@ -5,13 +5,30 @@ import path from 'node:path';
 import type { BrowserWindow } from 'electron';
 
 import { renderSnapshot } from '../../../electron/main/export/renderSnapshot';
-import { BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS } from '../../../src/models/InitialMartyriaBuiltInStyles';
+import {
+  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
+  type BuiltInInitialMartyriaStyleId,
+  getBuiltInInitialMartyriaStyle,
+} from '../../../src/models/InitialMartyriaBuiltInStyles';
 import { modeKeyTemplates } from '../../../src/models/ModeKeys';
 import {
   EmptyElement,
   ModeKeyElement,
 } from '../../../src/models/save/v1/Element';
+import type { InitialMartyriaStyle } from '../../../src/models/save/v1/InitialMartyriaStyle';
 import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
+
+/*
+ * A score style copied from a built-in preset, in its saved form. Mode keys
+ * name only the score's own styles; built-in styles are presets.
+ */
+function savedStyleFromPreset(
+  presetId: BuiltInInitialMartyriaStyleId,
+  id: string,
+): InitialMartyriaStyle {
+  const { structure, ...preset } = getBuiltInInitialMartyriaStyle(presetId);
+  return { ...preset, ...structure, id, displayName: id };
+}
 
 export async function checkClassicModeKeys(options: {
   snapshot: ScoreRenderSnapshot;
@@ -20,6 +37,18 @@ export async function checkClassicModeKeys(options: {
   owner: BrowserWindow;
 }) {
   const snapshot = structuredClone(options.snapshot);
+  const styles = [
+    savedStyleFromPreset(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
+      'Classic',
+    ),
+    savedStyleFromPreset(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
+      'Traditional Greek',
+    ),
+  ];
+  snapshot.score.initialMartyriaStyles = styles;
+  snapshot.score.pageSetup.initialMartyriaStyleId = styles[0].id;
   snapshot.score.staff.elements = [];
   for (const template of modeKeyTemplates) {
     // JSON removes the catalog's description selector, just as a saved
@@ -27,14 +56,11 @@ export async function checkClassicModeKeys(options: {
     const { optionalFthoras, ...notation } = JSON.parse(
       JSON.stringify(template),
     );
-    for (const styleId of [
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
-    ]) {
+    for (const style of styles) {
       snapshot.score.staff.elements.push(
         Object.assign(new ModeKeyElement(), notation, optionalFthoras, {
           templateId: template.id,
-          initialMartyriaStyleId: styleId,
+          initialMartyriaStyleId: style.id,
         }),
       );
     }
@@ -129,15 +155,38 @@ export async function checkClassicModeKeys(options: {
           })
         `);
       assert.equal(keys.length, modeKeyTemplates.length * 2);
+      // Bare asserts would make Node describe the failure by re-parsing the
+      // bundled source, which fails on the music font's private-use
+      // characters and hides the real failure, so every check is described.
       for (let index = 0; index < keys.length; index += 2) {
+        const template = modeKeyTemplates[index / 2].id;
         const classic = keys[index];
         const traditional = keys[index + 1];
-        assert(classic.finite && traditional.finite);
-        assert.equal(classic.textRuns, 0);
-        assert(classic.glyphs.startsWith('\ue2f1'));
-        assert(classic.fonts.every((font) => font.includes('Neanes')));
-        assert(traditional.textRuns > 0);
-        assert(traditional.fonts.some((font) => font.includes('GFS Didot')));
+        assert(
+          classic.finite && traditional.finite,
+          `Mode keys of template ${template} have no finite size`,
+        );
+        assert.equal(
+          classic.textRuns,
+          0,
+          `Classic sets text in template ${template}`,
+        );
+        assert(
+          classic.glyphs.startsWith('\ue2f1'),
+          `Classic does not start with the echos glyph in template ${template}`,
+        );
+        assert(
+          classic.fonts.every((font) => font.includes('Neanes')),
+          `Classic uses a font other than Neanes in template ${template}`,
+        );
+        assert(
+          traditional.textRuns > 0,
+          `Traditional Greek sets no text in template ${template}`,
+        );
+        assert(
+          traditional.fonts.some((font) => font.includes('GFS Didot')),
+          `Traditional Greek does not use GFS Didot in template ${template}`,
+        );
       }
       await writeFile(
         path.join(options.output, 'classic-mode-keys.pdf'),

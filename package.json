@@ -102,7 +102,7 @@
     "vue": "^3.5.45",
     "vue-component-type-helpers": "^3.3.14",
     "vue-draggable-resizable": "^3.0.0",
-    "vue-router": "^5.5.0",
+    "vue-router": "^5.5.1",
     "vue-sonner": "^2.0.9",
     "vue-tsc": "^3.3.14",
     "vue3-observe-visibility": "^1.0.7",

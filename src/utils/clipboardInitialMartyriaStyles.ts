@@ -1,13 +1,4 @@
-import {
-  extractModeKeyElementsFromHtml,
-  rewriteModeKeyAttributesInHtml,
-} from '@/ckeditor-plugins/insertmodekey/modekeydata';
-import type {
-  ModeKeyElement,
-  RichTextBoxElement,
-  ScoreElement,
-} from '@/models/Element';
-import { ElementType, RICH_TEXT_BOX_CONTENT_KEYS } from '@/models/Element';
+import type { ScoreElement } from '@/models/Element';
 import { getInitialMartyriaWordingKey } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
@@ -18,6 +9,10 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ParagraphStyle,
 } from '@/models/ParagraphStyle';
+import {
+  getModeKeyStyleReferenceChanges,
+  getModeKeyStyleReferences,
+} from '@/utils/modeKeyStyleReferences';
 import { getNextAvailableStyleName } from '@/utils/styleNames';
 
 import { resolveClipboardParagraphStyleReference } from './clipboardParagraphStyles';
@@ -36,30 +31,15 @@ export function collectClipboardInitialMartyriaStylesFromElements(
 ) {
   const collectedStyles = new Map<string, InitialMartyriaStyle>();
 
-  for (const element of elements) {
-    const modeKeys =
-      element.elementType === ElementType.ModeKey
-        ? [element as ModeKeyElement]
-        : element.elementType === ElementType.RichTextBox
-          ? RICH_TEXT_BOX_CONTENT_KEYS.flatMap((key) =>
-              extractModeKeyElementsFromHtml(
-                (element as RichTextBoxElement)[key],
-              ),
-            )
-          : [];
+  for (const styleId of elements.flatMap(getModeKeyStyleReferences)) {
+    if (styleId == null || collectedStyles.has(styleId)) {
+      continue;
+    }
 
-    for (const modeKey of modeKeys) {
-      const styleId = modeKey.initialMartyriaStyleId;
+    const style = initialMartyriaStyles.find((style) => style.id === styleId);
 
-      if (styleId == null || collectedStyles.has(styleId)) {
-        continue;
-      }
-
-      const style = initialMartyriaStyles.find((style) => style.id === styleId);
-
-      if (style != null) {
-        collectedStyles.set(styleId, cloneInitialMartyriaStyle(style));
-      }
+    if (style != null) {
+      collectedStyles.set(styleId, cloneInitialMartyriaStyle(style));
     }
   }
 
@@ -171,26 +151,5 @@ export function rewriteClipboardElementInitialMartyriaStyleId(
       : null;
   };
 
-  if (element.elementType === ElementType.RichTextBox) {
-    const richTextBox = element as RichTextBoxElement;
-
-    for (const contentKey of RICH_TEXT_BOX_CONTENT_KEYS) {
-      richTextBox[contentKey] = rewriteModeKeyAttributesInHtml(
-        richTextBox[contentKey],
-        (attributes) => {
-          const styleId = attributes.initialMartyriaStyleId;
-
-          return typeof styleId === 'string'
-            ? { ...attributes, initialMartyriaStyleId: rewrite(styleId) }
-            : attributes;
-        },
-      );
-    }
-  } else if (element.elementType === ElementType.ModeKey) {
-    const modeKey = element as ModeKeyElement;
-
-    if (modeKey.initialMartyriaStyleId != null) {
-      modeKey.initialMartyriaStyleId = rewrite(modeKey.initialMartyriaStyleId);
-    }
-  }
+  Object.assign(element, getModeKeyStyleReferenceChanges(element, rewrite));
 }

@@ -36,7 +36,6 @@ import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBo
 import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
 import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
 import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
-import { extractModeKeyElementsFromHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
@@ -308,6 +307,10 @@ import { resolveFontCss } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { isElectron } from '@/utils/isElectron';
+import {
+  getModeKeyStyleReferences,
+  getScoreModeKeyHosts,
+} from '@/utils/modeKeyStyleReferences';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import {
   getDisplayedPageNumber,
@@ -7787,7 +7790,7 @@ function updatePageSetup(pageSetup: PageSetup) {
 function getInitialMartyriaStyleUsage() {
   const counts: Record<string, number> = {};
   let defaultCount = 0;
-  const count = (styleId: string | null | undefined) => {
+  const count = (styleId: string | null) => {
     if (styleId == null) {
       defaultCount++;
     } else {
@@ -7795,21 +7798,8 @@ function getInitialMartyriaStyleUsage() {
     }
   };
 
-  for (const item of [
-    ...score.value.staves.flatMap((staff) => staff.elements),
-    ...score.value.headersAndFooters,
-  ]) {
-    if (item.elementType === ElementType.ModeKey) {
-      count((item as ModeKeyElement).initialMartyriaStyleId);
-    } else if (item.elementType === ElementType.RichTextBox) {
-      for (const key of RICH_TEXT_BOX_CONTENT_KEYS) {
-        for (const modeKey of extractModeKeyElementsFromHtml(
-          (item as RichTextBoxElement)[key],
-        )) {
-          count(modeKey.initialMartyriaStyleId);
-        }
-      }
-    }
+  for (const element of getScoreModeKeyHosts(score.value)) {
+    getModeKeyStyleReferences(element).forEach(count);
   }
 
   return { counts, defaultCount };

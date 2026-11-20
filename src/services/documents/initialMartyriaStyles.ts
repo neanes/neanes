@@ -1,10 +1,4 @@
-import { rewriteModeKeyAttributesInHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
-import {
-  ElementType,
-  type ModeKeyElement,
-  RICH_TEXT_BOX_CONTENT_KEYS,
-  type RichTextBoxElement,
-} from '@/models/Element';
+import type { ScoreElement } from '@/models/Element';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
@@ -13,6 +7,10 @@ import {
   CommandFactory,
 } from '@/services/history/CommandService';
 import { deepEquals } from '@/utils/deepEquals';
+import {
+  getModeKeyStyleReferenceChanges,
+  getScoreModeKeyHosts,
+} from '@/utils/modeKeyStyleReferences';
 
 export interface InitialMartyriaStyleUpdate {
   styles: InitialMartyriaStyle[];
@@ -28,14 +26,12 @@ export function replaceInitialMartyriaStyles(
   const nextStyleIds = new Set(payload.styles.map((style) => style.id));
   // A mode key of a deleted style takes the style chosen in its place. A
   // reference that resolves to no style at all follows the default again.
-  const nextModeKeyStyleId = (styleId: string | null) =>
-    styleId == null
-      ? null
-      : Object.hasOwn(payload.replacements, styleId)
-        ? payload.replacements[styleId]
-        : nextStyleIds.has(styleId)
-          ? styleId
-          : null;
+  const nextModeKeyStyleId = (styleId: string) =>
+    Object.hasOwn(payload.replacements, styleId)
+      ? payload.replacements[styleId]
+      : nextStyleIds.has(styleId)
+        ? styleId
+        : null;
   const commands: Command[] = [];
 
   const scoreValues: Partial<Score> = {};
@@ -54,58 +50,15 @@ export function replaceInitialMartyriaStyles(
     );
   }
 
-  const staffElements = score.staves.flatMap((staff) => staff.elements);
-
-  for (const item of staffElements) {
-    if (item.elementType !== ElementType.ModeKey) {
-      continue;
-    }
-    const modeKey = item as ModeKeyElement;
-    const styleId = nextModeKeyStyleId(modeKey.initialMartyriaStyleId);
-    if (styleId !== modeKey.initialMartyriaStyleId) {
+  for (const element of getScoreModeKeyHosts(score)) {
+    const newValues = getModeKeyStyleReferenceChanges(
+      element,
+      nextModeKeyStyleId,
+    );
+    if (newValues != null) {
       commands.push(
-        new CommandFactory<ModeKeyElement>().create('update-properties', {
-          target: modeKey,
-          newValues: { initialMartyriaStyleId: styleId },
-        }),
-      );
-    }
-  }
-
-  for (const item of [...staffElements, ...score.headersAndFooters]) {
-    if (item.elementType !== ElementType.RichTextBox) {
-      continue;
-    }
-
-    const richTextBox = item as RichTextBoxElement;
-    const newValues: Partial<RichTextBoxElement> = {};
-
-    for (const key of RICH_TEXT_BOX_CONTENT_KEYS) {
-      const content = richTextBox[key];
-      const rewritten = rewriteModeKeyAttributesInHtml(
-        content,
-        (attributes) => {
-          const styleId = attributes.initialMartyriaStyleId;
-          if (typeof styleId !== 'string') {
-            return attributes;
-          }
-          const nextStyleId = nextModeKeyStyleId(styleId);
-
-          return nextStyleId === styleId
-            ? attributes
-            : { ...attributes, initialMartyriaStyleId: nextStyleId };
-        },
-      );
-
-      if (rewritten !== content) {
-        newValues[key] = rewritten;
-      }
-    }
-
-    if (Object.keys(newValues).length > 0) {
-      commands.push(
-        new CommandFactory<RichTextBoxElement>().create('update-properties', {
-          target: richTextBox,
+        new CommandFactory<ScoreElement>().create('update-properties', {
+          target: element,
           newValues,
         }),
       );

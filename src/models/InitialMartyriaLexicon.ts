@@ -6,7 +6,6 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaCanonicalNote,
   type InitialMartyriaLanguageId,
-  initialMartyriaLanguageIds,
   type InitialMartyriaNoteNames,
   type InitialMartyriaNumeralQualifier,
   type InitialMartyriaNumeralStyle,
@@ -22,10 +21,6 @@ export const initialMartyriaCanonicalNotes: InitialMartyriaCanonicalNote[] = [
   ModeSign.Ke,
   ModeSign.Zo,
 ];
-
-/* The same notes keyed by scale degree: degree 0 is Pa, wrapping to Ni. */
-export const initialMartyriaCanonicalNotesByScaleDegree: InitialMartyriaCanonicalNote[] =
-  [...initialMartyriaCanonicalNotes.slice(1), ModeSign.Ni];
 
 /*
  * These note names are score content, deliberately kept independent of the
@@ -135,22 +130,9 @@ const arabicTransliteratedNoteNames: InitialMartyriaNoteNames = {
 
 type InitialMartyriaModeTexts = Readonly<Record<ModeKeyMode, string>>;
 
-type InitialMartyriaPronunciationOverrides = Partial<{
-  label: string;
-  ordinalWords: InitialMartyriaModeTexts;
-  plagalWord: string;
-  plagalCounterpartWord: string;
-  plagalCounterpartOrdinalWords: Partial<Record<ModeKeyMode, string>>;
-  graveWord: string;
-}>;
-
 interface InitialMartyriaLexiconBase {
   /** Reading direction of the language's mode-name phrases. */
   direction: 'ltr' | 'rtl';
-  /** Words introducing the physical starting note in a spoken mode name. */
-  startingNotePrefix: string;
-  /** Spoken forms that differ from the text printed in the score. */
-  pronunciationOverrides?: InitialMartyriaPronunciationOverrides;
   /** The word naming the concept of a mode (Mode, Tono, Glas). */
   label: string;
   /** Lowercase the label when an ordinal precedes it. */
@@ -259,28 +241,6 @@ export const initialMartyriaLexicons: Record<
     // https://byzantine-music.apostoliki-diakonia.gr/Texts/texts.asp?main=Anastasimatarion.htm
     direction: 'ltr',
     usesGreekScript: true,
-    startingNotePrefix: 'εκ του',
-    pronunciationOverrides: {
-      label: 'Ήχος',
-      ordinalWords: {
-        1: 'Πρώτος',
-        2: 'Δεύτερος',
-        3: 'Τρίτος',
-        4: 'Τέταρτος',
-        5: 'Πέμπτος',
-        6: 'Έκτος',
-        7: 'Έβδομος',
-        8: 'Όγδοος',
-      },
-      plagalWord: 'Πλάγιος',
-      plagalCounterpartWord: 'Πλάγιος του',
-      plagalCounterpartOrdinalWords: {
-        5: 'Πρώτου',
-        6: 'Δευτέρου',
-        8: 'Τετάρτου',
-      },
-      graveWord: 'Βαρύς',
-    },
     label: 'Ἦχος',
     ordinalWords: {
       1: 'πρῶτος',
@@ -321,7 +281,6 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
-    startingNotePrefix: 'from',
     label: 'Mode',
     ordinalWords: {
       1: 'First',
@@ -366,7 +325,6 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: spanishTransliteratedNoteNames,
-    startingNotePrefix: 'desde',
     label: 'Tono',
     lowercaseTrailingLabel: true,
     ordinalWords: {
@@ -417,7 +375,6 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
-    startingNotePrefix: 'ѿ',
     label: 'Гла́съ',
     lowercaseTrailingLabel: true,
     ordinalWords: {
@@ -478,7 +435,6 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: russianTransliteratedNoteNames,
-    startingNotePrefix: 'от',
     label: 'Глас',
     lowercaseTrailingLabel: true,
     ordinalWords: {
@@ -529,7 +485,6 @@ export const initialMartyriaLexicons: Record<
     direction: 'rtl',
     usesGreekScript: false,
     transliteratedNoteNames: arabicTransliteratedNoteNames,
-    startingNotePrefix: 'من',
     label: 'اللحن',
     ordinalWords: {
       1: 'الأول',
@@ -556,7 +511,6 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: romanianTransliteratedNoteNames,
-    startingNotePrefix: 'de la',
     label: 'Glas',
     labelWithOrdinal: 'Glasul',
     ordinalWords: {
@@ -596,7 +550,6 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: indonesianTransliteratedNoteNames,
-    startingNotePrefix: 'dari',
     label: 'Modus',
     ordinalWords: {
       1: 'Pertama',
@@ -625,17 +578,13 @@ export const initialMartyriaLexicons: Record<
   },
 };
 
-/* Lexicons with the spoken forms folded in, for the pronunciation functions. */
-export const initialMartyriaSpokenLexicons = Object.fromEntries(
-  initialMartyriaLanguageIds.map((languageId) => [
-    languageId,
-    {
-      ...initialMartyriaLexicons[languageId],
-      ...initialMartyriaLexicons[languageId].pronunciationOverrides,
-    },
-  ]),
-) as Record<InitialMartyriaLanguageId, InitialMartyriaLexicon>;
-
 export function usesGreekScript(languageId: InitialMartyriaLanguageId) {
   return initialMartyriaLexicons[languageId].usesGreekScript;
+}
+
+/** Whether a language's digit ordinals can use a font's ordinal forms. */
+export function hasRaisableOrdinalSuffix(
+  languageId: InitialMartyriaLanguageId,
+) {
+  return initialMartyriaLexicons[languageId].hasRaisableOrdinalSuffix === true;
 }

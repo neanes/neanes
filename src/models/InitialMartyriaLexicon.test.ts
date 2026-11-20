@@ -17,7 +17,6 @@ import { getInitialMartyriaContext } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
-  type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaStartingNoteRun,
   type InitialMartyriaStructure,
@@ -686,366 +685,6 @@ const expectedRunsByStructure: [string, string[]][] = [
   ],
 ];
 
-type ExpectedModePronunciations = [
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-  string,
-];
-
-const greekAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
-  [
-    'Ήχος Πρώτος',
-    'Ήχος Δεύτερος',
-    'Ήχος Τρίτος',
-    'Ήχος Τέταρτος',
-    'Ήχος Πλάγιος του Πρώτου',
-    'Ήχος Πλάγιος του Δευτέρου',
-    'Ήχος Βαρύς',
-    'Ήχος Πλάγιος του Τετάρτου',
-  ];
-
-const englishAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
-  [
-    'First Mode',
-    'Second Mode',
-    'Third Mode',
-    'Fourth Mode',
-    'Plagal of First Mode',
-    'Plagal of Second Mode',
-    'Grave Mode',
-    'Plagal of Fourth Mode',
-  ];
-
-const englishAuthenticCounterpartCardinalPronunciations: ExpectedModePronunciations =
-  [
-    'Mode One',
-    'Mode Two',
-    'Mode Three',
-    'Mode Four',
-    'Plagal of Mode One',
-    'Plagal of Mode Two',
-    'Grave Mode',
-    'Plagal of Mode Four',
-  ];
-
-const englishPlagalClassOrdinalPronunciations: ExpectedModePronunciations = [
-  'First Mode',
-  'Second Mode',
-  'Third Mode',
-  'Fourth Mode',
-  'First Plagal Mode',
-  'Second Plagal Mode',
-  'Grave Mode',
-  'Fourth Plagal Mode',
-];
-
-const englishAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
-  'First Mode',
-  'Second Mode',
-  'Third Mode',
-  'Fourth Mode',
-  'Fifth Mode',
-  'Sixth Mode',
-  'Seventh Mode',
-  'Eighth Mode',
-];
-
-const englishAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
-  'Mode One',
-  'Mode Two',
-  'Mode Three',
-  'Mode Four',
-  'Mode Five',
-  'Mode Six',
-  'Mode Seven',
-  'Mode Eight',
-];
-
-const spanishAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
-  'Tono uno',
-  'Tono dos',
-  'Tono tres',
-  'Tono cuatro',
-  'Tono cinco',
-  'Tono seis',
-  'Tono siete',
-  'Tono ocho',
-];
-
-const spanishPostnominalOrdinalPronunciations: ExpectedModePronunciations = [
-  'Tono primero',
-  'Tono segundo',
-  'Tono tercero',
-  'Tono cuarto',
-  'Tono quinto',
-  'Tono sexto',
-  'Tono séptimo',
-  'Tono octavo',
-];
-
-const spanishPrenominalOrdinalPronunciations: ExpectedModePronunciations = [
-  'Primer tono',
-  'Segundo tono',
-  'Tercer tono',
-  'Cuarto tono',
-  'Quinto tono',
-  'Sexto tono',
-  'Séptimo tono',
-  'Octavo tono',
-];
-
-const churchSlavonicAbsoluteOrdinalPronunciations: ExpectedModePronunciations =
-  [
-    'Гла́съ пе́рвый',
-    'Гла́съ вторы́й',
-    'Гла́съ тре́тїй',
-    'Гла́съ четве́ртый',
-    'Гла́съ пѧ́тый',
-    'Гла́съ шесты́й',
-    'Гла́съ седмы́й',
-    'Гла́съ ѻ҆сьмы́й',
-  ];
-
-const russianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
-  'Глас первый',
-  'Глас второй',
-  'Глас третий',
-  'Глас четвёртый',
-  'Глас пятый',
-  'Глас шестой',
-  'Глас седьмой',
-  'Глас восьмой',
-];
-
-const arabicAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
-  'اللحن الأول',
-  'اللحن الثاني',
-  'اللحن الثالث',
-  'اللحن الرابع',
-  'اللحن الخامس',
-  'اللحن السادس',
-  'اللحن السابع',
-  'اللحن الثامن',
-];
-
-const romanianAbsoluteCardinalPronunciations: ExpectedModePronunciations = [
-  'Glas unu',
-  'Glas doi',
-  'Glas trei',
-  'Glas patru',
-  'Glas cinci',
-  'Glas șase',
-  'Glas șapte',
-  'Glas opt',
-];
-
-const romanianAbsoluteOrdinalPronunciations: ExpectedModePronunciations = [
-  'Glasul întâi',
-  'Glasul al doilea',
-  'Glasul al treilea',
-  'Glasul al patrulea',
-  'Glasul al cincilea',
-  'Glasul al șaselea',
-  'Glasul al șaptelea',
-  'Glasul al optulea',
-];
-
-const indonesianAuthenticCounterpartOrdinalPronunciations: ExpectedModePronunciations =
-  [
-    'Modus Pertama',
-    'Modus Kedua',
-    'Modus Ketiga',
-    'Modus Keempat',
-    'Plagal dari Modus Pertama',
-    'Plagal dari Modus Kedua',
-    'Modus Berat',
-    'Plagal dari Modus Keempat',
-  ];
-
-const expectedStartingNotePhrasesByLanguage: Record<
-  InitialMartyriaLanguageId,
-  ExpectedModePronunciations
-> = {
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Greek]: [
-    'εκ του Πα',
-    'εκ του Δι',
-    'εκ του Γα',
-    'εκ του Δι',
-    'εκ του Πα',
-    'εκ του Πα',
-    'εκ του Γα',
-    'εκ του Νη',
-  ],
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: [
-    'from Pa',
-    'from Di',
-    'from Ga',
-    'from Di',
-    'from Pa',
-    'from Pa',
-    'from Ga',
-    'from Ni',
-  ],
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
-    'desde Pa',
-    'desde Di',
-    'desde Ga',
-    'desde Di',
-    'desde Pa',
-    'desde Pa',
-    'desde Ga',
-    'desde Ni',
-  ],
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
-    'ѿ Па',
-    'ѿ Ди',
-    'ѿ Га',
-    'ѿ Ди',
-    'ѿ Па',
-    'ѿ Па',
-    'ѿ Га',
-    'ѿ Ни',
-  ],
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: [
-    'от Па',
-    'от Ди',
-    'от Га',
-    'от Ди',
-    'от Па',
-    'от Па',
-    'от Га',
-    'от Ни',
-  ],
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: [
-    'من با',
-    'من ذي',
-    'من غا',
-    'من ذي',
-    'من با',
-    'من با',
-    'من غا',
-    'من ني',
-  ],
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: [
-    'de la Pa',
-    'de la Di',
-    'de la Ga',
-    'de la Di',
-    'de la Pa',
-    'de la Pa',
-    'de la Ga',
-    'de la Ni',
-  ],
-  [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
-    'dari Pa',
-    'dari Di',
-    'dari Ga',
-    'dari Di',
-    'dari Pa',
-    'dari Pa',
-    'dari Ga',
-    'dari Ni',
-  ],
-};
-
-const expectedPronunciationsByStructure: [
-  string,
-  ExpectedModePronunciations,
-][] = [
-  ['traditional-greek', greekAuthenticCounterpartOrdinalPronunciations],
-  ['greek-mode-names', greekAuthenticCounterpartOrdinalPronunciations],
-  ['english-plagal-first', englishAuthenticCounterpartOrdinalPronunciations],
-  ['english-mode-names', englishAuthenticCounterpartOrdinalPronunciations],
-  [
-    'english-authentic-counterpart-ordinal-digits-text',
-    englishAuthenticCounterpartOrdinalPronunciations,
-  ],
-  [
-    'english-authentic-counterpart-number-sign',
-    englishAuthenticCounterpartCardinalPronunciations,
-  ],
-  [
-    'english-authentic-counterpart-number-text',
-    englishAuthenticCounterpartCardinalPronunciations,
-  ],
-  [
-    'english-authentic-counterpart-roman-numeral-text',
-    englishAuthenticCounterpartCardinalPronunciations,
-  ],
-  [
-    'english-authentic-counterpart-number-word-text',
-    englishAuthenticCounterpartCardinalPronunciations,
-  ],
-  ['english-sign-first', englishPlagalClassOrdinalPronunciations],
-  [
-    'english-plagal-class-ordinal-words-text',
-    englishPlagalClassOrdinalPronunciations,
-  ],
-  [
-    'english-plagal-class-ordinal-words',
-    englishPlagalClassOrdinalPronunciations,
-  ],
-  ['english-ordinal-plagal-text', englishPlagalClassOrdinalPronunciations],
-  ['english-ordinal-plagal', englishPlagalClassOrdinalPronunciations],
-  ['english-ordinal', englishAbsoluteOrdinalPronunciations],
-  ['english-mode-number', englishAbsoluteCardinalPronunciations],
-  ['english-mode-roman-numeral', englishAbsoluteCardinalPronunciations],
-  ['english-mode-number-word', englishAbsoluteCardinalPronunciations],
-  ['english-full-name', englishAuthenticCounterpartOrdinalPronunciations],
-  [
-    'english-authentic-counterpart-ordinal-digits',
-    englishAuthenticCounterpartOrdinalPronunciations,
-  ],
-  [
-    'english-authentic-counterpart-number',
-    englishAuthenticCounterpartCardinalPronunciations,
-  ],
-  [
-    'english-authentic-counterpart-roman-numeral',
-    englishAuthenticCounterpartCardinalPronunciations,
-  ],
-  [
-    'english-authentic-counterpart-number-word',
-    englishAuthenticCounterpartCardinalPronunciations,
-  ],
-  ['spanish-tono-number', spanishAbsoluteCardinalPronunciations],
-  ['spanish-tono-roman-numeral', spanishPostnominalOrdinalPronunciations],
-  ['spanish-tono-ordinal', spanishPostnominalOrdinalPronunciations],
-  ['spanish-ordinal-tono', spanishPrenominalOrdinalPronunciations],
-  ['church-slavonic-glas-number', churchSlavonicAbsoluteOrdinalPronunciations],
-  [
-    'church-slavonic-glas-cyrillic-numeral',
-    churchSlavonicAbsoluteOrdinalPronunciations,
-  ],
-  [
-    'church-slavonic-glas-cyrillic-numeral-text',
-    churchSlavonicAbsoluteOrdinalPronunciations,
-  ],
-  ['church-slavonic-glas-ordinal', churchSlavonicAbsoluteOrdinalPronunciations],
-  [
-    'church-slavonic-glas-ordinal-text',
-    churchSlavonicAbsoluteOrdinalPronunciations,
-  ],
-  ['russian-glas-number', russianAbsoluteOrdinalPronunciations],
-  ['russian-glas-ordinal', russianAbsoluteOrdinalPronunciations],
-  ['russian-glas-ordinal-text', russianAbsoluteOrdinalPronunciations],
-  ['arabic-ordinal', arabicAbsoluteOrdinalPronunciations],
-  ['arabic-ordinal-text', arabicAbsoluteOrdinalPronunciations],
-  ['arabic-ordinal-digits', arabicAbsoluteOrdinalPronunciations],
-  ['arabic-ordinal-arabic-indic-digits', arabicAbsoluteOrdinalPronunciations],
-  ['romanian-glas-number', romanianAbsoluteCardinalPronunciations],
-  ['romanian-glas', romanianAbsoluteOrdinalPronunciations],
-  [
-    'indonesian-mode-names',
-    indonesianAuthenticCounterpartOrdinalPronunciations,
-  ],
-];
-
 describe('InitialMartyriaLexicon', () => {
   it.each([
     ['Spanish', INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish],
@@ -1070,13 +709,27 @@ describe('InitialMartyriaLexicon', () => {
     }
   });
 
-  it('renders and pronounces every legal structure', () => {
+  it('lists every legal structure as a row of the styles dialog', () => {
+    // The styles dialog shows the enumerated structures as its wording list
+    // and its per-row options only on the row matching the style, so every
+    // style a user can have must match one of them.
+    for (const structure of getLegalInitialMartyriaStructures()) {
+      const rowKeys = enumerateInitialMartyriaStructures(structure).map(
+        (row) => row.key,
+      );
+      expect(rowKeys, describeStructure(structure)).toContain(
+        getInitialMartyriaStructureKey(structure),
+      );
+    }
+  });
+
+  it('renders every legal structure', () => {
     const legalKeys = new Set(
       getLegalInitialMartyriaStructures().map(getInitialMartyriaStructureKey),
     );
     const uniqueStructures = getUniqueLegalInitialMartyriaStructures();
 
-    // Structures that render and read alike are represented once, while the
+    // Structures that render alike are represented once, while the
     // corpus still covers every legal combination of axes.
     expect(new Set(uniqueStructures.keys())).toEqual(legalKeys);
 
@@ -1086,7 +739,7 @@ describe('InitialMartyriaLexicon', () => {
         const mode = index + 1;
         const resolution = resolve(styleFor(structure), elementForMode(mode));
         const runs = resolution.runs.map(encodeCorpusRun).join(' | ');
-        return `${mode}: ${runs} = ${resolution.pronunciation}`;
+        return `${mode}: ${runs}`;
       }),
     }));
     expect(new Set(corpus.map((entry) => entry.structure)).size).toBe(
@@ -1114,58 +767,13 @@ describe('InitialMartyriaLexicon', () => {
     }
   });
 
-  it('pronounces every attested structure in every language for every mode', () => {
-    expect(expectedPronunciationsByStructure.map(([label]) => label)).toEqual(
-      Object.keys(attestedStructures),
-    );
-
-    for (const [label, expectedByMode] of expectedPronunciationsByStructure) {
-      const structure = getAttestedStructure(label);
-      const style = styleFor(structure);
-      for (let mode = 1; mode <= 8; mode++) {
-        const resolution = resolve(style, elementForMode(mode));
-        const expectedStartingNote =
-          expectedStartingNotePhrasesByLanguage[structure.languageId][mode - 1];
-
-        expect(`${label} mode ${mode}: ${resolution.pronunciation}`).toBe(
-          `${label} mode ${mode}: ${expectedByMode[mode - 1]} ${expectedStartingNote}`,
-        );
-      }
-    }
-  });
-
-  it('pronounces the physical starting note in every language', () => {
-    const element = elementForTemplate(506);
-    const context = getInitialMartyriaContext(element);
-    const expectedByStructure: [string, string][] = [
-      ['greek-mode-names', 'Ήχος Πλάγιος του Πρώτου εκ του Κε'],
-      ['english-mode-names', 'Plagal of First Mode from Ke'],
-      ['spanish-tono-ordinal', 'Tono quinto desde Ke'],
-      ['church-slavonic-glas-ordinal', 'Гла́съ пѧ́тый ѿ Ке'],
-      ['russian-glas-ordinal', 'Глас пятый от Ке'],
-      ['arabic-ordinal', 'اللحن الخامس من كه'],
-      ['romanian-glas', 'Glasul al cincilea de la Ke'],
-    ];
+  it('reads the physical starting note from the element', () => {
+    const context = getInitialMartyriaContext(elementForTemplate(506));
 
     expect(context).toMatchObject({
       physicalNote: ScaleNote.Ke,
       pitchCluster: { primary: { note: ModeSign.Pa } },
     });
-
-    for (const [label, expected] of expectedByStructure) {
-      expect(
-        resolve(styleFor(getAttestedStructure(label)), element).pronunciation,
-      ).toBe(expected);
-    }
-  });
-
-  it('preserves the physical starting note octave in the pronunciation', () => {
-    const resolution = resolve(
-      styleFor(attestedStructures['english-mode-names']),
-      elementForTemplate(803),
-    );
-
-    expect(resolution.pronunciation).toBe("Plagal of Fourth Mode from Ni'");
   });
 
   it('uses the note names defined by each structure', () => {

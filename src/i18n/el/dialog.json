@@ -84,51 +84,12 @@
     "greekParagraphStyle": "Στυλ ελληνικής παραγράφου",
     "typography": "Τυπογραφία",
     "modeIdentification": "Προσδιορισμός ήχου",
-    "numberForm": "Μορφή αριθμού",
-    "digitForm": "Μορφή ψηφίων",
-    "numberPlacement": "Θέση αριθμού",
-    "plagalWording": "Διατύπωση πλαγίων",
     "transliterateNoteNames": "Μεταγραφή αρχικής νότας",
     "transliterateNoteNamesHint": "Pa αντί για Πα",
     "modeIdentificationMethods": {
       "text": "Μόνο κείμενο",
       "modeSign": "Μόνο μαρτυρία",
       "textAndModeSign": "Κείμενο και μαρτυρία"
-    },
-    "numeralKinds": {
-      "cardinal": "Απόλυτο",
-      "ordinal": "Τακτικό"
-    },
-    "numeralForms": {
-      "digits": {
-        "cardinal": "Ψηφία, απόλυτα",
-        "ordinal": "Ψηφία, τακτικά"
-      },
-      "romanNumerals": {
-        "cardinal": "Λατινικοί αριθμοί, απόλυτοι",
-        "ordinal": "Λατινικοί αριθμοί, τακτικοί"
-      },
-      "alphabeticNumerals": {
-        "cardinal": "Αλφαβητικοί αριθμοί, απόλυτοι",
-        "ordinal": "Αλφαβητικοί αριθμοί, τακτικοί"
-      },
-      "words": {
-        "cardinal": "Λέξεις, απόλυτες",
-        "ordinal": "Λέξεις, τακτικές"
-      }
-    },
-    "numberingSystems": {
-      "western": "Δυτικά",
-      "arabicIndic": "Αραβοϊνδικά"
-    },
-    "numeralQualifiers": {
-      "postnominal": "Αριθμός μετά",
-      "prenominal": "Αριθμός πριν"
-    },
-    "modeNamingSchemes": {
-      "absolute": "Αρίθμηση 1 έως 8",
-      "authenticCounterpart": "Πλάγιος του κυρίου",
-      "plagalClass": "Πλάγιοι ως τάξη"
     },
     "discardChangesTitle": "Απόρριψη αλλαγών στα στυλ;",
     "discardChangesDescription": "Τα στυλ που δημιουργήσατε ή επεξεργαστήκατε σε αυτό το παράθυρο θα χαθούν.",
@@ -146,6 +107,13 @@
     "resetToPreset": "Επαναφορά στην προκαθορισμένη μορφή",
     "previewAllModes": "Προεπισκόπηση και των οκτώ ήχων",
     "wording": "Διατύπωση",
+    "numeralStyles": {
+      "digits": "Ψηφία",
+      "romanNumerals": "Ρωμαϊκοί αριθμοί",
+      "alphabeticNumerals": "Αλφαβητικοί αριθμοί",
+      "words": "Λέξεις"
+    },
+    "wordingChoices": "Επιλογές διατύπωσης",
     "greekParagraphStyleHint": "Για ελληνικό κείμενο, όπως το όνομα φθόγγου Πα.",
     "greekParagraphStylePlagalHint": "Για την ελληνική συντομογραφία του πλαγίου πλ.",
     "neumeFontParagraphStyleHint": "Ορίζει το μέγεθος, το χρώμα και το περίγραμμα των νευμάτων.",
@@ -156,6 +124,7 @@
     "neumeFontLettering": "Γραμματοσειρά νευμάτων",
     "deleteInUseDescription": "Αυτό το στυλ χρησιμοποιείται ({{count}}). Επιλέξτε το στυλ που θα το αντικαταστήσει.",
     "useOrdinalForms": "Χρήση τακτικών μορφών",
+    "useOrdinalFormsHint": "Ισχύει για τακτικά αριθμητικά με ψηφία, όπως 1st.",
     "languages": {
       "greek": "Ελληνικά",
       "english": "Αγγλικά",

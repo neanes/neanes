@@ -110,29 +110,104 @@
             </Select>
           </div>
 
-          <div class="space-y-4">
-            <section
-              v-for="strip in strips"
-              :key="strip.key"
-              :aria-label="strip.label"
+          <div class="mb-4 flex items-center gap-3">
+            <FieldLabel
+              id="initial-martyria-mode-identification"
+              class="flex-none"
             >
-              <p class="mb-1.5 text-xs font-medium">{{ strip.label }}</p>
-              <div
-                class="grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] gap-1.5"
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.modeIdentification, {
+                  ns,
+                })
+              }}
+            </FieldLabel>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              aria-labelledby="initial-martyria-mode-identification"
+              :model-value="martyriaStyle.structure.modeIdentificationMethod"
+              @update:model-value="setModeIdentificationMethod"
+            >
+              <ToggleGroupItem
+                v-for="method in initialMartyriaModeIdentificationMethods"
+                :key="method"
+                :value="method"
               >
-                <InitialMartyriaStyleTile
-                  v-for="tile in strip.tiles"
-                  :key="tile.key"
-                  :martyria-style="tile.martyriaStyle"
-                  :template-id="tileTemplateId"
-                  :page-setup="pageSetup"
-                  :paragraph-styles="paragraphStyles"
-                  :selected="tile.current"
-                  :caption="tile.caption"
-                  @select="setStructure(tile.structure)"
-                />
+                {{ getInitialMartyriaModeIdentificationMethodLabel(t, method) }}
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          <!--
+            Every printed form the language allows, all at once. A row sets
+            the whole wording, so choosing one never changes another.
+          -->
+          <div
+            role="group"
+            :aria-label="
+              $t(($) => $.dialog.initialMartyriaStyles.wordingChoices, { ns })
+            "
+            class="border"
+          >
+            <div
+              class="grid items-end gap-x-3 border-b bg-muted/40 px-3 py-1.5"
+              :style="wordingGridStyle"
+              aria-hidden="true"
+            >
+              <span
+                v-for="sample in wordingSamples"
+                :key="sample.mode"
+                class="truncate text-center text-[11px] text-muted-foreground"
+              >
+                {{ $t(sample.labelSelector, { ns: 'model' }) }}
+              </span>
+            </div>
+            <template v-for="group in wordingGroups" :key="group.key">
+              <p
+                v-if="group.label != null"
+                class="border-b bg-muted/20 px-3 py-1 text-[11px] font-medium text-muted-foreground"
+              >
+                {{ group.label }}
+              </p>
+              <div
+                v-for="row in group.rows"
+                :key="row.key"
+                class="border-b last:border-b-0"
+                :class="
+                  row.selected &&
+                  'bg-accent/50 outline-2 -outline-offset-2 outline-foreground'
+                "
+              >
+                <button
+                  type="button"
+                  class="grid w-full items-center gap-x-3 px-3 py-2 text-left transition-colors hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+                  :style="wordingGridStyle"
+                  :aria-pressed="row.selected"
+                  @click="selectRow(row)"
+                >
+                  <span
+                    v-for="sample in wordingSamples"
+                    :key="sample.mode"
+                    class="flex min-h-8 min-w-0 items-center justify-center"
+                  >
+                    <InitialMartyriaSample
+                      :martyria-style="row.martyriaStyle"
+                      :paragraph-styles="paragraphStyles"
+                      :template-id="sample.templateId"
+                      :page-setup="pageSetup"
+                      :max-font-size="18"
+                    />
+                  </span>
+                  <!-- Under the previews, so it never moves them. -->
+                  <span
+                    v-if="row.presets.length > 0"
+                    class="col-span-full mt-1 text-center text-[11px] text-muted-foreground"
+                  >
+                    {{ row.presets.join(', ') }}
+                  </span>
+                </button>
               </div>
-            </section>
+            </template>
           </div>
 
           <div class="mt-4 space-y-3">
@@ -168,23 +243,6 @@
                   }}
                 </FieldDescription>
               </FieldContent>
-            </Field>
-
-            <Field v-if="supportsOrdinalForms" orientation="horizontal">
-              <Checkbox
-                id="initial-martyria-ordinal-forms"
-                :model-value="martyriaStyle.useOrdinalForms"
-                @update:model-value="
-                  update({ useOrdinalForms: $event === true })
-                "
-              />
-              <FieldLabel for="initial-martyria-ordinal-forms">
-                {{
-                  $t(($) => $.dialog.initialMartyriaStyles.useOrdinalForms, {
-                    ns,
-                  })
-                }}
-              </FieldLabel>
             </Field>
           </div>
         </section>
@@ -232,6 +290,41 @@
               </FieldDescription>
             </Field>
           </div>
+
+          <!--
+            Shown by language alone and always available, so it can be set
+            before choosing a wording with ordinal digits.
+          -->
+          <Field
+            v-if="offersOrdinalForms"
+            orientation="horizontal"
+            class="mt-3"
+          >
+            <Checkbox
+              id="initial-martyria-ordinal-forms"
+              :model-value="martyriaStyle.useOrdinalForms"
+              @update:model-value="update({ useOrdinalForms: $event === true })"
+            />
+            <FieldContent>
+              <FieldLabel for="initial-martyria-ordinal-forms">
+                {{
+                  $t(($) => $.dialog.initialMartyriaStyles.useOrdinalForms, {
+                    ns,
+                  })
+                }}
+              </FieldLabel>
+              <FieldDescription>
+                {{
+                  $t(
+                    ($) => $.dialog.initialMartyriaStyles.useOrdinalFormsHint,
+                    {
+                      ns,
+                    },
+                  )
+                }}
+              </FieldDescription>
+            </FieldContent>
+          </Field>
         </section>
       </div>
     </ScrollArea>
@@ -244,7 +337,6 @@ import type { AcceptableValue } from 'reka-ui';
 import { computed, useTemplateRef } from 'vue';
 
 import InitialMartyriaSample from '@/components/InitialMartyriaSample.vue';
-import InitialMartyriaStyleTile from '@/components/InitialMartyriaStyleTile.vue';
 import ParagraphStyleSelect from '@/components/ParagraphStyleSelect.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -264,6 +356,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   builtInInitialMartyriaStyles,
   getBuiltInInitialMartyriaStyle,
@@ -271,23 +364,27 @@ import {
   getInitialMartyriaStyleDisplayName,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import {
+  enumerateInitialMartyriaStructures,
+  initialMartyriaModeIdentificationMethods,
   initialMartyriaStructuresEqual,
-  type InitialMartyriaStructureVariation,
   normalizeInitialMartyriaStructure,
+  withSupportedInitialMartyriaModeIdentificationMethod,
 } from '@/models/InitialMartyriaGrammar';
-import { usesGreekScript } from '@/models/InitialMartyriaLexicon';
+import {
+  hasRaisableOrdinalSuffix,
+  usesGreekScript,
+} from '@/models/InitialMartyriaLexicon';
 import {
   getInitialMartyriaParagraphStyleUsage,
-  initialMartyriaStructureSupportsOrdinalForms,
+  getInitialMartyriaStructureKey,
+  modeKeyModes,
 } from '@/models/InitialMartyriaResolver';
 import {
-  getInitialMartyriaStructureStrips,
-  type InitialMartyriaStructureStrip,
-} from '@/models/InitialMartyriaStructureStrips';
-import {
   INITIAL_MARTYRIA_LETTERINGS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
+  type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
@@ -297,17 +394,12 @@ import { deepEquals } from '@/utils/deepEquals';
 import {
   getInitialMartyriaLanguageName,
   getInitialMartyriaModeIdentificationMethodLabel,
-  getInitialMartyriaModeNamingSchemeLabel,
-  getInitialMartyriaNumberingSystemLabel,
-  getInitialMartyriaNumeralFormLabel,
-  getInitialMartyriaNumeralKindLabel,
-  getInitialMartyriaNumeralQualifierLabel,
+  getInitialMartyriaNumeralStyleLabel,
 } from '@/utils/initialMartyriaLabels';
 
 import {
-  getSampleModeOptions,
-  getSampleTemplateId,
-  PLAGAL_SAMPLE_MODE,
+  getSample,
+  getWordingSampleModes,
   withInitialMartyriaStyleStructure,
 } from './InitialMartyriaStylesDialog.shared';
 
@@ -318,8 +410,9 @@ const sectionHeadingClass =
 
 /**
  * The editor for one of the score's initial martyria styles: its name, how
- * it reads in every mode, each axis of its wording as a strip of rendered
- * choices, and its typography. Changes are emitted rather than applied.
+ * it reads in every mode, every wording its language allows as a list of
+ * rendered choices, and its typography. Changes are emitted rather than
+ * applied.
  */
 const props = defineProps<{
   martyriaStyle: InitialMartyriaStyle;
@@ -389,10 +482,7 @@ function resetToPreset() {
   });
 }
 
-const previewSamples = getSampleModeOptions().map((option) => ({
-  ...option,
-  templateId: getSampleTemplateId(option.mode),
-}));
+const previewSamples = modeKeyModes.map(getSample);
 
 const languageUsesGreekScript = computed(() =>
   usesGreekScript(props.martyriaStyle.structure.languageId),
@@ -420,25 +510,13 @@ const greekParagraphStyleHint = computed(() => {
       })
     : t(($) => $.dialog.initialMartyriaStyles.greekParagraphStyleHint, { ns });
 });
-const supportsOrdinalForms = computed(() =>
-  initialMartyriaStructureSupportsOrdinalForms(props.martyriaStyle.structure),
+// Only text lettering in a language whose digit ordinals have a raisable
+// suffix can use ordinal forms at all.
+const offersOrdinalForms = computed(
+  () =>
+    !usesMusicFontLettering.value &&
+    hasRaisableOrdinalSuffix(props.martyriaStyle.structure.languageId),
 );
-
-// The plagal first mode shows every axis at work, including the plagal
-// wording, so every tile renders it.
-const tileTemplateId = getSampleTemplateId(PLAGAL_SAMPLE_MODE);
-
-interface Strip {
-  key: InitialMartyriaStructureStrip['key'];
-  label: string;
-  tiles: {
-    key: string;
-    caption: string;
-    current: boolean;
-    structure: InitialMartyriaStructure;
-    martyriaStyle: InitialMartyriaStyle;
-  }[];
-}
 
 /*
  * The name does not change how a style renders, so while only the name is
@@ -455,85 +533,166 @@ const renderStyle = computed<InitialMartyriaStyle>((previous) =>
 );
 
 /*
- * The preview style of every tile is built here rather than in the template,
- * so a re-render that leaves the strips untouched does not hand each preview
- * a new style object to re-measure.
+ * The list depends only on these three choices. Keeping the same object
+ * while they are unchanged stops other edits, such as a paragraph style
+ * switch, from rebuilding the list and choosing its sample modes again.
  */
-function toRow<T>(
-  key: InitialMartyriaStructureStrip['key'],
-  label: string,
-  variations: InitialMartyriaStructureVariation<T>[],
-  caption: (value: T) => string,
-): Strip {
-  return {
-    key,
-    label,
-    tiles: variations.map((variation) => ({
-      key: variation.key,
-      caption: caption(variation.value),
-      current: variation.current,
-      structure: variation.structure,
-      martyriaStyle: withInitialMartyriaStyleStructure(
-        renderStyle.value,
-        variation.structure,
-      ),
-    })),
-  };
+const wordingBase = computed<
+  Pick<
+    InitialMartyriaStructure,
+    'languageId' | 'modeIdentificationMethod' | 'transliterateNoteNames'
+  >
+>((previous) => {
+  const { languageId, modeIdentificationMethod, transliterateNoteNames } =
+    renderStyle.value.structure;
+  const next = { languageId, modeIdentificationMethod, transliterateNoteNames };
+  return previous != null && deepEquals(previous, next) ? previous : next;
+});
+
+const wordings = computed(() =>
+  enumerateInitialMartyriaStructures(wordingBase.value),
+);
+
+/*
+ * The modes every row is previewed in: enough of them to tell every
+ * wording apart, so no two rows ever look the same.
+ */
+const wordingSamples = computed(() =>
+  getWordingSampleModes(wordings.value.map((wording) => wording.structure)).map(
+    getSample,
+  ),
+);
+
+const wordingGridStyle = computed(() => ({
+  gridTemplateColumns: `repeat(${wordingSamples.value.length}, minmax(0, 1fr))`,
+}));
+
+/*
+ * The built-in presets written in each wording, by structure key. The
+ * style's transliteration is applied, since that is a choice made apart
+ * from the wording.
+ */
+const presetNamesByKey = computed(() => {
+  const structure = wordingBase.value;
+  const names = new Map<string, string[]>();
+  for (const preset of builtInInitialMartyriaStyles) {
+    if (
+      preset.lettering !== INITIAL_MARTYRIA_LETTERINGS.Text ||
+      preset.structure.languageId !== structure.languageId
+    ) {
+      continue;
+    }
+    const key = getInitialMartyriaStructureKey({
+      ...preset.structure,
+      transliterateNoteNames: structure.transliterateNoteNames,
+    });
+    names.set(key, [
+      ...(names.get(key) ?? []),
+      getInitialMartyriaStyleDisplayName(preset, t),
+    ]);
+  }
+  return names;
+});
+
+interface WordingRow {
+  key: string;
+  selected: boolean;
+  structure: InitialMartyriaStructure;
+  martyriaStyle: InitialMartyriaStyle;
+  presets: string[];
 }
 
 /*
- * One strip per structural axis, as the model offers them. The model may
- * correlate another axis to keep a choice supported, so each tile renders
- * what choosing it produces.
+ * One row per printed wording. A row keeps its previous preview style
+ * whenever the new one is equal, so selecting a row re-measures only the
+ * previews whose rendering actually changed.
  */
-const strips = computed<Strip[]>(() =>
-  getInitialMartyriaStructureStrips(renderStyle.value.structure).map(
-    (strip) => {
-      const numberForm = t(($) => $.dialog.initialMartyriaStyles.numberForm, {
-        ns,
+const wordingRows = computed<WordingRow[]>((previous) => {
+  const previousStyles = new Map(
+    (previous ?? []).map((row) => [row.key, row.martyriaStyle]),
+  );
+  const currentKey = getInitialMartyriaStructureKey(
+    renderStyle.value.structure,
+  );
+  return wordings.value.map(({ structure, key }) => {
+    const martyriaStyle = withInitialMartyriaStyleStructure(
+      renderStyle.value,
+      structure,
+    );
+    const previousStyle = previousStyles.get(key);
+    return {
+      key,
+      selected: key === currentKey,
+      structure,
+      martyriaStyle:
+        previousStyle != null && deepEquals(previousStyle, martyriaStyle)
+          ? previousStyle
+          : martyriaStyle,
+      presets: presetNamesByKey.value.get(key) ?? [],
+    };
+  });
+});
+
+/*
+ * Rows printing numbers are grouped by how the number is written, which is
+ * the first thing a reader tells them apart by. A sign prints no number,
+ * and a single group needs no heading.
+ */
+const wordingGroups = computed(() => {
+  const groups: { key: string; label: string | null; rows: WordingRow[] }[] =
+    [];
+  for (const row of wordingRows.value) {
+    const structure = row.structure;
+    const isSign =
+      structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
+    const key = isSign ? 'sign' : structure.numeralStyle;
+    const group = groups.find((other) => other.key === key);
+    if (group != null) {
+      group.rows.push(row);
+    } else {
+      groups.push({
+        key,
+        label: isSign
+          ? null
+          : getInitialMartyriaNumeralStyleLabel(t, structure.numeralStyle),
+        rows: [row],
       });
-      switch (strip.key) {
-        case 'modeIdentificationMethod':
-          return toRow(
-            strip.key,
-            t(($) => $.dialog.initialMartyriaStyles.modeIdentification, { ns }),
-            strip.variations,
-            (value) =>
-              getInitialMartyriaModeIdentificationMethodLabel(t, value),
-          );
-        case 'numeralKind':
-          return toRow(strip.key, numberForm, strip.variations, (value) =>
-            getInitialMartyriaNumeralKindLabel(t, value),
-          );
-        case 'numeralForm':
-          return toRow(strip.key, numberForm, strip.variations, (value) =>
-            getInitialMartyriaNumeralFormLabel(t, value),
-          );
-        case 'numberingSystem':
-          return toRow(
-            strip.key,
-            t(($) => $.dialog.initialMartyriaStyles.digitForm, { ns }),
-            strip.variations,
-            (value) => getInitialMartyriaNumberingSystemLabel(t, value),
-          );
-        case 'numeralQualifier':
-          return toRow(
-            strip.key,
-            t(($) => $.dialog.initialMartyriaStyles.numberPlacement, { ns }),
-            strip.variations,
-            (value) => getInitialMartyriaNumeralQualifierLabel(t, value),
-          );
-        case 'modeNamingScheme':
-          return toRow(
-            strip.key,
-            t(($) => $.dialog.initialMartyriaStyles.plagalWording, { ns }),
-            strip.variations,
-            (value) => getInitialMartyriaModeNamingSchemeLabel(t, value),
-          );
-      }
-    },
-  ),
-);
+    }
+  }
+  if (groups.length === 1) {
+    groups[0].label = null;
+  }
+  return groups;
+});
+
+function setModeIdentificationMethod(value: AcceptableValue) {
+  // A single toggle group reports an empty value when its item is pressed
+  // again; the method stays as it is.
+  if (
+    !value ||
+    value === props.martyriaStyle.structure.modeIdentificationMethod
+  ) {
+    return;
+  }
+  setStructure(
+    withSupportedInitialMartyriaModeIdentificationMethod(
+      props.martyriaStyle.structure,
+      value as InitialMartyriaModeIdentificationMethod,
+    ),
+  );
+}
+
+/*
+ * The selected row already prints as the style does. Choosing it again
+ * would only replace the settings a sign keeps for a later switch back to
+ * text, so it does nothing.
+ */
+function selectRow(row: WordingRow) {
+  if (!row.selected) {
+    setStructure(row.structure);
+  }
+}
 
 function update(changes: Partial<InitialMartyriaStyle>) {
   emit('update:martyriaStyle', { ...props.martyriaStyle, ...changes });

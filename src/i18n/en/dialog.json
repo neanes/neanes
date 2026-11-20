@@ -84,51 +84,12 @@
     "greekParagraphStyle": "Greek paragraph style",
     "typography": "Typography",
     "modeIdentification": "Mode identification",
-    "numberForm": "Number form",
-    "digitForm": "Digit form",
-    "numberPlacement": "Number placement",
-    "plagalWording": "Plagal wording",
     "transliterateNoteNames": "Transliterate starting note",
     "transliterateNoteNamesHint": "Pa instead of Πα",
     "modeIdentificationMethods": {
       "text": "Text only",
       "modeSign": "Sign only",
       "textAndModeSign": "Text and sign"
-    },
-    "numeralKinds": {
-      "cardinal": "Cardinal",
-      "ordinal": "Ordinal"
-    },
-    "numeralForms": {
-      "digits": {
-        "cardinal": "Digits, cardinal",
-        "ordinal": "Digits, ordinal"
-      },
-      "romanNumerals": {
-        "cardinal": "Roman numerals, cardinal",
-        "ordinal": "Roman numerals, ordinal"
-      },
-      "alphabeticNumerals": {
-        "cardinal": "Alphabetic numerals, cardinal",
-        "ordinal": "Alphabetic numerals, ordinal"
-      },
-      "words": {
-        "cardinal": "Words, cardinal",
-        "ordinal": "Words, ordinal"
-      }
-    },
-    "numberingSystems": {
-      "western": "Western",
-      "arabicIndic": "Arabic-Indic"
-    },
-    "numeralQualifiers": {
-      "postnominal": "Number after",
-      "prenominal": "Number before"
-    },
-    "modeNamingSchemes": {
-      "absolute": "Numbered 1 to 8",
-      "authenticCounterpart": "Plagal of the authentic",
-      "plagalClass": "Plagal as a class"
     },
     "discardChangesTitle": "Discard changes to styles?",
     "discardChangesDescription": "The styles you created or edited in this dialog will be lost.",
@@ -146,6 +107,13 @@
     "resetToPreset": "Reset to preset",
     "previewAllModes": "Preview of all eight modes",
     "wording": "Wording",
+    "numeralStyles": {
+      "digits": "Digits",
+      "romanNumerals": "Roman numerals",
+      "alphabeticNumerals": "Alphabetic numerals",
+      "words": "Words"
+    },
+    "wordingChoices": "Wording choices",
     "greekParagraphStyleHint": "Used for Greek text, such as the note name Πα.",
     "greekParagraphStylePlagalHint": "Used for the Greek plagal abbreviation πλ.",
     "neumeFontParagraphStyleHint": "Sets the size, color, and outline of the neume glyphs.",
@@ -156,6 +124,7 @@
     "neumeFontLettering": "Neume font",
     "deleteInUseDescription": "This style is in use ({{count}}). Choose the style to use in its place.",
     "useOrdinalForms": "Use ordinal forms",
+    "useOrdinalFormsHint": "Applies to ordinal digits, such as 1st.",
     "languages": {
       "greek": "Greek",
       "english": "English",
@@ -506,7 +475,6 @@
     "positioning": "Positioning",
     "overridePosition": "Override position",
     "dragMarker": "Drag footnote marker",
-
     "offsetX": "Horizontal offset (em)",
     "offsetY": "Vertical offset (em)",
     "positionHint": "Enable Override position to drag the marker or edit offsets without automatic collision adjustment. Positive values move right or down.",

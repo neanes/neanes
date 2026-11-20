@@ -156,8 +156,8 @@ export interface InitialMartyriaWrittenModeNameSemantics extends InitialMartyria
 
 /**
  * How an initial martyria is written: one point in the space of structures
- * the app can produce. The displayed components and the spoken reading are
- * derived from these semantics and the language's lexicon, never stored.
+ * the app can produce. The displayed components are derived from these
+ * semantics and the language's lexicon, never stored.
  */
 interface InitialMartyriaStructureBase extends InitialMartyriaModeNameSemantics {
   languageId: InitialMartyriaLanguageId;
@@ -398,8 +398,6 @@ export interface InitialMartyriaStyleResolution {
   structure: InitialMartyriaStructure;
   runs: ResolvedInitialMartyriaRun[];
   flowDirection: 'ltr' | 'rtl';
-  /** The complete reading selected by the style's identification method. */
-  pronunciation: string;
 }
 
 export function cloneInitialMartyriaStyle(

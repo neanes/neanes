@@ -7,7 +7,6 @@ import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGra
 import { initialMartyriaLexicons } from '@/models/InitialMartyriaLexicon';
 import {
   getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
   resolveInitialMartyriaStyle,
   resolveInitialMartyriaStyleAppearances,
 } from '@/models/InitialMartyriaResolver';
@@ -110,18 +109,6 @@ function numeralsFor(
     return stripTerminalPunctuation
       ? run.content.text.replace(/\.$/, '')
       : run.content.text;
-  });
-}
-
-function pronunciationsFor(style: InitialMartyriaStyle) {
-  return modes.map((mode) => {
-    const element = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates.find((template) => template.mode === mode)!,
-    );
-    return getInitialMartyriaPronunciation(
-      style.structure,
-      getInitialMartyriaContext(element),
-    );
   });
 }
 
@@ -258,32 +245,20 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     }
   });
 
-  it('uses CLDR numerals and readings for Spanish and Russian Roman ordinals', () => {
+  it('uses CLDR numerals for Spanish and Russian Roman ordinals', () => {
     const expectedNumerals = cldrValues('root', 'renderRomanUpper');
     const cases = [
       [
         INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-        'es',
-        'renderSpelloutOrdinalMasculine',
         INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        1,
       ],
       [
         INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
-        'ru',
-        'renderSpelloutOrdinalMasculine',
         INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        0,
       ],
     ] as const;
 
-    for (const [
-      languageId,
-      locale,
-      ordinalRule,
-      numeralQualifier,
-      ordinalIndex,
-    ] of cases) {
+    for (const [languageId, numeralQualifier] of cases) {
       const style = styleFor({
         languageId,
         modeIdentificationMethod:
@@ -296,17 +271,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
 
       expect(isInitialMartyriaStructureSupported(style.structure)).toBe(true);
       expect(numeralsFor(style)).toEqual(expectedNumerals);
-
-      const expectedOrdinals = cldrValues(locale, ordinalRule);
-      if (languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Russian) {
-        // The attested spelling keeps yo where CLDR permits e.
-        expectedOrdinals[3] = 'четвёртый';
-      }
-      expect(
-        pronunciationsFor(style).map((pronunciation) =>
-          pronunciation.split(' ')[ordinalIndex].toLocaleLowerCase(locale),
-        ),
-      ).toEqual(expectedOrdinals);
     }
   });
 
@@ -375,7 +339,7 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     );
   });
 
-  it('preserves reachable polytonic Greek ordinals alongside CLDR readings', () => {
+  it('preserves reachable polytonic Greek ordinals', () => {
     const style = styleFor({
       languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
       modeIdentificationMethod:
@@ -386,16 +350,7 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
       modeNamingScheme:
         INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     });
-    const spokenOrdinals = pronunciationsFor(style).map((pronunciation) =>
-      pronunciation
-        .slice('Ήχος '.length)
-        .split(' εκ του ')[0]
-        .toLocaleLowerCase('el'),
-    );
 
-    expect(caseFold(spokenOrdinals.slice(0, 4), 'el')).toEqual(
-      cldrValues('el', 'renderSpelloutOrdinalMasculine').slice(0, 4),
-    );
     expect(numeralsFor(style).slice(0, 4)).toEqual([
       'πρῶτος',
       'δεύτερος',

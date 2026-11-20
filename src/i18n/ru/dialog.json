@@ -84,51 +84,12 @@
     "greekParagraphStyle": "Стиль абзаца для греческого текста",
     "typography": "Типографика",
     "modeIdentification": "Обозначение гласа",
-    "numberForm": "Форма числа",
-    "digitForm": "Форма цифр",
-    "numberPlacement": "Положение числа",
-    "plagalWording": "Обозначение плагальных",
     "transliterateNoteNames": "Транслитерировать начальную ноту",
     "transliterateNoteNamesHint": "Па вместо Πα",
     "modeIdentificationMethods": {
       "text": "Только текст",
       "modeSign": "Только знак",
       "textAndModeSign": "Текст и знак"
-    },
-    "numeralKinds": {
-      "cardinal": "Количественное",
-      "ordinal": "Порядковое"
-    },
-    "numeralForms": {
-      "digits": {
-        "cardinal": "Цифры, количественные",
-        "ordinal": "Цифры, порядковые"
-      },
-      "romanNumerals": {
-        "cardinal": "Римские цифры, количественные",
-        "ordinal": "Римские цифры, порядковые"
-      },
-      "alphabeticNumerals": {
-        "cardinal": "Буквенные числа, количественные",
-        "ordinal": "Буквенные числа, порядковые"
-      },
-      "words": {
-        "cardinal": "Слова, количественные",
-        "ordinal": "Слова, порядковые"
-      }
-    },
-    "numberingSystems": {
-      "western": "Западные",
-      "arabicIndic": "Арабо-индийские"
-    },
-    "numeralQualifiers": {
-      "postnominal": "Число после",
-      "prenominal": "Число перед"
-    },
-    "modeNamingSchemes": {
-      "absolute": "Нумерация от 1 до 8",
-      "authenticCounterpart": "Плагальный от автентического",
-      "plagalClass": "Плагальные как класс"
     },
     "discardChangesTitle": "Отменить изменения стилей?",
     "discardChangesDescription": "Стили, созданные или изменённые в этом окне, будут потеряны.",
@@ -146,6 +107,13 @@
     "resetToPreset": "Вернуть к шаблону",
     "previewAllModes": "Предпросмотр всех восьми гласов",
     "wording": "Формулировка",
+    "numeralStyles": {
+      "digits": "Цифры",
+      "romanNumerals": "Римские цифры",
+      "alphabeticNumerals": "Буквенные цифры",
+      "words": "Словами"
+    },
+    "wordingChoices": "Варианты формулировки",
     "greekParagraphStyleHint": "Для греческого текста, например названия ноты Πα.",
     "greekParagraphStylePlagalHint": "Для греческого сокращения плагального гласа πλ.",
     "neumeFontParagraphStyleHint": "Задаёт размер, цвет и контур невм.",
@@ -156,6 +124,7 @@
     "neumeFontLettering": "Шрифт невм",
     "deleteInUseDescription": "Этот стиль используется ({{count}}). Выберите стиль, который его заменит.",
     "useOrdinalForms": "Использовать порядковые формы",
+    "useOrdinalFormsHint": "Применяется к порядковым числительным, записанным цифрами, например 1st.",
     "languages": {
       "greek": "Греческий",
       "english": "Английский",

@@ -140,9 +140,6 @@ describe('Classic initial martyria', () => {
               run.appearance.fontFamily === 'NeanesStathisSeries',
           ),
         ).toBe(true);
-        expect(resolution.pronunciation).toBe(
-          resolve(traditional, element).pronunciation,
-        );
         expect(
           resolution.runs
             .slice(1)

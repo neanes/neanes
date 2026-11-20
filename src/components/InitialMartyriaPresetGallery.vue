@@ -64,7 +64,6 @@
                 :paragraph-styles="paragraphStyles"
                 :page-setup="pageSetup"
                 :template-id="sampleTemplateId"
-                :selected="false"
                 :caption="getInitialMartyriaStyleDisplayName(preset, t)"
                 :max-font-size="22"
                 @select="choose(preset)"

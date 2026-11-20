@@ -37,7 +37,7 @@ describe('withInitialMartyriaStyleStructure', () => {
     expect(changed.structure).not.toBe(english.structure);
   });
 
-  it('defaults ordinal forms when a picker choice introduces digit ordinals', () => {
+  it('keeps the ordinal forms choice when a wording introduces digit ordinals', () => {
     const english = cloneInitialMartyriaStyle(
       getDefaultBuiltInInitialMartyriaStyle(
         INITIAL_MARTYRIA_LANGUAGE_IDS.English,
@@ -54,7 +54,6 @@ describe('withInitialMartyriaStyleStructure', () => {
       modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     });
 
-    expect(changed.useOrdinalForms).toBe(true);
-    expect(english.useOrdinalForms).toBe(false);
+    expect(changed.useOrdinalForms).toBe(false);
   });
 });

@@ -84,51 +84,12 @@
     "greekParagraphStyle": "Stil de paragraf pentru greacă",
     "typography": "Tipografie",
     "modeIdentification": "Identificarea glasului",
-    "numberForm": "Forma numărului",
-    "digitForm": "Forma cifrelor",
-    "numberPlacement": "Poziția numărului",
-    "plagalWording": "Exprimarea plagalului",
     "transliterateNoteNames": "Transliterează nota de început",
     "transliterateNoteNamesHint": "Pa în loc de Πα",
     "modeIdentificationMethods": {
       "text": "Doar text",
       "modeSign": "Doar mărturie",
       "textAndModeSign": "Text și mărturie"
-    },
-    "numeralKinds": {
-      "cardinal": "Cardinal",
-      "ordinal": "Ordinal"
-    },
-    "numeralForms": {
-      "digits": {
-        "cardinal": "Cifre, cardinale",
-        "ordinal": "Cifre, ordinale"
-      },
-      "romanNumerals": {
-        "cardinal": "Numerale romane, cardinale",
-        "ordinal": "Numerale romane, ordinale"
-      },
-      "alphabeticNumerals": {
-        "cardinal": "Numerale alfabetice, cardinale",
-        "ordinal": "Numerale alfabetice, ordinale"
-      },
-      "words": {
-        "cardinal": "Cuvinte, cardinale",
-        "ordinal": "Cuvinte, ordinale"
-      }
-    },
-    "numberingSystems": {
-      "western": "Occidentale",
-      "arabicIndic": "Arabo-indiene"
-    },
-    "numeralQualifiers": {
-      "postnominal": "Numărul după",
-      "prenominal": "Numărul înainte"
-    },
-    "modeNamingSchemes": {
-      "absolute": "Numerotare 1-8",
-      "authenticCounterpart": "Plagalul autenticului",
-      "plagalClass": "Plagalele ca o clasă"
     },
     "discardChangesTitle": "Renunțați la modificările stilurilor?",
     "discardChangesDescription": "Stilurile create sau modificate în această fereastră se vor pierde.",
@@ -146,6 +107,13 @@
     "resetToPreset": "Revenire la model",
     "previewAllModes": "Previzualizarea tuturor celor opt glasuri",
     "wording": "Formulare",
+    "numeralStyles": {
+      "digits": "Cifre",
+      "romanNumerals": "Cifre romane",
+      "alphabeticNumerals": "Numerale alfabetice",
+      "words": "Cuvinte"
+    },
+    "wordingChoices": "Variante de formulare",
     "greekParagraphStyleHint": "Folosit pentru textul grecesc, cum ar fi numele notei Πα.",
     "greekParagraphStylePlagalHint": "Folosit pentru abrevierea grecească a plagalului πλ.",
     "neumeFontParagraphStyleHint": "Stabilește mărimea, culoarea și conturul neumelor.",
@@ -156,6 +124,7 @@
     "neumeFontLettering": "Font de neume",
     "deleteInUseDescription": "Acest stil este folosit ({{count}}). Alegeți stilul care îl va înlocui.",
     "useOrdinalForms": "Folosește forme ordinale",
+    "useOrdinalFormsHint": "Se aplică numeralelor ordinale scrise cu cifre, precum 1st.",
     "languages": {
       "greek": "Greacă",
       "english": "Engleză",

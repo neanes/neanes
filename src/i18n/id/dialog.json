@@ -84,51 +84,12 @@
     "greekParagraphStyle": "Gaya paragraf Yunani",
     "typography": "Tipografi",
     "modeIdentification": "Identifikasi modus",
-    "numberForm": "Bentuk angka",
-    "digitForm": "Bentuk angka",
-    "numberPlacement": "Letak angka",
-    "plagalWording": "Penyebutan plagal",
     "transliterateNoteNames": "Transliterasi nada awal",
     "transliterateNoteNamesHint": "Pa alih-alih Πα",
     "modeIdentificationMethods": {
       "text": "Teks saja",
       "modeSign": "Tanda saja",
       "textAndModeSign": "Teks dan tanda"
-    },
-    "numeralKinds": {
-      "cardinal": "Kardinal",
-      "ordinal": "Ordinal"
-    },
-    "numeralForms": {
-      "digits": {
-        "cardinal": "Angka, kardinal",
-        "ordinal": "Angka, ordinal"
-      },
-      "romanNumerals": {
-        "cardinal": "Angka Romawi, kardinal",
-        "ordinal": "Angka Romawi, ordinal"
-      },
-      "alphabeticNumerals": {
-        "cardinal": "Angka alfabetis, kardinal",
-        "ordinal": "Angka alfabetis, ordinal"
-      },
-      "words": {
-        "cardinal": "Kata, kardinal",
-        "ordinal": "Kata, ordinal"
-      }
-    },
-    "numberingSystems": {
-      "western": "Barat",
-      "arabicIndic": "Arab-India"
-    },
-    "numeralQualifiers": {
-      "postnominal": "Angka setelahnya",
-      "prenominal": "Angka sebelumnya"
-    },
-    "modeNamingSchemes": {
-      "absolute": "Bernomor 1 sampai 8",
-      "authenticCounterpart": "Plagal dari yang autentik",
-      "plagalClass": "Plagal sebagai kelas"
     },
     "discardChangesTitle": "Buang perubahan pada gaya?",
     "discardChangesDescription": "Gaya yang Anda buat atau ubah di dialog ini akan hilang.",
@@ -146,6 +107,13 @@
     "resetToPreset": "Kembalikan ke prasetel",
     "previewAllModes": "Pratinjau kedelapan mode",
     "wording": "Susunan kata",
+    "numeralStyles": {
+      "digits": "Angka",
+      "romanNumerals": "Angka Romawi",
+      "alphabeticNumerals": "Angka alfabetis",
+      "words": "Kata"
+    },
+    "wordingChoices": "Pilihan susunan kata",
     "greekParagraphStyleHint": "Digunakan untuk teks Yunani, seperti nama nada Πα.",
     "greekParagraphStylePlagalHint": "Digunakan untuk singkatan plagal Yunani πλ.",
     "neumeFontParagraphStyleHint": "Mengatur ukuran, warna, dan garis tepi glif neuma.",
@@ -156,6 +124,7 @@
     "neumeFontLettering": "Fon neuma",
     "deleteInUseDescription": "Gaya ini sedang digunakan ({{count}}). Pilih gaya yang akan menggantikannya.",
     "useOrdinalForms": "Gunakan bentuk ordinal",
+    "useOrdinalFormsHint": "Berlaku untuk angka ordinal, seperti 1st.",
     "languages": {
       "greek": "Yunani",
       "english": "Inggris",

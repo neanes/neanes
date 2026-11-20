@@ -8,16 +8,11 @@ import {
   createInitialMartyriaStyle,
   enumerateInitialMartyriaStructures,
   getInitialMartyriaStructureKey,
-  getInitialMartyriaStructureVariations,
-  getSupportedInitialMartyriaNumeralForms,
   initialMartyriaModeIdentificationMethods,
-  initialMartyriaNumberingSystems,
-  initialMartyriaNumeralForms,
-  initialMartyriaNumeralKinds,
-  initialMartyriaNumeralQualifiers,
   initialMartyriaStructuresEqual,
   isInitialMartyriaStructureSupported,
   normalizeInitialMartyriaStructure,
+  withSupportedInitialMartyriaModeIdentificationMethod,
 } from '@/models/InitialMartyriaGrammar';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
@@ -32,9 +27,7 @@ import {
   type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaModeNameSemantics,
   type InitialMartyriaStructure,
-  type InitialMartyriaTextStructure,
   type InitialMartyriaWrittenModeNameSemantics,
-  withInitialMartyriaModeIdentificationMethod,
 } from '@/models/InitialMartyriaStyle';
 
 import { attestedStructures } from './InitialMartyriaStyle.testData';
@@ -152,7 +145,6 @@ describe('InitialMartyriaGrammar', () => {
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
       'digits/cardinal/postnominal/absolute',
       'roman-numerals/ordinal/postnominal/absolute',
-      'roman-numerals/cardinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
       'words/ordinal/postnominal/absolute',
       'words/cardinal/postnominal/absolute',
@@ -198,12 +190,8 @@ describe('InitialMartyriaGrammar', () => {
       'ordinal/prenominal/authentic-counterpart',
       'ordinal/prenominal/plagal-class',
       'cardinal/postnominal/authentic-counterpart',
-      'cardinal/postnominal/plagal-class',
     ],
-    [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: [
-      'ordinal/postnominal/absolute',
-      'cardinal/postnominal/absolute',
-    ],
+    [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
       'ordinal/postnominal/absolute',
     ],
@@ -212,53 +200,8 @@ describe('InitialMartyriaGrammar', () => {
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: [
       'ordinal/postnominal/authentic-counterpart',
-      'ordinal/postnominal/absolute',
-      'cardinal/postnominal/absolute',
     ],
   } satisfies Record<InitialMartyriaLanguageId, string[]>;
-
-  it('derives only numeral forms supported by each mode-name convention', () => {
-    const forms = (languageId: InitialMartyriaLanguageId) =>
-      getSupportedInitialMartyriaNumeralForms(languageId).map(
-        (form) => `${form.numeralStyle}/${form.numeralKind}`,
-      );
-
-    expect(
-      Object.fromEntries(
-        initialMartyriaLanguageIds.map((languageId) => [
-          languageId,
-          forms(languageId),
-        ]),
-      ),
-    ).toEqual({
-      el: ['alphabetic-numerals/ordinal', 'words/ordinal'],
-      en: [
-        'digits/ordinal',
-        'digits/cardinal',
-        'roman-numerals/cardinal',
-        'words/ordinal',
-        'words/cardinal',
-      ],
-      es: [
-        'digits/cardinal',
-        'roman-numerals/ordinal',
-        'roman-numerals/cardinal',
-        'words/ordinal',
-        'words/cardinal',
-      ],
-      cu: ['digits/ordinal', 'alphabetic-numerals/ordinal', 'words/ordinal'],
-      ru: ['digits/ordinal', 'roman-numerals/ordinal', 'words/ordinal'],
-      ar: ['digits/ordinal', 'words/ordinal'],
-      ro: ['digits/cardinal'],
-      id: [
-        'digits/ordinal',
-        'digits/cardinal',
-        'roman-numerals/cardinal',
-        'words/ordinal',
-        'words/cardinal',
-      ],
-    });
-  });
 
   it('renders prenominal Roman ordinals with the Russian label form', () => {
     const structure = grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
@@ -272,7 +215,6 @@ describe('InitialMartyriaGrammar', () => {
     const resolution = resolve(styleFor(structure), elementForMode(2));
 
     expect(textOf(resolution.runs)).toEqual(['II', 'глас.']);
-    expect(resolution.pronunciation).toMatch(/^Второй глас/);
   });
 
   it('accepts and rejects complete supported mode-name constructions', () => {
@@ -731,7 +673,7 @@ describe('InitialMartyriaGrammar', () => {
     });
   });
 
-  it('keys structures by what they render and read, not by their axes', () => {
+  it('keys structures by what they render, not by their axes', () => {
     const spanishSignCardinal = {
       ...attestedStructures['spanish-tono-number'],
       modeIdentificationMethod:
@@ -742,11 +684,11 @@ describe('InitialMartyriaGrammar', () => {
       modeIdentificationMethod:
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     };
-    // Both signs look alike, but one legal structure is read cardinally and
-    // the other ordinally.
+    // Both signs look alike, so they are the same style whatever their
+    // numeral kind.
     expect(
       initialMartyriaStructuresEqual(spanishSignCardinal, spanishSignOrdinal),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       initialMartyriaStructuresEqual(
         attestedStructures['english-plagal-first'],
@@ -767,126 +709,56 @@ describe('InitialMartyriaGrammar', () => {
     ).toBe(true);
   });
 
-  it('offers a digit repertoire only where one is attested', () => {
-    const repertoires = (structure: InitialMartyriaTextStructure) =>
-      getInitialMartyriaStructureVariations(
-        structure,
-        initialMartyriaNumberingSystems,
-        (current, numberingSystem) => ({ ...current, numberingSystem }),
-      ).map((variation) => variation.value);
+  it('offers each printed form once', () => {
+    for (const languageId of initialMartyriaLanguageIds) {
+      for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
+        const keys = enumerateInitialMartyriaStructures({
+          languageId,
+          modeIdentificationMethod,
+          transliterateNoteNames: false,
+        }).map(({ structure }) => getInitialMartyriaStructureKey(structure));
+        expect(new Set(keys).size).toBe(keys.length);
+      }
+    }
 
-    expect(repertoires(attestedStructures['arabic-ordinal-digits'])).toEqual([
-      undefined,
-      INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic,
-    ]);
-    // No other language has a second repertoire.
-    expect(repertoires(attestedStructures['english-mode-number'])).toEqual([
-      undefined,
-    ]);
+    // Ordinal and cardinal Roman numerals print alike in Spanish, so they
+    // are one option.
+    const spanishRoman = enumerateInitialMartyriaStructures({
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+      transliterateNoteNames: false,
+    }).filter(
+      ({ structure }) =>
+        structure.modeIdentificationMethod !==
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+        structure.numeralStyle ===
+          INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+    );
+    expect(spanishRoman).toHaveLength(1);
   });
 
-  it('builds reachable variations across correlated grammar axes', () => {
-    const englishRoman = {
-      ...attestedStructures['english-mode-roman-numeral'],
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-    };
-    const forms = getInitialMartyriaStructureVariations(
-      englishRoman,
-      initialMartyriaNumeralForms,
-      (structure, form) => ({ ...structure, ...form }),
-    );
-
-    expect(
-      forms.map(
-        (variation) =>
-          `${variation.value.numeralStyle}/${variation.value.numeralKind}${
-            variation.current ? '*' : ''
-          }`,
-      ),
-    ).toEqual([
-      'digits/ordinal',
-      'digits/cardinal',
-      'roman-numerals/cardinal*',
-      'words/ordinal',
-      'words/cardinal',
-    ]);
-    expect(new Set(forms.map((variation) => variation.key)).size).toBe(
-      forms.length,
-    );
-
-    const greekForms = getInitialMartyriaStructureVariations(
-      greekText,
-      initialMartyriaNumeralForms,
-      (structure, form) => ({ ...structure, ...form }),
-    );
-    expect(greekForms.map((variation) => variation.value.numeralStyle)).toEqual(
-      [
-        INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
-      ],
-    );
-    expect(greekForms.filter((variation) => variation.current)).toHaveLength(1);
-
-    const englishPlacements = getInitialMartyriaStructureVariations(
-      attestedStructures['english-mode-number-word'],
-      initialMartyriaNumeralQualifiers,
-      (structure, numeralQualifier) => ({ ...structure, numeralQualifier }),
-    );
-    expect(
-      englishPlacements.map((variation) => ({
-        value: variation.value,
-        numeralKind: variation.structure.numeralKind,
-        current: variation.current,
-      })),
-    ).toEqual([
-      {
-        value: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-        current: false,
-      },
-      {
-        value: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-        current: true,
-      },
-    ]);
-
-    const romanianMethods = getInitialMartyriaStructureVariations(
+  it('keeps the wording a method change can carry over', () => {
+    const romanian = withSupportedInitialMartyriaModeIdentificationMethod(
       attestedStructures['romanian-glas'],
-      initialMartyriaModeIdentificationMethods,
-      withInitialMartyriaModeIdentificationMethod,
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     );
-    expect(romanianMethods.map((variation) => variation.value)).toEqual(
-      initialMartyriaModeIdentificationMethods,
+    expect(romanian.modeIdentificationMethod).toBe(
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
     );
-    expect(
-      romanianMethods
-        .filter(
-          (variation) =>
-            variation.value !==
-            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-        )
-        .every(
-          (variation) =>
-            variation.structure.modeNamingScheme ===
-            INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-        ),
-    ).toBe(true);
+    expect(isInitialMartyriaStructureSupported(romanian)).toBe(true);
 
-    const signKinds = getInitialMartyriaStructureVariations(
-      attestedStructures['english-sign-first'],
-      initialMartyriaNumeralKinds,
-      (structure, numeralKind) => ({ ...structure, numeralKind }),
-    );
-    expect(
-      signKinds.map(
-        (variation) => `${variation.value}${variation.current ? '*' : ''}`,
-      ),
-    ).toEqual(['ordinal*', 'cardinal']);
-    expect(
-      signKinds.every((variation) => !('numeralStyle' in variation.structure)),
-    ).toBe(true);
+    const english = attestedStructures['english-mode-number'];
+    const englishWithSign =
+      withSupportedInitialMartyriaModeIdentificationMethod(
+        english,
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+      );
+    expect(englishWithSign).toEqual({
+      ...english,
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    });
   });
 
   it('enumerates exactly the grammar-derived structures for every method', () => {
@@ -939,7 +811,7 @@ describe('InitialMartyriaGrammar', () => {
   });
 
   it('renders the corrected grammar-specific morphology', () => {
-    const examples: [InitialMartyriaStructure, string, string][] = [
+    const examples: [InitialMartyriaStructure, string][] = [
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Greek, {
           modeIdentificationMethod:
@@ -947,7 +819,6 @@ describe('InitialMartyriaGrammar', () => {
           numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
         }),
         'Ἦχος | πλάγιος τοῦ | δευτέρου.',
-        'Ήχος Πλάγιος του Δευτέρου εκ του Πα',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.English, {
@@ -959,7 +830,6 @@ describe('InitialMartyriaGrammar', () => {
           modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
         }),
         'Mode | Six.',
-        'Mode Six from Pa',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish, {
@@ -970,7 +840,6 @@ describe('InitialMartyriaGrammar', () => {
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
         }),
         'Tono | VI.',
-        'Tono seis desde Pa',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish, {
@@ -981,7 +850,6 @@ describe('InitialMartyriaGrammar', () => {
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
         }),
         'Tono | VI.',
-        'Tono sexto desde Pa',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic, {
@@ -991,7 +859,6 @@ describe('InitialMartyriaGrammar', () => {
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
         }),
         'Шесты́й | гла́съ.',
-        'Шесты́й гла́съ ѿ Па',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
@@ -1001,7 +868,6 @@ describe('InitialMartyriaGrammar', () => {
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
         }),
         'Шестой | глас.',
-        'Шестой глас от Па',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Russian, {
@@ -1011,7 +877,6 @@ describe('InitialMartyriaGrammar', () => {
           numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
         }),
         '6-й | глас.',
-        'Шестой глас от Па',
       ],
       [
         grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic, {
@@ -1019,24 +884,14 @@ describe('InitialMartyriaGrammar', () => {
             INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
         }),
         'اللحن | السادس',
-        'اللحن السادس من با',
       ],
-      [
-        attestedStructures['romanian-glas-number'],
-        'Glas | 6 | λ | π',
-        'Glas șase de la Pa',
-      ],
-      [
-        attestedStructures['romanian-glas'],
-        'Glas | λ | π',
-        'Glasul al șaselea de la Pa',
-      ],
+      [attestedStructures['romanian-glas-number'], 'Glas | 6 | λ | π'],
+      [attestedStructures['romanian-glas'], 'Glas | λ | π'],
     ];
 
-    for (const [structure, expectedText, expectedPronunciation] of examples) {
+    for (const [structure, expectedText] of examples) {
       const resolution = resolve(styleFor(structure), elementForMode(6));
       expect(textOf(resolution.runs).join(' | ')).toBe(expectedText);
-      expect(resolution.pronunciation).toBe(expectedPronunciation);
     }
   });
 

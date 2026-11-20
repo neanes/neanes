@@ -8,7 +8,6 @@ import {
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import { getScaleNoteValue, ScaleNote } from '@/models/Scales';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import {
   composeNumericVariant,
@@ -18,11 +17,10 @@ import {
 import { getInitialMartyriaStyleOrDefault } from './InitialMartyriaBuiltInStyles';
 import {
   arabicIndicDigits,
+  hasRaisableOrdinalSuffix,
   initialMartyriaCanonicalNotes,
-  initialMartyriaCanonicalNotesByScaleDegree,
   type InitialMartyriaLexicon,
   initialMartyriaLexicons,
-  initialMartyriaSpokenLexicons,
   originalGreekNoteNames,
   romanNumerals,
 } from './InitialMartyriaLexicon';
@@ -277,84 +275,12 @@ function orderInitialMartyriaModeName<T>(
     : [marker, label, identifier];
 }
 
-function getInitialMartyriaStylePronunciation(
-  structure: InitialMartyriaStructure,
-  lexicon: InitialMartyriaLexicon,
-  mode: ModeKeyMode,
-) {
-  const usesGraveWord =
-    usesGraveNaming(structure, mode) && lexicon.graveWord != null;
-  const numeralSemantics =
-    usesGraveNaming(structure, mode) && !usesGraveWord
-      ? {
-          ...structure,
-          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-        }
-      : structure;
-  const identifier = usesGraveWord
-    ? lexicon.graveWordAfterLabel
-      ? lexicon.graveWord!
-      : null
-    : // The spoken numeral is always a word; the counterpart form (Greek
-      // genitive) wins where the language has one.
-      getInitialMartyriaNumeralWord(numeralSemantics, lexicon, mode);
-  const marker = usesGraveWord
-    ? lexicon.graveWordAfterLabel
-      ? null
-      : lexicon.graveWord
-    : isPlagalMode(mode) && usesPlagalNaming(structure)
-      ? getPlagalMarkerWord(structure, lexicon)
-      : null;
-  const trailingLabel = usesTrailingLabel(structure);
-  const label = getInitialMartyriaLabelText(
-    lexicon,
-    trailingLabel,
-    structure.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-  );
-
-  return orderInitialMartyriaModeName(
-    structure,
-    lexicon,
-    identifier,
-    marker,
-    label,
-  )
-    .filter((component): component is string => component != null)
-    .join(' ');
-}
-
-const keLowNoteValue = getScaleNoteValue(ScaleNote.KeLow);
-const zoHighNoteValue = getScaleNoteValue(ScaleNote.ZoHigh);
-
-function getInitialMartyriaStartingNotePronunciation(
-  lexicon: InitialMartyriaLexicon,
-  physicalNote: ScaleNote,
-) {
-  const noteNames = lexicon.usesGreekScript
-    ? originalGreekNoteNames
-    : lexicon.transliteratedNoteNames;
-  const physicalNoteValue = getScaleNoteValue(physicalNote);
-  const canonicalNote =
-    initialMartyriaCanonicalNotesByScaleDegree[
-      ((physicalNoteValue % 7) + 7) % 7
-    ];
-  let noteName = noteNames.names[canonicalNote];
-
-  if (physicalNoteValue <= keLowNoteValue) {
-    noteName = noteName.toLocaleLowerCase(noteNames.languageTag);
-  } else if (physicalNoteValue >= zoHighNoteValue) {
-    noteName += "'";
-  }
-
-  return `${lexicon.startingNotePrefix} ${noteName}`;
-}
-
 /*
- * The conventional reading of the traditional sign group when it repeats a
- * text identification: the sign beside "Mode 5" is still read as "Plagal
- * First", so its plagal indicator keeps the traditional placement.
+ * The conventional semantics of the traditional sign group when it repeats a
+ * text identification: the sign beside "Mode 5" still names "Plagal First",
+ * so its plagal indicator keeps the traditional placement.
  */
-const traditionalModeSignPronunciation: InitialMartyriaModeNameSemantics = {
+const traditionalModeSignSemantics: InitialMartyriaModeNameSemantics = {
   numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
   numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
   modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
@@ -480,11 +406,11 @@ function getInitialMartyriaComponents(
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign
     ) {
       // The traditional sign group repeats the text identification, but keeps
-      // its own conventional reading rather than inheriting the text's number
-      // form. For example, the sign beside "Mode 5" is still read as
+      // its own conventional order rather than inheriting the text's number
+      // form. For example, the sign beside "Mode 5" still names
       // "Plagal First".
       const group = orderInitialMartyriaModeName(
-        traditionalModeSignPronunciation,
+        traditionalModeSignSemantics,
         lexicon,
         modeSign,
         modeSignAbbreviation,
@@ -511,7 +437,7 @@ function getInitialMartyriaComponents(
   return components;
 }
 
-const modeKeyModes: ModeKeyMode[] = [1, 2, 3, 4, 5, 6, 7, 8];
+export const modeKeyModes: ModeKeyMode[] = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export function isInitialMartyriaModeNameSupported(
   structure: InitialMartyriaStructure,
@@ -548,8 +474,8 @@ function encodeInitialMartyriaComponent(component: InitialMartyriaComponent) {
 // The key is a pure function of a structure's axes over static lexicon data,
 // and the reachable space is a few hundred structures, so every key is
 // computed at most once for the life of the app. The dialog asks for keys
-// once per style per tile rebuild, which would otherwise rebuild the
-// components and pronunciation of all eight modes each time.
+// once per style per row rebuild, which would otherwise rebuild the
+// components of all eight modes each time.
 const structureKeyCache = new Map<string, string>();
 
 function getInitialMartyriaStructureAxisSignature(
@@ -573,11 +499,21 @@ function getInitialMartyriaStructureAxisSignature(
   ].join('/');
 }
 
+/** The printed form of one mode: its components, encoded as text. */
+export function getInitialMartyriaPrintedForm(
+  structure: InitialMartyriaStructure,
+  mode: ModeKeyMode,
+) {
+  return getInitialMartyriaComponents(structure, mode)
+    .map(encodeInitialMartyriaComponent)
+    .join(' | ');
+}
+
 /**
  * Identifies what a structure produces rather than how it is described: the
- * displayed components and the spoken reading of every mode. Two structures
- * with the same key are the same style to a reader, however their axes are
- * set, so the key drives de-duplication throughout the styles dialog.
+ * printed form of every mode. Two structures with the same key look the same
+ * on the page, however their axes are set, so the key drives de-duplication
+ * throughout the styles dialog.
  */
 export function getInitialMartyriaStructureKey(
   structure: InitialMartyriaStructure,
@@ -588,24 +524,14 @@ export function getInitialMartyriaStructureKey(
     return cached;
   }
   const lexicon = initialMartyriaLexicons[structure.languageId];
-  const spokenLexicon = initialMartyriaSpokenLexicons[structure.languageId];
   const transliterate =
     structure.transliterateNoteNames && !lexicon.usesGreekScript;
-  const lines = modeKeyModes.map((mode) => {
-    const components = getInitialMartyriaComponents(structure, mode)
-      .map(encodeInitialMartyriaComponent)
-      .join(' | ');
-    const pronunciation = getInitialMartyriaStylePronunciation(
-      structure,
-      spokenLexicon,
-      mode,
-    );
-    return `${components} = ${pronunciation}`;
-  });
   const key = [
     structure.languageId,
     transliterate ? 'transliterated' : 'original',
-    ...lines,
+    ...modeKeyModes.map((mode) =>
+      getInitialMartyriaPrintedForm(structure, mode),
+    ),
   ].join('\n');
   structureKeyCache.set(cacheKey, key);
   return key;
@@ -746,26 +672,6 @@ export function resolveModeKeyInitialMartyriaStyle(options: {
   });
 }
 
-/**
- * The spoken reading of a style for an element: the mode name selected by
- * the style's identification method, then the starting note.
- */
-export function getInitialMartyriaPronunciation(
-  structure: InitialMartyriaStructure,
-  context: Pick<InitialMartyriaContext, 'mode' | 'physicalNote'>,
-) {
-  const modeName = getInitialMartyriaStylePronunciation(
-    structure,
-    initialMartyriaSpokenLexicons[structure.languageId],
-    context.mode,
-  );
-  const startingNote = getInitialMartyriaStartingNotePronunciation(
-    initialMartyriaLexicons[structure.languageId],
-    context.physicalNote,
-  );
-  return `${modeName} ${startingNote}`;
-}
-
 /*
  * The music font's lettering glyph for each word of a mode name, or null for
  * words it has no glyph for.
@@ -831,8 +737,8 @@ export function initialMartyriaStructureSupportsOrdinalForms(
   structure: InitialMartyriaStructure,
 ) {
   return (
-    initialMartyriaLexicons[structure.languageId].hasRaisableOrdinalSuffix ===
-      true && initialMartyriaStructureHasOrdinalDigits(structure)
+    hasRaisableOrdinalSuffix(structure.languageId) &&
+    initialMartyriaStructureHasOrdinalDigits(structure)
   );
 }
 
@@ -1003,7 +909,6 @@ export function resolveInitialMartyriaStyle(options: {
   return {
     structure,
     flowDirection,
-    pronunciation: getInitialMartyriaPronunciation(structure, options.context),
     runs,
   };
 }

@@ -1420,7 +1420,7 @@ export class ByzHtmlExporter {
     }
 
     const { resolution } = layout;
-    let html = `<span class="byz--initial-martyria-signature" dir="${resolution.flowDirection}" aria-label="${escapeHtml(resolution.pronunciation)}">`;
+    let html = `<span class="byz--initial-martyria-signature" dir="${resolution.flowDirection}">`;
 
     for (const [index, run] of resolution.runs.entries()) {
       const runLayout = layout.runs[index];

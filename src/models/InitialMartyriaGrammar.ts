@@ -27,6 +27,7 @@ import {
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
   type InitialMartyriaTextStructure,
+  withInitialMartyriaModeIdentificationMethod,
 } from './InitialMartyriaStyle';
 
 export { getInitialMartyriaStructureKey } from './InitialMartyriaResolver';
@@ -247,7 +248,7 @@ export interface InitialMartyriaNumeralForm {
   numeralStyle: InitialMartyriaNumeralStyle;
 }
 
-export const initialMartyriaNumeralKinds: InitialMartyriaNumeralKind[] = [
+const initialMartyriaNumeralKinds: InitialMartyriaNumeralKind[] = [
   INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
   INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
 ];
@@ -264,11 +265,6 @@ export const initialMartyriaNumeralForms: InitialMartyriaNumeralForm[] = [
   })),
 );
 
-/** The digit repertoires, starting with the language's own digits. */
-export const initialMartyriaNumberingSystems: (
-  InitialMartyriaNumberingSystem | undefined
-)[] = [undefined, INITIAL_MARTYRIA_NUMBERING_SYSTEMS.ArabicIndic];
-
 export const initialMartyriaModeIdentificationMethods: InitialMartyriaModeIdentificationMethod[] =
   [...everyModeIdentificationMethod];
 
@@ -278,8 +274,8 @@ export const initialMartyriaNumeralQualifiers: InitialMartyriaNumeralQualifier[]
 export const initialMartyriaModeNamingSchemes: InitialMartyriaModeNamingScheme[] =
   [...everyModeNamingScheme];
 
-// The spoken numeral is always a word, whatever is printed, so a language
-// without this word list cannot name modes this way at all.
+// A language without this word list does not offer this kind of numeral in
+// any form.
 function getNumeralWords(
   lexicon: InitialMartyriaLexicon,
   numeralKind: InitialMartyriaNumeralKind,
@@ -355,21 +351,6 @@ export function isInitialMartyriaStructureSupported(
     supportsNumeralForm(lexicon, structure) &&
     grammar.text.some((rule) => textGrammarRuleMatches(rule, structure)) &&
     isInitialMartyriaModeNameSupported(structure)
-  );
-}
-
-export function getSupportedInitialMartyriaNumeralForms(
-  languageId: InitialMartyriaLanguageId,
-) {
-  const lexicon = initialMartyriaLexicons[languageId];
-  return initialMartyriaNumeralForms.filter(
-    (form) =>
-      supportsNumeralForm(lexicon, form) &&
-      initialMartyriaGrammarRules[languageId].text.some(
-        (rule) =>
-          rule.numeralKinds.includes(form.numeralKind) &&
-          rule.numeralStyles.includes(form.numeralStyle),
-      ),
   );
 }
 
@@ -592,86 +573,10 @@ export function initialMartyriaStructuresEqual(
   );
 }
 
-export interface InitialMartyriaStructureVariation<T> {
-  value: T;
-  structure: InitialMartyriaStructure;
-  key: string;
-  current: boolean;
-}
-
 /**
- * One variation strip: the current structure with a single axis moved to
- * each of its candidate values. Values the language cannot express and
- * values that change nothing visible are left out, so the strip only ever
- * shows real alternatives.
+ * Every distinct structure a language and identification method can reach,
+ * de-duplicated by what it prints, in the grammar's presentation order.
  */
-export function getInitialMartyriaStructureVariations<
-  TStructure extends InitialMartyriaStructure,
-  TValue,
->(
-  current: TStructure,
-  values: TValue[],
-  apply: (structure: TStructure, value: TValue) => InitialMartyriaStructure,
-): InitialMartyriaStructureVariation<TValue>[] {
-  const currentKey = getInitialMartyriaStructureKey(current);
-  // Leaving a sign adds a printed numeral whose style is only a default,
-  // so normalization may still replace it.
-  const leavesSign =
-    current.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
-  const byKey = new Map<string, InitialMartyriaStructureVariation<TValue>>();
-  for (const value of values) {
-    const requested = apply(current, value);
-    const requestedAxes = initialMartyriaGrammarAxes.filter(
-      (axis) =>
-        getGrammarAxisValue(requested, axis) !==
-        getGrammarAxisValue(current, axis),
-    );
-    const structure = normalizeInitialMartyriaStructure(
-      requested,
-      requestedAxes,
-    );
-    if (
-      requestedAxes.some(
-        (axis) =>
-          !(leavesSign && isPrintedNumeralAxis(axis)) &&
-          getGrammarAxisValue(structure, axis) !==
-            getGrammarAxisValue(requested, axis),
-      )
-    ) {
-      continue;
-    }
-    const key = getInitialMartyriaStructureKey(structure);
-    const existing = byKey.get(key);
-    // When several values collapse into the current tile, the tile is
-    // captioned with the value the structure actually has.
-    if (existing == null) {
-      byKey.set(key, { value, structure, key, current: key === currentKey });
-    } else if (existing.current && hasSameAxes(structure, current)) {
-      existing.value = value;
-      existing.structure = structure;
-    }
-  }
-  return [...byKey.values()];
-}
-
-function hasSameAxes(a: InitialMartyriaStructure, b: InitialMartyriaStructure) {
-  return (
-    a.languageId === b.languageId &&
-    a.transliterateNoteNames === b.transliterateNoteNames &&
-    initialMartyriaGrammarAxes.every(
-      (axis) => getGrammarAxisValue(a, axis) === getGrammarAxisValue(b, axis),
-    )
-  );
-}
-
-/**
- * Every distinct structure a language can produce, de-duplicated by what it
- * renders. The wording axes (number form, placement, plagal wording) span
- * the space; the axes that only add or swap one element (identification
- * method and transliteration) are fixed by the caller.
- */
-/** Every distinct structure a language and identification method can reach. */
 export function enumerateInitialMartyriaStructures(
   base: Pick<
     InitialMartyriaStructure,
@@ -689,6 +594,23 @@ export function enumerateInitialMartyriaStructures(
     structures.push({ structure, key });
   }
   return structures;
+}
+
+/**
+ * The structure a style takes on when its identification method changes:
+ * its wording carries over where the method supports it.
+ */
+export function withSupportedInitialMartyriaModeIdentificationMethod(
+  structure: InitialMartyriaStructure,
+  modeIdentificationMethod: InitialMartyriaModeIdentificationMethod,
+) {
+  return normalizeInitialMartyriaStructure(
+    withInitialMartyriaModeIdentificationMethod(
+      structure,
+      modeIdentificationMethod,
+    ),
+    ['modeIdentificationMethod'],
+  );
 }
 
 export function createInitialMartyriaStyle(

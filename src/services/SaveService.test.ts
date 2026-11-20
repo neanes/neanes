@@ -1446,7 +1446,7 @@ describe('SaveService font styles', () => {
     expect(saved.initialMartyriaStyles![0]).toEqual({
       id: customStyle.id,
       displayName: 'Parish books',
-      ...customStyle.structure,
+      structure: customStyle.structure,
       paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
       greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
       useOrdinalForms: false,
@@ -1532,10 +1532,10 @@ describe('SaveService font styles', () => {
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
-    const savedStyle = saved.initialMartyriaStyles![0];
+    const savedStructure = saved.initialMartyriaStyles![0].structure;
 
-    expect(savedStyle).not.toHaveProperty('numeralStyle');
-    expect(savedStyle).not.toHaveProperty('numberingSystem');
+    expect(savedStructure).not.toHaveProperty('numeralStyle');
+    expect(savedStructure).not.toHaveProperty('numberingSystem');
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
   });
 
@@ -1555,7 +1555,7 @@ describe('SaveService font styles', () => {
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
 
-    expect(saved.initialMartyriaStyles![0]).toMatchObject({
+    expect(saved.initialMartyriaStyles![0].structure).toMatchObject({
       labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
       plagalAbbreviationWithModeSign: false,
     });
@@ -1575,7 +1575,7 @@ describe('SaveService font styles', () => {
     score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
-    expect(saved.initialMartyriaStyles![0]).not.toHaveProperty(
+    expect(saved.initialMartyriaStyles![0].structure).not.toHaveProperty(
       'plagalAbbreviationWithModeSign',
     );
     const [loadedStyle] = SaveService.LoadScore_v1(saved).initialMartyriaStyles;
@@ -1601,7 +1601,7 @@ describe('SaveService font styles', () => {
     score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
-    saved.initialMartyriaStyles![0].labelVariant =
+    saved.initialMartyriaStyles![0].structure.labelVariant =
       INITIAL_MARTYRIA_LABEL_VARIANTS.Tone;
     const loaded = SaveService.LoadScore_v1(saved);
 
@@ -1624,8 +1624,8 @@ describe('SaveService font styles', () => {
 
     const saved = SaveService.SaveScoreToJson(score);
     const savedStyle = saved.initialMartyriaStyles![0];
-    savedStyle.numeralKind = INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal;
-    savedStyle.numeralQualifier =
+    savedStyle.structure.numeralKind = INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal;
+    savedStyle.structure.numeralQualifier =
       INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal;
 
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1650,8 +1650,9 @@ describe('SaveService font styles', () => {
       displayName: 'Unsupported',
     });
     const savedUnsupported = SaveService.SaveInitialMartyriaStyle(unsupported);
-    savedUnsupported.numeralKind = INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal;
-    savedUnsupported.numeralQualifier =
+    savedUnsupported.structure.numeralKind =
+      INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal;
+    savedUnsupported.structure.numeralQualifier =
       INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal;
 
     const loaded = SaveService.LoadInitialMartyriaStyles_v1(
@@ -1755,7 +1756,7 @@ describe('SaveService font styles', () => {
     score.initialMartyriaStyles = [futureStyle];
     score.defaultInitialMartyriaStyleId = futureStyle.id;
     const saved = SaveService.SaveScoreToJson(score);
-    saved.initialMartyriaStyles![0].numeralStyle = 'binary';
+    saved.initialMartyriaStyles![0].structure.numeralStyle = 'binary';
     (saved.staff.elements[0] as ModeKeyElement_v1).initialMartyriaStyleId =
       'deleted';
 

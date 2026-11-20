@@ -1,6 +1,4 @@
-export interface InitialMartyriaStyle {
-  id: string;
-  displayName: string;
+export interface InitialMartyriaStructure {
   languageId: string;
   labelVariant?: string;
   modeIdentificationMethod: string;
@@ -9,10 +7,16 @@ export interface InitialMartyriaStyle {
   numberingSystem?: string;
   numeralQualifier: string;
   modeNamingScheme: string;
-  transliterateNoteNames: boolean | undefined;
+  transliterateNoteNames?: boolean;
   plagalAbbreviationWithModeSign?: boolean;
+}
+
+export interface InitialMartyriaStyle {
+  id: string;
+  displayName: string;
+  structure: InitialMartyriaStructure;
   paragraphStyleId: string;
   greekParagraphStyleId: string;
-  useOrdinalForms: boolean | undefined;
+  useOrdinalForms?: boolean;
   lettering?: string;
 }

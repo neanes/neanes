@@ -1070,7 +1070,7 @@ function saveInitialMartyriaStyle(
   return {
     id: style.id,
     displayName: style.displayName,
-    ...style.structure,
+    structure: { ...style.structure },
     paragraphStyleId: style.paragraphStyleId,
     greekParagraphStyleId: style.greekParagraphStyleId,
     useOrdinalForms: style.useOrdinalForms,
@@ -1087,77 +1087,79 @@ function loadInitialMartyriaStyle(
   saved: InitialMartyriaStyle_v1,
   paragraphStyles: ParagraphStyle[],
 ): InitialMartyriaStyle | null {
+  const savedStructure = saved.structure;
   if (
+    savedStructure == null ||
     isBuiltInInitialMartyriaStyleId(saved.id) ||
     !isOneOf<InitialMartyriaLanguageId>(
       initialMartyriaLanguageIds,
-      saved.languageId,
+      savedStructure.languageId,
     ) ||
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS),
-      saved.modeIdentificationMethod,
+      savedStructure.modeIdentificationMethod,
     ) ||
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_NUMERAL_KINDS),
-      saved.numeralKind,
+      savedStructure.numeralKind,
     ) ||
-    (saved.numberingSystem !== undefined &&
+    (savedStructure.numberingSystem !== undefined &&
       !isOneOf<InitialMartyriaNumberingSystem>(
         Object.values(INITIAL_MARTYRIA_NUMBERING_SYSTEMS),
-        saved.numberingSystem,
+        savedStructure.numberingSystem,
       )) ||
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_NUMERAL_QUALIFIERS),
-      saved.numeralQualifier,
+      savedStructure.numeralQualifier,
     ) ||
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES),
-      saved.modeNamingScheme,
+      savedStructure.modeNamingScheme,
     ) ||
-    (saved.labelVariant !== undefined &&
+    (savedStructure.labelVariant !== undefined &&
       !isOneOf(
         Object.values(INITIAL_MARTYRIA_LABEL_VARIANTS),
-        saved.labelVariant,
+        savedStructure.labelVariant,
       ))
   ) {
     return null;
   }
   const common = {
-    languageId: saved.languageId,
-    labelVariant: saved.labelVariant,
-    numeralKind: saved.numeralKind,
-    numeralQualifier: saved.numeralQualifier,
-    modeNamingScheme: saved.modeNamingScheme,
-    transliterateNoteNames: saved.transliterateNoteNames === true,
+    languageId: savedStructure.languageId,
+    labelVariant: savedStructure.labelVariant,
+    numeralKind: savedStructure.numeralKind,
+    numeralQualifier: savedStructure.numeralQualifier,
+    modeNamingScheme: savedStructure.modeNamingScheme,
+    transliterateNoteNames: savedStructure.transliterateNoteNames === true,
     // Styles saved before the choice existed follow the language's practice.
     plagalAbbreviationWithModeSign:
-      typeof saved.plagalAbbreviationWithModeSign === 'boolean'
-        ? saved.plagalAbbreviationWithModeSign
+      typeof savedStructure.plagalAbbreviationWithModeSign === 'boolean'
+        ? savedStructure.plagalAbbreviationWithModeSign
         : undefined,
   };
   let structure: InitialMartyriaStructure;
   if (
-    saved.modeIdentificationMethod ===
+    savedStructure.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
   ) {
     structure = {
       ...common,
-      modeIdentificationMethod: saved.modeIdentificationMethod,
+      modeIdentificationMethod: savedStructure.modeIdentificationMethod,
     };
   } else {
     if (
       !isOneOf(
         Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
-        saved.numeralStyle,
+        savedStructure.numeralStyle,
       )
     ) {
       return null;
     }
     structure = {
       ...common,
-      modeIdentificationMethod: saved.modeIdentificationMethod,
-      numeralStyle: saved.numeralStyle,
-      numberingSystem: saved.numberingSystem,
+      modeIdentificationMethod: savedStructure.modeIdentificationMethod,
+      numeralStyle: savedStructure.numeralStyle,
+      numberingSystem: savedStructure.numberingSystem,
     };
   }
   if (!isInitialMartyriaStructureSupported(structure)) {

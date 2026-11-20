@@ -26,8 +26,7 @@ function savedStyleFromPreset(
   presetId: BuiltInInitialMartyriaStyleId,
   id: string,
 ): InitialMartyriaStyle {
-  const { structure, ...preset } = getBuiltInInitialMartyriaStyle(presetId);
-  return { ...preset, ...structure, id, displayName: id };
+  return { ...getBuiltInInitialMartyriaStyle(presetId), id, displayName: id };
 }
 
 export async function checkClassicModeKeys(options: {

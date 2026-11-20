@@ -16,6 +16,7 @@ import {
   getInitialMartyriaStructureKey,
   isInitialMartyriaStructureSupported,
 } from '@/models/InitialMartyriaGrammar';
+import { getInitialMartyriaLabelVariants } from '@/models/InitialMartyriaLexicon';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -55,6 +56,11 @@ describe('InitialMartyriaBuiltInStyles', () => {
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumbersWithSign,
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSign,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumber,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalTone,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumberWithSign,
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneBeforeSign,
     ]);
     expect(
       getBuiltInInitialMartyriaStyle(
@@ -151,11 +157,19 @@ describe('InitialMartyriaBuiltInStyles', () => {
       content: { layout: 'inline', text: '5th' },
     });
 
+    // The picker lists the presets of one language and mode word at a time.
     for (const languageId of initialMartyriaLanguageIds) {
-      const count = builtInInitialMartyriaStyles.filter(
-        (style) => style.structure.languageId === languageId,
-      ).length;
-      expect(`${languageId}: ${count}`).toMatch(/: [1-5]$/);
+      for (const labelVariant of [
+        undefined,
+        ...getInitialMartyriaLabelVariants(languageId),
+      ]) {
+        const count = builtInInitialMartyriaStyles.filter(
+          (style) =>
+            style.structure.languageId === languageId &&
+            style.structure.labelVariant === labelVariant,
+        ).length;
+        expect(`${languageId} ${labelVariant}: ${count}`).toMatch(/: [1-6]$/);
+      }
     }
 
     for (const style of builtInInitialMartyriaStyles) {

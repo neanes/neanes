@@ -13,6 +13,8 @@ import {
   initialMartyriaNumeralQualifiers,
   isInitialMartyriaStructureSupported,
 } from '@/models/InitialMartyriaGrammar';
+import { getInitialMartyriaLabelVariants } from '@/models/InitialMartyriaLexicon';
+import { initialMartyriaPlagalAbbreviationWithModeSignIsOptional } from '@/models/InitialMartyriaRenderingConventions';
 import { getInitialMartyriaContext } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
@@ -35,10 +37,34 @@ import {
   textOf,
 } from './InitialMartyriaStyle.testHelpers';
 
+/*
+ * The label variants and plagal abbreviation choices of every language:
+ * absent (the language's usual practice) first, then each explicit choice
+ * where the language offers it.
+ */
+function getLanguageChoices() {
+  return initialMartyriaLanguageIds.flatMap((languageId) =>
+    [undefined, ...getInitialMartyriaLabelVariants(languageId)].flatMap(
+      (labelVariant) =>
+        (initialMartyriaPlagalAbbreviationWithModeSignIsOptional({
+          languageId,
+          labelVariant,
+        })
+          ? [undefined, true, false]
+          : [undefined]
+        ).map((plagalAbbreviationWithModeSign) => ({
+          languageId,
+          labelVariant,
+          plagalAbbreviationWithModeSign,
+        })),
+    ),
+  );
+}
+
 function getLegalInitialMartyriaStructures() {
   const structures: InitialMartyriaStructure[] = [];
 
-  for (const languageId of initialMartyriaLanguageIds) {
+  for (const choices of getLanguageChoices()) {
     for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
       for (const form of initialMartyriaNumeralForms) {
         for (const numberingSystem of [
@@ -49,7 +75,7 @@ function getLegalInitialMartyriaStructures() {
             for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
               for (const transliterateNoteNames of [false, true]) {
                 const common = {
-                  languageId,
+                  ...choices,
                   numeralKind: form.numeralKind,
                   numeralQualifier,
                   modeNamingScheme,
@@ -81,11 +107,11 @@ function getLegalInitialMartyriaStructures() {
 function getUniqueLegalInitialMartyriaStructures() {
   const structuresByKey = new Map<string, InitialMartyriaStructure>();
 
-  for (const languageId of initialMartyriaLanguageIds) {
+  for (const choices of getLanguageChoices()) {
     for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
       for (const transliterateNoteNames of [false, true]) {
         const variations = enumerateInitialMartyriaStructures({
-          languageId,
+          ...choices,
           modeIdentificationMethod,
           transliterateNoteNames,
         });
@@ -112,6 +138,7 @@ function describeStructure(structure: InitialMartyriaStructure) {
       : [structure.numberingSystem];
   return [
     structure.languageId,
+    structure.labelVariant,
     structure.modeIdentificationMethod,
     ...numeralStyle,
     structure.numeralKind,
@@ -119,6 +146,11 @@ function describeStructure(structure: InitialMartyriaStructure) {
     structure.numeralQualifier,
     structure.modeNamingScheme,
     structure.transliterateNoteNames ? 'transliterated' : 'original',
+    structure.plagalAbbreviationWithModeSign == null
+      ? undefined
+      : structure.plagalAbbreviationWithModeSign
+        ? 'plagal-sign'
+        : 'no-plagal-sign',
   ]
     .filter((part) => part != null)
     .join('/');
@@ -683,6 +715,110 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Plagal dari | Modus | Keempat. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
+  [
+    'english-mode-before-sign',
+    [
+      'Mode | <modeSign> | <pitch>',
+      'Mode | <modeSign> | <pitch>',
+      'Mode | <modeSign> | <pitch>',
+      'Mode | <modeSign> | <pitch>',
+      'Mode | greek:λ/π | <modeSign> | <pitch>',
+      'Mode | greek:λ/π | <modeSign> | <pitch>',
+      'Mode | <modeSign> | <pitch>',
+      'Mode | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'english-plagal-first-without-plagal-sign',
+    [
+      '<modeSign> | Mode | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+      '<modeSign> | Mode | <pitch>',
+    ],
+  ],
+  [
+    'english-tone-number-text',
+    [
+      'Tone | 1. | <pitch>',
+      'Tone | 2. | <pitch>',
+      'Tone | 3. | <pitch>',
+      'Tone | 4. | <pitch>',
+      'Tone | 5. | <pitch>',
+      'Tone | 6. | <pitch>',
+      'Tone | 7. | <pitch>',
+      'Tone | 8. | <pitch>',
+    ],
+  ],
+  [
+    'english-ordinal-tone-text',
+    [
+      'First | Tone. | <pitch>',
+      'Second | Tone. | <pitch>',
+      'Third | Tone. | <pitch>',
+      'Fourth | Tone. | <pitch>',
+      'Fifth | Tone. | <pitch>',
+      'Sixth | Tone. | <pitch>',
+      'Seventh | Tone. | <pitch>',
+      'Eighth | Tone. | <pitch>',
+    ],
+  ],
+  [
+    'english-tone-number',
+    [
+      'Tone | 1. | <modeSign> | <pitch>',
+      'Tone | 2. | <modeSign> | <pitch>',
+      'Tone | 3. | <modeSign> | <pitch>',
+      'Tone | 4. | <modeSign> | <pitch>',
+      'Tone | 5. | greek:λ/π | <modeSign> | <pitch>',
+      'Tone | 6. | greek:λ/π | <modeSign> | <pitch>',
+      'Tone | 7. | <modeSign> | <pitch>',
+      'Tone | 8. | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'english-tone-before-sign',
+    [
+      'Tone | <modeSign> | <pitch>',
+      'Tone | <modeSign> | <pitch>',
+      'Tone | <modeSign> | <pitch>',
+      'Tone | <modeSign> | <pitch>',
+      'Tone | greek:λ/π | <modeSign> | <pitch>',
+      'Tone | greek:λ/π | <modeSign> | <pitch>',
+      'Tone | <modeSign> | <pitch>',
+      'Tone | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'spanish-tono-number-with-plagal-sign',
+    [
+      'Tono | 1. | <modeSign> | <pitch>',
+      'Tono | 2. | <modeSign> | <pitch>',
+      'Tono | 3. | <modeSign> | <pitch>',
+      'Tono | 4. | <modeSign> | <pitch>',
+      'Tono | 5. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | 6. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | 7. | <modeSign> | <pitch>',
+      'Tono | 8. | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'spanish-tono-sign-with-plagal-sign',
+    [
+      'Tono | <modeSign> | <pitch>',
+      'Tono | <modeSign> | <pitch>',
+      'Tono | <modeSign> | <pitch>',
+      'Tono | <modeSign> | <pitch>',
+      'Tono | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | <modeSign> | <pitch>',
+      'Tono | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
 ];
 
 describe('InitialMartyriaLexicon', () => {
@@ -690,24 +826,29 @@ describe('InitialMartyriaLexicon', () => {
     ['Spanish', INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish],
     ['Church Slavonic', INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic],
     ['Russian', INITIAL_MARTYRIA_LANGUAGE_IDS.Russian],
-  ])('omits the plagal abbreviation in every %s structure', (_, languageId) => {
-    const structures = getLegalInitialMartyriaStructures().filter(
-      (structure) => structure.languageId === languageId,
-    );
+  ])(
+    'omits the plagal abbreviation by default in every %s structure',
+    (_, languageId) => {
+      const structures = getLegalInitialMartyriaStructures().filter(
+        (structure) =>
+          structure.languageId === languageId &&
+          structure.plagalAbbreviationWithModeSign !== true,
+      );
 
-    for (const structure of structures) {
-      const style = styleFor(structure);
-      for (const mode of [5, 6, 8]) {
-        const { runs } = resolve(style, elementForMode(mode));
-        expect(
-          runs,
-          `${describeStructure(structure)} mode ${mode}`,
-        ).not.toContainEqual(
-          expect.objectContaining({ semantic: 'plagalAbbreviation' }),
-        );
+      for (const structure of structures) {
+        const style = styleFor(structure);
+        for (const mode of [5, 6, 8]) {
+          const { runs } = resolve(style, elementForMode(mode));
+          expect(
+            runs,
+            `${describeStructure(structure)} mode ${mode}`,
+          ).not.toContainEqual(
+            expect.objectContaining({ semantic: 'plagalAbbreviation' }),
+          );
+        }
       }
-    }
-  });
+    },
+  );
 
   it('lists every legal structure as a row of the styles dialog', () => {
     // The styles dialog shows the enumerated structures as its wording list

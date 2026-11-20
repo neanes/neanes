@@ -1,4 +1,5 @@
 import {
+  INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -413,6 +414,87 @@ export const attestedStructures = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     transliterateNoteNames: false,
+  },
+  'english-mode-before-sign': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+  },
+  'english-plagal-first-without-plagal-sign': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    transliterateNoteNames: false,
+    plagalAbbreviationWithModeSign: false,
+  },
+  'english-tone-number-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+  },
+  'english-ordinal-tone-text': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+  },
+  'english-tone-number': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+  },
+  'english-tone-before-sign': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+  },
+  'spanish-tono-number-with-plagal-sign': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    plagalAbbreviationWithModeSign: true,
+  },
+  'spanish-tono-sign-with-plagal-sign': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    transliterateNoteNames: false,
+    plagalAbbreviationWithModeSign: true,
   },
 } satisfies Record<string, InitialMartyriaStructure>;
 

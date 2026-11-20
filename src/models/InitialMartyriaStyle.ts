@@ -84,6 +84,19 @@ export const INITIAL_MARTYRIA_LANGUAGE_IDS = {
 export type InitialMartyriaLanguageId =
   (typeof INITIAL_MARTYRIA_LANGUAGE_IDS)[keyof typeof INITIAL_MARTYRIA_LANGUAGE_IDS];
 
+/**
+ * A word a language can use for the concept of a mode in place of its usual
+ * one, named by concept rather than spelling so that languages can share an
+ * id (English Tone). Each language declares the variants it offers; a
+ * variant may bring its own words, grammar, and rendering conventions.
+ */
+export const INITIAL_MARTYRIA_LABEL_VARIANTS = {
+  Tone: 'tone',
+} as const;
+
+export type InitialMartyriaLabelVariant =
+  (typeof INITIAL_MARTYRIA_LABEL_VARIANTS)[keyof typeof INITIAL_MARTYRIA_LABEL_VARIANTS];
+
 export const initialMartyriaLanguageIds = Object.values(
   INITIAL_MARTYRIA_LANGUAGE_IDS,
 );
@@ -159,8 +172,16 @@ export interface InitialMartyriaWrittenModeNameSemantics extends InitialMartyria
  */
 interface InitialMartyriaStructureBase extends InitialMartyriaModeNameSemantics {
   languageId: InitialMartyriaLanguageId;
+  /** The word for the mode; absent means the language's usual word. */
+  labelVariant?: InitialMartyriaLabelVariant;
   /** Only used by languages that are not written in Greek script. */
   transliterateNoteNames: boolean;
+  /**
+   * Whether plagal modes set the plagal abbreviation beside the mode sign.
+   * Only used where the language makes it optional; absent means the
+   * language's usual practice.
+   */
+  plagalAbbreviationWithModeSign?: boolean;
 }
 
 export interface InitialMartyriaTextStructure
@@ -185,10 +206,12 @@ export function withInitialMartyriaModeIdentificationMethod(
 ): InitialMartyriaStructure {
   const common = {
     languageId: structure.languageId,
+    labelVariant: structure.labelVariant,
     numeralKind: structure.numeralKind,
     numeralQualifier: structure.numeralQualifier,
     modeNamingScheme: structure.modeNamingScheme,
     transliterateNoteNames: structure.transliterateNoteNames,
+    plagalAbbreviationWithModeSign: structure.plagalAbbreviationWithModeSign,
   };
   if (
     modeIdentificationMethod ===

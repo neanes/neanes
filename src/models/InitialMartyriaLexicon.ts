@@ -1,14 +1,17 @@
 import { ModeSign } from '@/models/Neumes';
 
 import {
+  INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaCanonicalNote,
+  type InitialMartyriaLabelVariant,
   type InitialMartyriaLanguageId,
   type InitialMartyriaNoteNames,
   type InitialMartyriaNumeralQualifier,
   type InitialMartyriaNumeralStyle,
+  type InitialMartyriaStructure,
   type ModeKeyMode,
 } from './InitialMartyriaStyle';
 
@@ -166,6 +169,12 @@ interface InitialMartyriaLexiconBase {
   plagalCounterpartOrdinalWords?: Partial<Record<ModeKeyMode, string>>;
   /** Where a plagal-counterpart marker sits inside the mode-name phrase. */
   plagalCounterpartMarkerPosition?: 'phraseStart' | 'beforeNumeral';
+  /**
+   * Under absolute naming, set the mode sign and its plagal abbreviation as
+   * one group after the label (Glas πλ[sign]) instead of reading the
+   * abbreviation as a word that opens the phrase (πλ Modus [sign]).
+   */
+  absoluteModeSignFollowsLabel?: true;
   /** Grave-mode word used inside a text phrase. */
   graveWord?: string;
   /** Treat the grave word as a postnominal identifier (Modus Berat). */
@@ -278,6 +287,8 @@ export const initialMartyriaLexicons: Record<
     // A sign by itself encodes authentic/plagal relations, not absolute 1-8.
     // https://dictionary.cambridge.org/grammar/british-grammar/number
     // https://www.govinfo.gov/content/pkg/GPO-STYLEMANUAL-2016/pdf/GPO-STYLEMANUAL-2016-10.pdf
+    // Beside Mode alone, the sign group may also stand for the absolute
+    // number, as in Romanian (Mode πλ[sign], read Mode Five).
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
@@ -307,6 +318,7 @@ export const initialMartyriaLexicons: Record<
     plagalWord: 'Plagal',
     plagalCounterpartWord: 'Plagal of',
     graveWord: 'Grave',
+    absoluteModeSignFollowsLabel: true,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: {
     // Cardinal numerals follow tono. Ordinal adjectives can precede or follow it.
@@ -347,6 +359,8 @@ export const initialMartyriaLexicons: Record<
       7: 'Séptimo',
       8: 'Octavo',
     },
+    // A plagal abbreviation, where shown, stays with the sign: Tono πλ[sign].
+    absoluteModeSignFollowsLabel: true,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {
     // Gamanovich distinguishes quantity from order and lists the same
@@ -524,7 +538,7 @@ export const initialMartyriaLexicons: Record<
       8: 'opt',
     },
     // The stacked plagal sign follows Glas, beside the mode sign.
-    plagalCounterpartMarkerPosition: 'beforeNumeral',
+    absoluteModeSignFollowsLabel: true,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian]: {
     // Indonesian rank numerals follow the noun and use ke-: Modus Pertama,
@@ -567,6 +581,74 @@ export const initialMartyriaLexicons: Record<
     graveWordAfterLabel: true,
   },
 };
+
+/*
+ * What a label variant changes about its language's lexicon. English Tone
+ * names the modes 1-8 only (Tone 5, never Plagal of the First Tone); the
+ * grammar enforces that, so the plagal words it inherits go unused.
+ */
+const initialMartyriaLabelVariantLexicons: Partial<
+  Record<
+    InitialMartyriaLanguageId,
+    Partial<Record<InitialMartyriaLabelVariant, InitialMartyriaLexicon>>
+  >
+> = {
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: {
+    [INITIAL_MARTYRIA_LABEL_VARIANTS.Tone]: {
+      ...initialMartyriaLexicons[INITIAL_MARTYRIA_LANGUAGE_IDS.English],
+      label: 'Tone',
+    },
+  },
+};
+
+/** The label variants a language offers besides its usual word. */
+export function getInitialMartyriaLabelVariants(
+  languageId: InitialMartyriaLanguageId,
+): InitialMartyriaLabelVariant[] {
+  return Object.keys(
+    initialMartyriaLabelVariantLexicons[languageId] ?? {},
+  ) as InitialMartyriaLabelVariant[];
+}
+
+/**
+ * A structure's entry in a per-language table, taking a label variant's own
+ * entry in its place where the variant has one.
+ */
+export function getForInitialMartyriaLabelVariant<T>(
+  structure: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
+  base: Record<InitialMartyriaLanguageId, T>,
+  variants: Partial<
+    Record<
+      InitialMartyriaLanguageId,
+      Partial<Record<InitialMartyriaLabelVariant, T>>
+    >
+  >,
+): T {
+  return (
+    (structure.labelVariant == null
+      ? undefined
+      : variants[structure.languageId]?.[structure.labelVariant]) ??
+    base[structure.languageId]
+  );
+}
+
+/** The lexicon of a structure's language and label variant. */
+export function getInitialMartyriaLexicon(
+  structure: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
+): InitialMartyriaLexicon {
+  return getForInitialMartyriaLabelVariant(
+    structure,
+    initialMartyriaLexicons,
+    initialMartyriaLabelVariantLexicons,
+  );
+}
+
+/** The word a structure uses for the mode (Mode, Tone, Tono). */
+export function getInitialMartyriaLabel(
+  structure: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
+) {
+  return getInitialMartyriaLexicon(structure).label;
+}
 
 export function usesGreekScript(languageId: InitialMartyriaLanguageId) {
   return initialMartyriaLexicons[languageId].usesGreekScript;

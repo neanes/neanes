@@ -17,14 +17,17 @@ import {
 import { getInitialMartyriaStyleOrDefault } from './InitialMartyriaBuiltInStyles';
 import {
   arabicIndicDigits,
+  getInitialMartyriaLexicon,
   hasRaisableOrdinalSuffix,
   initialMartyriaCanonicalNotes,
   type InitialMartyriaLexicon,
-  initialMartyriaLexicons,
   originalGreekNoteNames,
   romanNumerals,
 } from './InitialMartyriaLexicon';
-import { initialMartyriaRenderingConventions } from './InitialMartyriaRenderingConventions';
+import {
+  getInitialMartyriaRenderingConvention,
+  showsInitialMartyriaPlagalAbbreviationWithModeSign,
+} from './InitialMartyriaRenderingConventions';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
@@ -208,12 +211,12 @@ function getInitialMartyriaLabelText(
 }
 
 function usesPlagalAbbreviationInText(
-  semantics: Pick<InitialMartyriaWrittenModeNameSemantics, 'numeralStyle'>,
-  languageId: InitialMartyriaStructure['languageId'],
+  structure: Pick<InitialMartyriaWrittenModeNameSemantics, 'numeralStyle'> &
+    Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
 ) {
-  return initialMartyriaRenderingConventions[
-    languageId
-  ].plagalAbbreviationNumeralStyles.includes(semantics.numeralStyle);
+  return getInitialMartyriaRenderingConvention(
+    structure,
+  ).plagalAbbreviationNumeralStyles.includes(structure.numeralStyle);
 }
 
 function capitalizeInitial(value: string) {
@@ -247,6 +250,18 @@ function plagalAbbreviation(): InitialMartyriaComponent {
   };
 }
 
+/** Whether an absolute name sets the sign group after the label (Glas [sign]). */
+function modeSignGroupFollowsLabel(
+  semantics: Pick<InitialMartyriaModeNameSemantics, 'modeNamingScheme'>,
+  lexicon: InitialMartyriaLexicon,
+) {
+  return (
+    semantics.modeNamingScheme ===
+      INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute &&
+    lexicon.absoluteModeSignFollowsLabel
+  );
+}
+
 function orderInitialMartyriaModeName<T>(
   semantics: InitialMartyriaModeNameSemantics,
   lexicon: InitialMartyriaLexicon,
@@ -266,6 +281,12 @@ function orderInitialMartyriaModeName<T>(
 
   if (trailingLabel) {
     return [marker, identifier, label];
+  }
+
+  if (modeSignGroupFollowsLabel(semantics, lexicon)) {
+    // Absolute names have no plagal word, so a marker here is the sign's
+    // own abbreviation, which stays beside it.
+    return [label, marker, identifier];
   }
 
   const counterpartMarkerPosition =
@@ -295,15 +316,14 @@ const traditionalModeSignSemantics: InitialMartyriaModeNameSemantics = {
 function getInitialMartyriaComponents(
   structure: InitialMartyriaStructure,
   mode: ModeKeyMode,
-  flowDirection: 'ltr' | 'rtl' = initialMartyriaLexicons[structure.languageId]
-    .direction,
+  flowDirection: 'ltr' | 'rtl' = getInitialMartyriaLexicon(structure).direction,
 ): InitialMartyriaComponent[] {
-  const lexicon = initialMartyriaLexicons[structure.languageId];
-  const convention = initialMartyriaRenderingConventions[structure.languageId];
+  const lexicon = getInitialMartyriaLexicon(structure);
+  const convention = getInitialMartyriaRenderingConvention(structure);
   const plagal = isPlagalMode(mode);
   const modeSign: InitialMartyriaComponent = { kind: 'modeSign' };
   const modeSignAbbreviation =
-    plagal && convention.showPlagalAbbreviationWithModeSign
+    plagal && showsInitialMartyriaPlagalAbbreviationWithModeSign(structure)
       ? plagalAbbreviation()
       : null;
   const startingPitch: InitialMartyriaComponent = {
@@ -337,8 +357,14 @@ function getInitialMartyriaComponents(
     const marker =
       modeSignAbbreviation ??
       (graveTitle != null ? text('graveWord', graveTitle) : null);
+    // Unless named in words, the grave sign reads as the word it stands for,
+    // which in some languages precedes the label (Grave Mode). A sign group
+    // that follows the label stands for the number instead (Mode [sign]).
     const orderingSemantics =
-      mode === 7 && graveTitle == null && lexicon.graveWord != null
+      mode === 7 &&
+      graveTitle == null &&
+      lexicon.graveWord != null &&
+      !modeSignGroupFollowsLabel(structure, lexicon)
         ? {
             ...structure,
             numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
@@ -369,7 +395,7 @@ function getInitialMartyriaComponents(
         marker = text('graveWord', lexicon.graveWord);
       }
     } else if (plagal && usesPlagalNaming(structure)) {
-      if (usesPlagalAbbreviationInText(structure, structure.languageId)) {
+      if (usesPlagalAbbreviationInText(structure)) {
         marker = plagalAbbreviation();
       } else {
         const plagalMarkerWord = getPlagalMarkerWord(structure, lexicon);
@@ -448,10 +474,10 @@ export function isInitialMartyriaModeNameSupported(
   ) {
     return true;
   }
-  const lexicon = initialMartyriaLexicons[structure.languageId];
+  const lexicon = getInitialMartyriaLexicon(structure);
   return !(
     usesPlagalNaming(structure) &&
-    !usesPlagalAbbreviationInText(structure, structure.languageId) &&
+    !usesPlagalAbbreviationInText(structure) &&
     getPlagalMarkerWord(structure, lexicon) == null
   );
 }
@@ -483,11 +509,13 @@ function getInitialMartyriaStructureAxisSignature(
 ) {
   return [
     structure.languageId,
+    structure.labelVariant,
     structure.modeIdentificationMethod,
     structure.numeralKind,
     structure.numeralQualifier,
     structure.modeNamingScheme,
     structure.transliterateNoteNames,
+    showsInitialMartyriaPlagalAbbreviationWithModeSign(structure),
     structure.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
       ? undefined
@@ -523,7 +551,7 @@ export function getInitialMartyriaStructureKey(
   if (cached != null) {
     return cached;
   }
-  const lexicon = initialMartyriaLexicons[structure.languageId];
+  const lexicon = getInitialMartyriaLexicon(structure);
   const transliterate =
     structure.transliterateNoteNames && !lexicon.usesGreekScript;
   const key = [
@@ -617,7 +645,7 @@ export function resolveInitialMartyriaStyleAppearances(
   const greekAppearance = toInitialMartyriaAppearance(greek);
   // The primary text, and with it every music-font glyph, follows the
   // paragraph style of the language's script, whatever the lettering.
-  const primaryAppearance = initialMartyriaLexicons[style.structure.languageId]
+  const primaryAppearance = getInitialMartyriaLexicon(style.structure)
     .usesGreekScript
     ? greekAppearance
     : mainAppearance;
@@ -786,7 +814,7 @@ export function getInitialMartyriaParagraphStyleUsage(
   style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
 ): InitialMartyriaParagraphStyleUsage {
   const structure = style.structure;
-  const lexicon = initialMartyriaLexicons[structure.languageId];
+  const lexicon = getInitialMartyriaLexicon(structure);
   const usage = {
     regular: !lexicon.usesGreekScript,
     greek: lexicon.usesGreekScript,
@@ -825,7 +853,7 @@ export function resolveInitialMartyriaStyle(options: {
   const { style, mainAppearance, greekAppearance, primaryAppearance } =
     options.resolvedStyle;
   const structure = style.structure;
-  const lexicon = initialMartyriaLexicons[structure.languageId];
+  const lexicon = getInitialMartyriaLexicon(structure);
   const flowDirection =
     lexicon.direction === 'rtl' ? 'rtl' : options.pageSetup.direction;
   const transliteratedNoteNames =

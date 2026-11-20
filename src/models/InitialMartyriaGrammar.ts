@@ -1,6 +1,8 @@
 import {
+  getForInitialMartyriaLabelVariant,
+  getInitialMartyriaLabelVariants,
+  getInitialMartyriaLexicon,
   type InitialMartyriaLexicon,
-  initialMartyriaLexicons,
 } from './InitialMartyriaLexicon';
 import {
   getInitialMartyriaStructureKey,
@@ -9,6 +11,7 @@ import {
 } from './InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
+  INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -16,6 +19,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
+  type InitialMartyriaLabelVariant,
   type InitialMartyriaLanguageId,
   type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaModeNameSemantics,
@@ -157,7 +161,10 @@ const initialMartyriaGrammarRules: Record<
       {
         numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal],
         numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal],
-        modeNamingSchemes: relationalModeNamingSchemes,
+        modeNamingSchemes: [
+          ...relationalModeNamingSchemes,
+          INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        ],
       },
       {
         numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
@@ -235,6 +242,60 @@ const initialMartyriaGrammarRules: Record<
     modeSign: [cardinalPostAbsoluteRule, ordinalPostAbsoluteAndAuthenticRule],
   },
 };
+
+function keepModeNamingSchemes<T extends InitialMartyriaModeNameGrammarRule>(
+  rules: readonly T[],
+  modeNamingSchemes: readonly InitialMartyriaModeNamingScheme[],
+): T[] {
+  return rules
+    .map((rule) => ({
+      ...rule,
+      modeNamingSchemes: rule.modeNamingSchemes.filter((scheme) =>
+        modeNamingSchemes.includes(scheme),
+      ),
+    }))
+    .filter((rule) => rule.modeNamingSchemes.length > 0);
+}
+
+/** A language's grammar narrowed to some of its mode naming schemes. */
+function withModeNamingSchemes(
+  grammar: InitialMartyriaLanguageGrammar,
+  modeNamingSchemes: readonly InitialMartyriaModeNamingScheme[],
+): InitialMartyriaLanguageGrammar {
+  return {
+    text: keepModeNamingSchemes(grammar.text, modeNamingSchemes),
+    modeSign: keepModeNamingSchemes(grammar.modeSign, modeNamingSchemes),
+  };
+}
+
+/*
+ * The grammar of a label variant, in place of its language's. English Tone
+ * counts the modes 1-8 and never names them plagal: Tone 5, Tone V, Tone
+ * Five, Fifth Tone, 5th Tone, and Tone beside the sign group.
+ */
+const initialMartyriaLabelVariantGrammarRules: Partial<
+  Record<
+    InitialMartyriaLanguageId,
+    Partial<Record<InitialMartyriaLabelVariant, InitialMartyriaLanguageGrammar>>
+  >
+> = {
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.English]: {
+    [INITIAL_MARTYRIA_LABEL_VARIANTS.Tone]: withModeNamingSchemes(
+      initialMartyriaGrammarRules[INITIAL_MARTYRIA_LANGUAGE_IDS.English],
+      [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute],
+    ),
+  },
+};
+
+function getInitialMartyriaGrammar(
+  structure: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
+): InitialMartyriaLanguageGrammar {
+  return getForInitialMartyriaLabelVariant(
+    structure,
+    initialMartyriaGrammarRules,
+    initialMartyriaLabelVariantGrammarRules,
+  );
+}
 
 /*
  * The structure space. Each axis lists its candidate values in the order the
@@ -319,8 +380,16 @@ function textGrammarRuleMatches(
 export function isInitialMartyriaStructureSupported(
   structure: InitialMartyriaStructure,
 ) {
-  const lexicon = initialMartyriaLexicons[structure.languageId];
-  const grammar = initialMartyriaGrammarRules[structure.languageId];
+  if (
+    structure.labelVariant != null &&
+    !getInitialMartyriaLabelVariants(structure.languageId).includes(
+      structure.labelVariant,
+    )
+  ) {
+    return false;
+  }
+  const lexicon = getInitialMartyriaLexicon(structure);
+  const grammar = getInitialMartyriaGrammar(structure);
   if (
     structure.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
@@ -360,9 +429,21 @@ const initialMartyriaGrammarAxes: readonly InitialMartyriaGrammarAxis[] = [
 
 interface InitialMartyriaEnumerationBase {
   languageId: InitialMartyriaLanguageId;
+  labelVariant?: InitialMartyriaLabelVariant;
   modeIdentificationMethod: InitialMartyriaModeIdentificationMethod;
   transliterateNoteNames: boolean;
+  plagalAbbreviationWithModeSign?: boolean;
   numberingSystem?: InitialMartyriaNumberingSystem;
+}
+
+/** The axes an enumeration keeps fixed, as set on every structure. */
+function getEnumerationCommonAxes(base: InitialMartyriaEnumerationBase) {
+  return {
+    languageId: base.languageId,
+    labelVariant: base.labelVariant,
+    transliterateNoteNames: base.transliterateNoteNames,
+    plagalAbbreviationWithModeSign: base.plagalAbbreviationWithModeSign,
+  };
 }
 
 function getInitialMartyriaStructuresForMethod(
@@ -378,13 +459,12 @@ function getInitialMartyriaStructuresForMethod(
       for (const numeralQualifier of initialMartyriaNumeralQualifiers) {
         for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
           const structure: InitialMartyriaStructure = {
-            languageId: base.languageId,
+            ...getEnumerationCommonAxes(base),
             modeIdentificationMethod:
               INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
             numeralKind,
             numeralQualifier,
             modeNamingScheme,
-            transliterateNoteNames: base.transliterateNoteNames,
           };
           if (isInitialMartyriaStructureSupported(structure)) {
             structures.push(structure);
@@ -407,13 +487,12 @@ function getInitialMartyriaStructuresForMethod(
       for (const numeralQualifier of initialMartyriaNumeralQualifiers) {
         for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
           const structure: InitialMartyriaStructure = {
-            languageId: base.languageId,
+            ...getEnumerationCommonAxes(base),
             modeIdentificationMethod: base.modeIdentificationMethod,
             ...form,
             numberingSystem,
             numeralQualifier,
             modeNamingScheme,
-            transliterateNoteNames: base.transliterateNoteNames,
           };
           if (isInitialMartyriaStructureSupported(structure)) {
             structures.push(structure);
@@ -425,10 +504,11 @@ function getInitialMartyriaStructuresForMethod(
   return structures;
 }
 
-// The candidate set depends only on the language, the transliteration
-// choice, and the numbering system, so the enumeration (which tests roughly
-// a hundred candidates for support) is done once per combination instead of
-// once per unsupported value in every strip the styles dialog builds.
+// The candidate set depends only on the language and label variant, the
+// transliteration and plagal abbreviation choices, and the numbering system,
+// so the enumeration (which tests roughly a hundred candidates for support)
+// is done once per combination instead of once per unsupported value in
+// every strip the styles dialog builds.
 const grammarStructureCache = new Map<string, InitialMartyriaStructure[]>();
 
 function getInitialMartyriaGrammarStructures(
@@ -441,7 +521,9 @@ function getInitialMartyriaGrammarStructures(
       : structure.numberingSystem;
   const cacheKey = [
     structure.languageId,
+    structure.labelVariant,
     structure.transliterateNoteNames,
+    structure.plagalAbbreviationWithModeSign,
     numberingSystem,
   ].join('/');
   const cached = grammarStructureCache.get(cacheKey);
@@ -462,9 +544,8 @@ function getInitialMartyriaGrammarStructures(
   };
   for (const modeIdentificationMethod of everyModeIdentificationMethod) {
     for (const candidate of getInitialMartyriaStructuresForMethod({
-      languageId: structure.languageId,
+      ...getEnumerationCommonAxes(structure),
       modeIdentificationMethod,
-      transliterateNoteNames: structure.transliterateNoteNames,
       numberingSystem,
     })) {
       addCandidate(candidate);
@@ -569,7 +650,11 @@ export function initialMartyriaStructuresEqual(
 export function enumerateInitialMartyriaStructures(
   base: Pick<
     InitialMartyriaStructure,
-    'languageId' | 'modeIdentificationMethod' | 'transliterateNoteNames'
+    | 'languageId'
+    | 'labelVariant'
+    | 'modeIdentificationMethod'
+    | 'transliterateNoteNames'
+    | 'plagalAbbreviationWithModeSign'
   >,
 ) {
   const seen = new Set<string>();

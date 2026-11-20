@@ -28,6 +28,7 @@ import {
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
 import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
 import {
+  INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -1104,16 +1105,27 @@ function loadInitialMartyriaStyle(
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES),
       saved.modeNamingScheme,
-    )
+    ) ||
+    (saved.labelVariant !== undefined &&
+      !isOneOf(
+        Object.values(INITIAL_MARTYRIA_LABEL_VARIANTS),
+        saved.labelVariant,
+      ))
   ) {
     return null;
   }
   const common = {
     languageId: saved.languageId,
+    labelVariant: saved.labelVariant,
     numeralKind: saved.numeralKind,
     numeralQualifier: saved.numeralQualifier,
     modeNamingScheme: saved.modeNamingScheme,
     transliterateNoteNames: saved.transliterateNoteNames === true,
+    // Styles saved before the choice existed follow the language's practice.
+    plagalAbbreviationWithModeSign:
+      typeof saved.plagalAbbreviationWithModeSign === 'boolean'
+        ? saved.plagalAbbreviationWithModeSign
+        : undefined,
   };
   let structure: InitialMartyriaStructure;
   if (

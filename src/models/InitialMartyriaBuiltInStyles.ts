@@ -7,6 +7,7 @@ import { getInitialMartyriaStyleBaseNameSelector } from '@/utils/initialMartyria
 import { getNextAvailableStyleName } from '@/utils/styleNames';
 
 import {
+  INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -31,6 +32,11 @@ export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
   EnglishModeNamesWithSign: 'builtin:english-full-name-v1',
   EnglishModeNumbersWithSign: 'builtin:english-mode-number-v1',
   EnglishPlagalClassWithSign: 'builtin:english-plagal-class-ordinal-words-v1',
+  EnglishModeBeforeSign: 'builtin:english-mode-before-sign-v1',
+  EnglishToneNumberWithSign: 'builtin:english-tone-number-v1',
+  EnglishToneNumber: 'builtin:english-tone-number-text-v1',
+  EnglishOrdinalTone: 'builtin:english-ordinal-tone-text-v1',
+  EnglishToneBeforeSign: 'builtin:english-tone-before-sign-v1',
   SpanishTonoNumber: 'builtin:spanish-tono-number-v1',
   SpanishTonoRomanNumeral: 'builtin:spanish-tono-roman-numeral-v1',
   SpanishTonoOrdinal: 'builtin:spanish-tono-ordinal-v1',
@@ -89,6 +95,19 @@ const BUILT_IN_INITIAL_MARTYRIA_STYLE_NAME_SELECTORS: Record<
   ),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign]: styleName(
     'englishPlagalClassWithSign',
+  ),
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSign]: styleName(
+    'englishModeBeforeSign',
+  ),
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumberWithSign]: styleName(
+    'englishToneNumberWithSign',
+  ),
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumber]:
+    styleName('englishToneNumber'),
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalTone]:
+    styleName('englishOrdinalTone'),
+  [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneBeforeSign]: styleName(
+    'englishToneBeforeSign',
   ),
   [BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumber]:
     styleName('spanishTonoNumber'),
@@ -267,6 +286,58 @@ export const builtInInitialMartyriaStyles: BuiltInInitialMartyriaStyle[] = [
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+  }),
+  // The sign group beside the label stands for the mode number, as in
+  // Romanian Glas πλ[sign].
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSign,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumber,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalTone,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    modeIdentificationMethod: INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumberWithSign,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+  }),
+  builtIn({
+    id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneBeforeSign,
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   }),
   builtIn({
     id: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumber,

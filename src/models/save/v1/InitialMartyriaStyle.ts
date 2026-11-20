@@ -2,6 +2,7 @@ export interface InitialMartyriaStyle {
   id: string;
   displayName: string;
   languageId: string;
+  labelVariant?: string;
   modeIdentificationMethod: string;
   numeralKind: string;
   numeralStyle?: string;
@@ -9,6 +10,7 @@ export interface InitialMartyriaStyle {
   numeralQualifier: string;
   modeNamingScheme: string;
   transliterateNoteNames: boolean | undefined;
+  plagalAbbreviationWithModeSign?: boolean;
   paragraphStyleId: string;
   greekParagraphStyleId: string;
   useOrdinalForms: boolean | undefined;

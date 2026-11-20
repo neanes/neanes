@@ -189,6 +189,7 @@ describe('InitialMartyriaGrammar', () => {
       'ordinal/prenominal/authentic-counterpart',
       'ordinal/prenominal/plagal-class',
       'cardinal/postnominal/authentic-counterpart',
+      'cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: ['ordinal/postnominal/absolute'],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
@@ -303,6 +304,71 @@ describe('InitialMartyriaGrammar', () => {
         {
           ...attestedStructures['english-authentic-counterpart-number-sign'],
           modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+        },
+        true,
+      ],
+      [
+        'English sign-only absolute ordinal before the label',
+        {
+          ...attestedStructures['english-mode-before-sign'],
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+          numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+        },
+        false,
+      ],
+      ['English Tone number', attestedStructures['english-tone-number'], true],
+      [
+        'English Tone beside the sign group',
+        attestedStructures['english-tone-before-sign'],
+        true,
+      ],
+      [
+        'English Tone ordinal digits before the label',
+        {
+          ...attestedStructures['english-ordinal-tone-text'],
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
+        },
+        true,
+      ],
+      [
+        'English Tone cardinal words',
+        {
+          ...attestedStructures['english-tone-number-text'],
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
+        },
+        true,
+      ],
+      [
+        'English Tone Roman numerals',
+        {
+          ...attestedStructures['english-tone-number-text'],
+          numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        },
+        true,
+      ],
+      [
+        'English plagal of the first Tone',
+        {
+          ...attestedStructures['english-ordinal-tone-text'],
+          modeNamingScheme:
+            INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+        },
+        false,
+      ],
+      [
+        'English first plagal Tone',
+        {
+          ...attestedStructures['english-ordinal-tone-text'],
+          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+        },
+        false,
+      ],
+      [
+        'English Tone sign with plagal naming',
+        {
+          ...attestedStructures['english-tone-before-sign'],
+          modeNamingScheme:
+            INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
         },
         false,
       ],

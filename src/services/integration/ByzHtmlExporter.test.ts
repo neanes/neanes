@@ -218,7 +218,6 @@ describe('ByzHtmlExporter', () => {
       ...builtIn,
       id: 'custom-text-only',
       displayName: 'Custom text only',
-      basedOn: builtIn.id,
       structure: { ...builtIn.structure },
     };
     const modeKey = ModeKeyElement.createFromTemplate(

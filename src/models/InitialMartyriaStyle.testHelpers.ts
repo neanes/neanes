@@ -38,7 +38,6 @@ export function styleFor(
   return {
     id: 'test',
     displayName: 'Test',
-    basedOn: null,
     structure,
     ...createDefaultInitialMartyriaTypography(),
   };

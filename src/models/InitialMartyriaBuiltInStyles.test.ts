@@ -17,13 +17,13 @@ import {
   isInitialMartyriaStructureSupported,
 } from '@/models/InitialMartyriaGrammar';
 import {
-  getInitialMartyriaStyleNameScope,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   initialMartyriaLanguageIds,
+  type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 
@@ -125,7 +125,6 @@ describe('InitialMartyriaBuiltInStyles', () => {
 
     const newEnglishOrdinalDigits = createInitialMartyriaStyle({
       displayName: 'New ordinal style',
-      basedOn: null,
       structure: {
         ...englishOrdinalDigits.structure,
         modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
@@ -160,7 +159,6 @@ describe('InitialMartyriaBuiltInStyles', () => {
     }
 
     for (const style of builtInInitialMartyriaStyles) {
-      expect(style.basedOn).toBeNull();
       expect(style.paragraphStyleId).toBe(
         BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
       );
@@ -182,17 +180,16 @@ describe('InitialMartyriaBuiltInStyles', () => {
       }
     }
 
-    // Names only need to be distinct within a name scope (language and
-    // lettering), in every locale.
-    const nameScopes = new Set(
-      builtInInitialMartyriaStyles.map(getInitialMartyriaStyleNameScope),
-    );
+    // Names caption the presets of one language and lettering in the
+    // wording picker, so they only need to be distinct there, in every
+    // locale.
+    const getNameScope = (style: InitialMartyriaStyle) =>
+      `${style.structure.languageId}:${style.lettering}`;
+    const nameScopes = new Set(builtInInitialMartyriaStyles.map(getNameScope));
     for (const [locale, localeResources] of Object.entries(resources)) {
       for (const nameScope of nameScopes) {
         const names = builtInInitialMartyriaStyles
-          .filter(
-            (style) => getInitialMartyriaStyleNameScope(style) === nameScope,
-          )
+          .filter((style) => getNameScope(style) === nameScope)
           .map((style) =>
             getBuiltInInitialMartyriaStyleNameSelector(
               style.id as BuiltInInitialMartyriaStyleId,
@@ -205,23 +202,20 @@ describe('InitialMartyriaBuiltInStyles', () => {
     }
   });
 
-  it("names a score's new default style after its preset, avoiding names in use", () => {
+  it("names a score's new default style after the neume font, avoiding names in use", () => {
     const preset = getBuiltInInitialMartyriaStyle(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
     );
-    const taken = createInitialMartyriaStyleFromPreset(
-      preset,
-      'Traditional sign',
-    );
-    // Same name, but another lettering, so it does not take the name.
-    const otherScope = createInitialMartyriaStyleFromPreset(
+    const taken = createInitialMartyriaStyleFromPreset(preset, 'Neume Font');
+    // Names are unique across every style, whatever its language.
+    const otherLanguage = createInitialMartyriaStyleFromPreset(
       getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
       ),
-      'Traditional sign 2',
+      'Neume Font 2',
     );
     const score = {
-      initialMartyriaStyles: [taken, otherScope],
+      initialMartyriaStyles: [taken, otherLanguage],
       pageSetup: { initialMartyriaStyleId: 'deleted' },
     };
 
@@ -229,8 +223,9 @@ describe('InitialMartyriaBuiltInStyles', () => {
 
     expect(score.initialMartyriaStyles).toHaveLength(3);
     expect(score.initialMartyriaStyles[0]).toMatchObject({
-      basedOn: preset.id,
-      displayName: 'Traditional sign 2',
+      lettering: preset.lettering,
+      structure: preset.structure,
+      displayName: 'Neume Font 3',
     });
     expect(score.pageSetup.initialMartyriaStyleId).toBe(
       score.initialMartyriaStyles[0].id,

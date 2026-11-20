@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { getDefaultBuiltInInitialMartyriaStyle } from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
+  getBuiltInInitialMartyriaStyle,
+} from '@/models/InitialMartyriaBuiltInStyles';
+import { getInitialMartyriaWordingKey } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
-  INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
@@ -15,15 +18,15 @@ import { withInitialMartyriaStyleStructure } from './InitialMartyriaStylesDialog
 describe('withInitialMartyriaStyleStructure', () => {
   it('preserves paragraph style selections when the language changes', () => {
     const english = cloneInitialMartyriaStyle(
-      getDefaultBuiltInInitialMartyriaStyle(
-        INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+      getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
       ),
     );
     english.paragraphStyleId = 'custom-main';
     english.greekParagraphStyleId = 'custom-greek';
 
-    const arabic = getDefaultBuiltInInitialMartyriaStyle(
-      INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    const arabic = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal,
     );
     const changed = withInitialMartyriaStyleStructure(
       english,
@@ -39,8 +42,8 @@ describe('withInitialMartyriaStyleStructure', () => {
 
   it('keeps the ordinal forms choice when a wording introduces digit ordinals', () => {
     const english = cloneInitialMartyriaStyle(
-      getDefaultBuiltInInitialMartyriaStyle(
-        INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+      getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
       ),
     );
     english.useOrdinalForms = false;
@@ -55,5 +58,21 @@ describe('withInitialMartyriaStyleStructure', () => {
     });
 
     expect(changed.useOrdinalForms).toBe(false);
+  });
+});
+
+describe('getInitialMartyriaWordingKey', () => {
+  it('tells the neume font apart from the Greek text it reads as', () => {
+    const classic = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
+    );
+    const traditional = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
+    );
+
+    expect(classic.structure).toEqual(traditional.structure);
+    expect(getInitialMartyriaWordingKey(classic)).not.toBe(
+      getInitialMartyriaWordingKey(traditional),
+    );
   });
 });

@@ -41,13 +41,14 @@ function createCustomInitialMartyriaStyle(
   paragraphStyleId: string,
   greekParagraphStyleId: string = BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
 ): InitialMartyriaStyle {
-  const basedOn = BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames;
-
   return {
     id,
     displayName,
-    basedOn,
-    structure: { ...getBuiltInInitialMartyriaStyle(basedOn).structure },
+    structure: {
+      ...getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+      ).structure,
+    },
     ...createDefaultInitialMartyriaTypography(),
     paragraphStyleId,
     greekParagraphStyleId,
@@ -195,7 +196,7 @@ describe('clipboardInitialMartyriaStyles', () => {
     );
   });
 
-  it('does not reuse a destination style of the same name in another language', () => {
+  it('imports a style named like one in another language under the next free name', () => {
     const clipboardParish = createCustomInitialMartyriaStyle(
       'clipboard-parish',
       'Parish',
@@ -219,13 +220,15 @@ describe('clipboardInitialMartyriaStyles', () => {
       new Map(),
     );
 
-    expect(result.importedInitialMartyriaStyles).toEqual([clipboardParish]);
+    expect(result.importedInitialMartyriaStyles).toEqual([
+      { ...clipboardParish, displayName: 'Parish 2' },
+    ]);
     expect(result.initialMartyriaStyleIdRemap.get(clipboardParish.id)).toBe(
       clipboardParish.id,
     );
   });
 
-  it('does not reuse a destination style of the same name and language in another lettering', () => {
+  it('imports a style named like one in another lettering under the next free name', () => {
     const greekStructure = getBuiltInInitialMartyriaStyle(
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
     ).structure;
@@ -252,7 +255,7 @@ describe('clipboardInitialMartyriaStyles', () => {
     );
 
     expect(result.importedInitialMartyriaStyles).toEqual([
-      clipboardTraditional,
+      { ...clipboardTraditional, displayName: 'Traditional sign 2' },
     ]);
     expect(
       result.initialMartyriaStyleIdRemap.get(clipboardTraditional.id),

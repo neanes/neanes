@@ -5,6 +5,7 @@ import {
 } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
+  type InitialMartyriaLettering,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
   type ModeKeyMode,
@@ -16,7 +17,7 @@ import type { ModelSelector } from '@/models/NeumeI18nMappings';
  * Sample modes for previews. The plagal first mode exposes the plagal
  * wording of a style, so it shows every axis at work.
  */
-export const PLAGAL_SAMPLE_MODE: ModeKeyMode = 5;
+const PLAGAL_SAMPLE_MODE: ModeKeyMode = 5;
 
 const sampleModeLabelSelectors: Record<ModeKeyMode, ModelSelector> = {
   1: ($) => $.model.mode.first,
@@ -96,22 +97,21 @@ export function getWordingSampleModes(structures: InitialMartyriaStructure[]) {
 }
 
 /** The first template of a mode stands in for the mode in previews. */
-export function getSampleTemplateId(mode: ModeKeyMode) {
+function getSampleTemplateId(mode: ModeKeyMode) {
   return modeKeyTemplates.find((template) => template.mode === mode)!.id;
 }
 
 /**
- * Carry a style's presentation to another structure.
+ * Carry a style's typography to another wording. The lettering is kept, or
+ * the one given is used, wherever the structure supports it.
  */
 export function withInitialMartyriaStyleStructure(
   style: InitialMartyriaStyle,
   structure: InitialMartyriaStructure,
+  lettering: InitialMartyriaLettering = style.lettering,
 ) {
   const next = cloneInitialMartyriaStyle(style);
   next.structure = { ...structure };
-  next.lettering = getSupportedInitialMartyriaLettering(
-    style.lettering,
-    structure,
-  );
+  next.lettering = getSupportedInitialMartyriaLettering(lettering, structure);
   return next;
 }

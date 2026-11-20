@@ -4,12 +4,11 @@ import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
-  INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaLanguageId,
   type InitialMartyriaModeIdentificationMethod,
-  type InitialMartyriaNumeralStyle,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
+import { getNextAvailableStyleName } from '@/utils/styleNames';
 
 type DialogSelector = SelectorParam<'dialog'>;
 type Translate = TFunction<Namespace>;
@@ -46,20 +45,6 @@ const modeIdentificationMethodSelectors: Record<
     $.dialog.initialMartyriaStyles.modeIdentificationMethods.textAndModeSign,
 };
 
-const numeralStyleSelectors: Record<
-  InitialMartyriaNumeralStyle,
-  DialogSelector
-> = {
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.Digits]: ($) =>
-    $.dialog.initialMartyriaStyles.numeralStyles.digits,
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals]: ($) =>
-    $.dialog.initialMartyriaStyles.numeralStyles.romanNumerals,
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals]: ($) =>
-    $.dialog.initialMartyriaStyles.numeralStyles.alphabeticNumerals,
-  [INITIAL_MARTYRIA_NUMERAL_STYLES.Words]: ($) =>
-    $.dialog.initialMartyriaStyles.numeralStyles.words,
-};
-
 export function getInitialMartyriaLanguageName(
   t: Translate,
   languageId: InitialMartyriaLanguageId,
@@ -74,60 +59,31 @@ export function getInitialMartyriaModeIdentificationMethodLabel(
   return t(modeIdentificationMethodSelectors[method], { ns: 'dialog' });
 }
 
-/** How the mode number is written, as a heading for the wordings using it. */
-export function getInitialMartyriaNumeralStyleLabel(
-  t: Translate,
-  numeralStyle: InitialMartyriaNumeralStyle,
-) {
-  return t(numeralStyleSelectors[numeralStyle], { ns: 'dialog' });
-}
+const neumeFontStyleNameSelector: DialogSelector = ($) =>
+  $.dialog.initialMartyriaStyles.neumeFontStyleName;
 
-export interface InitialMartyriaStyleQualifiers {
-  language: string;
-  /** Set only for music-font lettering; text lettering is the norm. */
-  lettering: string | null;
-}
+type StyleNameSource = Pick<InitialMartyriaStyle, 'lettering' | 'structure'>;
 
 /**
- * The qualifiers shown beside a style's name: its language and, when it is
- * lettered in the neume font, its lettering. They name the scope the style's
- * name is unique within.
+ * The selector of the name a new style is given before any number is added:
+ * its language, or the neume font for a style lettered in it.
  */
-export function getInitialMartyriaStyleQualifiers(
-  t: Translate,
-  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
-): InitialMartyriaStyleQualifiers {
-  return {
-    language: getInitialMartyriaLanguageName(t, style.structure.languageId),
-    lettering:
-      style.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont
-        ? t(($) => $.dialog.initialMartyriaStyles.neumeFontLettering, {
-            ns: 'dialog',
-          })
-        : null,
-  };
+export function getInitialMartyriaStyleBaseNameSelector(
+  style: StyleNameSource,
+) {
+  return style.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont
+    ? neumeFontStyleNameSelector
+    : languageNameSelectors[style.structure.languageId];
 }
 
-/** A style's name with its qualifiers, for lists that show one line. */
-export function getInitialMartyriaStyleQualifiedName(
+/** The name of a style just added: its base name, numbered if taken. */
+export function getNewInitialMartyriaStyleName(
   t: Translate,
-  name: string,
-  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
+  style: StyleNameSource,
+  takenNames: Iterable<string>,
 ) {
-  const { language, lettering } = getInitialMartyriaStyleQualifiers(t, style);
-  return lettering == null
-    ? t(($) => $.dialog.initialMartyriaStyles.styleNameWithLanguage, {
-        ns: 'dialog',
-        name,
-        language,
-      })
-    : t(
-        ($) => $.dialog.initialMartyriaStyles.styleNameWithLanguageAndLettering,
-        {
-          ns: 'dialog',
-          name,
-          language,
-          lettering,
-        },
-      );
+  return getNextAvailableStyleName(
+    t(getInitialMartyriaStyleBaseNameSelector(style), { ns: 'dialog' }),
+    takenNames,
+  );
 }

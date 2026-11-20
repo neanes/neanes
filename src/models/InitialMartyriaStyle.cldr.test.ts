@@ -70,7 +70,6 @@ function styleFor(
   return {
     id: 'cldr-test',
     displayName: 'CLDR test',
-    basedOn: null,
     structure: fullStructure,
     ...createDefaultInitialMartyriaTypography(),
   };

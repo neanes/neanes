@@ -82,7 +82,6 @@ describe('InitialMartyriaResolver', () => {
   it('resolves inherited, explicit, and missing style references', () => {
     const custom = createInitialMartyriaStyle({
       displayName: 'Parish',
-      basedOn: BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
       structure: attestedStructures['greek-mode-names'],
       ...createDefaultInitialMartyriaTypography(),
     });

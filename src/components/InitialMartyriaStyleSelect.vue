@@ -19,7 +19,7 @@
         {{
           $t(($) => $.dialog.initialMartyriaStyles.documentDefaultNamed, {
             ns: 'dialog',
-            name: labelFor(defaultStyle),
+            name: getInitialMartyriaStyleDisplayName(defaultStyle, t),
           })
         }}
       </SelectItem>
@@ -29,7 +29,7 @@
         :key="style.id"
         :value="style.id"
       >
-        {{ labelFor(style) }}
+        {{ getInitialMartyriaStyleDisplayName(style, t) }}
       </SelectItem>
     </component>
   </Select>
@@ -56,7 +56,6 @@ import {
   getInitialMartyriaStyleOrDefault,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
-import { getInitialMartyriaStyleQualifiedName } from '@/utils/initialMartyriaLabels';
 
 const props = defineProps({
   id: {
@@ -110,16 +109,6 @@ const defaultStyle = computed(() =>
     props.defaultStyleId,
   ),
 );
-
-// Styles of different languages or letterings may share a name, so the
-// qualifiers are shown with the name.
-function labelFor(style: InitialMartyriaStyle) {
-  return getInitialMartyriaStyleQualifiedName(
-    t,
-    getInitialMartyriaStyleDisplayName(style, t),
-    style,
-  );
-}
 
 function onUpdate(value: AcceptableValue) {
   if (typeof value === 'string') {

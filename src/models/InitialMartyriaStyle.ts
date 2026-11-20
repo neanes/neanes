@@ -3,8 +3,6 @@ import type { ModeSign } from '@/models/Neumes';
 import type { ScaleNote } from '@/models/Scales';
 import type { FontVariantProperty } from '@/utils/fontVariants';
 
-import type { BuiltInInitialMartyriaStyleId } from './InitialMartyriaBuiltInStyles';
-
 export type ModeKeyMode = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 export const INITIAL_MARTYRIA_NUMERAL_KINDS = {
@@ -228,40 +226,13 @@ export function withInitialMartyriaNumeralForm(
 }
 
 /**
- * Whether new styles can be made from this one in the styles dialog. Only
- * built-in styles and saved files carry music-font lettering; the dialog
- * neither creates nor duplicates such styles, since they have no options to
- * configure.
- */
-export function isInitialMartyriaStyleUserCreatable(
-  style: Pick<InitialMartyriaStyle, 'lettering'>,
-) {
-  return style.lettering === INITIAL_MARTYRIA_LETTERINGS.Text;
-}
-
-/**
- * The scope a style's name is unique within: its language together with its
- * lettering, the qualifiers shown beside the name wherever styles are listed.
- * Styles in different scopes may share a name.
- */
-export function getInitialMartyriaStyleNameScope(
-  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
-) {
-  return `${style.structure.languageId}:${style.lettering}`;
-}
-
-/**
- * What identifies a style by name: its name within its name scope. The
- * styles dialog keeps these unique, and pasting reuses a destination style
- * with the same key.
+ * What identifies a style by name. Names are unique across all of a score's
+ * styles, and pasting reuses a destination style with the same name.
  */
 export function getInitialMartyriaStyleNameKey(
-  style: Pick<InitialMartyriaStyle, 'displayName' | 'lettering' | 'structure'>,
+  style: Pick<InitialMartyriaStyle, 'displayName'>,
 ) {
-  return JSON.stringify([
-    getInitialMartyriaStyleNameScope(style),
-    style.displayName.trim(),
-  ]);
+  return style.displayName.trim();
 }
 
 /** Whether the rendered mode name contains a digit ordinal such as "5th". */
@@ -285,8 +256,6 @@ export interface InitialMartyriaStyle extends InitialMartyriaStyleTypography {
   id: string;
   /** Ignored for built-in styles, which are named through the UI locale. */
   displayName: string;
-  /** The built-in style a custom style was derived from, if any. */
-  basedOn: BuiltInInitialMartyriaStyleId | null;
   structure: InitialMartyriaStructure;
 }
 

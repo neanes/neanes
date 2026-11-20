@@ -537,6 +537,13 @@ export function getInitialMartyriaStructureKey(
   return key;
 }
 
+/** What tells two wordings apart: their lettering and what they print. */
+export function getInitialMartyriaWordingKey(
+  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
+) {
+  return `${style.lettering}\n${getInitialMartyriaStructureKey(style.structure)}`;
+}
+
 export function getInitialMartyriaContext(
   element: ModeKeyElement,
 ): InitialMartyriaContext {
@@ -727,6 +734,16 @@ export function getSupportedInitialMartyriaLettering(
     initialMartyriaStructureSupportsMusicFontLettering(structure)
     ? INITIAL_MARTYRIA_LETTERINGS.MusicFont
     : INITIAL_MARTYRIA_LETTERINGS.Text;
+}
+
+/** Whether a style's use-ordinal-forms option has any effect. */
+export function initialMartyriaStyleOffersOrdinalForms(
+  style: Pick<InitialMartyriaStyle, 'lettering' | 'structure'>,
+) {
+  return (
+    style.lettering === INITIAL_MARTYRIA_LETTERINGS.Text &&
+    initialMartyriaStructureSupportsOrdinalForms(style.structure)
+  );
 }
 
 /**

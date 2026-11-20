@@ -3,10 +3,10 @@ import i18next from 'i18next';
 
 import { resources } from '@/i18n';
 import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
+import { getInitialMartyriaStyleBaseNameSelector } from '@/utils/initialMartyriaLabels';
 import { getNextAvailableStyleName } from '@/utils/styleNames';
 
 import {
-  getInitialMartyriaStyleNameScope,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -20,7 +20,6 @@ import {
   type InitialMartyriaStyle,
   type InitialMartyriaStyleTypography,
   type InitialMartyriaTextStructure,
-  isInitialMartyriaStyleUserCreatable,
 } from './InitialMartyriaStyle';
 
 export const BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS = {
@@ -172,9 +171,8 @@ function builtIn({
   return {
     id,
     displayName: '',
-    basedOn: null,
     structure: {
-      transliterateNoteNames: languagesThatTransliterateNoteNames.has(
+      transliterateNoteNames: getDefaultInitialMartyriaTransliteration(
         structure.languageId,
       ),
       ...structure,
@@ -482,18 +480,11 @@ export function getBuiltInInitialMartyriaStyle(
   return builtInInitialMartyriaStylesById.get(id)!;
 }
 
-/**
- * The first curated style of a language that the dialog can create styles
- * from seeds new styles in that language.
- */
-export function getDefaultBuiltInInitialMartyriaStyle(
+/** Whether new styles in a language transliterate their note names. */
+export function getDefaultInitialMartyriaTransliteration(
   languageId: InitialMartyriaLanguageId,
 ) {
-  return builtInInitialMartyriaStyles.find(
-    (style) =>
-      style.structure.languageId === languageId &&
-      isInitialMartyriaStyleUserCreatable(style),
-  )!;
+  return languagesThatTransliterateNoteNames.has(languageId);
 }
 
 export function findInitialMartyriaStyle(
@@ -539,7 +530,7 @@ export function getInitialMartyriaStyleDisplayName(
 
 /**
  * A style of the score's own made from a built-in style, which serves only
- * as a preset: the new style is the score's to edit and name.
+ * as a preset: the new style is the score's to name and set typography for.
  */
 export function createInitialMartyriaStyleFromPreset(
   preset: BuiltInInitialMartyriaStyle,
@@ -549,18 +540,17 @@ export function createInitialMartyriaStyleFromPreset(
     ...preset,
     id: crypto.randomUUID(),
     displayName,
-    basedOn: preset.id,
     structure: { ...preset.structure },
   };
 }
 
 /*
- * A preset's name in the app's language. Score models are also built where
- * i18next is not initialized (unit tests, before startup), and there the
- * English name is used.
+ * A new style's base name in the app's language. Score models are also built
+ * where i18next is not initialized (unit tests, before startup), and there
+ * the English name is used.
  */
-function getPresetName(preset: BuiltInInitialMartyriaStyle) {
-  const selector = getBuiltInInitialMartyriaStyleNameSelector(preset.id);
+function getBaseName(style: InitialMartyriaStyle) {
+  const selector = getInitialMartyriaStyleBaseNameSelector(style);
   return i18next.isInitialized
     ? i18next.t(selector, { ns: 'dialog' })
     : selector(resources.en);
@@ -586,16 +576,11 @@ export function ensureScoreInitialMartyriaStyle(score: {
       ? defaultStyleId
       : DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   );
-  const nameScope = getInitialMartyriaStyleNameScope(preset);
   const style = createInitialMartyriaStyleFromPreset(
     preset,
     getNextAvailableStyleName(
-      getPresetName(preset),
-      score.initialMartyriaStyles
-        .filter(
-          (style) => getInitialMartyriaStyleNameScope(style) === nameScope,
-        )
-        .map((style) => style.displayName),
+      getBaseName(preset),
+      score.initialMartyriaStyles.map((style) => style.displayName),
     ),
   );
   score.initialMartyriaStyles = [style, ...score.initialMartyriaStyles];

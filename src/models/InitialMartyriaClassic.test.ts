@@ -6,7 +6,6 @@ import {
   builtInInitialMartyriaStyles,
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   getBuiltInInitialMartyriaStyle,
-  getDefaultBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
@@ -14,9 +13,7 @@ import {
   getSupportedInitialMartyriaLettering,
 } from '@/models/InitialMartyriaResolver';
 import {
-  INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
-  isInitialMartyriaStyleUserCreatable,
   type ResolvedInitialMartyriaRun,
 } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
@@ -80,7 +77,6 @@ describe('Classic initial martyria', () => {
       createInitialMartyriaStyle({
         ...classic,
         displayName: 'English glyphs',
-        basedOn: classic.id,
         structure: english.structure,
       }).lettering,
     ).toBe(INITIAL_MARTYRIA_LETTERINGS.Text);
@@ -90,7 +86,6 @@ describe('Classic initial martyria', () => {
       createInitialMartyriaStyle({
         ...english,
         displayName: 'English',
-        basedOn: english.id,
       }),
     ];
     score.pageSetup.initialMartyriaStyleId = score.initialMartyriaStyles[0].id;
@@ -183,7 +178,6 @@ describe('Classic initial martyria', () => {
     const custom = createInitialMartyriaStyle({
       ...classic,
       displayName: 'Parish classic',
-      basedOn: classic.id,
     });
     score.initialMartyriaStyles = [custom];
     score.pageSetup.initialMartyriaStyleId = custom.id;
@@ -206,15 +200,6 @@ describe('Classic initial martyria', () => {
           (run.kind === 'startingPitch' && run.noteText == null),
       ),
     ).toBe(true);
-  });
-
-  it('never seeds or duplicates new styles from music-font lettering', () => {
-    expect(isInitialMartyriaStyleUserCreatable(classic)).toBe(false);
-    expect(isInitialMartyriaStyleUserCreatable(traditional)).toBe(true);
-    expect(
-      getDefaultBuiltInInitialMartyriaStyle(INITIAL_MARTYRIA_LANGUAGE_IDS.Greek)
-        .lettering,
-    ).toBe(INITIAL_MARTYRIA_LETTERINGS.Text);
   });
 
   it('sets the plagal abbreviation as a glyph with fixed gaps', () => {

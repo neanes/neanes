@@ -20,7 +20,6 @@ import type { Footer } from '@/models/Footer';
 import { Footnote } from '@/models/Footnote';
 import type { Header } from '@/models/Header';
 import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   ensureScoreInitialMartyriaStyle,
   findInitialMartyriaStyle,
@@ -1062,7 +1061,6 @@ function saveInitialMartyriaStyle(
   return {
     id: style.id,
     displayName: style.displayName,
-    basedOn: style.basedOn ?? undefined,
     ...style.structure,
     paragraphStyleId: style.paragraphStyleId,
     greekParagraphStyleId: style.greekParagraphStyleId,
@@ -1162,17 +1160,9 @@ function loadInitialMartyriaStyle(
     return null;
   }
 
-  const basedOn =
-    saved.basedOn === 'builtin:spanish-tono-ordinal-number-v1'
-      ? BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeral
-      : saved.basedOn;
   return {
     id: saved.id,
     displayName: saved.displayName,
-    basedOn:
-      basedOn != null && isBuiltInInitialMartyriaStyleId(basedOn)
-        ? basedOn
-        : null,
     structure,
     paragraphStyleId: paragraphStyles.some(
       (style) => style.id === saved.paragraphStyleId,

@@ -9,6 +9,7 @@ import {
   findInitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
 } from '@/models/InitialMartyriaBuiltInStyles';
+import { getInitialMartyriaWordingKey } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
   getInitialMartyriaStyleNameKey,
@@ -18,6 +19,7 @@ import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { getNextAvailableStyleName } from '@/utils/styleNames';
 
 import { resolveClipboardParagraphStyleReference } from './clipboardParagraphStyles';
 import { getEmbeddedModeKeys } from './richTextModeKeys';
@@ -67,9 +69,10 @@ export function collectClipboardInitialMartyriaStylesFromElements(
 }
 
 // Merges the clipboard's custom styles into the destination. Like paragraph
-// styles, an existing style is reused by id first and then by name within
-// its language and lettering (see getInitialMartyriaStyleNameKey). Every
-// other style is imported as its own copy under the same id. An imported
+// styles, an existing style is reused by id first and then by name (see
+// getInitialMartyriaStyleNameKey), though by name only when it also reads
+// the same way. Every other style is imported as its own copy under the same
+// id, renamed when its name is taken, since names are unique. An imported
 // style's paragraph style references are rewritten with the remap produced
 // for the pasted content, so they follow the paragraph styles that traveled
 // with it.
@@ -91,6 +94,9 @@ export function resolveClipboardInitialMartyriaStyles(
       style,
     ]),
   );
+  const takenNames = targetInitialMartyriaStyles.map(
+    (style) => style.displayName,
+  );
   const importedInitialMartyriaStyles: InitialMartyriaStyle[] = [];
   const initialMartyriaStyleIdRemap = new Map<string, string>();
 
@@ -104,12 +110,21 @@ export function resolveClipboardInitialMartyriaStyles(
       getInitialMartyriaStyleNameKey(clipboardStyle),
     );
 
-    if (targetStyle != null) {
+    if (
+      targetStyle != null &&
+      getInitialMartyriaWordingKey(targetStyle) ===
+        getInitialMartyriaWordingKey(clipboardStyle)
+    ) {
       initialMartyriaStyleIdRemap.set(clipboardStyle.id, targetStyle.id);
       continue;
     }
 
     const importedStyle = cloneInitialMartyriaStyle(clipboardStyle);
+    importedStyle.displayName = getNextAvailableStyleName(
+      importedStyle.displayName,
+      takenNames,
+    );
+    takenNames.push(importedStyle.displayName);
     const paragraphStyleId = resolveClipboardParagraphStyleReference(
       importedStyle.paragraphStyleId,
       targetParagraphStyleIds,

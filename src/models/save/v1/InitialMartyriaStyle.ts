@@ -1,7 +1,6 @@
 export interface InitialMartyriaStyle {
   id: string;
   displayName: string;
-  basedOn: string | undefined;
   languageId: string;
   modeIdentificationMethod: string;
   numeralKind: string;

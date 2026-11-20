@@ -659,7 +659,6 @@ describe('InitialMartyriaGrammar', () => {
 
     const created = createInitialMartyriaStyle({
       displayName: 'Normalized',
-      basedOn: null,
       structure: {
         ...attestedStructures['english-mode-number-word'],
         numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,

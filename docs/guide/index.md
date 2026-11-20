@@ -16,11 +16,11 @@ The bottom toolbar supplies common text controls. Select the title and open `Vie
 
 ## 3. Choose the initial martyria
 
-Double-click the initial martyria, right-click it and choose `Change Initial Martyria`, or select it and use the Change Initial Martyria button in the toolbar at the bottom of the window. Choose a mode on the left and an initial martyria on the right.
+Double-click the initial martyria, right-click it and choose `Change Initial Martyria`, or select it and use the Change Initial Martyria button in the toolbar at the bottom of the window. Choose a mode and an initial martyria, then press **Update**.
 
 ![The initial martyria dialog, showing modes on the left and available martyriæ on the right](./images/guide-mode-key-dialog.png)
 
-To choose the language and appearance, see [Choosing a style](./writing-music.md#choosing-a-style).
+To choose the language and appearance, see [Initial Martyria Styles](/guide/initial-martyria.html#initial-martyria-styles).
 
 ## 4. Add three neumes
 

@@ -117,9 +117,7 @@ The preview helps compare the specialized colors with the principal neume color 
 
 ### Style initial martyriæ
 
-Use **Initial Martyriæ** to set their height adjustment. Set their default typography through [Initial Martyria Styles](/guide/advanced.html#initial-martyria-styles) and paragraph styles. **Height Adjustment** adds or removes vertical space occupied by initial martyriæ. Use it when the following music sits too close to or too far from them.
-
-For the musical content or playback behavior of one initial martyria, select it in the score and use its bottom toolbar or Properties.
+Set the default typography through [Initial Martyria Styles](/guide/initial-martyria.html#initial-martyria-styles). To adjust the space above or below an individual initial martyria, select it and change **Gap Above** or **Gap Below** under **Positioning** in Properties.
 
 ### Set the drop-cap span
 

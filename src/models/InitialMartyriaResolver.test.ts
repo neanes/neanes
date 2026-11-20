@@ -111,6 +111,7 @@ describe('InitialMartyriaResolver', () => {
       }).style.id,
     ).toBe(custom.id);
 
+    // A reference to a deleted style follows the score's style.
     element.initialMartyriaStyleId = 'missing';
     expect(
       resolveModeKeyInitialMartyriaStyle({
@@ -119,7 +120,19 @@ describe('InitialMartyriaResolver', () => {
         paragraphStyles,
         initialMartyriaStyles,
       }).style.id,
-    ).toBe(DEFAULT_INITIAL_MARTYRIA_STYLE_ID);
+    ).toBe(builtInId);
+
+    // Built-in styles are only presets, so a mode key cannot name one.
+    element.initialMartyriaStyleId =
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign;
+    expect(
+      resolveModeKeyInitialMartyriaStyle({
+        element,
+        pageSetup,
+        paragraphStyles,
+        initialMartyriaStyles,
+      }).style.id,
+    ).toBe(builtInId);
 
     element.initialMartyriaStyleId = null;
     pageSetup.initialMartyriaStyleId = 'missing';

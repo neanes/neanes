@@ -668,7 +668,8 @@ function withOrdinalForms(
 }
 
 /**
- * The style every mode key of a score inherits unless it overrides it.
+ * The style every mode key of a score inherits unless it overrides it, or the
+ * score style `styleId` names when it names one.
  */
 export function resolveScoreInitialMartyriaStyle(options: {
   pageSetup: Pick<PageSetup, 'initialMartyriaStyleId'>;
@@ -677,19 +678,25 @@ export function resolveScoreInitialMartyriaStyle(options: {
   styleId?: string;
   paragraphStyleOverrides?: ParagraphStyleOverrides;
 }): ResolvedInitialMartyriaStyle {
+  const { initialMartyriaStyles, styleId } = options;
   return resolveInitialMartyriaStyleAppearances(
-    getInitialMartyriaStyleOrDefault(
-      options.initialMartyriaStyles,
-      options.styleId ?? options.pageSetup.initialMartyriaStyleId,
-    ),
+    (styleId == null
+      ? undefined
+      : initialMartyriaStyles.find((style) => style.id === styleId)) ??
+      getInitialMartyriaStyleOrDefault(
+        initialMartyriaStyles,
+        options.pageSetup.initialMartyriaStyleId,
+      ),
     options.paragraphStyles,
     options.paragraphStyleOverrides,
   );
 }
 
 /**
- * The style an element renders with: its own, or else the score's, falling
- * back to the default built-in style when a reference no longer resolves.
+ * The style an element renders with: its own, or else the score's. A
+ * reference that names no style of the score follows the score's style, and
+ * a score style that does not resolve falls back to the default built-in
+ * style.
  */
 export function resolveModeKeyInitialMartyriaStyle(options: {
   element: Pick<

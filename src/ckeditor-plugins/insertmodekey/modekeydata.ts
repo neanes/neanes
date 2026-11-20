@@ -4,7 +4,7 @@ import { Parser } from 'htmlparser2';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 
-export const MODE_KEY_DATA_VERSION = 1;
+const MODE_KEY_DATA_VERSION = 1;
 export const MODE_KEY_CLASS = 'neanes-ck-mode-key';
 export const MODE_KEY_DATA_ATTRIBUTE = 'data-neanes-mode-key';
 
@@ -237,23 +237,37 @@ export function extractModeKeyElementsFromHtml(html: string): ModeKeyElement[] {
 }
 
 export function modeKeyHtml(element: ModeKeyElement) {
-  const data = serializeModeKeyAttributes(getModeKeyModelAttributes(element));
+  return modeKeyAttributesHtml(getModeKeyModelAttributes(element));
+}
+
+function modeKeyAttributesHtml(attributes: ModeKeyModelAttributes) {
+  const data = serializeModeKeyAttributes(attributes);
   return `<span class="${MODE_KEY_CLASS}" ${MODE_KEY_DATA_ATTRIBUTE}="${data}"></span>`;
 }
 
-export function locateModeKeysInHtml(html: string) {
-  const widgets: { element: ModeKeyElement; start: number; end: number }[] = [];
+interface LocatedModeKey {
+  attributes: ModeKeyModelAttributes;
+  element: ModeKeyElement;
+  start: number;
+  end: number;
+}
+
+/**
+ * The embedded mode keys of rich text HTML, with the source range of each
+ * widget span. Matches the editor upcast, which keeps only classed widget
+ * spans with a readable payload.
+ */
+export function locateModeKeysInHtml(html: string): LocatedModeKey[] {
+  const widgets: LocatedModeKey[] = [];
   if (!html.includes(MODE_KEY_DATA_ATTRIBUTE)) {
     return widgets;
   }
 
   let depth = 0;
-  let open:
-    { element: ModeKeyElement; start: number; depth: number } | undefined;
+  let open: (Omit<LocatedModeKey, 'end'> & { depth: number }) | undefined;
   const parser = new Parser({
     onopentag(name, attributes) {
       depth++;
-      // Match the editor upcast, which keeps only classed widget spans.
       if (
         name !== 'span' ||
         open !== undefined ||
@@ -266,6 +280,7 @@ export function locateModeKeysInHtml(html: string) {
       );
       if (data !== null) {
         open = {
+          attributes: data,
           element: createModeKeyElementFromAttributes(data),
           start: parser.startIndex,
           depth,
@@ -275,6 +290,7 @@ export function locateModeKeysInHtml(html: string) {
     onclosetag(_name, implied) {
       if (open?.depth === depth) {
         widgets.push({
+          attributes: open.attributes,
           element: open.element,
           start: open.start,
           end: implied ? parser.startIndex : parser.endIndex + 1,
@@ -288,24 +304,33 @@ export function locateModeKeysInHtml(html: string) {
   return widgets;
 }
 
+/**
+ * Replaces each embedded mode key widget with the markup `replace` returns,
+ * or leaves it as it is when `replace` returns null.
+ */
+export function replaceModeKeysInHtml(
+  html: string,
+  replace: (widget: LocatedModeKey) => string | null,
+) {
+  let result = html;
+  for (const widget of locateModeKeysInHtml(html).reverse()) {
+    const replacement = replace(widget);
+    if (replacement !== null) {
+      result =
+        result.slice(0, widget.start) + replacement + result.slice(widget.end);
+    }
+  }
+  return result;
+}
+
 export function rewriteModeKeyAttributesInHtml(
   html: string,
   rewrite: (attributes: ModeKeyModelAttributes) => ModeKeyModelAttributes,
 ) {
-  return html.replace(
-    /data-neanes-mode-key=(['"])(.*?)\1/gu,
-    (source, quote: string, value: string) => {
-      const attributes = deserializeModeKeyAttributes(value);
-
-      if (attributes === null) {
-        return source;
-      }
-      const updated = rewrite(attributes);
-      return updated === attributes
-        ? source
-        : `data-neanes-mode-key=${quote}${serializeModeKeyAttributes(updated)}${quote}`;
-    },
-  );
+  return replaceModeKeysInHtml(html, ({ attributes }) => {
+    const updated = rewrite(attributes);
+    return updated === attributes ? null : modeKeyAttributesHtml(updated);
+  });
 }
 
 function sanitizeAttributes(

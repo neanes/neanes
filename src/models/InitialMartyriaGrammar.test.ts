@@ -9,10 +9,8 @@ import {
   enumerateInitialMartyriaStructures,
   getInitialMartyriaStructureKey,
   initialMartyriaModeIdentificationMethods,
-  initialMartyriaStructuresEqual,
   isInitialMartyriaStructureSupported,
   normalizeInitialMartyriaStructure,
-  withSupportedInitialMartyriaModeIdentificationMethod,
 } from '@/models/InitialMartyriaGrammar';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
@@ -690,19 +688,6 @@ describe('InitialMartyriaGrammar', () => {
       modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     });
 
-    const arabicIndicToWords = normalizeInitialMartyriaStructure(
-      {
-        ...attestedStructures['arabic-ordinal-arabic-indic-digits'],
-        numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
-      },
-      ['numeralStyle'],
-    );
-    expect(arabicIndicToWords).toMatchObject({
-      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
-      numberingSystem: undefined,
-    });
-
     const arabicIndicToIndonesian = normalizeInitialMartyriaStructure({
       ...attestedStructures['arabic-ordinal-arabic-indic-digits'],
       languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
@@ -717,7 +702,6 @@ describe('InitialMartyriaGrammar', () => {
     expect(isInitialMartyriaStructureSupported(englishOrdinal)).toBe(true);
     expect(isInitialMartyriaStructureSupported(greek)).toBe(true);
     expect(isInitialMartyriaStructureSupported(arabic)).toBe(true);
-    expect(isInitialMartyriaStructureSupported(arabicIndicToWords)).toBe(true);
     expect(isInitialMartyriaStructureSupported(arabicIndicToIndonesian)).toBe(
       true,
     );
@@ -738,6 +722,11 @@ describe('InitialMartyriaGrammar', () => {
   });
 
   it('keys structures by what they render, not by their axes', () => {
+    const structuresEqual = (
+      a: InitialMartyriaStructure,
+      b: InitialMartyriaStructure,
+    ) =>
+      getInitialMartyriaStructureKey(a) === getInitialMartyriaStructureKey(b);
     const spanishSignCardinal = {
       ...attestedStructures['spanish-tono-number'],
       modeIdentificationMethod:
@@ -750,23 +739,21 @@ describe('InitialMartyriaGrammar', () => {
     };
     // Both signs look alike, so they are the same style whatever their
     // numeral kind.
+    expect(structuresEqual(spanishSignCardinal, spanishSignOrdinal)).toBe(true);
     expect(
-      initialMartyriaStructuresEqual(spanishSignCardinal, spanishSignOrdinal),
-    ).toBe(true);
-    expect(
-      initialMartyriaStructuresEqual(
+      structuresEqual(
         attestedStructures['english-plagal-first'],
         attestedStructures['english-authentic-counterpart-number-sign'],
       ),
     ).toBe(false);
     expect(
-      initialMartyriaStructuresEqual(englishText, {
+      structuresEqual(englishText, {
         ...englishText,
         transliterateNoteNames: true,
       }),
     ).toBe(false);
     expect(
-      initialMartyriaStructuresEqual(greekText, {
+      structuresEqual(greekText, {
         ...greekText,
         transliterateNoteNames: true,
       }),
@@ -800,29 +787,6 @@ describe('InitialMartyriaGrammar', () => {
           INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
     );
     expect(spanishRoman).toHaveLength(1);
-  });
-
-  it('keeps the wording a method change can carry over', () => {
-    const romanian = withSupportedInitialMartyriaModeIdentificationMethod(
-      attestedStructures['romanian-glas'],
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-    );
-    expect(romanian.modeIdentificationMethod).toBe(
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-    );
-    expect(isInitialMartyriaStructureSupported(romanian)).toBe(true);
-
-    const english = attestedStructures['english-mode-number'];
-    const englishWithSign =
-      withSupportedInitialMartyriaModeIdentificationMethod(
-        english,
-        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-      );
-    expect(englishWithSign).toEqual({
-      ...english,
-      modeIdentificationMethod:
-        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    });
   });
 
   it('enumerates exactly the grammar-derived structures for every method', () => {

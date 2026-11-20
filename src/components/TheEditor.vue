@@ -201,10 +201,10 @@ import type {
 } from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
-  createDefaultParagraphStyles,
   getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import type { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
@@ -552,7 +552,7 @@ const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
 const paragraphStylesDialogIsOpen = ref(false);
 const initialMartyriaStylesDialogIsOpen = ref(false);
-const initialMartyriaStylesDialogElement = ref<ModeKeyElement | null>(null);
+const initialMartyriaStylesDialogStyleId = ref<string | null>(null);
 const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
@@ -1831,7 +1831,6 @@ onBeforeUnmount(() => {
 onMounted(() => {
   document.fonts.addEventListener('loadingdone', onLayoutFontsChanged);
   document.fonts.addEventListener('loadingerror', onLayoutFontsChanged);
-
   const savedAudioOptions = localStorage.getItem('audioOptionsDefault');
 
   if (savedAudioOptions != null) {
@@ -8616,12 +8615,12 @@ function onFileMenuParagraphStyles() {
 }
 
 function onFileMenuInitialMartyriaStyles() {
-  initialMartyriaStylesDialogElement.value = null;
-  initialMartyriaStylesDialogIsOpen.value = true;
+  openInitialMartyriaStyleDialog(null);
 }
 
 function openInitialMartyriaStyleDialog(element: ModeKeyElement | null) {
-  initialMartyriaStylesDialogElement.value = element;
+  initialMartyriaStylesDialogStyleId.value =
+    element?.initialMartyriaStyleId ?? null;
   initialMartyriaStylesDialogIsOpen.value = true;
 }
 
@@ -9910,19 +9909,26 @@ function createDefaultModeKey(pageSetup: PageSetup) {
 
 function createDefaultScore() {
   const score = new Score();
+  let savedPageSetupDefault: PageSetup_v1 | null = null;
 
   try {
     const pageSetupDefault = localStorage.getItem('pageSetupDefault');
 
     if (pageSetupDefault) {
-      SaveService.LoadPageSetup_v1(
-        score.pageSetup,
-        JSON.parse(pageSetupDefault),
-      );
+      savedPageSetupDefault = JSON.parse(pageSetupDefault) as PageSetup_v1;
+      SaveService.LoadPageSetup_v1(score.pageSetup, savedPageSetupDefault);
     }
   } catch (error) {
     console.error(error);
   }
+
+  // Saved paragraph style preferences take precedence over typography carried
+  // over from page setup defaults saved by earlier versions.
+  const defaultParagraphStyles =
+    SaveService.CreateDefaultParagraphStylesForPageSetupDefault(
+      savedPageSetupDefault,
+    );
+  score.paragraphStyles = defaultParagraphStyles;
 
   try {
     const paragraphStylesDefault = localStorage.getItem(
@@ -9932,7 +9938,7 @@ function createDefaultScore() {
     if (paragraphStylesDefault) {
       score.paragraphStyles = SaveService.LoadParagraphStyles_v1(
         JSON.parse(paragraphStylesDefault),
-        createDefaultParagraphStyles(),
+        defaultParagraphStyles,
       );
     }
   } catch (error) {
@@ -11163,9 +11169,7 @@ function renderTabLabel(tab: Tab) {
       :page-setup="score.pageSetup"
       :usage-counts="initialMartyriaStyleUsage.counts"
       :default-usage-count="initialMartyriaStyleUsage.defaultCount"
-      :initial-style-id="
-        initialMartyriaStylesDialogElement?.initialMartyriaStyleId
-      "
+      :initial-style-id="initialMartyriaStylesDialogStyleId"
       @confirm="confirmInitialMartyriaStyles($event)"
     />
     <DocumentPropertiesDialog

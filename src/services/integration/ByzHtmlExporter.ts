@@ -1,8 +1,4 @@
-import {
-  createModeKeyElementFromAttributes,
-  deserializeModeKeyAttributes,
-  type ModeKeyModelAttributes,
-} from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import { replaceModeKeysInHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import type {
   DropCapElement,
   ImageBoxElement,
@@ -92,23 +88,6 @@ function escapeHtml(value: string) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
-}
-
-export function replaceEmbeddedModeKeyMarkers(
-  html: string,
-  replace: (attributes: ModeKeyModelAttributes) => string,
-) {
-  return html.replace(
-    /<span\b(?=[^>]*\bclass="[^"]*\bneanes-ck-mode-key\b[^"]*")([^>]*)>(?:&nbsp;|&#160;|&#x[aA]0;|\u00a0)?<\/span>/gu,
-    (source, attributes: string) => {
-      const payload = attributes.match(
-        /data-neanes-mode-key=(['"])(.*?)\1/u,
-      )?.[2];
-      const modeKeyAttributes = deserializeModeKeyAttributes(payload);
-
-      return modeKeyAttributes == null ? source : replace(modeKeyAttributes);
-    },
-  );
 }
 
 interface TagInfo {
@@ -1395,8 +1374,7 @@ export class ByzHtmlExporter {
     defaultAppearance: InitialMartyriaAppearance,
     indentation: number,
   ) {
-    return replaceEmbeddedModeKeyMarkers(html, (modeKeyAttributes) => {
-      const modeKey = createModeKeyElementFromAttributes(modeKeyAttributes);
+    return replaceModeKeysInHtml(html, ({ element: modeKey }) => {
       const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
         element: modeKey,
         pageSetup,

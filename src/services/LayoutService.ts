@@ -51,14 +51,14 @@ import {
   resolveInitialMartyriaStyle,
   resolveModeKeyInitialMartyriaStyle,
 } from '@/models/InitialMartyriaResolver';
-import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
-import type {
-  InitialMartyriaAppearance,
-  InitialMartyriaPitchNote,
-  ResolvedInitialMartyriaRun,
-  ResolvedInitialMartyriaStyle,
+import {
+  getInitialMartyriaNoteAppearance,
+  type InitialMartyriaAppearance,
+  type InitialMartyriaPitchNote,
+  type InitialMartyriaStyle,
+  type ResolvedInitialMartyriaRun,
+  type ResolvedInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
-import { getInitialMartyriaNoteAppearance } from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayDiagnostics,
@@ -1455,10 +1455,11 @@ export class LayoutService {
             pageSetup,
             resolvedInitialMartyriaStyle,
           );
-          modeKeyElement.computedBaselineOffset = 0;
-
-          const elementWidthPx = pageSetup.innerPageWidth;
-          this.addBox(elementWidthPx, modeKeyElement, layoutWorkspace);
+          this.addBox(
+            pageSetup.innerPageWidth,
+            modeKeyElement,
+            layoutWorkspace,
+          );
           this.addGlue(standardGlue, layoutWorkspace, 'standard');
 
           break;
@@ -2375,7 +2376,6 @@ export class LayoutService {
       neumeHeight,
       neumeLineHeight,
       lyricsBaseline,
-
       defaultLyricsFontCss,
       measureBarWidthMap,
       atomicMelismaLayout,
@@ -8666,23 +8666,11 @@ export class LayoutService {
         ambitusHigh = Number.MIN_SAFE_INTEGER;
 
         currentModeKey = modeKey;
-        currentNote = getScaleNoteValue(modeKey.scaleNote);
-        currentScale = modeKey.scale;
-        currentShift = 0;
-
-        if (modeKey.fthora) {
-          currentScale =
-            this.getScaleFromFthora(modeKey.fthora, currentNote) ||
-            currentScale;
-
-          currentShift = this.getShift(
-            currentNote,
-            currentNote,
-            currentScale,
-            modeKey.fthora,
-            null,
-          );
-        }
+        ({
+          note: currentNote,
+          scale: currentScale,
+          shift: currentShift,
+        } = this.getModeKeyStartContext(modeKey));
       } else if (element.elementType === ElementType.Martyria) {
         const martyria = element as MartyriaElement;
 
@@ -8824,22 +8812,11 @@ export class LayoutService {
             );
           }
         } else {
-          currentNote = getScaleNoteValue(embeddedModeKey!.scaleNote);
-          currentScale = embeddedModeKey!.scale;
-          currentShift = 0;
-
-          if (embeddedModeKey!.fthora) {
-            currentScale =
-              this.getScaleFromFthora(embeddedModeKey!.fthora, currentNote) ||
-              currentScale;
-            currentShift = this.getShift(
-              currentNote,
-              currentNote,
-              currentScale,
-              embeddedModeKey!.fthora,
-              null,
-            );
-          }
+          ({
+            note: currentNote,
+            scale: currentScale,
+            shift: currentShift,
+          } = this.getModeKeyStartContext(embeddedModeKey!));
         }
       }
       if (elementFootnoteIds(element).length > 0) {
@@ -8863,6 +8840,20 @@ export class LayoutService {
       });
     }
     return contexts;
+  }
+
+  /** The note, scale, and shift a mode key starts the music in. */
+  private static getModeKeyStartContext(modeKey: ModeKeyElement) {
+    const note = getScaleNoteValue(modeKey.scaleNote);
+    let scale = modeKey.scale;
+    let shift = 0;
+
+    if (modeKey.fthora) {
+      scale = this.getScaleFromFthora(modeKey.fthora, note) || scale;
+      shift = this.getShift(note, note, scale, modeKey.fthora, null);
+    }
+
+    return { note, scale, shift };
   }
 
   public static assignAmbitus({

@@ -442,7 +442,11 @@ export class MusicXmlExporter {
           }
 
           // Set the key
-          const key = this.buildKey(modeKeyNode);
+          // A mode change override has no template; it keys by scale alone.
+          const key = this.buildKey(
+            modeKeyNode,
+            embeddedModeKey?.templateId ?? null,
+          );
 
           currentMeasure.attributes =
             currentMeasure.attributes ?? new MusicXmlAttributes();

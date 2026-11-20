@@ -31,7 +31,6 @@ import {
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
   type InitialMartyriaTextStructure,
-  withInitialMartyriaModeIdentificationMethod,
 } from './InitialMartyriaStyle';
 
 export { getInitialMartyriaStructureKey } from './InitialMartyriaResolver';
@@ -51,13 +50,13 @@ interface InitialMartyriaLanguageGrammar {
   modeSign: readonly InitialMartyriaModeNameGrammarRule[];
 }
 
-const everyModeIdentificationMethod = [
+export const initialMartyriaModeIdentificationMethods = [
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
 ] as const;
 
-const everyModeNamingScheme = [
+export const initialMartyriaModeNamingSchemes = [
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
@@ -68,7 +67,7 @@ const relationalModeNamingSchemes = [
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
 ] as const;
 
-const everyNumeralQualifier = [
+export const initialMartyriaNumeralQualifiers = [
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
 ] as const;
@@ -100,7 +99,7 @@ const ordinalPostAbsoluteRule = {
 
 const ordinalEveryAbsoluteRule = {
   ...ordinalPostAbsoluteRule,
-  numeralQualifiers: everyNumeralQualifier,
+  numeralQualifiers: initialMartyriaNumeralQualifiers,
 } satisfies InitialMartyriaModeNameGrammarRule;
 
 const ordinalPostAuthenticRule = {
@@ -137,7 +136,7 @@ const initialMartyriaGrammarRules: Record<
         {
           numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal],
           numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal],
-          modeNamingSchemes: everyModeNamingScheme,
+          modeNamingSchemes: initialMartyriaModeNamingSchemes,
         },
         [
           INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
@@ -149,7 +148,7 @@ const initialMartyriaGrammarRules: Record<
         {
           numeralKinds: [INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal],
           numeralQualifiers: [INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal],
-          modeNamingSchemes: everyModeNamingScheme,
+          modeNamingSchemes: initialMartyriaModeNamingSchemes,
         },
         [
           INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
@@ -325,15 +324,6 @@ export const initialMartyriaNumeralForms: InitialMartyriaNumeralForm[] = [
   })),
 );
 
-export const initialMartyriaModeIdentificationMethods: InitialMartyriaModeIdentificationMethod[] =
-  [...everyModeIdentificationMethod];
-
-export const initialMartyriaNumeralQualifiers: InitialMartyriaNumeralQualifier[] =
-  [...everyNumeralQualifier];
-
-export const initialMartyriaModeNamingSchemes: InitialMartyriaModeNamingScheme[] =
-  [...everyModeNamingScheme];
-
 function supportsNumeralForm(
   lexicon: InitialMartyriaLexicon,
   form: InitialMartyriaNumeralForm,
@@ -412,7 +402,7 @@ export function isInitialMartyriaStructureSupported(
   );
 }
 
-export type InitialMartyriaGrammarAxis =
+type InitialMartyriaGrammarAxis =
   | 'modeIdentificationMethod'
   | keyof InitialMartyriaModeNameSemantics
   | 'numeralStyle'
@@ -542,7 +532,7 @@ function getInitialMartyriaGrammarStructures(
       candidates.push(candidate);
     }
   };
-  for (const modeIdentificationMethod of everyModeIdentificationMethod) {
+  for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
     for (const candidate of getInitialMartyriaStructuresForMethod({
       ...getEnumerationCommonAxes(structure),
       modeIdentificationMethod,
@@ -576,37 +566,23 @@ function getGrammarAxisValue(
 function countAxisDifferences(
   a: InitialMartyriaStructure,
   b: InitialMartyriaStructure,
-  axes: readonly InitialMartyriaGrammarAxis[],
 ) {
-  return axes.filter(
+  return initialMartyriaGrammarAxes.filter(
     (axis) => getGrammarAxisValue(a, axis) !== getGrammarAxisValue(b, axis),
   ).length;
 }
 
-/**
- * Moves an unsupported structure to the nearest supported one. Callers
- * editing particular axes can give those axes priority so a correlated rule
- * does not undo the requested change.
- */
+/** Moves an unsupported structure to the nearest supported one. */
 export function normalizeInitialMartyriaStructure(
   structure: InitialMartyriaStructure,
-  preferredAxes: readonly InitialMartyriaGrammarAxis[] = [],
 ): InitialMartyriaStructure {
   if (isInitialMartyriaStructureSupported(structure)) {
     return structure;
   }
   const candidates = [...getInitialMartyriaGrammarStructures(structure)];
   candidates.sort((a, b) => {
-    const preferredDifference =
-      countAxisDifferences(a, structure, preferredAxes) -
-      countAxisDifferences(b, structure, preferredAxes);
-    if (preferredDifference !== 0) {
-      return preferredDifference;
-    }
-
     const totalDifference =
-      countAxisDifferences(a, structure, initialMartyriaGrammarAxes) -
-      countAxisDifferences(b, structure, initialMartyriaGrammarAxes);
+      countAxisDifferences(a, structure) - countAxisDifferences(b, structure);
     if (totalDifference !== 0) {
       return totalDifference;
     }
@@ -634,15 +610,6 @@ export function normalizeInitialMartyriaStructure(
   return { ...nearest };
 }
 
-export function initialMartyriaStructuresEqual(
-  a: InitialMartyriaStructure,
-  b: InitialMartyriaStructure,
-) {
-  return (
-    getInitialMartyriaStructureKey(a) === getInitialMartyriaStructureKey(b)
-  );
-}
-
 /**
  * Every distinct structure a language and identification method can reach,
  * de-duplicated by what it prints, in the grammar's presentation order.
@@ -668,23 +635,6 @@ export function enumerateInitialMartyriaStructures(
     structures.push({ structure, key });
   }
   return structures;
-}
-
-/**
- * The structure a style takes on when its identification method changes:
- * its wording carries over where the method supports it.
- */
-export function withSupportedInitialMartyriaModeIdentificationMethod(
-  structure: InitialMartyriaStructure,
-  modeIdentificationMethod: InitialMartyriaModeIdentificationMethod,
-) {
-  return normalizeInitialMartyriaStructure(
-    withInitialMartyriaModeIdentificationMethod(
-      structure,
-      modeIdentificationMethod,
-    ),
-    ['modeIdentificationMethod'],
-  );
 }
 
 export function createInitialMartyriaStyle(

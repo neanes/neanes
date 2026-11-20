@@ -27,7 +27,6 @@ import {
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStyle,
-  withInitialMartyriaModeIdentificationMethod,
 } from '@/models/InitialMartyriaStyle';
 import { Fthora, Ison, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
@@ -50,6 +49,7 @@ import {
   type ScoreElement as ScoreElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
+import { Footnote as Footnote_v1 } from '@/models/save/v1/Footnote';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { ParagraphStyle as ParagraphStyle_v1 } from '@/models/save/v1/Style';
 import { ScaleNote } from '@/models/Scales';
@@ -1608,76 +1608,6 @@ describe('SaveService font styles', () => {
     ).toBe(false);
   });
 
-  it.each([
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumber,
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ChurchSlavonicGlasNumber,
-    BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RussianGlasNumber,
-  ])(
-    'moves a saved sign after the label and preserves style references for %s',
-    (presetId) => {
-      const score = new Score();
-      const base = getBuiltInInitialMartyriaStyle(presetId);
-      const style = createInitialMartyriaStyle({
-        ...base,
-        structure: withInitialMartyriaModeIdentificationMethod(
-          base.structure,
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-        ),
-      });
-      score.initialMartyriaStyles = [style];
-      score.pageSetup.initialMartyriaStyleId = style.id;
-      const modeKey = new ModeKeyElement();
-      modeKey.initialMartyriaStyleId = style.id;
-      score.staff.elements = [modeKey];
-
-      const saved = SaveService.SaveScoreToJson(score);
-      saved.initialMartyriaStyles![0].numeralQualifier =
-        INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal;
-      const loaded = SaveService.LoadScore_v1(saved);
-
-      expect(loaded.initialMartyriaStyles).toEqual([style]);
-      expect(loaded.pageSetup.initialMartyriaStyleId).toBe(style.id);
-      expect(loaded.staff.elements[0]).toMatchObject({
-        initialMartyriaStyleId: style.id,
-      });
-    },
-  );
-
-  it.each([
-    [
-      INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    ],
-    [
-      INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-    ],
-    [
-      INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-    ],
-  ] as const)(
-    'loads a saved Spanish %s %s style with Roman numerals after Tono',
-    (numeralStyle, numeralQualifier) => {
-      const score = new Score();
-      const base = getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoRomanNumeral,
-      );
-      const style = createInitialMartyriaStyle(base);
-      score.initialMartyriaStyles = [style];
-      score.pageSetup.initialMartyriaStyleId = style.id;
-
-      const saved = SaveService.SaveScoreToJson(score);
-      const savedStyle = saved.initialMartyriaStyles![0];
-      savedStyle.numeralStyle = numeralStyle;
-      savedStyle.numeralQualifier = numeralQualifier;
-
-      const loaded = SaveService.LoadScore_v1(saved);
-      expect(loaded.initialMartyriaStyles).toEqual([style]);
-      expect(loaded.pageSetup.initialMartyriaStyleId).toBe(style.id);
-    },
-  );
-
   it('drops known but unsupported saved Initial Martyria styles', () => {
     const score = new Score();
     const base = getBuiltInInitialMartyriaStyle(
@@ -1699,6 +1629,40 @@ describe('SaveService font styles', () => {
     const loaded = SaveService.LoadScore_v1(saved);
 
     expectDefaultNeumeFontStyle(loaded);
+  });
+
+  it('loads clipboard Initial Martyria styles as a file load does', () => {
+    const base = getBuiltInInitialMartyriaStyle(
+      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
+    );
+    const sourceParagraphStyle = new ParagraphStyle();
+    sourceParagraphStyle.id = 'source-initial-martyria';
+    sourceParagraphStyle.displayName = 'Source';
+    const supported = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Supported',
+      paragraphStyleId: sourceParagraphStyle.id,
+    });
+    const unsupported = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Unsupported',
+    });
+    const savedUnsupported = SaveService.SaveInitialMartyriaStyle(unsupported);
+    savedUnsupported.numeralKind = INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal;
+    savedUnsupported.numeralQualifier =
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal;
+
+    const loaded = SaveService.LoadInitialMartyriaStyles_v1(
+      JSON.parse(
+        JSON.stringify([
+          SaveService.SaveInitialMartyriaStyle(supported),
+          savedUnsupported,
+        ]),
+      ),
+      [...createDefaultParagraphStyles(), sourceParagraphStyle],
+    );
+
+    expect(loaded).toEqual([supported]);
   });
 
   it('loads only the first Initial Martyria style with a given id', () => {
@@ -2041,6 +2005,56 @@ describe('SaveService font styles', () => {
     expect(loadedCustom.fontSize).toBeCloseTo((Unit.fromPt(30) * 14.5) / 20);
     expect(loadedUsingDefaults.color).toBeNull();
     expect(loadedUsingDefaults.fontSize).toBeNull();
+  });
+
+  it('migrates legacy mode key element styling in footnotes', () => {
+    const custom = new ModeKeyElement_v1();
+    custom.color = '#123456';
+    custom.fontSize = Unit.fromPt(40);
+    const usingDefaults = new ModeKeyElement_v1();
+    usingDefaults.useDefaultStyle = true;
+    usingDefaults.color = '#123456';
+    usingDefaults.fontSize = Unit.fromPt(40);
+    const footnote = new Footnote_v1();
+    footnote.id = 'footnote';
+    footnote.staff.elements = [custom, usingDefaults];
+    const saved = createLegacyScore();
+    saved.footnotes = [footnote];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const [loadedCustom, loadedUsingDefaults] = loaded.footnotes[0].staff
+      .elements as ModeKeyElement[];
+
+    expect(loadedCustom.color).toBe('#123456');
+    expect(loadedCustom.fontSize).toBeCloseTo((Unit.fromPt(40) * 14.5) / 20);
+    expect(loadedUsingDefaults.color).toBeNull();
+    expect(loadedUsingDefaults.fontSize).toBeNull();
+  });
+
+  it('carries legacy mode key typography from saved page setup defaults', () => {
+    const savedDefault = new PageSetup_v1();
+    savedDefault.modeKeyDefaultColor = '#123456';
+    savedDefault.modeKeyDefaultFontSize = Unit.fromPt(40);
+    savedDefault.modeKeyDefaultStrokeWidth = 2;
+
+    const styles =
+      SaveService.CreateDefaultParagraphStylesForPageSetupDefault(savedDefault);
+
+    expect(
+      resolveParagraphStyle(
+        styles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      ),
+    ).toMatchObject({
+      color: '#123456',
+      fontSize: expect.closeTo((Unit.fromPt(40) * 14.5) / 20),
+      strokeWidth: 2,
+    });
+    expect(
+      SaveService.CreateDefaultParagraphStylesForPageSetupDefault(
+        new PageSetup_v1(),
+      ),
+    ).toEqual(createDefaultParagraphStyles());
   });
 
   it('saves rich text language fields instead of legacy rtl', () => {

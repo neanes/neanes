@@ -62,7 +62,7 @@ describe('embedded mode key data', () => {
     const [element] = extractModeKeyElementsFromHtml(rewritten);
 
     expect(rewritten).toMatch(
-      /^<p>x<span class="neanes-ck-mode-key" data-neanes-mode-key='/u,
+      /^<p>x<span class="neanes-ck-mode-key" data-neanes-mode-key="[^"]+"><\/span>y<\/p>$/u,
     );
     expect(element.initialMartyriaStyleId).toBeNull();
     expect(element.fontSize).toBe(14);

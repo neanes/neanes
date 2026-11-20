@@ -445,7 +445,7 @@ export function createDefaultParagraphStyles() {
   ];
 }
 
-export function applyParagraphStyleOverrides(
+function applyParagraphStyleOverrides(
   target: ResolvedParagraphStyle,
   overrides?: ParagraphStyleOverrides,
 ) {

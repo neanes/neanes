@@ -18,11 +18,14 @@ import { computed, inject, onBeforeUnmount, useTemplateRef, watch } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
 import { Footnotes } from '@/ckeditor-plugins/footnotes/footnotes';
-import { MODE_KEY_ELEMENT } from '@/ckeditor-plugins/insertmodekey/insertmodekeyediting';
+import InsertModeKeyEditing, {
+  MODE_KEY_ELEMENT,
+} from '@/ckeditor-plugins/insertmodekey/insertmodekeyediting';
 import {
   createModeKeyElementFromModel,
   extractModeKeyElementsFromHtml,
   getModeKeyModelAttributes,
+  MODE_KEY_CLASS,
 } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import { NEUME_ELEMENT } from '@/ckeditor-plugins/insertneume/insertneumeediting';
 import {
@@ -166,6 +169,13 @@ function onReady(editor: InlineEditor) {
           : undefined,
     };
   }
+  if (footnotes !== null) {
+    editor.plugins.get(InsertModeKeyEditing).clipboard = {
+      copy: (styleId) => footnotes.copyInitialMartyriaStyle(styleId),
+      paste: (styleId, payload) =>
+        footnotes.pasteInitialMartyriaStyle(props.owner, styleId, payload),
+    };
+  }
   if (props.footnotesEditable && footnotes?.supports(props.owner)) {
     plugin.enableInsertion(() => {
       if (footnotes.supports(props.owner)) {
@@ -271,7 +281,7 @@ function onReady(editor: InlineEditor) {
   const onEditableDoubleClick = (event: MouseEvent) => {
     if (
       !(event.target instanceof Element) ||
-      event.target.closest('.neanes-ck-mode-key') == null
+      event.target.closest(`.${MODE_KEY_CLASS}`) == null
     ) {
       return;
     }

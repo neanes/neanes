@@ -1,5 +1,5 @@
-import type { ModelElement } from 'ckeditor5';
-import { Plugin, toWidget } from 'ckeditor5';
+import type { ModelElement, ViewElement, ViewItem } from 'ckeditor5';
+import { ClipboardPipeline, Plugin, toWidget } from 'ckeditor5';
 import { h, render as renderVue } from 'vue';
 
 import ModeKey from '@/components/ModeKey.vue';
@@ -21,12 +21,15 @@ import {
 
 export const MODE_KEY_ELEMENT = 'modeKey';
 const MODE_KEY_MOUNT_CLASS = 'neanes-ck-mode-key-mount';
+// Carries a copied key's custom initial martyria style to the paste.
+const MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE = 'data-neanes-initial-martyria-style';
+
+function isModeKeyView(item: ViewItem): item is ViewElement {
+  return item.is('element', 'span') && item.hasClass(MODE_KEY_CLASS);
+}
 
 export type InsertModeKeyConfig = {
   label?: string;
-  pageSetup?: PageSetup;
-  paragraphStyles?: ParagraphStyle[];
-  initialMartyriaStyles?: InitialMartyriaStyle[];
   getPageSetup?: () => PageSetup;
   getParagraphStyles?: () => ParagraphStyle[];
   getInitialMartyriaStyles?: () => InitialMartyriaStyle[];
@@ -38,6 +41,15 @@ type MountedModeKey = {
 };
 
 export default class InsertModeKeyEditing extends Plugin {
+  /**
+   * Resolves the initial martyria style a key names across scores: `copy`
+   * returns the payload for a custom style, `paste` the style the pasted key
+   * names in this score.
+   */
+  public clipboard?: {
+    copy(styleId: string): string | null;
+    paste(styleId: string, payload: string | undefined): string | null;
+  };
   private readonly mountedModeKeys = new Set<MountedModeKey>();
   private pruneTimer: number | null = null;
 
@@ -108,6 +120,68 @@ export default class InsertModeKeyEditing extends Plugin {
       },
     });
 
+    editor.editing.view.document.on('clipboardOutput', (_event, data) => {
+      editor.editing.view.change((writer) => {
+        for (const item of writer.createRangeIn(data.content).getItems()) {
+          if (!isModeKeyView(item)) {
+            continue;
+          }
+          const styleId = deserializeModeKeyAttributes(
+            item.getAttribute(MODE_KEY_DATA_ATTRIBUTE),
+          )?.initialMartyriaStyleId;
+          const payload =
+            typeof styleId === 'string'
+              ? this.clipboard?.copy(styleId)
+              : undefined;
+          if (payload != null) {
+            writer.setAttribute(
+              MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE,
+              payload,
+              item,
+            );
+          }
+        }
+      });
+    });
+
+    editor.plugins
+      .get(ClipboardPipeline)
+      .on('inputTransformation', (_event, data) => {
+        const modeKeys = [
+          ...editor.editing.view.createRangeIn(data.content).getItems(),
+        ].filter(isModeKeyView);
+        const clipboard = this.clipboard;
+        if (modeKeys.length === 0 || clipboard === undefined) {
+          return;
+        }
+        editor.editing.view.change((writer) => {
+          for (const modeKey of modeKeys) {
+            const payload = modeKey.getAttribute(
+              MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE,
+            );
+            writer.removeAttribute(MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE, modeKey);
+            const attributes = deserializeModeKeyAttributes(
+              modeKey.getAttribute(MODE_KEY_DATA_ATTRIBUTE),
+            );
+            const styleId = attributes?.initialMartyriaStyleId;
+            if (typeof styleId !== 'string') {
+              continue;
+            }
+            const pastedStyleId = clipboard.paste(styleId, payload);
+            if (pastedStyleId !== styleId) {
+              writer.setAttribute(
+                MODE_KEY_DATA_ATTRIBUTE,
+                serializeModeKeyAttributes({
+                  ...attributes,
+                  initialMartyriaStyleId: pastedStyleId,
+                }),
+                modeKey,
+              );
+            }
+          }
+        });
+      });
+
     editor.model.document.on('change:data', () => {
       // Intentionally refresh every mounted key on each data change. Manual
       // testing with realistic documents found no typing lag. Do not replace
@@ -150,7 +224,7 @@ export default class InsertModeKeyEditing extends Plugin {
     const config = this.editor.config.get(
       'insertModeKey',
     ) as InsertModeKeyConfig;
-    const pageSetup = config?.getPageSetup?.() ?? config?.pageSetup;
+    const pageSetup = config.getPageSetup?.();
 
     if (pageSetup == null) {
       renderVue(null, host);
@@ -161,12 +235,8 @@ export default class InsertModeKeyEditing extends Plugin {
     const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
       element,
       pageSetup,
-      paragraphStyles:
-        config.getParagraphStyles?.() ?? config.paragraphStyles ?? [],
-      initialMartyriaStyles:
-        config.getInitialMartyriaStyles?.() ??
-        config.initialMartyriaStyles ??
-        [],
+      paragraphStyles: config.getParagraphStyles?.() ?? [],
+      initialMartyriaStyles: config.getInitialMartyriaStyles?.() ?? [],
     });
     const geometry = LayoutService.layoutModeKey(
       element,

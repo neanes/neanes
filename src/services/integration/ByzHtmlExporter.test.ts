@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getModeKeyModelAttributes,
+  replaceModeKeysInHtml,
   serializeModeKeyAttributes,
 } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import {
@@ -44,11 +45,7 @@ import { Unit } from '@/utils/Unit';
 
 import glyphnames from '../../assets/fonts/sbmufl/glyphnames.json';
 import type { SbmuflGlyphName } from './../NeumeMappingService';
-import {
-  ByzHtmlExporter,
-  createByzHtmlDocument,
-  replaceEmbeddedModeKeyMarkers,
-} from './ByzHtmlExporter';
+import { ByzHtmlExporter, createByzHtmlDocument } from './ByzHtmlExporter';
 
 function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
   const element = new TextBoxElement();
@@ -157,9 +154,10 @@ describe('ByzHtmlExporter', () => {
     const modeKey = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
     const html = `<p>Before ${embeddedModeKeyHtml(modeKey, '&nbsp;')} after</p>`;
 
-    const replaced = replaceEmbeddedModeKeyMarkers(
+    const replaced = replaceModeKeysInHtml(
       html,
-      (attributes) => `<converted data-mode="${attributes.mode}"></converted>`,
+      ({ attributes }) =>
+        `<converted data-mode="${attributes.mode}"></converted>`,
     );
 
     expect(replaced).toBe(

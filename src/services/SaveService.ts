@@ -29,7 +29,6 @@ import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGra
 import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LABEL_VARIANTS,
-  INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
@@ -230,12 +229,19 @@ function scaleLegacyModeKeyFontSize(fontSize: number) {
   return fontSize * LEGACY_MODE_KEY_FONT_SIZE_SCALE;
 }
 
+function hasLegacyModeKeyStyleDefaults(pageSetup: PageSetup_v1) {
+  return [
+    pageSetup.modeKeyDefaultColor,
+    pageSetup.modeKeyDefaultFontSize,
+    pageSetup.modeKeyDefaultStrokeWidth,
+  ].some((value) => value != null);
+}
+
 /*
  * Folds the shared pre-style mode key color, size, and outline into Initial
- * Martyria so Initial Martyria (Greek) inherits them. Legacy scores load with
- * music-font lettering, which paints with the regular paragraph style. The
- * height adjustment has no equivalent: the replacement measures its own
- * height from font metrics.
+ * Martyria so Initial Martyria (Greek), which paints the music-font lettering
+ * legacy scores load with, inherits them. The height adjustment has no
+ * equivalent: the replacement measures its own height from font metrics.
  */
 function applyLegacyModeKeyStyleDefaults(
   styles: ParagraphStyle[],
@@ -298,7 +304,12 @@ function migrateLegacyModeKeyStyleOverrides(
     BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
   );
 
-  for (const element of score.staff.elements) {
+  const elements = [
+    ...score.staff.elements,
+    ...(score.footnotes ?? []).flatMap((footnote) => footnote.staff.elements),
+  ];
+
+  for (const element of elements) {
     if (element.elementType !== ElementType_v1.ModeKey) {
       continue;
     }
@@ -1135,12 +1146,6 @@ function loadInitialMartyriaStyle(
     structure = {
       ...common,
       modeIdentificationMethod: saved.modeIdentificationMethod,
-      numeralQualifier:
-        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish ||
-        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic ||
-        common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Russian
-          ? INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal
-          : common.numeralQualifier,
     };
   } else {
     if (
@@ -1151,20 +1156,10 @@ function loadInitialMartyriaStyle(
     ) {
       return null;
     }
-    const usesSpanishOrdinalNumeral =
-      common.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish &&
-      common.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal &&
-      (saved.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits ||
-        saved.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals);
     structure = {
       ...common,
       modeIdentificationMethod: saved.modeIdentificationMethod,
-      numeralQualifier: usesSpanishOrdinalNumeral
-        ? INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal
-        : common.numeralQualifier,
-      numeralStyle: usesSpanishOrdinalNumeral
-        ? INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals
-        : saved.numeralStyle,
+      numeralStyle: saved.numeralStyle,
       numberingSystem: saved.numberingSystem,
     };
   }
@@ -2438,6 +2433,22 @@ export class SaveService {
     }
   }
 
+  public static SaveInitialMartyriaStyle(style: InitialMartyriaStyle) {
+    return saveInitialMartyriaStyle(style);
+  }
+
+  /**
+   * Loads saved initial martyria styles as a file load does, dropping those
+   * this version does not support. Paragraph style references are checked
+   * against `paragraphStyles`, the styles of the score they were saved from.
+   */
+  public static LoadInitialMartyriaStyles_v1(
+    savedStyles: InitialMartyriaStyle_v1[],
+    paragraphStyles: ParagraphStyle[],
+  ) {
+    return loadInitialMartyriaStyles(savedStyles, paragraphStyles);
+  }
+
   public static LoadParagraphStyle_v1(saved: ParagraphStyle_v1) {
     const style = new ParagraphStyle();
     style.id = saved.id;
@@ -2499,6 +2510,24 @@ export class SaveService {
 
     style.overrides = overrides;
     return style;
+  }
+
+  /**
+   * The built-in paragraph styles for a new score made from saved page setup
+   * defaults. Defaults saved before initial martyria styles carry the old mode
+   * key typography, which moves into the Initial Martyria paragraph styles.
+   */
+  public static CreateDefaultParagraphStylesForPageSetupDefault(
+    savedPageSetup: PageSetup_v1 | null,
+  ) {
+    const styles = createDefaultParagraphStyles();
+    if (
+      savedPageSetup != null &&
+      hasLegacyModeKeyStyleDefaults(savedPageSetup)
+    ) {
+      applyLegacyModeKeyStyleDefaults(styles, savedPageSetup);
+    }
+    return styles;
   }
 
   public static LoadParagraphStyles_v1(

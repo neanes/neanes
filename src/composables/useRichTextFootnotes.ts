@@ -5,7 +5,15 @@ import type { RichTextBoxContentKey } from '@/models/Element';
 import type { ScoreElement } from '@/models/Element';
 import { RichTextBoxElement } from '@/models/Element';
 import type { Footnote } from '@/models/Footnote';
-import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { isBuiltInInitialMartyriaStyleId } from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  cloneInitialMartyriaStyle,
+  type InitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
+import {
+  createDefaultParagraphStyles,
+  type ParagraphStyle,
+} from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import {
@@ -24,11 +32,17 @@ import {
 } from '@/services/RichTextFootnotes';
 import { SaveService } from '@/services/SaveService';
 import {
+  collectClipboardInitialMartyriaStylesFromElements,
+  resolveClipboardInitialMartyriaStyles,
+  rewriteClipboardElementInitialMartyriaStyleId,
+} from '@/utils/clipboardInitialMartyriaStyles';
+import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
   resolveClipboardParagraphStyles,
   rewriteClipboardElementParagraphStyleIds,
 } from '@/utils/clipboardParagraphStyles';
+import { getEmbeddedModeKeys } from '@/utils/richTextModeKeys';
 
 export interface RichTextFootnoteController {
   supports(owner: object): owner is RichTextBoxElement;
@@ -42,6 +56,57 @@ export interface RichTextFootnoteController {
   copy(id: string): string;
   paste(owner: RichTextBoxElement, payload: string): string;
   reject(owner?: object): void;
+  /** The custom style a copied embedded mode key names, or null. */
+  copyInitialMartyriaStyle(styleId: string): string | null;
+  /**
+   * The style a pasted embedded mode key names in this score: the copied
+   * style, reused or imported, or null when it follows the score's default.
+   */
+  pasteInitialMartyriaStyle(
+    owner: object,
+    styleId: string,
+    payload: string | undefined,
+  ): string | null;
+}
+
+interface InitialMartyriaStyleClipboard {
+  initialMartyriaStyles: ReturnType<
+    typeof SaveService.SaveInitialMartyriaStyle
+  >[];
+  paragraphStyles: ReturnType<typeof SaveService.SaveParagraphStyle>[];
+  paragraphStyleIds: string[];
+}
+
+interface StagedModeKeyStyles {
+  initialMartyriaStyles: InitialMartyriaStyle[];
+  paragraphStyles: ParagraphStyle[];
+}
+
+// Clipboard styles load as file styles do, so a payload from another version
+// or app cannot add a style this version does not support. Payloads copied
+// before styles traveled with footnotes have none.
+function loadClipboardInitialMartyriaStyles(
+  saved: unknown,
+  sourceParagraphStyles: ParagraphStyle[],
+) {
+  return Array.isArray(saved)
+    ? SaveService.LoadInitialMartyriaStyles_v1(saved, sourceParagraphStyles)
+    : [];
+}
+
+// Each style once, leaving out those the score already has.
+function withoutExistingStyles<T extends { id: string }>(
+  candidates: T[],
+  existing: T[],
+) {
+  const ids = new Set(existing.map(({ id }) => id));
+  return candidates.filter((style) => {
+    if (ids.has(style.id)) {
+      return false;
+    }
+    ids.add(style.id);
+    return true;
+  });
 }
 
 export const richTextFootnoteControllerKey: InjectionKey<RichTextFootnoteController> =
@@ -60,6 +125,16 @@ export function useRichTextFootnotes(
   const pendingRichTextStyles = new WeakMap<
     RichTextBoxElement,
     ParagraphStyle[]
+  >();
+  const pendingRichTextInitialMartyriaStyles = new WeakMap<
+    RichTextBoxElement,
+    InitialMartyriaStyle[]
+  >();
+  // Styles imported by pasting embedded mode keys, added to the score with
+  // the first update of the box that uses them.
+  const pendingModeKeyStyles = new WeakMap<
+    RichTextBoxElement,
+    StagedModeKeyStyles
   >();
   const pendingRichTextFootnotes = new WeakMap<
     RichTextBoxElement,
@@ -83,6 +158,7 @@ export function useRichTextFootnotes(
   function clearPendingFootnotes(owner: RichTextBoxElement) {
     pendingRichTextFootnotes.delete(owner);
     pendingRichTextStyles.delete(owner);
+    pendingRichTextInitialMartyriaStyles.delete(owner);
   }
 
   const controller: RichTextFootnoteController = {
@@ -147,6 +223,11 @@ export function useRichTextFootnotes(
         paragraphStyles: workspace.value.score.paragraphStyles.map((style) =>
           SaveService.SaveParagraphStyle(style),
         ),
+        initialMartyriaStyles:
+          collectClipboardInitialMartyriaStylesFromElements(
+            body.staff.elements,
+            workspace.value.score.initialMartyriaStyles,
+          ).map((style) => SaveService.SaveInitialMartyriaStyle(style)),
       });
     },
     paste(owner, payload) {
@@ -158,14 +239,21 @@ export function useRichTextFootnotes(
       const saved = JSON.parse(payload) as {
         body: ReturnType<typeof SaveService.SaveFootnote>;
         paragraphStyles: ReturnType<typeof SaveService.SaveParagraphStyle>[];
+        initialMartyriaStyles?: unknown;
       };
       const sourceStyles = saved.paragraphStyles.map((style) =>
         SaveService.LoadParagraphStyle_v1(style),
+      );
+      // The payload carries every paragraph style of the source score.
+      const clipboardInitialMartyriaStyles = loadClipboardInitialMartyriaStyles(
+        saved.initialMartyriaStyles,
+        sourceStyles,
       );
       const copy = cloneFootnote(
         SaveService.LoadFootnote_v1(
           saved.body,
           workspace.value.score.pageSetup,
+          clipboardInitialMartyriaStyles,
         ),
       );
       if (
@@ -184,23 +272,52 @@ export function useRichTextFootnotes(
         resolveClipboardParagraphStyles(
           collectClipboardParagraphStylesFromElements(
             copy.staff.elements,
-            [],
+            clipboardInitialMartyriaStyles,
             sourceStyles,
           ),
           currentStyles,
-          collectClipboardParagraphStyleIdsFromElements(copy.staff.elements),
+          collectClipboardParagraphStyleIdsFromElements(
+            copy.staff.elements,
+            clipboardInitialMartyriaStyles,
+          ),
         );
       const paragraphStyles = [...currentStyles, ...importedParagraphStyles];
-      copy.staff.elements.forEach((element) =>
+      const stagedInitialMartyriaStyles =
+        pendingRichTextInitialMartyriaStyles.get(owner) ?? [];
+      const currentInitialMartyriaStyles = [
+        ...workspace.value.score.initialMartyriaStyles,
+        ...stagedInitialMartyriaStyles,
+      ];
+      const { importedInitialMartyriaStyles, initialMartyriaStyleIdRemap } =
+        resolveClipboardInitialMartyriaStyles(
+          clipboardInitialMartyriaStyles,
+          currentInitialMartyriaStyles,
+          paragraphStyles,
+          styleIdRemap,
+        );
+      const initialMartyriaStyles = [
+        ...currentInitialMartyriaStyles,
+        ...importedInitialMartyriaStyles,
+      ];
+      copy.staff.elements.forEach((element) => {
         rewriteClipboardElementParagraphStyleIds(
           element,
           paragraphStyles,
           styleIdRemap,
-        ),
-      );
+        );
+        rewriteClipboardElementInitialMartyriaStyleId(
+          element,
+          initialMartyriaStyles,
+          initialMartyriaStyleIdRemap,
+        );
+      });
       pendingRichTextStyles.set(owner, [
         ...stagedStyles,
         ...importedParagraphStyles,
+      ]);
+      pendingRichTextInitialMartyriaStyles.set(owner, [
+        ...stagedInitialMartyriaStyles,
+        ...importedInitialMartyriaStyles,
       ]);
       pendingRichTextFootnotes.set(owner, [
         ...(pendingRichTextFootnotes.get(owner) ?? []),
@@ -216,6 +333,98 @@ export function useRichTextFootnotes(
         clearPendingFootnotes(owner);
       }
       rejectPaste();
+    },
+    copyInitialMartyriaStyle(styleId) {
+      const score = workspace.value.score;
+      const style = score.initialMartyriaStyles.find(
+        (candidate) => candidate.id === styleId,
+      );
+      if (style === undefined) {
+        return null;
+      }
+      const initialMartyriaStyles = [cloneInitialMartyriaStyle(style)];
+      const clipboard: InitialMartyriaStyleClipboard = {
+        initialMartyriaStyles: initialMartyriaStyles.map((initialStyle) =>
+          SaveService.SaveInitialMartyriaStyle(initialStyle),
+        ),
+        paragraphStyles: collectClipboardParagraphStylesFromElements(
+          [],
+          initialMartyriaStyles,
+          score.paragraphStyles,
+        ).map((paragraphStyle) =>
+          SaveService.SaveParagraphStyle(paragraphStyle),
+        ),
+        paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(
+          [],
+          initialMartyriaStyles,
+        ),
+      };
+      return JSON.stringify(clipboard);
+    },
+    pasteInitialMartyriaStyle(owner, styleId, payload) {
+      if (isBuiltInInitialMartyriaStyleId(styleId)) {
+        return styleId;
+      }
+      const score = workspace.value.score;
+      const staged =
+        owner instanceof RichTextBoxElement
+          ? pendingModeKeyStyles.get(owner)
+          : undefined;
+      const currentInitialMartyriaStyles = [
+        ...score.initialMartyriaStyles,
+        ...(staged?.initialMartyriaStyles ?? []),
+      ];
+      const existing = currentInitialMartyriaStyles.some(
+        ({ id }) => id === styleId,
+      )
+        ? styleId
+        : null;
+      if (payload === undefined || !(owner instanceof RichTextBoxElement)) {
+        return existing;
+      }
+      try {
+        const clipboard = JSON.parse(payload) as InitialMartyriaStyleClipboard;
+        const currentParagraphStyles = [
+          ...score.paragraphStyles,
+          ...(staged?.paragraphStyles ?? []),
+        ];
+        const clipboardParagraphStyles = clipboard.paragraphStyles.map(
+          (style) => SaveService.LoadParagraphStyle_v1(style),
+        );
+        // The payload carries only the source's custom paragraph styles; the
+        // built-in ones exist in every score.
+        const clipboardInitialMartyriaStyles =
+          loadClipboardInitialMartyriaStyles(clipboard.initialMartyriaStyles, [
+            ...createDefaultParagraphStyles(),
+            ...clipboardParagraphStyles,
+          ]);
+        const { importedParagraphStyles, styleIdRemap } =
+          resolveClipboardParagraphStyles(
+            clipboardParagraphStyles,
+            currentParagraphStyles,
+            clipboard.paragraphStyleIds,
+          );
+        const { importedInitialMartyriaStyles, initialMartyriaStyleIdRemap } =
+          resolveClipboardInitialMartyriaStyles(
+            clipboardInitialMartyriaStyles,
+            currentInitialMartyriaStyles,
+            [...currentParagraphStyles, ...importedParagraphStyles],
+            styleIdRemap,
+          );
+        pendingModeKeyStyles.set(owner, {
+          initialMartyriaStyles: [
+            ...(staged?.initialMartyriaStyles ?? []),
+            ...importedInitialMartyriaStyles,
+          ],
+          paragraphStyles: [
+            ...(staged?.paragraphStyles ?? []),
+            ...importedParagraphStyles,
+          ],
+        });
+        return initialMartyriaStyleIdRemap.get(styleId) ?? existing;
+      } catch {
+        return existing;
+      }
     },
   };
 
@@ -241,16 +450,55 @@ export function useRichTextFootnotes(
       added,
     );
     const score = workspace.value.score;
-    const importedStyles = stagedStyles.filter(
-      (style) => !score.paragraphStyles.some(({ id }) => id === style.id),
+    const paragraphStylesToAdd = added.length > 0 ? [...stagedStyles] : [];
+    const initialMartyriaStylesToAdd =
+      added.length > 0
+        ? [...(pendingRichTextInitialMartyriaStyles.get(element) ?? [])]
+        : [];
+    const stagedModeKeyStyles = pendingModeKeyStyles.get(element);
+    if (stagedModeKeyStyles !== undefined) {
+      const next = Object.assign(new RichTextBoxElement(), element, newValues);
+      const referenced = new Set(
+        getEmbeddedModeKeys(next).map((key) => key.initialMartyriaStyleId),
+      );
+      if (
+        stagedModeKeyStyles.initialMartyriaStyles.some(({ id }) =>
+          referenced.has(id),
+        )
+      ) {
+        paragraphStylesToAdd.push(...stagedModeKeyStyles.paragraphStyles);
+        initialMartyriaStylesToAdd.push(
+          ...stagedModeKeyStyles.initialMartyriaStyles,
+        );
+        pendingModeKeyStyles.delete(element);
+      }
+    }
+    const importedStyles = withoutExistingStyles(
+      paragraphStylesToAdd,
+      score.paragraphStyles,
     );
-    if (importedStyles.length > 0 && added.length > 0) {
+    const importedInitialMartyriaStyles = withoutExistingStyles(
+      initialMartyriaStylesToAdd,
+      score.initialMartyriaStyles,
+    );
+    const scoreValues: Partial<Score> = {};
+    if (importedStyles.length > 0) {
+      scoreValues.paragraphStyles = [
+        ...score.paragraphStyles,
+        ...importedStyles,
+      ];
+    }
+    if (importedInitialMartyriaStyles.length > 0) {
+      scoreValues.initialMartyriaStyles = [
+        ...score.initialMartyriaStyles,
+        ...importedInitialMartyriaStyles,
+      ];
+    }
+    if (Object.keys(scoreValues).length > 0) {
       commands.unshift(
         new CommandFactory<Score>().create('update-properties', {
           target: score,
-          newValues: {
-            paragraphStyles: [...score.paragraphStyles, ...importedStyles],
-          },
+          newValues: scoreValues,
         }),
       );
     }

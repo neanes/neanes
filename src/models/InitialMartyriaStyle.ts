@@ -1,5 +1,4 @@
-import type { Fthora, Neume } from '@/models/Neumes';
-import type { ModeSign } from '@/models/Neumes';
+import type { Fthora, ModeSign, Neume } from '@/models/Neumes';
 import type { ScaleNote } from '@/models/Scales';
 import type { FontVariantProperty } from '@/utils/fontVariants';
 
@@ -140,7 +139,8 @@ export interface InitialMartyriaStyleTypography {
    * Music-font lettering takes its size, color, and stroke from the
    * paragraph style matching the language's script alone (the Greek one for
    * the neume font's Greek structure); ordinal forms apply to text lettering
-   * alone. Music-font lettering is only ever paired with a structure the font can letter: styles are created and loaded through
+   * alone. Music-font lettering is only ever paired with a structure the
+   * font can letter: styles are created and loaded through
    * getSupportedInitialMartyriaLettering, and the built-in styles are pinned
    * by a test. Consumers read this field as is.
    */
@@ -200,54 +200,6 @@ export interface InitialMartyriaModeSignStructure extends InitialMartyriaStructu
 export type InitialMartyriaStructure =
   InitialMartyriaTextStructure | InitialMartyriaModeSignStructure;
 
-export function withInitialMartyriaModeIdentificationMethod(
-  structure: InitialMartyriaStructure,
-  modeIdentificationMethod: InitialMartyriaModeIdentificationMethod,
-): InitialMartyriaStructure {
-  const common = {
-    languageId: structure.languageId,
-    labelVariant: structure.labelVariant,
-    numeralKind: structure.numeralKind,
-    numeralQualifier: structure.numeralQualifier,
-    modeNamingScheme: structure.modeNamingScheme,
-    transliterateNoteNames: structure.transliterateNoteNames,
-    plagalAbbreviationWithModeSign: structure.plagalAbbreviationWithModeSign,
-  };
-  if (
-    modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-  ) {
-    return { ...common, modeIdentificationMethod };
-  }
-  // A sign has no printed form to preserve; words are its direct reading.
-  const written =
-    structure.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-      ? { numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Words }
-      : {
-          numeralStyle: structure.numeralStyle,
-          numberingSystem: structure.numberingSystem,
-        };
-  return { ...common, modeIdentificationMethod, ...written };
-}
-
-export function withInitialMartyriaNumeralForm(
-  structure: InitialMartyriaTextStructure,
-  form: Pick<
-    InitialMartyriaWrittenModeNameSemantics,
-    'numeralKind' | 'numeralStyle'
-  >,
-): InitialMartyriaTextStructure {
-  return {
-    ...structure,
-    ...form,
-    numberingSystem:
-      form.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
-        ? structure.numberingSystem
-        : undefined,
-  };
-}
-
 /**
  * What identifies a style by name. Names are unique across all of a score's
  * styles, and pasting reuses a destination style with the same name.
@@ -303,9 +255,8 @@ export interface ResolvedInitialMartyriaStyle {
   mainAppearance: InitialMartyriaAppearance;
   greekAppearance: InitialMartyriaAppearance;
   /**
-   * The appearance matching the script of the style's language. Under
-   * music-font lettering its color and stroke come from the regular
-   * paragraph style.
+   * The appearance matching the script of the style's language. It sizes
+   * and paints every music-font glyph, whatever the lettering.
    */
   primaryAppearance: InitialMartyriaAppearance;
 }

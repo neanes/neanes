@@ -15,14 +15,13 @@ import {
   MODE_KEY_CLASS,
   MODE_KEY_DATA_ATTRIBUTE,
   MODE_KEY_MODEL_ATTRIBUTES,
+  MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE,
   serializeModeKeyAttributes,
   toModeKeyEditorAttributes,
 } from './modekeydata';
 
 export const MODE_KEY_ELEMENT = 'modeKey';
 const MODE_KEY_MOUNT_CLASS = 'neanes-ck-mode-key-mount';
-// Carries a copied key's custom initial martyria style to the paste.
-const MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE = 'data-neanes-initial-martyria-style';
 
 function isModeKeyView(item: ViewItem): item is ViewElement {
   return item.is('element', 'span') && item.hasClass(MODE_KEY_CLASS);

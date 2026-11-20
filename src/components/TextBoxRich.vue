@@ -162,6 +162,7 @@ import {
 } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import InsertModeKey from '@/ckeditor-plugins/insertmodekey/insertmodekey';
 import InsertModeKeyEditing from '@/ckeditor-plugins/insertmodekey/insertmodekeyediting';
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
@@ -393,6 +394,7 @@ const editorConfig = computed((): EditorConfig => {
       defaultFontSize: resolvedParagraphStyle.value.fontSize,
       defaultFontFamily: resolvedParagraphStyle.value.fontFamily,
     },
+    extraPlugins: [InsertModeKey],
     insertModeKey: {
       label: t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }),
       getPageSetup: () => props.pageSetup,

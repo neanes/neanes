@@ -169,7 +169,7 @@ function onReady(editor: InlineEditor) {
           : undefined,
     };
   }
-  if (footnotes !== null) {
+  if (footnotes !== null && editor.plugins.has(InsertModeKeyEditing)) {
     editor.plugins.get(InsertModeKeyEditing).clipboard = {
       copy: (styleId) => footnotes.copyInitialMartyriaStyle(styleId),
       paste: (styleId, payload) =>

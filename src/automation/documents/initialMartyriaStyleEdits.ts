@@ -5,7 +5,10 @@ import {
 } from '@/models/InitialMartyriaBuiltInStyles';
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
 import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
-import { getInitialMartyriaStyleNameKey } from '@/models/InitialMartyriaStyle';
+import {
+  cloneInitialMartyriaStyle,
+  getInitialMartyriaStyleNameKey,
+} from '@/models/InitialMartyriaStyle';
 import type { Score } from '@/models/Score';
 import type { InitialMartyriaStyleUpdate } from '@/services/documents/initialMartyriaStyles';
 
@@ -16,7 +19,7 @@ export function readInitialMartyriaStyles(
   includePresets = false,
 ) {
   return {
-    styles: score.initialMartyriaStyles,
+    styles: score.initialMartyriaStyles.map(cloneInitialMartyriaStyle),
     defaultStyleId: score.pageSetup.initialMartyriaStyleId,
     ...(includePresets
       ? {

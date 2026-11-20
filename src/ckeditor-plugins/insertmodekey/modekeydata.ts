@@ -7,6 +7,8 @@ import { Unit } from '@/utils/Unit';
 const MODE_KEY_DATA_VERSION = 1;
 export const MODE_KEY_CLASS = 'neanes-ck-mode-key';
 export const MODE_KEY_DATA_ATTRIBUTE = 'data-neanes-mode-key';
+export const MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE =
+  'data-neanes-initial-martyria-style';
 
 export const MODE_KEY_MODEL_ATTRIBUTES = [
   'templateId',

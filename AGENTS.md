@@ -75,6 +75,7 @@ Score mutations that should be undoable go through the per-workspace `CommandSer
 Load is content-detected (the version string must start with `"1."`), not version-gated.
 The format is backward-compatible only: the loader folds every legacy shape on read, but the writer emits only current fields, does not preserve legacy ones, and the score version is deliberately not bumped.
 Forward compatibility (an older app opening a newer file) is explicitly out of scope; do not add version gates or forward-compat handling.
+A saved initial martyria style is kept only if `isInitialMartyriaStructureSupported` accepts its wording, so the grammar is part of the file format. When a change stops supporting a wording that could have been saved (a removed combination or value), add an explicit load migration that maps it to its replacement; otherwise those styles are silently dropped and their mode keys fall back to the default. Do not use a generic nearest-match.
 
 ### UI stack
 

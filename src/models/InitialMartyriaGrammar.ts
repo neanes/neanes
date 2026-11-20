@@ -22,7 +22,6 @@ import {
   type InitialMartyriaLabelVariant,
   type InitialMartyriaLanguageId,
   type InitialMartyriaModeIdentificationMethod,
-  type InitialMartyriaModeNameSemantics,
   type InitialMartyriaModeNamingScheme,
   type InitialMartyriaNumberingSystem,
   type InitialMartyriaNumeralKind,
@@ -402,21 +401,6 @@ export function isInitialMartyriaStructureSupported(
   );
 }
 
-type InitialMartyriaGrammarAxis =
-  | 'modeIdentificationMethod'
-  | keyof InitialMartyriaModeNameSemantics
-  | 'numeralStyle'
-  | 'numberingSystem';
-
-const initialMartyriaGrammarAxes: readonly InitialMartyriaGrammarAxis[] = [
-  'modeIdentificationMethod',
-  'numeralKind',
-  'numeralStyle',
-  'numberingSystem',
-  'numeralQualifier',
-  'modeNamingScheme',
-];
-
 interface InitialMartyriaEnumerationBase {
   languageId: InitialMartyriaLanguageId;
   labelVariant?: InitialMartyriaLabelVariant;
@@ -494,122 +478,6 @@ function getInitialMartyriaStructuresForMethod(
   return structures;
 }
 
-// The candidate set depends only on the language and label variant, the
-// transliteration and plagal abbreviation choices, and the numbering system,
-// so the enumeration (which tests roughly a hundred candidates for support)
-// is done once per combination instead of once per unsupported value in
-// every strip the styles dialog builds.
-const grammarStructureCache = new Map<string, InitialMartyriaStructure[]>();
-
-function getInitialMartyriaGrammarStructures(
-  structure: InitialMartyriaStructure,
-) {
-  const numberingSystem =
-    structure.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-      ? undefined
-      : structure.numberingSystem;
-  const cacheKey = [
-    structure.languageId,
-    structure.labelVariant,
-    structure.transliterateNoteNames,
-    structure.plagalAbbreviationWithModeSign,
-    numberingSystem,
-  ].join('/');
-  const cached = grammarStructureCache.get(cacheKey);
-  if (cached != null) {
-    return cached;
-  }
-
-  const candidates: InitialMartyriaStructure[] = [];
-  const seen = new Set<string>();
-  const addCandidate = (candidate: InitialMartyriaStructure) => {
-    const signature = initialMartyriaGrammarAxes
-      .map((axis) => getGrammarAxisValue(candidate, axis))
-      .join('/');
-    if (!seen.has(signature)) {
-      seen.add(signature);
-      candidates.push(candidate);
-    }
-  };
-  for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
-    for (const candidate of getInitialMartyriaStructuresForMethod({
-      ...getEnumerationCommonAxes(structure),
-      modeIdentificationMethod,
-      numberingSystem,
-    })) {
-      addCandidate(candidate);
-    }
-  }
-  grammarStructureCache.set(cacheKey, candidates);
-  return candidates;
-}
-
-/** Axes of a printed numeral, which a sign does not have. */
-function isPrintedNumeralAxis(axis: InitialMartyriaGrammarAxis) {
-  return axis === 'numeralStyle' || axis === 'numberingSystem';
-}
-
-function getGrammarAxisValue(
-  structure: InitialMartyriaStructure,
-  axis: InitialMartyriaGrammarAxis,
-) {
-  if (isPrintedNumeralAxis(axis)) {
-    return structure.modeIdentificationMethod ===
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-      ? undefined
-      : structure[axis];
-  }
-  return structure[axis];
-}
-
-function countAxisDifferences(
-  a: InitialMartyriaStructure,
-  b: InitialMartyriaStructure,
-) {
-  return initialMartyriaGrammarAxes.filter(
-    (axis) => getGrammarAxisValue(a, axis) !== getGrammarAxisValue(b, axis),
-  ).length;
-}
-
-/** Moves an unsupported structure to the nearest supported one. */
-export function normalizeInitialMartyriaStructure(
-  structure: InitialMartyriaStructure,
-): InitialMartyriaStructure {
-  if (isInitialMartyriaStructureSupported(structure)) {
-    return structure;
-  }
-  const candidates = [...getInitialMartyriaGrammarStructures(structure)];
-  candidates.sort((a, b) => {
-    const totalDifference =
-      countAxisDifferences(a, structure) - countAxisDifferences(b, structure);
-    if (totalDifference !== 0) {
-      return totalDifference;
-    }
-
-    // The axes are listed most significant first, so the first axis where
-    // the candidates differ decides the tie.
-    for (const axis of initialMartyriaGrammarAxes) {
-      const aDiffers =
-        getGrammarAxisValue(a, axis) !== getGrammarAxisValue(structure, axis);
-      const bDiffers =
-        getGrammarAxisValue(b, axis) !== getGrammarAxisValue(structure, axis);
-      if (aDiffers !== bDiffers) {
-        return aDiffers ? 1 : -1;
-      }
-    }
-    return 0;
-  });
-  const nearest = candidates[0];
-  if (nearest == null) {
-    throw new Error(
-      `No supported initial martyria structure for language ${structure.languageId}`,
-    );
-  }
-  // The candidates are cached and shared, so callers get their own copy.
-  return { ...nearest };
-}
-
 /**
  * Every distinct structure a language and identification method can reach,
  * de-duplicated by what it prints, in the grammar's presentation order.
@@ -637,17 +505,19 @@ export function enumerateInitialMartyriaStructures(
   return structures;
 }
 
+/**
+ * A new style with its own id. The structure must be one the grammar
+ * supports, as every preset and enumerated wording is.
+ */
 export function createInitialMartyriaStyle(
   options: Omit<InitialMartyriaStyle, 'id'>,
 ): InitialMartyriaStyle {
-  const structure = normalizeInitialMartyriaStructure(options.structure);
   return cloneInitialMartyriaStyle({
     ...options,
     id: crypto.randomUUID(),
-    structure,
     lettering: getSupportedInitialMartyriaLettering(
       options.lettering,
-      structure,
+      options.structure,
     ),
   });
 }

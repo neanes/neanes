@@ -1,17 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import { builtInInitialMartyriaStyles } from '@/models/InitialMartyriaBuiltInStyles';
 import {
-  builtInInitialMartyriaStyles,
-  createDefaultInitialMartyriaTypography,
-} from '@/models/InitialMartyriaBuiltInStyles';
-import {
-  createInitialMartyriaStyle,
   enumerateInitialMartyriaStructures,
   getInitialMartyriaStructureKey,
   initialMartyriaModeIdentificationMethods,
   isInitialMartyriaStructureSupported,
-  normalizeInitialMartyriaStructure,
 } from '@/models/InitialMartyriaGrammar';
+import { getInitialMartyriaLabelVariants } from '@/models/InitialMartyriaLexicon';
+import { initialMartyriaPlagalAbbreviationWithModeSignIsOptional } from '@/models/InitialMartyriaRenderingConventions';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
@@ -627,98 +624,54 @@ describe('InitialMartyriaGrammar', () => {
     }
   });
 
-  it('normalizes unsupported structures to the nearest supported construction', () => {
-    const spanish = normalizeInitialMartyriaStructure({
-      ...attestedStructures['english-mode-number'],
-      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-      modeNamingScheme:
-        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
-    });
-    expect(spanish).toMatchObject({
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    });
+  // Styles are only ever created from these wordings, so none needs
+  // normalizing to a supported structure.
+  it('offers only supported structures in the wording picker', () => {
+    const unsupported: string[] = [];
+    const check = (structure: InitialMartyriaStructure) => {
+      if (!isInitialMartyriaStructureSupported(structure)) {
+        unsupported.push(JSON.stringify(structure));
+      }
+    };
+    const pickerChoices = (
+      axes: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
+    ) =>
+      [true, false].flatMap((transliterateNoteNames) =>
+        (initialMartyriaPlagalAbbreviationWithModeSignIsOptional(axes)
+          ? [true, false]
+          : [undefined]
+        ).map((plagalAbbreviationWithModeSign) => ({
+          transliterateNoteNames,
+          plagalAbbreviationWithModeSign,
+        })),
+      );
 
-    const englishCardinal = normalizeInitialMartyriaStructure({
-      ...attestedStructures['english-mode-number-word'],
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-    });
-    expect(englishCardinal).toMatchObject({
-      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    });
+    for (const preset of builtInInitialMartyriaStyles) {
+      for (const choices of pickerChoices(preset.structure)) {
+        check({ ...preset.structure, ...choices });
+      }
+    }
+    for (const languageId of initialMartyriaLanguageIds) {
+      for (const labelVariant of [
+        undefined,
+        ...getInitialMartyriaLabelVariants(languageId),
+      ]) {
+        for (const choices of pickerChoices({ languageId, labelVariant })) {
+          for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
+            for (const { structure } of enumerateInitialMartyriaStructures({
+              languageId,
+              labelVariant,
+              modeIdentificationMethod,
+              ...choices,
+            })) {
+              check(structure);
+            }
+          }
+        }
+      }
+    }
 
-    const englishOrdinal = normalizeInitialMartyriaStructure({
-      ...englishText,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    });
-    expect(englishOrdinal).toMatchObject({
-      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-    });
-
-    const greek = normalizeInitialMartyriaStructure({
-      ...greekText,
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    });
-    expect(greek).toMatchObject({
-      numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-      modeNamingScheme:
-        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
-    });
-
-    const arabic = normalizeInitialMartyriaStructure(
-      grammarStructure(INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic, {
-        modeIdentificationMethod:
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-        modeNamingScheme:
-          INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
-      }),
-    );
-    expect(arabic).toMatchObject({
-      modeIdentificationMethod:
-        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    });
-
-    const arabicIndicToIndonesian = normalizeInitialMartyriaStructure({
-      ...attestedStructures['arabic-ordinal-arabic-indic-digits'],
-      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
-    });
-    expect(arabicIndicToIndonesian).toMatchObject({
-      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Indonesian,
-      numberingSystem: undefined,
-    });
-
-    expect(isInitialMartyriaStructureSupported(spanish)).toBe(true);
-    expect(isInitialMartyriaStructureSupported(englishCardinal)).toBe(true);
-    expect(isInitialMartyriaStructureSupported(englishOrdinal)).toBe(true);
-    expect(isInitialMartyriaStructureSupported(greek)).toBe(true);
-    expect(isInitialMartyriaStructureSupported(arabic)).toBe(true);
-    expect(isInitialMartyriaStructureSupported(arabicIndicToIndonesian)).toBe(
-      true,
-    );
-    expect(normalizeInitialMartyriaStructure(englishText)).toBe(englishText);
-
-    const created = createInitialMartyriaStyle({
-      displayName: 'Normalized',
-      structure: {
-        ...attestedStructures['english-mode-number-word'],
-        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-      },
-      ...createDefaultInitialMartyriaTypography(),
-    });
-    expect(created.structure).toMatchObject({
-      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    });
+    expect(unsupported).toEqual([]);
   });
 
   it('keys structures by what they render, not by their axes', () => {

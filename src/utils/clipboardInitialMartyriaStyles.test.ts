@@ -411,9 +411,7 @@ describe('clipboardInitialMartyriaStyles', () => {
     }
 
     expect(known.initialMartyriaStyleId).toBe(parish.id);
-    expect(builtIn.initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-    );
+    expect(builtIn.initialMartyriaStyleId).toBeNull();
     expect(followsScore.initialMartyriaStyleId).toBeNull();
     expect(unknown.initialMartyriaStyleId).toBeNull();
   });

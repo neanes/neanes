@@ -1479,9 +1479,9 @@ describe('SaveService font styles', () => {
       fontSize: 30,
       strokeWidth: 0.5,
     });
-    expect(loadedModeKeys[2].initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
-    );
+    // Built-in styles are only presets; a mode key naming one follows the
+    // score's default instead.
+    expect(loadedModeKeys[2].initialMartyriaStyleId).toBeNull();
   });
 
   it('round-trips an Initial Martyria style with an independent Greek paragraph style', () => {

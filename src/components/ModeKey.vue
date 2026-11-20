@@ -426,8 +426,7 @@ function getRunStyle(
       ? undefined
       : withZoom(appearance.strokeWidth),
     top:
-      runLayout.baselineShift === 0 ||
-      (run.kind === 'text' && run.content.layout === 'stackedCharacters')
+      runLayout.baselineShift === 0
         ? undefined
         : withZoom(-runLayout.baselineShift),
     direction: run.direction,

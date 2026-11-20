@@ -22,7 +22,6 @@ import type { Header } from '@/models/Header';
 import {
   DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
   ensureScoreInitialMartyriaStyle,
-  findInitialMartyriaStyle,
   isBuiltInInitialMartyriaStyleId,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
@@ -325,10 +324,8 @@ function migrateLegacyModeKeyStyleOverrides(
     modeKey.color = undefined;
     modeKey.fontSize = undefined;
     modeKey.strokeWidth = undefined;
-    modeKey.heightAdjustment = undefined;
 
     if (modeKey.useDefaultStyle === true) {
-      modeKey.useDefaultStyle = undefined;
       continue;
     }
 
@@ -1203,12 +1200,15 @@ function loadInitialMartyriaStyles(
   return [...styles.values()];
 }
 
-/** A saved style reference, or null when it no longer resolves. */
-function loadInitialMartyriaStyleId(
+/*
+ * A mode key's saved style reference, or null when it names no style of the
+ * score. Built-in styles are only presets, so a mode key never names one.
+ */
+function loadModeKeyInitialMartyriaStyleId(
   styleId: string | undefined,
   styles: InitialMartyriaStyle[],
 ) {
-  return styleId != null && findInitialMartyriaStyle(styles, styleId) != null
+  return styleId != null && styles.some((style) => style.id === styleId)
     ? styleId
     : null;
 }
@@ -2029,11 +2029,10 @@ export class SaveService {
       s.initialMartyriaStyles ?? [],
       score.paragraphStyles,
     );
+    // A default that names no style of the score becomes a copy of the
+    // built-in style it names, or of the default built-in style.
     score.pageSetup.initialMartyriaStyleId =
-      loadInitialMartyriaStyleId(
-        s.pageSetup.initialMartyriaStyleId,
-        score.initialMartyriaStyles,
-      ) ?? DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
+      s.pageSetup.initialMartyriaStyleId ?? DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
     ensureScoreInitialMartyriaStyle(score);
     this.LoadLyricSetup_v1(
       score.staff.lyrics,
@@ -2159,7 +2158,7 @@ export class SaveService {
             e as ModeKeyElement_v1,
           );
           (element as ModeKeyElement).initialMartyriaStyleId =
-            loadInitialMartyriaStyleId(
+            loadModeKeyInitialMartyriaStyleId(
               (e as ModeKeyElement_v1).initialMartyriaStyleId,
               initialMartyriaStyles,
             );

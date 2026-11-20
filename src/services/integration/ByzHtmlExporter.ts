@@ -31,12 +31,7 @@ import type {
 } from '@/models/InitialMartyriaStyle';
 import { getInitialMartyriaNoteAppearance } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
-import {
-  MeasureBar,
-  ModeSign,
-  TimeNeume,
-  VocalExpressionNeume,
-} from '@/models/Neumes';
+import { MeasureBar, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -1391,11 +1386,8 @@ export class ByzHtmlExporter {
     element: ModeKeyElement,
     indentation: number,
   ) {
-    const layout = element.computedInitialMartyriaLayout;
-
-    if (layout == null) {
-      return this.exportLegacyModeKeySignature(element, indentation);
-    }
+    // Every exported mode key has been laid out by the layout service.
+    const layout = element.computedInitialMartyriaLayout!;
 
     const { resolution } = layout;
     let html = `<span class="byz--initial-martyria-signature" dir="${resolution.flowDirection}">`;
@@ -1582,46 +1574,6 @@ export class ByzHtmlExporter {
     const size = Unit.toPt(fontSize);
 
     return `--byz-neume-font-family: ${family};--byz-neume-font-size: ${size}pt;color: ${appearance.color};font-family: ${family};font-size: ${size}pt;font-weight: ${font.cssFontWeight};font-style: ${font.cssFontStyle};${fontVariantCssDeclarations(appearance).join('')}line-height: normal;-webkit-text-stroke-color: ${appearance.strokeColor};-webkit-text-stroke-width: ${Unit.toPt(appearance.strokeWidth)}pt;unicode-bidi: isolate;`;
-  }
-
-  private exportLegacyModeKeySignature(
-    element: ModeKeyElement,
-    indentation: number,
-  ) {
-    let inner = this.exportNeume(ModeSign.Ekhos, indentation);
-
-    if (element.isPlagal) {
-      inner += this.exportNeume(ModeSign.Plagal, indentation);
-    }
-
-    if (element.isVarys) {
-      inner += this.exportNeume(ModeSign.Varys, indentation);
-    }
-
-    inner += this.exportNeume(element.martyria, indentation);
-    inner += this.exportNeume(element.note, indentation);
-    inner += this.exportNeume(
-      element.fthoraAboveNote,
-      indentation,
-      NoOffset,
-      this.config.classFthora,
-    );
-    inner += this.exportNeume(element.quantitativeNeumeAboveNote, indentation);
-    inner += this.exportNeume(element.note2, indentation);
-    inner += this.exportNeume(
-      element.fthoraAboveNote2,
-      indentation,
-      NoOffset,
-      this.config.classFthora,
-    );
-    inner += this.exportNeume(element.quantitativeNeumeAboveNote2, indentation);
-    inner += this.exportNeume(element.quantitativeNeumeRight, indentation);
-    inner += this.exportNeume(
-      element.fthoraAboveQuantitativeNeumeRight,
-      indentation,
-    );
-
-    return inner;
   }
 
   exportModeKey(

@@ -8,10 +8,6 @@ import type {
   ScoreElement,
 } from '@/models/Element';
 import { ElementType, RICH_TEXT_BOX_CONTENT_KEYS } from '@/models/Element';
-import {
-  findInitialMartyriaStyle,
-  isBuiltInInitialMartyriaStyleId,
-} from '@/models/InitialMartyriaBuiltInStyles';
 import { getInitialMartyriaWordingKey } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
@@ -31,10 +27,9 @@ export interface ResolvedClipboardInitialMartyriaStyles {
   initialMartyriaStyleIdRemap: Map<string, string>;
 }
 
-// A copied mode key references its initial martyria style by id. Built-in
-// styles exist in every score, so only the custom styles a copied mode key
-// names need to travel with the clipboard. This includes keys in stored
-// panels that can become visible after pasting.
+// A copied mode key references its initial martyria style by id, so the
+// styles copied mode keys name travel with the clipboard. This includes keys
+// in stored panels that can become visible after pasting.
 export function collectClipboardInitialMartyriaStylesFromElements(
   elements: ScoreElement[],
   initialMartyriaStyles: InitialMartyriaStyle[],
@@ -56,11 +51,7 @@ export function collectClipboardInitialMartyriaStylesFromElements(
     for (const modeKey of modeKeys) {
       const styleId = modeKey.initialMartyriaStyleId;
 
-      if (
-        styleId == null ||
-        isBuiltInInitialMartyriaStyleId(styleId) ||
-        collectedStyles.has(styleId)
-      ) {
+      if (styleId == null || collectedStyles.has(styleId)) {
         continue;
       }
 
@@ -166,13 +157,20 @@ export function resolveClipboardInitialMartyriaStyles(
 
 // A pasted mode key may name a style the destination does not have even
 // after the merge; such a reference follows the score's style instead.
-// `initialMartyriaStyles` are the destination's custom styles including the
-// ones imported by this paste.
+// `initialMartyriaStyles` are the destination's styles including the ones
+// imported by this paste.
 export function rewriteClipboardElementInitialMartyriaStyleId(
   element: ScoreElement,
   initialMartyriaStyles: InitialMartyriaStyle[],
   styleIdRemap: Map<string, string>,
 ) {
+  const rewrite = (styleId: string) => {
+    const resolvedStyleId = styleIdRemap.get(styleId) ?? styleId;
+    return initialMartyriaStyles.some((style) => style.id === resolvedStyleId)
+      ? resolvedStyleId
+      : null;
+  };
+
   if (element.elementType === ElementType.RichTextBox) {
     const richTextBox = element as RichTextBoxElement;
 
@@ -182,45 +180,17 @@ export function rewriteClipboardElementInitialMartyriaStyleId(
         (attributes) => {
           const styleId = attributes.initialMartyriaStyleId;
 
-          if (
-            typeof styleId !== 'string' ||
-            isBuiltInInitialMartyriaStyleId(styleId)
-          ) {
-            return attributes;
-          }
-
-          const resolvedStyleId = styleIdRemap.get(styleId) ?? styleId;
-          return {
-            ...attributes,
-            initialMartyriaStyleId:
-              findInitialMartyriaStyle(
-                initialMartyriaStyles,
-                resolvedStyleId,
-              ) == null
-                ? null
-                : resolvedStyleId,
-          };
+          return typeof styleId === 'string'
+            ? { ...attributes, initialMartyriaStyleId: rewrite(styleId) }
+            : attributes;
         },
       );
     }
+  } else if (element.elementType === ElementType.ModeKey) {
+    const modeKey = element as ModeKeyElement;
 
-    return;
+    if (modeKey.initialMartyriaStyleId != null) {
+      modeKey.initialMartyriaStyleId = rewrite(modeKey.initialMartyriaStyleId);
+    }
   }
-
-  if (element.elementType !== ElementType.ModeKey) {
-    return;
-  }
-
-  const modeKey = element as ModeKeyElement;
-  const styleId = modeKey.initialMartyriaStyleId;
-
-  if (styleId == null || isBuiltInInitialMartyriaStyleId(styleId)) {
-    return;
-  }
-
-  const resolvedStyleId = styleIdRemap.get(styleId) ?? styleId;
-  modeKey.initialMartyriaStyleId =
-    findInitialMartyriaStyle(initialMartyriaStyles, resolvedStyleId) == null
-      ? null
-      : resolvedStyleId;
 }

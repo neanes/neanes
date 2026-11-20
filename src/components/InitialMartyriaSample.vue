@@ -68,7 +68,6 @@ const sample = computed(() => {
     props.martyriaStyle,
     props.paragraphStyles,
   );
-  element.initialMartyriaStyleId = props.martyriaStyle.id;
   const geometry = LayoutService.layoutModeKey(
     element,
     props.pageSetup,

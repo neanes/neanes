@@ -5,7 +5,6 @@ import type { RichTextBoxContentKey } from '@/models/Element';
 import type { ScoreElement } from '@/models/Element';
 import { RichTextBoxElement } from '@/models/Element';
 import type { Footnote } from '@/models/Footnote';
-import { isBuiltInInitialMartyriaStyleId } from '@/models/InitialMartyriaBuiltInStyles';
 import {
   cloneInitialMartyriaStyle,
   type InitialMartyriaStyle,
@@ -362,9 +361,6 @@ export function useRichTextFootnotes(
       return JSON.stringify(clipboard);
     },
     pasteInitialMartyriaStyle(owner, styleId, payload) {
-      if (isBuiltInInitialMartyriaStyleId(styleId)) {
-        return styleId;
-      }
       const score = workspace.value.score;
       const staged =
         owner instanceof RichTextBoxElement

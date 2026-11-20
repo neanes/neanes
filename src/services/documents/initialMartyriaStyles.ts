@@ -5,7 +5,6 @@ import {
   RICH_TEXT_BOX_CONTENT_KEYS,
   type RichTextBoxElement,
 } from '@/models/Element';
-import { isBuiltInInitialMartyriaStyleId } from '@/models/InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { Score } from '@/models/Score';
@@ -31,8 +30,8 @@ export function replaceInitialMartyriaStyles(
   // A mode key of a deleted style takes the style chosen in its place. A
   // reference that resolves to no style at all follows the default again.
   const nextModeKeyStyleId = (styleId: string | null) =>
-    styleId == null || isBuiltInInitialMartyriaStyleId(styleId)
-      ? styleId
+    styleId == null
+      ? null
       : Object.hasOwn(payload.replacements, styleId)
         ? payload.replacements[styleId]
         : nextStyleIds.has(styleId)

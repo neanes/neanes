@@ -42,6 +42,8 @@ In **Initial Martyria Styles**, choose **Paragraph style** for non-Greek letteri
 
 To edit the font, size, color, or outline, open `Format > Paragraph Styles` and edit the paragraph style chosen for that lettering. By default, **Initial Martyria (Greek)** inherits from **Initial Martyria**, so changes to the parent also apply to Greek lettering wherever the Greek style inherits that setting. See [Paragraph Styles](/guide/text-and-styles.html) for how to share formatting across the score.
 
+If you choose a Church Slavonic wording with Cyrillic numerals, set the **Initial Martyria** paragraph style to a font that supports Cyrillic numerals. Use **Old Standard**, which comes with Neanes, or any font installed on your computer that supports Cyrillic numerals. If you assigned a different paragraph style to the wording, set the font on that paragraph style.
+
 When you open a score saved before initial martyria styles were introduced, its initial martyriæ use the traditional neume-font form. Look in the **Initial Martyria** paragraph style for the score's previous default size, color, and outline.
 
 ## Insert an initial martyria in rich text

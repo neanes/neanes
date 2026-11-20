@@ -1265,6 +1265,7 @@ export class SaveService {
       s.initialMartyriaStyles.length > 0
         ? s.initialMartyriaStyles.map(saveInitialMartyriaStyle)
         : undefined;
+    score.defaultInitialMartyriaStyleId = s.defaultInitialMartyriaStyleId;
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
 
     this.SaveHeader(score.headers.default, s.headers.default);
@@ -1394,8 +1395,6 @@ export class SaveService {
 
     pageSetup.alternateLineDefaultColor = p.alternateLineDefaultColor;
     pageSetup.alternateLineDefaultFontSize = p.alternateLineDefaultFontSize;
-
-    pageSetup.initialMartyriaStyleId = p.initialMartyriaStyleId;
 
     pageSetup.pageHeight = p.pageHeight;
     pageSetup.pageWidth = p.pageWidth;
@@ -2008,7 +2007,7 @@ export class SaveService {
     // Initial martyria styles replaced the per-element mode key styling. A
     // score that names no style predates them, whether or not it also carries
     // the old page setup defaults.
-    const hasLegacyModeKeyElements = s.pageSetup.initialMartyriaStyleId == null;
+    const hasLegacyModeKeyElements = s.defaultInitialMartyriaStyleId == null;
     const defaultParagraphStyles = hasLegacyStyleDefaults
       ? createParagraphStylesFromLegacyPageSetupDefaults(s.pageSetup)
       : createDefaultParagraphStyles();
@@ -2031,8 +2030,8 @@ export class SaveService {
     );
     // A default that names no style of the score becomes a copy of the
     // built-in style it names, or of the default built-in style.
-    score.pageSetup.initialMartyriaStyleId =
-      s.pageSetup.initialMartyriaStyleId ?? DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
+    score.defaultInitialMartyriaStyleId =
+      s.defaultInitialMartyriaStyleId ?? DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
     ensureScoreInitialMartyriaStyle(score);
     this.LoadLyricSetup_v1(
       score.staff.lyrics,
@@ -2344,10 +2343,6 @@ export class SaveService {
       p.alternateLineDefaultColor ?? pageSetup.alternateLineDefaultColor;
     pageSetup.alternateLineDefaultFontSize =
       p.alternateLineDefaultFontSize ?? pageSetup.alternateLineDefaultFontSize;
-
-    // The default initial martyria style names one of the score's own styles,
-    // so it is not a page setting: the score loader resolves it against the
-    // loaded styles, and saved page setup defaults leave it as it is.
 
     pageSetup.accidentalDefaultColor =
       p.accidentalDefaultColor ?? pageSetup.accidentalDefaultColor;

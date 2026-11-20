@@ -18,6 +18,7 @@
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
       :initial-martyria-styles="initialMartyriaStyles"
+      :default-initial-martyria-style-id="defaultInitialMartyriaStyleId"
       :fallback-paragraph-style-id="fallbackParagraphStyleId"
       :fallback-paragraph-style="resolvedParagraphStyle"
       @open-paragraph-styles-dialog="
@@ -475,6 +476,11 @@ const props = defineProps({
   },
   initialMartyriaStyles: {
     type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultInitialMartyriaStyleId: {
+    type: String,
     required: true,
   },
   source: {

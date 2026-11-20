@@ -110,6 +110,7 @@
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
         :initial-martyria-styles="score.initialMartyriaStyles"
+        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
         :editor-language="editorLanguage"
         :selected="header == selectedHeaderFooterElement"
         :style="getHeaderStyle(page)"
@@ -521,6 +522,9 @@
           :fonts="fonts"
           :paragraph-styles="score.paragraphStyles"
           :initial-martyria-styles="score.initialMartyriaStyles"
+          :default-initial-martyria-style-id="
+            score.defaultInitialMartyriaStyleId
+          "
           :editor-language="editorLanguage"
           :selected="isSelected(element)"
           @select-single="emit('selectElement', element)"
@@ -557,6 +561,9 @@
           :page-setup="score.pageSetup"
           :paragraph-styles="score.paragraphStyles"
           :initial-martyria-styles="score.initialMartyriaStyles"
+          :default-initial-martyria-style-id="
+            score.defaultInitialMartyriaStyleId
+          "
           :class="[
             {
               selectedTextbox: isSelected(element),
@@ -653,6 +660,7 @@
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
         :initial-martyria-styles="score.initialMartyriaStyles"
+        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
         :editor-language="editorLanguage"
         :selected="footer == selectedHeaderFooterElement"
         :style="getFooterStyle(page)"

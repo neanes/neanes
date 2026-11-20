@@ -373,7 +373,7 @@ function expectDefaultNeumeFontStyle(score: Score) {
   );
   expect(style.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.MusicFont);
   expect(style.displayName).toBe('Neume Font');
-  expect(score.pageSetup.initialMartyriaStyleId).toBe(style.id);
+  expect(score.defaultInitialMartyriaStyleId).toBe(style.id);
 }
 
 describe('SaveService font styles', () => {
@@ -1425,7 +1425,7 @@ describe('SaveService font styles', () => {
       lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
     });
     score.initialMartyriaStyles = [customStyle];
-    score.pageSetup.initialMartyriaStyleId = customStyle.id;
+    score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const inherited = new ModeKeyElement();
     const overridden = new ModeKeyElement();
@@ -1452,7 +1452,9 @@ describe('SaveService font styles', () => {
       useOrdinalForms: false,
       lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
     });
-    expect(saved.pageSetup.initialMartyriaStyleId).toBe(customStyle.id);
+    expect(saved.defaultInitialMartyriaStyleId).toBe(customStyle.id);
+    // The default is the score's, not a page setting.
+    expect(saved.pageSetup).not.toHaveProperty('initialMartyriaStyleId');
     expect(saved.pageSetup.modeKeyDefaultColor).toBeUndefined();
     expect(saved.pageSetup.modeKeyDefaultFontSize).toBeUndefined();
     expect(savedModeKeys[0].initialMartyriaStyleId).toBeUndefined();
@@ -1469,7 +1471,7 @@ describe('SaveService font styles', () => {
     );
 
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(customStyle.id);
+    expect(loaded.defaultInitialMartyriaStyleId).toBe(customStyle.id);
     expect(loadedModeKeys[0].initialMartyriaStyleId).toBeNull();
     expect(loadedModeKeys[0].color).toBeNull();
     expect(loadedModeKeys[0].fontSize).toBeNull();
@@ -1505,7 +1507,7 @@ describe('SaveService font styles', () => {
       lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
     });
     score.initialMartyriaStyles = [customStyle];
-    score.pageSetup.initialMartyriaStyleId = customStyle.id;
+    score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1526,7 +1528,7 @@ describe('SaveService font styles', () => {
       displayName: 'Parish sign',
     });
     score.initialMartyriaStyles = [customStyle];
-    score.pageSetup.initialMartyriaStyleId = customStyle.id;
+    score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1548,7 +1550,7 @@ describe('SaveService font styles', () => {
       structure: { ...base.structure, plagalAbbreviationWithModeSign: false },
     });
     score.initialMartyriaStyles = [customStyle];
-    score.pageSetup.initialMartyriaStyleId = customStyle.id;
+    score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1570,7 +1572,7 @@ describe('SaveService font styles', () => {
       displayName: 'Parish tono',
     });
     score.initialMartyriaStyles = [customStyle];
-    score.pageSetup.initialMartyriaStyleId = customStyle.id;
+    score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     expect(saved.initialMartyriaStyles![0]).not.toHaveProperty(
@@ -1596,7 +1598,7 @@ describe('SaveService font styles', () => {
       displayName: 'Unknown word',
     });
     score.initialMartyriaStyles = [customStyle];
-    score.pageSetup.initialMartyriaStyleId = customStyle.id;
+    score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     saved.initialMartyriaStyles![0].labelVariant =
@@ -1618,7 +1620,7 @@ describe('SaveService font styles', () => {
       displayName: 'Invalid custom style',
     });
     score.initialMartyriaStyles = [customStyle];
-    score.pageSetup.initialMartyriaStyleId = customStyle.id;
+    score.defaultInitialMartyriaStyleId = customStyle.id;
 
     const saved = SaveService.SaveScoreToJson(score);
     const savedStyle = saved.initialMartyriaStyles![0];
@@ -1680,7 +1682,7 @@ describe('SaveService font styles', () => {
     });
     duplicateId.id = first.id;
     score.initialMartyriaStyles = [first, duplicateId];
-    score.pageSetup.initialMartyriaStyleId = first.id;
+    score.defaultInitialMartyriaStyleId = first.id;
     const saved = SaveService.SaveScoreToJson(score);
 
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1691,7 +1693,7 @@ describe('SaveService font styles', () => {
   it('gives a score whose default names a built-in style a copy of it', () => {
     const score = new Score();
     score.initialMartyriaStyles = [];
-    score.pageSetup.initialMartyriaStyleId =
+    score.defaultInitialMartyriaStyleId =
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames;
 
     const saved = SaveService.SaveScoreToJson(score);
@@ -1704,7 +1706,7 @@ describe('SaveService font styles', () => {
         BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
       ).structure,
     });
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
+    expect(loaded.defaultInitialMartyriaStyleId).toBe(
       loaded.initialMartyriaStyles[0].id,
     );
   });
@@ -1716,28 +1718,9 @@ describe('SaveService font styles', () => {
     const loaded = SaveService.LoadScore_v1(SaveService.SaveScoreToJson(score));
 
     expect(loaded.initialMartyriaStyles).toEqual(score.initialMartyriaStyles);
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(
-      score.pageSetup.initialMartyriaStyleId,
+    expect(loaded.defaultInitialMartyriaStyleId).toBe(
+      score.defaultInitialMartyriaStyleId,
     );
-  });
-
-  it('keeps a new score its own default style when page setup defaults apply', () => {
-    // Saved page setup defaults carry the default style of the score they
-    // were saved from, which may be a built-in id or another score's style.
-    for (const savedStyleId of [
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-      new Score().pageSetup.initialMartyriaStyleId,
-      undefined,
-    ]) {
-      const score = new Score();
-      const defaults = new PageSetup_v1();
-      SaveService.SavePageSetup(defaults, new PageSetup());
-      defaults.initialMartyriaStyleId = savedStyleId;
-
-      SaveService.LoadPageSetup_v1(score.pageSetup, defaults);
-
-      expectDefaultNeumeFontStyle(score);
-    }
   });
 
   it('loads scores without Initial Martyria style references as Neume Font', () => {
@@ -1745,7 +1728,7 @@ describe('SaveService font styles', () => {
     score.staff.elements = [new ModeKeyElement()];
     const saved = SaveService.SaveScoreToJson(score);
     delete saved.initialMartyriaStyles;
-    delete saved.pageSetup.initialMartyriaStyleId;
+    delete saved.defaultInitialMartyriaStyleId;
     delete (saved.staff.elements[0] as ModeKeyElement_v1)
       .initialMartyriaStyleId;
 
@@ -1770,7 +1753,7 @@ describe('SaveService font styles', () => {
       displayName: 'Future',
     };
     score.initialMartyriaStyles = [futureStyle];
-    score.pageSetup.initialMartyriaStyleId = futureStyle.id;
+    score.defaultInitialMartyriaStyleId = futureStyle.id;
     const saved = SaveService.SaveScoreToJson(score);
     saved.initialMartyriaStyles![0].numeralStyle = 'binary';
     (saved.staff.elements[0] as ModeKeyElement_v1).initialMartyriaStyleId =
@@ -1927,9 +1910,9 @@ describe('SaveService font styles', () => {
     ).toEqual({ fontFamily: 'GFS Didot' });
     expect(
       resolveScoreInitialMartyriaStyle({
-        pageSetup: score.pageSetup,
         paragraphStyles: score.paragraphStyles,
         initialMartyriaStyles: score.initialMartyriaStyles,
+        defaultInitialMartyriaStyleId: score.defaultInitialMartyriaStyleId,
       }).primaryAppearance,
     ).toMatchObject({
       fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),

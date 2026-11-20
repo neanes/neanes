@@ -372,11 +372,16 @@
     </PaneSection>
 
     <PropertiesEmbeddedModeKey
-      v-if="selectedModeKey != null"
+      v-if="
+        selectedModeKey != null &&
+        initialMartyriaStyles != null &&
+        defaultInitialMartyriaStyleId != null
+      "
       :element="selectedModeKey"
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
-      :initial-martyria-styles="initialMartyriaStyles ?? []"
+      :initial-martyria-styles="initialMartyriaStyles"
+      :default-initial-martyria-style-id="defaultInitialMartyriaStyleId"
       @update="updateModeKeyAttributes"
       @update:style-selector-open="onModeKeySelectorOpenChanged"
       @update:tempo-selector-open="onModeKeySelectorOpenChanged"
@@ -733,6 +738,7 @@ const props = defineProps<{
   pageSetup: PageSetup;
   paragraphStyles: ParagraphStyle[];
   initialMartyriaStyles?: InitialMartyriaStyle[];
+  defaultInitialMartyriaStyleId?: string;
   fallbackParagraphStyleId: string;
   fallbackParagraphStyle: ResolvedParagraphStyle;
 }>();

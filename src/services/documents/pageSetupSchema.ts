@@ -51,7 +51,6 @@ export const pageSetupSchema = z.strictObject({
   neumeDefaultStrokeWidth: z.number().nonnegative(),
   alternateLineDefaultFontSize: z.number().positive(),
   alternateLineDefaultColor: z.string(),
-  initialMartyriaStyleId: z.string().min(1),
   accidentalDefaultColor: z.string(),
   accidentalDefaultStrokeWidth: z.number().nonnegative(),
   fthoraDefaultColor: z.string(),

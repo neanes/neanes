@@ -6,7 +6,10 @@ import { Footers } from './Footers';
 import type { Footnote } from './Footnote';
 import type { Header } from './Header';
 import { Headers } from './Headers';
-import { ensureScoreInitialMartyriaStyle } from './InitialMartyriaBuiltInStyles';
+import {
+  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+  ensureScoreInitialMartyriaStyle,
+} from './InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
 import {
@@ -20,16 +23,25 @@ export class DocumentProperties {
   public author: string = '';
 }
 
+/** A score's initial martyria styles and the default its mode keys follow. */
+export type ScoreInitialMartyriaStyles = Pick<
+  Score,
+  'initialMartyriaStyles' | 'defaultInitialMartyriaStyleId'
+>;
+
 export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
   public paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles();
   /**
    * The score's own initial martyria styles. There is always at least one,
-   * and the page setup's default names one of them; built-in styles are only
-   * presets that styles are made from.
+   * and the default names one of them; built-in styles are only presets
+   * that styles are made from.
    */
   public initialMartyriaStyles: InitialMartyriaStyle[] = [];
+  /** The style every mode key without a style of its own follows. */
+  public defaultInitialMartyriaStyleId: string =
+    DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

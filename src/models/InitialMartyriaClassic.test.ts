@@ -88,7 +88,7 @@ describe('Classic initial martyria', () => {
         displayName: 'English',
       }),
     ];
-    score.pageSetup.initialMartyriaStyleId = score.initialMartyriaStyles[0].id;
+    score.defaultInitialMartyriaStyleId = score.initialMartyriaStyles[0].id;
     const saved = SaveService.SaveScoreToJson(score);
     saved.initialMartyriaStyles![0].lettering =
       INITIAL_MARTYRIA_LETTERINGS.MusicFont;
@@ -180,12 +180,12 @@ describe('Classic initial martyria', () => {
       displayName: 'Parish classic',
     });
     score.initialMartyriaStyles = [custom];
-    score.pageSetup.initialMartyriaStyleId = custom.id;
+    score.defaultInitialMartyriaStyleId = custom.id;
     const element = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
     element.initialMartyriaStyleId = custom.id;
     score.staff.elements = [element];
     const loaded = SaveService.LoadScore_v1(SaveService.SaveScoreToJson(score));
-    expect(loaded.pageSetup.initialMartyriaStyleId).toBe(custom.id);
+    expect(loaded.defaultInitialMartyriaStyleId).toBe(custom.id);
     expect(loaded.initialMartyriaStyles).toEqual([custom]);
     expect(
       (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,

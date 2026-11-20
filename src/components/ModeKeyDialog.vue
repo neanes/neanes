@@ -181,6 +181,11 @@ const props = defineProps({
     type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultInitialMartyriaStyleId: {
+    type: String,
+    required: true,
+  },
 });
 
 const open = defineModel<boolean>('open', { required: true });
@@ -188,9 +193,9 @@ const open = defineModel<boolean>('open', { required: true });
 // Templates preview in the style of the element being replaced.
 const { resolvedStyle } = useResolvedInitialMartyriaStyle({
   element: () => props.element,
-  pageSetup: () => props.pageSetup,
   paragraphStyles: () => props.paragraphStyles,
   initialMartyriaStyles: () => props.initialMartyriaStyles,
+  defaultInitialMartyriaStyleId: () => props.defaultInitialMartyriaStyleId,
 });
 
 const modeOptions = [

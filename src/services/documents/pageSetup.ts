@@ -49,16 +49,6 @@ export function updatePageSetup(
   const values: Partial<PageSetup> = { ...changes };
   if (kind === 'page') {
     if (
-      Object.hasOwn(changes, 'initialMartyriaStyleId') &&
-      !workspace.score.initialMartyriaStyles.some(
-        ({ id }) => id === next.initialMartyriaStyleId,
-      )
-    ) {
-      throw new Error(
-        'STYLE_NOT_FOUND: The default must name a score-owned initial martyria style.',
-      );
-    }
-    if (
       !isValidFootnoteStart(
         next.firstFootnoteNumber,
         next.footnoteFormat,

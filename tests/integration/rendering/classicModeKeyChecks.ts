@@ -48,7 +48,7 @@ export async function checkClassicModeKeys(options: {
     ),
   ];
   snapshot.score.initialMartyriaStyles = styles;
-  snapshot.score.pageSetup.initialMartyriaStyleId = styles[0].id;
+  snapshot.score.defaultInitialMartyriaStyleId = styles[0].id;
   snapshot.score.staff.elements = [];
   for (const template of modeKeyTemplates) {
     // JSON removes the catalog's description selector, just as a saved

@@ -687,7 +687,7 @@ export class McpDocumentAdapter {
       );
       return {
         ...this.summary(workspace),
-        defaultStyleId: workspace.score.pageSetup.initialMartyriaStyleId,
+        defaultStyleId: workspace.score.defaultInitialMartyriaStyleId,
       };
     }
     if (request.tool === 'edit_paragraph_styles') {

@@ -16,6 +16,7 @@ import {
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   builtInInitialMartyriaStyles,
+  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
 } from '@/models/InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaLayout } from '@/models/InitialMartyriaLayout';
 import {
@@ -39,6 +40,7 @@ import {
   createDefaultParagraphStyles,
   ParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
@@ -230,9 +232,9 @@ describe('ByzHtmlExporter', () => {
     const paragraphStyles = createDefaultParagraphStyles();
     const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
       element: modeKey,
-      pageSetup,
       paragraphStyles,
       initialMartyriaStyles: [customStyle],
+      defaultInitialMartyriaStyleId: DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
     });
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(modeKey),
@@ -287,9 +289,9 @@ describe('ByzHtmlExporter', () => {
       ambitus: null,
     } satisfies InitialMartyriaLayout;
     const defaultAppearance = resolveScoreInitialMartyriaStyle({
-      pageSetup,
       paragraphStyles,
       initialMartyriaStyles: [customStyle],
+      defaultInitialMartyriaStyleId: DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
     }).primaryAppearance;
 
     const html = exporter.exportModeKey(modeKey, defaultAppearance, 0, true);
@@ -439,7 +441,7 @@ describe('ByzHtmlExporter', () => {
       [new NoteElement(), inline, new NoteElement()],
       new PageSetup(),
       [],
-      [],
+      new Score(),
       0,
     );
 
@@ -460,7 +462,7 @@ describe('ByzHtmlExporter', () => {
       [inline, new NoteElement()],
       new PageSetup(),
       [],
-      [],
+      new Score(),
       0,
     );
 
@@ -480,7 +482,7 @@ describe('ByzHtmlExporter', () => {
       [new NoteElement(), inline, martyria, new NoteElement()],
       new PageSetup(),
       [],
-      [],
+      new Score(),
       0,
     );
 

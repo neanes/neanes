@@ -634,9 +634,9 @@ function getBaseName(style: InitialMartyriaStyle) {
  */
 export function ensureScoreInitialMartyriaStyle(score: {
   initialMartyriaStyles: InitialMartyriaStyle[];
-  pageSetup: { initialMartyriaStyleId: string };
+  defaultInitialMartyriaStyleId: string;
 }) {
-  const defaultStyleId = score.pageSetup.initialMartyriaStyleId;
+  const defaultStyleId = score.defaultInitialMartyriaStyleId;
   if (
     score.initialMartyriaStyles.some((style) => style.id === defaultStyleId)
   ) {
@@ -655,5 +655,5 @@ export function ensureScoreInitialMartyriaStyle(score: {
     ),
   );
   score.initialMartyriaStyles = [style, ...score.initialMartyriaStyles];
-  score.pageSetup.initialMartyriaStyleId = style.id;
+  score.defaultInitialMartyriaStyleId = style.id;
 }

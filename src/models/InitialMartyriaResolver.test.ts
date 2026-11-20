@@ -23,7 +23,6 @@ import {
   type InitialMartyriaLettering,
   type InitialMartyriaStructure,
 } from '@/models/InitialMartyriaStyle';
-import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   ParagraphStyle,
@@ -88,14 +87,13 @@ describe('InitialMartyriaResolver', () => {
     const initialMartyriaStyles = [custom];
     const builtInId =
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign;
-    const pageSetup = new PageSetup();
-    pageSetup.initialMartyriaStyleId = builtInId;
+    let defaultInitialMartyriaStyleId: string = builtInId;
     const element = new ModeKeyElement();
 
     expect(
       resolveModeKeyInitialMartyriaStyle({
         element,
-        pageSetup,
+        defaultInitialMartyriaStyleId,
         paragraphStyles,
         initialMartyriaStyles,
       }).style.id,
@@ -105,7 +103,7 @@ describe('InitialMartyriaResolver', () => {
     expect(
       resolveModeKeyInitialMartyriaStyle({
         element,
-        pageSetup,
+        defaultInitialMartyriaStyleId,
         paragraphStyles,
         initialMartyriaStyles,
       }).style.id,
@@ -116,7 +114,7 @@ describe('InitialMartyriaResolver', () => {
     expect(
       resolveModeKeyInitialMartyriaStyle({
         element,
-        pageSetup,
+        defaultInitialMartyriaStyleId,
         paragraphStyles,
         initialMartyriaStyles,
       }).style.id,
@@ -128,18 +126,18 @@ describe('InitialMartyriaResolver', () => {
     expect(
       resolveModeKeyInitialMartyriaStyle({
         element,
-        pageSetup,
+        defaultInitialMartyriaStyleId,
         paragraphStyles,
         initialMartyriaStyles,
       }).style.id,
     ).toBe(builtInId);
 
     element.initialMartyriaStyleId = null;
-    pageSetup.initialMartyriaStyleId = 'missing';
+    defaultInitialMartyriaStyleId = 'missing';
     expect(
       resolveModeKeyInitialMartyriaStyle({
         element,
-        pageSetup,
+        defaultInitialMartyriaStyleId,
         paragraphStyles,
         initialMartyriaStyles,
       }).style.id,
@@ -147,14 +145,13 @@ describe('InitialMartyriaResolver', () => {
   });
 
   it('folds element overrides into the resolved style appearances', () => {
-    const pageSetup = new PageSetup();
-    pageSetup.initialMartyriaStyleId =
+    const defaultInitialMartyriaStyleId =
       BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign;
     const element = new ModeKeyElement();
 
     const inherited = resolveModeKeyInitialMartyriaStyle({
       element,
-      pageSetup,
+      defaultInitialMartyriaStyleId,
       paragraphStyles,
       initialMartyriaStyles: [],
     });
@@ -175,7 +172,7 @@ describe('InitialMartyriaResolver', () => {
     element.strokeWidth = 0.5;
     const overridden = resolveModeKeyInitialMartyriaStyle({
       element,
-      pageSetup,
+      defaultInitialMartyriaStyleId,
       paragraphStyles,
       initialMartyriaStyles: [],
     });

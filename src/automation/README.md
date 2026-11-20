@@ -43,8 +43,9 @@ Future automation jobs and export transformations belong in this feature area
 ## Initial martyria styles
 
 Every score owns its initial martyria styles, and there is always at least one.
-The page setup's `initialMartyriaStyleId` names the score's default style, which
-is always one of them. Built-in styles (`builtin:...` ids) are only presets the
+The score's `defaultInitialMartyriaStyleId` names its default style, which is
+always one of them; MCP reads and sets it as `defaultStyleId` through the
+initial martyria style tools, not page setup. Built-in styles (`builtin:...` ids) are only presets the
 app's Initial Martyria Styles dialog starts new styles from; scores and mode
 keys never name them. A new score, and a score saved before initial martyria
 styles existed, gets a copy of the Greek "Traditional sign" preset lettered in

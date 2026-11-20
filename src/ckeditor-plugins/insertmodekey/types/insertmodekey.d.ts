@@ -14,6 +14,7 @@ declare module 'ckeditor5' {
       getPageSetup?: () => PageSetup;
       getParagraphStyles?: () => ParagraphStyle[];
       getInitialMartyriaStyles?: () => InitialMartyriaStyle[];
+      getDefaultInitialMartyriaStyleId?: () => string;
     };
   }
 }

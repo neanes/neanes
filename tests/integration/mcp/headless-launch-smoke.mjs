@@ -164,22 +164,16 @@ try {
     expectedRevision: modeEdit.revision,
     includePresets: true,
   });
-  assert.equal(
-    (
-      await call(first, 'get_page_setup', {
-        ...privateArgs,
-        properties: ['initialMartyriaStyleId'],
-      })
-    ).settings.initialMartyriaStyleId,
-    styleState.defaultStyleId,
+  assert.ok(
+    styleState.styles.some(({ id }) => id === styleState.defaultStyleId),
   );
   await callTool(
     first,
-    'update_page_setup',
+    'edit_initial_martyria_styles',
     {
       ...privateArgs,
       expectedRevision: styleState.revision,
-      changes: { initialMartyriaStyleId: 'missing' },
+      changes: { defaultStyleId: 'missing' },
     },
     'STYLE_NOT_FOUND',
   );

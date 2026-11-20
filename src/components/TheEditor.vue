@@ -6075,7 +6075,7 @@ async function load() {
                 pages.value,
                 workspace.score.pageSetup,
                 workspace.score.paragraphStyles,
-                workspace.score.initialMartyriaStyles,
+                workspace.score,
                 options,
               ),
               null,
@@ -9152,7 +9152,7 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
           pages.value,
           score.value.pageSetup,
           score.value.paragraphStyles,
-          score.value.initialMartyriaStyles,
+          score.value,
           args.options,
         ),
         null,
@@ -9591,7 +9591,7 @@ async function onFileMenuCopyAsHtml() {
     copiedElements,
     score.value.pageSetup,
     score.value.paragraphStyles,
-    score.value.initialMartyriaStyles,
+    score.value,
     0,
     true,
   );
@@ -10610,6 +10610,9 @@ function renderTabLabel(tab: Tab) {
             :page-setup="score.pageSetup"
             :paragraph-styles="score.paragraphStyles"
             :initial-martyria-styles="score.initialMartyriaStyles"
+            :default-initial-martyria-style-id="
+              score.defaultInitialMartyriaStyleId
+            "
             @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
             @update:rich-text-box="updateRichTextBox"
@@ -10969,6 +10972,9 @@ function renderTabLabel(tab: Tab) {
           :page-setup="score.pageSetup"
           :paragraph-styles="score.paragraphStyles"
           :initial-martyria-styles="score.initialMartyriaStyles"
+          :default-initial-martyria-style-id="
+            score.defaultInitialMartyriaStyleId
+          "
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
           @open-mode-key-dialog="openModeKeyDialog"
@@ -11102,6 +11108,7 @@ function renderTabLabel(tab: Tab) {
       :page-setup="score.pageSetup"
       :paragraph-styles="score.paragraphStyles"
       :initial-martyria-styles="score.initialMartyriaStyles"
+      :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
       @update="applyModeKeyDialogTemplate"
       @update:use-optional-diatonic-fthoras="
         updatePageSetupUseOptionalDiatonicFthoras($event)
@@ -11164,7 +11171,7 @@ function renderTabLabel(tab: Tab) {
       v-if="initialMartyriaStylesDialogIsOpen"
       v-model:open="initialMartyriaStylesDialogIsOpen"
       :styles="score.initialMartyriaStyles"
-      :default-style-id="score.pageSetup.initialMartyriaStyleId"
+      :default-style-id="score.defaultInitialMartyriaStyleId"
       :paragraph-styles="score.paragraphStyles"
       :page-setup="score.pageSetup"
       :usage-counts="initialMartyriaStyleUsage.counts"
@@ -11202,6 +11209,7 @@ function renderTabLabel(tab: Tab) {
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
         :initial-martyria-styles="score.initialMartyriaStyles"
+        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
         :editor-language="ckeditorLanguage"
         :recalc="true"
         @update:height="

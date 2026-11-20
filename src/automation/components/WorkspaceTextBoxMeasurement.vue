@@ -30,6 +30,9 @@
           :page-setup="workspace.score.pageSetup"
           :paragraph-styles="workspace.score.paragraphStyles"
           :initial-martyria-styles="workspace.score.initialMartyriaStyles"
+          :default-initial-martyria-style-id="
+            workspace.score.defaultInitialMartyriaStyleId
+          "
           :fonts="fonts"
           :editor-language="editorLanguage"
           :edit-mode="false"

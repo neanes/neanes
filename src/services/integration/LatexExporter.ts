@@ -10,7 +10,6 @@ import type {
 } from '@/models/Element';
 import { ElementType } from '@/models/Element';
 import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
-import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import { TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
 import type { Page } from '@/models/Page';
@@ -22,6 +21,7 @@ import {
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import type { ScoreInitialMartyriaStyles } from '@/models/Score';
 import { getInitialMartyriaGlyphFontSize } from '@/services/InitialMartyriaPitchMeasurementService';
 import { resolveFontCss } from '@/utils/fontStyle';
 import {
@@ -252,7 +252,7 @@ export class LatexExporter {
     pages: Page[],
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
-    initialMartyriaStyles: InitialMartyriaStyle[],
+    martyriaStyles: ScoreInitialMartyriaStyles,
     options: LatexExporterOptions,
   ) {
     const neumeDescent = TextMeasurementService.getFontBoundingBoxDescent(
@@ -307,9 +307,8 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
     // The typography every mode key inherits unless it overrides it: the
     // score's initial martyria style resolved through the paragraph styles.
     const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
-      pageSetup,
       paragraphStyles,
-      initialMartyriaStyles,
+      ...martyriaStyles,
     }).primaryAppearance;
     // Mode keys are drawn in the neume font at the size matched to their
     // text, so the default size is that glyph size, as each element's is.

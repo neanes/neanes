@@ -6,7 +6,6 @@ import type {
   InitialMartyriaStyle,
   ResolvedInitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
-import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
 import { hasParagraphStyleOverrides } from '@/models/ParagraphStyle';
 
@@ -21,16 +20,18 @@ export function useResolvedInitialMartyriaStyle(options: {
       'initialMartyriaStyleId' | 'getParagraphStyleOverrides'
     >
   >;
-  pageSetup: MaybeRefOrGetter<Pick<PageSetup, 'initialMartyriaStyleId'>>;
   paragraphStyles: MaybeRefOrGetter<ParagraphStyle[]>;
   initialMartyriaStyles: MaybeRefOrGetter<InitialMartyriaStyle[]>;
+  defaultInitialMartyriaStyleId: MaybeRefOrGetter<string>;
 }) {
   const resolvedStyle = computed<ResolvedInitialMartyriaStyle>(() =>
     resolveModeKeyInitialMartyriaStyle({
       element: toValue(options.element),
-      pageSetup: toValue(options.pageSetup),
       paragraphStyles: toValue(options.paragraphStyles),
       initialMartyriaStyles: toValue(options.initialMartyriaStyles),
+      defaultInitialMartyriaStyleId: toValue(
+        options.defaultInitialMartyriaStyleId,
+      ),
     }),
   );
 

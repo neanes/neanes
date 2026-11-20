@@ -248,6 +248,11 @@ const props = defineProps({
     type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultInitialMartyriaStyleId: {
+    type: String,
+    required: true,
+  },
   editMode: {
     type: Boolean,
     default: true,
@@ -400,6 +405,8 @@ const editorConfig = computed((): EditorConfig => {
       getPageSetup: () => props.pageSetup,
       getParagraphStyles: () => props.paragraphStyles,
       getInitialMartyriaStyles: () => props.initialMartyriaStyles,
+      getDefaultInitialMartyriaStyleId: () =>
+        props.defaultInitialMartyriaStyleId,
     },
   };
 });
@@ -409,6 +416,7 @@ watch(
     () => props.pageSetup,
     () => props.paragraphStyles,
     () => props.initialMartyriaStyles,
+    () => props.defaultInitialMartyriaStyleId,
   ],
   () => {
     for (const editor of getActiveEditorInstances()) {

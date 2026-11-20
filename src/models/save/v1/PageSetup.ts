@@ -110,8 +110,6 @@ export class PageSetup {
   public modeKeyDefaultFontSize: number | undefined = undefined;
   public modeKeyDefaultHeightAdjustment: number | undefined = undefined;
 
-  public initialMartyriaStyleId: string | undefined = undefined;
-
   public accidentalDefaultColor = '#ED0000';
   public accidentalDefaultStrokeWidth = 0;
   public fthoraDefaultColor = '#ED0000';

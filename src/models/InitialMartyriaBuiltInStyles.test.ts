@@ -230,7 +230,7 @@ describe('InitialMartyriaBuiltInStyles', () => {
     );
     const score = {
       initialMartyriaStyles: [taken, otherLanguage],
-      pageSetup: { initialMartyriaStyleId: 'deleted' },
+      defaultInitialMartyriaStyleId: 'deleted',
     };
 
     ensureScoreInitialMartyriaStyle(score);
@@ -241,7 +241,7 @@ describe('InitialMartyriaBuiltInStyles', () => {
       structure: preset.structure,
       displayName: 'Neume Font 3',
     });
-    expect(score.pageSetup.initialMartyriaStyleId).toBe(
+    expect(score.defaultInitialMartyriaStyleId).toBe(
       score.initialMartyriaStyles[0].id,
     );
   });

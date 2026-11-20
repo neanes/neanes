@@ -672,9 +672,9 @@ function withOrdinalForms(
  * score style `styleId` names when it names one.
  */
 export function resolveScoreInitialMartyriaStyle(options: {
-  pageSetup: Pick<PageSetup, 'initialMartyriaStyleId'>;
   paragraphStyles: ParagraphStyle[];
   initialMartyriaStyles: InitialMartyriaStyle[];
+  defaultInitialMartyriaStyleId: string;
   styleId?: string;
   paragraphStyleOverrides?: ParagraphStyleOverrides;
 }): ResolvedInitialMartyriaStyle {
@@ -685,7 +685,7 @@ export function resolveScoreInitialMartyriaStyle(options: {
       : initialMartyriaStyles.find((style) => style.id === styleId)) ??
       getInitialMartyriaStyleOrDefault(
         initialMartyriaStyles,
-        options.pageSetup.initialMartyriaStyleId,
+        options.defaultInitialMartyriaStyleId,
       ),
     options.paragraphStyles,
     options.paragraphStyleOverrides,
@@ -703,9 +703,9 @@ export function resolveModeKeyInitialMartyriaStyle(options: {
     ModeKeyElement,
     'initialMartyriaStyleId' | 'getParagraphStyleOverrides'
   >;
-  pageSetup: Pick<PageSetup, 'initialMartyriaStyleId'>;
   paragraphStyles: ParagraphStyle[];
   initialMartyriaStyles: InitialMartyriaStyle[];
+  defaultInitialMartyriaStyleId: string;
 }): ResolvedInitialMartyriaStyle {
   return resolveScoreInitialMartyriaStyle({
     ...options,

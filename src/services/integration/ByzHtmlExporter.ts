@@ -26,7 +26,6 @@ import {
 import type {
   InitialMartyriaAppearance,
   InitialMartyriaStartingNoteRun,
-  InitialMartyriaStyle,
   ResolvedInitialMartyriaRun,
 } from '@/models/InitialMartyriaStyle';
 import { getInitialMartyriaNoteAppearance } from '@/models/InitialMartyriaStyle';
@@ -40,7 +39,7 @@ import {
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import type { Score } from '@/models/Score';
+import type { Score, ScoreInitialMartyriaStyles } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
@@ -260,14 +259,14 @@ export class ByzHtmlExporter {
     const style = this.exportPageSetup(
       score.pageSetup,
       score.paragraphStyles,
-      score.initialMartyriaStyles,
+      score,
     );
 
     const body = this.exportElements(
       score.staff.elements,
       score.pageSetup,
       score.paragraphStyles,
-      score.initialMartyriaStyles,
+      score,
       4,
     );
 
@@ -277,14 +276,13 @@ export class ByzHtmlExporter {
   exportPageSetup(
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
-    initialMartyriaStyles: InitialMartyriaStyle[],
+    martyriaStyles: ScoreInitialMartyriaStyles,
   ) {
     // The typography every mode key inherits unless it overrides it: the
     // score's initial martyria style resolved through the paragraph styles.
     const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
-      pageSetup,
       paragraphStyles,
-      initialMartyriaStyles,
+      ...martyriaStyles,
     }).primaryAppearance;
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
@@ -663,16 +661,15 @@ export class ByzHtmlExporter {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
-    initialMartyriaStyles: InitialMartyriaStyle[],
+    martyriaStyles: ScoreInitialMartyriaStyles,
     indentation: number,
     startInsidePage: boolean = false,
   ) {
     // The typography every mode key inherits unless it overrides it: the
     // score's initial martyria style resolved through the paragraph styles.
     const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
-      pageSetup,
       paragraphStyles,
-      initialMartyriaStyles,
+      ...martyriaStyles,
     }).primaryAppearance;
     let result = '';
 
@@ -790,8 +787,7 @@ export class ByzHtmlExporter {
             pageSetup,
             insidePage ? indentation + 2 : indentation,
             paragraphStyles,
-            initialMartyriaStyles,
-            defaultModeKeyAppearance,
+            { martyriaStyles, defaultAppearance: defaultModeKeyAppearance },
           );
 
           if (
@@ -1310,20 +1306,23 @@ export class ByzHtmlExporter {
     pageSetup: PageSetup,
     indentation: number,
     paragraphStyles: ParagraphStyle[] = [],
-    initialMartyriaStyles: InitialMartyriaStyle[] = [],
-    defaultModeKeyAppearance?: InitialMartyriaAppearance,
+    /** How embedded mode keys are styled; without it they stay as stored. */
+    modeKeys?: {
+      martyriaStyles: ScoreInitialMartyriaStyles;
+      defaultAppearance: InitialMartyriaAppearance;
+    },
   ) {
     let className = this.config.classRichTextBox;
     let style = '';
     const exportContent = (content: string) =>
-      defaultModeKeyAppearance == null
+      modeKeys == null
         ? content
         : this.exportEmbeddedModeKeys(
             content,
             pageSetup,
             paragraphStyles,
-            initialMartyriaStyles,
-            defaultModeKeyAppearance,
+            modeKeys.martyriaStyles,
+            modeKeys.defaultAppearance,
             indentation,
           );
     let content: string;
@@ -1365,16 +1364,15 @@ export class ByzHtmlExporter {
     html: string,
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
-    initialMartyriaStyles: InitialMartyriaStyle[],
+    martyriaStyles: ScoreInitialMartyriaStyles,
     defaultAppearance: InitialMartyriaAppearance,
     indentation: number,
   ) {
     return replaceModeKeysInHtml(html, ({ element: modeKey }) => {
       const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
         element: modeKey,
-        pageSetup,
         paragraphStyles,
-        initialMartyriaStyles,
+        ...martyriaStyles,
       });
       LayoutService.layoutModeKey(modeKey, pageSetup, resolvedStyle, true);
 

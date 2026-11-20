@@ -63,6 +63,7 @@
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
       :initial-martyria-styles="initialMartyriaStyles"
+      :default-initial-martyria-style-id="defaultInitialMartyriaStyleId"
       :source="richTextBoxSource"
       :footnote-body="context.kind === 'rich-text-box' && context.footnoteBody"
       @update:open-sections="emit('update:open-sections', $event)"
@@ -123,6 +124,7 @@
       :page-setup="pageSetup"
       :paragraph-styles="paragraphStyles"
       :initial-martyria-styles="initialMartyriaStyles"
+      :default-initial-martyria-style-id="defaultInitialMartyriaStyleId"
       @update:open-sections="emit('update:open-sections', $event)"
       @update="emit('update:mode-key', modeKeyElement, $event)"
       @open-style-dialog="
@@ -209,6 +211,11 @@ const props = defineProps({
   },
   initialMartyriaStyles: {
     type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultInitialMartyriaStyleId: {
+    type: String,
     required: true,
   },
   openSections: {

@@ -499,6 +499,7 @@ export class LayoutService {
       pageSetup,
       score.paragraphStyles,
       score.initialMartyriaStyles,
+      score.defaultInitialMartyriaStyleId,
       options,
       false,
     );
@@ -906,6 +907,7 @@ export class LayoutService {
           setup,
           score.paragraphStyles,
           score.initialMartyriaStyles,
+          score.defaultInitialMartyriaStyleId,
           options,
           true,
         );
@@ -1213,6 +1215,7 @@ export class LayoutService {
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
     initialMartyriaStyles: InitialMartyriaStyle[],
+    defaultInitialMartyriaStyleId: string,
     options?: LayoutDiagnosticsOptions,
     hidePopulatedTerminator = false,
   ) {
@@ -1446,9 +1449,9 @@ export class LayoutService {
           const resolvedInitialMartyriaStyle =
             resolveModeKeyInitialMartyriaStyle({
               element: modeKeyElement,
-              pageSetup,
               paragraphStyles,
               initialMartyriaStyles,
+              defaultInitialMartyriaStyleId,
             });
           this.layoutModeKey(
             modeKeyElement,

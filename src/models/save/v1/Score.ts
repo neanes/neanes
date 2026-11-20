@@ -24,6 +24,7 @@ export class Score {
   public pageSetup: PageSetup = new PageSetup();
   public paragraphStyles: ParagraphStyle[] = [];
   public initialMartyriaStyles: InitialMartyriaStyle[] | undefined = undefined;
+  public defaultInitialMartyriaStyleId: string | undefined = undefined;
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

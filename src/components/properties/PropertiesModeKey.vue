@@ -47,7 +47,7 @@
           id="properties-mode-key-style"
           :model-value="element.initialMartyriaStyleId"
           :initial-martyria-styles="initialMartyriaStyles"
-          :default-style-id="pageSetup.initialMartyriaStyleId"
+          :default-style-id="defaultInitialMartyriaStyleId"
           @update:model-value="
             $emit('update', {
               initialMartyriaStyleId: $event,
@@ -321,6 +321,11 @@ const props = defineProps({
     type: Array as PropType<InitialMartyriaStyle[]>,
     required: true,
   },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultInitialMartyriaStyleId: {
+    type: String,
+    required: true,
+  },
 });
 
 const emit = defineEmits([
@@ -333,9 +338,9 @@ const emit = defineEmits([
 // change writes an explicit element value and clear restores inheritance.
 const { primaryAppearance, hasOverrides } = useResolvedInitialMartyriaStyle({
   element: () => props.element,
-  pageSetup: () => props.pageSetup,
   paragraphStyles: () => props.paragraphStyles,
   initialMartyriaStyles: () => props.initialMartyriaStyles,
+  defaultInitialMartyriaStyleId: () => props.defaultInitialMartyriaStyleId,
 });
 
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));

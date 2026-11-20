@@ -2577,11 +2577,7 @@ function saveAsDefault() {
   localStorage.setItem('pageSetupDefault', JSON.stringify(defaults));
 }
 
-// The default initial martyria style names one of the score's own styles,
-// not a page setting, so a reset keeps it.
 function resetToSystemDefaults() {
-  form.value = Object.assign(new PageSetup(), {
-    initialMartyriaStyleId: props.pageSetup.initialMartyriaStyleId,
-  });
+  form.value = new PageSetup();
 }
 </script>

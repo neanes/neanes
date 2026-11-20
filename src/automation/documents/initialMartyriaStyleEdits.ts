@@ -20,7 +20,7 @@ export function readInitialMartyriaStyles(
 ) {
   return {
     styles: score.initialMartyriaStyles.map(cloneInitialMartyriaStyle),
-    defaultStyleId: score.pageSetup.initialMartyriaStyleId,
+    defaultStyleId: score.defaultInitialMartyriaStyleId,
     ...(includePresets
       ? {
           presets: builtInInitialMartyriaStyles.map((style) => ({
@@ -80,7 +80,7 @@ export function planInitialMartyriaStyleEdits(
   const replacements = Object.fromEntries(
     remove.map(({ id, replacementId }) => [id, replacementId]),
   );
-  const previousDefault = score.pageSetup.initialMartyriaStyleId;
+  const previousDefault = score.defaultInitialMartyriaStyleId;
   const nextDefault =
     defaultStyleId ??
     (Object.hasOwn(replacements, previousDefault)

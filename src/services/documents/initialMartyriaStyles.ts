@@ -6,7 +6,6 @@ import {
   type RichTextBoxElement,
 } from '@/models/Element';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
-import type { PageSetup } from '@/models/PageSetup';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import {
@@ -39,20 +38,18 @@ export function replaceInitialMartyriaStyles(
           : null;
   const commands: Command[] = [];
 
+  const scoreValues: Partial<Score> = {};
   if (!deepEquals(score.initialMartyriaStyles, payload.styles)) {
+    scoreValues.initialMartyriaStyles = payload.styles;
+  }
+  if (payload.defaultStyleId !== score.defaultInitialMartyriaStyleId) {
+    scoreValues.defaultInitialMartyriaStyleId = payload.defaultStyleId;
+  }
+  if (Object.keys(scoreValues).length > 0) {
     commands.push(
       new CommandFactory<Score>().create('update-properties', {
         target: score,
-        newValues: { initialMartyriaStyles: payload.styles },
-      }),
-    );
-  }
-
-  if (payload.defaultStyleId !== score.pageSetup.initialMartyriaStyleId) {
-    commands.push(
-      new CommandFactory<PageSetup>().create('update-properties', {
-        target: score.pageSetup,
-        newValues: { initialMartyriaStyleId: payload.defaultStyleId },
+        newValues: scoreValues,
       }),
     );
   }

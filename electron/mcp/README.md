@@ -1188,8 +1188,8 @@ origin rather than guaranteeing that all notation still matches the template.
 ### Initial martyria styles and rich text
 
 Call `get_initial_martyria_styles` with the document ID to read its styles
-and `defaultStyleId`. The same ID is available as `initialMartyriaStyleId`
-in page setup, where it can be changed to another score-owned style. To create a style from a supplied wording, pass
+and `defaultStyleId`, the score-owned style that mode keys without a style
+of their own follow. To create a style from a supplied wording, pass
 `includePresets: true`, copy a preset definition, give it a new ID and
 display name, and send it in `edit_initial_martyria_styles.changes.upsert`.
 You can set the default in the same request with `changes.defaultStyleId`.

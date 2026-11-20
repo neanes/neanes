@@ -4,7 +4,10 @@ import type {
   PitchAtomBounds,
 } from '@/models/InitialMartyriaPitchGeometry';
 import { getInitialMartyriaPitchGeometry } from '@/models/InitialMartyriaPitchGeometry';
-import type { InitialMartyriaPitchNote } from '@/models/InitialMartyriaStyle';
+import type {
+  InitialMartyriaAppearance,
+  InitialMartyriaPitchNote,
+} from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
 import { fontService } from '@/services/FontService';
 import { NeumeMappingService } from '@/services/NeumeMappingService';
@@ -143,7 +146,7 @@ const CAPITAL_HEIGHT_MEASUREMENT_FONT_SIZE = 1000;
  * The music font size whose capital height matches the text's, or null when
  * either font has no usable capital height.
  */
-export function getMatchedNeumeFontSize(options: {
+function getMatchedNeumeFontSize(options: {
   textFontFamily: string;
   textFontStyle: string;
   textFontSize: number;
@@ -170,6 +173,29 @@ export function getMatchedNeumeFontSize(options: {
     capitalHeight > 0
     ? textCapitalHeight / capitalHeight
     : null;
+}
+
+/**
+ * The size an initial martyria draws its music-font glyphs at: the size whose
+ * capital height matches the style's primary text, or the text size itself
+ * when no match exists.
+ */
+export function getInitialMartyriaGlyphFontSize(
+  primaryAppearance: Pick<
+    InitialMartyriaAppearance,
+    'fontFamily' | 'fontStyle' | 'fontSize' | 'fontVariantCaps'
+  >,
+  neumeFontFamily: string,
+) {
+  return (
+    getMatchedNeumeFontSize({
+      textFontFamily: primaryAppearance.fontFamily,
+      textFontStyle: primaryAppearance.fontStyle,
+      textFontSize: primaryAppearance.fontSize,
+      textFontVariantCaps: primaryAppearance.fontVariantCaps,
+      neumeFontFamily,
+    }) ?? primaryAppearance.fontSize
+  );
 }
 
 /** How far music-font glyphs are raised to sit on the text baseline. */

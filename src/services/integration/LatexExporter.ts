@@ -22,6 +22,7 @@ import {
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { getInitialMartyriaGlyphFontSize } from '@/services/InitialMartyriaPitchMeasurementService';
 import { resolveFontCss } from '@/utils/fontStyle';
 import {
   type OpenTypeFeatures,
@@ -310,6 +311,12 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
       paragraphStyles,
       initialMartyriaStyles,
     }).primaryAppearance;
+    // Mode keys are drawn in the neume font at the size matched to their
+    // text, so the default size is that glyph size, as each element's is.
+    const defaultModeKeyFontSize = getInitialMartyriaGlyphFontSize(
+      defaultModeKeyAppearance,
+      pageSetup.neumeDefaultFontFamily,
+    );
 
     const result: LatexScore = {
       appVersion: APP_VERSION,
@@ -329,7 +336,7 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
           neume: neumeFont.fontFamily,
         },
         fontSizes: {
-          modeKey: toPt(defaultModeKeyAppearance.fontSize),
+          modeKey: toPt(defaultModeKeyFontSize),
           neume: toPt(pageSetup.neumeDefaultFontSize),
         },
         lyricsVerticalOffset: toPt(lyricsVerticalOffset),
@@ -729,9 +736,10 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 modeKey.computedColor !== defaultModeKeyAppearance.color
                   ? convertColor(modeKey.computedColor)
                   : undefined,
-              // The glyph size is matched to the style's text by layout, so
-              // it is always written per element.
-              fontSize: toPt(modeKey.computedNeumeFontSize),
+              fontSize:
+                modeKey.computedNeumeFontSize !== defaultModeKeyFontSize
+                  ? toPt(modeKey.computedNeumeFontSize)
+                  : undefined,
               isPlagal: modeKey.isPlagal || undefined,
               isVarys: modeKey.isVarys || undefined,
               martyria: glyphName(modeKey.martyria),

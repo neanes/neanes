@@ -149,9 +149,9 @@ import { Unit } from '@/utils/Unit';
 import { fontService } from './FontService';
 import { automaticFootnoteMarker } from './FootnoteMarker';
 import {
+  getInitialMartyriaGlyphFontSize,
   getInitialMartyriaNeumeBaselineCorrection,
   getInitialMartyriaPitchTrailingGlueWidth,
-  getMatchedNeumeFontSize,
   glyphText,
   measureInitialMartyriaPitchGeometry,
   resolveInitialMartyriaAccessoryLayout,
@@ -3133,16 +3133,10 @@ export class LayoutService {
     const neumeFontSize = element.computedFontSize;
     const baseTextAppearance = resolvedStyle.primaryAppearance;
     const fixedSeparatorFontSize = baseTextAppearance.fontSize;
-    // Music-font glyphs are drawn at the size whose capital height matches
-    // the primary text, or at the nominal neume size when no match exists.
-    const glyphFontSize =
-      getMatchedNeumeFontSize({
-        textFontFamily: baseTextAppearance.fontFamily,
-        textFontStyle: baseTextAppearance.fontStyle,
-        textFontSize: baseTextAppearance.fontSize,
-        textFontVariantCaps: baseTextAppearance.fontVariantCaps,
-        neumeFontFamily,
-      }) ?? neumeFontSize;
+    const glyphFontSize = getInitialMartyriaGlyphFontSize(
+      baseTextAppearance,
+      neumeFontFamily,
+    );
     const resolution = resolveInitialMartyriaStyle({
       context: getInitialMartyriaContext(element),
       resolvedStyle,

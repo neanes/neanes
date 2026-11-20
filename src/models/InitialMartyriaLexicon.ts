@@ -309,7 +309,7 @@ export const initialMartyriaLexicons: Record<
     graveWord: 'Grave',
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish]: {
-    // Cardinals follow tono; ordinal adjectives can precede or follow it.
+    // Cardinal numerals follow tono. Ordinal adjectives can precede or follow it.
     // RAE says Roman numerals are ordinarily read as ordinals, but permits a
     // cardinal reading where both readings fit the construction. It also
     // illustrates ordinal Roman numerals on either side of a noun ("X
@@ -346,16 +346,6 @@ export const initialMartyriaLexicons: Record<
       6: 'Sexto',
       7: 'Séptimo',
       8: 'Octavo',
-    },
-    cardinalWords: {
-      1: 'uno',
-      2: 'dos',
-      3: 'tres',
-      4: 'cuatro',
-      5: 'cinco',
-      6: 'seis',
-      7: 'siete',
-      8: 'ocho',
     },
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: {

@@ -2227,19 +2227,6 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
-      "1: Tono | uno. | <modeSign> | <pitch:Πα>",
-      "2: Tono | dos. | <modeSign> | <pitch:Δι>",
-      "3: Tono | tres. | <modeSign> | <pitch:Γα>",
-      "4: Tono | cuatro. | <modeSign> | <pitch:Δι>",
-      "5: Tono | cinco. | <modeSign> | <pitch:Πα>",
-      "6: Tono | seis. | <modeSign> | <pitch:Πα>",
-      "7: Tono | siete. | <modeSign> | <pitch:Γα>",
-      "8: Tono | ocho. | <modeSign> | <pitch:Νη>",
-    ],
-    "structure": "es/text-and-mode-sign/words/cardinal/postnominal/absolute/original",
-  },
-  {
-    "modes": [
       "1: Tono | 1. | <modeSign> | <pitch:Pa>",
       "2: Tono | 2. | <modeSign> | <pitch:Di>",
       "3: Tono | 3. | <modeSign> | <pitch:Ga>",
@@ -2289,19 +2276,6 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
       "8: Tono | octavo. | <modeSign> | <pitch:Ni>",
     ],
     "structure": "es/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated",
-  },
-  {
-    "modes": [
-      "1: Tono | uno. | <modeSign> | <pitch:Pa>",
-      "2: Tono | dos. | <modeSign> | <pitch:Di>",
-      "3: Tono | tres. | <modeSign> | <pitch:Ga>",
-      "4: Tono | cuatro. | <modeSign> | <pitch:Di>",
-      "5: Tono | cinco. | <modeSign> | <pitch:Pa>",
-      "6: Tono | seis. | <modeSign> | <pitch:Pa>",
-      "7: Tono | siete. | <modeSign> | <pitch:Ga>",
-      "8: Tono | ocho. | <modeSign> | <pitch:Ni>",
-    ],
-    "structure": "es/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated",
   },
   {
     "modes": [
@@ -2357,19 +2331,6 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
-      "1: Tono | uno. | <pitch:Πα>",
-      "2: Tono | dos. | <pitch:Δι>",
-      "3: Tono | tres. | <pitch:Γα>",
-      "4: Tono | cuatro. | <pitch:Δι>",
-      "5: Tono | cinco. | <pitch:Πα>",
-      "6: Tono | seis. | <pitch:Πα>",
-      "7: Tono | siete. | <pitch:Γα>",
-      "8: Tono | ocho. | <pitch:Νη>",
-    ],
-    "structure": "es/text/words/cardinal/postnominal/absolute/original",
-  },
-  {
-    "modes": [
       "1: Tono | 1. | <pitch:Pa>",
       "2: Tono | 2. | <pitch:Di>",
       "3: Tono | 3. | <pitch:Ga>",
@@ -2419,19 +2380,6 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
       "8: Tono | octavo. | <pitch:Ni>",
     ],
     "structure": "es/text/words/ordinal/postnominal/absolute/transliterated",
-  },
-  {
-    "modes": [
-      "1: Tono | uno. | <pitch:Pa>",
-      "2: Tono | dos. | <pitch:Di>",
-      "3: Tono | tres. | <pitch:Ga>",
-      "4: Tono | cuatro. | <pitch:Di>",
-      "5: Tono | cinco. | <pitch:Pa>",
-      "6: Tono | seis. | <pitch:Pa>",
-      "7: Tono | siete. | <pitch:Ga>",
-      "8: Tono | ocho. | <pitch:Ni>",
-    ],
-    "structure": "es/text/words/cardinal/postnominal/absolute/transliterated",
   },
 ]
 `;

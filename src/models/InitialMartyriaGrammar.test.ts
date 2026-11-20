@@ -147,7 +147,6 @@ describe('InitialMartyriaGrammar', () => {
       'roman-numerals/ordinal/postnominal/absolute',
       'words/ordinal/prenominal/absolute',
       'words/ordinal/postnominal/absolute',
-      'words/cardinal/postnominal/absolute',
     ],
     [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: [
       'digits/ordinal/postnominal/absolute',

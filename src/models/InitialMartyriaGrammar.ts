@@ -171,7 +171,6 @@ const initialMartyriaGrammarRules: Record<
       withNumeralStyles(cardinalPostAbsoluteRule, [
         INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
         INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-        INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
       ]),
       withNumeralStyles(ordinalPostAbsoluteRule, [
         INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
@@ -274,28 +273,21 @@ export const initialMartyriaNumeralQualifiers: InitialMartyriaNumeralQualifier[]
 export const initialMartyriaModeNamingSchemes: InitialMartyriaModeNamingScheme[] =
   [...everyModeNamingScheme];
 
-// A language without this word list does not offer this kind of numeral in
-// any form.
-function getNumeralWords(
-  lexicon: InitialMartyriaLexicon,
-  numeralKind: InitialMartyriaNumeralKind,
-) {
-  return numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal
-    ? lexicon.cardinalWords
-    : lexicon.ordinalWords;
-}
-
 function supportsNumeralForm(
   lexicon: InitialMartyriaLexicon,
   form: InitialMartyriaNumeralForm,
 ) {
-  if (getNumeralWords(lexicon, form.numeralKind) == null) {
-    return false;
+  switch (form.numeralStyle) {
+    case INITIAL_MARTYRIA_NUMERAL_STYLES.Words:
+      return (
+        form.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal ||
+        lexicon.cardinalWords != null
+      );
+    case INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals:
+      return lexicon.alphabeticNumerals != null;
+    default:
+      return true;
   }
-  return (
-    form.numeralStyle !== INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals ||
-    lexicon.alphabeticNumerals != null
-  );
 }
 
 function modeNameGrammarRuleMatches(
@@ -328,9 +320,6 @@ export function isInitialMartyriaStructureSupported(
   structure: InitialMartyriaStructure,
 ) {
   const lexicon = initialMartyriaLexicons[structure.languageId];
-  if (getNumeralWords(lexicon, structure.numeralKind) == null) {
-    return false;
-  }
   const grammar = initialMartyriaGrammarRules[structure.languageId];
   if (
     structure.modeIdentificationMethod ===

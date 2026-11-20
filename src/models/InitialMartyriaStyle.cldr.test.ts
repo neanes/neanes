@@ -401,18 +401,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     ).toEqual(cldrValues('es', 'renderSpelloutOrdinalMasculineAdjective'));
   });
 
-  it('uses CLDR standalone Spanish cardinal words', () => {
-    expect(
-      numeralsFor(
-        absoluteWordStyle(
-          INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-          INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-          INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        ),
-      ),
-    ).toEqual(cldrValues('es', 'renderSpelloutNumbering'));
-  });
-
   it('uses CLDR Russian ordinals modulo case and attested yo spelling', () => {
     const expected = cldrValues('ru', 'renderSpelloutOrdinalMasculine');
     expected[3] = 'четвёртый';

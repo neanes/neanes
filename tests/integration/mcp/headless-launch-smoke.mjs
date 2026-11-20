@@ -159,6 +159,216 @@ try {
     'VALIDATION_ERROR',
   );
 
+  const styleState = await call(first, 'get_initial_martyria_styles', {
+    ...privateArgs,
+    expectedRevision: modeEdit.revision,
+    includePresets: true,
+  });
+  assert.equal(
+    (
+      await call(first, 'get_page_setup', {
+        ...privateArgs,
+        properties: ['initialMartyriaStyleId'],
+      })
+    ).settings.initialMartyriaStyleId,
+    styleState.defaultStyleId,
+  );
+  await callTool(
+    first,
+    'update_page_setup',
+    {
+      ...privateArgs,
+      expectedRevision: styleState.revision,
+      changes: { initialMartyriaStyleId: 'missing' },
+    },
+    'STYLE_NOT_FOUND',
+  );
+  const tonePreset = styleState.presets.find(
+    ({ id }) => id === 'builtin:english-tone-number-text-v1',
+  );
+  assert.ok(tonePreset);
+  const tone = {
+    ...tonePreset,
+    id: 'english-tone',
+    displayName: 'English Tone',
+  };
+  const styled = await call(first, 'edit_initial_martyria_styles', {
+    ...privateArgs,
+    expectedRevision: styleState.revision,
+    changes: { upsert: [tone], defaultStyleId: tone.id },
+  });
+  assert.equal(styled.defaultStyleId, tone.id);
+  const heading = '<p class="neanes-paragraph-style-default-text">Heading </p>';
+  const embedded = await call(first, 'edit_elements', {
+    ...privateArgs,
+    expectedRevision: styled.revision,
+    actions: [
+      {
+        action: 'update',
+        elementRef: modeRef,
+        elementType: 'ModeKey',
+        properties: { initialMartyriaStyleId: tone.id },
+      },
+      {
+        action: 'insert',
+        elements: [
+          {
+            elementType: 'RichTextBox',
+            clientId: 'heading',
+            properties: { inline: true, contentBottom: heading },
+          },
+        ],
+      },
+      {
+        action: 'edit_rich_text_mode_key',
+        elementRef: '@heading',
+        contentKey: 'contentBottom',
+        change: {
+          kind: 'insert',
+          htmlOffset: heading.indexOf('</p>'),
+          properties: {
+            templateId: 604,
+            useOptionalDiatonicFthoras: false,
+            initialMartyriaStyleId: tone.id,
+          },
+        },
+      },
+    ],
+  });
+  const boxRef = embedded.created[0].elementRef;
+  const matches = await call(first, 'find_elements', {
+    ...privateArgs,
+    elementTypes: ['ModeKey', 'RichTextBox'],
+    where: {
+      or: [
+        { field: 'mode', op: 'eq', value: 1 },
+        { field: 'embeddedMode', op: 'eq', value: 6 },
+      ],
+    },
+    properties: ['embeddedModeKeys', 'initialMartyriaStyleId'],
+  });
+  assert.deepEqual(
+    matches.elements.map(({ elementRef }) => elementRef),
+    [modeRef, boxRef],
+  );
+  assert.equal(
+    matches.elements[1].properties.embeddedModeKeys[0].scaleNote,
+    'PaHigh',
+  );
+  const setBoxInline = (expectedRevision, inline) =>
+    call(first, 'edit_elements', {
+      ...privateArgs,
+      expectedRevision,
+      actions: [
+        {
+          action: 'update',
+          elementType: 'RichTextBox',
+          elementRef: boxRef,
+          properties: { inline },
+        },
+      ],
+    });
+  const readBox = (includeContent = false) =>
+    call(first, 'get_element', {
+      ...privateArgs,
+      elementRef: boxRef,
+      includeContent,
+      properties: ['contentBottom', 'embeddedModeKeys', 'embeddedMode'],
+    });
+  const hidden = await setBoxInline(embedded.revision, false);
+  assert.deepEqual((await readBox()).elements[0].properties, {});
+  await callTool(
+    first,
+    'edit_elements',
+    {
+      ...privateArgs,
+      expectedRevision: hidden.revision,
+      actions: [
+        {
+          action: 'edit_rich_text_mode_key',
+          elementRef: boxRef,
+          contentKey: 'contentBottom',
+          change: { kind: 'remove', index: 0 },
+        },
+      ],
+    },
+    'INVALID_ELEMENT_EDIT',
+  );
+  const replacement = await call(first, 'edit_initial_martyria_styles', {
+    ...privateArgs,
+    expectedRevision: hidden.revision,
+    changes: {
+      remove: [{ id: tone.id, replacementId: styleState.defaultStyleId }],
+    },
+  });
+  assert.equal(replacement.defaultStyleId, styleState.defaultStyleId);
+  const shown = await setBoxInline(replacement.revision, true);
+  const remapped = await call(first, 'get_elements', {
+    ...privateArgs,
+    properties: ['embeddedModeKeys', 'initialMartyriaStyleId'],
+  });
+  assert.equal(
+    remapped.elements[0].properties.initialMartyriaStyleId,
+    styleState.defaultStyleId,
+  );
+  assert.equal(
+    remapped.elements[1].properties.embeddedModeKeys[0].initialMartyriaStyleId,
+    styleState.defaultStyleId,
+  );
+  const updated = await call(first, 'edit_elements', {
+    ...privateArgs,
+    expectedRevision: shown.revision,
+    actions: [
+      {
+        action: 'edit_rich_text_mode_key',
+        elementRef: boxRef,
+        contentKey: 'contentBottom',
+        change: {
+          kind: 'update',
+          index: 0,
+          properties: {
+            templateId: 100,
+            useOptionalDiatonicFthoras: true,
+            initialMartyriaStyleId: null,
+          },
+        },
+      },
+    ],
+  });
+  const retuned = (await readBox()).elements[0].properties;
+  assert.equal(retuned.embeddedMode, 1);
+  assert.equal(retuned.embeddedModeKeys[0].initialMartyriaStyleId, null);
+  const overridden = await call(first, 'edit_elements', {
+    ...privateArgs,
+    expectedRevision: updated.revision,
+    actions: [
+      {
+        action: 'update',
+        elementType: 'RichTextBox',
+        elementRef: boxRef,
+        properties: { modeChange: true },
+      },
+    ],
+  });
+  const overriddenBox = (await readBox()).elements[0].properties;
+  assert.equal(overriddenBox.embeddedMode, undefined);
+  assert.equal(overriddenBox.embeddedModeKeys.length, 1);
+  await call(first, 'edit_elements', {
+    ...privateArgs,
+    expectedRevision: overridden.revision,
+    actions: [
+      {
+        action: 'edit_rich_text_mode_key',
+        elementRef: boxRef,
+        contentKey: 'contentBottom',
+        change: { kind: 'remove', index: 0 },
+      },
+    ],
+  });
+  assert.deepEqual((await readBox(true)).elements[0].properties, {
+    contentBottom: heading,
+  });
+
   assert.equal((await call(first, 'list_documents')).length, 1);
   assert.deepEqual(await call(second, 'list_documents'), []);
   const definitions = await first.listTools();

@@ -1,14 +1,13 @@
 import { extractModeKeyElementsFromHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import type { ModeKeyElement, RichTextBoxElement } from '@/models/Element';
+import { activeRichTextContentKeys } from '@/services/RichTextFootnotes';
 
 export function getEmbeddedModeKeys(
   element: Readonly<RichTextBoxElement>,
 ): ModeKeyElement[] {
-  const content = element.multipanel
-    ? [element.contentLeft, element.contentCenter, element.contentRight]
-    : [element.content, element.contentBottom];
-
-  return content.flatMap(extractModeKeyElementsFromHtml);
+  return activeRichTextContentKeys(element).flatMap((key) =>
+    extractModeKeyElementsFromHtml(element[key]),
+  );
 }
 
 export function getLastEmbeddedModeKey(

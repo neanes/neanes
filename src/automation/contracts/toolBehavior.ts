@@ -31,6 +31,7 @@ const readOnlyTools = new Set<AutomationTool>([
   'preview_page',
   'get_page_elements',
   'get_paragraph_styles',
+  'get_initial_martyria_styles',
 ]);
 
 export function isReadOnlyAutomationTool(tool: AutomationTool) {

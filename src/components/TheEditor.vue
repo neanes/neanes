@@ -36,10 +36,7 @@ import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBo
 import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
 import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
 import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
-import {
-  extractModeKeyElementsFromHtml,
-  rewriteModeKeyAttributesInHtml,
-} from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import { extractModeKeyElementsFromHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
@@ -162,7 +159,6 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type { Footnote } from '@/models/Footnote';
-import { isBuiltInInitialMartyriaStyleId } from '@/models/InitialMartyriaBuiltInStyles';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type {
   ElementOverlayBox,
@@ -238,6 +234,10 @@ import {
   saveDocument,
 } from '@/services/documentPersistence';
 import {
+  type InitialMartyriaStyleUpdate,
+  replaceInitialMartyriaStyles,
+} from '@/services/documents/initialMartyriaStyles';
+import {
   createMartyriaUpdateCommand,
   createNoteUpdateCommand,
   getFthoraChange,
@@ -294,7 +294,6 @@ import {
   rewriteClipboardTextBoxFormatParagraphStyleId,
 } from '@/utils/clipboardParagraphStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
-import { deepEquals } from '@/utils/deepEquals';
 import {
   isDropCapElement,
   isImageBoxElement,
@@ -7823,103 +7822,10 @@ const initialMartyriaStyleUsage = computed(() =>
     : { counts: {}, defaultCount: 0 },
 );
 
-function confirmInitialMartyriaStyles(payload: {
-  styles: InitialMartyriaStyle[];
-  defaultStyleId: string;
-  replacements: Record<string, string>;
-}) {
-  const nextStyleIds = new Set(payload.styles.map((style) => style.id));
-  // A mode key of a deleted style takes the style chosen in its place. A
-  // reference that resolves to no style at all follows the default again.
-  const nextModeKeyStyleId = (styleId: string | null) =>
-    styleId == null || isBuiltInInitialMartyriaStyleId(styleId)
-      ? styleId
-      : (payload.replacements[styleId] ??
-        (nextStyleIds.has(styleId) ? styleId : null));
-  const commands: Command[] = [];
-
-  if (!deepEquals(score.value.initialMartyriaStyles, payload.styles)) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: { initialMartyriaStyles: payload.styles },
-      }),
-    );
+function confirmInitialMartyriaStyles(payload: InitialMartyriaStyleUpdate) {
+  if (replaceInitialMartyriaStyles(selectedWorkspace.value, payload)) {
+    save();
   }
-
-  if (payload.defaultStyleId !== score.value.pageSetup.initialMartyriaStyleId) {
-    commands.push(
-      pageSetupCommandFactory.create('update-properties', {
-        target: score.value.pageSetup,
-        newValues: { initialMartyriaStyleId: payload.defaultStyleId },
-      }),
-    );
-  }
-
-  const staffElements = score.value.staves.flatMap((staff) => staff.elements);
-
-  for (const item of staffElements) {
-    if (item.elementType !== ElementType.ModeKey) {
-      continue;
-    }
-    const modeKey = item as ModeKeyElement;
-    const styleId = nextModeKeyStyleId(modeKey.initialMartyriaStyleId);
-    if (styleId !== modeKey.initialMartyriaStyleId) {
-      commands.push(
-        modeKeyCommandFactory.create('update-properties', {
-          target: modeKey,
-          newValues: { initialMartyriaStyleId: styleId },
-        }),
-      );
-    }
-  }
-
-  for (const item of [...staffElements, ...score.value.headersAndFooters]) {
-    if (item.elementType !== ElementType.RichTextBox) {
-      continue;
-    }
-
-    const richTextBox = item as RichTextBoxElement;
-    const newValues: Partial<RichTextBoxElement> = {};
-
-    for (const key of RICH_TEXT_BOX_CONTENT_KEYS) {
-      const content = richTextBox[key];
-      const rewritten = rewriteModeKeyAttributesInHtml(
-        content,
-        (attributes) => {
-          const styleId = attributes.initialMartyriaStyleId;
-          if (typeof styleId !== 'string') {
-            return attributes;
-          }
-          const nextStyleId = nextModeKeyStyleId(styleId);
-
-          return nextStyleId === styleId
-            ? attributes
-            : { ...attributes, initialMartyriaStyleId: nextStyleId };
-        },
-      );
-
-      if (rewritten !== content) {
-        newValues[key] = rewritten;
-      }
-    }
-
-    if (Object.keys(newValues).length > 0) {
-      commands.push(
-        new CommandFactory<RichTextBoxElement>().create('update-properties', {
-          target: richTextBox,
-          newValues,
-        }),
-      );
-    }
-  }
-
-  if (commands.length === 0) {
-    return;
-  }
-
-  commandService.value.executeAsBatch(commands);
-  save();
 }
 
 function updateDocumentProperties(documentProperties: DocumentProperties) {

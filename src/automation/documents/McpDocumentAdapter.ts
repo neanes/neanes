@@ -2,6 +2,7 @@ import { ElementDiscovery } from '@/automation/documents/elementDiscovery';
 import type { Page } from '@/models/Page';
 import { Workspace } from '@/models/Workspace';
 import type { DocumentService } from '@/services/documents/DocumentService';
+import { replaceInitialMartyriaStyles } from '@/services/documents/initialMartyriaStyles';
 import { cloneScoreForLayout } from '@/services/documents/layoutSnapshot';
 import {
   readHeaderFooterSettings,
@@ -29,6 +30,10 @@ import {
   createdElementResult,
   planElementEdits,
 } from './elementEdits';
+import {
+  planInitialMartyriaStyleEdits,
+  readInitialMartyriaStyles,
+} from './initialMartyriaStyleEdits';
 import {
   discoverPages,
   fingerprintLayout,
@@ -266,6 +271,7 @@ export class McpDocumentAdapter {
       request.tool === 'update_page_setup' ||
       request.tool === 'update_header_footer_settings' ||
       request.tool === 'edit_paragraph_styles' ||
+      request.tool === 'edit_initial_martyria_styles' ||
       request.tool === 'save_document'
     ) {
       // Discovery exposes calculated notation properties. Geometry edits and
@@ -464,6 +470,19 @@ export class McpDocumentAdapter {
               )),
       };
     }
+    if (request.tool === 'get_initial_martyria_styles') {
+      return {
+        ...this.checkedSummary(
+          workspace,
+          request.arguments.expectedRevision,
+          'Read the document again before continuing discovery.',
+        ),
+        ...readInitialMartyriaStyles(
+          workspace.score,
+          request.arguments.includePresets,
+        ),
+      };
+    }
     if (request.tool === 'get_paragraph_styles') {
       return {
         ...this.summary(workspace),
@@ -654,6 +673,21 @@ export class McpDocumentAdapter {
       return {
         documentId: workspace.id,
         selectedDocumentId: this.documents.selected()?.id ?? null,
+      };
+    }
+    if (request.tool === 'edit_initial_martyria_styles') {
+      const plan = planInitialMartyriaStyleEdits(
+        workspace.score,
+        request.arguments.changes,
+      );
+      await this.mutateAndSettle(workspace, () =>
+        this.documents.changeElements(workspace, () =>
+          replaceInitialMartyriaStyles(workspace, plan),
+        ),
+      );
+      return {
+        ...this.summary(workspace),
+        defaultStyleId: workspace.score.pageSetup.initialMartyriaStyleId,
       };
     }
     if (request.tool === 'edit_paragraph_styles') {

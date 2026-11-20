@@ -13,17 +13,25 @@ function marker(templateId: number) {
 }
 
 describe('rich text mode keys', () => {
-  it('uses the last key in normal rich text content order', () => {
+  it('uses the bottom panel only while the box is inline', () => {
     const element = new RichTextBoxElement();
     element.index = 17;
     element.content = `${marker(1)} text ${marker(2)}`;
     element.contentBottom = marker(3);
+    element.inline = true;
 
     expect(getEmbeddedModeKeys(element).map((x) => x.templateId)).toEqual([
       1, 2, 3,
     ]);
     expect(getLastEmbeddedModeKey(element)?.templateId).toBe(3);
     expect(getLastEmbeddedModeKey(element)?.index).toBe(17);
+
+    element.inline = false;
+    expect(getEmbeddedModeKeys(element).map((x) => x.templateId)).toEqual([
+      1, 2,
+    ]);
+    expect(getLastEmbeddedModeKey(element)?.templateId).toBe(2);
+    expect(element.contentBottom).toBe(marker(3));
   });
 
   it('uses left, center, right order for multipanel content', () => {

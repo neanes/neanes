@@ -50,21 +50,17 @@ keys never name them. A new score, and a score saved before initial martyria
 styles existed, gets a copy of the Greek "Traditional sign" preset lettered in
 the neume font (`builtin:classic-v1`) as its default.
 
-ModeKey edits accept `initialMartyriaStyleId`, which must name one of the
-score's own styles; any other id, built-in ids included, fails with
-`STYLE_NOT_FOUND`. Reset the property to make the mode key follow the score's
-default style again. MCP does not list, create, or edit initial martyria
-styles: a style's id can be read from a mode key that names it, and styles are
-managed in the app. Copying elements between documents carries the styles their
-mode keys name, reusing a destination style with the same name or importing a
-copy.
+MCP lists score-owned definitions and optional presets with
+`get_initial_martyria_styles`. `edit_initial_martyria_styles` manages those
+definitions and the score default. It shares the editor's undoable style and
+reference updates. ModeKey edits use score-owned IDs or null to inherit the
+default. Rich text mode keys are edited inside the owning box with
+`edit_rich_text_mode_key` and projected as `embeddedModeKeys`. Range copy
+carries named initial martyria styles and their paragraph styles across scores.
 
-Only Greek sign-identified structures support `music-font` lettering; any other
-structure falls back to `text` when a style is created or loaded. Styles keep
-their `lettering` through score serialization and document copying. Style names
-are unique within a language and lettering, the qualifiers the UI shows beside
-each name. Every style has a name of its own; a default style made from a
-preset is named after it in the app's language when it is created.
+Music-font lettering is available for supported Greek sign wordings. Style
+names are unique within the score. Styles retain their lettering when saved
+and copied.
 
 ## Footnotes
 

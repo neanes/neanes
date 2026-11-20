@@ -4,6 +4,7 @@ import {
   AcceptsLyricsOption,
   ElementType,
   LineBreakType,
+  RICH_TEXT_BOX_CONTENT_KEYS,
 } from '@/models/Element';
 import * as Neumes from '@/models/Neumes';
 import { TextBoxAlignment } from '@/models/ParagraphStyle';
@@ -380,6 +381,31 @@ export const elementPropertySchemas = {
     height: z.number(),
   }),
   [ElementType.RichTextBox]: z.strictObject({
+    embeddedMode: z
+      .number()
+      .optional()
+      .describe(
+        'Mode of the final embedded initial martyria when it controls the following music. Omitted if absent or the box enables Mode Change Override.',
+      ),
+    embeddedModeKeys: z
+      .array(
+        z.strictObject({
+          contentKey: z.enum(RICH_TEXT_BOX_CONTENT_KEYS),
+          index: z.number().int().nonnegative(),
+          templateId: z.number().nullable(),
+          mode: z.number(),
+          scale: z.enum(Scale),
+          scaleNote: z.enum(ScaleNote),
+          initialMartyriaStyleId: z.string().nullable(),
+          fontSize: z.number().nullable(),
+          color: z.string().nullable(),
+          strokeWidth: z.number().nullable(),
+        }),
+      )
+      .optional()
+      .describe(
+        'Embedded initial martyriae in active panel order. The zero-based index is within contentKey and is used by edit_rich_text_mode_key. A null style or typography value inherits.',
+      ),
     footnoteReferences: z
       .array(
         z.strictObject({
@@ -423,7 +449,7 @@ export const elementPropertySchemas = {
     modeChange: z
       .boolean()
       .describe(
-        'When true, this text box also resets the musical context for subsequent music using modeChange* fields; when false, those fields are inactive.',
+        'When true, use modeChange* fields for subsequent music. Otherwise the final embedded initial martyria, if present, sets the musical context.',
       ),
     modeChangePhysicalNote: z
       .enum(ScaleNote)
@@ -497,7 +523,12 @@ export const elementPropertySchemas = {
     strokeWidth: z.number().optional(),
     marginBottom: z.number(),
     marginTop: z.number(),
-    initialMartyriaStyleId: z.string().optional(),
+    initialMartyriaStyleId: z
+      .string()
+      .optional()
+      .describe(
+        'ID from get_initial_martyria_styles. Omitted on read when following the score default. On edit, null or reset restores the default.',
+      ),
     ignoreAttractions: z.boolean(),
     permanentEnharmonicZo: z.boolean(),
     showAmbitus: z.boolean(),

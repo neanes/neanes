@@ -7,6 +7,8 @@ import {
   extractModeKeyElementsFromHtml,
   getModeKeyModelAttributes,
   getModeKeyReplacementAttributes,
+  locateModeKeysInHtml,
+  modeKeyHtml,
   rewriteModeKeyAttributesInHtml,
   serializeModeKeyAttributes,
   toModeKeyEditorAttributes,
@@ -51,7 +53,7 @@ describe('embedded mode key data', () => {
       initialMartyriaStyleId: 'deleted-style',
       fontSize: 14,
     });
-    const html = `<p>x<span data-neanes-mode-key='${serialized}'></span>y</p>`;
+    const html = `<p>x<span class="neanes-ck-mode-key" data-neanes-mode-key='${serialized}'></span>y</p>`;
 
     const rewritten = rewriteModeKeyAttributesInHtml(html, (attributes) => ({
       ...attributes,
@@ -59,7 +61,9 @@ describe('embedded mode key data', () => {
     }));
     const [element] = extractModeKeyElementsFromHtml(rewritten);
 
-    expect(rewritten).toMatch(/^<p>x<span data-neanes-mode-key='/u);
+    expect(rewritten).toMatch(
+      /^<p>x<span class="neanes-ck-mode-key" data-neanes-mode-key='/u,
+    );
     expect(element.initialMartyriaStyleId).toBeNull();
     expect(element.fontSize).toBe(14);
   });
@@ -72,7 +76,7 @@ describe('embedded mode key data', () => {
     expect(
       getModeKeyModelAttributes(
         extractModeKeyElementsFromHtml(
-          `<span data-neanes-mode-key="${serialized}"></span>`,
+          `<span class="neanes-ck-mode-key" data-neanes-mode-key="${serialized}"></span>`,
         )[0],
       ).fontSize,
     ).toBeCloseTo(26.6667, 3);
@@ -97,5 +101,24 @@ describe('embedded mode key data', () => {
     expect(attributes.note).toBeNull();
     expect(attributes.fthoraAboveNote).toBeNull();
     expect(attributes.mode).toBe(element.mode);
+  });
+
+  it('locates only classed widget spans, as the editor upcast does', () => {
+    const data = serializeModeKeyAttributes({ templateId: 7 });
+    const html = `<p><span data-neanes-mode-key="${data}"></span>${modeKeyHtml(new ModeKeyElement())}</p>`;
+
+    expect(locateModeKeysInHtml(html)).toHaveLength(1);
+  });
+
+  it('ends an unclosed widget span at its implicit close', () => {
+    const widget = modeKeyHtml(new ModeKeyElement());
+    const unclosed = widget.replace('</span>', '');
+    const atEnd = `<p>x${unclosed}tail`;
+    const beforeParagraphEnd = `<p>x${unclosed}</p><p>y</p>`;
+
+    expect(locateModeKeysInHtml(atEnd)[0].end).toBe(atEnd.length);
+    expect(locateModeKeysInHtml(beforeParagraphEnd)[0].end).toBe(
+      beforeParagraphEnd.indexOf('</p>'),
+    );
   });
 });

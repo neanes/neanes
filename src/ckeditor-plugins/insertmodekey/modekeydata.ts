@@ -1,9 +1,12 @@
 import type { ModelElement } from 'ckeditor5';
+import { Parser } from 'htmlparser2';
 
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
 import { Unit } from '@/utils/Unit';
 
 export const MODE_KEY_DATA_VERSION = 1;
+export const MODE_KEY_CLASS = 'neanes-ck-mode-key';
+export const MODE_KEY_DATA_ATTRIBUTE = 'data-neanes-mode-key';
 
 export const MODE_KEY_MODEL_ATTRIBUTES = [
   'templateId',
@@ -175,7 +178,7 @@ export function serializeModeKeyAttributes(
     attributes: sanitized,
   };
 
-  return encodeURIComponent(JSON.stringify(payload));
+  return encodeURIComponent(JSON.stringify(payload)).replaceAll("'", '%27');
 }
 
 export function getModeKeyFontSizeInPixels(value: unknown): number | null {
@@ -230,18 +233,59 @@ export function deserializeModeKeyAttributes(
 }
 
 export function extractModeKeyElementsFromHtml(html: string): ModeKeyElement[] {
-  const elements: ModeKeyElement[] = [];
-  const attributePattern = /data-neanes-mode-key=(['"])(.*?)\1/gu;
+  return locateModeKeysInHtml(html).map(({ element }) => element);
+}
 
-  for (const match of html.matchAll(attributePattern)) {
-    const attributes = deserializeModeKeyAttributes(match[2]);
+export function modeKeyHtml(element: ModeKeyElement) {
+  const data = serializeModeKeyAttributes(getModeKeyModelAttributes(element));
+  return `<span class="${MODE_KEY_CLASS}" ${MODE_KEY_DATA_ATTRIBUTE}="${data}"></span>`;
+}
 
-    if (attributes != null) {
-      elements.push(createModeKeyElementFromAttributes(attributes));
-    }
+export function locateModeKeysInHtml(html: string) {
+  const widgets: { element: ModeKeyElement; start: number; end: number }[] = [];
+  if (!html.includes(MODE_KEY_DATA_ATTRIBUTE)) {
+    return widgets;
   }
 
-  return elements;
+  let depth = 0;
+  let open:
+    { element: ModeKeyElement; start: number; depth: number } | undefined;
+  const parser = new Parser({
+    onopentag(name, attributes) {
+      depth++;
+      // Match the editor upcast, which keeps only classed widget spans.
+      if (
+        name !== 'span' ||
+        open !== undefined ||
+        !attributes.class?.split(/\s+/).includes(MODE_KEY_CLASS)
+      ) {
+        return;
+      }
+      const data = deserializeModeKeyAttributes(
+        attributes[MODE_KEY_DATA_ATTRIBUTE],
+      );
+      if (data !== null) {
+        open = {
+          element: createModeKeyElementFromAttributes(data),
+          start: parser.startIndex,
+          depth,
+        };
+      }
+    },
+    onclosetag(_name, implied) {
+      if (open?.depth === depth) {
+        widgets.push({
+          element: open.element,
+          start: open.start,
+          end: implied ? parser.startIndex : parser.endIndex + 1,
+        });
+        open = undefined;
+      }
+      depth--;
+    },
+  });
+  parser.end(html);
+  return widgets;
 }
 
 export function rewriteModeKeyAttributesInHtml(
@@ -253,11 +297,13 @@ export function rewriteModeKeyAttributesInHtml(
     (source, quote: string, value: string) => {
       const attributes = deserializeModeKeyAttributes(value);
 
-      return attributes == null
+      if (attributes === null) {
+        return source;
+      }
+      const updated = rewrite(attributes);
+      return updated === attributes
         ? source
-        : `data-neanes-mode-key=${quote}${serializeModeKeyAttributes(
-            rewrite(attributes),
-          )}${quote}`;
+        : `data-neanes-mode-key=${quote}${serializeModeKeyAttributes(updated)}${quote}`;
     },
   );
 }

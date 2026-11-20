@@ -12,14 +12,14 @@ import { LayoutService } from '@/services/LayoutService';
 import {
   createModeKeyElementFromModel,
   deserializeModeKeyAttributes,
+  MODE_KEY_CLASS,
+  MODE_KEY_DATA_ATTRIBUTE,
   MODE_KEY_MODEL_ATTRIBUTES,
   serializeModeKeyAttributes,
   toModeKeyEditorAttributes,
 } from './modekeydata';
 
 export const MODE_KEY_ELEMENT = 'modeKey';
-export const MODE_KEY_CLASS = 'neanes-ck-mode-key';
-export const MODE_KEY_DATA_ATTRIBUTE = 'data-neanes-mode-key';
 const MODE_KEY_MOUNT_CLASS = 'neanes-ck-mode-key-mount';
 
 export type InsertModeKeyConfig = {

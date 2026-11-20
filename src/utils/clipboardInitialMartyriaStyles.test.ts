@@ -107,19 +107,26 @@ describe('clipboardInitialMartyriaStyles', () => {
     expect(collected[0].structure).not.toBe(parish.structure);
   });
 
-  it('collects styles referenced by embedded mode keys', () => {
+  it('collects styles referenced by embedded mode keys, including hidden panels', () => {
     const parish = createCustomInitialMartyriaStyle(
       'parish',
       'Parish',
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
+    const preset = createCustomInitialMartyriaStyle(
+      'hidden',
+      'Hidden',
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    const box = createRichTextBoxWithModeKey(parish.id);
+    box.contentBottom = createRichTextBoxWithModeKey(preset.id).content;
 
     expect(
       collectClipboardInitialMartyriaStylesFromElements(
-        [createRichTextBoxWithModeKey(parish.id)],
-        [parish],
+        [box],
+        [parish, preset],
       ),
-    ).toEqual([parish]);
+    ).toEqual([parish, preset]);
   });
 
   it('walks the collected styles when collecting paragraph styles', () => {

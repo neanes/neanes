@@ -1,4 +1,7 @@
-import { rewriteModeKeyAttributesInHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import {
+  extractModeKeyElementsFromHtml,
+  rewriteModeKeyAttributesInHtml,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import type {
   ModeKeyElement,
   RichTextBoxElement,
@@ -22,7 +25,6 @@ import {
 import { getNextAvailableStyleName } from '@/utils/styleNames';
 
 import { resolveClipboardParagraphStyleReference } from './clipboardParagraphStyles';
-import { getEmbeddedModeKeys } from './richTextModeKeys';
 
 export interface ResolvedClipboardInitialMartyriaStyles {
   importedInitialMartyriaStyles: InitialMartyriaStyle[];
@@ -31,7 +33,8 @@ export interface ResolvedClipboardInitialMartyriaStyles {
 
 // A copied mode key references its initial martyria style by id. Built-in
 // styles exist in every score, so only the custom styles a copied mode key
-// names need to travel with the clipboard.
+// names need to travel with the clipboard. This includes keys in stored
+// panels that can become visible after pasting.
 export function collectClipboardInitialMartyriaStylesFromElements(
   elements: ScoreElement[],
   initialMartyriaStyles: InitialMartyriaStyle[],
@@ -43,7 +46,11 @@ export function collectClipboardInitialMartyriaStylesFromElements(
       element.elementType === ElementType.ModeKey
         ? [element as ModeKeyElement]
         : element.elementType === ElementType.RichTextBox
-          ? getEmbeddedModeKeys(element as RichTextBoxElement)
+          ? RICH_TEXT_BOX_CONTENT_KEYS.flatMap((key) =>
+              extractModeKeyElementsFromHtml(
+                (element as RichTextBoxElement)[key],
+              ),
+            )
           : [];
 
     for (const modeKey of modeKeys) {

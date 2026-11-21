@@ -74,7 +74,7 @@
     "dockview-vue": "^8.9.0",
     "electron": "^45.3.2",
     "electron-builder": "^26.18.0",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "eslint-plugin-prettier": "^5.5.7",
     "eslint-plugin-simple-import-sort": "^14.0.0",
     "eslint-plugin-vue": "^10.12.1",

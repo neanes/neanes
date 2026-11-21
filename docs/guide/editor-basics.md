@@ -53,6 +53,7 @@ Choose `Edit > Preferences` to change settings that apply throughout Neanes. Cha
 - **Color Mode** sets the interface to **Light** or **Dark**. Choose **System** to follow your operating system's appearance setting.
 - **Menu Interaction** controls toolbar buttons that contain a family of related signs. With **Press and hold to select**, hold the button, move to the desired sign, and release. With **Click to open menu**, click the button and then click a sign.
 - **Tempo Defaults** sets the BPM used when you add each kind of tempo sign, including a tempo attached to a martyria. To give one tempo sign a different speed, select it in the score and change **BPM** in Properties. Changing a default does not alter tempo signs already in the score.
+- **Character Replacements** inserts a different character when you type a given character in lyrics, drop caps, text boxes, and the Lyrics pane. For example, replace `'` with `’` to type curly apostrophes. With no replacements, characters are inserted as typed. Replacements apply only while typing. Pasted text and text already in the score are not changed. Replacements do not apply in rich text boxes. See [Type curly apostrophes and quotation marks](/guide/lyrics.html#type-curly-apostrophes-and-quotation-marks).
 
 Preferences are remembered between sessions. Choose **Use System Default** to restore the defaults for the current section.
 

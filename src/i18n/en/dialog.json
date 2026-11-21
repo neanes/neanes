@@ -345,6 +345,12 @@
     "enableDeveloperPanel": "Enable Developer Panel",
     "tempoDefaults": "Tempo Defaults",
     "bpm": "BPM",
+    "characterReplacements": "Character Replacements",
+    "characterReplacementsDescription": "Replace a typed character with another in lyrics, drop caps, text boxes, and the lyrics pane. With no replacements, characters are inserted as typed.",
+    "characterReplacementTyped": "Typed",
+    "characterReplacementInserted": "Inserted",
+    "addCharacterReplacement": "Add Replacement",
+    "removeCharacterReplacement": "Remove replacement",
     "sections": {
       "general": "General",
       "appearance": "Appearance",

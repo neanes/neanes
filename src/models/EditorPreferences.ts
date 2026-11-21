@@ -6,8 +6,15 @@ export enum ButtonMenuMode {
   Hold = 'Hold',
 }
 
+export interface CharacterReplacement {
+  from: string;
+  to: string;
+}
+
 export interface IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
+  // Typed characters to replace in plain text fields. Empty keeps keyboard input.
+  characterReplacements: CharacterReplacement[];
   buttonMenuMode: ButtonMenuMode;
   // Empty string means "follow the system / browser locale".
   language: string;
@@ -46,6 +53,7 @@ export type ScoreOverlaySettings = Pick<
 
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
+  characterReplacements: CharacterReplacement[] = [];
   buttonMenuMode = ButtonMenuMode.Hold;
   language = '';
   showDeveloperPanels = false;

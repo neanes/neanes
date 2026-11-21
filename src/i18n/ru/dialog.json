@@ -345,6 +345,12 @@
     "enableDeveloperPanel": "Включить панель разработчика",
     "tempoDefaults": "Темпы по умолчанию",
     "bpm": "уд/мин",
+    "characterReplacements": "Замена символов",
+    "characterReplacementsDescription": "Заменяет вводимый символ другим в тексте песнопения, буквицах, текстовых полях и панели текста. Без замен символы вставляются так, как они набраны.",
+    "characterReplacementTyped": "Вводимый",
+    "characterReplacementInserted": "Вставляемый",
+    "addCharacterReplacement": "Добавить замену",
+    "removeCharacterReplacement": "Удалить замену",
     "sections": {
       "general": "Общие",
       "appearance": "Оформление",

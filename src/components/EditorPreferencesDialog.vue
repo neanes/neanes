@@ -294,6 +294,72 @@
                     </Field>
                   </FieldGroup>
                 </FieldSet>
+
+                <FieldSet v-if="section === 'editing'" class="gap-2">
+                  <FieldLegend variant="label" class="mb-0">
+                    {{
+                      $t(($) => $.dialog.preferences.characterReplacements, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </FieldLegend>
+                  <FieldDescription>
+                    {{
+                      $t(
+                        ($) =>
+                          $.dialog.preferences.characterReplacementsDescription,
+                        { ns: 'dialog' },
+                      )
+                    }}
+                  </FieldDescription>
+                  <FieldGroup class="gap-1">
+                    <Field
+                      v-for="(replacement, index) in form.characterReplacements"
+                      :key="index"
+                      orientation="horizontal"
+                    >
+                      <Input
+                        v-model="replacement.from"
+                        class="w-24 text-center"
+                        :placeholder="characterReplacementTypedLabel"
+                        :aria-label="characterReplacementTypedLabel"
+                      />
+                      <Input
+                        v-model="replacement.to"
+                        class="w-24 text-center"
+                        :placeholder="characterReplacementInsertedLabel"
+                        :aria-label="characterReplacementInsertedLabel"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        :aria-label="
+                          $t(
+                            ($) =>
+                              $.dialog.preferences.removeCharacterReplacement,
+                            { ns: 'dialog' },
+                          )
+                        "
+                        @click="form.characterReplacements.splice(index, 1)"
+                        ><PhTrash
+                      /></Button>
+                    </Field>
+                  </FieldGroup>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    class="self-start"
+                    @click="
+                      form.characterReplacements.push({ from: '', to: '' })
+                    "
+                    ><PhPlus data-icon="inline-start" />{{
+                      $t(($) => $.dialog.preferences.addCharacterReplacement, {
+                        ns: 'dialog',
+                      })
+                    }}</Button
+                  >
+                </FieldSet>
               </FieldGroup></ScrollArea
             ></TabsContent
           >
@@ -329,7 +395,9 @@ import {
   PhArrowCounterClockwise,
   PhDesktop,
   PhMoon,
+  PhPlus,
   PhSun,
+  PhTrash,
 } from '@phosphor-icons/vue';
 import type { BasicColorSchema } from '@vueuse/core';
 import { useColorMode } from '@vueuse/core';
@@ -356,6 +424,7 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -431,6 +500,14 @@ const menuInteractionLabel = computed(() =>
     { ns: 'dialog' },
   ),
 );
+const characterReplacementTypedLabel = computed(() =>
+  t(($) => $.dialog.preferences.characterReplacementTyped, { ns: 'dialog' }),
+);
+const characterReplacementInsertedLabel = computed(() =>
+  t(($) => $.dialog.preferences.characterReplacementInserted, {
+    ns: 'dialog',
+  }),
+);
 const tempoSigns = [
   TempoSign.VerySlow,
   TempoSign.Slower,
@@ -477,6 +554,7 @@ function resetToSystemDefaults() {
     colorModeValue.value = 'auto';
   } else if (section.value === 'editing') {
     form.value.tempoDefaults = defaults.tempoDefaults;
+    form.value.characterReplacements = defaults.characterReplacements;
   } else if (section.value === 'advanced') {
     form.value.showDeveloperPanels = defaults.showDeveloperPanels;
   }

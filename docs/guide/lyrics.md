@@ -127,6 +127,16 @@ Select a lyric beneath a neume to use the text controls in the bottom toolbar. Y
 
 For consistent formatting throughout the score, choose `Format > Paragraph Styles` and modify the built-in **Lyrics** style instead of formatting each neume separately. See [Apply a style](/guide/text-and-styles.html#apply-a-style).
 
+## Type curly apostrophes and quotation marks
+
+Lyrics contain exactly the characters you type. Most keyboards type a straight apostrophe (`'`). To insert a curly apostrophe (`’`) each time you type `'`, add a character replacement:
+
+1. Choose `Edit > Preferences` and select **Editing**.
+2. Under **Character Replacements**, choose **Add Replacement**.
+3. Enter `'` in the **Typed** box and `’` in the **Inserted** box.
+
+The replacement applies when you type lyrics beneath the neumes or in the Lyrics pane. Add a row for each other character you want to replace, such as `"`. Replacements do not change pasted text or lyrics already in the score. See [Set application preferences](/guide/editor-basics.html#set-application-preferences).
+
 ## Create a prosomoion from an automelon
 
 A prosomoion uses the melodic pattern of an automelon with different words. Neanes can preserve the automelon's syllable and melisma pattern while you replace its text.

@@ -8772,48 +8772,46 @@ export class LayoutService {
           ? null
           : getLastEmbeddedModeKey(richTextBox);
 
-        if (!richTextBox.modeChange && embeddedModeKey == null) {
-          continue;
-        }
-
-        if (currentModeKey) {
-          this.assignAmbitus({
-            currentModeKey,
-            ambitusLow,
-            ambitusHigh,
-            ambitusLowScale,
-            ambitusLowShift,
-            ambitusHighScale,
-            ambitusHighShift,
-          });
-        }
-
-        ambitusLow = Number.MAX_SAFE_INTEGER;
-        ambitusHigh = Number.MIN_SAFE_INTEGER;
-
-        currentModeKey = null;
-        if (richTextBox.modeChange) {
-          currentNote = getScaleNoteValue(richTextBox.modeChangePhysicalNote);
-          currentScale = richTextBox.modeChangeScale;
-          currentShift = 0;
-
-          if (richTextBox.modeChangeVirtualNote) {
-            currentNoteVirtual = getScaleNoteValue(
-              richTextBox.modeChangeVirtualNote,
-            );
-
-            currentShift = getShiftWithoutFthora(
-              currentNote,
-              currentNoteVirtual,
-              currentScale,
-            );
+        if (richTextBox.modeChange || embeddedModeKey != null) {
+          if (currentModeKey) {
+            this.assignAmbitus({
+              currentModeKey,
+              ambitusLow,
+              ambitusHigh,
+              ambitusLowScale,
+              ambitusLowShift,
+              ambitusHighScale,
+              ambitusHighShift,
+            });
           }
-        } else {
-          ({
-            note: currentNote,
-            scale: currentScale,
-            shift: currentShift,
-          } = this.getModeKeyStartContext(embeddedModeKey!));
+
+          ambitusLow = Number.MAX_SAFE_INTEGER;
+          ambitusHigh = Number.MIN_SAFE_INTEGER;
+
+          currentModeKey = null;
+          if (embeddedModeKey != null) {
+            ({
+              note: currentNote,
+              scale: currentScale,
+              shift: currentShift,
+            } = this.getModeKeyStartContext(embeddedModeKey));
+          } else {
+            currentNote = getScaleNoteValue(richTextBox.modeChangePhysicalNote);
+            currentScale = richTextBox.modeChangeScale;
+            currentShift = 0;
+
+            if (richTextBox.modeChangeVirtualNote) {
+              currentNoteVirtual = getScaleNoteValue(
+                richTextBox.modeChangeVirtualNote,
+              );
+
+              currentShift = getShiftWithoutFthora(
+                currentNote,
+                currentNoteVirtual,
+                currentScale,
+              );
+            }
+          }
         }
       }
       if (elementFootnoteIds(element).length > 0) {

@@ -13,6 +13,7 @@ import {
   MartyriaElement,
   ModeKeyElement,
   NoteElement,
+  RichTextBoxElement,
   TempoElement,
   TextBoxElement,
 } from '../models/Element';
@@ -209,6 +210,23 @@ describe('LayoutService.calculateMartyriae', () => {
     expect(body.note).toBe(main.note);
     expect(body.scale).toBe(Scale.Zygos);
     expect(body.rootSign).toBe(main.rootSign);
+  });
+
+  it('starts a footnote at the pitch and scale of a plain rich-text anchor', () => {
+    const setup = new PageSetup();
+    const key = new ModeKeyElement();
+    key.scaleNote = ScaleNote.Ga;
+    key.scale = Scale.SoftChromatic;
+    const anchor = new RichTextBoxElement();
+    anchor.content =
+      '<p>Text<span class="neanes-footnote" data-footnote-id="c281b011-5c49-42af-9e38-fdcdaddc5245"></span></p>';
+
+    const contexts = LayoutService.calculateMartyriae([key, anchor], setup);
+    const body = new MartyriaElement();
+    LayoutService.calculateMartyriae([body], setup, contexts.get(anchor));
+
+    expect(body.note).toBe(Note.Ga);
+    expect(body.scale).toBe(Scale.SoftChromatic);
   });
 
   it('normalizes all fthora slots in one layout pass', () => {

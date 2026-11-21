@@ -282,8 +282,7 @@ export function planElementEdits(
       ) {
         throw new Error('STYLE_NOT_FOUND');
       }
-      // A mode key names one of the score's own initial martyria styles;
-      // built-in styles are only presets in the app.
+      // A mode key names one of the score's own initial martyria styles.
       if (
         key === 'initialMartyriaStyleId' &&
         value !== null &&

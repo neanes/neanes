@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { DropCapElement, NoteElement, TextBoxElement } from '@/models/Element';
-import { builtInInitialMartyriaStyles } from '@/models/InitialMartyriaBuiltInStyles';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS as ids,
   ParagraphStyle,
@@ -32,7 +32,7 @@ describe('paragraph style update commands', () => {
     const greek = custom('mode-greek', ids.InitialMartyriaGreek);
     score.paragraphStyles.push(text, greek);
     const style = {
-      ...builtInInitialMartyriaStyles[0],
+      ...styleFromWording('greekTraditionalSign'),
       id: 'custom-mode',
       displayName: 'Custom mode',
       paragraphStyleId: text.id,

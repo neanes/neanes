@@ -13,10 +13,7 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   Fthora,
@@ -205,9 +202,7 @@ describe('ByzHtmlExporter', () => {
     const exporter = new ByzHtmlExporter();
     const score = new Score();
     const style = {
-      ...getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-      ),
+      ...styleFromWording('englishModeNames'),
       id: 'custom-english',
     };
     score.initialMartyriaStyles = [style];

@@ -178,7 +178,7 @@ try {
     'STYLE_NOT_FOUND',
   );
   const tonePreset = styleState.presets.find(
-    ({ id }) => id === 'builtin:english-tone-number-text-v1',
+    ({ id }) => id === 'englishToneNumber',
   );
   assert.ok(tonePreset);
   const tone = {

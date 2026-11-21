@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ModeKeyElement } from '@/models/Element';
-import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  createDefaultInitialMartyriaTypography,
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaCommonWordings';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
   getInitialMartyriaFixedSeparatorSize,
@@ -37,6 +33,7 @@ import {
   paragraphStyles,
   resolve,
   styleFor,
+  styleFromWording,
 } from './InitialMartyriaStyle.testHelpers';
 
 function createInitialMartyriaParagraphStyle(
@@ -84,76 +81,52 @@ describe('InitialMartyriaResolver', () => {
       structure: attestedStructures['greek-mode-names'],
       ...createDefaultInitialMartyriaTypography(),
     });
-    const initialMartyriaStyles = [custom];
-    const builtInId =
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign;
-    let defaultInitialMartyriaStyleId: string = builtInId;
+    const scoreDefault = styleFromWording('englishTraditionalSign', 'English');
+    const initialMartyriaStyles = [scoreDefault, custom];
+    const defaultInitialMartyriaStyleId = scoreDefault.id;
     const element = new ModeKeyElement();
-
-    expect(
+    const resolveId = () =>
       resolveModeKeyInitialMartyriaStyle({
         element,
         defaultInitialMartyriaStyleId,
         paragraphStyles,
         initialMartyriaStyles,
-      }).style.id,
-    ).toBe(builtInId);
+      }).style.id;
+
+    expect(resolveId()).toBe(scoreDefault.id);
 
     element.initialMartyriaStyleId = custom.id;
-    expect(
-      resolveModeKeyInitialMartyriaStyle({
-        element,
-        defaultInitialMartyriaStyleId,
-        paragraphStyles,
-        initialMartyriaStyles,
-      }).style.id,
-    ).toBe(custom.id);
+    expect(resolveId()).toBe(custom.id);
 
     // A reference to a deleted style follows the score's style.
     element.initialMartyriaStyleId = 'missing';
-    expect(
-      resolveModeKeyInitialMartyriaStyle({
-        element,
-        defaultInitialMartyriaStyleId,
-        paragraphStyles,
-        initialMartyriaStyles,
-      }).style.id,
-    ).toBe(builtInId);
+    expect(resolveId()).toBe(scoreDefault.id);
+  });
 
-    // Built-in styles are only presets, so a mode key cannot name one.
-    element.initialMartyriaStyleId =
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign;
-    expect(
-      resolveModeKeyInitialMartyriaStyle({
-        element,
-        defaultInitialMartyriaStyleId,
-        paragraphStyles,
-        initialMartyriaStyles,
-      }).style.id,
-    ).toBe(builtInId);
+  it('follows the first score style when the default does not resolve', () => {
+    const first = styleFromWording('englishTraditionalSign', 'English');
+    const second = styleFromWording('greekTraditionalSign', 'Greek');
 
-    element.initialMartyriaStyleId = null;
-    defaultInitialMartyriaStyleId = 'missing';
     expect(
       resolveModeKeyInitialMartyriaStyle({
-        element,
-        defaultInitialMartyriaStyleId,
+        element: new ModeKeyElement(),
+        defaultInitialMartyriaStyleId: 'missing',
         paragraphStyles,
-        initialMartyriaStyles,
+        initialMartyriaStyles: [first, second],
       }).style.id,
-    ).toBe(DEFAULT_INITIAL_MARTYRIA_STYLE_ID);
+    ).toBe(first.id);
   });
 
   it('folds element overrides into the resolved style appearances', () => {
-    const defaultInitialMartyriaStyleId =
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign;
+    const scoreDefault = styleFromWording('englishTraditionalSign', 'English');
+    const defaultInitialMartyriaStyleId = scoreDefault.id;
     const element = new ModeKeyElement();
 
     const inherited = resolveModeKeyInitialMartyriaStyle({
       element,
       defaultInitialMartyriaStyleId,
       paragraphStyles,
-      initialMartyriaStyles: [],
+      initialMartyriaStyles: [scoreDefault],
     });
     expect(inherited.mainAppearance).toMatchObject({
       fontFamily: 'Source Serif',
@@ -174,7 +147,7 @@ describe('InitialMartyriaResolver', () => {
       element,
       defaultInitialMartyriaStyleId,
       paragraphStyles,
-      initialMartyriaStyles: [],
+      initialMartyriaStyles: [scoreDefault],
     });
     expect(overridden.mainAppearance).toMatchObject({
       fontFamily: 'Source Serif',

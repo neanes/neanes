@@ -14,7 +14,7 @@ import {
   parseNumericVariant,
 } from '@/utils/fontVariants';
 
-import { getInitialMartyriaStyleOrDefault } from './InitialMartyriaBuiltInStyles';
+import { getScoreDefaultInitialMartyriaStyle } from './InitialMartyriaCommonWordings';
 import {
   arabicIndicDigits,
   getInitialMartyriaLexicon,
@@ -724,10 +724,7 @@ export function resolveScoreInitialMartyriaStyle(options: {
     (styleId == null
       ? undefined
       : initialMartyriaStyles.find((style) => style.id === styleId)) ??
-      getInitialMartyriaStyleOrDefault(
-        initialMartyriaStyles,
-        options.defaultInitialMartyriaStyleId,
-      ),
+      getScoreDefaultInitialMartyriaStyle(options),
     options.paragraphStyles,
     options.paragraphStyleOverrides,
   );
@@ -735,9 +732,7 @@ export function resolveScoreInitialMartyriaStyle(options: {
 
 /**
  * The style an element renders with: its own, or else the score's. A
- * reference that names no style of the score follows the score's style, and
- * a score style that does not resolve falls back to the default built-in
- * style.
+ * reference that names no style of the score follows the score's style.
  */
 export function resolveModeKeyInitialMartyriaStyle(options: {
   element: Pick<

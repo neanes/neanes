@@ -263,13 +263,14 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  builtInInitialMartyriaStyles,
-  createDefaultInitialMartyriaTypography,
+  commonInitialMartyriaWordings,
+  createInitialMartyriaStyleFromWording,
+  DEFAULT_INITIAL_MARTYRIA_WORDING_NAME,
+  getCommonInitialMartyriaWording,
+  getCommonInitialMartyriaWordingCaptionSelector,
   getDefaultInitialMartyriaTransliteration,
-  getInitialMartyriaStyleDisplayName,
-} from '@/models/InitialMartyriaBuiltInStyles';
+} from '@/models/InitialMartyriaCommonWordings';
 import {
-  createInitialMartyriaStyle,
   enumerateInitialMartyriaStructures,
   initialMartyriaModeIdentificationMethods,
 } from '@/models/InitialMartyriaGrammar';
@@ -320,7 +321,7 @@ const groupHeadingClass =
  * where it has more than one, whether its note names are transliterated and
  * plagal modes show the plagal abbreviation beside the sign (where the
  * language leaves that open), and one of the wordings the language allows. The
- * common wordings (the built-in presets) come first; every other wording is
+ * common wordings come first; every other wording is
  * kept in a collapsed section. Each wording is previewed in enough modes to
  * tell it apart from the rest.
  */
@@ -441,11 +442,10 @@ function setLanguage(value: AcceptableValue) {
 const previewBase = computed(
   () =>
     props.editingStyle ??
-    createInitialMartyriaStyle({
-      ...createDefaultInitialMartyriaTypography(),
-      displayName: '',
-      structure: builtInInitialMartyriaStyles[0].structure,
-    }),
+    createInitialMartyriaStyleFromWording(
+      getCommonInitialMartyriaWording(DEFAULT_INITIAL_MARTYRIA_WORDING_NAME),
+      '',
+    ),
 );
 
 const currentKey = computed(() =>
@@ -463,14 +463,14 @@ interface WordingRow {
   key: string;
   structure: InitialMartyriaStructure;
   lettering: InitialMartyriaLettering;
-  /** The names of the presets written this way. */
-  presetNames: string[];
+  /** The captions of the common wordings written this way. */
+  captions: string[];
 }
 
 function createRow(
   structure: InitialMartyriaStructure,
   lettering: InitialMartyriaLettering,
-  presetNames: string[],
+  captions: string[],
 ): WordingRow {
   const wording = {
     structure,
@@ -479,11 +479,11 @@ function createRow(
   return {
     key: getInitialMartyriaWordingKey(wording),
     ...wording,
-    presetNames,
+    captions,
   };
 }
 
-const presetNameList = computed(
+const captionList = computed(
   () => new Intl.ListFormat(i18next.language, { style: 'short', type: 'unit' }),
 );
 
@@ -496,40 +496,42 @@ function rowProps(row: WordingRow) {
     paragraphStyles: props.paragraphStyles,
     pageSetup: props.pageSetup,
     caption:
-      row.presetNames.length > 0
-        ? presetNameList.value.format(row.presetNames)
-        : null,
+      row.captions.length > 0 ? captionList.value.format(row.captions) : null,
     selected: row.key === currentKey.value,
     inUse: row.key !== currentKey.value && props.usedWordingKeys.has(row.key),
   };
 }
 
 /*
- * The presets of the language and mode word, with the choices above in
- * place of their own, then the sign group alone. Presets that then print
- * alike share a row.
+ * The common wordings of the language and mode word, with the choices
+ * above in place of their own, then the sign group alone. Wordings that then
+ * print alike share a row.
  */
 const commonGroups = computed(() => {
   const neumeFontRows: WordingRow[] = [];
   const textRows: WordingRow[] = [];
-  for (const preset of builtInInitialMartyriaStyles) {
+  for (const wording of commonInitialMartyriaWordings) {
     if (
-      preset.structure.languageId !== languageId.value ||
-      preset.structure.labelVariant !== labelVariant.value
+      wording.structure.languageId !== languageId.value ||
+      wording.structure.labelVariant !== labelVariant.value
     ) {
       continue;
     }
     const usesNeumeFont =
-      preset.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont;
+      wording.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont;
     const rows = usesNeumeFont ? neumeFontRows : textRows;
     const row = createRow(
-      { ...preset.structure, ...chosenAxes.value },
-      preset.lettering,
-      [getInitialMartyriaStyleDisplayName(preset, t)],
+      { ...wording.structure, ...chosenAxes.value },
+      wording.lettering,
+      [
+        t(getCommonInitialMartyriaWordingCaptionSelector(wording.name), {
+          ns: 'dialog',
+        }),
+      ],
     );
     const existing = rows.find((other) => other.key === row.key);
     if (existing != null) {
-      existing.presetNames.push(...row.presetNames);
+      existing.captions.push(...row.captions);
     } else {
       rows.push(row);
     }

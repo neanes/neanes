@@ -327,7 +327,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaBuiltInStyles';
+import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaCommonWordings';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
   getInitialMartyriaParagraphStyleUsage,

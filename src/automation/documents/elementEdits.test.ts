@@ -485,7 +485,8 @@ describe('validated element transactions', () => {
     ).toBe(ownStyle.id);
 
     const before = saved(workspace);
-    for (const initialMartyriaStyleId of ['builtin:classic-v1', 'missing']) {
+    // A common wording's name is not a style either.
+    for (const initialMartyriaStyleId of ['classic', 'missing']) {
       expect(() =>
         edit([
           insert([

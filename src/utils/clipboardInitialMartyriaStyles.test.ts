@@ -10,10 +10,9 @@ import {
   TextBoxElement,
 } from '@/models/Element';
 import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
   createDefaultInitialMartyriaTypography,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
+  getCommonInitialMartyriaWording,
+} from '@/models/InitialMartyriaCommonWordings';
 import {
   INITIAL_MARTYRIA_LETTERINGS,
   type InitialMartyriaStyle,
@@ -45,9 +44,7 @@ function createCustomInitialMartyriaStyle(
     id,
     displayName,
     structure: {
-      ...getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-      ).structure,
+      ...getCommonInitialMartyriaWording('englishModeNames').structure,
     },
     ...createDefaultInitialMartyriaTypography(),
     paragraphStyleId,
@@ -93,7 +90,6 @@ describe('clipboardInitialMartyriaStyles', () => {
       [
         createModeKey(parish.id),
         createModeKey(null),
-        createModeKey(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign),
         createModeKey('deleted'),
         createModeKey(parish.id),
         new TextBoxElement(),
@@ -215,9 +211,7 @@ describe('clipboardInitialMartyriaStyles', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
     targetParish.structure = {
-      ...getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianGlasNumber,
-      ).structure,
+      ...getCommonInitialMartyriaWording('romanianGlasNumber').structure,
     };
 
     const result = resolveClipboardInitialMartyriaStyles(
@@ -236,8 +230,8 @@ describe('clipboardInitialMartyriaStyles', () => {
   });
 
   it('imports a style named like one in another lettering under the next free name', () => {
-    const greekStructure = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
+    const greekStructure = getCommonInitialMartyriaWording(
+      'greekTraditionalSign',
     ).structure;
     const clipboardTraditional = createCustomInitialMartyriaStyle(
       'clipboard-traditional',
@@ -396,13 +390,10 @@ describe('clipboardInitialMartyriaStyles', () => {
       BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
     );
     const known = createModeKey(parish.id);
-    const builtIn = createModeKey(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-    );
     const followsScore = createModeKey(null);
     const unknown = createModeKey('deleted');
 
-    for (const modeKey of [known, builtIn, followsScore, unknown]) {
+    for (const modeKey of [known, followsScore, unknown]) {
       rewriteClipboardElementInitialMartyriaStyleId(
         modeKey,
         [parish],
@@ -411,7 +402,6 @@ describe('clipboardInitialMartyriaStyles', () => {
     }
 
     expect(known.initialMartyriaStyleId).toBe(parish.id);
-    expect(builtIn.initialMartyriaStyleId).toBeNull();
     expect(followsScore.initialMartyriaStyleId).toBeNull();
     expect(unknown.initialMartyriaStyleId).toBeNull();
   });

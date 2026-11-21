@@ -13,7 +13,7 @@ import {
   RichTextBoxElement,
   TextBoxElement,
 } from '@/models/Element';
-import { builtInInitialMartyriaStyles } from '@/models/InitialMartyriaBuiltInStyles';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import { QuantitativeNeume, TempoSign } from '@/models/Neumes';
 import { ParagraphStyle } from '@/models/ParagraphStyle';
 import { Workspace } from '@/models/Workspace';
@@ -35,7 +35,7 @@ describe('copying staff ranges', () => {
     paragraph.displayName = 'Mode text';
     source.score.paragraphStyles.push(paragraph);
     const style = {
-      ...builtInInitialMartyriaStyles[0],
+      ...styleFromWording('greekTraditionalSign'),
       id: 'custom-mode',
       displayName: 'Custom mode',
       paragraphStyleId: paragraph.id,

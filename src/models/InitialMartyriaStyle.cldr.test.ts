@@ -2,7 +2,7 @@ import cldr from 'cldr';
 import { describe, expect, it } from 'vitest';
 
 import { ModeKeyElement } from '@/models/Element';
-import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaBuiltInStyles';
+import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaCommonWordings';
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
 import { initialMartyriaLexicons } from '@/models/InitialMartyriaLexicon';
 import {

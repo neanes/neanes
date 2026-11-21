@@ -70,7 +70,7 @@ const props = defineProps<{
   samples: ReturnType<typeof getSample>[];
   paragraphStyles: ParagraphStyle[];
   pageSetup: PageSetup;
-  /** The names of the presets written this way, if any. */
+  /** The captions of the common wordings written this way, if any. */
   caption: string | null;
   /** Whether this is the wording of the style being changed. */
   selected: boolean;

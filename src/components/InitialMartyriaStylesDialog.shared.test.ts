@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { getCommonInitialMartyriaWording } from '@/models/InitialMartyriaCommonWordings';
 import { getInitialMartyriaWordingKey } from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
@@ -12,22 +9,19 @@ import {
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
 } from '@/models/InitialMartyriaStyle';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 
 import { withInitialMartyriaStyleStructure } from './InitialMartyriaStylesDialog.shared';
 
 describe('withInitialMartyriaStyleStructure', () => {
   it('preserves paragraph style selections when the language changes', () => {
     const english = cloneInitialMartyriaStyle(
-      getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
-      ),
+      styleFromWording('englishTraditionalSign'),
     );
     english.paragraphStyleId = 'custom-main';
     english.greekParagraphStyleId = 'custom-greek';
 
-    const arabic = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal,
-    );
+    const arabic = styleFromWording('arabicOrdinal');
     const changed = withInitialMartyriaStyleStructure(
       english,
       arabic.structure,
@@ -42,16 +36,12 @@ describe('withInitialMartyriaStyleStructure', () => {
 
   it('keeps the ordinal forms choice when a wording introduces digit ordinals', () => {
     const english = cloneInitialMartyriaStyle(
-      getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
-      ),
+      styleFromWording('englishTraditionalSign'),
     );
     english.useOrdinalForms = false;
 
     const changed = withInitialMartyriaStyleStructure(english, {
-      ...getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
-      ).structure,
+      ...getCommonInitialMartyriaWording('englishTraditionalSign').structure,
       modeIdentificationMethod:
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
@@ -65,12 +55,8 @@ describe('withInitialMartyriaStyleStructure', () => {
 
 describe('getInitialMartyriaWordingKey', () => {
   it('tells the neume font apart from the Greek text it reads as', () => {
-    const classic = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-    );
-    const traditional = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
-    );
+    const classic = styleFromWording('classic');
+    const traditional = styleFromWording('greekTraditionalSign');
 
     expect(classic.structure).toEqual(traditional.structure);
     expect(getInitialMartyriaWordingKey(classic)).not.toBe(

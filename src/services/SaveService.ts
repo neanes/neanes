@@ -19,11 +19,7 @@ import {
 import type { Footer } from '@/models/Footer';
 import { Footnote } from '@/models/Footnote';
 import type { Header } from '@/models/Header';
-import {
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  ensureScoreInitialMartyriaStyle,
-  isBuiltInInitialMartyriaStyleId,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { ensureScoreInitialMartyriaStyle } from '@/models/InitialMartyriaCommonWordings';
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
 import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
 import {
@@ -1170,7 +1166,6 @@ function loadInitialMartyriaStyle(
   const savedStructure = saved.structure;
   if (
     savedStructure == null ||
-    isBuiltInInitialMartyriaStyleId(saved.id) ||
     !isOneOf<InitialMartyriaLanguageId>(
       initialMartyriaLanguageIds,
       savedStructure.languageId,
@@ -2068,10 +2063,9 @@ export class SaveService {
       s.initialMartyriaStyles ?? [],
       score.paragraphStyles,
     );
-    // A default that names no style of the score becomes a copy of the
-    // built-in style it names, or of the default built-in style.
-    score.defaultInitialMartyriaStyleId =
-      s.defaultInitialMartyriaStyleId ?? DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
+    // A score without a default of its own, including one saved before
+    // initial martyria styles existed, gets a new default style.
+    score.defaultInitialMartyriaStyleId = s.defaultInitialMartyriaStyleId ?? '';
     ensureScoreInitialMartyriaStyle(score);
     this.LoadLyricSetup_v1(
       score.staff.lyrics,

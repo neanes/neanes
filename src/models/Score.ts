@@ -6,10 +6,7 @@ import { Footers } from './Footers';
 import type { Footnote } from './Footnote';
 import type { Header } from './Header';
 import { Headers } from './Headers';
-import {
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  ensureScoreInitialMartyriaStyle,
-} from './InitialMartyriaBuiltInStyles';
+import { ensureScoreInitialMartyriaStyle } from './InitialMartyriaCommonWordings';
 import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
 import {
@@ -35,13 +32,14 @@ export class Score {
   public paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles();
   /**
    * The score's own initial martyria styles. There is always at least one,
-   * and the default names one of them; built-in styles are only presets
-   * that styles are made from.
+   * and the default names one of them.
    */
   public initialMartyriaStyles: InitialMartyriaStyle[] = [];
-  /** The style every mode key without a style of its own follows. */
-  public defaultInitialMartyriaStyleId: string =
-    DEFAULT_INITIAL_MARTYRIA_STYLE_ID;
+  /**
+   * The style every mode key without a style of its own follows. Empty only
+   * until the constructor gives the score its default style.
+   */
+  public defaultInitialMartyriaStyleId: string = '';
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();

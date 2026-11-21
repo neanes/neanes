@@ -45,13 +45,14 @@ Future automation jobs and export transformations belong in this feature area
 Every score owns its initial martyria styles, and there is always at least one.
 The score's `defaultInitialMartyriaStyleId` names its default style, which is
 always one of them; MCP reads and sets it as `defaultStyleId` through the
-initial martyria style tools, not page setup. Built-in styles (`builtin:...` ids) are only presets the
-app's Initial Martyria Styles dialog starts new styles from; scores and mode
-keys never name them. A new score, and a score saved before initial martyria
-styles existed, gets a copy of the Greek "Traditional sign" preset lettered in
-the neume font (`builtin:classic-v1`) as its default.
+initial martyria style tools, not page setup. The app's wording picker offers
+a few common wordings per language (`InitialMartyriaCommonWordings`); they are
+wordings, not styles, and scores and mode keys never name them. A new score,
+and a score saved before initial martyria styles existed, gets a new default
+style in the Greek "Traditional sign" wording lettered in the neume font.
 
-MCP lists score-owned definitions and optional presets with
+MCP lists score-owned definitions and, optionally, the common wordings as
+preset definitions (whose IDs are placeholders) with
 `get_initial_martyria_styles`. `edit_initial_martyria_styles` manages those
 definitions and the score default. It shares the editor's undoable style and
 reference updates. ModeKey edits use score-owned IDs or null to inherit the

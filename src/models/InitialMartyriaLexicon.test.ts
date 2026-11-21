@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
-import {
   enumerateInitialMartyriaStructures,
   getInitialMartyriaStructureKey,
   initialMartyriaModeIdentificationMethods,
@@ -35,6 +31,7 @@ import {
   encodeRun,
   resolve,
   styleFor,
+  styleFromWording,
   textOf,
 } from './InitialMartyriaStyle.testHelpers';
 
@@ -1087,9 +1084,7 @@ describe('InitialMartyriaLexicon', () => {
       },
     });
 
-    const arabicStyle = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal,
-    );
+    const arabicStyle = styleFromWording('arabicOrdinal');
 
     expect(arabicStyle).toMatchObject({
       paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,

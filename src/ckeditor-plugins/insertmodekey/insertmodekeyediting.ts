@@ -225,10 +225,15 @@ export default class InsertModeKeyEditing extends Plugin {
       'insertModeKey',
     ) as InsertModeKeyConfig;
     const pageSetup = config.getPageSetup?.();
+    const initialMartyriaStyles = config.getInitialMartyriaStyles?.();
     const defaultInitialMartyriaStyleId =
       config.getDefaultInitialMartyriaStyleId?.();
 
-    if (pageSetup == null || defaultInitialMartyriaStyleId == null) {
+    if (
+      pageSetup == null ||
+      initialMartyriaStyles == null ||
+      defaultInitialMartyriaStyleId == null
+    ) {
       renderVue(null, host);
       return;
     }
@@ -237,7 +242,7 @@ export default class InsertModeKeyEditing extends Plugin {
     const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
       element,
       paragraphStyles: config.getParagraphStyles?.() ?? [],
-      initialMartyriaStyles: config.getInitialMartyriaStyles?.() ?? [],
+      initialMartyriaStyles,
       defaultInitialMartyriaStyleId,
     });
     const geometry = LayoutService.layoutModeKey(

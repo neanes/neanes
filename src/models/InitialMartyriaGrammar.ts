@@ -525,7 +525,7 @@ export function enumerateInitialMartyriaStructures(
 
 /**
  * A new style with its own id. The structure must be one the grammar
- * supports, as every preset and enumerated wording is.
+ * supports, as every common and enumerated wording is.
  */
 export function createInitialMartyriaStyle(
   options: Omit<InitialMartyriaStyle, 'id'>,

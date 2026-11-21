@@ -2,22 +2,13 @@ import i18next from 'i18next';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { defaultNS, resources } from '@/i18n';
-import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 
 import { getNewInitialMartyriaStyleName } from './initialMartyriaLabels';
 
-const english = getBuiltInInitialMartyriaStyle(
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-);
-const neumeFont = getBuiltInInitialMartyriaStyle(
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-);
-const greek = getBuiltInInitialMartyriaStyle(
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
-);
+const english = styleFromWording('englishModeNames');
+const neumeFont = styleFromWording('classic');
+const greek = styleFromWording('greekTraditionalSign');
 
 async function createT(lng: string) {
   const instance = i18next.createInstance();

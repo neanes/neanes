@@ -1190,8 +1190,11 @@ origin rather than guaranteeing that all notation still matches the template.
 Call `get_initial_martyria_styles` with the document ID to read its styles
 and `defaultStyleId`, the score-owned style that mode keys without a style
 of their own follow. To create a style from a supplied wording, pass
-`includePresets: true`, copy a preset definition, give it a new ID and
-display name, and send it in `edit_initial_martyria_styles.changes.upsert`.
+`includePresets: true`, copy a preset definition (a common wording with
+the default typography, whose ID is only a placeholder), give it a new ID
+and display name, and send it in `edit_initial_martyria_styles.changes.upsert`.
+An upsert that keeps a preset's placeholder ID is rejected with
+`INVALID_INITIAL_MARTYRIA_STYLE`.
 You can set the default in the same request with `changes.defaultStyleId`.
 To delete a style, send `changes.remove: [{id, replacementId}]` so any
 standalone or embedded uses can switch to a surviving style. Typography

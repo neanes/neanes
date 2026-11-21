@@ -19,7 +19,7 @@
         {{
           $t(($) => $.dialog.initialMartyriaStyles.documentDefaultNamed, {
             ns: 'dialog',
-            name: getInitialMartyriaStyleDisplayName(defaultStyle, t),
+            name: defaultStyle.displayName,
           })
         }}
       </SelectItem>
@@ -29,7 +29,7 @@
         :key="style.id"
         :value="style.id"
       >
-        {{ getInitialMartyriaStyleDisplayName(style, t) }}
+        {{ style.displayName }}
       </SelectItem>
     </component>
   </Select>
@@ -37,7 +37,6 @@
 
 <script setup lang="ts">
 import { cn } from 'cn';
-import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
@@ -51,10 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  getInitialMartyriaStyleDisplayName,
-  getInitialMartyriaStyleOrDefault,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { getScoreDefaultInitialMartyriaStyle } from '@/models/InitialMartyriaCommonWordings';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 
 const props = defineProps({
@@ -92,8 +88,6 @@ const emit = defineEmits<{
   'update:open': [value: boolean];
 }>();
 
-const { t } = useTranslation();
-
 const DOCUMENT_DEFAULT_VALUE = '__document-default__';
 
 const selectValue = computed(() => props.modelValue ?? DOCUMENT_DEFAULT_VALUE);
@@ -101,13 +95,11 @@ const contentComponent = computed(() =>
   props.richTextPortal ? RichTextSelectContent : SelectContent,
 );
 
-// Built-in styles are presets in the styles dialog, not styles a mode key
-// can name, so only the score's own styles are offered.
 const defaultStyle = computed(() =>
-  getInitialMartyriaStyleOrDefault(
-    props.initialMartyriaStyles,
-    props.defaultStyleId,
-  ),
+  getScoreDefaultInitialMartyriaStyle({
+    initialMartyriaStyles: props.initialMartyriaStyles,
+    defaultInitialMartyriaStyleId: props.defaultStyleId,
+  }),
 );
 
 function onUpdate(value: AcceptableValue) {

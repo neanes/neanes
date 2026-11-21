@@ -1,15 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
   INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_NUMERAL_KINDS,
 } from '@/models/InitialMartyriaStyle';
 import { attestedStructures } from '@/models/InitialMartyriaStyle.testData';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import { Score } from '@/models/Score';
 
 import { initialMartyriaStyleChangesSchema } from '../contracts/initialMartyriaStyles';
@@ -20,9 +17,7 @@ import {
 
 function createSignAloneStyle() {
   return createInitialMartyriaStyle({
-    ...getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-    ),
+    ...styleFromWording('classic'),
     displayName: 'Bare sign',
     structure: attestedStructures['greek-mode-sign-alone'],
   });
@@ -56,5 +51,35 @@ describe('initial martyria style edits: the sign group alone', () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe('initial martyria style edits: presets', () => {
+  it('rejects a preset copied without an ID of its own', () => {
+    const score = new Score();
+    const preset = readInitialMartyriaStyles(score, true).presets!.find(
+      ({ id }) => id === 'englishToneNumber',
+    )!;
+    const changes = initialMartyriaStyleChangesSchema.parse({
+      upsert: [{ ...preset, displayName: 'Tone' }],
+    });
+
+    expect(() => planInitialMartyriaStyleEdits(score, changes)).toThrow(
+      'INVALID_INITIAL_MARTYRIA_STYLE',
+    );
+  });
+
+  it('accepts a preset copied with an ID of its own', () => {
+    const score = new Score();
+    const preset = readInitialMartyriaStyles(score, true).presets!.find(
+      ({ id }) => id === 'englishToneNumber',
+    )!;
+    const changes = initialMartyriaStyleChangesSchema.parse({
+      upsert: [{ ...preset, id: 'tone', displayName: 'Tone' }],
+    });
+
+    expect(
+      planInitialMartyriaStyleEdits(score, changes).styles.map(({ id }) => id),
+    ).toContain('tone');
   });
 });

@@ -1,7 +1,7 @@
 [
   {
     "case": "didot",
-    "style": "builtin:traditional-greek-v1",
+    "style": "greekTraditionalSign",
     "textFontSize": 19.333333333333332,
     "forms": [
       {
@@ -336,7 +336,7 @@
   },
   {
     "case": "naskh",
-    "style": "builtin:arabic-ordinal-v1",
+    "style": "arabicOrdinal",
     "textFontSize": 19.333333333333332,
     "forms": [
       {
@@ -671,7 +671,7 @@
   },
   {
     "case": "source",
-    "style": "builtin:english-mode-names-v1",
+    "style": "englishModeNames",
     "textFontSize": 19.333333333333332,
     "forms": [
       {

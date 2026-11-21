@@ -147,7 +147,7 @@ export interface InitialMartyriaStyleTypography {
    * the neume font's Greek structure); ordinal forms apply to text lettering
    * alone. Music-font lettering is only ever paired with a structure the
    * font can letter: styles are created and loaded through
-   * getSupportedInitialMartyriaLettering, and the built-in styles are pinned
+   * getSupportedInitialMartyriaLettering, and the common wordings are pinned
    * by a test. Consumers read this field as is.
    */
   lettering: InitialMartyriaLettering;
@@ -266,13 +266,11 @@ export function initialMartyriaStructureHasOrdinalDigits(
 }
 
 /**
- * A named point in the structure space together with its typography.
- * Built-in styles are curated per language and read-only; the rest are
- * saved with the score.
+ * A named point in the structure space together with its typography, owned
+ * and saved by a score.
  */
 export interface InitialMartyriaStyle extends InitialMartyriaStyleTypography {
   id: string;
-  /** Ignored for built-in styles, which are named through the UI locale. */
   displayName: string;
   structure: InitialMartyriaStructure;
 }

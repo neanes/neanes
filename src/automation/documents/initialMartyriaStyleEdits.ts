@@ -1,8 +1,9 @@
 import { resources } from '@/i18n';
 import {
-  builtInInitialMartyriaStyles,
-  getBuiltInInitialMartyriaStyleNameSelector,
-} from '@/models/InitialMartyriaBuiltInStyles';
+  commonInitialMartyriaWordings,
+  createInitialMartyriaStyleFromWording,
+  getCommonInitialMartyriaWordingCaptionSelector,
+} from '@/models/InitialMartyriaCommonWordings';
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
 import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
 import {
@@ -14,6 +15,15 @@ import type { InitialMartyriaStyleUpdate } from '@/services/documents/initialMar
 
 import type { InitialMartyriaStyleChanges } from '../contracts/initialMartyriaStyles';
 
+const commonWordingNames = new Set<string>(
+  commonInitialMartyriaWordings.map(({ name }) => name),
+);
+
+/*
+ * Presets are the common wordings as ready-to-copy style definitions with
+ * the default typography. A preset's ID is the wording's name, a placeholder
+ * that a copy replaces with an ID of its own.
+ */
 export function readInitialMartyriaStyles(
   score: Score,
   includePresets = false,
@@ -23,12 +33,15 @@ export function readInitialMartyriaStyles(
     defaultStyleId: score.defaultInitialMartyriaStyleId,
     ...(includePresets
       ? {
-          presets: builtInInitialMartyriaStyles.map((style) => ({
-            ...style,
-            displayName: getBuiltInInitialMartyriaStyleNameSelector(style.id)(
-              resources.en,
+          presets: commonInitialMartyriaWordings.map((wording) =>
+            createInitialMartyriaStyleFromWording(
+              wording,
+              getCommonInitialMartyriaWordingCaptionSelector(wording.name)(
+                resources.en,
+              ),
+              wording.name,
             ),
-          })),
+          ),
         }
       : {}),
   };
@@ -45,15 +58,18 @@ export function planInitialMartyriaStyleEdits(
   if (new Set(editedIds).size !== editedIds.length) {
     throw new Error('DUPLICATE_STYLE_ACTION');
   }
-  if (editedIds.some((id) => id.startsWith('builtin:'))) {
-    throw new Error('BUILT_IN_STYLE_IMMUTABLE');
-  }
 
   const styles = new Map(
     score.initialMartyriaStyles.map((style) => [style.id, style]),
   );
   const paragraphStyleIds = new Set(score.paragraphStyles.map(({ id }) => id));
   for (const style of upsert) {
+    // A preset's ID is a placeholder, so a copy must replace it.
+    if (!styles.has(style.id) && commonWordingNames.has(style.id)) {
+      throw new Error(
+        'INVALID_INITIAL_MARTYRIA_STYLE: A preset ID is a placeholder; give the new style an ID of its own.',
+      );
+    }
     if (
       !paragraphStyleIds.has(style.paragraphStyleId) ||
       !paragraphStyleIds.has(style.greekParagraphStyleId)

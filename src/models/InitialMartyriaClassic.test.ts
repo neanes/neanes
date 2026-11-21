@@ -2,11 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { ModeKeyElement } from '@/models/Element';
 import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  builtInInitialMartyriaStyles,
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
+  commonInitialMartyriaWordings,
+  DEFAULT_INITIAL_MARTYRIA_WORDING_NAME,
+} from '@/models/InitialMartyriaCommonWordings';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import {
   getInitialMartyriaSeparatorBefore,
@@ -21,16 +19,12 @@ import { Fthora, ModeSign, type Neume } from '@/models/Neumes';
 import { Score } from '@/models/Score';
 import { SaveService } from '@/services/SaveService';
 
-import { resolve } from './InitialMartyriaStyle.testHelpers';
+import { resolve, styleFromWording } from './InitialMartyriaStyle.testHelpers';
 
 (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
 
-const classic = getBuiltInInitialMartyriaStyle(
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-);
-const traditional = getBuiltInInitialMartyriaStyle(
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.GreekTraditionalSign,
-);
+const classic = styleFromWording('classic');
+const traditional = styleFromWording('greekTraditionalSign');
 
 function getRunNeumes(run: ResolvedInitialMartyriaRun): Neume[] {
   if (run.kind === 'glyph') {
@@ -54,7 +48,7 @@ function getRunNeumes(run: ResolvedInitialMartyriaRun): Neume[] {
 
 describe('Classic initial martyria', () => {
   it('is the default and is Traditional Greek set in music-font lettering', () => {
-    expect(DEFAULT_INITIAL_MARTYRIA_STYLE_ID).toBe(classic.id);
+    expect(DEFAULT_INITIAL_MARTYRIA_WORDING_NAME).toBe('classic');
     expect(classic.structure).toEqual(traditional.structure);
     expect(classic.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.MusicFont);
     expect(traditional.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.Text);
@@ -70,9 +64,7 @@ describe('Classic initial martyria', () => {
   });
 
   it('falls back to text lettering for structures the music font cannot letter', () => {
-    const english = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
-    );
+    const english = styleFromWording('englishTraditionalSign');
     expect(
       createInitialMartyriaStyle({
         ...classic,
@@ -220,11 +212,14 @@ describe('Classic initial martyria', () => {
     );
   });
 
-  it('pairs every built-in style with lettering its structure supports', () => {
-    for (const style of builtInInitialMartyriaStyles) {
+  it('pairs every common wording with lettering its structure supports', () => {
+    for (const wording of commonInitialMartyriaWordings) {
       expect(
-        getSupportedInitialMartyriaLettering(style.lettering, style.structure),
-      ).toBe(style.lettering);
+        getSupportedInitialMartyriaLettering(
+          wording.lettering,
+          wording.structure,
+        ),
+      ).toBe(wording.lettering);
     }
   });
 });

@@ -536,7 +536,7 @@ export const attestedStructures = {
 } satisfies Record<string, InitialMartyriaStructure>;
 
 /*
- * The attested look of every structure a curated style has ever had: the
+ * The attested look of every structure a common wording has ever had: the
  * exact run sequence for modes 1-8. Changing an entry here changes what published scores look
  * like, so treat edits as deliberate typographic decisions.
  */

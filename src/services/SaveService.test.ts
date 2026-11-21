@@ -12,10 +12,7 @@ import {
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  getBuiltInInitialMartyriaStyle,
-} from '@/models/InitialMartyriaBuiltInStyles';
+import { getCommonInitialMartyriaWording } from '@/models/InitialMartyriaCommonWordings';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
 import { showsInitialMartyriaPlagalAbbreviationWithModeSign } from '@/models/InitialMartyriaRenderingConventions';
 import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
@@ -29,6 +26,7 @@ import {
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import { attestedStructures } from '@/models/InitialMartyriaStyle.testData';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import { Fthora, Ison, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -369,8 +367,7 @@ function expectDefaultNeumeFontStyle(score: Score) {
   expect(score.initialMartyriaStyles).toHaveLength(1);
   const [style] = score.initialMartyriaStyles;
   expect(style.structure).toEqual(
-    getBuiltInInitialMartyriaStyle(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic)
-      .structure,
+    getCommonInitialMartyriaWording('classic').structure,
   );
   expect(style.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.MusicFont);
   expect(style.displayName).toBe('Neume Font');
@@ -1402,9 +1399,7 @@ describe('SaveService font styles', () => {
 
   it('round-trips custom Initial Martyria styles and style references', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
-    );
+    const base = styleFromWording('englishModeNamesWithSign');
     if (
       base.structure.modeIdentificationMethod ===
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
@@ -1433,10 +1428,9 @@ describe('SaveService font styles', () => {
     overridden.fontSize = 30;
     overridden.color = '#abcdef';
     overridden.strokeWidth = 0.5;
-    const builtIn = new ModeKeyElement();
-    builtIn.initialMartyriaStyleId =
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign;
-    score.staff.elements = [inherited, overridden, builtIn];
+    const unknown = new ModeKeyElement();
+    unknown.initialMartyriaStyleId = 'deleted';
+    score.staff.elements = [inherited, overridden, unknown];
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
@@ -1467,9 +1461,7 @@ describe('SaveService font styles', () => {
       fontSize: 30,
       strokeWidth: 0.5,
     });
-    expect(savedModeKeys[2].initialMartyriaStyleId).toBe(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
-    );
+    expect(savedModeKeys[2].initialMartyriaStyleId).toBe('deleted');
 
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
     expect(loaded.defaultInitialMartyriaStyleId).toBe(customStyle.id);
@@ -1482,8 +1474,7 @@ describe('SaveService font styles', () => {
       fontSize: 30,
       strokeWidth: 0.5,
     });
-    // Built-in styles are only presets; a mode key naming one follows the
-    // score's default instead.
+    // A mode key naming no style of the score follows its default instead.
     expect(loadedModeKeys[2].initialMartyriaStyleId).toBeNull();
   });
 
@@ -1496,9 +1487,7 @@ describe('SaveService font styles', () => {
       fontSize: 16,
     };
     score.paragraphStyles.push(greekParagraphStyle);
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
-    );
+    const base = styleFromWording('englishModeNamesWithSign');
     const customStyle = createInitialMartyriaStyle({
       displayName: 'Greek typography',
       structure: base.structure,
@@ -1521,9 +1510,7 @@ describe('SaveService font styles', () => {
 
   it('round-trips sign-only Initial Martyria styles without printed-number fields', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.RomanianTraditionalSign,
-    );
+    const base = styleFromWording('romanianTraditionalSign');
     const customStyle = createInitialMartyriaStyle({
       ...base,
       displayName: 'Parish sign',
@@ -1543,9 +1530,7 @@ describe('SaveService font styles', () => {
   it('round-trips the sign group alone without mode-name axes', () => {
     const score = new Score();
     const customStyle = createInitialMartyriaStyle({
-      ...getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-      ),
+      ...styleFromWording('classic'),
       displayName: 'Bare neume font',
       structure: attestedStructures['greek-mode-sign-alone'],
     });
@@ -1570,9 +1555,7 @@ describe('SaveService font styles', () => {
 
   it('round-trips the label variant and plagal abbreviation choice', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumberWithSign,
-    );
+    const base = styleFromWording('englishToneNumberWithSign');
     const customStyle = createInitialMartyriaStyle({
       ...base,
       displayName: 'Tone without plagal sign',
@@ -1593,9 +1576,7 @@ describe('SaveService font styles', () => {
 
   it('follows the language for a style saved without a plagal abbreviation choice', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumber,
-    );
+    const base = styleFromWording('spanishTonoNumber');
     const customStyle = createInitialMartyriaStyle({
       ...base,
       displayName: 'Parish tono',
@@ -1619,9 +1600,7 @@ describe('SaveService font styles', () => {
 
   it('drops a style whose label variant its language does not offer', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.SpanishTonoNumber,
-    );
+    const base = styleFromWording('spanishTonoNumber');
     const customStyle = createInitialMartyriaStyle({
       ...base,
       displayName: 'Unknown word',
@@ -1641,9 +1620,7 @@ describe('SaveService font styles', () => {
 
   it('drops known but unsupported saved Initial Martyria styles', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
-    );
+    const base = styleFromWording('englishModeNamesWithSign');
     const customStyle = createInitialMartyriaStyle({
       ...base,
       displayName: 'Invalid custom style',
@@ -1663,9 +1640,7 @@ describe('SaveService font styles', () => {
   });
 
   it('loads clipboard Initial Martyria styles as a file load does', () => {
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
-    );
+    const base = styleFromWording('englishModeNamesWithSign');
     const sourceParagraphStyle = new ParagraphStyle();
     sourceParagraphStyle.id = 'source-initial-martyria';
     sourceParagraphStyle.displayName = 'Source';
@@ -1699,9 +1674,7 @@ describe('SaveService font styles', () => {
 
   it('loads only the first Initial Martyria style with a given id', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-    );
+    const base = styleFromWording('englishModeNames');
     const first = createInitialMartyriaStyle({
       ...base,
       displayName: 'Parish books',
@@ -1720,25 +1693,15 @@ describe('SaveService font styles', () => {
     expect(loaded.initialMartyriaStyles).toEqual([first]);
   });
 
-  it('gives a score whose default names a built-in style a copy of it', () => {
+  it('gives a score whose default names none of its styles a Neume Font default', () => {
     const score = new Score();
     score.initialMartyriaStyles = [];
-    score.defaultInitialMartyriaStyleId =
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames;
+    score.defaultInitialMartyriaStyleId = 'deleted';
 
     const saved = SaveService.SaveScoreToJson(score);
 
     expect(saved.initialMartyriaStyles).toBeUndefined();
-    const loaded = SaveService.LoadScore_v1(saved);
-    expect(loaded.initialMartyriaStyles).toHaveLength(1);
-    expect(loaded.initialMartyriaStyles[0]).toMatchObject({
-      structure: getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-      ).structure,
-    });
-    expect(loaded.defaultInitialMartyriaStyleId).toBe(
-      loaded.initialMartyriaStyles[0].id,
-    );
+    expectDefaultNeumeFontStyle(SaveService.LoadScore_v1(saved));
   });
 
   it('gives new scores a Neume Font style of their own as the default', () => {
@@ -1774,9 +1737,7 @@ describe('SaveService font styles', () => {
     const score = new Score();
     const element = new ModeKeyElement();
     score.staff.elements = [element];
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-    );
+    const base = styleFromWording('englishModeNames');
     const futureStyle: InitialMartyriaStyle = {
       ...base,
       id: 'future',
@@ -1799,9 +1760,7 @@ describe('SaveService font styles', () => {
 
   it('falls back to the built-in Initial Martyria paragraph style for an unknown paragraph style', () => {
     const score = new Score();
-    const base = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-    );
+    const base = styleFromWording('englishModeNames');
     const customStyle = createInitialMartyriaStyle({
       ...base,
       displayName: 'Orphaned',

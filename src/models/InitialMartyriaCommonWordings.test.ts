@@ -2,15 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import { resources } from '@/i18n';
 import {
-  BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  type BuiltInInitialMartyriaStyleId,
-  builtInInitialMartyriaStyles,
+  type CommonInitialMartyriaWording,
+  commonInitialMartyriaWordings,
   createDefaultInitialMartyriaTypography,
-  createInitialMartyriaStyleFromPreset,
+  createInitialMartyriaStyleFromWording,
   ensureScoreInitialMartyriaStyle,
-  getBuiltInInitialMartyriaStyle,
-  getBuiltInInitialMartyriaStyleNameSelector,
-} from '@/models/InitialMartyriaBuiltInStyles';
+  getCommonInitialMartyriaWording,
+  getCommonInitialMartyriaWordingCaptionSelector,
+} from '@/models/InitialMartyriaCommonWordings';
 import {
   createInitialMartyriaStyle,
   getInitialMartyriaStructureKey,
@@ -24,48 +23,51 @@ import {
   INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   initialMartyriaLanguageIds,
-  type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
-import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 
 import { attestedStructures } from './InitialMartyriaStyle.testData';
-import { elementForMode, resolve } from './InitialMartyriaStyle.testHelpers';
+import {
+  elementForMode,
+  resolve,
+  styleFromWording,
+} from './InitialMartyriaStyle.testHelpers';
 
-describe('InitialMartyriaBuiltInStyles', () => {
-  it('curates a few attested, localized built-in styles per language', () => {
-    const styleIds = builtInInitialMartyriaStyles.map((style) => style.id);
+describe('InitialMartyriaCommonWordings', () => {
+  it('curates a few attested, captioned wordings per language', () => {
+    const names = commonInitialMartyriaWordings.map((wording) => wording.name);
     const attestedKeys = new Set(
       Object.values(attestedStructures).map(getInitialMartyriaStructureKey),
     );
 
-    expect(new Set(styleIds).size).toBe(styleIds.length);
-    expect(new Set(styleIds)).toEqual(
-      new Set(Object.values(BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS)),
+    expect(new Set(names).size).toBe(names.length);
+    // Every caption names a common wording.
+    expect(new Set(names)).toEqual(
+      new Set(
+        Object.keys(resources.en.dialog.initialMartyriaStyles.wordingCaptions),
+      ),
     );
     expect(
-      builtInInitialMartyriaStyles
+      commonInitialMartyriaWordings
         .filter(
-          (style) =>
-            style.structure.languageId ===
+          (wording) =>
+            wording.structure.languageId ===
             INITIAL_MARTYRIA_LANGUAGE_IDS.English,
         )
-        .map((style) => style.id),
+        .map((wording) => wording.name),
     ).toEqual([
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNamesWithSign,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumbersWithSign,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeBeforeSign,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumber,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishOrdinalTone,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneNumberWithSign,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishToneBeforeSign,
+      'englishTraditionalSign',
+      'englishModeNamesWithSign',
+      'englishModeNumbersWithSign',
+      'englishPlagalClassWithSign',
+      'englishModeNames',
+      'englishModeBeforeSign',
+      'englishToneNumber',
+      'englishOrdinalTone',
+      'englishToneNumberWithSign',
+      'englishToneBeforeSign',
     ]);
     expect(
-      getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNumbersWithSign,
-      ).structure,
+      getCommonInitialMartyriaWording('englishModeNumbersWithSign').structure,
     ).toMatchObject({
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
@@ -73,20 +75,18 @@ describe('InitialMartyriaBuiltInStyles', () => {
         INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
     });
     expect(
-      getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
-      ).structure,
+      getCommonInitialMartyriaWording('englishPlagalClassWithSign').structure,
     ).toMatchObject({
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
       numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
     });
-    const arabicStyles = builtInInitialMartyriaStyles.filter(
-      (style) =>
-        style.structure.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    const arabicStyles = commonInitialMartyriaWordings.filter(
+      (wording) =>
+        wording.structure.languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
     );
-    expect(arabicStyles.map((style) => style.id)).toEqual([
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinal,
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.ArabicOrdinalText,
+    expect(arabicStyles.map((wording) => wording.name)).toEqual([
+      'arabicOrdinal',
+      'arabicOrdinalText',
     ]);
     expect(arabicStyles[0].structure.modeIdentificationMethod).toBe(
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
@@ -97,9 +97,7 @@ describe('InitialMartyriaBuiltInStyles', () => {
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
     });
 
-    const englishOrdinalDigits = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishPlagalClassWithSign,
-    );
+    const englishOrdinalDigits = styleFromWording('englishPlagalClassWithSign');
     expect(englishOrdinalDigits.useOrdinalForms).toBe(true);
     const plagalRuns = resolve(englishOrdinalDigits, elementForMode(5)).runs;
     const ordinalNumeralRun = plagalRuns.find(
@@ -157,77 +155,81 @@ describe('InitialMartyriaBuiltInStyles', () => {
       content: { layout: 'inline', text: '5th' },
     });
 
-    // The picker lists the presets of one language and mode word at a time.
+    // The picker lists the wordings of one language and mode word at a time.
     for (const languageId of initialMartyriaLanguageIds) {
       for (const labelVariant of [
         undefined,
         ...getInitialMartyriaLabelVariants(languageId),
       ]) {
-        const count = builtInInitialMartyriaStyles.filter(
-          (style) =>
-            style.structure.languageId === languageId &&
-            style.structure.labelVariant === labelVariant,
+        const count = commonInitialMartyriaWordings.filter(
+          (wording) =>
+            wording.structure.languageId === languageId &&
+            wording.structure.labelVariant === labelVariant,
         ).length;
         expect(`${languageId} ${labelVariant}: ${count}`).toMatch(/: [1-6]$/);
       }
     }
 
-    for (const style of builtInInitialMartyriaStyles) {
-      expect(style.paragraphStyleId).toBe(
-        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
-      );
-      expect(style.greekParagraphStyleId).toBe(
-        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
-      );
-      expect(isInitialMartyriaStructureSupported(style.structure)).toBe(true);
+    for (const wording of commonInitialMartyriaWordings) {
+      expect(isInitialMartyriaStructureSupported(wording.structure)).toBe(true);
       expect(
-        attestedKeys.has(getInitialMartyriaStructureKey(style.structure)),
+        attestedKeys.has(getInitialMartyriaStructureKey(wording.structure)),
       ).toBe(true);
-      const selector = getBuiltInInitialMartyriaStyleNameSelector(
-        style.id as BuiltInInitialMartyriaStyleId,
+      const selector = getCommonInitialMartyriaWordingCaptionSelector(
+        wording.name,
       );
       for (const [locale, localeResources] of Object.entries(resources)) {
-        const name = selector(localeResources);
-        expect(`${locale} ${style.id}: ${name.length > 0}`).toBe(
-          `${locale} ${style.id}: true`,
+        const caption = selector(localeResources);
+        expect(`${locale} ${wording.name}: ${caption.length > 0}`).toBe(
+          `${locale} ${wording.name}: true`,
         );
       }
     }
 
-    // Names caption the presets of one language and lettering in the
+    // Captions label the wordings of one language and lettering in the
     // wording picker, so they only need to be distinct there, in every
     // locale.
-    const getNameScope = (style: InitialMartyriaStyle) =>
-      `${style.structure.languageId}:${style.lettering}`;
-    const nameScopes = new Set(builtInInitialMartyriaStyles.map(getNameScope));
+    const getCaptionScope = (wording: CommonInitialMartyriaWording) =>
+      `${wording.structure.languageId}:${wording.lettering}`;
+    const captionScopes = new Set(
+      commonInitialMartyriaWordings.map(getCaptionScope),
+    );
     for (const [locale, localeResources] of Object.entries(resources)) {
-      for (const nameScope of nameScopes) {
-        const names = builtInInitialMartyriaStyles
-          .filter((style) => getNameScope(style) === nameScope)
-          .map((style) =>
-            getBuiltInInitialMartyriaStyleNameSelector(
-              style.id as BuiltInInitialMartyriaStyleId,
-            )(localeResources),
+      for (const captionScope of captionScopes) {
+        const captions = commonInitialMartyriaWordings
+          .filter((wording) => getCaptionScope(wording) === captionScope)
+          .map((wording) =>
+            getCommonInitialMartyriaWordingCaptionSelector(wording.name)(
+              localeResources,
+            ),
           );
-        expect(`${locale} ${nameScope}: ${new Set(names).size}`).toBe(
-          `${locale} ${nameScope}: ${names.length}`,
+        expect(`${locale} ${captionScope}: ${new Set(captions).size}`).toBe(
+          `${locale} ${captionScope}: ${captions.length}`,
         );
       }
     }
   });
 
+  it("makes a style of the score's own with the default typography", () => {
+    const wording = getCommonInitialMartyriaWording('englishModeNames');
+    const style = createInitialMartyriaStyleFromWording(wording, 'English');
+    const other = createInitialMartyriaStyleFromWording(wording, 'English 2');
+
+    expect(style).toMatchObject({
+      ...createDefaultInitialMartyriaTypography(),
+      displayName: 'English',
+      structure: wording.structure,
+      lettering: wording.lettering,
+    });
+    expect(style.id).not.toBe(other.id);
+    expect(style.structure).not.toBe(wording.structure);
+  });
+
   it("names a score's new default style after the neume font, avoiding names in use", () => {
-    const preset = getBuiltInInitialMartyriaStyle(
-      BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
-    );
-    const taken = createInitialMartyriaStyleFromPreset(preset, 'Neume Font');
+    const classic = getCommonInitialMartyriaWording('classic');
+    const taken = createInitialMartyriaStyleFromWording(classic, 'Neume Font');
     // Names are unique across every style, whatever its language.
-    const otherLanguage = createInitialMartyriaStyleFromPreset(
-      getBuiltInInitialMartyriaStyle(
-        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-      ),
-      'Neume Font 2',
-    );
+    const otherLanguage = styleFromWording('englishModeNames', 'Neume Font 2');
     const score = {
       initialMartyriaStyles: [taken, otherLanguage],
       defaultInitialMartyriaStyleId: 'deleted',
@@ -237,8 +239,8 @@ describe('InitialMartyriaBuiltInStyles', () => {
 
     expect(score.initialMartyriaStyles).toHaveLength(3);
     expect(score.initialMartyriaStyles[0]).toMatchObject({
-      lettering: preset.lettering,
-      structure: preset.structure,
+      lettering: classic.lettering,
+      structure: classic.structure,
       displayName: 'Neume Font 3',
     });
     expect(score.defaultInitialMartyriaStyleId).toBe(

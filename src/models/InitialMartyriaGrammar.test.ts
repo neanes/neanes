@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { builtInInitialMartyriaStyles } from '@/models/InitialMartyriaBuiltInStyles';
+import { commonInitialMartyriaWordings } from '@/models/InitialMartyriaCommonWordings';
 import {
   enumerateInitialMartyriaStructures,
   getInitialMartyriaStructureKey,
@@ -85,8 +85,8 @@ describe('InitialMartyriaGrammar', () => {
         }
     >,
   ): InitialMartyriaStructure => {
-    const base = builtInInitialMartyriaStyles.find(
-      (style) => style.structure.languageId === languageId,
+    const base = commonInitialMartyriaWordings.find(
+      (wording) => wording.structure.languageId === languageId,
     )!.structure;
     const modeIdentificationMethod =
       changes.modeIdentificationMethod ?? base.modeIdentificationMethod;
@@ -653,9 +653,9 @@ describe('InitialMartyriaGrammar', () => {
         })),
       );
 
-    for (const preset of builtInInitialMartyriaStyles) {
-      for (const choices of pickerChoices(preset.structure)) {
-        check({ ...preset.structure, ...choices });
+    for (const wording of commonInitialMartyriaWordings) {
+      for (const choices of pickerChoices(wording.structure)) {
+        check({ ...wording.structure, ...choices });
       }
     }
     for (const languageId of initialMartyriaLanguageIds) {

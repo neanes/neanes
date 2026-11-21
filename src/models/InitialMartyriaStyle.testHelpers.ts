@@ -1,5 +1,10 @@
 import { ModeKeyElement } from '@/models/Element';
-import { createDefaultInitialMartyriaTypography } from '@/models/InitialMartyriaBuiltInStyles';
+import {
+  type CommonInitialMartyriaWordingName,
+  createDefaultInitialMartyriaTypography,
+  createInitialMartyriaStyleFromWording,
+  getCommonInitialMartyriaWording,
+} from '@/models/InitialMartyriaCommonWordings';
 import {
   getInitialMartyriaContext,
   resolveInitialMartyriaStyle,
@@ -29,6 +34,17 @@ export function encodeRun(run: ResolvedInitialMartyriaRun) {
   return run.content.layout === 'inline'
     ? prefix + run.content.text
     : `${prefix}${run.content.topCharacter}/${run.content.bottomCharacter}`;
+}
+
+/** A new style written in a common wording, with the default typography. */
+export function styleFromWording(
+  name: CommonInitialMartyriaWordingName,
+  displayName = '',
+) {
+  return createInitialMartyriaStyleFromWording(
+    getCommonInitialMartyriaWording(name),
+    displayName,
+  );
 }
 
 /** An unsaved style with the language's default typography. */

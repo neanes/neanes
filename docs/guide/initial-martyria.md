@@ -23,7 +23,7 @@ A style controls the language, the wording of the mode name, whether a mode sign
 1. Open `Format > Initial Martyria Styles…`, or select an initial martyria and choose **Manage styles…** in Properties.
 2. Choose **Add style**. To revise a style already in the score, use its pencil button (**Change wording**).
 3. Choose a **Language**. The picker offers Greek, English, Spanish, Church Slavonic, Russian, Arabic, Romanian, and Indonesian. Some languages offer a choice of terms for the mode, such as **Mode** or **Tone** in English.
-4. Click the preview row you want. **Common** shows frequently used wordings, ending with **Sign without words**, which sets only the mode sign and the starting note, with the plagal sign in plagal modes as the language sets it or as the **Plagal sign** switch chooses. Greek also offers it as a **Neume font** choice. Expand **More wordings** to see additional forms, grouped by how they identify the mode (**Sign only**, **Text and sign**, or **Text only**). Use a **Neume font** choice where available for traditional lettering drawn from the score's music font.
+4. Click the preview row you want. **Common** shows frequently used wordings, including [Sign without words](#add-a-bare-initial-martyria). Expand **More wordings** to see additional forms, grouped by how they identify the mode (**Sign only**, **Text and sign**, or **Text only**). Use a **Neume font** choice where available for traditional lettering drawn from the score's music font.
 5. In the styles list, give the style a name and choose its paragraph styles. Press **Update** to save the changes.
 
 Where available, enable **Transliterate starting note** to show a form such as `Pa` for `Πα`. The **Plagal sign** switch adds `πλ` beside the mode sign in plagal modes for wordings that offer this choice.
@@ -60,6 +60,17 @@ The inserted initial martyria sets the starting pitch and scale for the music af
 ### Place it in the line of music
 
 Select the rich text box and enable **Inline** under **Positioning** in Properties. The box has two content areas. The top aligns with the neumes and the bottom with the lyrics. Use **Top Y Offset** and **Bottom Y Offset** for small vertical adjustments. Enable **Center on Page** to center the box across the page instead of within the remaining space on its line.
+
+## Add a bare initial martyria
+
+A bare initial martyria shows the mode sign and starting note without spelling out the mode name. Use it when you want to introduce a hymn in your own words. Place the martyria beside your text in a rich text box so it still sets the starting pitch and scale for the music that follows.
+
+1. Open `Format > Initial Martyria Styles…` and choose **Add style**.
+2. Choose a **Language**, then select **Sign without words** under **Common**. For Greek, you can also choose it under **Neume font**.
+3. Give the style a name and press **Update** to save it with the score.
+4. Type your heading in a rich text box and [insert an initial martyria](#insert-an-initial-martyria-in-rich-text) beside it. Select the inserted martyria and choose your new style under **Style** in Properties.
+
+The **Language** choice still matters. Where available, **Transliterate starting note** shows a form such as `Pa` for `Πα`. The language can also affect the order of the signs and whether `πλ` appears in plagal modes. For example, English shows `πλ` by default and Spanish omits it by default. Use **Plagal sign** to change that choice where the switch is available.
 
 ## Create a custom initial martyria
 

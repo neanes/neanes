@@ -15,22 +15,13 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
-import type {
-  InitialMartyriaRunLayout,
-  InitialMartyriaSeparatorLayout,
-} from '@/models/InitialMartyriaLayout';
-import {
-  resolveModeKeyInitialMartyriaStyle,
-  resolveScoreInitialMartyriaStyle,
-} from '@/models/InitialMartyriaResolver';
-import type {
-  InitialMartyriaAppearance,
-  InitialMartyriaStartingNoteRun,
-  ResolvedInitialMartyriaRun,
-} from '@/models/InitialMartyriaStyle';
-import { getInitialMartyriaNoteAppearance } from '@/models/InitialMartyriaStyle';
 import type { Neume } from '@/models/Neumes';
-import { MeasureBar, TimeNeume, VocalExpressionNeume } from '@/models/Neumes';
+import {
+  MeasureBar,
+  ModeSign,
+  TimeNeume,
+  VocalExpressionNeume,
+} from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
@@ -39,7 +30,7 @@ import {
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
-import type { Score, ScoreInitialMartyriaStyles } from '@/models/Score';
+import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
 import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
@@ -61,7 +52,6 @@ import {
 } from '@/utils/richTextParagraphStyleCss';
 import { Unit } from '@/utils/Unit';
 
-import { LayoutService } from '../LayoutService';
 import { MelismaHelperGreek } from '../MelismaHelperGreek';
 import type { SbmuflGlyphName } from '../NeumeMappingService';
 import { NeumeMappingService } from '../NeumeMappingService';
@@ -74,15 +64,6 @@ interface NeumeOffset {
 
 const NoOffset: NeumeOffset = { x: null, y: null };
 const byzhtmlVersion = import.meta.env.VITE_BYZHTML_VERSION;
-
-function escapeHtml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
 
 interface TagInfo {
   tag: string;
@@ -256,34 +237,23 @@ export class ByzHtmlExporter {
   }
 
   exportScore(score: Score) {
-    const style = this.exportPageSetup(
-      score.pageSetup,
-      score.paragraphStyles,
-      score,
-    );
+    const style = this.exportPageSetup(score.pageSetup, score.paragraphStyles);
 
     const body = this.exportElements(
       score.staff.elements,
       score.pageSetup,
       score.paragraphStyles,
-      score,
       4,
     );
 
     return createByzHtmlDocument(style, body, score.pageSetup.melkiteRtl);
   }
 
-  exportPageSetup(
-    pageSetup: PageSetup,
-    paragraphStyles: ParagraphStyle[],
-    martyriaStyles: ScoreInitialMartyriaStyles,
-  ) {
-    // The typography every mode key inherits unless it overrides it: the
-    // score's initial martyria style resolved through the paragraph styles.
-    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
+  exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
+    const modeKeyStyle = resolveParagraphStyle(
       paragraphStyles,
-      ...martyriaStyles,
-    }).primaryAppearance;
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    );
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -553,8 +523,9 @@ export class ByzHtmlExporter {
 
       .${this.config.classModeKey} {
         position: relative;
-        color: ${defaultModeKeyAppearance.color};
-        -webkit-text-stroke-width: ${defaultModeKeyAppearance.strokeWidth};
+        font-size: var(--byz-neume-font-size);
+        color: ${modeKeyStyle.color};
+        -webkit-text-stroke-width: ${Unit.toPt(modeKeyStyle.strokeWidth)}pt;
       }
 
       .${this.config.classModeKeyRightContainer} {
@@ -661,16 +632,9 @@ export class ByzHtmlExporter {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
-    martyriaStyles: ScoreInitialMartyriaStyles,
     indentation: number,
     startInsidePage: boolean = false,
   ) {
-    // The typography every mode key inherits unless it overrides it: the
-    // score's initial martyria style resolved through the paragraph styles.
-    const defaultModeKeyAppearance = resolveScoreInitialMartyriaStyle({
-      paragraphStyles,
-      ...martyriaStyles,
-    }).primaryAppearance;
     let result = '';
 
     let insidePage = startInsidePage;
@@ -786,8 +750,6 @@ export class ByzHtmlExporter {
             richTextBox,
             pageSetup,
             insidePage ? indentation + 2 : indentation,
-            paragraphStyles,
-            { martyriaStyles, defaultAppearance: defaultModeKeyAppearance },
           );
 
           if (
@@ -806,11 +768,7 @@ export class ByzHtmlExporter {
             insidePage = false;
           }
 
-          result += this.exportModeKey(
-            element as ModeKeyElement,
-            defaultModeKeyAppearance,
-            indentation,
-          );
+          result += this.exportModeKey(element as ModeKeyElement, indentation);
           break;
         case ElementType.ImageBox:
           if (insidePage && !(element as ImageBoxElement).inline) {
@@ -1305,26 +1263,13 @@ export class ByzHtmlExporter {
     element: RichTextBoxElement,
     pageSetup: PageSetup,
     indentation: number,
-    paragraphStyles: ParagraphStyle[] = [],
-    /** How embedded mode keys are styled; without it they stay as stored. */
-    modeKeys?: {
-      martyriaStyles: ScoreInitialMartyriaStyles;
-      defaultAppearance: InitialMartyriaAppearance;
-    },
   ) {
     let className = this.config.classRichTextBox;
     let style = '';
     const exportContent = (content: string) =>
-      modeKeys == null
-        ? content
-        : this.exportEmbeddedModeKeys(
-            content,
-            pageSetup,
-            paragraphStyles,
-            modeKeys.martyriaStyles,
-            modeKeys.defaultAppearance,
-            indentation,
-          );
+      replaceModeKeysInHtml(content, ({ element: modeKey }) =>
+        this.exportModeKey(modeKey, indentation, true),
+      );
     let content: string;
 
     if (element.multipanel) {
@@ -1360,227 +1305,50 @@ export class ByzHtmlExporter {
     return `<div class="${className}"${languageAttributes}${styleAttribute}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  private exportEmbeddedModeKeys(
-    html: string,
-    pageSetup: PageSetup,
-    paragraphStyles: ParagraphStyle[],
-    martyriaStyles: ScoreInitialMartyriaStyles,
-    defaultAppearance: InitialMartyriaAppearance,
-    indentation: number,
-  ) {
-    return replaceModeKeysInHtml(html, ({ element: modeKey }) => {
-      const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
-        element: modeKey,
-        paragraphStyles,
-        ...martyriaStyles,
-      });
-      LayoutService.layoutModeKey(modeKey, pageSetup, resolvedStyle, true);
+  private exportModeKeySignature(element: ModeKeyElement, indentation: number) {
+    let inner = this.exportNeume(ModeSign.Ekhos, indentation);
 
-      return this.exportModeKey(modeKey, defaultAppearance, indentation, true);
-    });
-  }
-
-  private exportInitialMartyriaSignature(
-    element: ModeKeyElement,
-    indentation: number,
-  ) {
-    // Every exported mode key has been laid out by the layout service.
-    const layout = element.computedInitialMartyriaLayout!;
-
-    const { resolution } = layout;
-    let html = `<span class="byz--initial-martyria-signature" dir="${resolution.flowDirection}">`;
-
-    for (const [index, run] of resolution.runs.entries()) {
-      const runLayout = layout.runs[index];
-      html += this.exportInitialMartyriaSeparator(
-        run,
-        runLayout.separatorBefore,
-      );
-      html += this.exportInitialMartyriaRun(
-        run,
-        runLayout,
-        layout.neumeBaselineCorrection,
-        indentation,
-      );
+    if (element.isPlagal) {
+      inner += this.exportNeume(ModeSign.Plagal, indentation);
     }
 
-    const lastRun = resolution.runs.at(-1);
-    if (lastRun != null) {
-      html += this.exportInitialMartyriaSeparator(
-        lastRun,
-        layout.trailingSeparator,
-      );
+    if (element.isVarys) {
+      inner += this.exportNeume(ModeSign.Varys, indentation);
     }
 
-    return `${html}</span>`;
-  }
-
-  private exportInitialMartyriaSeparator(
-    run: ResolvedInitialMartyriaRun,
-    separator: InitialMartyriaSeparatorLayout,
-  ) {
-    if (separator.kind === 'none') {
-      return '';
-    }
-
-    if (separator.kind === 'wordSpace') {
-      const font = separator.wordSpaceFont!;
-      const resolvedFont = resolveFontStyle(font.fontFamily, font.fontStyle);
-      const family = getFontFamilyWithFallback(
-        resolvedFont.cssFontFamily,
-      ).replaceAll('"', "'");
-      return `<span class="byz--initial-martyria-separator" aria-hidden="true" style="font-family: ${family};font-size: ${Unit.toPt(font.fontSize)}pt;direction: ${run.direction};">&nbsp;</span>`;
-    }
-
-    return `<span class="byz--initial-martyria-separator" aria-hidden="true" style="display: inline-block;width: ${Unit.toPt(separator.width)}pt;direction: ${run.direction};"></span>`;
-  }
-
-  private exportInitialMartyriaRun(
-    run: ResolvedInitialMartyriaRun,
-    runLayout: InitialMartyriaRunLayout,
-    neumeBaselineCorrection: number,
-    indentation: number,
-  ) {
-    if (run.kind === 'glyph') {
-      const top =
-        runLayout.baselineShift === 0
-          ? ''
-          : `position: relative;top: ${Unit.toPt(-runLayout.baselineShift)}pt;`;
-      const glyphs = run.glyphs
-        .map((glyph) => this.exportNeume(glyph, indentation + 2))
-        .join('');
-      return `<span class="byz--initial-martyria-run byz--initial-martyria-glyph" dir="${run.direction}" aria-hidden="true" style="${this.getInitialMartyriaAppearanceCss(run.appearance, runLayout.fontSize)}${top}">${glyphs}</span>`;
-    }
-
-    if (run.kind === 'startingPitch') {
-      return this.exportInitialMartyriaStartingPitch(
-        run,
-        runLayout,
-        neumeBaselineCorrection,
-        indentation,
-      );
-    }
-
-    const languageAttributes = ` lang="${escapeHtml(run.languageTag)}" dir="${run.direction}"`;
-    const appearanceCss = this.getInitialMartyriaAppearanceCss(
-      run.appearance,
-      runLayout.fontSize,
+    inner += this.exportNeume(element.martyria, indentation);
+    inner += this.exportNeume(element.note, indentation);
+    inner += this.exportNeume(
+      element.fthoraAboveNote,
+      indentation,
+      NoOffset,
+      this.config.classFthora,
+    );
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote, indentation);
+    inner += this.exportNeume(element.note2, indentation);
+    inner += this.exportNeume(
+      element.fthoraAboveNote2,
+      indentation,
+      NoOffset,
+      this.config.classFthora,
+    );
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote2, indentation);
+    inner += this.exportNeume(element.quantitativeNeumeRight, indentation);
+    inner += this.exportNeume(
+      element.fthoraAboveQuantitativeNeumeRight,
+      indentation,
     );
 
-    if (run.content.layout === 'inline') {
-      return `<span class="byz--initial-martyria-run byz--initial-martyria-text"${languageAttributes} aria-hidden="true" style="${appearanceCss}">${escapeHtml(run.content.text)}</span>`;
-    }
-
-    const stacked = runLayout.stackedCharacters!;
-    const height = stacked.geometry.bottom - stacked.geometry.top;
-    const containerStyle = `${appearanceCss}display: inline-block;height: ${Unit.toPt(height)}pt;position: relative;vertical-align: ${Unit.toPt(-stacked.geometry.bottom)}pt;width: ${Unit.toPt(stacked.geometry.width)}pt;`;
-    const rowStyle = (top: number) =>
-      `display: block;left: 0;line-height: ${Unit.toPt(stacked.lineHeight)}pt;position: absolute;text-align: center;top: ${Unit.toPt(top)}pt;white-space: nowrap;width: 100%;`;
-
-    return `<span class="byz--initial-martyria-run byz--initial-martyria-stacked"${languageAttributes} aria-hidden="true" style="${containerStyle}"><span style="${rowStyle(stacked.geometry.topRow.top)}">${escapeHtml(run.content.topCharacter)}</span><span style="${rowStyle(stacked.geometry.bottomRow.top)}">${escapeHtml(run.content.bottomCharacter)}</span></span>`;
-  }
-
-  private exportInitialMartyriaStartingPitch(
-    run: InitialMartyriaStartingNoteRun,
-    runLayout: InitialMartyriaRunLayout,
-    neumeBaselineCorrection: number,
-    indentation: number,
-  ) {
-    const pitchLayout = runLayout.pitch!;
-    let inner = '';
-
-    for (const role of ['primary', 'secondary'] as const) {
-      const pitchNote = run.cluster[role];
-      const geometry = pitchLayout[role];
-
-      if (pitchNote == null || geometry == null) {
-        continue;
-      }
-
-      let cell = '';
-      const glyphCss = this.getInitialMartyriaAppearanceCss(
-        run.appearance,
-        runLayout.fontSize,
-      );
-
-      if (pitchNote.fthoraAbove != null && geometry.fthora != null) {
-        cell += `<span class="byz--initial-martyria-pitch-mark ${this.config.classFthora}" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(geometry.fthora.left)}pt;top: ${Unit.toPt(geometry.fthora.baseline)}pt;${glyphCss}">${this.exportNeume(pitchNote.fthoraAbove, indentation + 2)}</span>`;
-      }
-
-      if (
-        pitchNote.quantitativeNeumeAbove != null &&
-        geometry.quantitative != null
-      ) {
-        cell += `<span class="byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(geometry.quantitative.left)}pt;top: ${Unit.toPt(geometry.quantitative.baseline)}pt;${glyphCss}">${this.exportNeume(pitchNote.quantitativeNeumeAbove, indentation + 2)}</span>`;
-      }
-
-      const noteCss = this.getInitialMartyriaAppearanceCss(
-        getInitialMartyriaNoteAppearance(run),
-        pitchLayout.textFontSize,
-      );
-      const notePosition = `left: ${Unit.toPt(geometry.text.left)}pt;position: relative;white-space: nowrap;`;
-      cell +=
-        run.noteText == null
-          ? `<span style="${noteCss}${notePosition}">${this.exportNeume(pitchNote.note, indentation + 2)}</span>`
-          : `<span lang="${escapeHtml(run.noteText.languageTag)}" dir="${run.noteText.direction}" style="${noteCss}${notePosition}">${escapeHtml(run.noteText.names[pitchNote.note])}</span>`;
-      const cellTop =
-        pitchLayout.noteBaselineShift === 0
-          ? ''
-          : `top: ${Unit.toPt(-pitchLayout.noteBaselineShift)}pt;`;
-      inner += `<span class="byz--initial-martyria-pitch-note" style="direction: ltr;position: relative;${cellTop}text-align: left;width: ${Unit.toPt(geometry.width)}pt;">${cell}</span>`;
-
-      if (
-        role === 'primary' &&
-        run.cluster.primary != null &&
-        run.cluster.secondary != null
-      ) {
-        inner += `<span style="display: inline-block;width: ${Unit.toPt(pitchLayout.clusterSeparatorWidth)}pt;"></span>`;
-      }
-    }
-
-    if (
-      (run.cluster.primary != null || run.cluster.secondary != null) &&
-      run.cluster.trailingGlyphs.length > 0
-    ) {
-      inner += `<span style="display: inline-block;width: ${Unit.toPt(pitchLayout.trailingGlueWidth)}pt;"></span>`;
-    }
-
-    const trailingCss = this.getInitialMartyriaAppearanceCss(
-      run.appearance,
-      runLayout.fontSize,
-    );
-    if (run.cluster.trailingGlyphs.length > 0) {
-      const glyphs = run.cluster.trailingGlyphs
-        .map((glyph) => this.exportNeume(glyph, indentation + 2))
-        .join('');
-      inner += `<span style="${trailingCss}position: relative;top: ${Unit.toPt(neumeBaselineCorrection)}pt;">${glyphs}</span>`;
-    }
-
-    return `<span class="byz--initial-martyria-run byz--initial-martyria-starting-pitch" dir="${run.direction}">${inner}</span>`;
-  }
-
-  private getInitialMartyriaAppearanceCss(
-    appearance: InitialMartyriaAppearance,
-    fontSize: number,
-  ) {
-    const font = resolveFontStyle(appearance.fontFamily, appearance.fontStyle);
-    const family = getFontFamilyWithFallback(font.cssFontFamily).replaceAll(
-      '"',
-      "'",
-    );
-
-    const size = Unit.toPt(fontSize);
-
-    return `--byz-neume-font-family: ${family};--byz-neume-font-size: ${size}pt;color: ${appearance.color};font-family: ${family};font-size: ${size}pt;font-weight: ${font.cssFontWeight};font-style: ${font.cssFontStyle};${fontVariantCssDeclarations(appearance).join('')}line-height: normal;-webkit-text-stroke-color: ${appearance.strokeColor};-webkit-text-stroke-width: ${Unit.toPt(appearance.strokeWidth)}pt;unicode-bidi: isolate;`;
+    return inner;
   }
 
   exportModeKey(
     element: ModeKeyElement,
-    defaultAppearance: InitialMartyriaAppearance,
     indentation: number,
     embedded = false,
   ) {
-    let inner = this.exportInitialMartyriaSignature(element, indentation + 2);
+    // BYZHTML's music fonts position marks on the original Greek glyphs.
+    let inner = this.exportModeKeySignature(element, indentation + 2);
 
     let rightContainer = false;
 
@@ -1637,29 +1405,21 @@ export class ByzHtmlExporter {
       inner += `</span>`;
     }
 
-    // The glyph size is matched to the style's text by layout, so it is
-    // always written per element; color and outline only when the element
-    // departs from the score's style.
-    let styleAttribute = '';
-    let style = `font-size: ${Unit.toPt(element.computedNeumeFontSize)}pt;`;
+    let style = `text-align: ${element.alignment};`;
 
-    if (element.computedColor !== defaultAppearance.color) {
-      style += `color: ${element.computedColor};`;
+    if (element.color != null) {
+      style += `color: ${element.color};`;
     }
 
-    if (element.computedStrokeWidth !== defaultAppearance.strokeWidth) {
-      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+    if (element.strokeWidth != null) {
+      style += `-webkit-text-stroke-width: ${Unit.toPt(element.strokeWidth)}pt;`;
     }
-
-    style += `text-align: ${element.alignment};`;
-
-    styleAttribute = ` style="${style}"`;
 
     const className = this.config.classModeKey;
 
     const tag = embedded ? 'span' : 'div';
 
-    return `<${tag} class="${className}"${styleAttribute}\n${this.getIndentationString(
+    return `<${tag} class="${className}" lang="el" dir="ltr" style="${style}"\n${this.getIndentationString(
       indentation + 2,
     )}>${inner}</${tag}\n${this.getIndentationString(indentation)}>`;
   }

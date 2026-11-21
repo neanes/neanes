@@ -15,17 +15,8 @@ import {
 } from '@/models/Element';
 import {
   BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS,
-  builtInInitialMartyriaStyles,
-  DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
+  getBuiltInInitialMartyriaStyle,
 } from '@/models/InitialMartyriaBuiltInStyles';
-import type { InitialMartyriaLayout } from '@/models/InitialMartyriaLayout';
-import {
-  getInitialMartyriaContext,
-  resolveInitialMartyriaStyle,
-  resolveModeKeyInitialMartyriaStyle,
-  resolveScoreInitialMartyriaStyle,
-} from '@/models/InitialMartyriaResolver';
-import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   Fthora,
@@ -37,7 +28,6 @@ import {
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
-  createDefaultParagraphStyles,
   ParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { Score } from '@/models/Score';
@@ -181,7 +171,9 @@ describe('ByzHtmlExporter', () => {
     expect(html).toContain('<p>Top content</p>');
     expect(html).toContain('byz--text-box-inline-bottom');
     expect(html).toContain('<p>Bottom content');
-    expect(html).toContain('data-neanes-mode-key=');
+    expect(html).toContain('<span class="byz--mode-key" lang="el" dir="ltr"');
+    expect(html).toContain('<x-mode-word-echos');
+    expect(html).not.toContain('data-neanes-mode-key=');
   });
 
   it('exports all active fields of a multipanel rich text box', () => {
@@ -205,127 +197,60 @@ describe('ByzHtmlExporter', () => {
     expect(html).toContain(
       'class="byz--text-box-multipanel-right"><p>Right content',
     );
-    expect(html.match(/data-neanes-mode-key=/gu)).toHaveLength(3);
+    expect(html.match(/<x-mode-word-echos/gu)).toHaveLength(3);
+    expect(html).not.toContain('data-neanes-mode-key=');
   });
 
-  it('exports an embedded mode key from its resolved custom style runs', () => {
+  it('exports standalone and embedded mode keys with the original Greek BYZHTML tags', () => {
     const exporter = new ByzHtmlExporter();
-    const builtIn = builtInInitialMartyriaStyles.find(
-      (style) =>
-        style.id === BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
-    )!;
-    const customStyle: InitialMartyriaStyle = {
-      ...builtIn,
-      id: 'custom-text-only',
-      displayName: 'Custom text only',
-      structure: { ...builtIn.structure },
+    const score = new Score();
+    const style = {
+      ...getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishModeNames,
+      ),
+      id: 'custom-english',
     };
-    const modeKey = ModeKeyElement.createFromTemplate(
-      modeKeyTemplates.find((template) => template.mode === 1)!,
-    );
-    modeKey.initialMartyriaStyleId = customStyle.id;
+    score.initialMartyriaStyles = [style];
+    score.defaultInitialMartyriaStyleId = style.id;
+
+    const modeKey = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
+    modeKey.initialMartyriaStyleId = style.id;
     modeKey.fthoraAboveNote = Fthora.DiatonicPa_Top;
     modeKey.quantitativeNeumeAboveNote = ModeSign.OligonPlusKentima;
+    modeKey.note2 = ModeSign.Thi;
+    modeKey.fthoraAboveNote2 = Fthora.SoftChromaticThi_Top;
     modeKey.quantitativeNeumeRight = QuantitativeNeume.OligonPlusKentimaAbove;
     modeKey.fthoraAboveQuantitativeNeumeRight = Fthora.Zygos_Top;
-    const pageSetup = new PageSetup();
-    const paragraphStyles = createDefaultParagraphStyles();
-    const resolvedStyle = resolveModeKeyInitialMartyriaStyle({
-      element: modeKey,
-      paragraphStyles,
-      initialMartyriaStyles: [customStyle],
-      defaultInitialMartyriaStyleId: DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-    });
-    const resolution = resolveInitialMartyriaStyle({
-      context: getInitialMartyriaContext(modeKey),
-      resolvedStyle,
-      pageSetup,
-      glyphFontSize: 20,
-    });
-    const pitchGeometry = {
-      width: 20,
-      top: -10,
-      bottom: 5,
-      text: { left: 0 },
-      fthora: { left: 4, baseline: -12 },
-      quantitative: { left: 6, baseline: -20 },
-    };
-    modeKey.computedInitialMartyriaLayout = {
-      inkBounds: { top: -30, bottom: 12 },
-      resolution,
-      primaryAppearance: resolvedStyle.primaryAppearance,
-      runs: resolution.runs.map((run) => ({
-        separatorBefore: {
-          kind: 'none',
-          width: 0,
-          wordSpaceFont: null,
-        },
-        fontSize: run.appearance.fontSize,
-        baselineShift: 0,
-        stackedCharacters: null,
-        pitch:
-          run.kind === 'startingPitch'
-            ? {
-                textFontSize: run.noteText!.appearance.fontSize,
-                noteBaselineShift: 0,
-                primary: run.cluster.primary == null ? null : pitchGeometry,
-                secondary: run.cluster.secondary == null ? null : pitchGeometry,
-                clusterSeparatorWidth: 4,
-                trailingGlueWidth: 4,
-              }
-            : null,
-      })),
-      trailingSeparator: {
-        kind: 'none',
-        width: 0,
-        wordSpaceFont: null,
-      },
-      neumeBaselineCorrection: 0,
-      accessory: {
-        fontSize: 20,
-        baselineOffset: 0,
-        tempoMarginLeft: 8,
-      },
-      ambitus: null,
-    } satisfies InitialMartyriaLayout;
-    const defaultAppearance = resolveScoreInitialMartyriaStyle({
-      paragraphStyles,
-      initialMartyriaStyles: [customStyle],
-      defaultInitialMartyriaStyleId: DEFAULT_INITIAL_MARTYRIA_STYLE_ID,
-    }).primaryAppearance;
 
-    const html = exporter.exportModeKey(modeKey, defaultAppearance, 0, true);
+    const richText = new RichTextBoxElement();
+    richText.content = `<p>Before ${embeddedModeKeyHtml(modeKey, '&nbsp;')} after</p>`;
+    score.staff.elements = [modeKey, richText];
 
-    expect(html).toContain('byz--initial-martyria-text');
-    expect(html).toContain('First');
-    expect(html).toContain('Mode');
+    const html = exporter.exportElements(
+      score.staff.elements,
+      score.pageSetup,
+      score.paragraphStyles,
+      0,
+    );
+
+    expect(html).toContain('<div class="byz--mode-key" lang="el" dir="ltr"');
     expect(html).toContain(
-      `byz--initial-martyria-pitch-mark byz--f" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(4)}pt;top: ${Unit.toPt(-12)}pt;--byz-neume-font-family:`,
+      'Before <span class="byz--mode-key" lang="el" dir="ltr"',
     );
-    expect(html).toContain(
-      `byz--initial-martyria-pitch-mark" style="display: inline-block;position: relative;width: 0;left: ${Unit.toPt(6)}pt;top: ${Unit.toPt(-20)}pt;--byz-neume-font-family:`,
-    );
-    expect(html).toContain(`--byz-neume-font-size: ${Unit.toPt(20)}pt;`);
-    expect(html).toContain('<x-f-d-pa');
-    expect(html).toContain(
-      'style="direction: ltr;position: relative;text-align: left;width:',
-    );
-    expect(html).not.toContain(
-      'byz--initial-martyria-pitch-note" style="direction: ltr;display: inline-block;',
-    );
-    expect(html).not.toContain(
-      'byz--initial-martyria-pitch-mark" style="position: absolute;',
-    );
-    const trailingQuantitativeIndex = html.lastIndexOf('<x-o3');
-    const trailingFthoraIndex = html.indexOf(
+    const tags = [
+      '<x-mode-word-echos',
+      '<x-mode-first',
+      '<x-mode-pa',
+      '<x-f-d-pa',
+      '<x-mode-oligon-kentima-above',
+      '<x-mode-di',
+      '<x-f-sc-di',
+      '<x-o3',
       '<x-f-zygos',
-      trailingQuantitativeIndex,
-    );
-    expect(trailingQuantitativeIndex).toBeGreaterThan(-1);
-    expect(trailingFthoraIndex).toBeGreaterThan(trailingQuantitativeIndex);
-    expect(
-      html.slice(trailingQuantitativeIndex, trailingFthoraIndex),
-    ).not.toContain('</span>');
+    ];
+    expect(html.match(/<x-[a-z0-9-]+/gu)).toEqual([...tags, ...tags]);
+    expect(html).not.toContain('byz--initial-martyria-');
+    expect(html).not.toContain('data-neanes-mode-key=');
   });
 
   it('exports paragraph-style text boxes with inline underline text decoration', () => {
@@ -441,7 +366,6 @@ describe('ByzHtmlExporter', () => {
       [new NoteElement(), inline, new NoteElement()],
       new PageSetup(),
       [],
-      new Score(),
       0,
     );
 
@@ -462,7 +386,6 @@ describe('ByzHtmlExporter', () => {
       [inline, new NoteElement()],
       new PageSetup(),
       [],
-      new Score(),
       0,
     );
 
@@ -482,7 +405,6 @@ describe('ByzHtmlExporter', () => {
       [new NoteElement(), inline, martyria, new NoteElement()],
       new PageSetup(),
       [],
-      new Score(),
       0,
     );
 

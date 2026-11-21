@@ -9581,7 +9581,6 @@ async function onFileMenuCopyAsHtml() {
     copiedElements,
     score.value.pageSetup,
     score.value.paragraphStyles,
-    score.value,
     0,
     true,
   );

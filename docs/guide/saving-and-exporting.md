@@ -41,6 +41,8 @@ HTML does not preserve the score's page layout. Instead, the neumes dynamically 
 
 The exported HTML is for viewing rather than further editing in Neanes. It loads supporting web resources from the internet, so an internet connection is required for it to display correctly.
 
+HTML export and Copy as HTML render mode keys in traditional Greek using the ByzHtml music font.
+
 ### Copy part of a score as HTML
 
 Use **Copy as HTML** when you need the web markup for selected score elements rather than a complete HTML file:

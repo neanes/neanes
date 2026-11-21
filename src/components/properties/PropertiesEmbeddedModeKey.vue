@@ -16,87 +16,17 @@
       }}
     </Button>
 
-    <Field>
-      <div class="mb-2 flex items-center justify-between gap-2">
-        <FieldLabel for="properties-embedded-mode-key-style">{{
-          $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
-            ns: 'dialog',
-          })
-        }}</FieldLabel>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          @click="emit('open-style-dialog')"
-        >
-          {{
-            $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
-              ns: 'dialog',
-            })
-          }}
-        </Button>
-      </div>
-      <InitialMartyriaStyleSelect
-        id="properties-embedded-mode-key-style"
-        :model-value="element.initialMartyriaStyleId"
-        :initial-martyria-styles="initialMartyriaStyles"
-        :default-style-id="defaultInitialMartyriaStyleId"
-        rich-text-portal
-        @update:model-value="update({ initialMartyriaStyleId: $event })"
-        @update:open="emit('update:style-selector-open', $event)"
-      />
-    </Field>
-
-    <Field orientation="horizontal">
-      <FieldLabel for="properties-embedded-mode-key-size">{{
-        $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-      }}</FieldLabel>
-      <div class="flex items-center gap-1">
-        <InputFontSize
-          id="properties-embedded-mode-key-size"
-          :model-value="primaryAppearance.fontSize"
-          @update:model-value="update({ fontSize: $event })"
-        />
-        <ParagraphStyleClearButton
-          :disabled="element.fontSize == null"
-          @clear="update({ fontSize: null })"
-        />
-      </div>
-    </Field>
-
-    <Field orientation="horizontal">
-      <FieldLabel>{{
-        $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-      }}</FieldLabel>
-      <div class="flex items-center gap-1">
-        <ColorPicker
-          :model-value="primaryAppearance.color"
-          rich-text-portal
-          @update:model-value="update({ color: $event })"
-        />
-        <ParagraphStyleClearButton
-          :disabled="element.color == null"
-          @clear="update({ color: null })"
-        />
-      </div>
-    </Field>
-
-    <Field orientation="horizontal">
-      <FieldLabel for="properties-embedded-mode-key-outline">{{
-        $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-      }}</FieldLabel>
-      <div class="flex items-center gap-1">
-        <InputStrokeWidth
-          id="properties-embedded-mode-key-outline"
-          :model-value="primaryAppearance.strokeWidth"
-          @update:model-value="update({ strokeWidth: $event })"
-        />
-        <ParagraphStyleClearButton
-          :disabled="element.strokeWidth == null"
-          @clear="update({ strokeWidth: null })"
-        />
-      </div>
-    </Field>
+    <InitialMartyriaStyleFields
+      :element="element"
+      :paragraph-styles="paragraphStyles"
+      :initial-martyria-styles="initialMartyriaStyles"
+      :default-initial-martyria-style-id="defaultInitialMartyriaStyleId"
+      id-prefix="properties-embedded-mode-key"
+      rich-text-portal
+      @update="update"
+      @open-style-dialog="emit('open-style-dialog')"
+      @update:style-selector-open="emit('update:style-selector-open', $event)"
+    />
 
     <Field orientation="horizontal">
       <FieldLabel for="properties-embedded-mode-key-bpm">{{
@@ -192,14 +122,10 @@ import type { AcceptableValue } from 'reka-ui';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 
-import ColorPicker from '@/components/ColorPicker.vue';
-import InitialMartyriaStyleSelect from '@/components/InitialMartyriaStyleSelect.vue';
 import InputBpm from '@/components/InputBpm.vue';
-import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import NeumeIcon from '@/components/NeumeIcon.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
-import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
+import InitialMartyriaStyleFields from '@/components/properties/InitialMartyriaStyleFields.vue';
 import RichTextSelectContent from '@/components/RichTextSelectContent.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -210,7 +136,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import type { ModeKeyElement } from '@/models/Element';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { getTempoSignLabelSelector } from '@/models/NeumeI18nMappings';
@@ -274,13 +199,6 @@ const selectedTempoLabel = computed(() =>
         ns: 'model',
       }),
 );
-
-const { primaryAppearance } = useResolvedInitialMartyriaStyle({
-  element: () => props.element,
-  paragraphStyles: () => props.paragraphStyles,
-  initialMartyriaStyles: () => props.initialMartyriaStyles,
-  defaultInitialMartyriaStyleId: () => props.defaultInitialMartyriaStyleId,
-});
 
 function update(values: Partial<ModeKeyElement>) {
   emit('update', values);

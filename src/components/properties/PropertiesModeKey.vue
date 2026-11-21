@@ -11,112 +11,16 @@
       value="style"
       :title="$t(($) => $.dialog.pageSetup.style, { ns: 'dialog' })"
     >
-      <Field>
-        <div class="mb-2 flex items-center justify-between gap-2">
-          <FieldLabel for="properties-mode-key-style">{{
-            $t(($) => $.dialog.initialMartyriaStyles.styleLabel, {
-              ns: 'dialog',
-            })
-          }}</FieldLabel>
-          <div class="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              @click="$emit('open-style-dialog')"
-            >
-              {{
-                $t(($) => $.dialog.initialMartyriaStyles.manageStyles, {
-                  ns: 'dialog',
-                })
-              }}
-            </Button>
-            <ParagraphStyleClearButton
-              :disabled="!hasOverrides"
-              @clear="
-                $emit('update', {
-                  fontSize: null,
-                  color: null,
-                  strokeWidth: null,
-                } as Partial<ModeKeyElement>)
-              "
-            />
-          </div>
-        </div>
-        <InitialMartyriaStyleSelect
-          id="properties-mode-key-style"
-          :model-value="element.initialMartyriaStyleId"
-          :initial-martyria-styles="initialMartyriaStyles"
-          :default-style-id="defaultInitialMartyriaStyleId"
-          @update:model-value="
-            $emit('update', {
-              initialMartyriaStyleId: $event,
-            } as Partial<ModeKeyElement>)
-          "
-        />
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-mode-key-font-size">{{
-          $t(($) => $.toolbar.initialMartyria.size, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <div class="flex items-center gap-1">
-          <InputFontSize
-            id="properties-mode-key-font-size"
-            :model-value="primaryAppearance.fontSize"
-            @update:model-value="
-              $emit('update', { fontSize: $event } as Partial<ModeKeyElement>)
-            "
-          />
-          <ParagraphStyleClearButton
-            :disabled="element.fontSize == null"
-            @clear="
-              $emit('update', { fontSize: null } as Partial<ModeKeyElement>)
-            "
-          />
-        </div>
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel>{{
-          $t(($) => $.dialog.pageSetup.color, { ns: 'dialog' })
-        }}</FieldLabel>
-        <div class="flex items-center gap-1">
-          <ColorPicker
-            :model-value="primaryAppearance.color"
-            @update:model-value="
-              $emit('update', { color: $event } as Partial<ModeKeyElement>)
-            "
-          />
-          <ParagraphStyleClearButton
-            :disabled="element.color == null"
-            @clear="$emit('update', { color: null } as Partial<ModeKeyElement>)"
-          />
-        </div>
-      </Field>
-
-      <Field orientation="horizontal">
-        <FieldLabel for="properties-mode-key-outline">{{
-          $t(($) => $.toolbar.common.outline, { ns: 'toolbar' })
-        }}</FieldLabel>
-        <div class="flex items-center gap-1">
-          <InputStrokeWidth
-            id="properties-mode-key-outline"
-            :model-value="primaryAppearance.strokeWidth"
-            @update:model-value="
-              $emit('update', {
-                strokeWidth: $event,
-              } as Partial<ModeKeyElement>)
-            "
-          />
-          <ParagraphStyleClearButton
-            :disabled="element.strokeWidth == null"
-            @clear="
-              $emit('update', { strokeWidth: null } as Partial<ModeKeyElement>)
-            "
-          />
-        </div>
-      </Field>
+      <InitialMartyriaStyleFields
+        :element="element"
+        :paragraph-styles="paragraphStyles"
+        :initial-martyria-styles="initialMartyriaStyles"
+        :default-initial-martyria-style-id="defaultInitialMartyriaStyleId"
+        id-prefix="properties-mode-key"
+        show-clear-overrides
+        @update="$emit('update', $event)"
+        @open-style-dialog="$emit('open-style-dialog')"
+      />
     </PaneSection>
 
     <PaneSection
@@ -278,20 +182,14 @@ import type { PropType } from 'vue';
 import { computed } from 'vue';
 
 import AppTooltip from '@/components/AppTooltip.vue';
-import ColorPicker from '@/components/ColorPicker.vue';
-import InitialMartyriaStyleSelect from '@/components/InitialMartyriaStyleSelect.vue';
 import InputBpm from '@/components/InputBpm.vue';
-import InputFontSize from '@/components/InputFontSize.vue';
-import InputStrokeWidth from '@/components/InputStrokeWidth.vue';
 import InputUnit from '@/components/InputUnit.vue';
 import PaneAccordion from '@/components/pane/PaneAccordion.vue';
 import PaneSection from '@/components/pane/PaneSection.vue';
-import ParagraphStyleClearButton from '@/components/properties/ParagraphStyleClearButton.vue';
-import { Button } from '@/components/ui/button';
+import InitialMartyriaStyleFields from '@/components/properties/InitialMartyriaStyleFields.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import type { ModeKeyElement } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
 import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
@@ -333,15 +231,6 @@ const emit = defineEmits([
   'update',
   'update:open-sections',
 ]);
-
-// The controls reflect the resolved style (element overrides folded in); a
-// change writes an explicit element value and clear restores inheritance.
-const { primaryAppearance, hasOverrides } = useResolvedInitialMartyriaStyle({
-  element: () => props.element,
-  paragraphStyles: () => props.paragraphStyles,
-  initialMartyriaStyles: () => props.initialMartyriaStyles,
-  defaultInitialMartyriaStyleId: () => props.defaultInitialMartyriaStyleId,
-});
 
 const maxHeight = computed(() => Unit.toPt(props.pageSetup.innerPageHeight));
 

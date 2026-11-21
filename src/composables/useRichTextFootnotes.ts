@@ -5,10 +5,7 @@ import type { RichTextBoxContentKey } from '@/models/Element';
 import type { ScoreElement } from '@/models/Element';
 import { RichTextBoxElement } from '@/models/Element';
 import type { Footnote } from '@/models/Footnote';
-import {
-  cloneInitialMartyriaStyle,
-  type InitialMartyriaStyle,
-} from '@/models/InitialMartyriaStyle';
+import { cloneInitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import {
   createDefaultParagraphStyles,
   type ParagraphStyle,
@@ -30,18 +27,19 @@ import {
   richTextFootnoteIds,
 } from '@/services/RichTextFootnotes';
 import { SaveService } from '@/services/SaveService';
-import {
-  collectClipboardInitialMartyriaStylesFromElements,
-  resolveClipboardInitialMartyriaStyles,
-  rewriteClipboardElementInitialMartyriaStyleId,
-} from '@/utils/clipboardInitialMartyriaStyles';
+import { collectClipboardInitialMartyriaStylesFromElements } from '@/utils/clipboardInitialMartyriaStyles';
 import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
-  resolveClipboardParagraphStyles,
-  rewriteClipboardElementParagraphStyleIds,
 } from '@/utils/clipboardParagraphStyles';
-import { getEmbeddedModeKeys } from '@/utils/richTextModeKeys';
+import {
+  type ClipboardStyles,
+  getScoreStyleAdditions,
+  importClipboardStyles,
+  partitionStylesByUse,
+  rewriteClipboardElementStyleReferences,
+  type ScoreStyles,
+} from '@/utils/clipboardStyles';
 
 export interface RichTextFootnoteController {
   supports(owner: object): owner is RichTextBoxElement;
@@ -76,11 +74,6 @@ interface InitialMartyriaStyleClipboard {
   paragraphStyleIds: string[];
 }
 
-interface StagedModeKeyStyles {
-  initialMartyriaStyles: InitialMartyriaStyle[];
-  paragraphStyles: ParagraphStyle[];
-}
-
 // Clipboard styles load as file styles do, so a payload from another version
 // or app cannot add a style this version does not support. Payloads copied
 // before styles traveled with footnotes have none.
@@ -91,21 +84,6 @@ function loadClipboardInitialMartyriaStyles(
   return Array.isArray(saved)
     ? SaveService.LoadInitialMartyriaStyles_v1(saved, sourceParagraphStyles)
     : [];
-}
-
-// Each style once, leaving out those the score already has.
-function withoutExistingStyles<T extends { id: string }>(
-  candidates: T[],
-  existing: T[],
-) {
-  const ids = new Set(existing.map(({ id }) => id));
-  return candidates.filter((style) => {
-    if (ids.has(style.id)) {
-      return false;
-    }
-    ids.add(style.id);
-    return true;
-  });
 }
 
 export const richTextFootnoteControllerKey: InjectionKey<RichTextFootnoteController> =
@@ -121,29 +99,20 @@ export function useRichTextFootnotes(
   ) => void,
   rejectPaste: () => void,
 ) {
-  const pendingRichTextStyles = new WeakMap<
-    RichTextBoxElement,
-    ParagraphStyle[]
-  >();
-  const pendingRichTextInitialMartyriaStyles = new WeakMap<
-    RichTextBoxElement,
-    InitialMartyriaStyle[]
-  >();
-  // Styles imported by pasting embedded mode keys, added to the score with
-  // the first update of the box that uses them.
-  const pendingModeKeyStyles = new WeakMap<
-    RichTextBoxElement,
-    StagedModeKeyStyles
-  >();
+  // Styles imported by pasting footnotes or embedded mode keys into a box,
+  // added to the score with the first update of the box that uses them.
+  const pendingRichTextStyles = new WeakMap<RichTextBoxElement, ScoreStyles>();
   const pendingRichTextFootnotes = new WeakMap<
     RichTextBoxElement,
     Footnote[]
   >();
+  // Boxes with a pasted footnote, as opposed to only an inserted one.
+  const pendingFootnotePastes = new WeakSet<RichTextBoxElement>();
   function hasPendingFootnotePaste(
     owner: RichTextBoxElement,
     updates: Partial<RichTextBoxElement>,
   ) {
-    if (!pendingRichTextStyles.has(owner)) {
+    if (!pendingFootnotePastes.has(owner)) {
       return false;
     }
     const staged = pendingRichTextFootnotes.get(owner)!;
@@ -156,8 +125,40 @@ export function useRichTextFootnotes(
 
   function clearPendingFootnotes(owner: RichTextBoxElement) {
     pendingRichTextFootnotes.delete(owner);
-    pendingRichTextStyles.delete(owner);
-    pendingRichTextInitialMartyriaStyles.delete(owner);
+    pendingFootnotePastes.delete(owner);
+  }
+
+  /*
+   * Imports a paste's styles against the score and the styles already staged
+   * for the box, and stages the ones the score lacks.
+   */
+  function importStylesForBox(
+    owner: RichTextBoxElement,
+    clipboard: ClipboardStyles,
+  ) {
+    const score = workspace.value.score;
+    const staged = pendingRichTextStyles.get(owner);
+    const result = importClipboardStyles(clipboard, {
+      paragraphStyles: [
+        ...score.paragraphStyles,
+        ...(staged?.paragraphStyles ?? []),
+      ],
+      initialMartyriaStyles: [
+        ...score.initialMartyriaStyles,
+        ...(staged?.initialMartyriaStyles ?? []),
+      ],
+    });
+    pendingRichTextStyles.set(owner, {
+      paragraphStyles: [
+        ...(staged?.paragraphStyles ?? []),
+        ...result.imported.paragraphStyles,
+      ],
+      initialMartyriaStyles: [
+        ...(staged?.initialMartyriaStyles ?? []),
+        ...result.imported.initialMartyriaStyles,
+      ],
+    });
+    return result;
   }
 
   const controller: RichTextFootnoteController = {
@@ -193,7 +194,7 @@ export function useRichTextFootnotes(
       // Marker changes commit HTML and bodies together; ordinary typing stays local.
       const updates = { [key]: html };
       if (
-        pendingRichTextStyles.has(owner) &&
+        pendingFootnotePastes.has(owner) &&
         needsFootnoteSettlement(workspace.value.score)
       ) {
         return;
@@ -262,62 +263,22 @@ export function useRichTextFootnotes(
       ) {
         throw new Error('NESTED_FOOTNOTES_UNSUPPORTED');
       }
-      const stagedStyles = pendingRichTextStyles.get(owner) ?? [];
-      const currentStyles = [
-        ...workspace.value.score.paragraphStyles,
-        ...stagedStyles,
-      ];
-      const { importedParagraphStyles, styleIdRemap } =
-        resolveClipboardParagraphStyles(
-          collectClipboardParagraphStylesFromElements(
-            copy.staff.elements,
-            clipboardInitialMartyriaStyles,
-            sourceStyles,
-          ),
-          currentStyles,
-          collectClipboardParagraphStyleIdsFromElements(
-            copy.staff.elements,
-            clipboardInitialMartyriaStyles,
-          ),
-        );
-      const paragraphStyles = [...currentStyles, ...importedParagraphStyles];
-      const stagedInitialMartyriaStyles =
-        pendingRichTextInitialMartyriaStyles.get(owner) ?? [];
-      const currentInitialMartyriaStyles = [
-        ...workspace.value.score.initialMartyriaStyles,
-        ...stagedInitialMartyriaStyles,
-      ];
-      const { importedInitialMartyriaStyles, initialMartyriaStyleIdRemap } =
-        resolveClipboardInitialMartyriaStyles(
+      const importedStyles = importStylesForBox(owner, {
+        paragraphStyles: collectClipboardParagraphStylesFromElements(
+          copy.staff.elements,
           clipboardInitialMartyriaStyles,
-          currentInitialMartyriaStyles,
-          paragraphStyles,
-          styleIdRemap,
-        );
-      const initialMartyriaStyles = [
-        ...currentInitialMartyriaStyles,
-        ...importedInitialMartyriaStyles,
-      ];
-      copy.staff.elements.forEach((element) => {
-        rewriteClipboardElementParagraphStyleIds(
-          element,
-          paragraphStyles,
-          styleIdRemap,
-        );
-        rewriteClipboardElementInitialMartyriaStyleId(
-          element,
-          initialMartyriaStyles,
-          initialMartyriaStyleIdRemap,
-        );
+          sourceStyles,
+        ),
+        paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(
+          copy.staff.elements,
+          clipboardInitialMartyriaStyles,
+        ),
+        initialMartyriaStyles: clipboardInitialMartyriaStyles,
       });
-      pendingRichTextStyles.set(owner, [
-        ...stagedStyles,
-        ...importedParagraphStyles,
-      ]);
-      pendingRichTextInitialMartyriaStyles.set(owner, [
-        ...stagedInitialMartyriaStyles,
-        ...importedInitialMartyriaStyles,
-      ]);
+      copy.staff.elements.forEach((element) =>
+        rewriteClipboardElementStyleReferences(element, importedStyles),
+      );
+      pendingFootnotePastes.add(owner);
       pendingRichTextFootnotes.set(owner, [
         ...(pendingRichTextFootnotes.get(owner) ?? []),
         copy,
@@ -364,15 +325,12 @@ export function useRichTextFootnotes(
       const score = workspace.value.score;
       const staged =
         owner instanceof RichTextBoxElement
-          ? pendingModeKeyStyles.get(owner)
+          ? pendingRichTextStyles.get(owner)
           : undefined;
-      const currentInitialMartyriaStyles = [
+      const existing = [
         ...score.initialMartyriaStyles,
         ...(staged?.initialMartyriaStyles ?? []),
-      ];
-      const existing = currentInitialMartyriaStyles.some(
-        ({ id }) => id === styleId,
-      )
+      ].some(({ id }) => id === styleId)
         ? styleId
         : null;
       if (payload === undefined || !(owner instanceof RichTextBoxElement)) {
@@ -380,42 +338,18 @@ export function useRichTextFootnotes(
       }
       try {
         const clipboard = JSON.parse(payload) as InitialMartyriaStyleClipboard;
-        const currentParagraphStyles = [
-          ...score.paragraphStyles,
-          ...(staged?.paragraphStyles ?? []),
-        ];
         const clipboardParagraphStyles = clipboard.paragraphStyles.map(
           (style) => SaveService.LoadParagraphStyle_v1(style),
         );
         // The payload carries only the source's custom paragraph styles; the
         // built-in ones exist in every score.
-        const clipboardInitialMartyriaStyles =
-          loadClipboardInitialMartyriaStyles(clipboard.initialMartyriaStyles, [
-            ...createDefaultParagraphStyles(),
-            ...clipboardParagraphStyles,
-          ]);
-        const { importedParagraphStyles, styleIdRemap } =
-          resolveClipboardParagraphStyles(
-            clipboardParagraphStyles,
-            currentParagraphStyles,
-            clipboard.paragraphStyleIds,
-          );
-        const { importedInitialMartyriaStyles, initialMartyriaStyleIdRemap } =
-          resolveClipboardInitialMartyriaStyles(
-            clipboardInitialMartyriaStyles,
-            currentInitialMartyriaStyles,
-            [...currentParagraphStyles, ...importedParagraphStyles],
-            styleIdRemap,
-          );
-        pendingModeKeyStyles.set(owner, {
-          initialMartyriaStyles: [
-            ...(staged?.initialMartyriaStyles ?? []),
-            ...importedInitialMartyriaStyles,
-          ],
-          paragraphStyles: [
-            ...(staged?.paragraphStyles ?? []),
-            ...importedParagraphStyles,
-          ],
+        const { initialMartyriaStyleIdRemap } = importStylesForBox(owner, {
+          paragraphStyles: clipboardParagraphStyles,
+          paragraphStyleIds: clipboard.paragraphStyleIds,
+          initialMartyriaStyles: loadClipboardInitialMartyriaStyles(
+            clipboard.initialMartyriaStyles,
+            [...createDefaultParagraphStyles(), ...clipboardParagraphStyles],
+          ),
         });
         return initialMartyriaStyleIdRemap.get(styleId) ?? existing;
       } catch {
@@ -429,12 +363,11 @@ export function useRichTextFootnotes(
     element: RichTextBoxElement,
     newValues: Partial<RichTextBoxElement>,
   ) {
-    const stagedStyles = pendingRichTextStyles.get(element) ?? [];
     const staged = pendingRichTextFootnotes.get(element) ?? [];
+    const next = Object.assign(new RichTextBoxElement(), element, newValues);
     let added: Footnote[] = [];
     let remaining: Footnote[] = [];
     if (staged.length > 0) {
-      const next = Object.assign(new RichTextBoxElement(), element, newValues);
       const referenced = new Set(elementFootnoteIds(next));
       added = staged.filter((body) => referenced.has(body.id));
       remaining = staged.filter((body) => !referenced.has(body.id));
@@ -445,58 +378,32 @@ export function useRichTextFootnotes(
       newValues,
       added,
     );
-    const score = workspace.value.score;
-    const paragraphStylesToAdd = added.length > 0 ? [...stagedStyles] : [];
-    const initialMartyriaStylesToAdd =
-      added.length > 0
-        ? [...(pendingRichTextInitialMartyriaStyles.get(element) ?? [])]
-        : [];
-    const stagedModeKeyStyles = pendingModeKeyStyles.get(element);
-    if (stagedModeKeyStyles !== undefined) {
-      const next = Object.assign(new RichTextBoxElement(), element, newValues);
-      const referenced = new Set(
-        getEmbeddedModeKeys(next).map((key) => key.initialMartyriaStyleId),
+    // A staged style goes in once the box uses it: through a pasted footnote
+    // it now holds, or an embedded mode key. The rest stay staged, since
+    // CKEditor can still redo the paste that brought them.
+    const stagedStyles = pendingRichTextStyles.get(element);
+    if (stagedStyles !== undefined) {
+      const { used, unused } = partitionStylesByUse(
+        [next, ...added.flatMap((body) => body.staff.elements)],
+        stagedStyles,
       );
-      if (
-        stagedModeKeyStyles.initialMartyriaStyles.some(({ id }) =>
-          referenced.has(id),
-        )
-      ) {
-        paragraphStylesToAdd.push(...stagedModeKeyStyles.paragraphStyles);
-        initialMartyriaStylesToAdd.push(
-          ...stagedModeKeyStyles.initialMartyriaStyles,
+      const scoreValues = getScoreStyleAdditions(workspace.value.score, used);
+      if (scoreValues != null) {
+        commands.unshift(
+          new CommandFactory<Score>().create('update-properties', {
+            target: workspace.value.score,
+            newValues: scoreValues,
+          }),
         );
-        pendingModeKeyStyles.delete(element);
       }
-    }
-    const importedStyles = withoutExistingStyles(
-      paragraphStylesToAdd,
-      score.paragraphStyles,
-    );
-    const importedInitialMartyriaStyles = withoutExistingStyles(
-      initialMartyriaStylesToAdd,
-      score.initialMartyriaStyles,
-    );
-    const scoreValues: Partial<Score> = {};
-    if (importedStyles.length > 0) {
-      scoreValues.paragraphStyles = [
-        ...score.paragraphStyles,
-        ...importedStyles,
-      ];
-    }
-    if (importedInitialMartyriaStyles.length > 0) {
-      scoreValues.initialMartyriaStyles = [
-        ...score.initialMartyriaStyles,
-        ...importedInitialMartyriaStyles,
-      ];
-    }
-    if (Object.keys(scoreValues).length > 0) {
-      commands.unshift(
-        new CommandFactory<Score>().create('update-properties', {
-          target: score,
-          newValues: scoreValues,
-        }),
-      );
+      if (
+        unused.paragraphStyles.length === 0 &&
+        unused.initialMartyriaStyles.length === 0
+      ) {
+        pendingRichTextStyles.delete(element);
+      } else {
+        pendingRichTextStyles.set(element, unused);
+      }
     }
     workspace.value.commandService.executeAsBatch(commands);
     // CKEditor can still redo a paste after blur commits unrelated edits.

@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.5.40",
+  "appVersion": "0.5.59",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "in",
@@ -13,6 +13,16 @@
     "headerMargin": 48,
     "footerMargin": 48,
     "firstPageNumber": 1,
+    "footnoteFormat": "numbers",
+    "footnoteNumbering": "continuous",
+    "footnoteSymbolSequence": "standard",
+    "footnoteReferenceParentheses": true,
+    "showFootnoteHorizontalRule": true,
+    "footnoteHorizontalRuleLength": 40,
+    "footnoteSpaceAboveRule": 8,
+    "footnoteSpaceBelowRule": 3.466666666666667,
+    "footnoteRuleThickness": 1.3333333333333333,
+    "footnoteRuleColor": "#000000",
     "lineHeight": 72,
     "lyricsVerticalOffset": -5.76,
     "lyricsMinimumSpacing": 4.800000000000001,
@@ -24,10 +34,6 @@
     "neumeDefaultStrokeWidth": 0,
     "alternateLineDefaultFontSize": 16,
     "alternateLineDefaultColor": "#ED0000",
-    "modeKeyDefaultColor": "#800000",
-    "modeKeyDefaultStrokeWidth": 0,
-    "modeKeyDefaultFontSize": 26.666666666666668,
-    "modeKeyDefaultHeightAdjustment": 0,
     "accidentalDefaultColor": "#800000",
     "accidentalDefaultStrokeWidth": 0,
     "fthoraDefaultColor": "#800000",
@@ -126,8 +132,57 @@
       "fontSize": 80,
       "color": "#800000",
       "lineHeight": 1
+    },
+    {
+      "id": "initial-martyria",
+      "displayName": "Initial Martyria",
+      "parentStyleId": "default-text",
+      "fontSize": 19.333333333333332,
+      "color": "#800000"
+    },
+    {
+      "id": "initial-martyria-greek",
+      "displayName": "Initial Martyria (Greek)",
+      "parentStyleId": "initial-martyria",
+      "fontFamily": "GFS Didot"
+    },
+    {
+      "id": "footnote-text",
+      "displayName": "Footnote Text",
+      "parentStyleId": "default-text",
+      "fontSize": 13.333333333333334
+    },
+    {
+      "id": "footnote-body-marker",
+      "displayName": "Footnote Body Marker",
+      "parentStyleId": "footnote-text"
+    },
+    {
+      "id": "footnote-reference",
+      "displayName": "Footnote Reference",
+      "parentStyleId": "default-text",
+      "color": "#ED0000"
     }
   ],
+  "initialMartyriaStyles": [
+    {
+      "id": "073f199e-4440-4585-87c5-955992d2a5a3",
+      "displayName": "Neume Font",
+      "structure": {
+        "transliterateNoteNames": false,
+        "languageId": "el",
+        "numeralKind": "ordinal",
+        "numeralQualifier": "postnominal",
+        "modeNamingScheme": "authentic-counterpart",
+        "modeIdentificationMethod": "mode-sign"
+      },
+      "paragraphStyleId": "initial-martyria",
+      "greekParagraphStyleId": "initial-martyria-greek",
+      "useOrdinalForms": true,
+      "lettering": "music-font"
+    }
+  ],
+  "defaultInitialMartyriaStyleId": "073f199e-4440-4585-87c5-955992d2a5a3",
   "headers": {
     "default": {
       "elements": [
@@ -315,7 +370,7 @@
         "contentLeft": "",
         "contentCenter": "",
         "contentRight": "",
-        "height": 32.86335372924805,
+        "height": 33.5,
         "marginTop": 0,
         "marginBottom": 0
       },
@@ -329,7 +384,7 @@
         "contentLeft": "",
         "contentCenter": "",
         "contentRight": "",
-        "height": 20.265735626220703,
+        "height": 20,
         "marginTop": 0,
         "marginBottom": 0
       },
@@ -344,15 +399,10 @@
         "martyria": "ModeSign.SoftChromatic2",
         "note": "ModeSign.Thi",
         "fthoraAboveNote": "SoftChromaticThi_Top",
-        "color": "#ED0000",
-        "fontSize": 26.666666666666668,
-        "strokeWidth": 0,
-        "height": 49,
-        "heightAdjustment": 0,
+        "height": 39.14444719950358,
         "marginTop": 0,
         "marginBottom": 0,
         "bpm": 120,
-        "useDefaultStyle": true,
         "ambitusLowNote": "Pa",
         "ambitusLowRootSign": "Alpha",
         "ambitusHighNote": "Pa",

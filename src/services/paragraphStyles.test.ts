@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { DropCapElement, NoteElement, TextBoxElement } from '@/models/Element';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS as ids,
   ParagraphStyle,
@@ -25,6 +26,37 @@ function replace(score: Score, styles: ParagraphStyle[]) {
 }
 
 describe('paragraph style update commands', () => {
+  it('remaps deleted paragraph styles used by initial martyria styles and restores them on undo', () => {
+    const score = new Score();
+    const text = custom('mode-text', ids.InitialMartyria);
+    const greek = custom('mode-greek', ids.InitialMartyriaGreek);
+    score.paragraphStyles.push(text, greek);
+    const style = {
+      ...styleFromWording('greekTraditionalSign'),
+      id: 'custom-mode',
+      displayName: 'Custom mode',
+      paragraphStyleId: text.id,
+      greekParagraphStyleId: greek.id,
+    };
+    score.initialMartyriaStyles = [style];
+    const history = replace(
+      score,
+      score.paragraphStyles.filter(
+        (item) => ![text.id, greek.id].includes(item.id),
+      ),
+    );
+    expect(score.initialMartyriaStyles[0]).toMatchObject({
+      paragraphStyleId: ids.InitialMartyria,
+      greekParagraphStyleId: ids.InitialMartyriaGreek,
+    });
+    history.undo();
+    expect(score.initialMartyriaStyles[0]).toBe(style);
+    history.redo();
+    expect(score.initialMartyriaStyles[0].paragraphStyleId).toBe(
+      ids.InitialMartyria,
+    );
+  });
+
   it('plans without mutating the score, and clones proposed definitions and overrides', () => {
     const score = new Score();
     const previous = score.paragraphStyles;

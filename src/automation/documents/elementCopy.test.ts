@@ -8,10 +8,12 @@ import {
   ImageBoxElement,
   LineBreakType,
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   TextBoxElement,
 } from '@/models/Element';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import { QuantitativeNeume, TempoSign } from '@/models/Neumes';
 import { ParagraphStyle } from '@/models/ParagraphStyle';
 import { Workspace } from '@/models/Workspace';
@@ -26,6 +28,52 @@ const saved = (document: Workspace) =>
   JSON.stringify(SaveService.SaveScoreToJson(document.score));
 
 describe('copying staff ranges', () => {
+  it('carries custom initial martyria styles and their paragraph styles across documents with undo', () => {
+    const source = workspace();
+    const destination = workspace();
+    const paragraph = new ParagraphStyle();
+    paragraph.displayName = 'Mode text';
+    source.score.paragraphStyles.push(paragraph);
+    const style = {
+      ...styleFromWording('greekTraditionalSign'),
+      id: 'custom-mode',
+      displayName: 'Custom mode',
+      paragraphStyleId: paragraph.id,
+    };
+    source.score.initialMartyriaStyles.push(style);
+    const key = new ModeKeyElement();
+    key.initialMartyriaStyleId = style.id;
+    source.score.staff.elements.unshift(key);
+    const before = saved(source);
+    const destinationStyles = destination.score.initialMartyriaStyles.slice();
+    applyElementEdits(
+      destination,
+      planElementCopy(source, destination, { start: 0, end: 1 }),
+    );
+    expect(destination.score.staff.elements[0]).toMatchObject({
+      initialMartyriaStyleId: style.id,
+    });
+    const importedParagraph = destination.score.paragraphStyles.find(
+      (item) => item.displayName === paragraph.displayName,
+    )!;
+    const importedStyle = { ...style, paragraphStyleId: importedParagraph.id };
+    expect(destination.score.initialMartyriaStyles).toContainEqual(
+      importedStyle,
+    );
+    expect(saved(source)).toBe(before);
+    destination.commandService.undo();
+    expect(destination.score.initialMartyriaStyles).toEqual(destinationStyles);
+    expect(
+      destination.score.paragraphStyles.some(
+        (item) => item.id === importedParagraph.id,
+      ),
+    ).toBe(false);
+    destination.commandService.redo();
+    expect(destination.score.initialMartyriaStyles).toContainEqual(
+      importedStyle,
+    );
+  });
+
   it.each([undefined, true, false])(
     'copies note lyrics only when included (%s), including alternate lines',
     (includeLyrics) => {

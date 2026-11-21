@@ -1,3 +1,4 @@
+import { replaceModeKeysInHtml } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import type {
   DropCapElement,
   ImageBoxElement,
@@ -249,6 +250,10 @@ export class ByzHtmlExporter {
   }
 
   exportPageSetup(pageSetup: PageSetup, paragraphStyles: ParagraphStyle[]) {
+    const modeKeyStyle = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    );
     const orientation = pageSetup.landscape ? 'landscape' : 'portrait';
     const firstPageMargins = resolvePageMargins(pageSetup, 1);
     const secondPageMargins = resolvePageMargins(pageSetup, 2);
@@ -518,9 +523,9 @@ export class ByzHtmlExporter {
 
       .${this.config.classModeKey} {
         position: relative;
-        font-size: ${Unit.toPt(pageSetup.modeKeyDefaultFontSize)}pt;
-        color: ${pageSetup.modeKeyDefaultColor};
-        -webkit-text-stroke-width: ${pageSetup.modeKeyDefaultStrokeWidth};
+        font-size: var(--byz-neume-font-size);
+        color: ${modeKeyStyle.color};
+        -webkit-text-stroke-width: ${Unit.toPt(modeKeyStyle.strokeWidth)}pt;
       }
 
       .${this.config.classModeKeyRightContainer} {
@@ -1261,12 +1266,16 @@ export class ByzHtmlExporter {
   ) {
     let className = this.config.classRichTextBox;
     let style = '';
-    let content = element.content;
+    const exportContent = (content: string) =>
+      replaceModeKeysInHtml(content, ({ element: modeKey }) =>
+        this.exportModeKey(modeKey, indentation, true),
+      );
+    let content: string;
 
     if (element.multipanel) {
       className += ` ${this.config.classTextBoxMultipanel}`;
       style += `width: ${Unit.toPt(element.width)}pt;`;
-      content = `<div class="${this.config.classTextBoxMultipanelLeft}">${element.contentLeft}</div><div class="${this.config.classTextBoxMultipanelCenter}">${element.contentCenter}</div><div class="${this.config.classTextBoxMultipanelRight}">${element.contentRight}</div>`;
+      content = `<div class="${this.config.classTextBoxMultipanelLeft}">${exportContent(element.contentLeft)}</div><div class="${this.config.classTextBoxMultipanelCenter}">${exportContent(element.contentCenter)}</div><div class="${this.config.classTextBoxMultipanelRight}">${exportContent(element.contentRight)}</div>`;
     } else if (element.inline) {
       className += ` ${this.config.classTextBoxInline}`;
       style += `width: ${Unit.toPt(element.width)}pt;`;
@@ -1283,7 +1292,9 @@ export class ByzHtmlExporter {
         element.defaultLyricsFontHeight +
         element.offsetYBottom;
 
-      content = `<div class="${this.config.classTextBoxInlineTop}" style="top: ${Unit.toPt(topAnchor)}pt;">${element.content}</div><div class="${this.config.classTextBoxInlineBottom}" style="top: ${Unit.toPt(bottomAnchor)}pt;">${element.contentBottom}</div>`;
+      content = `<div class="${this.config.classTextBoxInlineTop}" style="top: ${Unit.toPt(topAnchor)}pt;">${exportContent(element.content)}</div><div class="${this.config.classTextBoxInlineBottom}" style="top: ${Unit.toPt(bottomAnchor)}pt;">${exportContent(element.contentBottom)}</div>`;
+    } else {
+      content = exportContent(element.content);
     }
 
     const languageAttributes = getRichTextLanguageAttributes(
@@ -1294,47 +1305,50 @@ export class ByzHtmlExporter {
     return `<div class="${className}"${languageAttributes}${styleAttribute}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
 
-  exportModeKey(element: ModeKeyElement, indentation: number) {
-    let inner = '';
-
-    inner += this.exportNeume(ModeSign.Ekhos, indentation + 2);
+  private exportModeKeySignature(element: ModeKeyElement, indentation: number) {
+    let inner = this.exportNeume(ModeSign.Ekhos, indentation);
 
     if (element.isPlagal) {
-      inner += this.exportNeume(ModeSign.Plagal, indentation + 2);
+      inner += this.exportNeume(ModeSign.Plagal, indentation);
     }
 
     if (element.isVarys) {
-      inner += this.exportNeume(ModeSign.Varys, indentation + 2);
+      inner += this.exportNeume(ModeSign.Varys, indentation);
     }
 
-    inner += this.exportNeume(element.martyria, indentation + 2);
-    inner += this.exportNeume(element.note, indentation + 2);
+    inner += this.exportNeume(element.martyria, indentation);
+    inner += this.exportNeume(element.note, indentation);
     inner += this.exportNeume(
       element.fthoraAboveNote,
-      indentation + 2,
+      indentation,
       NoOffset,
       this.config.classFthora,
     );
-    inner += this.exportNeume(
-      element.quantitativeNeumeAboveNote,
-      indentation + 2,
-    );
-    inner += this.exportNeume(element.note2, indentation + 2);
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote, indentation);
+    inner += this.exportNeume(element.note2, indentation);
     inner += this.exportNeume(
       element.fthoraAboveNote2,
-      indentation + 2,
+      indentation,
       NoOffset,
       this.config.classFthora,
     );
-    inner += this.exportNeume(
-      element.quantitativeNeumeAboveNote2,
-      indentation + 2,
-    );
-    inner += this.exportNeume(element.quantitativeNeumeRight, indentation + 2);
+    inner += this.exportNeume(element.quantitativeNeumeAboveNote2, indentation);
+    inner += this.exportNeume(element.quantitativeNeumeRight, indentation);
     inner += this.exportNeume(
       element.fthoraAboveQuantitativeNeumeRight,
-      indentation + 2,
+      indentation,
     );
+
+    return inner;
+  }
+
+  exportModeKey(
+    element: ModeKeyElement,
+    indentation: number,
+    embedded = false,
+  ) {
+    // BYZHTML's music fonts position marks on the original Greek glyphs.
+    let inner = this.exportModeKeySignature(element, indentation + 2);
 
     let rightContainer = false;
 
@@ -1391,27 +1405,23 @@ export class ByzHtmlExporter {
       inner += `</span>`;
     }
 
-    let styleAttribute = '';
-    let style = '';
+    let style = `text-align: ${element.alignment};`;
 
-    if (!element.useDefaultStyle) {
-      style += `color: ${element.computedColor};`;
-      style += `font-family: ${getFontFamilyWithFallback(
-        element.computedFontFamily,
-      ).replaceAll('"', "'")};`;
-      style += `font-size: ${Unit.toPt(element.computedFontSize)}pt;`;
-      style += `-webkit-text-stroke-width: ${element.computedStrokeWidth};`;
+    if (element.color != null) {
+      style += `color: ${element.color};`;
     }
 
-    style += `text-align: ${element.alignment};`;
+    if (element.strokeWidth != null) {
+      style += `-webkit-text-stroke-width: ${Unit.toPt(element.strokeWidth)}pt;`;
+    }
 
-    styleAttribute = ` style="${style}"`;
+    const className = this.config.classModeKey;
 
-    return `<div class="${
-      this.config.classModeKey
-    }"${styleAttribute}\n${this.getIndentationString(
+    const tag = embedded ? 'span' : 'div';
+
+    return `<${tag} class="${className}" lang="el" dir="ltr" style="${style}"\n${this.getIndentationString(
       indentation + 2,
-    )}>${inner}</div\n${this.getIndentationString(indentation)}>`;
+    )}>${inner}</${tag}\n${this.getIndentationString(indentation)}>`;
   }
 
   exportImageBox(element: ImageBoxElement, indentation: number) {

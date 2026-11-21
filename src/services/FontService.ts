@@ -12,6 +12,8 @@ interface Metrics {
   winAscent: number;
   winDescent: number;
   oligonMidpoint: number;
+  initialMartyriaBaseline: number;
+  capitalHeight: number;
   elafronBounds: Partial<Record<SbmuflGlyphName, HorizontalBounds>>;
 }
 

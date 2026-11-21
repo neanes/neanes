@@ -76,13 +76,7 @@ A score can contain more than the initial martyria created with a new score. Use
 
 Neanes inserts the initial martyria before the selected element and uses it to establish the note and scale for the music that follows. To change it later, double-click it, right-click it and choose `Change Initial Martyria`, or use **Change Initial Martyria** in its bottom toolbar.
 
-This workflow uses one of Neanes's standard initial martyriæ. To construct an initial martyria from text and individual symbols instead, see [Create a custom initial martyria](/guide/advanced.html#create-a-custom-initial-martyria).
-
-#### Show the ambitus
-
-The ambitus displays the lowest and highest notes of the passage governed by an initial martyria. Select the initial martyria, open `View > Properties`, and enable **Show Ambitus** under **Initial Martyria**. You can also right-click the initial martyria and enable **Show Ambitus**.
-
-Neanes calculates the range from the notes after that initial martyria up to the next initial martyria, another element that changes the mode, or the end of the score.
+For wording and typography, the ambitus, or an initial martyria within a line of music, see [Initial Martyriæ](/guide/initial-martyria.html).
 
 ### Insert a martyria
 

@@ -55,6 +55,10 @@ import ruTranslations from 'ckeditor5/translations/ru.js';
 import AlignmentOverride from './ckeditor-plugins/alignmentoverride/alignmentoverride';
 import FontStyle from './ckeditor-plugins/fontstyle/fontstyle';
 import { Footnotes } from './ckeditor-plugins/footnotes/footnotes';
+import {
+  MODE_KEY_DATA_ATTRIBUTE,
+  MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE,
+} from './ckeditor-plugins/insertmodekey/modekeydata';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import OpenType from './ckeditor-plugins/opentype/opentype';
 import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
@@ -209,10 +213,17 @@ InlineEditor.defaultConfig = {
     // outside the plugin's supported vocabulary are dropped during upcast.
     // TextPartLanguage similarly owns language metadata. If GHS also preserves
     // `dir`, removing the language leaves a stale `<span dir="...">`.
+    // Initial martyria attributes belong to InsertModeKey, which rich text
+    // boxes enable. GHS must not preserve them in annotations.
     disallow: [
       {
         name: 'span',
-        attributes: ['lang', 'dir'],
+        attributes: [
+          'lang',
+          'dir',
+          MODE_KEY_DATA_ATTRIBUTE,
+          MODE_KEY_STYLE_CLIPBOARD_ATTRIBUTE,
+        ],
       },
       {
         name: 'span',

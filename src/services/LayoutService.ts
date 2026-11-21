@@ -14,7 +14,6 @@ import type {
   DropCapElement,
   ImageBoxElement,
   MartyriaElement,
-  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   RichTextFootnoteMarker,
@@ -32,9 +31,34 @@ import {
   isRightAlignedMartyria,
   isTieNeume,
   LineBreakType,
+  ModeKeyElement,
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
 import type { Header } from '@/models/Header';
+import type {
+  InitialMartyriaAmbitusLayout,
+  InitialMartyriaLayout,
+  InitialMartyriaRunLayout,
+  InitialMartyriaSeparatorLayout,
+  InitialMartyriaWordSpaceFont,
+} from '@/models/InitialMartyriaLayout';
+import {
+  getInitialMartyriaContext,
+  getInitialMartyriaFixedSeparatorSize,
+  getInitialMartyriaSeparatorAfter,
+  getInitialMartyriaSeparatorBefore,
+  type InitialMartyriaSeparator,
+  resolveInitialMartyriaStyle,
+  resolveModeKeyInitialMartyriaStyle,
+} from '@/models/InitialMartyriaResolver';
+import {
+  getInitialMartyriaNoteAppearance,
+  type InitialMartyriaAppearance,
+  type InitialMartyriaPitchNote,
+  type InitialMartyriaStyle,
+  type ResolvedInitialMartyriaRun,
+  type ResolvedInitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
 import type {
   BoxOverlayDiagnostics,
   ElementOverlayDiagnostics,
@@ -110,17 +134,29 @@ import {
 } from '@/services/NeumeMappingService';
 import { FOOTNOTE_CLASS } from '@/services/RichTextFootnotes';
 import { TATWEEL } from '@/utils/constants';
+import { deepEquals } from '@/utils/deepEquals';
+import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
+import { getLastEmbeddedModeKey } from '@/utils/richTextModeKeys';
 import { getFirstRunningMarker } from '@/utils/runningMarkers';
 import { Unit } from '@/utils/Unit';
 
 import { fontService } from './FontService';
 import { automaticFootnoteMarker } from './FootnoteMarker';
+import {
+  getInitialMartyriaGlyphFontSize,
+  getInitialMartyriaNeumeBaselineCorrection,
+  getInitialMartyriaPitchTrailingGlueWidth,
+  glyphText,
+  measureInitialMartyriaPitchGeometry,
+  resolveInitialMartyriaAccessoryLayout,
+} from './InitialMartyriaPitchMeasurementService';
+import { measureInitialMartyriaStackedCharacters } from './InitialMartyriaStackedCharactersMeasurementService';
 import {
   getLyricsBaseline,
   getLyricsTop,
@@ -128,6 +164,7 @@ import {
 } from './LyricsLayout';
 import type { MelismaSyllables } from './MelismaHelperGreek';
 import { MelismaHelperGreek } from './MelismaHelperGreek';
+import { ModeKeyMetricsService } from './ModeKeyMetricsService';
 import { buildContentPages } from './rendering/buildContentPages';
 import {
   type InkBounds,
@@ -461,6 +498,8 @@ export class LayoutService {
       elements,
       pageSetup,
       score.paragraphStyles,
+      score.initialMartyriaStyles,
+      score.defaultInitialMartyriaStyleId,
       options,
       false,
     );
@@ -867,6 +906,8 @@ export class LayoutService {
           footnote.staff.elements,
           setup,
           score.paragraphStyles,
+          score.initialMartyriaStyles,
+          score.defaultInitialMartyriaStyleId,
           options,
           true,
         );
@@ -1173,6 +1214,8 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     paragraphStyles: ParagraphStyle[],
+    initialMartyriaStyles: InitialMartyriaStyle[],
+    defaultInitialMartyriaStyleId: string,
     options?: LayoutDiagnosticsOptions,
     hidePopulatedTerminator = false,
   ) {
@@ -1403,31 +1446,18 @@ export class LayoutService {
           // PROCESS MODEKEY
           const modeKeyElement = elements[i] as ModeKeyElement;
 
-          // Compute properties
-          modeKeyElement.computedFontFamily = pageSetup.neumeDefaultFontFamily;
-
-          modeKeyElement.computedFontSize = modeKeyElement.useDefaultStyle
-            ? pageSetup.modeKeyDefaultFontSize
-            : modeKeyElement.fontSize;
-
-          modeKeyElement.computedColor = modeKeyElement.useDefaultStyle
-            ? pageSetup.modeKeyDefaultColor
-            : modeKeyElement.color;
-
-          modeKeyElement.computedStrokeWidth = modeKeyElement.useDefaultStyle
-            ? pageSetup.modeKeyDefaultStrokeWidth
-            : modeKeyElement.strokeWidth;
-
-          modeKeyElement.computedHeightAdjustment =
-            modeKeyElement.useDefaultStyle
-              ? pageSetup.modeKeyDefaultHeightAdjustment
-              : modeKeyElement.heightAdjustment;
-
-          modeKeyElement.height =
-            TextMeasurementService.getFontHeight(
-              `${modeKeyElement.computedFontSize}px ${modeKeyElement.computedFontFamily}`,
-            ) + modeKeyElement.computedHeightAdjustment;
-
+          const resolvedInitialMartyriaStyle =
+            resolveModeKeyInitialMartyriaStyle({
+              element: modeKeyElement,
+              paragraphStyles,
+              initialMartyriaStyles,
+              defaultInitialMartyriaStyleId,
+            });
+          this.layoutModeKey(
+            modeKeyElement,
+            pageSetup,
+            resolvedInitialMartyriaStyle,
+          );
           this.addBox(
             pageSetup.innerPageWidth,
             modeKeyElement,
@@ -2319,7 +2349,6 @@ export class LayoutService {
 
       // A line break is implied before a block text box, rich-text box, image
       // box, or mode key element.
-      // TODO support inline mode keys
       if (isBlockElement(nextElement)) {
         lineBreak = true;
       }
@@ -3038,6 +3067,440 @@ export class LayoutService {
 
     workspace.lyricsEndPx =
       workspace.neumesEndPx + elementWidthPx + lyricEndGlueWidth;
+  }
+
+  /**
+   * Writes the typography and geometry a mode key renders with onto the
+   * element, and returns the geometry for callers that also need its width.
+   * Standalone keys share a compact allocation; embedded keys retain their
+   * native font/ink allocation for the surrounding inline formatting context.
+   */
+  public static layoutModeKey(
+    element: ModeKeyElement,
+    pageSetup: PageSetup,
+    resolvedStyle: ResolvedInitialMartyriaStyle,
+    embedded = false,
+  ) {
+    const { primaryAppearance } = resolvedStyle;
+
+    element.computedFontFamily = pageSetup.neumeDefaultFontFamily;
+    element.computedFontSize = primaryAppearance.fontSize;
+    element.computedColor = primaryAppearance.color;
+    element.computedStrokeWidth = primaryAppearance.strokeWidth;
+
+    const geometry = this.getInitialMartyriaGeometry(
+      element,
+      pageSetup,
+      resolvedStyle,
+    );
+
+    if (!embedded) {
+      const metrics = ModeKeyMetricsService.getMetrics(
+        {
+          resolvedStyle,
+          neumeFontFamily: element.computedFontFamily,
+          accessoryFontSize: geometry.layout.accessory.fontSize,
+          accessoryBaselineOffset: geometry.layout.accessory.baselineOffset,
+          tempoStrokeWidth: pageSetup.tempoDefaultStrokeWidth,
+        },
+        (template, optional) => {
+          const sample = ModeKeyElement.createFromTemplate(template, optional);
+          sample.computedFontFamily = element.computedFontFamily;
+          sample.computedFontSize = primaryAppearance.fontSize;
+          return this.getInitialMartyriaGeometry(
+            sample,
+            pageSetup,
+            resolvedStyle,
+          ).layout.inkBounds;
+        },
+      );
+      geometry.top = -metrics.ascent;
+      geometry.bottom = metrics.descent;
+    }
+
+    element.computedNeumeFontSize = geometry.neumeFontSize;
+    element.computedTop = geometry.top;
+    element.computedFlowTop = geometry.flowTop;
+    element.computedInitialMartyriaLayout = geometry.layout;
+    element.height = geometry.bottom - geometry.top;
+
+    return geometry;
+  }
+
+  private static getInitialMartyriaGeometry(
+    element: ModeKeyElement,
+    pageSetup: PageSetup,
+    resolvedStyle: ResolvedInitialMartyriaStyle,
+  ) {
+    const neumeFontFamily = element.computedFontFamily;
+    const neumeFontSize = element.computedFontSize;
+    const baseTextAppearance = resolvedStyle.primaryAppearance;
+    const fixedSeparatorFontSize = baseTextAppearance.fontSize;
+    const glyphFontSize = getInitialMartyriaGlyphFontSize(
+      baseTextAppearance,
+      neumeFontFamily,
+    );
+    const resolution = resolveInitialMartyriaStyle({
+      context: getInitialMartyriaContext(element),
+      resolvedStyle,
+      pageSetup,
+      glyphFontSize,
+    });
+    const runs = resolution.runs;
+    const neumeBaselineCorrection = getInitialMartyriaNeumeBaselineCorrection({
+      initialMartyriaBaseline:
+        fontService.getMetrics(neumeFontFamily).initialMartyriaBaseline,
+      glyphFontSize,
+    });
+    const accessory = resolveInitialMartyriaAccessoryLayout({
+      glyphFontSize,
+      neumeBaselineCorrection,
+    });
+    const baseFont = resolveFontCss(baseTextAppearance);
+    let top = -TextMeasurementService.getFontBoundingBoxAscent(baseFont);
+    let bottom = TextMeasurementService.getFontBoundingBoxDescent(baseFont);
+    const inkBounds = { top: 0, bottom: 0 };
+    const includeInk = (inkTop: number, inkBottom: number) => {
+      inkBounds.top = Math.min(inkBounds.top, inkTop);
+      inkBounds.bottom = Math.max(inkBounds.bottom, inkBottom);
+      top = Math.min(top, inkTop);
+      bottom = Math.max(bottom, inkBottom);
+    };
+    const flowFont = resolveFontCss({
+      fontFamily: neumeFontFamily,
+      fontStyle: DEFAULT_FONT_STYLE,
+      fontSize: neumeFontSize,
+    });
+    let flowTop = -TextMeasurementService.getFontBoundingBoxAscent(flowFont);
+    let width = 0;
+
+    // The text whose font a word space next to a run is set in.
+    const getWordSpaceOwner = (
+      run: ResolvedInitialMartyriaRun | undefined,
+    ): InitialMartyriaAppearance | null => {
+      if (run?.kind === 'startingPitch') {
+        return run.noteText?.appearance ?? null;
+      }
+      if (run?.kind === 'text') {
+        return run.appearance;
+      }
+      return null;
+    };
+    // The separator in the slot before runs[index]; index === runs.length is
+    // the slot after the last run.
+    const getSeparatorLayout = (
+      kind: InitialMartyriaSeparator,
+      index: number,
+    ): InitialMartyriaSeparatorLayout => {
+      if (kind === 'none') {
+        return { kind, width: 0, wordSpaceFont: null };
+      }
+      if (kind === 'wordSpace') {
+        const appearance =
+          getWordSpaceOwner(runs[index - 1]) ??
+          getWordSpaceOwner(runs[index]) ??
+          baseTextAppearance;
+        const wordSpaceFont: InitialMartyriaWordSpaceFont = {
+          fontFamily: appearance.fontFamily,
+          fontStyle: appearance.fontStyle,
+          fontSize: appearance.fontSize,
+        };
+        return {
+          kind,
+          width: TextMeasurementService.getTextWidth(
+            ' ',
+            resolveFontCss(wordSpaceFont),
+            appearance.fontVariantCaps,
+          ),
+          wordSpaceFont,
+        };
+      }
+      return {
+        kind,
+        width: getInitialMartyriaFixedSeparatorSize(fixedSeparatorFontSize),
+        wordSpaceFont: null,
+      };
+    };
+
+    const runLayouts: InitialMartyriaRunLayout[] = [];
+    for (const [runIndex, run] of runs.entries()) {
+      const separatorBefore = getSeparatorLayout(
+        getInitialMartyriaSeparatorBefore(resolution, runIndex),
+        runIndex,
+      );
+      width += separatorBefore.width;
+      const appearance =
+        run.kind === 'startingPitch'
+          ? getInitialMartyriaNoteAppearance(run)
+          : run.appearance;
+      const { fontFamily, fontStyle, fontSize } = appearance;
+      const strokeOverflow = appearance.strokeWidth / 2;
+
+      if (run.kind === 'text' && run.content.layout === 'stackedCharacters') {
+        const geometry = measureInitialMartyriaStackedCharacters(
+          run.content.topCharacter,
+          run.content.bottomCharacter,
+          {
+            fontFamily,
+            fontStyle,
+            fontSize,
+            fontVariantCaps: appearance.fontVariantCaps,
+            strokeWidth: appearance.strokeWidth,
+          },
+        );
+        includeInk(geometry.top, geometry.bottom);
+        flowTop = Math.min(flowTop, geometry.top);
+        width += geometry.width;
+        runLayouts.push({
+          separatorBefore,
+          fontSize,
+          baselineShift: 0,
+          stackedCharacters: {
+            geometry,
+            lineHeight: TextMeasurementService.getFontHeight(
+              resolveFontCss({ fontFamily, fontStyle, fontSize }),
+            ),
+          },
+          pitch: null,
+        });
+        continue;
+      }
+
+      if (run.kind === 'startingPitch') {
+        const glyphAppearance = run.appearance;
+        // The run is drawn in the glyph font, so its line box contributes to
+        // the flow even when it holds no glyphs. The note names sit in flow on
+        // the same baseline, so their text font's line box contributes too.
+        const glyphFont = resolveFontCss(glyphAppearance);
+        const noteTextFont = resolveFontCss({
+          fontFamily,
+          fontStyle,
+          fontSize,
+        });
+        flowTop = Math.min(
+          flowTop,
+          -TextMeasurementService.getFontBoundingBoxAscent(glyphFont),
+          -TextMeasurementService.getFontBoundingBoxAscent(noteTextFont),
+        );
+        // Glyph notes sit on the neume baseline like every other glyph; the
+        // marks above them move with them.
+        const noteBaselineShift =
+          run.noteText == null ? -neumeBaselineCorrection : 0;
+        const measureNote = (note: InitialMartyriaPitchNote | null) =>
+          note == null
+            ? null
+            : measureInitialMartyriaPitchGeometry(
+                note,
+                run.noteText == null
+                  ? glyphText(note.note, glyphAppearance.fontFamily)
+                  : run.noteText.names[note.note],
+                {
+                  textFontFamily: fontFamily,
+                  textFontStyle: fontStyle,
+                  textFontSize: fontSize,
+                  textFontVariantCaps: appearance.fontVariantCaps,
+                  glyphFontFamily: glyphAppearance.fontFamily,
+                  glyphFontStyle: glyphAppearance.fontStyle,
+                  glyphFontSize: glyphAppearance.fontSize,
+                  textStrokeWidth: appearance.strokeWidth,
+                  glyphStrokeWidth: glyphAppearance.strokeWidth,
+                },
+              );
+        const primary = measureNote(run.cluster.primary);
+        const secondary = measureNote(run.cluster.secondary);
+        for (const geometry of [primary, secondary]) {
+          if (geometry == null) {
+            continue;
+          }
+          const top = geometry.top - noteBaselineShift;
+          includeInk(top, geometry.bottom - noteBaselineShift);
+          flowTop = Math.min(flowTop, top);
+          width += geometry.width;
+        }
+        const clusterSeparatorWidth = getInitialMartyriaFixedSeparatorSize(
+          fixedSeparatorFontSize,
+        );
+        if (primary != null && secondary != null) {
+          width += clusterSeparatorWidth;
+        }
+        const trailingGlueWidth = getInitialMartyriaPitchTrailingGlueWidth(
+          glyphAppearance.fontFamily,
+          glyphAppearance.fontSize,
+        );
+        if (run.cluster.trailingGlyphs.length > 0) {
+          const trailingGlyphText = run.cluster.trailingGlyphs
+            .map((neume) => glyphText(neume, glyphAppearance.fontFamily))
+            .join('');
+          const trailingMetrics = TextMeasurementService.getTextMetrics(
+            trailingGlyphText,
+            glyphFont,
+          );
+          const glyphStrokeOverflow = glyphAppearance.strokeWidth / 2;
+          includeInk(
+            neumeBaselineCorrection -
+              trailingMetrics.actualBoundingBoxAscent -
+              glyphStrokeOverflow,
+            neumeBaselineCorrection +
+              trailingMetrics.actualBoundingBoxDescent +
+              glyphStrokeOverflow,
+          );
+          if (primary != null || secondary != null) {
+            width += trailingGlueWidth;
+          }
+          width += trailingMetrics.width;
+        }
+        runLayouts.push({
+          separatorBefore,
+          fontSize: glyphAppearance.fontSize,
+          baselineShift: 0,
+          stackedCharacters: null,
+          pitch: {
+            textFontSize: fontSize,
+            noteBaselineShift,
+            primary,
+            secondary,
+            clusterSeparatorWidth,
+            trailingGlueWidth,
+          },
+        });
+        continue;
+      }
+
+      const font = resolveFontCss({ fontFamily, fontStyle, fontSize });
+      const text =
+        run.kind === 'glyph'
+          ? run.glyphs.map((neume) => glyphText(neume, fontFamily)).join('')
+          : run.content.layout === 'inline'
+            ? run.content.text
+            : '';
+      const metrics = TextMeasurementService.getTextMetrics(
+        text,
+        font,
+        appearance.fontVariantCaps,
+      );
+      width += metrics.width;
+      flowTop = Math.min(
+        flowTop,
+        -TextMeasurementService.getFontBoundingBoxAscent(font),
+      );
+      const glyphBaselineCorrection =
+        run.kind === 'glyph' ? neumeBaselineCorrection : 0;
+      includeInk(
+        glyphBaselineCorrection -
+          metrics.actualBoundingBoxAscent -
+          strokeOverflow,
+        glyphBaselineCorrection +
+          metrics.actualBoundingBoxDescent +
+          strokeOverflow,
+      );
+      runLayouts.push({
+        separatorBefore,
+        fontSize,
+        baselineShift: -glyphBaselineCorrection,
+        stackedCharacters: null,
+        pitch: null,
+      });
+    }
+
+    const trailingSeparator = getSeparatorLayout(
+      getInitialMartyriaSeparatorAfter(resolution, runs.length - 1),
+      runs.length,
+    );
+    width += trailingSeparator.width;
+
+    if (element.tempo != null) {
+      const tempoFont = resolveFontCss({
+        fontFamily: neumeFontFamily,
+        fontStyle: DEFAULT_FONT_STYLE,
+        fontSize: accessory.fontSize,
+      });
+      const tempoMetrics = TextMeasurementService.getTextMetrics(
+        glyphText(element.tempo, neumeFontFamily),
+        tempoFont,
+      );
+      const tempoStrokeOverflow = pageSetup.tempoDefaultStrokeWidth / 2;
+      includeInk(
+        accessory.baselineOffset -
+          tempoMetrics.actualBoundingBoxAscent -
+          tempoStrokeOverflow,
+        accessory.baselineOffset +
+          tempoMetrics.actualBoundingBoxDescent +
+          tempoStrokeOverflow,
+      );
+      width += accessory.tempoMarginLeft + tempoMetrics.width;
+    }
+
+    let ambitus: InitialMartyriaAmbitusLayout | null = null;
+    if (element.showAmbitus) {
+      const punctuationMetrics = TextMeasurementService.getTextMetrics(
+        '(-)',
+        baseFont,
+        baseTextAppearance.fontVariantCaps,
+      );
+      const punctuationStrokeOverflow = baseTextAppearance.strokeWidth / 2;
+      includeInk(
+        -punctuationMetrics.actualBoundingBoxAscent - punctuationStrokeOverflow,
+        punctuationMetrics.actualBoundingBoxDescent + punctuationStrokeOverflow,
+      );
+
+      const ambitusFont = resolveFontCss({
+        fontFamily: neumeFontFamily,
+        fontStyle: DEFAULT_FONT_STYLE,
+        fontSize: accessory.fontSize,
+      });
+      const ambitusStrokeOverflow = pageSetup.martyriaDefaultStrokeWidth / 2;
+      const ambitusBaseline = accessory.baselineOffset;
+      const measureAmbitus = (neumes: Neume[]) =>
+        TextMeasurementService.getTextMetrics(
+          neumes.map((neume) => glyphText(neume, neumeFontFamily)).join(''),
+          ambitusFont,
+        );
+      const lowMetrics = measureAmbitus([
+        element.ambitusLowNote,
+        element.ambitusLowRootSign,
+      ]);
+      const highMetrics = measureAmbitus([
+        element.ambitusHighNote,
+        element.ambitusHighRootSign,
+      ]);
+      for (const metrics of [lowMetrics, highMetrics]) {
+        includeInk(
+          ambitusBaseline -
+            metrics.actualBoundingBoxAscent -
+            ambitusStrokeOverflow,
+          ambitusBaseline +
+            metrics.actualBoundingBoxDescent +
+            ambitusStrokeOverflow,
+        );
+      }
+      // Pull each end note toward the parentheses so that 4px separates its
+      // ink, rather than its advance box, from the punctuation.
+      ambitus = {
+        lowMarginLeft: 4 + lowMetrics.actualBoundingBoxLeft,
+        highMarginRight:
+          4 - (highMetrics.width - highMetrics.actualBoundingBoxRight),
+      };
+    }
+
+    const layout: InitialMartyriaLayout = {
+      inkBounds,
+      resolution,
+      primaryAppearance: baseTextAppearance,
+      runs: runLayouts,
+      trailingSeparator,
+      neumeBaselineCorrection,
+      accessory,
+      ambitus,
+    };
+
+    return {
+      bottom,
+      flowTop,
+      top,
+      width,
+      neumeFontSize: glyphFontSize,
+      layout,
+    };
   }
 
   private static addBox(
@@ -6093,10 +6556,14 @@ export class LayoutService {
       const modeKey = element as ModeKeyElement;
       modeKey.computedFontFamilyPrevious = modeKey.computedFontFamily;
       modeKey.computedFontSizePrevious = modeKey.computedFontSize;
-      modeKey.computedHeightAdjustmentPrevious =
-        modeKey.computedHeightAdjustment;
+      modeKey.computedNeumeFontSizePrevious = modeKey.computedNeumeFontSize;
       modeKey.computedColorPrevious = modeKey.computedColor;
       modeKey.computedStrokeWidthPrevious = modeKey.computedStrokeWidth;
+      modeKey.computedTopPrevious = modeKey.computedTop;
+      modeKey.computedFlowTopPrevious = modeKey.computedFlowTop;
+      modeKey.heightPrevious = modeKey.height;
+      modeKey.computedInitialMartyriaLayoutPrevious =
+        modeKey.computedInitialMartyriaLayout;
       modeKey.ambitusHighNotePrevious = modeKey.ambitusHighNote;
       modeKey.ambitusHighRootSignPrevious = modeKey.ambitusHighRootSign;
       modeKey.ambitusLowNotePrevious = modeKey.ambitusLowNote;
@@ -6205,10 +6672,17 @@ export class LayoutService {
         modeKey.widthPrevious !== modeKey.width ||
         modeKey.computedFontFamilyPrevious !== modeKey.computedFontFamily ||
         modeKey.computedFontSizePrevious !== modeKey.computedFontSize ||
-        modeKey.computedHeightAdjustmentPrevious !==
-          modeKey.computedHeightAdjustment ||
+        modeKey.computedNeumeFontSizePrevious !==
+          modeKey.computedNeumeFontSize ||
         modeKey.computedColorPrevious !== modeKey.computedColor ||
         modeKey.computedStrokeWidthPrevious !== modeKey.computedStrokeWidth ||
+        modeKey.computedTopPrevious !== modeKey.computedTop ||
+        modeKey.computedFlowTopPrevious !== modeKey.computedFlowTop ||
+        modeKey.heightPrevious !== modeKey.height ||
+        !deepEquals(
+          modeKey.computedInitialMartyriaLayoutPrevious,
+          modeKey.computedInitialMartyriaLayout,
+        ) ||
         modeKey.ambitusHighNote !== modeKey.ambitusHighNotePrevious ||
         modeKey.ambitusHighRootSign !== modeKey.ambitusHighRootSignPrevious ||
         modeKey.ambitusLowNote !== modeKey.ambitusLowNotePrevious ||
@@ -8189,23 +8663,11 @@ export class LayoutService {
         ambitusHigh = Number.MIN_SAFE_INTEGER;
 
         currentModeKey = modeKey;
-        currentNote = getScaleNoteValue(modeKey.scaleNote);
-        currentScale = modeKey.scale;
-        currentShift = 0;
-
-        if (modeKey.fthora) {
-          currentScale =
-            this.getScaleFromFthora(modeKey.fthora, currentNote) ||
-            currentScale;
-
-          currentShift = this.getShift(
-            currentNote,
-            currentNote,
-            currentScale,
-            modeKey.fthora,
-            null,
-          );
-        }
+        ({
+          note: currentNote,
+          scale: currentScale,
+          shift: currentShift,
+        } = this.getModeKeyStartContext(modeKey));
       } else if (element.elementType === ElementType.Martyria) {
         const martyria = element as MartyriaElement;
 
@@ -8304,40 +8766,52 @@ export class LayoutService {
             }
           }
         }
-      } else if (
-        element.elementType === ElementType.RichTextBox &&
-        (element as RichTextBoxElement).modeChange
-      ) {
-        const modeKey = element as RichTextBoxElement;
+      } else if (element.elementType === ElementType.RichTextBox) {
+        const richTextBox = element as RichTextBoxElement;
+        const embeddedModeKey = richTextBox.modeChange
+          ? null
+          : getLastEmbeddedModeKey(richTextBox);
 
-        if (currentModeKey) {
-          this.assignAmbitus({
-            currentModeKey,
-            ambitusLow,
-            ambitusHigh,
-            ambitusLowScale,
-            ambitusLowShift,
-            ambitusHighScale,
-            ambitusHighShift,
-          });
-        }
+        if (richTextBox.modeChange || embeddedModeKey != null) {
+          if (currentModeKey) {
+            this.assignAmbitus({
+              currentModeKey,
+              ambitusLow,
+              ambitusHigh,
+              ambitusLowScale,
+              ambitusLowShift,
+              ambitusHighScale,
+              ambitusHighShift,
+            });
+          }
 
-        ambitusLow = Number.MAX_SAFE_INTEGER;
-        ambitusHigh = Number.MIN_SAFE_INTEGER;
+          ambitusLow = Number.MAX_SAFE_INTEGER;
+          ambitusHigh = Number.MIN_SAFE_INTEGER;
 
-        currentModeKey = null;
-        currentNote = getScaleNoteValue(modeKey.modeChangePhysicalNote);
-        currentScale = modeKey.modeChangeScale;
-        currentShift = 0;
+          currentModeKey = null;
+          if (embeddedModeKey != null) {
+            ({
+              note: currentNote,
+              scale: currentScale,
+              shift: currentShift,
+            } = this.getModeKeyStartContext(embeddedModeKey));
+          } else {
+            currentNote = getScaleNoteValue(richTextBox.modeChangePhysicalNote);
+            currentScale = richTextBox.modeChangeScale;
+            currentShift = 0;
 
-        if (modeKey.modeChangeVirtualNote) {
-          currentNoteVirtual = getScaleNoteValue(modeKey.modeChangeVirtualNote);
+            if (richTextBox.modeChangeVirtualNote) {
+              currentNoteVirtual = getScaleNoteValue(
+                richTextBox.modeChangeVirtualNote,
+              );
 
-          currentShift = getShiftWithoutFthora(
-            currentNote,
-            currentNoteVirtual,
-            currentScale,
-          );
+              currentShift = getShiftWithoutFthora(
+                currentNote,
+                currentNoteVirtual,
+                currentScale,
+              );
+            }
+          }
         }
       }
       if (elementFootnoteIds(element).length > 0) {
@@ -8361,6 +8835,20 @@ export class LayoutService {
       });
     }
     return contexts;
+  }
+
+  /** The note, scale, and shift a mode key starts the music in. */
+  private static getModeKeyStartContext(modeKey: ModeKeyElement) {
+    const note = getScaleNoteValue(modeKey.scaleNote);
+    let scale = modeKey.scale;
+    let shift = 0;
+
+    if (modeKey.fthora) {
+      scale = this.getScaleFromFthora(modeKey.fthora, note) || scale;
+      shift = this.getShift(note, note, scale, modeKey.fthora, null);
+    }
+
+    return { note, scale, shift };
   }
 
   public static assignAmbitus({

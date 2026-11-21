@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "appVersion": "0.4.31",
+  "appVersion": "0.5.59",
   "pageSetup": {
     "pageSize": "Letter",
     "pageSizeUnit": "in",
@@ -14,24 +14,27 @@
     "footerMargin": 48,
     "showFooter": true,
     "firstPageNumber": 1,
+    "footnoteFormat": "numbers",
+    "footnoteNumbering": "continuous",
+    "footnoteSymbolSequence": "standard",
+    "footnoteReferenceParentheses": true,
+    "showFootnoteHorizontalRule": true,
+    "footnoteHorizontalRuleLength": 40,
+    "footnoteSpaceAboveRule": 8,
+    "footnoteSpaceBelowRule": 3.466666666666667,
+    "footnoteRuleThickness": 1.3333333333333333,
+    "footnoteRuleColor": "#000000",
     "lineHeight": 72,
-    "lyricsDefaultFontFamily": "GFS Didot",
-    "lyricsDefaultFontSize": 16,
-    "lyricsDefaultFontWeight": "400",
-    "lyricsDefaultFontStyle": "normal",
-    "lyricsDefaultColor": "#000000",
-    "lyricsDefaultStrokeWidth": 0,
     "lyricsVerticalOffset": -5.76,
     "lyricsMinimumSpacing": 4.800000000000001,
+    "lyricsMelismaCutoffWidth": 6.666666666666667,
     "neumeDefaultFontFamily": "NeanesStathisSeries",
     "neumeDefaultFontSize": 26.666666666666668,
     "neumeDefaultColor": "#000000",
     "neumeDefaultSpacing": 0,
     "neumeDefaultStrokeWidth": 0,
-    "modeKeyDefaultColor": "#ED0000",
-    "modeKeyDefaultStrokeWidth": 0,
-    "modeKeyDefaultFontSize": 26.666666666666668,
-    "modeKeyDefaultHeightAdjustment": 0,
+    "alternateLineDefaultFontSize": 16,
+    "alternateLineDefaultColor": "#ED0000",
     "accidentalDefaultColor": "#ED0000",
     "accidentalDefaultStrokeWidth": 0,
     "fthoraDefaultColor": "#ED0000",
@@ -48,24 +51,17 @@
     "noteIndicatorDefaultStrokeWidth": 0,
     "isonDefaultColor": "#ED0000",
     "isonDefaultStrokeWidth": 0,
+    "breathDefaultColor": "#000000",
+    "breathDefaultStrokeWidth": 0,
+    "crossDefaultColor": "#000000",
+    "crossDefaultStrokeWidth": 0,
     "koronisDefaultColor": "#ED0000",
     "koronisDefaultStrokeWidth": 0,
     "martyriaDefaultColor": "#ED0000",
     "martyriaDefaultStrokeWidth": 0,
     "tempoDefaultColor": "#ED0000",
     "tempoDefaultStrokeWidth": 0,
-    "dropCapDefaultFontFamily": "GFS Didot",
-    "dropCapDefaultFontSize": 80,
-    "dropCapDefaultFontWeight": "400",
-    "dropCapDefaultFontStyle": "normal",
-    "dropCapDefaultColor": "#FF0000",
-    "dropCapDefaultStrokeWidth": 0,
-    "textBoxDefaultFontFamily": "GFS Didot",
-    "textBoxDefaultFontSize": 17.333333333333332,
-    "textBoxDefaultFontWeight": "400",
-    "textBoxDefaultFontStyle": "normal",
-    "textBoxDefaultColor": "#000000",
-    "textBoxDefaultStrokeWidth": 0,
+    "dropCapDefaultLineSpan": 1,
     "hyphenSpacing": 49.632000000000005,
     "minimumSyllableToHyphenClearance": 13.228346456692915,
     "martyriaVerticalOffset": 4,
@@ -73,23 +69,136 @@
     "alignIsonIndicators": true,
     "ignorePunctuationWhenPositioningLyrics": true
   },
+  "paragraphStyles": [
+    {
+      "id": "default-text",
+      "displayName": "Default Text",
+      "fontFamily": "GFS Didot",
+      "fontSize": 17.333333333333332
+    },
+    {
+      "id": "annotation",
+      "displayName": "Annotation",
+      "parentStyleId": "default-text",
+      "fontSize": 16
+    },
+    {
+      "id": "title",
+      "displayName": "Title",
+      "parentStyleId": "default-text",
+      "alignment": "center",
+      "fontSize": 37.333333333333336
+    },
+    {
+      "id": "subtitle",
+      "displayName": "Subtitle",
+      "parentStyleId": "default-text",
+      "alignment": "center",
+      "fontSize": 29.333333333333332
+    },
+    {
+      "id": "chapter",
+      "displayName": "Chapter",
+      "parentStyleId": "default-text",
+      "alignment": "center",
+      "fontSize": 32
+    },
+    {
+      "id": "section",
+      "displayName": "Section",
+      "parentStyleId": "default-text",
+      "fontSize": 26.666666666666668
+    },
+    {
+      "id": "header",
+      "displayName": "Header",
+      "parentStyleId": "default-text",
+      "alignment": "center"
+    },
+    {
+      "id": "footer",
+      "displayName": "Footer",
+      "parentStyleId": "default-text",
+      "alignment": "center"
+    },
+    {
+      "id": "lyrics",
+      "displayName": "Lyrics",
+      "parentStyleId": "default-text",
+      "fontSize": 16
+    },
+    {
+      "id": "drop-cap",
+      "displayName": "Drop Cap",
+      "parentStyleId": "default-text",
+      "fontSize": 80,
+      "color": "#FF0000"
+    },
+    {
+      "id": "initial-martyria",
+      "displayName": "Initial Martyria",
+      "parentStyleId": "default-text",
+      "fontSize": 19.333333333333332,
+      "color": "#ED0000"
+    },
+    {
+      "id": "initial-martyria-greek",
+      "displayName": "Initial Martyria (Greek)",
+      "parentStyleId": "initial-martyria",
+      "fontFamily": "GFS Porson"
+    },
+    {
+      "id": "footnote-text",
+      "displayName": "Footnote Text",
+      "parentStyleId": "default-text",
+      "fontSize": 13.333333333333334
+    },
+    {
+      "id": "footnote-body-marker",
+      "displayName": "Footnote Body Marker",
+      "parentStyleId": "footnote-text"
+    },
+    {
+      "id": "footnote-reference",
+      "displayName": "Footnote Reference",
+      "parentStyleId": "default-text",
+      "color": "#ED0000"
+    }
+  ],
+  "initialMartyriaStyles": [
+    {
+      "id": "b29492fe-638e-454e-a7e9-9a1e86740b01",
+      "displayName": "Neume Font",
+      "structure": {
+        "transliterateNoteNames": false,
+        "languageId": "el",
+        "numeralKind": "ordinal",
+        "numeralQualifier": "postnominal",
+        "modeNamingScheme": "authentic-counterpart",
+        "modeIdentificationMethod": "mode-sign"
+      },
+      "paragraphStyleId": "initial-martyria",
+      "greekParagraphStyleId": "initial-martyria-greek",
+      "useOrdinalForms": true,
+      "lettering": "music-font"
+    }
+  ],
+  "defaultInitialMartyriaStyleId": "b29492fe-638e-454e-a7e9-9a1e86740b01",
   "headers": {
     "default": {
       "elements": [
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Arial",
-          "strokeWidth": 0,
           "multipanel": true,
           "height": 21,
-          "useDefaultStyle": true
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -98,17 +207,15 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Arial",
-          "strokeWidth": 0,
           "multipanel": true,
           "height": 21,
-          "useDefaultStyle": true
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -117,17 +224,15 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Arial",
-          "strokeWidth": 0,
           "multipanel": true,
           "height": 21,
-          "useDefaultStyle": true
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -136,17 +241,32 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Arial",
-          "strokeWidth": 0,
           "multipanel": true,
           "height": 21,
-          "useDefaultStyle": true
+          "marginTop": 0,
+          "marginBottom": 0
+        }
+      ]
+    },
+    "chapterOpening": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "",
+          "multipanel": true,
+          "height": 21,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     }
@@ -157,16 +277,16 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "$p",
           "fontSize": 14.666666666666666,
-          "fontFamily": "GFS Didot",
-          "strokeWidth": 0,
           "multipanel": true,
-          "height": 18
+          "height": 20.5,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -175,17 +295,15 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Arial",
-          "strokeWidth": 0,
           "multipanel": true,
           "height": 21,
-          "useDefaultStyle": true
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -194,17 +312,15 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Arial",
-          "strokeWidth": 0,
           "multipanel": true,
           "height": 21,
-          "useDefaultStyle": true
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     },
@@ -213,17 +329,33 @@
         {
           "elementType": "TextBox",
           "alignment": "left",
-          "color": "#000000",
           "content": "",
+          "contentBottom": "",
           "contentLeft": "",
           "contentCenter": "",
           "contentRight": "",
-          "fontSize": 16,
-          "fontFamily": "Arial",
-          "strokeWidth": 0,
           "multipanel": true,
           "height": 21,
-          "useDefaultStyle": true
+          "marginTop": 0,
+          "marginBottom": 0
+        }
+      ]
+    },
+    "chapterOpening": {
+      "elements": [
+        {
+          "elementType": "TextBox",
+          "alignment": "left",
+          "content": "",
+          "contentBottom": "",
+          "contentLeft": "",
+          "contentCenter": "",
+          "contentRight": "$p",
+          "fontSize": 14.666666666666666,
+          "multipanel": true,
+          "height": 20.5,
+          "marginTop": 0,
+          "marginBottom": 0
         }
       ]
     }
@@ -231,16 +363,37 @@
   "staff": {
     "elements": [
       {
+        "id": 1,
         "elementType": "RichTextBox",
         "content": "<p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,50%);\">Τῼ ΣΑΒΒΑΤῼ ΤΟΥ ΛΑΖΑΡΟΥ ΕΣΠΕΡΑΣ</span></p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,50%);\">Ο ΜΕΓΑΣ ΕΣΠΕΡΙΝΟΣ&nbsp;</span></p><p><span style=\"color:hsl(0,100%,50%);\">Ὁ ἱερεύς·</span> Εὐλογητὸς ὁ Θεὸς ἡμῶν, πάντοτε, νῦν καὶ ἀεὶ καὶ εἰς τοὺς αἰῶνας τῶν αἰώνων.&nbsp;</p><p><span style=\"color:hsl(0,100%,50%);\">Ὁ χορός·</span> Ἀμήν.&nbsp;</p><p><span style=\"color:hsl(0,100%,50%);\">Καὶ ἄρχεται ὁ Ἀναγνώστης ἀναγινώσκων τὸν Προοιμιακὸν Ψαλμόν, λέγων οὕτω·</span>&nbsp;</p><p><span style=\"color:hsl(0,100%,50%);\">Δ</span>εῦτε, προσκυνήσωμεν καὶ προσπέσωμεν τῷ Βασιλεῖ ἡμῶν Θεῷ.&nbsp;</p><p><span style=\"color:hsl(0,100%,50%);\">Δ</span>εῦτε, προσκυνήσωμεν καὶ προσπέσωμεν Χριστῷ τῷ Βασιλεῖ ἡμῶν Θεῷ.&nbsp;</p><p><span style=\"color:hsl(0,100%,50%);\">Δ</span>εῦτε, προσκυνήσωμεν καὶ προσπέσωμεν αὐτῷ, Χριστῷ τῷ Βασιλεῖ καὶ Θεῷ ἡμῶν.&nbsp;</p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,50%);\">Ψαλμὸς ργ´ (103).&nbsp;</span></p><p style=\"text-align:justify;\"><span style=\"color:hsl(0,100%,50%);\">Ε</span>ὐλόγει, ἡ ψυχή μου, τὸν Κύριον· Κύριε ὁ Θεός μου, ἐμεγαλύνθης σφόδρα. ἐξομολόγησιν καὶ μεγαλοπρέπειαν ἐνεδύσω ἀναβαλλόμενος φῶς ὡς ἱμάτιον, ἐκτείνων τὸν οὐρανὸν ὡσεὶ δέρριν· ὁ στεγάζων ἐν ὕδασι τὰ ὑπερῷα αὐτοῦ, ὁ τιθεὶς νέφη τὴν ἐπίβασιν αὐτοῦ, ὁ περιπατῶν ἐπὶ πτερύγων ἀνέμων· ὁ ποιῶν τοὺς ἀγγέλους αὐτοῦ πνεύματα καὶ τοὺς λειτουργοὺς αὐτοῦ πυρὸς φλόγα. ὁ θεμελιῶν τὴν γῆν ἐπὶ τὴν ἀσφάλειαν αὐτῆς, οὐ κλιθήσεται εἰς τὸν αἰῶνα τοῦ αἰῶνος. ἄβυσσος ὡς ἱμάτιον τὸ περιβόλαιον αὐτοῦ, ἐπὶ τῶν ὀρέων στήσονται ὕδατα· ἀπὸ ἐπιτιμήσεώς σου φεύξονται, ἀπὸ φωνῆς βροντῆς σου δειλιάσουσιν. ἀναβαίνουσιν ὄρη καὶ καταβαίνουσι πεδία εἰς τὸν τόπον ὃν ἐθεμελίωσας αὐτά· ὅριον ἔθου, ὃ οὐ παρελεύσονται, οὐδὲ ἐπιστρέψουσι καλύψαι τὴν γῆν. ὁ ἐξαποστέλλων πηγὰς ἐν φάραγξιν, ἀνὰ μέσον τῶν ὀρέων διελεύσονται ὕδατα· ποτιοῦσι πάντα τὰ θηρία τοῦ ἀγροῦ, προσδέξονται ὄναγροι εἰς δίψαν αὐτῶν· ἐπ᾿ αὐτὰ τὰ πετεινὰ τοῦ οὐρανοῦ κατασκηνώσει, ἐκ μέσου τῶν πετρῶν δώσουσι φωνήν. ποτίζων ὄρη ἐκ τῶν ὑπερῴων αὐτοῦ, ἀπὸ καρποῦ τῶν ἔργων σου χορτασθήσεται ἡ γῆ. ὁ ἐξανατέλλων χόρτον τοῖς κτήνεσι καὶ χλόην τῇ δουλείᾳ τῶν ἀνθρώπων τοῦ ἐξαγαγεῖν ἄρτον ἐκ τῆς γῆς·<br>καὶ οἶνος εὐφραίνει καρδίαν ἀνθρώπου τοῦ ἱλαρῦναι πρόσωπον ἐν ἐλαίῳ, καὶ ἄρτος καρδίαν ἀνθρώπου στηρίζει. χορτασθήσονται τὰ ξύλα τοῦ πεδίου, αἱ κέδροι τοῦ Λιβάνου, ἃς ἐφύτευσας. ἐκεῖ στρουθία ἐννοσσεύσουσι, τοῦ ἐρωδιοῦ ἡ οἰκία ἡγεῖται αὐτῶν. ὄρη τὰ ὑψηλὰ ταῖς ἐλάφοις, πέτρα καταφυγὴ τοῖς λαγωοῖς. ἐποίησε σελήνην εἰς καιρούς, ὁ ἥλιος ἔγνω τὴν δύσιν αὐτοῦ. ἔθου σκότος, καὶ ἐγένετο νύξ· ἐν αὐτῇ διελεύσονται πάντα τὰ θηρία τοῦ δρυμοῦ. σκύμνοι ὠρυόμενοι τοῦ ἁρπάσαι καὶ ζητῆσαι παρὰ τῷ Θεῷ βρῶσιν αὐτοῖς. ἀνέτειλεν ὁ ἥλιος, καὶ συνήχθησαν καὶ εἰς τὰς μάνδρας αὐτῶν κοιτασθήσονται. ἐξελεύσεται ἄνθρωπος ἐπὶ τὸ ἔργον αὐτοῦ καὶ ἐπὶ τὴν ἐργασίαν αὐτοῦ ἕως ἑσπέρας. ὡς ἐμεγαλύνθη τὰ ἔργα σου, Κύριε· πάντα ἐν σοφίᾳ ἐποίησας, ἐπληρώθη ἡ γῆ τῆς κτίσεώς σου. αὕτη ἡ θάλασσα ἡ μεγάλη καὶ εὐρύχωρος, ἐκεῖ ἑρπετά, ὧν οὐκ ἔστιν ἀριθμός, ζῷα μικρὰ μετὰ μεγάλων·&nbsp;</p>",
-        "height": 876
+        "contentBottom": "",
+        "contentLeft": "",
+        "contentRight": "",
+        "contentCenter": "",
+        "modeChangePhysicalNote": "Pa",
+        "modeChangeScale": "Diatonic",
+        "modeChangeBpm": 120,
+        "height": 880,
+        "marginTop": 0,
+        "marginBottom": 0
       },
       {
+        "id": 2,
         "elementType": "RichTextBox",
         "content": "<p style=\"text-align:justify;\">ἐκεῖ πλοῖα διαπορεύονται, δράκων οὗτος, ὃν ἔπλασας ἐμπαίζειν αὐτῇ. πάντα πρὸς σὲ προσδοκῶσι, δοῦναι τὴν τροφὴν αὐτῶν εἰς εὔκαιρον. δόντος σου αὐτοῖς συλλέξουσιν, ἀνοίξαντός σου τὴν χεῖρα, τὰ σύμπαντα πλησθήσονται χρηστότητος. ἀποστρέψαντος δέ σου τὸ πρόσωπον ταραχθήσονται· ἀντανελεῖς τὸ πνεῦμα αὐτῶν, καὶ ἐκλείψουσι καὶ εἰς τὸν χοῦν αὐτῶν ἐπιστρέψουσιν. ἐξαποστελεῖς τὸ πνεῦμά σου, καὶ κτισθήσονται, καὶ ἀνακαινιεῖς τὸ πρόσωπον τῆς γῆς. ἤτω ἡ δόξα Κυρίου εἰς τοὺς αἰῶνας, εὐφρανθήσεται Κύριος ἐπὶ τοῖς ἔργοις αὐτοῦ· ὁ ἐπιβλέπων ἐπὶ τὴν γῆν καὶ ποιῶν αὐτὴν τρέμειν, ὁ ἁπτόμενος τῶν ὀρέων καὶ καπνίζονται. ᾄσω τῷ Κυρίῳ ἐν τῇ ζωῇ μου, ψαλῶ τῷ Θεῷ μου ἕως ὑπάρχω· ἡδυνθείη αὐτῷ ἡ διαλογή μου, ἐγὼ δὲ εὐφρανθήσομαι ἐπὶ τῷ Κυρίῳ. ἐκλείποιεν ἁμαρτωλοὶ ἀπὸ τῆς γῆς καὶ ἄνομοι, ὥστε μὴ ὑπάρχειν αὐτούς. εὐλόγει, ἡ ψυχή μου, τὸν Κύριον.</p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,50%);\">Καὶ πάλιν.&nbsp;</span></p><p style=\"text-align:justify;\">Ὁ ἥλιος ἔγνω τὴν δύσιν αὐτοῦ· ἔθου σκότος, καὶ ἐγένετο νύξ. Ὡς ἐμεγαλύνθη τὰ ἔργα σου, Κύριε· πάντα ἐν σοφίᾳ ἐποίησας.&nbsp;</p><p style=\"text-align:center;\">Δόξα. Καὶ νῦν.&nbsp;</p><p style=\"text-align:justify;\">Ἀλληλούϊα, Ἀλληλούϊα, Ἀλληλούϊα. Δόξα σοι ὁ Θεός <span style=\"color:hsl(0,100%,50%);\">(ἐκ γ´).</span> Ἡ ἐλπὶς ἡμῶν, Κύριε, δόξα σοι.&nbsp;</p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,50%);\">Εἶτα, Συναπτὴ μεγάλη ὑπὸ τοῦ Διακόνου,</span></p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,50%);\">καὶ ὁ ἱερεὺς τὴν ἐκφώνησιν·</span></p><p style=\"text-align:center;\">Ὅτι πρέπει σοι πᾶσα δόξα…</p><p style=\"text-align:center;\"><span style=\"color:hsl(0,100%,50%);\">* * *&nbsp;</span></p><p><span style=\"color:hsl(0,100%,50%);\">Μετὰ τὸν Προοιμιακὸν Ψαλμόν, καὶ τὸ πρῶτον Κάθισμα τοῦ Ψαλτηρίου, εἰς τό, </span><span style=\"color:hsl(0,0%,0%);\">Κύριε, ἐκέκραξα,</span><span style=\"color:hsl(0,100%,50%);\"> ἱστῶμεν Στίχους στ´, καὶ ψάλλομεν Στιχηρὰ Ἰδιόμελα τοῦ Τριῳδίου.</span></p>",
-        "height": 548
+        "contentBottom": "",
+        "contentLeft": "",
+        "contentRight": "",
+        "contentCenter": "",
+        "modeChangePhysicalNote": "Pa",
+        "modeChangeScale": "Diatonic",
+        "modeChangeBpm": 120,
+        "height": 550,
+        "marginTop": 0,
+        "marginBottom": 0
       },
       {
+        "id": 3,
         "elementType": "ModeKey",
         "templateId": 600,
         "alignment": "center",
@@ -250,30 +403,23 @@
         "martyria": "ModeSign.SoftChromatic6",
         "note": "ModeSign.Pa",
         "fthoraAboveNote": "HardChromaticPa_Top",
-        "color": "#ED0000",
-        "fontSize": 26.666666666666668,
-        "strokeWidth": 0,
-        "height": 49,
-        "heightAdjustment": 0,
+        "height": 39.81443010965983,
+        "marginTop": 0,
+        "marginBottom": 0,
         "bpm": 120,
-        "useDefaultStyle": true,
         "ambitusLowNote": "Pa",
         "ambitusLowRootSign": "Alpha",
         "ambitusHighNote": "Pa",
         "ambitusHighRootSign": "Alpha"
       },
       {
+        "id": 4,
         "elementType": "DropCap",
         "content": "Ν",
-        "fontFamily": "GFS Didot",
-        "fontSize": 80,
-        "fontWeight": "400",
-        "fontStyle": "normal",
-        "strokeWidth": 0,
-        "color": "#000000",
-        "useDefaultStyle": true
+        "lineSpan": 1
       },
       {
+        "id": 5,
         "elementType": "Note",
         "quantitativeNeume": "Ison",
         "timeNeume": "Dipli",
@@ -283,17 +429,20 @@
         "isMelismaStart": true
       },
       {
+        "id": 6,
         "elementType": "Note",
         "quantitativeNeume": "Kentemata",
         "isMelisma": true
       },
       {
+        "id": 7,
         "elementType": "Note",
         "quantitativeNeume": "OligonPlusKentemata",
         "vocalExpressionNeume": "Psifiston",
         "lyrics": "Κυ"
       },
       {
+        "id": 8,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "lyrics": "ρι",
@@ -301,11 +450,13 @@
         "isMelismaStart": true
       },
       {
+        "id": 9,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "isMelisma": true
       },
       {
+        "id": 10,
         "elementType": "Note",
         "quantitativeNeume": "Apostrophos",
         "lyrics": "ε"

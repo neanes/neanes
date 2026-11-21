@@ -1,18 +1,33 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  getModeKeyModelAttributes,
+  replaceModeKeysInHtml,
+  serializeModeKeyAttributes,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import {
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
-import { Fthora, Ison, QuantitativeNeume, TempoSign } from '@/models/Neumes';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
+import { modeKeyTemplates } from '@/models/ModeKeys';
+import {
+  Fthora,
+  Ison,
+  ModeSign,
+  QuantitativeNeume,
+  TempoSign,
+} from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   ParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { setRichTextLanguage } from '@/utils/richTextLanguage';
 import { Unit } from '@/utils/Unit';
@@ -34,6 +49,13 @@ function createComputedTextBox(overrides: Partial<TextBoxElement> = {}) {
   element.computedLineHeight = null;
 
   return Object.assign(element, overrides);
+}
+
+function embeddedModeKeyHtml(element = new ModeKeyElement(), content = '') {
+  const payload = serializeModeKeyAttributes(
+    getModeKeyModelAttributes(element),
+  );
+  return `<span class="neanes-ck-mode-key" data-neanes-mode-key="${payload}">${content}</span>`;
 }
 
 describe('ByzHtmlExporter', () => {
@@ -115,6 +137,115 @@ describe('ByzHtmlExporter', () => {
     expect(exporter.exportRichTextBox(element, new PageSetup(), 0)).toBe(
       '<div class="byz---rich-text-box" lang="ar" dir="rtl"><p><span lang="ar" dir="rtl">Hello</span></p></div\n>',
     );
+  });
+
+  it('replaces an embedded mode key containing the CKEditor filler', () => {
+    const modeKey = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
+    const html = `<p>Before ${embeddedModeKeyHtml(modeKey, '&nbsp;')} after</p>`;
+
+    const replaced = replaceModeKeysInHtml(
+      html,
+      ({ attributes }) =>
+        `<converted data-mode="${attributes.mode}"></converted>`,
+    );
+
+    expect(replaced).toBe(
+      `<p>Before <converted data-mode="${modeKey.mode}"></converted> after</p>`,
+    );
+  });
+
+  it('exports both active fields of an inline rich text box', () => {
+    const exporter = new ByzHtmlExporter();
+    const element = new RichTextBoxElement();
+
+    element.inline = true;
+    element.content = '<p>Top content</p>';
+    element.contentBottom = `<p>Bottom content ${embeddedModeKeyHtml()}</p>`;
+
+    const html = exporter.exportRichTextBox(element, new PageSetup(), 0);
+
+    expect(html).toContain('byz--text-box-inline-top');
+    expect(html).toContain('<p>Top content</p>');
+    expect(html).toContain('byz--text-box-inline-bottom');
+    expect(html).toContain('<p>Bottom content');
+    expect(html).toContain('<span class="byz--mode-key" lang="el" dir="ltr"');
+    expect(html).toContain('<x-mode-word-echos');
+    expect(html).not.toContain('data-neanes-mode-key=');
+  });
+
+  it('exports all active fields of a multipanel rich text box', () => {
+    const exporter = new ByzHtmlExporter();
+    const element = new RichTextBoxElement();
+
+    element.multipanel = true;
+    element.contentLeft = `<p>Left content ${embeddedModeKeyHtml()}</p>`;
+    element.contentCenter = `<p>Center content ${embeddedModeKeyHtml()}</p>`;
+    element.contentRight = `<p>Right content ${embeddedModeKeyHtml()}</p>`;
+
+    const html = exporter.exportRichTextBox(element, new PageSetup(), 0);
+
+    expect(html).toContain('byz--text-box-multipanel');
+    expect(html).toContain(
+      'class="byz--text-box-multipanel-left"><p>Left content',
+    );
+    expect(html).toContain(
+      'class="byz--text-box-multipanel-center"><p>Center content',
+    );
+    expect(html).toContain(
+      'class="byz--text-box-multipanel-right"><p>Right content',
+    );
+    expect(html.match(/<x-mode-word-echos/gu)).toHaveLength(3);
+    expect(html).not.toContain('data-neanes-mode-key=');
+  });
+
+  it('exports standalone and embedded mode keys with the original Greek BYZHTML tags', () => {
+    const exporter = new ByzHtmlExporter();
+    const score = new Score();
+    const style = {
+      ...styleFromWording('englishModeNames'),
+      id: 'custom-english',
+    };
+    score.initialMartyriaStyles = [style];
+    score.defaultInitialMartyriaStyleId = style.id;
+
+    const modeKey = ModeKeyElement.createFromTemplate(modeKeyTemplates[0]);
+    modeKey.initialMartyriaStyleId = style.id;
+    modeKey.fthoraAboveNote = Fthora.DiatonicPa_Top;
+    modeKey.quantitativeNeumeAboveNote = ModeSign.OligonPlusKentima;
+    modeKey.note2 = ModeSign.Thi;
+    modeKey.fthoraAboveNote2 = Fthora.SoftChromaticThi_Top;
+    modeKey.quantitativeNeumeRight = QuantitativeNeume.OligonPlusKentimaAbove;
+    modeKey.fthoraAboveQuantitativeNeumeRight = Fthora.Zygos_Top;
+
+    const richText = new RichTextBoxElement();
+    richText.content = `<p>Before ${embeddedModeKeyHtml(modeKey, '&nbsp;')} after</p>`;
+    score.staff.elements = [modeKey, richText];
+
+    const html = exporter.exportElements(
+      score.staff.elements,
+      score.pageSetup,
+      score.paragraphStyles,
+      0,
+    );
+
+    expect(html).toContain('<div class="byz--mode-key" lang="el" dir="ltr"');
+    expect(html).toContain(
+      'Before <span class="byz--mode-key" lang="el" dir="ltr"',
+    );
+    const tags = [
+      '<x-mode-word-echos',
+      '<x-mode-first',
+      '<x-mode-pa',
+      '<x-f-d-pa',
+      '<x-mode-oligon-kentima-above',
+      '<x-mode-di',
+      '<x-f-sc-di',
+      '<x-o3',
+      '<x-f-zygos',
+    ];
+    expect(html.match(/<x-[a-z0-9-]+/gu)).toEqual([...tags, ...tags]);
+    expect(html).not.toContain('byz--initial-martyria-');
+    expect(html).not.toContain('data-neanes-mode-key=');
   });
 
   it('exports paragraph-style text boxes with inline underline text decoration', () => {

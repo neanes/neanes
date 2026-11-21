@@ -7,6 +7,7 @@ import {
   PhX,
   PhXCircle,
 } from '@phosphor-icons/vue';
+import type { Editor } from 'ckeditor5';
 import { getFontEmbedCSS, toPng } from 'html-to-image';
 import i18next from 'i18next';
 import { useTranslation } from 'i18next-vue';
@@ -20,6 +21,7 @@ import {
   provide,
   reactive,
   ref,
+  shallowRef,
   type StyleValue,
   toRaw,
   useTemplateRef,
@@ -33,6 +35,8 @@ import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasu
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
 import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
+import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
+import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
 import DeveloperPane from '@/components/DeveloperPane.vue';
 import DocumentPropertiesDialog from '@/components/DocumentPropertiesDialog.vue';
@@ -48,6 +52,7 @@ import ExportDialog from '@/components/ExportDialog.vue';
 import FileMenuBar from '@/components/FileMenuBar.vue';
 import FootnoteContextMenu from '@/components/FootnoteContextMenu.vue';
 import FootnotePropertiesDialog from '@/components/FootnotePropertiesDialog.vue';
+import InitialMartyriaStylesDialog from '@/components/InitialMartyriaStylesDialog.vue';
 import LyricsPane from '@/components/LyricsPane.vue';
 import McpSetupDialog from '@/components/McpSetupDialog.vue';
 import ModeKeyDialog from '@/components/ModeKeyDialog.vue';
@@ -153,6 +158,7 @@ import {
 } from '@/models/Element';
 import { EntryMode } from '@/models/EntryMode';
 import type { Footnote } from '@/models/Footnote';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type {
   ElementOverlayBox,
   ElementOverlayDiagnostics,
@@ -194,10 +200,10 @@ import type {
 } from '@/models/ParagraphStyle';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
-  createDefaultParagraphStyles,
   getTextBoxParagraphStyleFallbackId,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import type { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import type { DocumentProperties } from '@/models/Score';
 import { Score } from '@/models/Score';
 import type { ScoreElementSelectionRange } from '@/models/ScoreElementSelectionRange';
@@ -226,6 +232,10 @@ import {
   type DocumentSaveResult,
   saveDocument,
 } from '@/services/documentPersistence';
+import {
+  type InitialMartyriaStyleUpdate,
+  replaceInitialMartyriaStyles,
+} from '@/services/documents/initialMartyriaStyles';
 import {
   createMartyriaUpdateCommand,
   createNoteUpdateCommand,
@@ -267,16 +277,23 @@ import { assertVisualExportFits } from '@/services/rendering/visualExportValidat
 import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
 import { TextMeasurementService } from '@/services/TextMeasurementService';
+import { collectClipboardInitialMartyriaStylesFromElements } from '@/utils/clipboardInitialMartyriaStyles';
 import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesForPassageAndFootnotes,
   collectClipboardParagraphStylesFromElements,
   collectClipboardParagraphStylesFromStyleIds,
   resolveClipboardParagraphStyles,
-  rewriteClipboardElementParagraphStyleIds,
   rewriteClipboardNoteFormatParagraphStyleId,
   rewriteClipboardTextBoxFormatParagraphStyleId,
 } from '@/utils/clipboardParagraphStyles';
+import {
+  getScoreStyleAdditions,
+  importClipboardStyles,
+  type ImportedClipboardStyles,
+  rewriteClipboardElementStyleReferences,
+  type ScoreStyles,
+} from '@/utils/clipboardStyles';
 import { GORTHMIKON, PELASTIKON, TATWEEL } from '@/utils/constants';
 import {
   isDropCapElement,
@@ -292,6 +309,10 @@ import { resolveFontCss } from '@/utils/fontStyle';
 import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { isElectron } from '@/utils/isElectron';
+import {
+  getModeKeyStyleReferences,
+  getScoreModeKeyHosts,
+} from '@/utils/modeKeyStyleReferences';
 import { resolvePageMargins } from '@/utils/PageMargins';
 import {
   getDisplayedPageNumber,
@@ -520,10 +541,23 @@ const scoreMenuPointerDownInside = ref(false);
 const pages = ref<Page[]>([]);
 const currentPageNumber = ref(0);
 const modeKeyDialogIsOpen = ref(false);
+type ModeKeyDialogTarget =
+  | { kind: 'standalone'; element: ModeKeyElement }
+  | {
+      kind: 'rich-text-insert' | 'rich-text-edit';
+      editor: Editor;
+      element: ModeKeyElement;
+    };
+const modeKeyDialogTarget = shallowRef<ModeKeyDialogTarget | null>(null);
+const modeKeyDialogElement = computed(
+  () => modeKeyDialogTarget.value?.element ?? null,
+);
 const syllablePositioningDialogIsOpen = ref(false);
 const playbackSettingsDialogIsOpen = ref(false);
 const pageSetupDialogIsOpen = ref(false);
 const paragraphStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogIsOpen = ref(false);
+const initialMartyriaStylesDialogStyleId = ref<string | null>(null);
 const paragraphStylesDialogSelectedStyleId = ref<string>(
   BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
 );
@@ -539,6 +573,7 @@ interface ClipboardState {
   elements: ScoreElement[];
   paragraphStyleIds: string[];
   paragraphStyles: ParagraphStyle[];
+  initialMartyriaStyles: InitialMartyriaStyle[];
 }
 
 interface ClipboardFormatState<T> {
@@ -552,6 +587,7 @@ const clipboard = ref<ClipboardState>({
   elements: [],
   paragraphStyleIds: [],
   paragraphStyles: [],
+  initialMartyriaStyles: [],
 });
 const formatType = ref<ElementType | null>(null);
 const textBoxFormat = ref<ClipboardFormatState<TextBoxElement>>({
@@ -1499,6 +1535,10 @@ const activeDialog = computed(
       { name: 'page_setup', open: pageSetupDialogIsOpen.value },
       { name: 'paragraph_styles', open: paragraphStylesDialogIsOpen.value },
       {
+        name: 'initial_martyria_styles',
+        open: initialMartyriaStylesDialogIsOpen.value,
+      },
+      {
         name: 'document_properties',
         open: documentPropertiesDialogIsOpen.value,
       },
@@ -1841,6 +1881,10 @@ onMounted(() => {
     onFileMenuParagraphStyles,
   );
   EventBus.$on(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
+  );
+  EventBus.$on(
     IpcMainChannels.FileMenuDocumentProperties,
     onFileMenuDocumentProperties,
   );
@@ -1960,6 +2004,10 @@ onBeforeUnmount(() => {
   EventBus.$off(
     IpcMainChannels.FileMenuParagraphStyles,
     onFileMenuParagraphStyles,
+  );
+  EventBus.$off(
+    IpcMainChannels.FileMenuInitialMartyriaStyles,
+    onFileMenuInitialMartyriaStyles,
   );
   EventBus.$off(
     IpcMainChannels.FileMenuDocumentProperties,
@@ -2128,6 +2176,7 @@ const pageHandlers: ScorePageHandlers = {
   setSelectionRange,
   openSyllablePositioningDialog,
   openModeKeyDialog,
+  editModeKey: openRichTextModeKeyEditDialog,
   focusLyrics: focusClickedLyric,
   updateLyrics,
   updateDropCapContent,
@@ -2855,8 +2904,52 @@ function isAudioSelected(element: ScoreElement) {
 }
 
 function openModeKeyDialog() {
+  if (selectedElement.value?.elementType !== ElementType.ModeKey) {
+    return;
+  }
+
+  modeKeyDialogTarget.value = {
+    kind: 'standalone',
+    element: selectedElement.value as ModeKeyElement,
+  };
   modeKeyDialogIsOpen.value = true;
 }
+
+function openRichTextModeKeyInsertDialog(editor: Editor, fontSize: number) {
+  const element = createDefaultModeKey(score.value.pageSetup);
+  element.fontSize = fontSize;
+  modeKeyDialogTarget.value = {
+    kind: 'rich-text-insert',
+    editor,
+    element,
+  };
+  modeKeyDialogIsOpen.value = true;
+}
+
+function openRichTextModeKeyEditDialog(
+  editor: Editor,
+  element: ModeKeyElement,
+) {
+  modeKeyDialogTarget.value = {
+    kind: 'rich-text-edit',
+    editor,
+    element,
+  };
+  modeKeyDialogIsOpen.value = true;
+}
+
+watch(modeKeyDialogIsOpen, (isOpen) => {
+  if (isOpen) {
+    return;
+  }
+
+  const target = modeKeyDialogTarget.value;
+  modeKeyDialogTarget.value = null;
+
+  if (target?.kind !== 'standalone' && target != null) {
+    nextTick(() => target.editor.editing.view.focus());
+  }
+});
 
 function openSyllablePositioningDialog() {
   syllablePositioningDialogIsOpen.value = true;
@@ -3293,12 +3386,14 @@ function addNeumeCombination(combo: NeumeCombination) {
     elements: clipboard.value.elements.slice(),
     paragraphStyleIds: clipboard.value.paragraphStyleIds.slice(),
     paragraphStyles: clipboard.value.paragraphStyles.slice(),
+    initialMartyriaStyles: clipboard.value.initialMartyriaStyles.slice(),
   };
   clipboard.value = {
     footnotes: [],
     elements: combo.elements,
     paragraphStyleIds: [],
     paragraphStyles: [],
+    initialMartyriaStyles: [],
   };
   onPasteScoreElements(false);
 
@@ -4903,14 +4998,24 @@ function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
     ...elementsToCopy,
     ...footnotes.flatMap((body) => body.staff.elements),
   ];
+  const initialMartyriaStyles =
+    collectClipboardInitialMartyriaStylesFromElements(
+      content,
+      score.value.initialMartyriaStyles,
+    );
   return {
     elements,
     footnotes,
-    paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(content),
+    paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(
+      content,
+      initialMartyriaStyles,
+    ),
     paragraphStyles: collectClipboardParagraphStylesFromElements(
       content,
+      initialMartyriaStyles,
       score.value.paragraphStyles,
     ),
+    initialMartyriaStyles,
   };
 }
 
@@ -4991,37 +5096,19 @@ function onCopyScoreElements() {
   }
 }
 
-function cloneScoreElementForPaste(
-  element: ScoreElement,
-  includeLyrics: boolean,
-  styleIdRemap: Map<string, string>,
-) {
-  const clone = element.clone({ includeLyrics });
-
-  rewriteClipboardElementParagraphStyleIds(
-    clone,
-    score.value.paragraphStyles,
-    styleIdRemap,
-  );
-
-  return clone;
-}
-
 function cloneClipboardForPaste(
   includeLyrics: boolean,
-  styleIdRemap: Map<string, string>,
+  importedStyles: ImportedClipboardStyles,
 ) {
-  const elements = clipboard.value.elements.map((element) =>
-    cloneScoreElementForPaste(element, includeLyrics, styleIdRemap),
-  );
+  const elements = clipboard.value.elements.map((element) => {
+    const clone = element.clone({ includeLyrics });
+    rewriteClipboardElementStyleReferences(clone, importedStyles);
+    return clone;
+  });
   const footnotes = prepareFootnotePaste(elements, clipboard.value.footnotes);
   for (const footnote of footnotes) {
     footnote.staff.elements.forEach((element) =>
-      rewriteClipboardElementParagraphStyleIds(
-        element,
-        score.value.paragraphStyles,
-        styleIdRemap,
-      ),
+      rewriteClipboardElementStyleReferences(element, importedStyles),
     );
   }
   return { elements, footnotes };
@@ -5033,7 +5120,37 @@ function collectClipboardParagraphStylesForPaste(includeLyrics: boolean) {
     clipboard.value.footnotes.flatMap((body) => body.staff.elements),
     includeLyrics,
     clipboard.value.paragraphStyles,
+    clipboard.value.initialMartyriaStyles,
   );
+}
+
+// Resolves every style the clipboard carries against the score, and clones
+// the clipboard content with its references rewritten to match.
+function resolveClipboardStylesForPaste(includeLyrics: boolean) {
+  const importedStyles = importClipboardStyles(
+    {
+      paragraphStyles: collectClipboardParagraphStylesForPaste(includeLyrics),
+      paragraphStyleIds: clipboard.value.paragraphStyleIds,
+      initialMartyriaStyles: clipboard.value.initialMartyriaStyles,
+    },
+    score.value,
+  );
+
+  return {
+    importedStylesCommand: createImportedStylesCommand(importedStyles.imported),
+    pastedElements: cloneClipboardForPaste(includeLyrics, importedStyles),
+  };
+}
+
+function createImportedStylesCommand(imported: ScoreStyles): Command | null {
+  const newValues = getScoreStyleAdditions(score.value, imported);
+
+  return newValues == null
+    ? null
+    : scoreCommandFactory.create('update-properties', {
+        target: score.value,
+        newValues,
+      });
 }
 
 function footnotePasteCommands(footnotes: Footnote[]): Command[] {
@@ -5077,32 +5194,14 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
     ? selectedElementIndex.value
     : selectedElementIndex.value + 1;
 
-  const clipboardParagraphStyles =
-    collectClipboardParagraphStylesForPaste(includeLyrics);
-  const { importedParagraphStyles, styleIdRemap } =
-    resolveClipboardParagraphStyles(
-      clipboardParagraphStyles,
-      score.value.paragraphStyles,
-      clipboard.value.paragraphStyleIds,
-    );
-  const { elements: newElements, footnotes } = cloneClipboardForPaste(
-    includeLyrics,
-    styleIdRemap,
-  );
+  const {
+    importedStylesCommand,
+    pastedElements: { elements: newElements, footnotes },
+  } = resolveClipboardStylesForPaste(includeLyrics);
   const commands: Command[] = footnotePasteCommands(footnotes);
 
-  if (importedParagraphStyles.length > 0) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: {
-          paragraphStyles: [
-            ...score.value.paragraphStyles,
-            ...importedParagraphStyles,
-          ],
-        },
-      }),
-    );
+  if (importedStylesCommand != null) {
+    commands.push(importedStylesCommand);
   }
 
   commands.push(
@@ -5129,32 +5228,14 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   }
 
   const commands: Command[] = [];
-  const clipboardParagraphStyles =
-    collectClipboardParagraphStylesForPaste(includeLyrics);
-  const { importedParagraphStyles, styleIdRemap } =
-    resolveClipboardParagraphStyles(
-      clipboardParagraphStyles,
-      score.value.paragraphStyles,
-      clipboard.value.paragraphStyleIds,
-    );
-  const { elements: pastedElements, footnotes } = cloneClipboardForPaste(
-    includeLyrics,
-    styleIdRemap,
-  );
+  const {
+    importedStylesCommand,
+    pastedElements: { elements: pastedElements, footnotes },
+  } = resolveClipboardStylesForPaste(includeLyrics);
   commands.push(...footnotePasteCommands(footnotes));
 
-  if (importedParagraphStyles.length > 0) {
-    commands.push(
-      scoreCommandFactory.create('update-properties', {
-        target: score.value,
-        newValues: {
-          paragraphStyles: [
-            ...score.value.paragraphStyles,
-            ...importedParagraphStyles,
-          ],
-        },
-      }),
-    );
+  if (importedStylesCommand != null) {
+    commands.push(importedStylesCommand);
   }
 
   let currentIndex = selectedElementIndex.value;
@@ -5915,6 +5996,7 @@ async function load() {
                 pages.value,
                 workspace.score.pageSetup,
                 workspace.score.paragraphStyles,
+                workspace.score,
                 options,
               ),
               null,
@@ -6990,8 +7072,16 @@ function updateRichTextBox(
   commitRichTextFootnotes(element, newValues);
 
   const modeChangeProp: keyof RichTextBoxElement = 'modeChange';
+  const richTextContentProps = new Set<keyof RichTextBoxElement>(
+    RICH_TEXT_BOX_CONTENT_KEYS,
+  );
 
-  if (modeChangeProp in newValues) {
+  if (
+    modeChangeProp in newValues ||
+    Object.keys(newValues).some((key) =>
+      richTextContentProps.has(key as keyof RichTextBoxElement),
+    )
+  ) {
     refreshStaffLyrics();
   }
 
@@ -7146,6 +7236,10 @@ function updateModeKeyFromTemplate(
   element: ModeKeyElement,
   template: ModeKeyElement,
 ) {
+  updateModeKey(element, getModeKeyTemplateUpdates(template));
+}
+
+function getModeKeyTemplateUpdates(template: ModeKeyElement) {
   const {
     templateId,
     mode,
@@ -7180,9 +7274,30 @@ function updateModeKeyFromTemplate(
     quantitativeNeumeRight,
   };
 
-  updateModeKey(element, newValues);
+  return newValues;
+}
 
-  save();
+function applyModeKeyDialogTemplate(template: ModeKeyElement) {
+  const target = modeKeyDialogTarget.value;
+
+  if (target == null) {
+    return;
+  }
+
+  if (target.kind === 'standalone') {
+    updateModeKeyFromTemplate(target.element, template);
+    return;
+  }
+
+  Object.assign(target.element, getModeKeyTemplateUpdates(template));
+  target.editor.execute(
+    target.kind === 'rich-text-insert'
+      ? INSERT_MODE_KEY_COMMAND
+      : UPDATE_MODE_KEY_ATTRIBUTES_COMMAND,
+    target.kind === 'rich-text-insert'
+      ? { element: target.element }
+      : target.element,
+  );
 }
 
 function updateMartyria(
@@ -7584,6 +7699,40 @@ function updatePageSetup(pageSetup: PageSetup) {
   commandService.value.executeAsBatch(updateCommands);
 
   save();
+}
+
+/*
+ * Every mode key of the score, in the staves and embedded in rich text, by
+ * the style it names: null when it follows the score's default style.
+ */
+function getInitialMartyriaStyleUsage() {
+  const counts: Record<string, number> = {};
+  let defaultCount = 0;
+  const count = (styleId: string | null) => {
+    if (styleId == null) {
+      defaultCount++;
+    } else {
+      counts[styleId] = (counts[styleId] ?? 0) + 1;
+    }
+  };
+
+  for (const element of getScoreModeKeyHosts(score.value)) {
+    getModeKeyStyleReferences(element).forEach(count);
+  }
+
+  return { counts, defaultCount };
+}
+
+const initialMartyriaStyleUsage = computed(() =>
+  initialMartyriaStylesDialogIsOpen.value
+    ? getInitialMartyriaStyleUsage()
+    : { counts: {}, defaultCount: 0 },
+);
+
+function confirmInitialMartyriaStyles(payload: InitialMartyriaStyleUpdate) {
+  if (replaceInitialMartyriaStyles(selectedWorkspace.value, payload)) {
+    save();
+  }
 }
 
 function updateDocumentProperties(documentProperties: DocumentProperties) {
@@ -8373,6 +8522,16 @@ function onFileMenuParagraphStyles() {
   openParagraphStylesDialog();
 }
 
+function onFileMenuInitialMartyriaStyles() {
+  openInitialMartyriaStyleDialog(null);
+}
+
+function openInitialMartyriaStyleDialog(element: ModeKeyElement | null) {
+  initialMartyriaStylesDialogStyleId.value =
+    element?.initialMartyriaStyleId ?? null;
+  initialMartyriaStylesDialogIsOpen.value = true;
+}
+
 function onFileMenuDocumentProperties() {
   documentPropertiesDialogIsOpen.value = true;
 }
@@ -8901,6 +9060,7 @@ async function exportAsLatex(args: ExportAsLatexSettings) {
           pages.value,
           score.value.pageSetup,
           score.value.paragraphStyles,
+          score.value,
           args.options,
         ),
         null,
@@ -9648,33 +9808,34 @@ async function onSearchText(args: { query: string; reverse?: boolean }) {
 }
 
 function createDefaultModeKey(pageSetup: PageSetup) {
-  const defaultTemplate = ModeKeyElement.createFromTemplate(
+  return ModeKeyElement.createFromTemplate(
     modeKeyTemplates[0],
-    score.value.pageSetup.useOptionalDiatonicFthoras,
+    pageSetup.useOptionalDiatonicFthoras,
   );
-
-  defaultTemplate.color = pageSetup.modeKeyDefaultColor;
-  defaultTemplate.fontSize = pageSetup.modeKeyDefaultFontSize;
-  defaultTemplate.strokeWidth = pageSetup.modeKeyDefaultStrokeWidth;
-
-  return defaultTemplate;
 }
 
 function createDefaultScore() {
   const score = new Score();
+  let savedPageSetupDefault: PageSetup_v1 | null = null;
 
   try {
     const pageSetupDefault = localStorage.getItem('pageSetupDefault');
 
     if (pageSetupDefault) {
-      SaveService.LoadPageSetup_v1(
-        score.pageSetup,
-        JSON.parse(pageSetupDefault),
-      );
+      savedPageSetupDefault = JSON.parse(pageSetupDefault) as PageSetup_v1;
+      SaveService.LoadPageSetup_v1(score.pageSetup, savedPageSetupDefault);
     }
   } catch (error) {
     console.error(error);
   }
+
+  // Saved paragraph style preferences take precedence over typography carried
+  // over from page setup defaults saved by earlier versions.
+  const defaultParagraphStyles =
+    SaveService.CreateDefaultParagraphStylesForPageSetupDefault(
+      savedPageSetupDefault,
+    );
+  score.paragraphStyles = defaultParagraphStyles;
 
   try {
     const paragraphStylesDefault = localStorage.getItem(
@@ -9684,7 +9845,7 @@ function createDefaultScore() {
     if (paragraphStylesDefault) {
       score.paragraphStyles = SaveService.LoadParagraphStyles_v1(
         JSON.parse(paragraphStylesDefault),
-        createDefaultParagraphStyles(),
+        defaultParagraphStyles,
       );
     }
   } catch (error) {
@@ -10213,19 +10374,6 @@ const canSaveContextMenuSelectionAsCombo = computed(
   () => getContextMenuSelectedNoteElements().length >= 2,
 );
 
-function setContextMenuUseDefaultStyle(
-  element: ModeKeyElement,
-  value: boolean,
-) {
-  const wasUsingDefaultStyle = element.useDefaultStyle;
-
-  updateModeKey(element, { useDefaultStyle: value });
-
-  if (wasUsingDefaultStyle && !value) {
-    setPaneVisibility('properties', true);
-  }
-}
-
 function openContextMenuPositioning(element: NoteElement) {
   // Make sure the dialog targets the right-clicked note (it reads the
   // selected element), then open it as the Properties pane button does.
@@ -10368,6 +10516,10 @@ function renderTabLabel(tab: Tab) {
             :open-sections="propertiesPaneOpenSections"
             :page-setup="score.pageSetup"
             :paragraph-styles="score.paragraphStyles"
+            :initial-martyria-styles="score.initialMartyriaStyles"
+            :default-initial-martyria-style-id="
+              score.defaultInitialMartyriaStyleId
+            "
             @update:annotation="updateAnnotation"
             @update:text-box="updateTextBox"
             @update:rich-text-box="updateRichTextBox"
@@ -10379,6 +10531,8 @@ function renderTabLabel(tab: Tab) {
             @update:martyria="updateMartyria"
             @update:open-sections="propertiesPaneOpenSections = $event"
             @update:tempo="updateTempo"
+            @open-initial-martyria-style-dialog="openInitialMartyriaStyleDialog"
+            @open-rich-text-mode-key-dialog="openRichTextModeKeyEditDialog"
             @open-paragraph-styles-dialog="openParagraphStylesDialog"
           />
         </template>
@@ -10623,7 +10777,6 @@ function renderTabLabel(tab: Tab) {
                 @paste="onPasteScoreElements"
                 @select-all="onSelectAllScoreElements"
                 @update-martyria="updateMartyria"
-                @default-style="setContextMenuUseDefaultStyle"
                 @update-mode-key="updateModeKey"
                 @update-image-box="updateImageBox"
                 @save-combo="saveContextMenuSelectionAsCombo"
@@ -10723,6 +10876,12 @@ function renderTabLabel(tab: Tab) {
       <template v-else-if="inspectorContext.kind === 'mode-key'">
         <ToolbarModeKey
           :element="inspectorContext.element"
+          :page-setup="score.pageSetup"
+          :paragraph-styles="score.paragraphStyles"
+          :initial-martyria-styles="score.initialMartyriaStyles"
+          :default-initial-martyria-style-id="
+            score.defaultInitialMartyriaStyleId
+          "
           @update="updateModeKey(inspectorContext.element, $event)"
           @update:tempo="setModeKeyTempo(inspectorContext.element, $event)"
           @open-mode-key-dialog="openModeKeyDialog"
@@ -10758,6 +10917,7 @@ function renderTabLabel(tab: Tab) {
               ? resolvedDefaultLyricsStyle
               : resolvedDefaultParagraphStyle
           "
+          @open-mode-key-dialog="openRichTextModeKeyInsertDialog"
         />
       </template>
       <template v-else-if="inspectorContext.kind === 'annotation'">
@@ -10849,13 +11009,14 @@ function renderTabLabel(tab: Tab) {
       @update="updateFootnoteMarker"
     />
     <ModeKeyDialog
-      v-if="modeKeyDialogIsOpen"
+      v-if="modeKeyDialogIsOpen && modeKeyDialogElement != null"
       v-model:open="modeKeyDialogIsOpen"
-      :element="selectedElement as ModeKeyElement"
+      :element="modeKeyDialogElement"
       :page-setup="score.pageSetup"
-      @update="
-        updateModeKeyFromTemplate(selectedElement as ModeKeyElement, $event)
-      "
+      :paragraph-styles="score.paragraphStyles"
+      :initial-martyria-styles="score.initialMartyriaStyles"
+      :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
+      @update="applyModeKeyDialogTemplate"
       @update:use-optional-diatonic-fthoras="
         updatePageSetupUseOptionalDiatonicFthoras($event)
       "
@@ -10913,6 +11074,18 @@ function renderTabLabel(tab: Tab) {
       :fonts="fonts"
       @update="updateParagraphStyles($event)"
     />
+    <InitialMartyriaStylesDialog
+      v-if="initialMartyriaStylesDialogIsOpen"
+      v-model:open="initialMartyriaStylesDialogIsOpen"
+      :styles="score.initialMartyriaStyles"
+      :default-style-id="score.defaultInitialMartyriaStyleId"
+      :paragraph-styles="score.paragraphStyles"
+      :page-setup="score.pageSetup"
+      :usage-counts="initialMartyriaStyleUsage.counts"
+      :default-usage-count="initialMartyriaStyleUsage.defaultCount"
+      :initial-style-id="initialMartyriaStylesDialogStyleId"
+      @confirm="confirmInitialMartyriaStyles($event)"
+    />
     <DocumentPropertiesDialog
       v-if="documentPropertiesDialogIsOpen"
       v-model:open="documentPropertiesDialogIsOpen"
@@ -10942,6 +11115,8 @@ function renderTabLabel(tab: Tab) {
         :page-setup="score.pageSetup"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
+        :initial-martyria-styles="score.initialMartyriaStyles"
+        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
         :editor-language="ckeditorLanguage"
         :recalc="true"
         @update:height="

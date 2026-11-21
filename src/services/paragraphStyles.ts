@@ -1,5 +1,6 @@
 import type { ScoreElement } from '@/models/Element';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { BUILT_IN_PARAGRAPH_STYLE_IDS } from '@/models/ParagraphStyle';
 import type { Score } from '@/models/Score';
 import type { Command } from '@/services/history/CommandService';
 import { CommandFactory } from '@/services/history/CommandService';
@@ -67,10 +68,32 @@ export function createParagraphStyleUpdateCommands(
         ? (deletedStyleFallbacks.get(styleId) ?? fallbackStyleId)
         : null,
   };
+  // Initial martyria styles reference regular and Greek paragraph styles too;
+  // a deleted one moves to the same fallback chain, ending at its built-in
+  // style.
+  const initialMartyriaStyles = score.initialMartyriaStyles.map((style) => {
+    const paragraphStyleId = remapResolvers.resolveStyleId(
+      style.paragraphStyleId,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    const greekParagraphStyleId = remapResolvers.resolveStyleId(
+      style.greekParagraphStyleId,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    );
+
+    return paragraphStyleId == null && greekParagraphStyleId == null
+      ? style
+      : {
+          ...style,
+          paragraphStyleId: paragraphStyleId ?? style.paragraphStyleId,
+          greekParagraphStyleId:
+            greekParagraphStyleId ?? style.greekParagraphStyleId,
+        };
+  });
   const commands: Command[] = [
     new CommandFactory<Score>().create('update-properties', {
       target: score,
-      newValues: { paragraphStyles: clonedStyles },
+      newValues: { paragraphStyles: clonedStyles, initialMartyriaStyles },
     }),
   ];
 

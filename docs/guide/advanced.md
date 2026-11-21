@@ -1,39 +1,6 @@
 # Advanced Workflows
 
-These workflows are useful when a score needs something beyond the supplied initial martyriæ or the automatic page layout.
-
-## Create a custom initial martyria
-
-Any rich text box can change the musical mode. This lets you build an initial martyria that is not available in the Initial Martyria dialog or write its surrounding text in another language.
-
-1. Choose `Insert > Rich Text Box`.
-2. Enter and format the text of the initial martyria.
-3. Select the box and open `View > Properties`.
-4. Enable `Change Mode`, then choose the starting note and scale.
-5. If the initial martyria contains a fthora, set the `Parallagē Note` as well.
-
-For example, a triphonic hymn in the plagal of the fourth mode may have a Ni fthora on Ga. In that case, Ga is the starting note and Ni is the parallagē note.
-
-You can replace the Greek word `ήχος` with `mode`, `glas`, `глас`, or another suitable term without changing how the element affects the melody.
-
-### Insert the symbols
-
-The rich-text toolbar has controls for inserting neumes, martyriæ, and the Greek plagal symbol.
-
-![Rich-text controls for building a custom initial martyria](./images/guide-custom-mode-keys-toolbar-buttons.png)
-
-After inserting a neume or martyria, select it to adjust its color, size, position, and spacing.
-
-### Position an inline initial martyria
-
-Enable `Inline` when the initial martyria should sit within the musical flow. The box then has two content lines:
-
-- The top line aligns with the neumes.
-- The bottom line aligns with the lyrics.
-
-Use `Top Y Offset` and `Bottom Y Offset` in Properties for small vertical corrections. Enable `Center on Page` when the box should be centered across the page rather than within the remaining space on its line.
-
-Example files show several configurations: [editable BYZX](https://github.com/neanes/neanes/blob/master/examples/Custom%20Mode%20Key%20Demo.byzx) and [PDF](https://github.com/neanes/neanes/blob/master/examples/Custom%20Mode%20Key%20Demo.pdf).
+Explore reusable templates, book layout, and ways to refine the appearance of a score.
 
 ## Build a prosomoion template
 

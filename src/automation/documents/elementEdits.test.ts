@@ -467,6 +467,40 @@ describe('validated element transactions', () => {
     expect(workspace.hasUnsavedChanges).toBe(false);
   });
 
+  it("names only the score's own initial martyria styles on mode keys", () => {
+    const { workspace, edit } = document();
+    const [ownStyle] = workspace.score.initialMartyriaStyles;
+    const modeKey = { templateId: 100, useOptionalDiatonicFthoras: false };
+    edit([
+      insert([
+        {
+          elementType: 'ModeKey',
+          properties: { ...modeKey, initialMartyriaStyleId: ownStyle.id },
+        },
+      ]),
+    ]);
+    expect(
+      (workspace.score.staff.elements[0] as ModeKeyElement)
+        .initialMartyriaStyleId,
+    ).toBe(ownStyle.id);
+
+    const before = saved(workspace);
+    // A common wording's name is not a style either.
+    for (const initialMartyriaStyleId of ['classic', 'missing']) {
+      expect(() =>
+        edit([
+          insert([
+            {
+              elementType: 'ModeKey',
+              properties: { ...modeKey, initialMartyriaStyleId },
+            },
+          ]),
+        ]),
+      ).toThrow('STYLE_NOT_FOUND');
+    }
+    expect(saved(workspace)).toBe(before);
+  });
+
   it('supports every writable element type and saves/reopens the result', () => {
     const { workspace, edit } = document();
     edit([

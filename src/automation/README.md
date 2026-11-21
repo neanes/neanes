@@ -40,6 +40,30 @@ use the Electron debugging endpoint as their test driver.
 Future automation jobs and export transformations belong in this feature area
 (and its Electron counterpart), reusing shared document and rendering behavior.
 
+## Initial martyria styles
+
+Every score owns its initial martyria styles, and there is always at least one.
+The score's `defaultInitialMartyriaStyleId` names its default style, which is
+always one of them; MCP reads and sets it as `defaultStyleId` through the
+initial martyria style tools, not page setup. The app's wording picker offers
+a few common wordings per language (`InitialMartyriaCommonWordings`); they are
+wordings, not styles, and scores and mode keys never name them. A new score,
+and a score saved before initial martyria styles existed, gets a new default
+style in the Greek "Traditional sign" wording lettered in the neume font.
+
+MCP lists score-owned definitions and, optionally, the common wordings as
+preset definitions (whose IDs are placeholders) with
+`get_initial_martyria_styles`. `edit_initial_martyria_styles` manages those
+definitions and the score default. It shares the editor's undoable style and
+reference updates. ModeKey edits use score-owned IDs or null to inherit the
+default. Rich text mode keys are edited inside the owning box with
+`edit_rich_text_mode_key` and projected as `embeddedModeKeys`. Range copy
+carries named initial martyria styles and their paragraph styles across scores.
+
+Music-font lettering is available for supported Greek sign wordings. Style
+names are unique within the score. Styles retain their lettering when saved
+and copied.
+
 ## Footnotes
 
 Clients can request `get_rich_text_format` with `topics: ["footnotes"]` for the

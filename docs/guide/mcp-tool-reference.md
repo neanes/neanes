@@ -47,6 +47,7 @@ Batch operations work on saved files privately. They can save changes in place, 
 | `get_paragraph_styles` / `edit_paragraph_styles`               | Read, create, or change paragraph styles and their inheritance.                                                           |
 | `get_capabilities`                                             | Discover supported formats and units; optionally list installed fonts and error codes.                                    |
 | `get_element_catalog`                                          | Discover element types, editable properties, and available neumes.                                                        |
+| `get_initial_martyria_styles` / `edit_initial_martyria_styles` | Read or change the score’s initial martyria styles and choose its default.                                                |
 | `get_mode_key_templates`                                       | Find the mode-key templates used to insert or change a mode key.                                                          |
 | `get_rich_text_format`                                         | Get formatting guidance for rich text boxes and annotations.                                                              |
 
@@ -64,6 +65,24 @@ Full input and output schemas are available as MCP resources at `neanes://schema
 ## Formatting details
 
 For font and size changes, distinguish an element's current appearance from formatting set directly on that element. Paragraph styles can supply inherited formatting, and advanced text boxes can contain several fonts. Use **font size** for the size of a drop cap's letter, or **Lines to Drop** for the number of lines it spans.
+
+## Initial martyriæ
+
+Ask your agent to insert a supplied initial martyria at a section break or
+place it beside a hymn title in a rich text box. Give the mode and starting
+note, and mention any optional diatonic fthora you want. The agent can find
+matching templates with `get_mode_key_templates` and apply them with
+`edit_elements`.
+
+You can also ask the agent to create a style from a supplied wording, set it
+as the score default, or apply it to one initial martyria. For example, ask it
+to use an English **Tone** wording for one hymn while the other initial
+martyriæ follow the score default. See [Initial Martyriæ](./initial-martyria.md)
+for the wording and typography options.
+
+For direct tool calls, request the `initial_martyria` topic from
+`get_rich_text_format` for instructions on reading and editing embedded
+initial martyriæ.
 
 ## Copying details
 

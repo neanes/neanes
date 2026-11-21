@@ -220,6 +220,7 @@ describe('rich-text authoring discovery', () => {
       ['inline'],
       ['opentype'],
       ['footnotes'],
+      ['initial_martyria'],
       ['basics', 'inline', 'opentype'],
       ['basics', 'inline', 'opentype', 'footnotes'],
     ]) {
@@ -228,11 +229,7 @@ describe('rich-text authoring discovery', () => {
         parseAutomationRequest({ tool: tool.name, arguments: { topics } }),
       ).not.toThrow();
     }
-    for (const topics of [
-      [],
-      ['unknown'],
-      ['basics', 'basics', 'basics', 'basics', 'basics'],
-    ]) {
+    for (const topics of [[], ['unknown'], Array(6).fill('basics')]) {
       expect(validate({ topics })).toMatchObject({ valid: false });
       expect(() =>
         parseAutomationRequest({ tool: tool.name, arguments: { topics } }),

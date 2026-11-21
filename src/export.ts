@@ -1,6 +1,8 @@
 import './assets/main.css';
 import './assets/app.css';
 
+import i18next from 'i18next';
+import I18NextVue from 'i18next-vue';
 import { createApp } from 'vue';
 
 import ExportRenderer from '@/components/ExportRenderer.vue';
@@ -20,6 +22,7 @@ window.ipcRenderer.on(
     try {
       await initializeI18n({ lng: snapshot.editorLanguage });
       const app = createApp(ExportRenderer, { snapshot, png });
+      app.use(I18NextVue, { i18next });
       app.config.errorHandler = fail;
       app.mount('#app');
     } catch (error) {

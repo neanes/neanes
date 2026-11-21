@@ -5,9 +5,11 @@ import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleC
 
 export const richTextFormatQuerySchema = z.strictObject({
   topics: z
-    .array(z.enum(['basics', 'inline', 'opentype', 'footnotes']))
+    .array(
+      z.enum(['basics', 'inline', 'opentype', 'footnotes', 'initial_martyria']),
+    )
     .min(1)
-    .max(4)
+    .max(5)
     .default(['basics', 'inline']),
 });
 
@@ -36,6 +38,36 @@ export function getRichTextFormat(
       arguments: { documentId: 'DOCUMENT_ID', expectedRevision: 0, actions },
     });
   const sections = {
+    initial_martyria: [
+      'INITIAL MARTYRIA',
+      'Use get_mode_key_templates to choose the mode and starting pitch. Use get_initial_martyria_styles for the document default and score-owned style IDs. Use the same templateId and useOptionalDiatonicFthoras pair for standalone ModeKey and embedded insertion.',
+      'Use edit_elements with action:"edit_rich_text_mode_key" and the RichTextBox elementRef/contentKey. For change.kind:"insert", read exact HTML and provide htmlOffset (UTF-16) inside paragraph text or immediately after a p opening tag. Offsets are evaluated after earlier actions. Do not insert inside tags, entities, Unicode surrogate pairs or another widget.',
+      'Project embeddedModeKeys for panel/index and musical settings. Use change.kind:"update" with the zero-based panel index and sparse properties, or change.kind:"remove" with index. Template updates preserve unrelated settings. Null or reset on initialMartyriaStyleId follows the document default. Embedded keys accept musical properties and typography overrides such as fontSize in CSS px, color, and strokeWidth.',
+      'Leave modeChange:false to let the last embedded martyria set the musical context. With modeChange:true the box uses its explicit modeChange* settings instead. To locate section boundaries use find_elements with a single or predicate on ModeKey.mode and RichTextBox.embeddedMode, or read all standalone ModeKey elements and rich text boxes with embeddedMode present. Embedded keys are edited through their owning box.',
+      'Preserve existing mode-key spans during ordinary content edits. The structured edit action writes the HTML widget and can be used in the same transaction as box creation.',
+      call([
+        {
+          action: 'insert',
+          elements: [
+            {
+              elementType: 'RichTextBox',
+              clientId: 'heading',
+              properties: { content: text },
+            },
+          ],
+        },
+        {
+          action: 'edit_rich_text_mode_key',
+          elementRef: '@heading',
+          contentKey: 'content',
+          change: {
+            kind: 'insert',
+            htmlOffset: text.indexOf('</p>'),
+            properties: { templateId: 100, useOptionalDiatonicFthoras: false },
+          },
+        },
+      ]),
+    ],
     footnotes: [
       'FOOTNOTES',
       'Use edit_elements insert_footnote with a main-score Note or Martyria elementRef, or a main-score RichTextBox elementRef with contentKey and htmlOffset. Tempo, plain TextBox, annotations, alternate lines, headers/footers and footnote bodies cannot own references. Each reference owns one body; nested/shared references are unsupported.',

@@ -25,6 +25,8 @@
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
+        @edit-mode-key="onEditModeKey"
+        @mode-key-change="update"
       />
       <RichTextEditor
         :key="`center-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
@@ -39,6 +41,8 @@
         @blur="onBlur"
         @ready="onEditorReady"
         @select-neume="emit('select-neume')"
+        @edit-mode-key="onEditModeKey"
+        @mode-key-change="update"
       />
       <RichTextEditor
         :key="`right-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
@@ -53,6 +57,8 @@
         @blur="onBlur"
         @ready="onEditorReadyMultipanelSide"
         @select-neume="emit('select-neume')"
+        @edit-mode-key="onEditModeKey"
+        @mode-key-change="update"
       />
     </div>
     <div v-else-if="element.inline" class="inline-container">
@@ -76,6 +82,8 @@
             @blur="onBlur"
             @ready="onEditorReadyInline"
             @select-neume="emit('select-neume')"
+            @edit-mode-key="onEditModeKey"
+            @mode-key-change="update"
           />
         </div>
       </div>
@@ -95,6 +103,8 @@
           @blur="onBlur"
           @ready="onEditorReadyInlineBottom"
           @select-neume="emit('select-neume')"
+          @edit-mode-key="onEditModeKey"
+          @mode-key-change="update"
         />
       </div>
     </div>
@@ -113,6 +123,8 @@
       @blur="onBlur"
       @ready="onEditorReady"
       @select-neume="emit('select-neume')"
+      @edit-mode-key="onEditModeKey"
+      @mode-key-change="update"
     />
     <RichTextEditor
       v-else
@@ -129,12 +141,15 @@
       @blur="onBlur"
       @ready="onEditorReady"
       @select-neume="emit('select-neume')"
+      @edit-mode-key="onEditModeKey"
+      @mode-key-change="update"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { Editor, EditorConfig, FontSizeOption } from 'ckeditor5';
+import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
 import type { PropType, StyleValue } from 'vue';
 import {
@@ -147,15 +162,19 @@ import {
 } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import InsertModeKey from '@/ckeditor-plugins/insertmodekey/insertmodekey';
+import InsertModeKeyEditing from '@/ckeditor-plugins/insertmodekey/insertmodekeyediting';
 import RichTextEditor from '@/components/RichTextEditor.vue';
 import { useResizeObserver } from '@/composables/useResizeObserver';
 import { useRichTextParagraphStyleDefinitions } from '@/composables/useRichTextParagraphStyleDefinitions';
 import type InlineEditor from '@/customEditor';
 import type {
+  ModeKeyElement,
   RichTextBoxElement,
   RichTextFootnoteMarker,
 } from '@/models/Element';
 import { TextBoxAlignment } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import {
   getTextBoxParagraphStyleFallbackId,
@@ -187,7 +206,9 @@ const emit = defineEmits([
   'update:height',
   'select-single',
   'select-neume',
+  'edit-mode-key',
 ]);
+const { t } = useTranslation();
 const props = defineProps({
   layoutGeometry: {
     type: Object as PropType<
@@ -223,6 +244,15 @@ const props = defineProps({
     type: Array as PropType<ParagraphStyle[]>,
     required: true,
   },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultInitialMartyriaStyleId: {
+    type: String,
+    required: true,
+  },
   editMode: {
     type: Boolean,
     default: true,
@@ -248,6 +278,10 @@ const props = defineProps({
     default: 'en',
   },
 });
+
+function onEditModeKey(editor: InlineEditor, element: ModeKeyElement) {
+  emit('edit-mode-key', editor, element);
+}
 
 const container = useTemplateRef<HTMLElement>('container');
 const editorRef =
@@ -339,6 +373,7 @@ const editorConfig = computed((): EditorConfig => {
         'default',
         'Source Serif',
         'GFS Didot',
+        'GFS Porson',
         'Noto Naskh Arabic',
         'Old Standard',
         'Neanes',
@@ -364,8 +399,32 @@ const editorConfig = computed((): EditorConfig => {
       defaultFontSize: resolvedParagraphStyle.value.fontSize,
       defaultFontFamily: resolvedParagraphStyle.value.fontFamily,
     },
+    extraPlugins: [InsertModeKey],
+    insertModeKey: {
+      label: t(($) => $.menu.insert.initialMartyria, { ns: 'menu' }),
+      getPageSetup: () => props.pageSetup,
+      getParagraphStyles: () => props.paragraphStyles,
+      getInitialMartyriaStyles: () => props.initialMartyriaStyles,
+      getDefaultInitialMartyriaStyleId: () =>
+        props.defaultInitialMartyriaStyleId,
+    },
   };
 });
+
+watch(
+  [
+    () => props.pageSetup,
+    () => props.paragraphStyles,
+    () => props.initialMartyriaStyles,
+    () => props.defaultInitialMartyriaStyleId,
+  ],
+  () => {
+    for (const editor of getActiveEditorInstances()) {
+      editor?.plugins.get(InsertModeKeyEditing).refreshMountedModeKeys();
+    }
+  },
+  { deep: true },
+);
 
 const content = computed(() => {
   return props.editMode || props.metadata == null

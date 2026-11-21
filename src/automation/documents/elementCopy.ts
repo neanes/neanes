@@ -10,6 +10,11 @@ import {
 } from '@/services/FootnoteService';
 import { CommandFactory } from '@/services/history/CommandService';
 import {
+  collectClipboardInitialMartyriaStylesFromElements,
+  resolveClipboardInitialMartyriaStyles,
+  rewriteClipboardElementInitialMartyriaStyleId,
+} from '@/utils/clipboardInitialMartyriaStyles';
+import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
   resolveClipboardParagraphStyles,
@@ -114,20 +119,45 @@ export function planElementCopy(
     ...copies,
     ...footnotes.flatMap((body) => body.staff.elements),
   ];
+  const carriedInitialMartyriaStyles =
+    collectClipboardInitialMartyriaStylesFromElements(
+      content,
+      source.score.initialMartyriaStyles,
+    );
   const { importedParagraphStyles, styleIdRemap } =
     resolveClipboardParagraphStyles(
       collectClipboardParagraphStylesFromElements(
         content,
+        carriedInitialMartyriaStyles,
         source.score.paragraphStyles,
       ),
       destination.score.paragraphStyles,
-      collectClipboardParagraphStyleIdsFromElements(content),
+      collectClipboardParagraphStyleIdsFromElements(
+        content,
+        carriedInitialMartyriaStyles,
+      ),
     );
   const paragraphStyles = [
     ...destination.score.paragraphStyles,
     ...importedParagraphStyles,
   ];
+  const { importedInitialMartyriaStyles, initialMartyriaStyleIdRemap } =
+    resolveClipboardInitialMartyriaStyles(
+      carriedInitialMartyriaStyles,
+      destination.score.initialMartyriaStyles,
+      destination.score.paragraphStyles,
+      styleIdRemap,
+    );
+  const initialMartyriaStyles = [
+    ...destination.score.initialMartyriaStyles,
+    ...importedInitialMartyriaStyles,
+  ];
   for (const copy of content) {
+    rewriteClipboardElementInitialMartyriaStyleId(
+      copy,
+      initialMartyriaStyles,
+      initialMartyriaStyleIdRemap,
+    );
     rewriteClipboardElementParagraphStyleIds(
       copy,
       paragraphStyles,
@@ -154,11 +184,14 @@ export function planElementCopy(
     }
   }
   plan.fontFamilies = [...fonts];
-  if (importedParagraphStyles.length > 0) {
+  if (
+    importedParagraphStyles.length > 0 ||
+    importedInitialMartyriaStyles.length > 0
+  ) {
     plan.commands.push(
       new CommandFactory<Score>().create('update-properties', {
         target: destination.score,
-        newValues: { paragraphStyles },
+        newValues: { paragraphStyles, initialMartyriaStyles },
       }),
     );
   }

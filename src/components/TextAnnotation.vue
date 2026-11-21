@@ -185,6 +185,7 @@ const editorConfig = computed((): EditorConfig => {
         'default',
         'Source Serif',
         'GFS Didot',
+        'GFS Porson',
         'Noto Naskh Arabic',
         'Old Standard',
         'Neanes',

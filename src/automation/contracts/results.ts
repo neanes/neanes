@@ -28,6 +28,7 @@ import {
 } from './elementSearchSchema';
 import { automationErrorSchema } from './errors';
 import { fileDiscoveryResultSchema } from './fileDiscovery';
+import { initialMartyriaStyleSchema } from './initialMartyriaStyles';
 import { modeKeyTemplatesResultSchema } from './modeKeyTemplates';
 import { pageElementsResultShape, pageListResultShape } from './pageSchemas';
 import { PREVIEW_MAX_EDGE } from './preview';
@@ -191,6 +192,14 @@ export const automationResultSchemas = {
     settings: headerFooterSettingsSchema.partial(),
   }),
   update_header_footer_settings: documentSummarySchema,
+  get_initial_martyria_styles: documentSummarySchema.extend({
+    defaultStyleId: z.string(),
+    styles: z.array(initialMartyriaStyleSchema),
+    presets: z.array(initialMartyriaStyleSchema).optional(),
+  }),
+  edit_initial_martyria_styles: documentSummarySchema.extend({
+    defaultStyleId: z.string(),
+  }),
   get_paragraph_styles: z.union([
     styleResultSchema,
     documentSummarySchema.extend({ styleIds: z.array(z.string()) }),

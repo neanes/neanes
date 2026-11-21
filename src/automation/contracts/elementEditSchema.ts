@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { ElementType } from '@/models/Element';
+import { MODE_KEY_MODEL_ATTRIBUTES } from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import { ElementType, RICH_TEXT_BOX_CONTENT_KEYS } from '@/models/Element';
 import { normalizeFootnoteMarker } from '@/services/FootnoteMarker';
 
 import { paragraphStyleOverridesSchema } from '../../services/documents/paragraphStyleSchema';
@@ -47,7 +48,10 @@ function editPropertySchema(type: ElementType) {
   for (const [key, inspected] of Object.entries(
     elementPropertySchemas[type].shape,
   )) {
-    if (type === ElementType.RichTextBox && key === 'footnoteReferences') {
+    if (
+      type === ElementType.RichTextBox &&
+      ['footnoteReferences', 'embeddedModeKeys', 'embeddedMode'].includes(key)
+    ) {
       continue;
     }
     if (
@@ -277,7 +281,59 @@ const elementDefinitionSchema = z
   .superRefine((element, ctx) =>
     validateProperties(element.elementType, element.properties, ctx, true),
   );
+const embeddedModeKeyFields = new Set<string>([
+  ...MODE_KEY_MODEL_ATTRIBUTES.filter((key) => key !== 'fontColor'),
+  'color',
+  'useOptionalDiatonicFthoras',
+]);
+const embeddedModeKeyChange = z
+  .discriminatedUnion('kind', [
+    z.strictObject({
+      kind: z.literal('insert'),
+      htmlOffset: index.describe(
+        'UTF-16 offset in the exact stored HTML inside a paragraph.',
+      ),
+      properties: propertyValues,
+    }),
+    z.strictObject({
+      kind: z.literal('update'),
+      index,
+      properties: propertyValues,
+      reset: z.array(z.string()).default([]),
+    }),
+    z.strictObject({ kind: z.literal('remove'), index }),
+  ])
+  .superRefine((change, ctx) => {
+    if (change.kind === 'remove') {
+      return;
+    }
+    const reset = change.kind === 'update' ? change.reset : [];
+    if (
+      [...Object.keys(change.properties), ...reset].some(
+        (key) => !embeddedModeKeyFields.has(key),
+      )
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Property applies only to standalone mode keys or is unknown.',
+      });
+    }
+    validateProperties(
+      ElementType.ModeKey,
+      change.properties,
+      ctx,
+      change.kind === 'insert',
+      reset,
+    );
+  });
+
 const elementEditActionSchema = z.discriminatedUnion('action', [
+  z.strictObject({
+    action: z.literal('edit_rich_text_mode_key'),
+    elementRef: editReferenceSchema,
+    contentKey: z.enum(RICH_TEXT_BOX_CONTENT_KEYS),
+    change: embeddedModeKeyChange,
+  }),
   z.strictObject({
     action: z.literal('update_footnote'),
     footnoteId: z.string().uuid(),

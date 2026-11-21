@@ -535,6 +535,27 @@ try {
   assert.ok(finalAnnotation.content.includes('ANNOTATION_PENDING_LANGUAGE'));
   assert.ok(finalAnnotation.content.includes('ANNOTATION_PENDING_DROPDOWN'));
 
+  const modeKeyPayload = encodeURIComponent(
+    JSON.stringify({ version: 1, attributes: { mode: 1 } }),
+  );
+  const modeKeyHtml =
+    `<p>Before <span class="neanes-ck-mode-key" data-neanes-mode-key="${modeKeyPayload}"` +
+    ' data-neanes-initial-martyria-style="{}"></span>after</p>';
+  const annotationUpcast = await evaluate(`(() => {
+    const editor = document.querySelector(${JSON.stringify(annotationSelector)}).ckeditorInstance;
+    const view = editor.data.processor.toView(${JSON.stringify(modeKeyHtml)});
+    return {
+      hasInsertCommand: !!editor.commands.get('insertModeKey'),
+      html: editor.data.stringify(editor.data.toModel(view)),
+    };
+  })()`);
+  assert.equal(annotationUpcast.hasInsertCommand, false);
+  assert.match(annotationUpcast.html, /Before after/);
+  assert.doesNotMatch(
+    annotationUpcast.html,
+    /neanes-(?:ck-mode-key|mode-key|initial-martyria-style)/,
+  );
+
   await call('close_document', {
     ...relatedArgs,
     expectedRevision: finalAnnotation.revision,

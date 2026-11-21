@@ -2265,6 +2265,14 @@ function createMenu() {
             win?.webContents.send(IpcMainChannels.FileMenuParagraphStyles);
           },
         },
+        {
+          label: i18next.t(($) => $.menu.format.initialMartyriaStyles),
+          click() {
+            win?.webContents.send(
+              IpcMainChannels.FileMenuInitialMartyriaStyles,
+            );
+          },
+        },
       ],
     },
     {

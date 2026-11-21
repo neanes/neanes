@@ -109,6 +109,8 @@
         :page-setup="score.pageSetup"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
+        :initial-martyria-styles="score.initialMartyriaStyles"
+        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
         :editor-language="editorLanguage"
         :selected="header == selectedHeaderFooterElement"
         :style="getHeaderStyle(page)"
@@ -122,6 +124,12 @@
         "
         @update:height="
           emit('updateRichTextBoxHeight', header as RichTextBoxElement, $event)
+        "
+        @edit-mode-key="
+          (editor, modeKey) => {
+            emit('selectHeaderRichTextBox', pageIndex);
+            emit('editModeKey', editor, modeKey);
+          }
         "
       />
     </template>
@@ -513,6 +521,10 @@
           :page-setup="score.pageSetup"
           :fonts="fonts"
           :paragraph-styles="score.paragraphStyles"
+          :initial-martyria-styles="score.initialMartyriaStyles"
+          :default-initial-martyria-style-id="
+            score.defaultInitialMartyriaStyleId
+          "
           :editor-language="editorLanguage"
           :selected="isSelected(element)"
           @select-single="emit('selectElement', element)"
@@ -530,6 +542,12 @@
               $event,
             )
           "
+          @edit-mode-key="
+            (editor, modeKey) => {
+              emit('selectElement', element);
+              emit('editModeKey', editor, modeKey);
+            }
+          "
         />
       </template>
       <template v-else-if="isModeKeyElement(element)">
@@ -541,6 +559,11 @@
           :ref="setTemplateRef(`element-${getElementKey(element)}`)"
           :element="element as ModeKeyElement"
           :page-setup="score.pageSetup"
+          :paragraph-styles="score.paragraphStyles"
+          :initial-martyria-styles="score.initialMartyriaStyles"
+          :default-initial-martyria-style-id="
+            score.defaultInitialMartyriaStyleId
+          "
           :class="[
             {
               selectedTextbox: isSelected(element),
@@ -636,6 +659,8 @@
         :page-setup="score.pageSetup"
         :fonts="fonts"
         :paragraph-styles="score.paragraphStyles"
+        :initial-martyria-styles="score.initialMartyriaStyles"
+        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
         :editor-language="editorLanguage"
         :selected="footer == selectedHeaderFooterElement"
         :style="getFooterStyle(page)"
@@ -649,6 +674,12 @@
         "
         @update:height="
           emit('updateRichTextBoxHeight', footer as RichTextBoxElement, $event)
+        "
+        @edit-mode-key="
+          (editor, modeKey) => {
+            emit('selectFooterRichTextBox', pageIndex);
+            emit('editModeKey', editor, modeKey);
+          }
         "
       />
     </template>

@@ -6,11 +6,27 @@ import {
   EmptyElement,
   LineBreakType,
   MartyriaElement,
+  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   TextBoxAlignment,
   TextBoxElement,
 } from '@/models/Element';
+import { getCommonInitialMartyriaWording } from '@/models/InitialMartyriaCommonWordings';
+import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
+import { showsInitialMartyriaPlagalAbbreviationWithModeSign } from '@/models/InitialMartyriaRenderingConventions';
+import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
+import {
+  INITIAL_MARTYRIA_LABEL_VARIANTS,
+  INITIAL_MARTYRIA_LETTERINGS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
+  INITIAL_MARTYRIA_NUMERAL_KINDS,
+  INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
+  INITIAL_MARTYRIA_NUMERAL_STYLES,
+  type InitialMartyriaStyle,
+} from '@/models/InitialMartyriaStyle';
+import { attestedStructures } from '@/models/InitialMartyriaStyle.testData';
+import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import { Fthora, Ison, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -26,16 +42,19 @@ import {
   EmptyElement as EmptyElement_v1,
   LineBreakType as LineBreakType_v1,
   MartyriaElement as MartyriaElement_v1,
+  ModeKeyElement as ModeKeyElement_v1,
   NoteElement as NoteElement_v1,
   RichTextBoxElement as RichTextBoxElement_v1,
   type ScoreElement as ScoreElement_v1,
   TextBoxElement as TextBoxElement_v1,
 } from '@/models/save/v1/Element';
+import { Footnote as Footnote_v1 } from '@/models/save/v1/Footnote';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import { ParagraphStyle as ParagraphStyle_v1 } from '@/models/save/v1/Style';
 import { ScaleNote } from '@/models/Scales';
 import { Score } from '@/models/Score';
 import { getRichTextLanguage } from '@/utils/richTextLanguage';
+import { Unit } from '@/utils/Unit';
 
 import { SaveService } from './SaveService';
 
@@ -342,6 +361,18 @@ describe('SaveService break constraints', () => {
     expect(loaded.staff.elements[1].lineBreakType).toBeNull();
   });
 });
+
+/** The score owns exactly one style, a copy of Neume Font, as its default. */
+function expectDefaultNeumeFontStyle(score: Score) {
+  expect(score.initialMartyriaStyles).toHaveLength(1);
+  const [style] = score.initialMartyriaStyles;
+  expect(style.structure).toEqual(
+    getCommonInitialMartyriaWording('classic').structure,
+  );
+  expect(style.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.MusicFont);
+  expect(style.displayName).toBe('Neume Font');
+  expect(score.defaultInitialMartyriaStyleId).toBe(style.id);
+}
 
 describe('SaveService font styles', () => {
   it('loads legacy text box bold/italic booleans as a font style', () => {
@@ -1364,6 +1395,638 @@ describe('SaveService font styles', () => {
       resolveElementParagraphStyle(loaded.paragraphStyles, loadedDropCap)
         .strokeColor,
     ).toBe('#654321');
+  });
+
+  it('round-trips custom Initial Martyria styles and style references', () => {
+    const score = new Score();
+    const base = styleFromWording('englishModeNamesWithSign');
+    if (
+      base.structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+    ) {
+      throw new Error('Expected a text style');
+    }
+    const customStyle = createInitialMartyriaStyle({
+      displayName: 'Parish books',
+      structure: {
+        ...base.structure,
+        numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
+        numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
+        numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+        transliterateNoteNames: true,
+      },
+      paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+      greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
+      useOrdinalForms: false,
+      lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const inherited = new ModeKeyElement();
+    const overridden = new ModeKeyElement();
+    overridden.fontSize = 30;
+    overridden.color = '#abcdef';
+    overridden.strokeWidth = 0.5;
+    const unknown = new ModeKeyElement();
+    unknown.initialMartyriaStyleId = 'deleted';
+    score.staff.elements = [inherited, overridden, unknown];
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const savedModeKeys = saved.staff.elements as ModeKeyElement_v1[];
+    const loadedModeKeys = loaded.staff.elements as ModeKeyElement[];
+
+    expect(saved.initialMartyriaStyles).toHaveLength(1);
+    expect(saved.initialMartyriaStyles![0]).toEqual({
+      id: customStyle.id,
+      displayName: 'Parish books',
+      structure: customStyle.structure,
+      paragraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Title,
+      greekParagraphStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.Subtitle,
+      useOrdinalForms: false,
+      lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
+    });
+    expect(saved.defaultInitialMartyriaStyleId).toBe(customStyle.id);
+    // The default is the score's, not a page setting.
+    expect(saved.pageSetup).not.toHaveProperty('initialMartyriaStyleId');
+    expect(saved.pageSetup.modeKeyDefaultColor).toBeUndefined();
+    expect(saved.pageSetup.modeKeyDefaultFontSize).toBeUndefined();
+    expect(savedModeKeys[0].initialMartyriaStyleId).toBeUndefined();
+    expect(savedModeKeys[0].color).toBeUndefined();
+    expect(savedModeKeys[0].fontSize).toBeUndefined();
+    expect(savedModeKeys[0].strokeWidth).toBeUndefined();
+    expect(savedModeKeys[1]).toMatchObject({
+      color: '#abcdef',
+      fontSize: 30,
+      strokeWidth: 0.5,
+    });
+    expect(savedModeKeys[2].initialMartyriaStyleId).toBe('deleted');
+
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+    expect(loaded.defaultInitialMartyriaStyleId).toBe(customStyle.id);
+    expect(loadedModeKeys[0].initialMartyriaStyleId).toBeNull();
+    expect(loadedModeKeys[0].color).toBeNull();
+    expect(loadedModeKeys[0].fontSize).toBeNull();
+    expect(loadedModeKeys[0].strokeWidth).toBeNull();
+    expect(loadedModeKeys[1]).toMatchObject({
+      color: '#abcdef',
+      fontSize: 30,
+      strokeWidth: 0.5,
+    });
+    // A mode key naming no style of the score follows its default instead.
+    expect(loadedModeKeys[2].initialMartyriaStyleId).toBeNull();
+  });
+
+  it('round-trips an Initial Martyria style with an independent Greek paragraph style', () => {
+    const score = new Score();
+    const greekParagraphStyle = new ParagraphStyle();
+    greekParagraphStyle.displayName = 'Greek Martyria';
+    greekParagraphStyle.overrides = {
+      fontFamily: 'GFS Porson',
+      fontSize: 16,
+    };
+    score.paragraphStyles.push(greekParagraphStyle);
+    const base = styleFromWording('englishModeNamesWithSign');
+    const customStyle = createInitialMartyriaStyle({
+      displayName: 'Greek typography',
+      structure: base.structure,
+      paragraphStyleId: base.paragraphStyleId,
+      greekParagraphStyleId: greekParagraphStyle.id,
+      useOrdinalForms: true,
+      lettering: INITIAL_MARTYRIA_LETTERINGS.Text,
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(saved.initialMartyriaStyles![0]).toMatchObject({
+      greekParagraphStyleId: greekParagraphStyle.id,
+    });
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
+  it('round-trips sign-only Initial Martyria styles without printed-number fields', () => {
+    const score = new Score();
+    const base = styleFromWording('romanianTraditionalSign');
+    const customStyle = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Parish sign',
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const savedStructure = saved.initialMartyriaStyles![0].structure;
+
+    expect(savedStructure).not.toHaveProperty('numeralStyle');
+    expect(savedStructure).not.toHaveProperty('numberingSystem');
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
+  it('round-trips the sign group alone without mode-name axes', () => {
+    const score = new Score();
+    const customStyle = createInitialMartyriaStyle({
+      ...styleFromWording('classic'),
+      displayName: 'Bare neume font',
+      structure: attestedStructures['greek-mode-sign-alone'],
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const savedStructure = saved.initialMartyriaStyles![0].structure;
+
+    expect(customStyle.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.MusicFont);
+    for (const axis of [
+      'labelVariant',
+      'numeralKind',
+      'numeralQualifier',
+      'modeNamingScheme',
+    ]) {
+      expect(savedStructure).not.toHaveProperty(axis);
+    }
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
+  it('round-trips the label variant and plagal abbreviation choice', () => {
+    const score = new Score();
+    const base = styleFromWording('englishToneNumberWithSign');
+    const customStyle = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Tone without plagal sign',
+      structure: { ...base.structure, plagalAbbreviationWithModeSign: false },
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(saved.initialMartyriaStyles![0].structure).toMatchObject({
+      labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+      plagalAbbreviationWithModeSign: false,
+    });
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
+  it('follows the language for a style saved without a plagal abbreviation choice', () => {
+    const score = new Score();
+    const base = styleFromWording('spanishTonoNumber');
+    const customStyle = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Parish tono',
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    expect(saved.initialMartyriaStyles![0].structure).not.toHaveProperty(
+      'plagalAbbreviationWithModeSign',
+    );
+    const [loadedStyle] = SaveService.LoadScore_v1(saved).initialMartyriaStyles;
+
+    expect(
+      loadedStyle.structure.plagalAbbreviationWithModeSign,
+    ).toBeUndefined();
+    expect(
+      showsInitialMartyriaPlagalAbbreviationWithModeSign(loadedStyle.structure),
+    ).toBe(false);
+  });
+
+  it('drops a style whose label variant its language does not offer', () => {
+    const score = new Score();
+    const base = styleFromWording('spanishTonoNumber');
+    const customStyle = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Unknown word',
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    saved.initialMartyriaStyles![0].structure.labelVariant =
+      INITIAL_MARTYRIA_LABEL_VARIANTS.Tone;
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(
+      loaded.initialMartyriaStyles.some((style) => style.id === customStyle.id),
+    ).toBe(false);
+  });
+
+  it('drops known but unsupported saved Initial Martyria styles', () => {
+    const score = new Score();
+    const base = styleFromWording('englishModeNamesWithSign');
+    const customStyle = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Invalid custom style',
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const savedStyle = saved.initialMartyriaStyles![0];
+    savedStyle.structure.numeralKind = INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal;
+    savedStyle.structure.numeralQualifier =
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal;
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expectDefaultNeumeFontStyle(loaded);
+  });
+
+  it('loads clipboard Initial Martyria styles as a file load does', () => {
+    const base = styleFromWording('englishModeNamesWithSign');
+    const sourceParagraphStyle = new ParagraphStyle();
+    sourceParagraphStyle.id = 'source-initial-martyria';
+    sourceParagraphStyle.displayName = 'Source';
+    const supported = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Supported',
+      paragraphStyleId: sourceParagraphStyle.id,
+    });
+    const unsupported = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Unsupported',
+    });
+    const savedUnsupported = SaveService.SaveInitialMartyriaStyle(unsupported);
+    savedUnsupported.structure.numeralKind =
+      INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal;
+    savedUnsupported.structure.numeralQualifier =
+      INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal;
+
+    const loaded = SaveService.LoadInitialMartyriaStyles_v1(
+      JSON.parse(
+        JSON.stringify([
+          SaveService.SaveInitialMartyriaStyle(supported),
+          savedUnsupported,
+        ]),
+      ),
+      [...createDefaultParagraphStyles(), sourceParagraphStyle],
+    );
+
+    expect(loaded).toEqual([supported]);
+  });
+
+  it('loads only the first Initial Martyria style with a given id', () => {
+    const score = new Score();
+    const base = styleFromWording('englishModeNames');
+    const first = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Parish books',
+    });
+    const duplicateId = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Other books',
+    });
+    duplicateId.id = first.id;
+    score.initialMartyriaStyles = [first, duplicateId];
+    score.defaultInitialMartyriaStyleId = first.id;
+    const saved = SaveService.SaveScoreToJson(score);
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(loaded.initialMartyriaStyles).toEqual([first]);
+  });
+
+  it('gives a score whose default names none of its styles a Neume Font default', () => {
+    const score = new Score();
+    score.initialMartyriaStyles = [];
+    score.defaultInitialMartyriaStyleId = 'deleted';
+
+    const saved = SaveService.SaveScoreToJson(score);
+
+    expect(saved.initialMartyriaStyles).toBeUndefined();
+    expectDefaultNeumeFontStyle(SaveService.LoadScore_v1(saved));
+  });
+
+  it('gives new scores a Neume Font style of their own as the default', () => {
+    const score = new Score();
+    expectDefaultNeumeFontStyle(score);
+
+    const loaded = SaveService.LoadScore_v1(SaveService.SaveScoreToJson(score));
+
+    expect(loaded.initialMartyriaStyles).toEqual(score.initialMartyriaStyles);
+    expect(loaded.defaultInitialMartyriaStyleId).toBe(
+      score.defaultInitialMartyriaStyleId,
+    );
+  });
+
+  it('loads scores without Initial Martyria style references as Neume Font', () => {
+    const score = new Score();
+    score.staff.elements = [new ModeKeyElement()];
+    const saved = SaveService.SaveScoreToJson(score);
+    delete saved.initialMartyriaStyles;
+    delete saved.defaultInitialMartyriaStyleId;
+    delete (saved.staff.elements[0] as ModeKeyElement_v1)
+      .initialMartyriaStyleId;
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expectDefaultNeumeFontStyle(loaded);
+    expect(
+      (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,
+    ).toBeNull();
+  });
+
+  it('drops Initial Martyria styles and references this version cannot resolve', () => {
+    const score = new Score();
+    const element = new ModeKeyElement();
+    score.staff.elements = [element];
+    const base = styleFromWording('englishModeNames');
+    const futureStyle: InitialMartyriaStyle = {
+      ...base,
+      id: 'future',
+      displayName: 'Future',
+    };
+    score.initialMartyriaStyles = [futureStyle];
+    score.defaultInitialMartyriaStyleId = futureStyle.id;
+    const saved = SaveService.SaveScoreToJson(score);
+    saved.initialMartyriaStyles![0].structure.numeralStyle = 'binary';
+    (saved.staff.elements[0] as ModeKeyElement_v1).initialMartyriaStyleId =
+      'deleted';
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expectDefaultNeumeFontStyle(loaded);
+    expect(
+      (loaded.staff.elements[0] as ModeKeyElement).initialMartyriaStyleId,
+    ).toBeNull();
+  });
+
+  it('falls back to the built-in Initial Martyria paragraph style for an unknown paragraph style', () => {
+    const score = new Score();
+    const base = styleFromWording('englishModeNames');
+    const customStyle = createInitialMartyriaStyle({
+      ...base,
+      displayName: 'Orphaned',
+      paragraphStyleId: 'deleted-paragraph-style',
+      greekParagraphStyleId: 'deleted-greek-paragraph-style',
+    });
+    score.initialMartyriaStyles = [customStyle];
+
+    const loaded = SaveService.LoadScore_v1(SaveService.SaveScoreToJson(score));
+
+    expect(loaded.initialMartyriaStyles[0].paragraphStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+    );
+    expect(loaded.initialMartyriaStyles[0].greekParagraphStyleId).toBe(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+    );
+  });
+
+  it('loads a legacy score without mode key styling as Neume Font', () => {
+    const modeKey = new ModeKeyElement_v1();
+    modeKey.useDefaultStyle = true;
+    modeKey.color = '#ED0000';
+    modeKey.fontSize = Unit.fromPt(20);
+    modeKey.strokeWidth = 0;
+    modeKey.heightAdjustment = 0;
+    const saved = createLegacyScore({
+      modeKeyDefaultColor: '#ED0000',
+      modeKeyDefaultFontSize: Unit.fromPt(20),
+      modeKeyDefaultStrokeWidth: 0,
+      modeKeyDefaultHeightAdjustment: 0,
+    });
+    saved.staff.elements = [modeKey];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const loadedModeKey = loaded.staff.elements[0] as ModeKeyElement;
+
+    expectDefaultNeumeFontStyle(loaded);
+    expect(
+      loaded.paragraphStyles
+        .filter(
+          (style) =>
+            style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria ||
+            style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+        )
+        .map((style) => ({
+          id: style.id,
+          parentStyleId: style.parentStyleId,
+          overrides: style.overrides,
+        })),
+    ).toEqual([
+      {
+        id: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+        parentStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.DefaultText,
+        overrides: { color: '#ED0000', fontSize: Unit.fromPt(14.5) },
+      },
+      {
+        id: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+        parentStyleId: BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+        overrides: { fontFamily: 'GFS Didot' },
+      },
+    ]);
+    expect(loadedModeKey.initialMartyriaStyleId).toBeNull();
+    expect(loadedModeKey.color).toBeNull();
+    expect(loadedModeKey.fontSize).toBeNull();
+    expect(loadedModeKey.strokeWidth).toBeNull();
+  });
+
+  it.each(['NeanesStathisSeries', 'NeanesStathisSeriesLegacy'])(
+    'migrates the legacy %s music font to GFS Porson for Greek initial martyria text',
+    (neumeDefaultFontFamily) => {
+      const greekInitialMartyriaStyle = loadLegacyBuiltInStyle(
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+        { neumeDefaultFontFamily },
+      );
+
+      expect(greekInitialMartyriaStyle.fontFamily).toBe('GFS Porson');
+    },
+  );
+
+  it('migrates legacy color, size, and outline to Initial Martyria', () => {
+    const initialMartyriaStyle = loadLegacyBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+      {
+        modeKeyDefaultColor: '#000000',
+        modeKeyDefaultFontSize: Unit.fromPt(24),
+        modeKeyDefaultStrokeWidth: 2,
+        modeKeyDefaultHeightAdjustment: 5,
+      },
+    );
+
+    expect(initialMartyriaStyle.color).toBe('#000000');
+    expect(initialMartyriaStyle.fontSize).toBeCloseTo(
+      (Unit.fromPt(24) * 14.5) / 20,
+    );
+    expect(initialMartyriaStyle.strokeWidth).toBe(2);
+    expect(initialMartyriaStyle.fontFamily).toBe('Source Serif');
+
+    const greekInitialMartyriaStyle = loadLegacyBuiltInStyle(
+      BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      {
+        modeKeyDefaultColor: '#000000',
+        modeKeyDefaultFontSize: Unit.fromPt(24),
+        modeKeyDefaultStrokeWidth: 2,
+        modeKeyDefaultHeightAdjustment: 5,
+      },
+    );
+
+    expect(greekInitialMartyriaStyle).toMatchObject({
+      fontFamily: 'GFS Didot',
+      fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
+      color: '#000000',
+      strokeWidth: 2,
+    });
+
+    const score = SaveService.LoadScore_v1(
+      createLegacyScore({
+        modeKeyDefaultColor: '#000000',
+        modeKeyDefaultFontSize: Unit.fromPt(24),
+        modeKeyDefaultStrokeWidth: 2,
+        modeKeyDefaultHeightAdjustment: 5,
+      }),
+    );
+    expect(
+      score.paragraphStyles.find(
+        (style) => style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyria,
+      )!.overrides,
+    ).toEqual({
+      fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
+      strokeWidth: 2,
+    });
+    expect(
+      score.paragraphStyles.find(
+        (style) =>
+          style.id === BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      )!.overrides,
+    ).toEqual({ fontFamily: 'GFS Didot' });
+    expect(
+      resolveScoreInitialMartyriaStyle({
+        paragraphStyles: score.paragraphStyles,
+        initialMartyriaStyles: score.initialMartyriaStyles,
+        defaultInitialMartyriaStyleId: score.defaultInitialMartyriaStyleId,
+      }).primaryAppearance,
+    ).toMatchObject({
+      fontSize: expect.closeTo((Unit.fromPt(24) * 14.5) / 20),
+      color: '#000000',
+      strokeWidth: 2,
+    });
+  });
+
+  it('migrates legacy mode key element styling to element overrides', () => {
+    const custom = new ModeKeyElement_v1();
+    custom.useDefaultStyle = undefined;
+    custom.color = '#123456';
+    custom.fontSize = Unit.fromPt(20);
+    custom.strokeWidth = 0;
+    custom.heightAdjustment = 3;
+    const customMatchingDefaults = new ModeKeyElement_v1();
+    customMatchingDefaults.useDefaultStyle = undefined;
+    customMatchingDefaults.color = '#ED0000';
+    customMatchingDefaults.fontSize = Unit.fromPt(30);
+    customMatchingDefaults.strokeWidth = 1;
+    const usingDefaults = new ModeKeyElement_v1();
+    usingDefaults.useDefaultStyle = true;
+    usingDefaults.color = '#123456';
+    usingDefaults.fontSize = Unit.fromPt(40);
+    usingDefaults.strokeWidth = 3;
+    const saved = createLegacyScore({
+      modeKeyDefaultColor: '#ED0000',
+      modeKeyDefaultFontSize: Unit.fromPt(30),
+      modeKeyDefaultStrokeWidth: 0,
+      modeKeyDefaultHeightAdjustment: 0,
+    });
+    saved.staff.elements = [custom, customMatchingDefaults, usingDefaults];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const [loadedCustom, loadedMatching, loadedUsingDefaults] = loaded.staff
+      .elements as ModeKeyElement[];
+
+    expect(loadedCustom.color).toBe('#123456');
+    expect(loadedCustom.fontSize).toBeCloseTo((Unit.fromPt(20) * 14.5) / 20);
+    expect(loadedCustom.strokeWidth).toBeNull();
+
+    expect(loadedMatching.color).toBeNull();
+    expect(loadedMatching.fontSize).toBeNull();
+    expect(loadedMatching.strokeWidth).toBe(1);
+
+    expect(loadedUsingDefaults.color).toBeNull();
+    expect(loadedUsingDefaults.fontSize).toBeNull();
+    expect(loadedUsingDefaults.strokeWidth).toBeNull();
+
+    const resaved = SaveService.SaveScoreToJson(loaded);
+    const resavedCustom = resaved.staff.elements[0] as ModeKeyElement_v1;
+    expect(resavedCustom.useDefaultStyle).toBeUndefined();
+    expect(resavedCustom.heightAdjustment).toBeUndefined();
+    expect(resaved.pageSetup.modeKeyDefaultColor).toBeUndefined();
+  });
+
+  it('migrates legacy mode key element styling without legacy page setup defaults', () => {
+    const custom = new ModeKeyElement_v1();
+    custom.color = '#123456';
+    custom.fontSize = Unit.fromPt(30);
+    const usingDefaults = new ModeKeyElement_v1();
+    usingDefaults.useDefaultStyle = true;
+    usingDefaults.color = '#123456';
+    usingDefaults.fontSize = Unit.fromPt(40);
+    const saved = createLegacyScore();
+    saved.staff.elements = [custom, usingDefaults];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const [loadedCustom, loadedUsingDefaults] = loaded.staff
+      .elements as ModeKeyElement[];
+
+    expect(loadedCustom.color).toBe('#123456');
+    expect(loadedCustom.fontSize).toBeCloseTo((Unit.fromPt(30) * 14.5) / 20);
+    expect(loadedUsingDefaults.color).toBeNull();
+    expect(loadedUsingDefaults.fontSize).toBeNull();
+  });
+
+  it('migrates legacy mode key element styling in footnotes', () => {
+    const custom = new ModeKeyElement_v1();
+    custom.color = '#123456';
+    custom.fontSize = Unit.fromPt(40);
+    const usingDefaults = new ModeKeyElement_v1();
+    usingDefaults.useDefaultStyle = true;
+    usingDefaults.color = '#123456';
+    usingDefaults.fontSize = Unit.fromPt(40);
+    const footnote = new Footnote_v1();
+    footnote.id = 'footnote';
+    footnote.staff.elements = [custom, usingDefaults];
+    const saved = createLegacyScore();
+    saved.footnotes = [footnote];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+    const [loadedCustom, loadedUsingDefaults] = loaded.footnotes[0].staff
+      .elements as ModeKeyElement[];
+
+    expect(loadedCustom.color).toBe('#123456');
+    expect(loadedCustom.fontSize).toBeCloseTo((Unit.fromPt(40) * 14.5) / 20);
+    expect(loadedUsingDefaults.color).toBeNull();
+    expect(loadedUsingDefaults.fontSize).toBeNull();
+  });
+
+  it('carries legacy mode key typography from saved page setup defaults', () => {
+    const savedDefault = new PageSetup_v1();
+    savedDefault.modeKeyDefaultColor = '#123456';
+    savedDefault.modeKeyDefaultFontSize = Unit.fromPt(40);
+    savedDefault.modeKeyDefaultStrokeWidth = 2;
+
+    const styles =
+      SaveService.CreateDefaultParagraphStylesForPageSetupDefault(savedDefault);
+
+    expect(
+      resolveParagraphStyle(
+        styles,
+        BUILT_IN_PARAGRAPH_STYLE_IDS.InitialMartyriaGreek,
+      ),
+    ).toMatchObject({
+      color: '#123456',
+      fontSize: expect.closeTo((Unit.fromPt(40) * 14.5) / 20),
+      strokeWidth: 2,
+    });
+    expect(
+      SaveService.CreateDefaultParagraphStylesForPageSetupDefault(
+        new PageSetup_v1(),
+      ),
+    ).toEqual(createDefaultParagraphStyles());
   });
 
   it('saves rich text language fields instead of legacy rtl', () => {

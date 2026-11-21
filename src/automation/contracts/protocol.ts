@@ -16,6 +16,7 @@ import { elementCatalogQuerySchema, elementQueryShape } from './elementSchemas';
 import { elementLookupShape, elementSearchShape } from './elementSearchSchema';
 import type { AutomationOutcome } from './errors';
 import { fileDiscoveryQuerySchema } from './fileDiscovery';
+import { initialMartyriaStyleChangesSchema } from './initialMartyriaStyles';
 import { modeKeyTemplatesQuerySchema } from './modeKeyTemplates';
 import { layoutReadShape, pageElementQueryShape } from './pageSchemas';
 import { paragraphStyleChangeSchema } from './paragraphStyleChanges';
@@ -123,6 +124,14 @@ export const automationSchemas = {
   close_document: z.strictObject({
     ...documentMutation,
     discardUnsavedChanges: z.boolean().default(false),
+  }),
+  get_initial_martyria_styles: z.strictObject({
+    ...documentRead,
+    includePresets: z.boolean().default(false),
+  }),
+  edit_initial_martyria_styles: z.strictObject({
+    ...documentMutation,
+    changes: initialMartyriaStyleChangesSchema,
   }),
   get_paragraph_styles: z.strictObject({
     documentId,

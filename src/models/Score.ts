@@ -6,6 +6,8 @@ import { Footers } from './Footers';
 import type { Footnote } from './Footnote';
 import type { Header } from './Header';
 import { Headers } from './Headers';
+import { ensureScoreInitialMartyriaStyle } from './InitialMartyriaCommonWordings';
+import type { InitialMartyriaStyle } from './InitialMartyriaStyle';
 import { PageSetup } from './PageSetup';
 import {
   createDefaultParagraphStyles,
@@ -18,14 +20,34 @@ export class DocumentProperties {
   public author: string = '';
 }
 
+/** A score's initial martyria styles and the default its mode keys follow. */
+export type ScoreInitialMartyriaStyles = Pick<
+  Score,
+  'initialMartyriaStyles' | 'defaultInitialMartyriaStyleId'
+>;
+
 export class Score {
   public documentProperties: DocumentProperties = new DocumentProperties();
   public pageSetup: PageSetup = new PageSetup();
   public paragraphStyles: ParagraphStyle[] = createDefaultParagraphStyles();
+  /**
+   * The score's own initial martyria styles. There is always at least one,
+   * and the default names one of them.
+   */
+  public initialMartyriaStyles: InitialMartyriaStyle[] = [];
+  /**
+   * The style every mode key without a style of its own follows. Empty only
+   * until the constructor gives the score its default style.
+   */
+  public defaultInitialMartyriaStyleId: string = '';
   public headers: Headers = new Headers();
   public footers: Footers = new Footers();
   public staff: Staff = new Staff();
   public footnotes: Footnote[] = [];
+
+  constructor() {
+    ensureScoreInitialMartyriaStyle(this);
+  }
 
   public get staves() {
     return [this.staff, ...this.footnotes.map((footnote) => footnote.staff)];

@@ -59,6 +59,7 @@ export default defineConfig({
               link: '/guide/editor-basics.html',
             },
             { text: 'Writing Music', link: '/guide/writing-music.html' },
+            { text: 'Initial Martyriæ', link: '/guide/initial-martyria.html' },
             { text: 'Lyrics', link: '/guide/lyrics.html' },
             {
               text: 'Text, Images, Annotations, and Alternate Lines',

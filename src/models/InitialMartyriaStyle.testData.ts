@@ -496,6 +496,43 @@ export const attestedStructures = {
     transliterateNoteNames: false,
     plagalAbbreviationWithModeSign: true,
   },
+  'greek-mode-sign-alone': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+    transliterateNoteNames: false,
+  },
+  'english-mode-sign-alone': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+    transliterateNoteNames: false,
+  },
+  'spanish-mode-sign-alone': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+    transliterateNoteNames: false,
+  },
+  'spanish-mode-sign-alone-with-plagal-sign': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+    transliterateNoteNames: false,
+    plagalAbbreviationWithModeSign: true,
+  },
+  'russian-mode-sign-alone': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+    transliterateNoteNames: true,
+  },
+  'arabic-mode-sign-alone': {
+    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic,
+    modeIdentificationMethod:
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+    transliterateNoteNames: false,
+  },
 } satisfies Record<string, InitialMartyriaStructure>;
 
 /*

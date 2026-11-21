@@ -18,6 +18,7 @@ import { initialMartyriaPlagalAbbreviationWithModeSignIsOptional } from '@/model
 import { getInitialMartyriaContext } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
   initialMartyriaLanguageIds,
   type InitialMartyriaStartingNoteRun,
@@ -66,6 +67,24 @@ function getLegalInitialMartyriaStructures() {
 
   for (const choices of getLanguageChoices()) {
     for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
+      if (
+        modeIdentificationMethod ===
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone
+      ) {
+        // No word for the mode, so no label variant either.
+        if (choices.labelVariant == null) {
+          for (const transliterateNoteNames of [false, true]) {
+            structures.push({
+              languageId: choices.languageId,
+              plagalAbbreviationWithModeSign:
+                choices.plagalAbbreviationWithModeSign,
+              transliterateNoteNames,
+              modeIdentificationMethod,
+            });
+          }
+        }
+        continue;
+      }
       for (const form of initialMartyriaNumeralForms) {
         for (const numberingSystem of [
           undefined,
@@ -128,6 +147,25 @@ function getUniqueLegalInitialMartyriaStructures() {
 }
 
 function describeStructure(structure: InitialMartyriaStructure) {
+  const plagalSign =
+    structure.plagalAbbreviationWithModeSign == null
+      ? undefined
+      : structure.plagalAbbreviationWithModeSign
+        ? 'plagal-sign'
+        : 'no-plagal-sign';
+  if (
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone
+  ) {
+    return [
+      structure.languageId,
+      structure.modeIdentificationMethod,
+      structure.transliterateNoteNames ? 'transliterated' : 'original',
+      plagalSign,
+    ]
+      .filter((part) => part != null)
+      .join('/');
+  }
   const numeralStyle =
     structure.modeIdentificationMethod === 'mode-sign'
       ? []
@@ -146,11 +184,7 @@ function describeStructure(structure: InitialMartyriaStructure) {
     structure.numeralQualifier,
     structure.modeNamingScheme,
     structure.transliterateNoteNames ? 'transliterated' : 'original',
-    structure.plagalAbbreviationWithModeSign == null
-      ? undefined
-      : structure.plagalAbbreviationWithModeSign
-        ? 'plagal-sign'
-        : 'no-plagal-sign',
+    plagalSign,
   ]
     .filter((part) => part != null)
     .join('/');
@@ -817,6 +851,84 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Tono | greek:λ/π | <modeSign> | <pitch>',
       'Tono | <modeSign> | <pitch>',
       'Tono | greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'greek-mode-sign-alone',
+    [
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'english-mode-sign-alone',
+    [
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'spanish-mode-sign-alone',
+    [
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'spanish-mode-sign-alone-with-plagal-sign',
+    [
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'russian-mode-sign-alone',
+    [
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+      '<modeSign> | <pitch>',
+    ],
+  ],
+  [
+    'arabic-mode-sign-alone',
+    [
+      '<pitch> | <modeSign>',
+      '<pitch> | <modeSign>',
+      '<pitch> | <modeSign>',
+      '<pitch> | <modeSign>',
+      '<pitch> | <modeSign> | greek:λ/π',
+      '<pitch> | <modeSign> | greek:λ/π',
+      '<pitch> | <modeSign>',
+      '<pitch> | <modeSign> | greek:λ/π',
     ],
   ],
 ];

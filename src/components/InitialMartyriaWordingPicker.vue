@@ -289,6 +289,7 @@ import {
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   type InitialMartyriaLabelVariant,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
@@ -505,7 +506,8 @@ function rowProps(row: WordingRow) {
 
 /*
  * The presets of the language and mode word, with the choices above in
- * place of their own. Presets that then print alike share a row.
+ * place of their own, then the sign group alone. Presets that then print
+ * alike share a row.
  */
 const commonGroups = computed(() => {
   const neumeFontRows: WordingRow[] = [];
@@ -531,6 +533,33 @@ const commonGroups = computed(() => {
     } else {
       rows.push(row);
     }
+  }
+  // The sign group alone has no word for the mode, so it is the same row
+  // whichever word is chosen.
+  const modeSignAloneMethod =
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone;
+  const [{ structure: modeSignAloneStructure }] =
+    enumerateInitialMartyriaStructures({
+      ...chosenAxes.value,
+      modeIdentificationMethod: modeSignAloneMethod,
+    });
+  const modeSignAloneCaption = [
+    getInitialMartyriaModeIdentificationMethodLabel(t, modeSignAloneMethod),
+  ];
+  textRows.push(
+    createRow(
+      modeSignAloneStructure,
+      INITIAL_MARTYRIA_LETTERINGS.Text,
+      modeSignAloneCaption,
+    ),
+  );
+  const neumeFontRow = createRow(
+    modeSignAloneStructure,
+    INITIAL_MARTYRIA_LETTERINGS.MusicFont,
+    modeSignAloneCaption,
+  );
+  if (neumeFontRow.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont) {
+    neumeFontRows.push(neumeFontRow);
   }
   return [
     {

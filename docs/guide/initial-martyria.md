@@ -23,7 +23,7 @@ A style controls the language, the wording of the mode name, whether a mode sign
 1. Open `Format > Initial Martyria Styles…`, or select an initial martyria and choose **Manage styles…** in Properties.
 2. Choose **Add style**. To revise a style already in the score, use its pencil button (**Change wording**).
 3. Choose a **Language**. The picker offers Greek, English, Spanish, Church Slavonic, Russian, Arabic, Romanian, and Indonesian. Some languages offer a choice of terms for the mode, such as **Mode** or **Tone** in English.
-4. Click the preview row you want. **Common** shows frequently used wordings. Expand **More wordings** to see additional forms, grouped by how they identify the mode (**Sign only**, **Text and sign**, or **Text only**). Use a **Neume font** choice where available for traditional lettering drawn from the score's music font.
+4. Click the preview row you want. **Common** shows frequently used wordings, ending with **Sign without words**, which sets only the mode sign and the starting note, with the plagal sign in plagal modes as the language sets it or as the **Plagal sign** switch chooses. Greek also offers it as a **Neume font** choice. Expand **More wordings** to see additional forms, grouped by how they identify the mode (**Sign only**, **Text and sign**, or **Text only**). Use a **Neume font** choice where available for traditional lettering drawn from the score's music font.
 5. In the styles list, give the style a name and choose its paragraph styles. Press **Update** to save the changes.
 
 Where available, enable **Transliterate starting note** to show a form such as `Pa` for `Πα`. The **Plagal sign** switch adds `πλ` beside the mode sign in plagal modes for wordings that offer this choice.

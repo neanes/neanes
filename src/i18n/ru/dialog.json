@@ -89,7 +89,8 @@
     "modeIdentificationMethods": {
       "text": "Только текст",
       "modeSign": "Только знак",
-      "textAndModeSign": "Текст и знак"
+      "textAndModeSign": "Текст и знак",
+      "modeSignAlone": "Знак без текста"
     },
     "discardChangesTitle": "Отменить изменения стилей?",
     "discardChangesDescription": "Стили, созданные или изменённые в этом окне, будут потеряны.",

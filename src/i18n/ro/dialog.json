@@ -89,7 +89,8 @@
     "modeIdentificationMethods": {
       "text": "Doar text",
       "modeSign": "Doar mărturie",
-      "textAndModeSign": "Text și mărturie"
+      "textAndModeSign": "Text și mărturie",
+      "modeSignAlone": "Mărturie fără text"
     },
     "discardChangesTitle": "Renunțați la modificările stilurilor?",
     "discardChangesDescription": "Stilurile create sau modificate în această fereastră se vor pierde.",

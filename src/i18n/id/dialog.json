@@ -89,7 +89,8 @@
     "modeIdentificationMethods": {
       "text": "Teks saja",
       "modeSign": "Tanda saja",
-      "textAndModeSign": "Teks dan tanda"
+      "textAndModeSign": "Teks dan tanda",
+      "modeSignAlone": "Tanda tanpa teks"
     },
     "discardChangesTitle": "Buang perubahan pada gaya?",
     "discardChangesDescription": "Gaya yang Anda buat atau ubah di dialog ini akan hilang.",

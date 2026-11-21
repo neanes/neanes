@@ -10,6 +10,7 @@ import {
 import { getInitialMartyriaLabelVariants } from '@/models/InitialMartyriaLexicon';
 import { initialMartyriaPlagalAbbreviationWithModeSignIsOptional } from '@/models/InitialMartyriaRenderingConventions';
 import {
+  INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
@@ -46,6 +47,12 @@ describe('InitialMartyriaGrammar', () => {
   const englishText = attestedStructures['english-mode-names'];
 
   const signature = (structure: InitialMartyriaStructure) => {
+    if (
+      structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone
+    ) {
+      return structure.modeIdentificationMethod;
+    }
     const axes: string[] = [
       structure.numeralKind,
       structure.numeralQualifier,
@@ -734,12 +741,41 @@ describe('InitialMartyriaGrammar', () => {
       transliterateNoteNames: false,
     }).filter(
       ({ structure }) =>
-        structure.modeIdentificationMethod !==
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+        structure.modeIdentificationMethod ===
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text &&
         structure.numeralStyle ===
           INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
     );
     expect(spanishRoman).toHaveLength(1);
+  });
+
+  it('sets the sign group alone in every language, without a word for the mode', () => {
+    const [{ structure }] = enumerateInitialMartyriaStructures({
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+      labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+      transliterateNoteNames: false,
+      plagalAbbreviationWithModeSign: false,
+    });
+
+    expect(structure).toEqual({
+      languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
+      modeIdentificationMethod:
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+      transliterateNoteNames: false,
+      plagalAbbreviationWithModeSign: false,
+    });
+    for (const languageId of initialMartyriaLanguageIds) {
+      expect(
+        isInitialMartyriaStructureSupported({
+          languageId,
+          modeIdentificationMethod:
+            INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+          transliterateNoteNames: false,
+        }),
+      ).toBe(true);
+    }
   });
 
   it('enumerates exactly the grammar-derived structures for every method', () => {
@@ -753,9 +789,12 @@ describe('InitialMartyriaGrammar', () => {
         const keys = structures.map((variation) => variation.key);
         const expected =
           modeIdentificationMethod ===
-          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-            ? modeSignStructureSignatures[languageId]
-            : textStructureSignatures[languageId];
+          INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone
+            ? [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone]
+            : modeIdentificationMethod ===
+                INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+              ? modeSignStructureSignatures[languageId]
+              : textStructureSignatures[languageId];
 
         expect(
           structures.map((variation) => signature(variation.structure)),

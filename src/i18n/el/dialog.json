@@ -89,7 +89,8 @@
     "modeIdentificationMethods": {
       "text": "Μόνο κείμενο",
       "modeSign": "Μόνο μαρτυρία",
-      "textAndModeSign": "Κείμενο και μαρτυρία"
+      "textAndModeSign": "Κείμενο και μαρτυρία",
+      "modeSignAlone": "Μαρτυρία χωρίς κείμενο"
     },
     "discardChangesTitle": "Απόρριψη αλλαγών στα στυλ;",
     "discardChangesDescription": "Τα στυλ που δημιουργήσατε ή επεξεργαστήκατε σε αυτό το παράθυρο θα χαθούν.",

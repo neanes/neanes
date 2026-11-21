@@ -89,7 +89,8 @@
     "modeIdentificationMethods": {
       "text": "Text only",
       "modeSign": "Sign only",
-      "textAndModeSign": "Text and sign"
+      "textAndModeSign": "Text and sign",
+      "modeSignAlone": "Sign without words"
     },
     "discardChangesTitle": "Discard changes to styles?",
     "discardChangesDescription": "The styles you created or edited in this dialog will be lost.",

@@ -2,11 +2,12 @@ export interface InitialMartyriaStructure {
   languageId: string;
   labelVariant?: string;
   modeIdentificationMethod: string;
-  numeralKind: string;
+  /** Absent for the sign group alone, which has no mode name. */
+  numeralKind?: string;
   numeralStyle?: string;
   numberingSystem?: string;
-  numeralQualifier: string;
-  modeNamingScheme: string;
+  numeralQualifier?: string;
+  modeNamingScheme?: string;
   transliterateNoteNames?: boolean;
   plagalAbbreviationWithModeSign?: boolean;
 }

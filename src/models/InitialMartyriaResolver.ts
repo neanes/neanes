@@ -42,12 +42,15 @@ import {
   type InitialMartyriaContext,
   type InitialMartyriaLettering,
   type InitialMartyriaModeNameSemantics,
+  type InitialMartyriaNamedStructure,
   type InitialMartyriaStructure,
   initialMartyriaStructureHasOrdinalDigits,
   type InitialMartyriaStyle,
   type InitialMartyriaStyleResolution,
   type InitialMartyriaTextSemantic,
   type InitialMartyriaWrittenModeNameSemantics,
+  isInitialMartyriaModeSignAloneStructure,
+  isInitialMartyriaTextStructure,
   type ModeKeyMode,
   type ResolvedInitialMartyriaRun,
   type ResolvedInitialMartyriaStyle,
@@ -308,6 +311,42 @@ const traditionalModeSignSemantics: InitialMartyriaModeNameSemantics = {
 };
 
 /**
+ * The traditional sign group: the sign with its plagal abbreviation, in the
+ * conventional order and in the flow direction of the text around it.
+ */
+function getTraditionalModeSignGroup(
+  lexicon: InitialMartyriaLexicon,
+  modeSign: InitialMartyriaComponent,
+  modeSignAbbreviation: InitialMartyriaComponent | null,
+  flowDirection: 'ltr' | 'rtl',
+) {
+  const group = orderInitialMartyriaModeName(
+    traditionalModeSignSemantics,
+    lexicon,
+    modeSign,
+    modeSignAbbreviation,
+    null,
+  ).filter(
+    (component): component is InitialMartyriaComponent => component != null,
+  );
+  if (flowDirection === 'rtl') {
+    group.reverse();
+  }
+  return group;
+}
+
+/** The sign group and starting pitch, in the language's order. */
+function placeModeSignGroup(
+  convention: ReturnType<typeof getInitialMartyriaRenderingConvention>,
+  group: InitialMartyriaComponent[],
+  startingPitch: InitialMartyriaComponent,
+) {
+  return convention.modeSignGroupPlacement === 'after-starting-pitch'
+    ? [startingPitch, ...group]
+    : [...group, startingPitch];
+}
+
+/**
  * Derives the displayed components for one mode from the style's semantics
  * and its language's lexicon. The mode name is a phrase built from the
  * label, the numeral, and a plagal or grave marker; sign-identified styles
@@ -329,6 +368,21 @@ function getInitialMartyriaComponents(
   const startingPitch: InitialMartyriaComponent = {
     kind: 'startingNoteCluster',
   };
+  const traditionalModeSignGroupWithPitch = () =>
+    placeModeSignGroup(
+      convention,
+      getTraditionalModeSignGroup(
+        lexicon,
+        modeSign,
+        modeSignAbbreviation,
+        flowDirection,
+      ),
+      startingPitch,
+    );
+  if (isInitialMartyriaModeSignAloneStructure(structure)) {
+    // No words at all, so neither a label nor a grave title.
+    return traditionalModeSignGroupWithPitch();
+  }
   const makeLabel = (withOrdinal: boolean) => {
     const labelText = getInitialMartyriaLabelText(
       lexicon,
@@ -435,23 +489,7 @@ function getInitialMartyriaComponents(
       // its own conventional order rather than inheriting the text's number
       // form. For example, the sign beside "Mode 5" still names
       // "Plagal First".
-      const group = orderInitialMartyriaModeName(
-        traditionalModeSignSemantics,
-        lexicon,
-        modeSign,
-        modeSignAbbreviation,
-        null,
-      ).filter(
-        (component): component is InitialMartyriaComponent => component != null,
-      );
-      if (flowDirection === 'rtl') {
-        group.reverse();
-      }
-      if (convention.modeSignGroupPlacement === 'after-starting-pitch') {
-        ordered.push(startingPitch, ...group);
-      } else {
-        ordered.push(...group, startingPitch);
-      }
+      ordered.push(...traditionalModeSignGroupWithPitch());
     } else {
       ordered.push(startingPitch);
     }
@@ -466,7 +504,7 @@ function getInitialMartyriaComponents(
 export const modeKeyModes: ModeKeyMode[] = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export function isInitialMartyriaModeNameSupported(
-  structure: InitialMartyriaStructure,
+  structure: InitialMartyriaNamedStructure,
 ) {
   if (
     structure.modeIdentificationMethod ===
@@ -507,6 +545,14 @@ const structureKeyCache = new Map<string, string>();
 function getInitialMartyriaStructureAxisSignature(
   structure: InitialMartyriaStructure,
 ) {
+  if (isInitialMartyriaModeSignAloneStructure(structure)) {
+    return [
+      structure.languageId,
+      structure.modeIdentificationMethod,
+      structure.transliterateNoteNames,
+      showsInitialMartyriaPlagalAbbreviationWithModeSign(structure),
+    ].join('/');
+  }
   return [
     structure.languageId,
     structure.labelVariant,
@@ -516,14 +562,9 @@ function getInitialMartyriaStructureAxisSignature(
     structure.modeNamingScheme,
     structure.transliterateNoteNames,
     showsInitialMartyriaPlagalAbbreviationWithModeSign(structure),
-    structure.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-      ? undefined
-      : structure.numeralStyle,
-    structure.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-      ? undefined
-      : structure.numberingSystem,
+    ...(isInitialMartyriaTextStructure(structure)
+      ? [structure.numeralStyle, structure.numberingSystem]
+      : [undefined, undefined]),
   ].join('/');
 }
 

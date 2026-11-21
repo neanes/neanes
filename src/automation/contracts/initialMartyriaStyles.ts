@@ -12,17 +12,27 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
 } from '@/models/InitialMartyriaStyle';
 
-const structureBase = {
+const structureCommon = {
   languageId: z.enum(INITIAL_MARTYRIA_LANGUAGE_IDS),
-  labelVariant: z.enum(INITIAL_MARTYRIA_LABEL_VARIANTS).optional(),
-  numeralKind: z.enum(INITIAL_MARTYRIA_NUMERAL_KINDS),
-  numeralQualifier: z.enum(INITIAL_MARTYRIA_NUMERAL_QUALIFIERS),
-  modeNamingScheme: z.enum(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES),
   transliterateNoteNames: z.boolean(),
   plagalAbbreviationWithModeSign: z.boolean().optional(),
 };
 
+const structureBase = {
+  ...structureCommon,
+  labelVariant: z.enum(INITIAL_MARTYRIA_LABEL_VARIANTS).optional(),
+  numeralKind: z.enum(INITIAL_MARTYRIA_NUMERAL_KINDS),
+  numeralQualifier: z.enum(INITIAL_MARTYRIA_NUMERAL_QUALIFIERS),
+  modeNamingScheme: z.enum(INITIAL_MARTYRIA_MODE_NAMING_SCHEMES),
+};
+
 const structure = z.discriminatedUnion('modeIdentificationMethod', [
+  z.strictObject({
+    ...structureCommon,
+    modeIdentificationMethod: z.literal(
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+    ),
+  }),
   z.strictObject({
     ...structureBase,
     modeIdentificationMethod: z.literal(

@@ -23,6 +23,7 @@ import {
   type InitialMartyriaLanguageId,
   type InitialMartyriaModeIdentificationMethod,
   type InitialMartyriaModeNamingScheme,
+  type InitialMartyriaNamedStructure,
   type InitialMartyriaNumberingSystem,
   type InitialMartyriaNumeralKind,
   type InitialMartyriaNumeralQualifier,
@@ -30,6 +31,7 @@ import {
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
   type InitialMartyriaTextStructure,
+  isInitialMartyriaModeSignAloneStructure,
 } from './InitialMartyriaStyle';
 
 export { getInitialMartyriaStructureKey } from './InitialMartyriaResolver';
@@ -53,6 +55,7 @@ export const initialMartyriaModeIdentificationMethods = [
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
 ] as const;
 
 export const initialMartyriaModeNamingSchemes = [
@@ -342,7 +345,7 @@ function supportsNumeralForm(
 
 function modeNameGrammarRuleMatches(
   rule: InitialMartyriaModeNameGrammarRule,
-  structure: InitialMartyriaStructure,
+  structure: InitialMartyriaNamedStructure,
 ) {
   return (
     rule.numeralKinds.includes(structure.numeralKind) &&
@@ -364,11 +367,15 @@ function textGrammarRuleMatches(
 /**
  * Whether the language's lexicon can express a structure. Axes that do not
  * take part in the structure (the transliteration of Greek-script languages)
- * are never a reason to reject.
+ * are never a reason to reject. The sign group alone has no words, so every
+ * language can set it.
  */
 export function isInitialMartyriaStructureSupported(
   structure: InitialMartyriaStructure,
 ) {
+  if (isInitialMartyriaModeSignAloneStructure(structure)) {
+    return true;
+  }
   if (
     structure.labelVariant != null &&
     !getInitialMartyriaLabelVariants(structure.languageId).includes(
@@ -410,13 +417,20 @@ interface InitialMartyriaEnumerationBase {
   numberingSystem?: InitialMartyriaNumberingSystem;
 }
 
-/** The axes an enumeration keeps fixed, as set on every structure. */
-function getEnumerationCommonAxes(base: InitialMartyriaEnumerationBase) {
+/** The axes an enumeration keeps fixed that every structure takes part in. */
+function getEnumerationSharedAxes(base: InitialMartyriaEnumerationBase) {
   return {
     languageId: base.languageId,
-    labelVariant: base.labelVariant,
     transliterateNoteNames: base.transliterateNoteNames,
     plagalAbbreviationWithModeSign: base.plagalAbbreviationWithModeSign,
+  };
+}
+
+/** The axes an enumeration keeps fixed, as set on every named structure. */
+function getEnumerationCommonAxes(base: InitialMartyriaEnumerationBase) {
+  return {
+    ...getEnumerationSharedAxes(base),
+    labelVariant: base.labelVariant,
   };
 }
 
@@ -425,10 +439,14 @@ function getInitialMartyriaStructuresForMethod(
   includeAllNumberingSystems = false,
 ) {
   const structures: InitialMartyriaStructure[] = [];
-  if (
-    base.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-  ) {
+  const method = base.modeIdentificationMethod;
+  if (method === INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone) {
+    // No word for the mode, so the label variant takes no part.
+    return [
+      { ...getEnumerationSharedAxes(base), modeIdentificationMethod: method },
+    ];
+  }
+  if (method === INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign) {
     for (const numeralKind of initialMartyriaNumeralKinds) {
       for (const numeralQualifier of initialMartyriaNumeralQualifiers) {
         for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
@@ -462,7 +480,7 @@ function getInitialMartyriaStructuresForMethod(
         for (const modeNamingScheme of initialMartyriaModeNamingSchemes) {
           const structure: InitialMartyriaStructure = {
             ...getEnumerationCommonAxes(base),
-            modeIdentificationMethod: base.modeIdentificationMethod,
+            modeIdentificationMethod: method,
             ...form,
             numberingSystem,
             numeralQualifier,

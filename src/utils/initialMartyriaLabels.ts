@@ -43,6 +43,8 @@ const modeIdentificationMethodSelectors: Record<
     $.dialog.initialMartyriaStyles.modeIdentificationMethods.modeSign,
   [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign]: ($) =>
     $.dialog.initialMartyriaStyles.modeIdentificationMethods.textAndModeSign,
+  [INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone]: ($) =>
+    $.dialog.initialMartyriaStyles.modeIdentificationMethods.modeSignAlone,
 };
 
 export function getInitialMartyriaLanguageName(

@@ -49,7 +49,9 @@ describe('withInitialMartyriaStyleStructure', () => {
     english.useOrdinalForms = false;
 
     const changed = withInitialMartyriaStyleStructure(english, {
-      ...english.structure,
+      ...getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.EnglishTraditionalSign,
+      ).structure,
       modeIdentificationMethod:
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
       numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,

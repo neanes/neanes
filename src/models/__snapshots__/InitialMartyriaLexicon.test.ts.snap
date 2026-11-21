@@ -186,6 +186,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
+      "1: <pitch:Πα> | <modeSign>",
+      "2: <pitch:Δι> | <modeSign>",
+      "3: <pitch:Γα> | <modeSign>",
+      "4: <pitch:Δι> | <modeSign>",
+      "5: <pitch:Πα> | <modeSign> | greek:λ/π",
+      "6: <pitch:Πα> | <modeSign> | greek:λ/π",
+      "7: <pitch:Γα> | <modeSign>",
+      "8: <pitch:Νη> | <modeSign> | greek:λ/π",
+    ],
+    "structure": "ar/mode-sign-alone/original",
+  },
+  {
+    "modes": [
+      "1: <pitch:با> | <modeSign>",
+      "2: <pitch:ذي> | <modeSign>",
+      "3: <pitch:غا> | <modeSign>",
+      "4: <pitch:ذي> | <modeSign>",
+      "5: <pitch:با> | <modeSign> | greek:λ/π",
+      "6: <pitch:با> | <modeSign> | greek:λ/π",
+      "7: <pitch:غا> | <modeSign>",
+      "8: <pitch:ني> | <modeSign> | greek:λ/π",
+    ],
+    "structure": "ar/mode-sign-alone/transliterated",
+  },
+  {
+    "modes": [
       "1: Гла́съ | <modeSign> | <pitch:Πα>",
       "2: Гла́съ | <modeSign> | <pitch:Δι>",
       "3: Гла́съ | <modeSign> | <pitch:Γα>",
@@ -417,6 +443,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
       "8: Гла́съ | ѻ҆сьмы́й. | <pitch:Ни>",
     ],
     "structure": "cu/text/words/ordinal/postnominal/absolute/transliterated",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: <modeSign> | <pitch:Πα>",
+      "6: <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "cu/mode-sign-alone/original",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Па>",
+      "2: <modeSign> | <pitch:Ди>",
+      "3: <modeSign> | <pitch:Га>",
+      "4: <modeSign> | <pitch:Ди>",
+      "5: <modeSign> | <pitch:Па>",
+      "6: <modeSign> | <pitch:Па>",
+      "7: <modeSign> | <pitch:Га>",
+      "8: <modeSign> | <pitch:Ни>",
+    ],
+    "structure": "cu/mode-sign-alone/transliterated",
   },
   {
     "modes": [
@@ -1304,6 +1356,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "6: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: greek:λ/π | <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "en/mode-sign-alone/original",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Pa>",
+      "2: <modeSign> | <pitch:Di>",
+      "3: <modeSign> | <pitch:Ga>",
+      "4: <modeSign> | <pitch:Di>",
+      "5: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "6: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "7: <modeSign> | <pitch:Ga>",
+      "8: greek:λ/π | <modeSign> | <pitch:Ni>",
+    ],
+    "structure": "en/mode-sign-alone/transliterated",
+  },
+  {
+    "modes": [
       "1: <modeSign> | Mode | <pitch:Πα>",
       "2: <modeSign> | Mode | <pitch:Δι>",
       "3: <modeSign> | Mode | <pitch:Γα>",
@@ -1769,6 +1847,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
       "8: Mode | Eight. | <modeSign> | <pitch:Ni>",
     ],
     "structure": "en/text-and-mode-sign/words/cardinal/postnominal/absolute/transliterated/no-plagal-sign",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: <modeSign> | <pitch:Πα>",
+      "6: <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "en/mode-sign-alone/original/no-plagal-sign",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Pa>",
+      "2: <modeSign> | <pitch:Di>",
+      "3: <modeSign> | <pitch:Ga>",
+      "4: <modeSign> | <pitch:Di>",
+      "5: <modeSign> | <pitch:Pa>",
+      "6: <modeSign> | <pitch:Pa>",
+      "7: <modeSign> | <pitch:Ga>",
+      "8: <modeSign> | <pitch:Ni>",
+    ],
+    "structure": "en/mode-sign-alone/transliterated/no-plagal-sign",
   },
   {
     "modes": [
@@ -2279,6 +2383,19 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "6: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: greek:λ/π | <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "el/mode-sign-alone/original",
+  },
+  {
+    "modes": [
       "1: Modus | <modeSign> | <pitch:Πα>",
       "2: Modus | <modeSign> | <pitch:Δι>",
       "3: Modus | <modeSign> | <pitch:Γα>",
@@ -2669,6 +2786,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "6: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: greek:λ/π | <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "id/mode-sign-alone/original",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Pa>",
+      "2: <modeSign> | <pitch:Di>",
+      "3: <modeSign> | <pitch:Ga>",
+      "4: <modeSign> | <pitch:Di>",
+      "5: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "6: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "7: <modeSign> | <pitch:Ga>",
+      "8: greek:λ/π | <modeSign> | <pitch:Ni>",
+    ],
+    "structure": "id/mode-sign-alone/transliterated",
+  },
+  {
+    "modes": [
       "1: Glas | <modeSign> | <pitch:Πα>",
       "2: Glas | <modeSign> | <pitch:Δι>",
       "3: Glas | <modeSign> | <pitch:Γα>",
@@ -2744,6 +2887,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
       "8: Glas | 8 | <pitch:Ni>",
     ],
     "structure": "ro/text/digits/cardinal/postnominal/absolute/transliterated",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "6: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: greek:λ/π | <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "ro/mode-sign-alone/original",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Pa>",
+      "2: <modeSign> | <pitch:Di>",
+      "3: <modeSign> | <pitch:Ga>",
+      "4: <modeSign> | <pitch:Di>",
+      "5: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "6: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "7: <modeSign> | <pitch:Ga>",
+      "8: greek:λ/π | <modeSign> | <pitch:Ni>",
+    ],
+    "structure": "ro/mode-sign-alone/transliterated",
   },
   {
     "modes": [
@@ -3085,6 +3254,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: <modeSign> | <pitch:Πα>",
+      "6: <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "ru/mode-sign-alone/original",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Па>",
+      "2: <modeSign> | <pitch:Ди>",
+      "3: <modeSign> | <pitch:Га>",
+      "4: <modeSign> | <pitch:Ди>",
+      "5: <modeSign> | <pitch:Па>",
+      "6: <modeSign> | <pitch:Па>",
+      "7: <modeSign> | <pitch:Га>",
+      "8: <modeSign> | <pitch:Ни>",
+    ],
+    "structure": "ru/mode-sign-alone/transliterated",
+  },
+  {
+    "modes": [
       "1: Tono | <modeSign> | <pitch:Πα>",
       "2: Tono | <modeSign> | <pitch:Δι>",
       "3: Tono | <modeSign> | <pitch:Γα>",
@@ -3319,6 +3514,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
   },
   {
     "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: <modeSign> | <pitch:Πα>",
+      "6: <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "es/mode-sign-alone/original",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Pa>",
+      "2: <modeSign> | <pitch:Di>",
+      "3: <modeSign> | <pitch:Ga>",
+      "4: <modeSign> | <pitch:Di>",
+      "5: <modeSign> | <pitch:Pa>",
+      "6: <modeSign> | <pitch:Pa>",
+      "7: <modeSign> | <pitch:Ga>",
+      "8: <modeSign> | <pitch:Ni>",
+    ],
+    "structure": "es/mode-sign-alone/transliterated",
+  },
+  {
+    "modes": [
       "1: Tono | <modeSign> | <pitch:Πα>",
       "2: Tono | <modeSign> | <pitch:Δι>",
       "3: Tono | <modeSign> | <pitch:Γα>",
@@ -3446,6 +3667,32 @@ exports[`InitialMartyriaLexicon > renders every legal structure 1`] = `
       "8: Tono | octavo. | greek:λ/π | <modeSign> | <pitch:Ni>",
     ],
     "structure": "es/text-and-mode-sign/words/ordinal/postnominal/absolute/transliterated/plagal-sign",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Πα>",
+      "2: <modeSign> | <pitch:Δι>",
+      "3: <modeSign> | <pitch:Γα>",
+      "4: <modeSign> | <pitch:Δι>",
+      "5: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "6: greek:λ/π | <modeSign> | <pitch:Πα>",
+      "7: <modeSign> | <pitch:Γα>",
+      "8: greek:λ/π | <modeSign> | <pitch:Νη>",
+    ],
+    "structure": "es/mode-sign-alone/original/plagal-sign",
+  },
+  {
+    "modes": [
+      "1: <modeSign> | <pitch:Pa>",
+      "2: <modeSign> | <pitch:Di>",
+      "3: <modeSign> | <pitch:Ga>",
+      "4: <modeSign> | <pitch:Di>",
+      "5: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "6: greek:λ/π | <modeSign> | <pitch:Pa>",
+      "7: <modeSign> | <pitch:Ga>",
+      "8: greek:λ/π | <modeSign> | <pitch:Ni>",
+    ],
+    "structure": "es/mode-sign-alone/transliterated/plagal-sign",
   },
 ]
 `;

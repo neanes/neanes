@@ -36,6 +36,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
+  type InitialMartyriaNamedStructure,
   type InitialMartyriaNumberingSystem,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
@@ -73,7 +74,10 @@ import {
 import type { Footer as Footer_v1 } from '@/models/save/v1/Footer';
 import { Footnote as Footnote_v1 } from '@/models/save/v1/Footnote';
 import type { Header as Header_v1 } from '@/models/save/v1/Header';
-import type { InitialMartyriaStyle as InitialMartyriaStyle_v1 } from '@/models/save/v1/InitialMartyriaStyle';
+import type {
+  InitialMartyriaStructure as InitialMartyriaStructure_v1,
+  InitialMartyriaStyle as InitialMartyriaStyle_v1,
+} from '@/models/save/v1/InitialMartyriaStyle';
 import { PageSetup as PageSetup_v1 } from '@/models/save/v1/PageSetup';
 import {
   DocumentProperties as DocumentProperties_v1,
@@ -1078,27 +1082,18 @@ function saveInitialMartyriaStyle(
   };
 }
 
-/*
- * A saved style whose axes this version does not understand, or whose axis
- * combination it does not support, is dropped rather than guessed at;
- * references to it then fall back to the score's style.
+/**
+ * Loads a structure that names the mode, or null when one of its mode-name
+ * axes is not a known value.
  */
-function loadInitialMartyriaStyle(
-  saved: InitialMartyriaStyle_v1,
-  paragraphStyles: ParagraphStyle[],
-): InitialMartyriaStyle | null {
-  const savedStructure = saved.structure;
+function loadNamedInitialMartyriaStructure(
+  savedStructure: InitialMartyriaStructure_v1,
+  sharedAxes: Pick<
+    InitialMartyriaStructure,
+    'languageId' | 'transliterateNoteNames' | 'plagalAbbreviationWithModeSign'
+  >,
+): InitialMartyriaNamedStructure | null {
   if (
-    savedStructure == null ||
-    isBuiltInInitialMartyriaStyleId(saved.id) ||
-    !isOneOf<InitialMartyriaLanguageId>(
-      initialMartyriaLanguageIds,
-      savedStructure.languageId,
-    ) ||
-    !isOneOf(
-      Object.values(INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS),
-      savedStructure.modeIdentificationMethod,
-    ) ||
     !isOneOf(
       Object.values(INITIAL_MARTYRIA_NUMERAL_KINDS),
       savedStructure.numeralKind,
@@ -1124,12 +1119,71 @@ function loadInitialMartyriaStyle(
   ) {
     return null;
   }
-  const common = {
-    languageId: savedStructure.languageId,
+  const namedAxes = {
+    ...sharedAxes,
     labelVariant: savedStructure.labelVariant,
     numeralKind: savedStructure.numeralKind,
     numeralQualifier: savedStructure.numeralQualifier,
     modeNamingScheme: savedStructure.modeNamingScheme,
+  };
+  if (
+    savedStructure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+  ) {
+    return {
+      ...namedAxes,
+      modeIdentificationMethod: savedStructure.modeIdentificationMethod,
+    };
+  }
+  if (
+    !isOneOf(
+      [
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+      ],
+      savedStructure.modeIdentificationMethod,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
+      savedStructure.numeralStyle,
+    )
+  ) {
+    return null;
+  }
+  return {
+    ...namedAxes,
+    modeIdentificationMethod: savedStructure.modeIdentificationMethod,
+    numeralStyle: savedStructure.numeralStyle,
+    numberingSystem: savedStructure.numberingSystem,
+  };
+}
+
+/*
+ * A saved style whose axes this version does not understand, or whose axis
+ * combination it does not support, is dropped rather than guessed at;
+ * references to it then fall back to the score's style.
+ */
+function loadInitialMartyriaStyle(
+  saved: InitialMartyriaStyle_v1,
+  paragraphStyles: ParagraphStyle[],
+): InitialMartyriaStyle | null {
+  const savedStructure = saved.structure;
+  if (
+    savedStructure == null ||
+    isBuiltInInitialMartyriaStyleId(saved.id) ||
+    !isOneOf<InitialMartyriaLanguageId>(
+      initialMartyriaLanguageIds,
+      savedStructure.languageId,
+    ) ||
+    !isOneOf(
+      Object.values(INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS),
+      savedStructure.modeIdentificationMethod,
+    )
+  ) {
+    return null;
+  }
+  const sharedAxes = {
+    languageId: savedStructure.languageId,
     transliterateNoteNames: savedStructure.transliterateNoteNames === true,
     // Styles saved before the choice existed follow the language's practice.
     plagalAbbreviationWithModeSign:
@@ -1137,32 +1191,16 @@ function loadInitialMartyriaStyle(
         ? savedStructure.plagalAbbreviationWithModeSign
         : undefined,
   };
-  let structure: InitialMartyriaStructure;
-  if (
+  // The sign group alone names no mode, so it has no mode-name axes.
+  const structure: InitialMartyriaStructure | null =
     savedStructure.modeIdentificationMethod ===
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
-  ) {
-    structure = {
-      ...common,
-      modeIdentificationMethod: savedStructure.modeIdentificationMethod,
-    };
-  } else {
-    if (
-      !isOneOf(
-        Object.values(INITIAL_MARTYRIA_NUMERAL_STYLES),
-        savedStructure.numeralStyle,
-      )
-    ) {
-      return null;
-    }
-    structure = {
-      ...common,
-      modeIdentificationMethod: savedStructure.modeIdentificationMethod,
-      numeralStyle: savedStructure.numeralStyle,
-      numberingSystem: savedStructure.numberingSystem,
-    };
-  }
-  if (!isInitialMartyriaStructureSupported(structure)) {
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone
+      ? {
+          ...sharedAxes,
+          modeIdentificationMethod: savedStructure.modeIdentificationMethod,
+        }
+      : loadNamedInitialMartyriaStructure(savedStructure, sharedAxes);
+  if (structure == null || !isInitialMartyriaStructureSupported(structure)) {
     return null;
   }
 

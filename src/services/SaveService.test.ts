@@ -28,6 +28,7 @@ import {
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
+import { attestedStructures } from '@/models/InitialMartyriaStyle.testData';
 import { Fthora, Ison, QuantitativeNeume } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -1536,6 +1537,34 @@ describe('SaveService font styles', () => {
 
     expect(savedStructure).not.toHaveProperty('numeralStyle');
     expect(savedStructure).not.toHaveProperty('numberingSystem');
+    expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
+  });
+
+  it('round-trips the sign group alone without mode-name axes', () => {
+    const score = new Score();
+    const customStyle = createInitialMartyriaStyle({
+      ...getBuiltInInitialMartyriaStyle(
+        BUILT_IN_INITIAL_MARTYRIA_STYLE_IDS.Classic,
+      ),
+      displayName: 'Bare neume font',
+      structure: attestedStructures['greek-mode-sign-alone'],
+    });
+    score.initialMartyriaStyles = [customStyle];
+    score.defaultInitialMartyriaStyleId = customStyle.id;
+
+    const saved = SaveService.SaveScoreToJson(score);
+    const loaded = SaveService.LoadScore_v1(saved);
+    const savedStructure = saved.initialMartyriaStyles![0].structure;
+
+    expect(customStyle.lettering).toBe(INITIAL_MARTYRIA_LETTERINGS.MusicFont);
+    for (const axis of [
+      'labelVariant',
+      'numeralKind',
+      'numeralQualifier',
+      'modeNamingScheme',
+    ]) {
+      expect(savedStructure).not.toHaveProperty(axis);
+    }
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
   });
 

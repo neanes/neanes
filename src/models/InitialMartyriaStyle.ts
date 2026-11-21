@@ -48,6 +48,12 @@ export const INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS = {
   ModeSign: 'mode-sign',
   TextAndModeSign: 'text-and-mode-sign',
   Text: 'text',
+  /**
+   * The traditional sign group alone, with no words: the plagal
+   * abbreviation where the language sets one, the mode sign, then the
+   * starting note cluster.
+   */
+  ModeSignAlone: 'mode-sign-alone',
 } as const;
 
 export type InitialMartyriaModeIdentificationMethod =
@@ -170,10 +176,8 @@ export interface InitialMartyriaWrittenModeNameSemantics extends InitialMartyria
  * the app can produce. The displayed components are derived from these
  * semantics and the language's lexicon, never stored.
  */
-interface InitialMartyriaStructureBase extends InitialMartyriaModeNameSemantics {
+interface InitialMartyriaStructureCommon {
   languageId: InitialMartyriaLanguageId;
-  /** The word for the mode; absent means the language's usual word. */
-  labelVariant?: InitialMartyriaLabelVariant;
   /** Only used by languages that are not written in Greek script. */
   transliterateNoteNames: boolean;
   /**
@@ -182,6 +186,12 @@ interface InitialMartyriaStructureBase extends InitialMartyriaModeNameSemantics 
    * language's usual practice.
    */
   plagalAbbreviationWithModeSign?: boolean;
+}
+
+interface InitialMartyriaStructureBase
+  extends InitialMartyriaStructureCommon, InitialMartyriaModeNameSemantics {
+  /** The word for the mode; absent means the language's usual word. */
+  labelVariant?: InitialMartyriaLabelVariant;
 }
 
 export interface InitialMartyriaTextStructure
@@ -197,8 +207,42 @@ export interface InitialMartyriaModeSignStructure extends InitialMartyriaStructu
   modeIdentificationMethod: typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign;
 }
 
-export type InitialMartyriaStructure =
+/**
+ * The sign group without a mode name, so it has no word for the mode and no
+ * grammatical reading of one.
+ */
+export interface InitialMartyriaModeSignAloneStructure extends InitialMartyriaStructureCommon {
+  modeIdentificationMethod: typeof INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone;
+  labelVariant?: undefined;
+}
+
+/** A structure that names the mode, in words or with a word and the sign. */
+export type InitialMartyriaNamedStructure =
   InitialMartyriaTextStructure | InitialMartyriaModeSignStructure;
+
+export type InitialMartyriaStructure =
+  InitialMartyriaNamedStructure | InitialMartyriaModeSignAloneStructure;
+
+export function isInitialMartyriaModeSignAloneStructure(
+  structure: InitialMartyriaStructure,
+): structure is InitialMartyriaModeSignAloneStructure {
+  return (
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone
+  );
+}
+
+/** Whether the structure names the mode in words, with a written numeral. */
+export function isInitialMartyriaTextStructure(
+  structure: InitialMartyriaStructure,
+): structure is InitialMartyriaTextStructure {
+  return (
+    structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text ||
+    structure.modeIdentificationMethod ===
+      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign
+  );
+}
 
 /**
  * What identifies a style by name. Names are unique across all of a score's
@@ -215,8 +259,7 @@ export function initialMartyriaStructureHasOrdinalDigits(
   structure: InitialMartyriaStructure,
 ) {
   return (
-    structure.modeIdentificationMethod !==
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign &&
+    isInitialMartyriaTextStructure(structure) &&
     structure.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal &&
     structure.numeralStyle === INITIAL_MARTYRIA_NUMERAL_STYLES.Digits
   );

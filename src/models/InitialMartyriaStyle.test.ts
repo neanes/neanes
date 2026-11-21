@@ -29,8 +29,8 @@ describe('InitialMartyriaStyle', () => {
     const source = styleFor(attestedStructures['greek-mode-names']);
     const clone = cloneInitialMartyriaStyle(source);
     if (
-      source.structure.modeIdentificationMethod === 'mode-sign' ||
-      clone.structure.modeIdentificationMethod === 'mode-sign'
+      source.structure.modeIdentificationMethod !== 'text' ||
+      clone.structure.modeIdentificationMethod !== 'text'
     ) {
       throw new Error('Expected a text structure');
     }

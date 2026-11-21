@@ -113,8 +113,8 @@ function numeralsFor(
 
 function absoluteWordStyle(
   languageId: InitialMartyriaStructure['languageId'],
-  numeralKind: InitialMartyriaStructure['numeralKind'],
-  numeralQualifier: InitialMartyriaStructure['numeralQualifier'],
+  numeralKind: InitialMartyriaTextStructure['numeralKind'],
+  numeralQualifier: InitialMartyriaTextStructure['numeralQualifier'],
 ) {
   return styleFor({
     languageId,
@@ -128,7 +128,7 @@ function absoluteWordStyle(
 
 function absoluteDigitOrdinalStyle(
   languageId: InitialMartyriaStructure['languageId'],
-  numeralQualifier: InitialMartyriaStructure['numeralQualifier'],
+  numeralQualifier: InitialMartyriaTextStructure['numeralQualifier'],
 ) {
   return styleFor({
     languageId,

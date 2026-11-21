@@ -18,6 +18,7 @@ import {
   type InitialMartyriaLanguageId,
   type InitialMartyriaLettering,
   type InitialMartyriaModeSignStructure,
+  type InitialMartyriaNamedStructure,
   type InitialMartyriaStyle,
   type InitialMartyriaStyleTypography,
   type InitialMartyriaTextStructure,
@@ -177,9 +178,13 @@ type BuiltInInitialMartyriaStyleDefinition = (
   lettering?: InitialMartyriaLettering;
 };
 
-/** A curated style, whose id names one of the built-in styles. */
+/**
+ * A curated style, whose id names one of the built-in styles. Every preset
+ * names the mode; the sign group alone is offered by the picker itself.
+ */
 export interface BuiltInInitialMartyriaStyle extends InitialMartyriaStyle {
   id: BuiltInInitialMartyriaStyleId;
+  structure: InitialMartyriaNamedStructure;
 }
 
 function builtIn({

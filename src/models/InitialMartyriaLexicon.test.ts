@@ -10,10 +10,11 @@ import {
   isInitialMartyriaStructureSupported,
 } from '@/models/InitialMartyriaGrammar';
 import { getInitialMartyriaLabelVariants } from '@/models/InitialMartyriaLexicon';
-import { initialMartyriaPlagalAbbreviationWithModeSignIsOptional } from '@/models/InitialMartyriaRenderingConventions';
-import { getInitialMartyriaContext } from '@/models/InitialMartyriaResolver';
 import {
-  INITIAL_MARTYRIA_LANGUAGE_IDS,
+  getInitialMartyriaContext,
+  modeKeyModes,
+} from '@/models/InitialMartyriaResolver';
+import {
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
   INITIAL_MARTYRIA_NUMBERING_SYSTEMS,
   initialMartyriaLanguageIds,
@@ -35,26 +36,10 @@ import {
   textOf,
 } from './InitialMartyriaStyle.testHelpers';
 
-/*
- * The label variants and plagal abbreviation choices of every language:
- * absent (the language's usual practice) first, then each explicit choice
- * where the language offers it.
- */
 function getLanguageChoices() {
   return initialMartyriaLanguageIds.flatMap((languageId) =>
-    [undefined, ...getInitialMartyriaLabelVariants(languageId)].flatMap(
-      (labelVariant) =>
-        (initialMartyriaPlagalAbbreviationWithModeSignIsOptional({
-          languageId,
-          labelVariant,
-        })
-          ? [undefined, true, false]
-          : [undefined]
-        ).map((plagalAbbreviationWithModeSign) => ({
-          languageId,
-          labelVariant,
-          plagalAbbreviationWithModeSign,
-        })),
+    [undefined, ...getInitialMartyriaLabelVariants(languageId)].map(
+      (labelVariant) => ({ languageId, labelVariant }),
     ),
   );
 }
@@ -73,8 +58,6 @@ function getLegalInitialMartyriaStructures() {
           for (const transliterateNoteNames of [false, true]) {
             structures.push({
               languageId: choices.languageId,
-              plagalAbbreviationWithModeSign:
-                choices.plagalAbbreviationWithModeSign,
               transliterateNoteNames,
               modeIdentificationMethod,
             });
@@ -144,12 +127,6 @@ function getUniqueLegalInitialMartyriaStructures() {
 }
 
 function describeStructure(structure: InitialMartyriaStructure) {
-  const plagalSign =
-    structure.plagalAbbreviationWithModeSign == null
-      ? undefined
-      : structure.plagalAbbreviationWithModeSign
-        ? 'plagal-sign'
-        : 'no-plagal-sign';
   if (
     structure.modeIdentificationMethod ===
     INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone
@@ -158,10 +135,7 @@ function describeStructure(structure: InitialMartyriaStructure) {
       structure.languageId,
       structure.modeIdentificationMethod,
       structure.transliterateNoteNames ? 'transliterated' : 'original',
-      plagalSign,
-    ]
-      .filter((part) => part != null)
-      .join('/');
+    ].join('/');
   }
   const numeralStyle =
     structure.modeIdentificationMethod === 'mode-sign'
@@ -181,7 +155,6 @@ function describeStructure(structure: InitialMartyriaStructure) {
     structure.numeralQualifier,
     structure.modeNamingScheme,
     structure.transliterateNoteNames ? 'transliterated' : 'original',
-    plagalSign,
   ]
     .filter((part) => part != null)
     .join('/');
@@ -506,10 +479,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Tono | 2. | <modeSign> | <pitch>',
       'Tono | 3. | <modeSign> | <pitch>',
       'Tono | 4. | <modeSign> | <pitch>',
-      'Tono | 5. | <modeSign> | <pitch>',
-      'Tono | 6. | <modeSign> | <pitch>',
+      'Tono | 5. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | 6. | greek:λ/π | <modeSign> | <pitch>',
       'Tono | 7. | <modeSign> | <pitch>',
-      'Tono | 8. | <modeSign> | <pitch>',
+      'Tono | 8. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -519,10 +492,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Tono | II. | <modeSign> | <pitch>',
       'Tono | III. | <modeSign> | <pitch>',
       'Tono | IV. | <modeSign> | <pitch>',
-      'Tono | V. | <modeSign> | <pitch>',
-      'Tono | VI. | <modeSign> | <pitch>',
+      'Tono | V. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | VI. | greek:λ/π | <modeSign> | <pitch>',
       'Tono | VII. | <modeSign> | <pitch>',
-      'Tono | VIII. | <modeSign> | <pitch>',
+      'Tono | VIII. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -532,10 +505,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Tono | segundo. | <modeSign> | <pitch>',
       'Tono | tercero. | <modeSign> | <pitch>',
       'Tono | cuarto. | <modeSign> | <pitch>',
-      'Tono | quinto. | <modeSign> | <pitch>',
-      'Tono | sexto. | <modeSign> | <pitch>',
+      'Tono | quinto. | greek:λ/π | <modeSign> | <pitch>',
+      'Tono | sexto. | greek:λ/π | <modeSign> | <pitch>',
       'Tono | séptimo. | <modeSign> | <pitch>',
-      'Tono | octavo. | <modeSign> | <pitch>',
+      'Tono | octavo. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -545,10 +518,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Segundo | tono. | <modeSign> | <pitch>',
       'Tercer | tono. | <modeSign> | <pitch>',
       'Cuarto | tono. | <modeSign> | <pitch>',
-      'Quinto | tono. | <modeSign> | <pitch>',
-      'Sexto | tono. | <modeSign> | <pitch>',
+      'Quinto | tono. | greek:λ/π | <modeSign> | <pitch>',
+      'Sexto | tono. | greek:λ/π | <modeSign> | <pitch>',
       'Séptimo | tono. | <modeSign> | <pitch>',
-      'Octavo | tono. | <modeSign> | <pitch>',
+      'Octavo | tono. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -558,10 +531,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Гла́съ | 2. | <modeSign> | <pitch>',
       'Гла́съ | 3. | <modeSign> | <pitch>',
       'Гла́съ | 4. | <modeSign> | <pitch>',
-      'Гла́съ | 5. | <modeSign> | <pitch>',
-      'Гла́съ | 6. | <modeSign> | <pitch>',
+      'Гла́съ | 5. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | 6. | greek:λ/π | <modeSign> | <pitch>',
       'Гла́съ | 7. | <modeSign> | <pitch>',
-      'Гла́съ | 8. | <modeSign> | <pitch>',
+      'Гла́съ | 8. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -571,10 +544,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Гла́съ | в҃. | <modeSign> | <pitch>',
       'Гла́съ | г҃. | <modeSign> | <pitch>',
       'Гла́съ | д҃. | <modeSign> | <pitch>',
-      'Гла́съ | є҃. | <modeSign> | <pitch>',
-      'Гла́съ | ѕ҃. | <modeSign> | <pitch>',
+      'Гла́съ | є҃. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | ѕ҃. | greek:λ/π | <modeSign> | <pitch>',
       'Гла́съ | з҃. | <modeSign> | <pitch>',
-      'Гла́съ | и҃. | <modeSign> | <pitch>',
+      'Гла́съ | и҃. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -597,10 +570,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Гла́съ | вторы́й. | <modeSign> | <pitch>',
       'Гла́съ | тре́тїй. | <modeSign> | <pitch>',
       'Гла́съ | четве́ртый. | <modeSign> | <pitch>',
-      'Гла́съ | пѧ́тый. | <modeSign> | <pitch>',
-      'Гла́съ | шесты́й. | <modeSign> | <pitch>',
+      'Гла́съ | пѧ́тый. | greek:λ/π | <modeSign> | <pitch>',
+      'Гла́съ | шесты́й. | greek:λ/π | <modeSign> | <pitch>',
       'Гла́съ | седмы́й. | <modeSign> | <pitch>',
-      'Гла́съ | ѻ҆сьмы́й. | <modeSign> | <pitch>',
+      'Гла́съ | ѻ҆сьмы́й. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -623,10 +596,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Глас | 2. | <modeSign> | <pitch>',
       'Глас | 3. | <modeSign> | <pitch>',
       'Глас | 4. | <modeSign> | <pitch>',
-      'Глас | 5. | <modeSign> | <pitch>',
-      'Глас | 6. | <modeSign> | <pitch>',
+      'Глас | 5. | greek:λ/π | <modeSign> | <pitch>',
+      'Глас | 6. | greek:λ/π | <modeSign> | <pitch>',
       'Глас | 7. | <modeSign> | <pitch>',
-      'Глас | 8. | <modeSign> | <pitch>',
+      'Глас | 8. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -636,10 +609,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       'Глас | второй. | <modeSign> | <pitch>',
       'Глас | третий. | <modeSign> | <pitch>',
       'Глас | четвёртый. | <modeSign> | <pitch>',
-      'Глас | пятый. | <modeSign> | <pitch>',
-      'Глас | шестой. | <modeSign> | <pitch>',
+      'Глас | пятый. | greek:λ/π | <modeSign> | <pitch>',
+      'Глас | шестой. | greek:λ/π | <modeSign> | <pitch>',
       'Глас | седьмой. | <modeSign> | <pitch>',
-      'Глас | восьмой. | <modeSign> | <pitch>',
+      'Глас | восьмой. | greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -760,19 +733,6 @@ const expectedRunsByStructure: [string, string[]][] = [
     ],
   ],
   [
-    'english-plagal-first-without-plagal-sign',
-    [
-      '<modeSign> | Mode | <pitch>',
-      '<modeSign> | Mode | <pitch>',
-      '<modeSign> | Mode | <pitch>',
-      '<modeSign> | Mode | <pitch>',
-      '<modeSign> | Mode | <pitch>',
-      '<modeSign> | Mode | <pitch>',
-      '<modeSign> | Mode | <pitch>',
-      '<modeSign> | Mode | <pitch>',
-    ],
-  ],
-  [
     'english-tone-number-text',
     [
       'Tone | 1. | <pitch>',
@@ -825,20 +785,7 @@ const expectedRunsByStructure: [string, string[]][] = [
     ],
   ],
   [
-    'spanish-tono-number-with-plagal-sign',
-    [
-      'Tono | 1. | <modeSign> | <pitch>',
-      'Tono | 2. | <modeSign> | <pitch>',
-      'Tono | 3. | <modeSign> | <pitch>',
-      'Tono | 4. | <modeSign> | <pitch>',
-      'Tono | 5. | greek:λ/π | <modeSign> | <pitch>',
-      'Tono | 6. | greek:λ/π | <modeSign> | <pitch>',
-      'Tono | 7. | <modeSign> | <pitch>',
-      'Tono | 8. | greek:λ/π | <modeSign> | <pitch>',
-    ],
-  ],
-  [
-    'spanish-tono-sign-with-plagal-sign',
+    'spanish-tono-sign',
     [
       'Tono | <modeSign> | <pitch>',
       'Tono | <modeSign> | <pitch>',
@@ -883,19 +830,6 @@ const expectedRunsByStructure: [string, string[]][] = [
       '<modeSign> | <pitch>',
       '<modeSign> | <pitch>',
       '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-    ],
-  ],
-  [
-    'spanish-mode-sign-alone-with-plagal-sign',
-    [
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
       'greek:λ/π | <modeSign> | <pitch>',
       'greek:λ/π | <modeSign> | <pitch>',
       '<modeSign> | <pitch>',
@@ -909,10 +843,10 @@ const expectedRunsByStructure: [string, string[]][] = [
       '<modeSign> | <pitch>',
       '<modeSign> | <pitch>',
       '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
       '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
-      '<modeSign> | <pitch>',
+      'greek:λ/π | <modeSign> | <pitch>',
     ],
   ],
   [
@@ -931,33 +865,29 @@ const expectedRunsByStructure: [string, string[]][] = [
 ];
 
 describe('InitialMartyriaLexicon', () => {
-  it.each([
-    ['Spanish', INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish],
-    ['Church Slavonic', INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic],
-    ['Russian', INITIAL_MARTYRIA_LANGUAGE_IDS.Russian],
-  ])(
-    'omits the plagal abbreviation by default in every %s structure',
-    (_, languageId) => {
-      const structures = getLegalInitialMartyriaStructures().filter(
-        (structure) =>
-          structure.languageId === languageId &&
-          structure.plagalAbbreviationWithModeSign !== true,
-      );
+  it('adds the abbreviation to mode-sign wordings in every plagal mode', () => {
+    const structures = getLegalInitialMartyriaStructures().filter(
+      (structure) =>
+        structure.modeIdentificationMethod !==
+        INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    );
 
-      for (const structure of structures) {
-        const style = styleFor(structure);
-        for (const mode of [5, 6, 8]) {
-          const { runs } = resolve(style, elementForMode(mode));
-          expect(
-            runs,
-            `${describeStructure(structure)} mode ${mode}`,
-          ).not.toContainEqual(
-            expect.objectContaining({ semantic: 'plagalAbbreviation' }),
-          );
-        }
+    for (const structure of structures) {
+      const style = styleFor(structure);
+      for (const mode of modeKeyModes) {
+        const { runs } = resolve(style, elementForMode(mode));
+        const hasAbbreviation = runs.some(
+          (run) =>
+            run.kind !== 'startingPitch' &&
+            run.semantic === 'plagalAbbreviation',
+        );
+        expect(
+          hasAbbreviation,
+          `${describeStructure(structure)} mode ${mode}`,
+        ).toBe(mode === 5 || mode === 6 || mode === 8);
       }
-    },
-  );
+    }
+  });
 
   it('lists every legal structure as a row of the styles dialog', () => {
     // The styles dialog shows the enumerated structures as its wording list

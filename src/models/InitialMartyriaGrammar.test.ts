@@ -8,7 +8,6 @@ import {
   isInitialMartyriaStructureSupported,
 } from '@/models/InitialMartyriaGrammar';
 import { getInitialMartyriaLabelVariants } from '@/models/InitialMartyriaLexicon';
-import { initialMartyriaPlagalAbbreviationWithModeSignIsOptional } from '@/models/InitialMartyriaRenderingConventions';
 import {
   INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
@@ -640,22 +639,9 @@ describe('InitialMartyriaGrammar', () => {
         unsupported.push(JSON.stringify(structure));
       }
     };
-    const pickerChoices = (
-      axes: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
-    ) =>
-      [true, false].flatMap((transliterateNoteNames) =>
-        (initialMartyriaPlagalAbbreviationWithModeSignIsOptional(axes)
-          ? [true, false]
-          : [undefined]
-        ).map((plagalAbbreviationWithModeSign) => ({
-          transliterateNoteNames,
-          plagalAbbreviationWithModeSign,
-        })),
-      );
-
     for (const wording of commonInitialMartyriaWordings) {
-      for (const choices of pickerChoices(wording.structure)) {
-        check({ ...wording.structure, ...choices });
+      for (const transliterateNoteNames of [true, false]) {
+        check({ ...wording.structure, transliterateNoteNames });
       }
     }
     for (const languageId of initialMartyriaLanguageIds) {
@@ -663,13 +649,13 @@ describe('InitialMartyriaGrammar', () => {
         undefined,
         ...getInitialMartyriaLabelVariants(languageId),
       ]) {
-        for (const choices of pickerChoices({ languageId, labelVariant })) {
+        for (const transliterateNoteNames of [true, false]) {
           for (const modeIdentificationMethod of initialMartyriaModeIdentificationMethods) {
             for (const { structure } of enumerateInitialMartyriaStructures({
               languageId,
               labelVariant,
               modeIdentificationMethod,
-              ...choices,
+              transliterateNoteNames,
             })) {
               check(structure);
             }
@@ -756,7 +742,6 @@ describe('InitialMartyriaGrammar', () => {
       modeIdentificationMethod:
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
       transliterateNoteNames: false,
-      plagalAbbreviationWithModeSign: false,
     });
 
     expect(structure).toEqual({
@@ -764,7 +749,6 @@ describe('InitialMartyriaGrammar', () => {
       modeIdentificationMethod:
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
       transliterateNoteNames: false,
-      plagalAbbreviationWithModeSign: false,
     });
     for (const languageId of initialMartyriaLanguageIds) {
       expect(

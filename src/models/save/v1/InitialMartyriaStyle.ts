@@ -9,7 +9,6 @@ export interface InitialMartyriaStructure {
   numeralQualifier?: string;
   modeNamingScheme?: string;
   transliterateNoteNames?: boolean;
-  plagalAbbreviationWithModeSign?: boolean;
 }
 
 export interface InitialMartyriaStyle {

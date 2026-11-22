@@ -14,7 +14,6 @@ import {
 } from '@/models/Element';
 import { getCommonInitialMartyriaWording } from '@/models/InitialMartyriaCommonWordings';
 import { createInitialMartyriaStyle } from '@/models/InitialMartyriaGrammar';
-import { showsInitialMartyriaPlagalAbbreviationWithModeSign } from '@/models/InitialMartyriaRenderingConventions';
 import { resolveScoreInitialMartyriaStyle } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LABEL_VARIANTS,
@@ -1553,13 +1552,12 @@ describe('SaveService font styles', () => {
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
   });
 
-  it('round-trips the label variant and plagal abbreviation choice', () => {
+  it('round-trips the label variant', () => {
     const score = new Score();
     const base = styleFromWording('englishToneNumberWithSign');
     const customStyle = createInitialMartyriaStyle({
       ...base,
-      displayName: 'Tone without plagal sign',
-      structure: { ...base.structure, plagalAbbreviationWithModeSign: false },
+      displayName: 'Tone with sign',
     });
     score.initialMartyriaStyles = [customStyle];
     score.defaultInitialMartyriaStyleId = customStyle.id;
@@ -1569,33 +1567,8 @@ describe('SaveService font styles', () => {
 
     expect(saved.initialMartyriaStyles![0].structure).toMatchObject({
       labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
-      plagalAbbreviationWithModeSign: false,
     });
     expect(loaded.initialMartyriaStyles).toEqual([customStyle]);
-  });
-
-  it('follows the language for a style saved without a plagal abbreviation choice', () => {
-    const score = new Score();
-    const base = styleFromWording('spanishTonoNumber');
-    const customStyle = createInitialMartyriaStyle({
-      ...base,
-      displayName: 'Parish tono',
-    });
-    score.initialMartyriaStyles = [customStyle];
-    score.defaultInitialMartyriaStyleId = customStyle.id;
-
-    const saved = SaveService.SaveScoreToJson(score);
-    expect(saved.initialMartyriaStyles![0].structure).not.toHaveProperty(
-      'plagalAbbreviationWithModeSign',
-    );
-    const [loadedStyle] = SaveService.LoadScore_v1(saved).initialMartyriaStyles;
-
-    expect(
-      loadedStyle.structure.plagalAbbreviationWithModeSign,
-    ).toBeUndefined();
-    expect(
-      showsInitialMartyriaPlagalAbbreviationWithModeSign(loadedStyle.structure),
-    ).toBe(false);
   });
 
   it('drops a style whose label variant its language does not offer', () => {

@@ -83,8 +83,6 @@
     "greekParagraphStyle": "Greek paragraph style",
     "transliterateNoteNames": "Transliterate starting note",
     "transliterateNoteNamesHint": "Pa instead of Πα",
-    "plagalAbbreviationWithModeSign": "Plagal sign",
-    "plagalAbbreviationWithModeSignHint": "πλ beside the sign of a plagal mode",
     "labelVariant": "Word for mode",
     "modeIdentificationMethods": {
       "text": "Text only",

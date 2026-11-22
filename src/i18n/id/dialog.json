@@ -83,8 +83,6 @@
     "greekParagraphStyle": "Gaya paragraf Yunani",
     "transliterateNoteNames": "Transliterasi nada awal",
     "transliterateNoteNamesHint": "Pa alih-alih Πα",
-    "plagalAbbreviationWithModeSign": "Tanda plagal",
-    "plagalAbbreviationWithModeSignHint": "πλ di samping tanda modus plagal",
     "labelVariant": "Kata untuk modus",
     "modeIdentificationMethods": {
       "text": "Teks saja",

@@ -180,12 +180,6 @@ interface InitialMartyriaStructureCommon {
   languageId: InitialMartyriaLanguageId;
   /** Only used by languages that are not written in Greek script. */
   transliterateNoteNames: boolean;
-  /**
-   * Whether plagal modes set the plagal abbreviation beside the mode sign.
-   * Only used where the language makes it optional; absent means the
-   * language's usual practice.
-   */
-  plagalAbbreviationWithModeSign?: boolean;
 }
 
 interface InitialMartyriaStructureBase

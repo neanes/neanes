@@ -83,8 +83,6 @@
     "greekParagraphStyle": "Стиль абзаца для греческого текста",
     "transliterateNoteNames": "Транслитерировать начальную ноту",
     "transliterateNoteNamesHint": "Па вместо Πα",
-    "plagalAbbreviationWithModeSign": "Плагальный знак",
-    "plagalAbbreviationWithModeSignHint": "πλ рядом со знаком плагального гласа",
     "labelVariant": "Слово для гласа",
     "modeIdentificationMethods": {
       "text": "Только текст",

@@ -413,7 +413,6 @@ interface InitialMartyriaEnumerationBase {
   labelVariant?: InitialMartyriaLabelVariant;
   modeIdentificationMethod: InitialMartyriaModeIdentificationMethod;
   transliterateNoteNames: boolean;
-  plagalAbbreviationWithModeSign?: boolean;
   numberingSystem?: InitialMartyriaNumberingSystem;
 }
 
@@ -422,7 +421,6 @@ function getEnumerationSharedAxes(base: InitialMartyriaEnumerationBase) {
   return {
     languageId: base.languageId,
     transliterateNoteNames: base.transliterateNoteNames,
-    plagalAbbreviationWithModeSign: base.plagalAbbreviationWithModeSign,
   };
 }
 
@@ -507,7 +505,6 @@ export function enumerateInitialMartyriaStructures(
     | 'labelVariant'
     | 'modeIdentificationMethod'
     | 'transliterateNoteNames'
-    | 'plagalAbbreviationWithModeSign'
   >,
 ) {
   const seen = new Set<string>();

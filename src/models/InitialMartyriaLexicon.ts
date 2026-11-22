@@ -421,6 +421,7 @@ export const initialMartyriaLexicons: Record<
       7: 'з҃',
       8: 'и҃',
     },
+    absoluteModeSignFollowsLabel: true,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Russian]: {
     // General Russian orthography writes an Arabic ordinal with a suffix such
@@ -476,6 +477,7 @@ export const initialMartyriaLexicons: Record<
       numeralQualifier === INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal
         ? `${base}-й`
         : base,
+    absoluteModeSignFollowsLabel: true,
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Arabic]: {
     // Arabic ordinals are adjectives: they follow the noun and agree with its

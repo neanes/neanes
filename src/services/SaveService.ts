@@ -1086,7 +1086,7 @@ function loadNamedInitialMartyriaStructure(
   savedStructure: InitialMartyriaStructure_v1,
   sharedAxes: Pick<
     InitialMartyriaStructure,
-    'languageId' | 'transliterateNoteNames' | 'plagalAbbreviationWithModeSign'
+    'languageId' | 'transliterateNoteNames'
   >,
 ): InitialMartyriaNamedStructure | null {
   if (
@@ -1180,11 +1180,6 @@ function loadInitialMartyriaStyle(
   const sharedAxes = {
     languageId: savedStructure.languageId,
     transliterateNoteNames: savedStructure.transliterateNoteNames === true,
-    // Styles saved before the choice existed follow the language's practice.
-    plagalAbbreviationWithModeSign:
-      typeof savedStructure.plagalAbbreviationWithModeSign === 'boolean'
-        ? savedStructure.plagalAbbreviationWithModeSign
-        : undefined,
   };
   // The sign group alone names no mode, so it has no mode-name axes.
   const structure: InitialMartyriaStructure | null =

@@ -15,7 +15,6 @@ import {
 const structureCommon = {
   languageId: z.enum(INITIAL_MARTYRIA_LANGUAGE_IDS),
   transliterateNoteNames: z.boolean(),
-  plagalAbbreviationWithModeSign: z.boolean().optional(),
 };
 
 const structureBase = {

@@ -83,8 +83,6 @@
     "greekParagraphStyle": "Στυλ ελληνικής παραγράφου",
     "transliterateNoteNames": "Μεταγραφή αρχικής νότας",
     "transliterateNoteNamesHint": "Pa αντί για Πα",
-    "plagalAbbreviationWithModeSign": "Πλάγιο σημάδι",
-    "plagalAbbreviationWithModeSignHint": "πλ δίπλα στη μαρτυρία των πλαγίων ήχων",
     "labelVariant": "Λέξη για τον ήχο",
     "modeIdentificationMethods": {
       "text": "Μόνο κείμενο",

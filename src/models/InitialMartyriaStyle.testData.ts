@@ -424,16 +424,6 @@ export const attestedStructures = {
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
   },
-  'english-plagal-first-without-plagal-sign': {
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
-    transliterateNoteNames: false,
-    plagalAbbreviationWithModeSign: false,
-  },
   'english-tone-number-text': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.English,
     labelVariant: INITIAL_MARTYRIA_LABEL_VARIANTS.Tone,
@@ -475,18 +465,7 @@ export const attestedStructures = {
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
   },
-  'spanish-tono-number-with-plagal-sign': {
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-    numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-    numeralStyle: INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-    numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-    modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-    transliterateNoteNames: false,
-    plagalAbbreviationWithModeSign: true,
-  },
-  'spanish-tono-sign-with-plagal-sign': {
+  'spanish-tono-sign': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
@@ -494,7 +473,6 @@ export const attestedStructures = {
     numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     transliterateNoteNames: false,
-    plagalAbbreviationWithModeSign: true,
   },
   'greek-mode-sign-alone': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Greek,
@@ -513,13 +491,6 @@ export const attestedStructures = {
     modeIdentificationMethod:
       INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
     transliterateNoteNames: false,
-  },
-  'spanish-mode-sign-alone-with-plagal-sign': {
-    languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Spanish,
-    modeIdentificationMethod:
-      INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
-    transliterateNoteNames: false,
-    plagalAbbreviationWithModeSign: true,
   },
   'russian-mode-sign-alone': {
     languageId: INITIAL_MARTYRIA_LANGUAGE_IDS.Russian,

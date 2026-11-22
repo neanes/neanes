@@ -26,7 +26,7 @@ A style controls the language, the wording of the mode name, whether a mode sign
 4. Click the preview row you want. **Common** shows frequently used wordings, including [Sign without words](#add-a-bare-initial-martyria). Expand **More wordings** to see additional forms, grouped by how they identify the mode (**Sign only**, **Text and sign**, or **Text only**). Use a **Neume font** choice where available for traditional lettering drawn from the score's music font.
 5. In the styles list, give the style a name and choose its paragraph styles. Press **Update** to save the changes.
 
-Where available, enable **Transliterate starting note** to show a form such as `Pa` for `Πα`. The **Plagal sign** switch adds `πλ` beside the mode sign in plagal modes for wordings that offer this choice.
+Where available, enable **Transliterate starting note** to show a form such as `Pa` for `Πα`. When a wording includes a mode sign, Neanes adds the plagal abbreviation (`πλ`) in plagal modes.
 
 Use **Duplicate** to make a variation of an existing style, for example to keep the same wording at a different size. Editing a style updates every initial martyria that uses it. If you delete a style in use, choose its replacement under **Use instead**.
 
@@ -70,7 +70,7 @@ A bare initial martyria shows the mode sign and starting note without spelling o
 3. Give the style a name and press **Update** to save it with the score.
 4. Type your heading in a rich text box and [insert an initial martyria](#insert-an-initial-martyria-in-rich-text) beside it. Select the inserted martyria and choose your new style under **Style** in Properties.
 
-The **Language** choice still matters. Where available, **Transliterate starting note** shows a form such as `Pa` for `Πα`. The language can also affect the order of the signs and whether `πλ` appears in plagal modes. For example, English shows `πλ` by default and Spanish omits it by default. Use **Plagal sign** to change that choice where the switch is available.
+The **Language** choice can affect the order of the signs. Where available, **Transliterate starting note** shows a form such as `Pa` for `Πα`.
 
 ## Create a custom initial martyria
 

@@ -24,10 +24,7 @@ import {
   originalGreekNoteNames,
   romanNumerals,
 } from './InitialMartyriaLexicon';
-import {
-  getInitialMartyriaRenderingConvention,
-  showsInitialMartyriaPlagalAbbreviationWithModeSign,
-} from './InitialMartyriaRenderingConventions';
+import { getInitialMartyriaRenderingConvention } from './InitialMartyriaRenderingConventions';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
   INITIAL_MARTYRIA_LETTERINGS,
@@ -361,10 +358,7 @@ function getInitialMartyriaComponents(
   const convention = getInitialMartyriaRenderingConvention(structure);
   const plagal = isPlagalMode(mode);
   const modeSign: InitialMartyriaComponent = { kind: 'modeSign' };
-  const modeSignAbbreviation =
-    plagal && showsInitialMartyriaPlagalAbbreviationWithModeSign(structure)
-      ? plagalAbbreviation()
-      : null;
+  const modeSignAbbreviation = plagal ? plagalAbbreviation() : null;
   const startingPitch: InitialMartyriaComponent = {
     kind: 'startingNoteCluster',
   };
@@ -550,7 +544,6 @@ function getInitialMartyriaStructureAxisSignature(
       structure.languageId,
       structure.modeIdentificationMethod,
       structure.transliterateNoteNames,
-      showsInitialMartyriaPlagalAbbreviationWithModeSign(structure),
     ].join('/');
   }
   return [
@@ -561,7 +554,6 @@ function getInitialMartyriaStructureAxisSignature(
     structure.numeralQualifier,
     structure.modeNamingScheme,
     structure.transliterateNoteNames,
-    showsInitialMartyriaPlagalAbbreviationWithModeSign(structure),
     ...(isInitialMartyriaTextStructure(structure)
       ? [structure.numeralStyle, structure.numberingSystem]
       : [undefined, undefined]),

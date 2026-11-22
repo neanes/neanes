@@ -78,74 +78,35 @@
           </ToggleGroup>
         </div>
 
-        <div
-          v-if="!languageUsesGreekScript || plagalAbbreviationIsOptional"
-          class="flex flex-wrap items-start gap-x-6 gap-y-2"
+        <Field
+          v-if="!languageUsesGreekScript"
+          orientation="horizontal"
+          class="w-auto"
         >
-          <Field
-            v-if="!languageUsesGreekScript"
-            orientation="horizontal"
-            class="w-auto"
-          >
-            <Switch
-              id="initial-martyria-picker-transliterate"
-              v-model="transliterateNoteNames"
-            />
-            <FieldContent>
-              <FieldLabel for="initial-martyria-picker-transliterate">
-                {{
-                  $t(
-                    ($) =>
-                      $.dialog.initialMartyriaStyles.transliterateNoteNames,
-                    { ns },
-                  )
-                }}
-              </FieldLabel>
-              <FieldDescription>
-                {{
-                  $t(
-                    ($) =>
-                      $.dialog.initialMartyriaStyles.transliterateNoteNamesHint,
-                    { ns },
-                  )
-                }}
-              </FieldDescription>
-            </FieldContent>
-          </Field>
-
-          <Field
-            v-if="plagalAbbreviationIsOptional"
-            orientation="horizontal"
-            class="w-auto"
-          >
-            <Switch
-              id="initial-martyria-picker-plagal-abbreviation"
-              v-model="plagalAbbreviationWithModeSign"
-            />
-            <FieldContent>
-              <FieldLabel for="initial-martyria-picker-plagal-abbreviation">
-                {{
-                  $t(
-                    ($) =>
-                      $.dialog.initialMartyriaStyles
-                        .plagalAbbreviationWithModeSign,
-                    { ns },
-                  )
-                }}
-              </FieldLabel>
-              <FieldDescription>
-                {{
-                  $t(
-                    ($) =>
-                      $.dialog.initialMartyriaStyles
-                        .plagalAbbreviationWithModeSignHint,
-                    { ns },
-                  )
-                }}
-              </FieldDescription>
-            </FieldContent>
-          </Field>
-        </div>
+          <Switch
+            id="initial-martyria-picker-transliterate"
+            v-model="transliterateNoteNames"
+          />
+          <FieldContent>
+            <FieldLabel for="initial-martyria-picker-transliterate">
+              {{
+                $t(
+                  ($) => $.dialog.initialMartyriaStyles.transliterateNoteNames,
+                  { ns },
+                )
+              }}
+            </FieldLabel>
+            <FieldDescription>
+              {{
+                $t(
+                  ($) =>
+                    $.dialog.initialMartyriaStyles.transliterateNoteNamesHint,
+                  { ns },
+                )
+              }}
+            </FieldDescription>
+          </FieldContent>
+        </Field>
       </div>
 
       <ScrollArea class="min-h-0 border">
@@ -280,10 +241,6 @@ import {
   usesGreekScript,
 } from '@/models/InitialMartyriaLexicon';
 import {
-  initialMartyriaPlagalAbbreviationWithModeSignIsOptional,
-  showsInitialMartyriaPlagalAbbreviationWithModeSign,
-} from '@/models/InitialMartyriaRenderingConventions';
-import {
   getInitialMartyriaWordingKey,
   getSupportedInitialMartyriaLettering,
 } from '@/models/InitialMartyriaResolver';
@@ -318,12 +275,10 @@ const groupHeadingClass =
 
 /**
  * Chooses how an initial martyria reads: a language, its word for the mode
- * where it has more than one, whether its note names are transliterated and
- * plagal modes show the plagal abbreviation beside the sign (where the
- * language leaves that open), and one of the wordings the language allows. The
- * common wordings come first; every other wording is
- * kept in a collapsed section. Each wording is previewed in enough modes to
- * tell it apart from the rest.
+ * where it has more than one, whether its note names are transliterated, and
+ * one of the wordings the language allows. The common wordings come first;
+ * every other wording is kept in a collapsed section. Each is previewed in
+ * enough modes to tell it apart from the rest.
  */
 const props = defineProps<{
   paragraphStyles: ParagraphStyle[];
@@ -355,7 +310,6 @@ const languageId = ref<InitialMartyriaLanguageId>(
 );
 const labelVariant = ref<InitialMartyriaLabelVariant | undefined>();
 const transliterateNoteNames = ref(false);
-const plagalAbbreviationWithModeSign = ref(false);
 const moreOpen = ref(false);
 
 const languageUsesGreekScript = computed(() =>
@@ -397,22 +351,11 @@ function setLabelChoice(value: AcceptableValue | AcceptableValue[]) {
   moreOpen.value = false;
 }
 
-const labelAxes = computed(() => ({
-  languageId: languageId.value,
-  labelVariant: labelVariant.value,
-}));
-
-const plagalAbbreviationIsOptional = computed(() =>
-  initialMartyriaPlagalAbbreviationWithModeSignIsOptional(labelAxes.value),
-);
-
 /** The choices above, as set on every wording the picker lists. */
 const chosenAxes = computed(() => ({
-  ...labelAxes.value,
+  languageId: languageId.value,
+  labelVariant: labelVariant.value,
   transliterateNoteNames: transliterateNoteNames.value,
-  plagalAbbreviationWithModeSign: plagalAbbreviationIsOptional.value
-    ? plagalAbbreviationWithModeSign.value
-    : undefined,
 }));
 
 const orderedLanguageIds = computed(() => [
@@ -430,8 +373,6 @@ function setLanguage(value: AcceptableValue) {
   languageId.value = id;
   labelVariant.value = undefined;
   transliterateNoteNames.value = getDefaultInitialMartyriaTransliteration(id);
-  plagalAbbreviationWithModeSign.value =
-    showsInitialMartyriaPlagalAbbreviationWithModeSign({ languageId: id });
   moreOpen.value = false;
 }
 
@@ -631,7 +572,7 @@ function choose(row: WordingRow) {
 
 /*
  * Each opening starts from the style being changed, or from the preferred
- * language with its usual word, transliteration, and plagal abbreviation.
+ * language with its usual word and transliteration.
  * When the current wording is not a common one, the section holding it
  * starts open.
  */
@@ -647,10 +588,6 @@ watch(
     transliterateNoteNames.value =
       style?.structure.transliterateNoteNames ??
       getDefaultInitialMartyriaTransliteration(languageId.value);
-    plagalAbbreviationWithModeSign.value =
-      showsInitialMartyriaPlagalAbbreviationWithModeSign(
-        style?.structure ?? labelAxes.value,
-      );
     moreOpen.value =
       currentKey.value != null &&
       moreGroups.value.some((group) =>

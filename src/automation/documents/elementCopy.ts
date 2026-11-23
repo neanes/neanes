@@ -9,12 +9,16 @@ import {
   prepareFootnotePaste,
 } from '@/services/FootnoteService';
 import { CommandFactory } from '@/services/history/CommandService';
+import { collectClipboardInitialMartyriaStylesFromElements } from '@/utils/clipboardInitialMartyriaStyles';
 import {
   collectClipboardParagraphStyleIdsFromElements,
   collectClipboardParagraphStylesFromElements,
-  resolveClipboardParagraphStyles,
-  rewriteClipboardElementParagraphStyleIds,
 } from '@/utils/clipboardParagraphStyles';
+import {
+  getScoreStyleAdditions,
+  importClipboardStyles,
+  rewriteClipboardElementStyleReferences,
+} from '@/utils/clipboardStyles';
 
 import { elementPropertySchemas } from '../contracts/elementPropertySchemas';
 import { childCollections } from './elementDiscovery';
@@ -114,25 +118,28 @@ export function planElementCopy(
     ...copies,
     ...footnotes.flatMap((body) => body.staff.elements),
   ];
-  const { importedParagraphStyles, styleIdRemap } =
-    resolveClipboardParagraphStyles(
-      collectClipboardParagraphStylesFromElements(
+  const carriedInitialMartyriaStyles =
+    collectClipboardInitialMartyriaStylesFromElements(
+      content,
+      source.score.initialMartyriaStyles,
+    );
+  const importedStyles = importClipboardStyles(
+    {
+      paragraphStyles: collectClipboardParagraphStylesFromElements(
         content,
+        carriedInitialMartyriaStyles,
         source.score.paragraphStyles,
       ),
-      destination.score.paragraphStyles,
-      collectClipboardParagraphStyleIdsFromElements(content),
-    );
-  const paragraphStyles = [
-    ...destination.score.paragraphStyles,
-    ...importedParagraphStyles,
-  ];
+      paragraphStyleIds: collectClipboardParagraphStyleIdsFromElements(
+        content,
+        carriedInitialMartyriaStyles,
+      ),
+      initialMartyriaStyles: carriedInitialMartyriaStyles,
+    },
+    destination.score,
+  );
   for (const copy of content) {
-    rewriteClipboardElementParagraphStyleIds(
-      copy,
-      paragraphStyles,
-      styleIdRemap,
-    );
+    rewriteClipboardElementStyleReferences(copy, importedStyles);
   }
   const fonts = new Set<string>();
   const collectFonts = (element: ScoreElement) => {
@@ -148,17 +155,21 @@ export function planElementCopy(
     }
   };
   content.forEach(collectFonts);
-  for (const style of paragraphStyles) {
+  for (const style of importedStyles.styles.paragraphStyles) {
     if (style.overrides.fontFamily !== undefined) {
       fonts.add(style.overrides.fontFamily);
     }
   }
   plan.fontFamilies = [...fonts];
-  if (importedParagraphStyles.length > 0) {
+  const styleAdditions = getScoreStyleAdditions(
+    destination.score,
+    importedStyles.imported,
+  );
+  if (styleAdditions != null) {
     plan.commands.push(
       new CommandFactory<Score>().create('update-properties', {
         target: destination.score,
-        newValues: { paragraphStyles },
+        newValues: styleAdditions,
       }),
     );
   }

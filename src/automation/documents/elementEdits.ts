@@ -1,6 +1,10 @@
 import { toRaw } from 'vue';
 
 import {
+  locateModeKeysInHtml,
+  modeKeyHtml,
+} from '@/ckeditor-plugins/insertmodekey/modekeydata';
+import {
   AcceptsLyricsOption,
   AlternateLineElement,
   AnnotationElement,
@@ -54,6 +58,7 @@ import { LyricService } from '@/services/LyricService';
 import {
   activeRichTextContentKeys,
   insertRichTextFootnote,
+  insertRichTextInlineObject,
   richTextFootnoteIds,
 } from '@/services/RichTextFootnotes';
 
@@ -277,6 +282,16 @@ export function planElementEdits(
       ) {
         throw new Error('STYLE_NOT_FOUND');
       }
+      // A mode key names one of the score's own initial martyria styles.
+      if (
+        key === 'initialMartyriaStyleId' &&
+        value !== null &&
+        !workspace.score.initialMartyriaStyles.some(
+          (style) => style.id === value,
+        )
+      ) {
+        throw new Error('STYLE_NOT_FOUND');
+      }
     }
   };
   const applyProperties = (
@@ -483,7 +498,54 @@ export function planElementEdits(
     }
   };
   for (const action of actions) {
-    if (action.action === 'update_footnote') {
+    if (action.action === 'edit_rich_text_mode_key') {
+      const box = resolve(action.elementRef);
+      const { change, contentKey } = action;
+      if (
+        !(box instanceof RichTextBoxElement) ||
+        !activeRichTextContentKeys(box).includes(contentKey)
+      ) {
+        throw new Error(
+          'INVALID_ELEMENT_EDIT: Select a rich text box and an active content panel.',
+        );
+      }
+      const html = box[contentKey];
+      if (change.kind === 'insert') {
+        const element = new ModeKeyElement();
+        applyProperties(element, change.properties, [], { creating: true });
+        if (
+          !Object.hasOwn(change.properties, 'bpm') &&
+          element.tempo !== null
+        ) {
+          element.bpm = TempoElement.getDefaultBpm(element.tempo);
+        }
+        box[contentKey] = insertRichTextInlineObject(
+          html,
+          change.htmlOffset,
+          modeKeyHtml(element),
+        );
+      } else {
+        const widget = locateModeKeysInHtml(html)[change.index];
+        if (widget === undefined) {
+          throw new Error(
+            'INVALID_ELEMENT_EDIT: Embedded initial martyria index does not exist.',
+          );
+        }
+        if (change.kind === 'update') {
+          if (
+            Object.keys(change.properties).length === 0 &&
+            change.reset.length === 0
+          ) {
+            throw new Error('INVALID_ELEMENT_EDIT');
+          }
+          applyProperties(widget.element, change.properties, change.reset);
+        }
+        const replacement =
+          change.kind === 'update' ? modeKeyHtml(widget.element) : '';
+        box[contentKey] =
+          html.slice(0, widget.start) + replacement + html.slice(widget.end);
+      }
+    } else if (action.action === 'update_footnote') {
       const body = footnotes.find(
         (footnote) => footnote.id === action.footnoteId,
       );

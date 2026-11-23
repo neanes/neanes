@@ -1,7 +1,9 @@
+import type InlineEditor from '@/customEditor';
 import type {
   AlternateLineElement,
   AnnotationElement,
   DropCapElement,
+  ModeKeyElement,
   NoteElement,
   RichTextBoxElement,
   ScoreElement,
@@ -31,6 +33,7 @@ export interface ScorePageEvents {
   setSelectionRange: [element: ScoreElement];
   openSyllablePositioningDialog: [];
   openModeKeyDialog: [];
+  editModeKey: [editor: InlineEditor, modeKey: ModeKeyElement];
   focusLyrics: [element: NoteElement];
   updateLyrics: [element: NoteElement, lyrics: string];
   updateDropCapContent: [element: DropCapElement, content: string];

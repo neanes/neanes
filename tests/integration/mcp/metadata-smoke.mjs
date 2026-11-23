@@ -58,6 +58,7 @@ try {
     'get_document_properties',
     'get_page_setup',
     'get_header_footer_settings',
+    'get_initial_martyria_styles',
     'get_staff_lyrics',
     'get_selection',
     'find_text',
@@ -83,6 +84,12 @@ try {
         }
         if (tool === 'get_document_properties') {
           assert.equal(result.properties.title, 'Updated metadata');
+        }
+        if (tool === 'get_initial_martyria_styles') {
+          const style = result.styles.find(
+            ({ id }) => id === result.defaultStyleId,
+          );
+          assert.ok(style?.structure.languageId);
         }
         await call(
           tool,

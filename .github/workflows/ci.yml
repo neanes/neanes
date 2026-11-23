@@ -64,6 +64,8 @@ jobs:
       - name: Build macOS
         if: runner.os == 'macOS'
         run: npm run build -- --mac --x64 --arm64
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Configure Linux Electron sandbox
         if: runner.os == 'Linux'

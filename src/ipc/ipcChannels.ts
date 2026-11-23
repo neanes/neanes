@@ -32,6 +32,7 @@ export enum IpcMainChannels {
 
   FileMenuPageSetup = 'FileMenuPageSetup',
   FileMenuParagraphStyles = 'FileMenuParagraphStyles',
+  FileMenuInitialMartyriaStyles = 'FileMenuInitialMartyriaStyles',
   FileMenuDocumentProperties = 'FileMenuDocumentProperties',
 
   FileMenuUndo = 'FileMenuUndo',

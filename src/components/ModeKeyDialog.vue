@@ -151,11 +151,14 @@ import {
 } from '@/components/ui/item';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useResolvedInitialMartyriaStyle } from '@/composables/useResolvedInitialMartyriaStyle';
 import { ModeKeyElement, TextBoxAlignment } from '@/models/Element';
+import type { InitialMartyriaStyle } from '@/models/InitialMartyriaStyle';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import type { ModelSelector } from '@/models/NeumeI18nMappings';
 import type { PageSetup } from '@/models/PageSetup';
-import { TextMeasurementService } from '@/services/TextMeasurementService';
+import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { LayoutService } from '@/services/LayoutService';
 
 const emit = defineEmits<{
   update: [modeKey: ModeKeyElement];
@@ -170,9 +173,30 @@ const props = defineProps({
     type: Object as PropType<PageSetup>,
     required: true,
   },
+  paragraphStyles: {
+    type: Array as PropType<ParagraphStyle[]>,
+    required: true,
+  },
+  initialMartyriaStyles: {
+    type: Array as PropType<InitialMartyriaStyle[]>,
+    required: true,
+  },
+  /** The score's default style, which a mode key without a style follows. */
+  defaultInitialMartyriaStyleId: {
+    type: String,
+    required: true,
+  },
 });
 
 const open = defineModel<boolean>('open', { required: true });
+
+// Templates preview in the style of the element being replaced.
+const { resolvedStyle } = useResolvedInitialMartyriaStyle({
+  element: () => props.element,
+  paragraphStyles: () => props.paragraphStyles,
+  initialMartyriaStyles: () => props.initialMartyriaStyles,
+  defaultInitialMartyriaStyleId: () => props.defaultInitialMartyriaStyleId,
+});
 
 const modeOptions = [
   {
@@ -237,17 +261,15 @@ function getModeKeyTemplatesForMode(mode: number) {
           useOptionalDiatonicFthoras.value,
           TextBoxAlignment.Left,
         ),
-        { descriptionSelector: x.description },
+        {
+          descriptionSelector: x.description,
+          initialMartyriaStyleId: props.element.initialMartyriaStyleId,
+        },
       ),
     );
 
-  const height = TextMeasurementService.getFontHeight(
-    `${elements[0].fontSize}px ${props.pageSetup.neumeDefaultFontFamily}`,
-  );
-
   for (const element of elements) {
-    element.height = height;
-    element.computedFontFamily = props.pageSetup.neumeDefaultFontFamily;
+    LayoutService.layoutModeKey(element, props.pageSetup, resolvedStyle.value);
   }
 
   return elements;

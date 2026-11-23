@@ -31,6 +31,8 @@ Use `Insert > Drop Cap Before` or `Insert > Drop Cap After` to add a drop cap, t
 
 For formatting that several text elements should share, see [Paragraph Styles](/guide/text-and-styles.html).
 
+To set the starting pitch and scale for music after a rich text box, see [Insert an initial martyria in rich text](/guide/initial-martyria.html#insert-an-initial-martyria-in-rich-text).
+
 ## Arrange advanced text boxes
 
 Select a text box and open `View > Properties`. **Multipanel** and **Fill Width** are under **Positioning**; a rich text box has a separate **Scrollable** section.

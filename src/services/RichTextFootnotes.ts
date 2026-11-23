@@ -1,5 +1,6 @@
 import { Parser } from 'htmlparser2';
 
+import { MODE_KEY_DATA_ATTRIBUTE } from '@/ckeditor-plugins/insertmodekey/modekeydata';
 import {
   RICH_TEXT_BOX_CONTENT_KEYS,
   type RichTextBoxContentKey,
@@ -49,6 +50,7 @@ function isRichTextFootnoteId(id: string | undefined): id is string {
 function isRichTextObject(attributes: Record<string, string>) {
   return (
     attributes.contenteditable === 'false' ||
+    Object.hasOwn(attributes, MODE_KEY_DATA_ATTRIBUTE) ||
     attributes.class
       ?.split(/\s+/)
       .some(
@@ -196,11 +198,19 @@ export function richTextFootnoteHtml(id: string) {
   return `<span class="${FOOTNOTE_CLASS}" ${FOOTNOTE_ATTRIBUTE}="${id}"></span>`;
 }
 
-// Automation inserts at a source HTML boundary, never inside a tag or entity.
 export function insertRichTextFootnote(
   html: string,
   offset: number,
   id: string,
+) {
+  return insertRichTextInlineObject(html, offset, richTextFootnoteHtml(id));
+}
+
+// Automation inserts at a source HTML boundary, never inside a tag or entity.
+export function insertRichTextInlineObject(
+  html: string,
+  offset: number,
+  markup: string,
 ) {
   let valid = false;
   const stack: string[] = [];
@@ -246,5 +256,5 @@ export function insertRichTextFootnote(
   ) {
     throw new Error('INVALID_ELEMENT_EDIT');
   }
-  return html.slice(0, offset) + richTextFootnoteHtml(id) + html.slice(offset);
+  return html.slice(0, offset) + markup + html.slice(offset);
 }

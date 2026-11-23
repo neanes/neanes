@@ -51,7 +51,6 @@ const emit = defineEmits<{
     element: MartyriaElement,
     values: Partial<MartyriaElement>,
   ];
-  'default-style': [element: ModeKeyElement, value: boolean];
   'update-mode-key': [element: ModeKeyElement, values: Partial<ModeKeyElement>];
   'update-image-box': [
     element: ImageBoxElement,
@@ -127,19 +126,6 @@ const emit = defineEmits<{
           <PhAlignRight class="h-4 w-4" weight="duotone" />
           {{
             $t(($) => $.toolbar.common.alignRight, {
-              ns: 'toolbar',
-            })
-          }}
-        </ContextMenuCheckboxItem>
-        <ContextMenuCheckboxItem
-          v-if="contextMenuModeKey != null"
-          :model-value="contextMenuModeKey.useDefaultStyle"
-          @update:model-value="
-            emit('default-style', contextMenuModeKey, $event === true)
-          "
-        >
-          {{
-            $t(($) => $.toolbar.common.useDefaultStyle, {
               ns: 'toolbar',
             })
           }}

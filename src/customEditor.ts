@@ -58,6 +58,7 @@ import { Footnotes } from './ckeditor-plugins/footnotes/footnotes';
 import InsertNeume from './ckeditor-plugins/insertneume/insertneume';
 import OpenType from './ckeditor-plugins/opentype/opentype';
 import NeanesFakeSelectionEditing from './ckeditor-plugins/richtextselection/richtextselection';
+import SmartQuotes from './ckeditor-plugins/smartquotes/smartquotes';
 import { FONT_VARIANT_CSS_NAMES } from './utils/fontVariants';
 import { RICH_TEXT_LANGUAGE_OPTIONS } from './utils/richTextLanguage';
 
@@ -117,6 +118,7 @@ InlineEditor.builtinPlugins = [
   RemoveFormatEditing,
   SelectAllEditing,
   ShiftEnter,
+  SmartQuotes,
   Style,
   SubscriptEditing,
   SuperscriptEditing,

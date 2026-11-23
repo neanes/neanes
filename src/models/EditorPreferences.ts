@@ -1,3 +1,5 @@
+import type { QuoteStyle } from '@/utils/smartQuotes';
+
 import { TempoElement } from './Element';
 import { TempoSign } from './Neumes';
 
@@ -6,15 +8,11 @@ export enum ButtonMenuMode {
   Hold = 'Hold',
 }
 
-export interface CharacterReplacement {
-  from: string;
-  to: string;
-}
-
 export interface IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
-  // Typed characters to replace in plain text fields. Empty keeps keyboard input.
-  characterReplacements: CharacterReplacement[];
+  smartQuotes: boolean;
+  // Empty string means "follow the interface language".
+  quoteStyle: QuoteStyle | '';
   buttonMenuMode: ButtonMenuMode;
   // Empty string means "follow the system / browser locale".
   language: string;
@@ -53,7 +51,8 @@ export type ScoreOverlaySettings = Pick<
 
 export class EditorPreferences implements IEditorPreferences {
   tempoDefaults: { [key in TempoSign]?: number };
-  characterReplacements: CharacterReplacement[] = [];
+  smartQuotes = true;
+  quoteStyle: QuoteStyle | '' = '';
   buttonMenuMode = ButtonMenuMode.Hold;
   language = '';
   showDeveloperPanels = false;

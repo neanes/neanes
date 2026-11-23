@@ -62,7 +62,7 @@ import {
 } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { useCharacterReplacements } from '@/composables/useCharacterReplacements';
+import { useSmartQuotes } from '@/composables/useSmartQuotes';
 
 defineProps({
   contextLabel: { type: String, default: '' },
@@ -83,5 +83,5 @@ const emit = defineEmits([
   'update:lyrics',
 ]);
 
-const onBeforeInput = useCharacterReplacements();
+const onBeforeInput = useSmartQuotes();
 </script>

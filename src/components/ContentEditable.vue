@@ -18,7 +18,7 @@
 import type { StyleValue } from 'vue';
 import { computed, onMounted, useTemplateRef } from 'vue';
 
-import { useCharacterReplacements } from '@/composables/useCharacterReplacements';
+import { useSmartQuotes } from '@/composables/useSmartQuotes';
 
 const emit = defineEmits(['click', 'focus', 'blur', 'onEditorReady']);
 const props = defineProps({
@@ -45,7 +45,7 @@ const props = defineProps({
 });
 
 const span = useTemplateRef<HTMLElement>('span');
-const onBeforeInput = useCharacterReplacements();
+const onBeforeInput = useSmartQuotes();
 
 const contentEditable = computed(() => {
   return props.editable

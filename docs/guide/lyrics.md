@@ -127,15 +127,25 @@ Select a lyric beneath a neume to use the text controls in the bottom toolbar. Y
 
 For consistent formatting throughout the score, choose `Format > Paragraph Styles` and modify the built-in **Lyrics** style instead of formatting each neume separately. See [Apply a style](/guide/text-and-styles.html#apply-a-style).
 
-## Type curly apostrophes and quotation marks
+## Type quotation marks and apostrophes
 
-Lyrics contain exactly the characters you type. Most keyboards type a straight apostrophe (`'`). To insert a curly apostrophe (`’`) each time you type `'`, add a character replacement:
+Neanes converts straight quotes to typographic quotation marks as you type. This applies to lyrics, drop caps, text boxes, and the Lyrics pane.
 
-1. Choose `Edit > Preferences` and select **Editing**.
-2. Under **Character Replacements**, choose **Add Replacement**.
-3. Enter `'` in the **Typed** box and `’` in the **Inserted** box.
+- `"` opens a quotation at the start of the text, after a space, or after an opening bracket. Elsewhere it closes the quotation.
+- `'` opens a nested quotation in the same places.
+- Elsewhere, `'` closes a nested quotation that is still open in the same text.
+- Otherwise `'` becomes an apostrophe (`’`).
 
-The replacement applies when you type lyrics beneath the neumes or in the Lyrics pane. Add a row for each other character you want to replace, such as `"`. Replacements do not change pasted text or lyrics already in the score. See [Set application preferences](/guide/editor-basics.html#set-application-preferences).
+The quotation marks follow **Quote Style** in `Edit > Preferences > Editing`.
+
+| Quote Style               | `"` | `'` |
+| ------------------------- | --- | --- |
+| English, Bahasa Indonesia | “…” | ‘…’ |
+| Ελληνικά                  | «…» | “…” |
+| Română                    | „…” | «…» |
+| Русский                   | «…» | „…“ |
+
+To keep a straight quote, press Backspace right after Neanes converts it. To type an apostrophe at the start of a word, such as `’tis`, type `’` directly. Turn off **Smart Quotes** to type straight quotes everywhere. Pasted text and text already in the score are not changed. See [Set application preferences](/guide/editor-basics.html#set-application-preferences).
 
 ## Create a prosomoion from an automelon
 

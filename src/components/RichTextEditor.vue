@@ -4,7 +4,7 @@
     v-bind="$attrs"
     :editor="InlineEditor"
     :model-value="initialData"
-    :config="config"
+    :config="editorConfig"
     :disable-two-way-data-binding="true"
     @ready="onReady"
     @destroy="onDestroy"
@@ -24,7 +24,9 @@ import {
   unregisterEditor,
 } from '@/composables/useRichTextEditorRegistry';
 import { richTextFootnoteControllerKey } from '@/composables/useRichTextFootnotes';
+import { getSmartQuoteStyle } from '@/composables/useSmartQuotes';
 import InlineEditor from '@/customEditor';
+import { editorPreferencesKey } from '@/injectionKeys';
 import type {
   RichTextBoxContentKey,
   RichTextFootnoteMarker,
@@ -66,6 +68,15 @@ const initialData = props.modelValue;
 let loadedModelValue = initialData;
 let applyingModel = false;
 const footnotes = inject(richTextFootnoteControllerKey, null);
+// Headless renderers mount rich text without TheEditor, so no preferences.
+const editorPreferences = inject(editorPreferencesKey, undefined);
+const editorConfig = computed<EditorConfig>(() => ({
+  ...props.config,
+  smartQuotes: () =>
+    editorPreferences == null
+      ? null
+      : getSmartQuoteStyle(editorPreferences.value),
+}));
 watch(
   () => props.footnoteMarkers,
   (markers) => {

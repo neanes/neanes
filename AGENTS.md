@@ -19,13 +19,14 @@ Enable the pinned npm first with `corepack enable npm`.
 - `npm run test:integration:mcp` - run self-launching Electron MCP scenarios after `npx vite build`; append `-- --list` to list scenarios.
 - `npm run test:integration:rendering` - run real Electron PDF, PNG, and print-preparation checks after `npx vite build`.
 - `npm run test:integration:saving` - run editor save/recovery checks with a disposable Vite/Electron instance (POSIX desktop session required).
+- `npm run test:integration:layout` - build with `VITE_LAYOUT_VERIFY_ENABLED=true`, then drive real edits in disposable Electron instances and fail if any interactive layout differs from a fresh full layout.
 - Integration test setup and fixtures are documented in `tests/README.md`.
 - Single test file: `npx vitest run src/services/LayoutService.test.ts`
 - Single test by name: `npx vitest run -t "part of the test title"`
 - `npm run coverage` - Vitest with `istanbul` coverage.
 - `npm run docs:dev` - VitePress docs site (`docs/`).
 
-Useful development environment variables (put in `.env.local`, or `.env.web.local` for web): `FAKE_UPDATE_AVAILABLE=1` simulates the updater flow without publishing; `VITE_ENABLE_DEV_TOOLS=true` enables Vue Devtools; `VITE_PSEUDOLOCALIZATION=true` pseudolocalizes all strings; `VITE_AUDIO_SERVICE_LOGGING_ENABLED`, `VITE_PLAYBACK_SERVICE_LOGGING_ENABLED`, and `VITE_LAYOUT_SERVICE_LOGGING_ENABLED` enable audio/playback/layout logs.
+Useful development environment variables (put in `.env.local`, or `.env.web.local` for web): `FAKE_UPDATE_AVAILABLE=1` simulates the updater flow without publishing; `VITE_ENABLE_DEV_TOOLS=true` enables Vue Devtools; `VITE_PSEUDOLOCALIZATION=true` pseudolocalizes all strings; `VITE_AUDIO_SERVICE_LOGGING_ENABLED`, `VITE_PLAYBACK_SERVICE_LOGGING_ENABLED`, and `VITE_LAYOUT_SERVICE_LOGGING_ENABLED` enable audio/playback/layout logs; `VITE_LAYOUT_VERIFY_ENABLED=true` re-runs a full layout on a detached copy after every interactive editor layout, records the result on `window.__neanesLayoutVerify`, and logs any difference with `console.error` (slow, for checking incremental layout).
 
 ### macOS: launch Electron outside the agent command sandbox
 

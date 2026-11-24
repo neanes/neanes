@@ -9,8 +9,10 @@ Real Electron integration scenarios and their helpers live in `tests/integration
 - `mcp/`: stdio launch, editor socket access, and document-tool scenarios.
 - `rendering/`: detached PDF, PNG, and native-print preparation checks.
 - `saving/`: editor save, undo, and recovery revision checks.
+- `layout/`: interactive layout checked against a fresh full layout (local only, not in CI).
 
-These scenarios run separately from Vitest. CI runs them on Linux, Windows, and macOS.
+These scenarios run separately from Vitest. CI runs the MCP, rendering, and saving
+scenarios on Linux, Windows, and macOS.
 
 They use real Electron processes without mocks or DOM emulation. Use disposable
 profiles, never the normal Neanes profile. On macOS, agents must launch them
@@ -39,6 +41,40 @@ otherwise they report temporary artifact directories. See the
 [rendering](integration/rendering/README.md) and
 [saving](integration/saving/README.md) instructions for details and manual checks.
 Saving starts its own Vite development server and requires a POSIX desktop session.
+
+## Layout verification
+
+`npm run test:integration:layout` checks that the editor's interactive layout
+equals a full layout. It builds with `VITE_LAYOUT_VERIFY_ENABLED=true`, which
+makes every interactive editor layout also lay out a detached copy of the same
+pre-layout input and record the comparison on `window.__neanesLayoutVerify`
+(`checks`, `failures`, `firstDifference`, `lastDifference`). The script then
+opens each fixture in a disposable Electron instance and drives real input over
+the DevTools protocol: gorgon toggles, neume insertion and deletion at the
+start, middle, and end, lyric commits, line breaks, a martyria edit, Undo/Redo,
+and a page setup change. It fails on the first edit whose layout differs.
+
+Fixtures:
+
+- `layout/fixtures/verify-layout.byzx`: drop caps, lyric paragraph-style and
+  local overrides, Greek hyphen and underscore melismas across an explicit line
+  break, and martyriae whose bars transfer at automatic breaks. The script also
+  runs it with `melkiteRtl` enabled.
+- Test files from `TestFileGenerator` (Gorgon, FthoraTop, FthoraBottom,
+  Accidentals, Measures, Ison, Random, DropCaps), created through the
+  Generate Test File menu channel.
+- `scroll-test.byz` from the main checkout's root, copied to a temporary
+  directory. Set `NEANES_LAYOUT_VERIFY_SCROLL_TEST` to use another path. It is
+  skipped when missing.
+
+```sh
+npm run test:integration:layout
+node tests/integration/layout/verify-edits.mjs --list
+node tests/integration/layout/verify-edits.mjs --skip-build --only verify-layout
+```
+
+The check uses the dev-only oracle, so it is slow on long scores. With the
+flag on, a difference is also logged in the renderer with `console.error`.
 
 ## Local Linux tests with Docker
 

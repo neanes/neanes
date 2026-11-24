@@ -12,6 +12,7 @@ interface ImportMetaEnv {
   readonly VITE_PLAYBACK_SERVICE_LOGGING_ENABLED?: string;
   readonly VITE_AUDIO_SERVICE_LOGGING_ENABLED?: string;
   readonly VITE_LAYOUT_SERVICE_LOGGING_ENABLED?: string;
+  readonly VITE_LAYOUT_VERIFY_ENABLED?: string;
 }
 
 interface ImportMeta {

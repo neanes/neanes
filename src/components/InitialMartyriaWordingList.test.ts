@@ -77,13 +77,13 @@ describe('buildInitialMartyriaWordingList', () => {
         common.rows.every(
           (row) =>
             row.commonWordingNames.length > 0 ||
-            row.method ===
+            row.structure.modeIdentificationMethod ===
               INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
         ),
       ).toBe(true);
       const methods = common.rows.map((row) =>
         initialMartyriaWordingGroupMethods.indexOf(
-          row.method as (typeof initialMartyriaWordingGroupMethods)[number],
+          row.structure.modeIdentificationMethod,
         ),
       );
       expect(methods).toEqual([...methods].sort((a, b) => a - b));
@@ -117,9 +117,11 @@ describe('buildInitialMartyriaWordingList', () => {
           group.key !== INITIAL_MARTYRIA_NEUME_FONT_GROUP &&
           group.key !== INITIAL_MARTYRIA_COMMON_GROUP
         ) {
-          expect(group.rows.every((row) => row.method === group.key)).toBe(
-            true,
-          );
+          expect(
+            group.rows.every(
+              (row) => row.structure.modeIdentificationMethod === group.key,
+            ),
+          ).toBe(true);
         }
       }
     }
@@ -132,7 +134,12 @@ describe('buildInitialMartyriaWordingList', () => {
     });
 
     expect(groups[0].key).toBe(INITIAL_MARTYRIA_NEUME_FONT_GROUP);
-    expect(groups[0].rows.map((row) => [row.method, row.lettering])).toEqual([
+    expect(
+      groups[0].rows.map((row) => [
+        row.structure.modeIdentificationMethod,
+        row.lettering,
+      ]),
+    ).toEqual([
       [
         INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
         INITIAL_MARTYRIA_LETTERINGS.MusicFont,
@@ -162,7 +169,7 @@ describe('buildInitialMartyriaWordingList', () => {
         // caption instead of the generated one.
         const captions = group.rows.map((row) =>
           JSON.stringify([
-            row.method,
+            row.structure.modeIdentificationMethod,
             row.commonWordingNames.length > 0
               ? row.commonWordingNames
               : row.captionParts,
@@ -220,7 +227,7 @@ describe('getInitialMartyriaWordingFilters', () => {
       INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
       INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
     ]);
-    expect(englishFilters.plagal?.map((option) => option.example)).toEqual([
+    expect(englishFilters.plagal?.map((option) => option.label)).toEqual([
       'Plagal of First Mode',
       'First Plagal Mode',
       'Mode Five',

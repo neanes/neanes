@@ -41,6 +41,7 @@ import {
 import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
+import { escapeHtmlAttribute } from '@/utils/escapeHtmlAttribute';
 import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
 import {
   FONT_VARIANT_CSS_NAMES,
@@ -1365,7 +1366,7 @@ export class ByzHtmlExporter {
         .structure,
       getInitialMartyriaContext(element),
     );
-    let inner = `<span class="${this.config.classModeKeySignature}" role="img" aria-label="${escapeAttribute(reading)}">`;
+    let inner = `<span class="${this.config.classModeKeySignature}" role="img" aria-label="${escapeHtmlAttribute(reading)}">`;
     inner += this.exportModeKeySignature(element, indentation + 2);
     inner += '</span>';
 
@@ -1997,13 +1998,4 @@ export class ByzHtmlExporter {
     map.set('modeDeltaCapital', 'x-mode-delta-capital');
     return map;
   }
-}
-
-/** Text safe inside a double-quoted HTML attribute. */
-function escapeAttribute(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
 }

@@ -9,6 +9,7 @@ import {
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
 import { getScaleNoteValue, ScaleNote } from '@/models/Scales';
+import { capitalizeInitial } from '@/utils/capitalizeInitial';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import {
   composeNumericVariant,
@@ -223,11 +224,6 @@ function usesPlagalAbbreviationInText(
   ).plagalAbbreviationNumeralStyles.includes(structure.numeralStyle);
 }
 
-function capitalizeInitial(value: string) {
-  const [first, ...rest] = [...value];
-  return `${first.toLocaleUpperCase()}${rest.join('')}`;
-}
-
 /** A prenominal mode name puts the mode word after the numeral. */
 function usesTrailingLabel(
   semantics: Pick<InitialMartyriaModeNameSemantics, 'numeralQualifier'>,
@@ -318,28 +314,31 @@ function getInitialMartyriaModeNameReading(
           numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
         }
       : printedSemantics;
-  const usesGraveWord =
-    usesGraveNaming(semantics, mode) && lexicon.graveWord != null;
-  const numeralSemantics =
-    usesGraveNaming(semantics, mode) && !usesGraveWord
-      ? {
-          ...semantics,
-          modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
-        }
-      : semantics;
-  const identifier = usesGraveWord
-    ? lexicon.graveWordAfterLabel
-      ? lexicon.graveWord!
-      : null
-    : // The counterpart form (Greek genitive) wins where the language has one.
-      getInitialMartyriaNumeralWord(numeralSemantics, lexicon, mode);
-  const marker = usesGraveWord
-    ? lexicon.graveWordAfterLabel
-      ? null
-      : lexicon.graveWord!
-    : isPlagalMode(mode) && usesPlagalNaming(semantics)
-      ? (getPlagalMarkerWord(semantics, lexicon) ?? null)
-      : null;
+  const grave = usesGraveNaming(semantics, mode);
+  let identifier: string | null = null;
+  let marker: string | null = null;
+  if (grave && lexicon.graveWord != null) {
+    if (lexicon.graveWordAfterLabel) {
+      identifier = lexicon.graveWord;
+    } else {
+      marker = lexicon.graveWord;
+    }
+  } else {
+    // The counterpart form (Greek genitive) wins where the language has one.
+    identifier = getInitialMartyriaNumeralWord(
+      grave
+        ? {
+            ...semantics,
+            modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+          }
+        : semantics,
+      lexicon,
+      mode,
+    );
+    if (isPlagalMode(mode) && usesPlagalNaming(semantics)) {
+      marker = getPlagalMarkerWord(semantics, lexicon) ?? null;
+    }
+  }
   const label = getInitialMartyriaLabelText(
     lexicon,
     usesTrailingLabel(semantics),
@@ -1161,7 +1160,6 @@ export function resolveInitialMartyriaStyle(options: {
   return {
     structure,
     flowDirection,
-    pronunciation: getInitialMartyriaPronunciation(structure, options.context),
     runs,
   };
 }

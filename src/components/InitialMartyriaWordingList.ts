@@ -2,7 +2,11 @@ import {
   type CommonInitialMartyriaWordingName,
   commonInitialMartyriaWordings,
 } from '@/models/InitialMartyriaCommonWordings';
-import { enumerateInitialMartyriaStructures } from '@/models/InitialMartyriaGrammar';
+import {
+  enumerateInitialMartyriaStructures,
+  initialMartyriaNumeralStyles,
+  relationalModeNamingSchemes,
+} from '@/models/InitialMartyriaGrammar';
 import { getInitialMartyriaLabel } from '@/models/InitialMartyriaLexicon';
 import {
   getInitialMartyriaLabelPosition,
@@ -46,12 +50,13 @@ export interface InitialMartyriaWordingAxes {
  * The order of the groups of wordings that are not common, after the neume
  * font and common groups.
  */
-export const initialMartyriaWordingGroupMethods = [
-  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
-  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
-  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
-  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
-] as const;
+export const initialMartyriaWordingGroupMethods: readonly InitialMartyriaModeIdentificationMethod[] =
+  [
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.TextAndModeSign,
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.Text,
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign,
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
+  ];
 
 export const INITIAL_MARTYRIA_NEUME_FONT_GROUP = 'neume-font';
 export const INITIAL_MARTYRIA_COMMON_GROUP = 'common';
@@ -87,6 +92,11 @@ export type InitialMartyriaCaptionPart =
     }
   | { kind: 'noWords' };
 
+type InitialMartyriaCandidateCaptionPart = Exclude<
+  InitialMartyriaCaptionPart,
+  { kind: 'noWords' }
+>;
+
 /** How a wording prints the number of a mode, as the Number filter offers. */
 export interface InitialMartyriaNumberFacet {
   /** Equal for number words that differ only by place (Primer, primero). */
@@ -104,22 +114,19 @@ export interface InitialMartyriaWordingRow {
   commonWordingNames: CommonInitialMartyriaWordingName[];
   /** What tells the row apart from the other rows of its group. */
   captionParts: InitialMartyriaCaptionPart[];
+  /**
+   * Whether the caption quotes the language's own number form or word for
+   * the mode, and so is set in the language's text font.
+   */
+  captionQuotesLanguage: boolean;
   number: InitialMartyriaNumberFacet | null;
   plagal: InitialMartyriaModeNamingScheme | null;
-  method: InitialMartyriaModeIdentificationMethod;
 }
 
 export interface InitialMartyriaWordingGroup {
   key: InitialMartyriaWordingGroupKey;
   rows: InitialMartyriaWordingRow[];
 }
-
-const numeralStyleOrder = [
-  INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
-  INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
-  INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
-  INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
-];
 
 function compareOrder(a: number[], b: number[]) {
   for (let index = 0; index < a.length; index++) {
@@ -153,7 +160,7 @@ function getNumberFacet(
     key: keyForm.toLocaleLowerCase(structure.languageId),
     label,
     order: [
-      numeralStyleOrder.indexOf(structure.numeralStyle),
+      initialMartyriaNumeralStyles.indexOf(structure.numeralStyle),
       structure.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal ? 0 : 1,
       structure.numberingSystem == null ? 0 : 1,
       structure.numeralQualifier ===
@@ -164,7 +171,10 @@ function getNumberFacet(
   };
 }
 
-type RowDraft = Omit<InitialMartyriaWordingRow, 'captionParts'>;
+type RowDraft = Omit<
+  InitialMartyriaWordingRow,
+  'captionParts' | 'captionQuotesLanguage'
+>;
 
 function createRow(
   structure: InitialMartyriaStructure,
@@ -183,17 +193,18 @@ function createRow(
     plagal: isInitialMartyriaModeSignAloneStructure(structure)
       ? null
       : structure.modeNamingScheme,
-    method: structure.modeIdentificationMethod,
   };
 }
 
 /** Every part a caption could name for a row, in the order it names them. */
-function getCandidateCaptionParts(row: RowDraft): InitialMartyriaCaptionPart[] {
+function getCandidateCaptionParts(
+  row: RowDraft,
+): InitialMartyriaCandidateCaptionPart[] {
   const structure = row.structure;
   if (isInitialMartyriaModeSignAloneStructure(structure)) {
     return [];
   }
-  const parts: InitialMartyriaCaptionPart[] = [];
+  const parts: InitialMartyriaCandidateCaptionPart[] = [];
   if (row.number != null) {
     parts.push({ kind: 'number', number: row.number.label });
   }
@@ -228,17 +239,22 @@ function withCaptionParts(rows: RowDraft[]): InitialMartyriaWordingRow[] {
   );
   return rows.map((row, index) => {
     const parts = candidates[index];
-    const distinguishing = parts.filter(
-      (part) => part.kind !== 'noWords' && kinds.includes(part.kind),
-    );
+    const distinguishing = parts.filter((part) => kinds.includes(part.kind));
+    const captionParts: InitialMartyriaCaptionPart[] =
+      distinguishing.length > 0
+        ? distinguishing
+        : parts.length > 0
+          ? [parts[0]]
+          : [{ kind: 'noWords' }];
     return {
       ...row,
-      captionParts:
-        distinguishing.length > 0
-          ? distinguishing
-          : parts.length > 0
-            ? [parts[0]]
-            : [{ kind: 'noWords' }],
+      captionParts,
+      // A common wording keeps its curated caption, which quotes nothing.
+      captionQuotesLanguage:
+        row.commonWordingNames.length === 0 &&
+        captionParts.some(
+          (part) => part.kind === 'number' || part.kind === 'labelPosition',
+        ),
     };
   });
 }
@@ -319,7 +335,7 @@ export function buildInitialMartyriaWordingList(
   // Common wordings that show the mode alike sit together, in group order.
   const methodOrder = (row: RowDraft) =>
     initialMartyriaWordingGroupMethods.indexOf(
-      row.method as (typeof initialMartyriaWordingGroupMethods)[number],
+      row.structure.modeIdentificationMethod,
     );
   commonRows.sort((a, b) => methodOrder(a) - methodOrder(b));
 
@@ -356,12 +372,6 @@ export function createInitialMartyriaWordingFilterSelection(): InitialMartyriaWo
   return { number: null, plagal: null, method: null };
 }
 
-export function isInitialMartyriaWordingFilterActive(
-  selection: InitialMartyriaWordingFilterSelection,
-) {
-  return Object.values(selection).some((value) => value != null);
-}
-
 function getRowFilterValue(
   row: InitialMartyriaWordingRow,
   filter: InitialMartyriaWordingFilterName,
@@ -372,7 +382,7 @@ function getRowFilterValue(
     case 'plagal':
       return row.plagal;
     case 'method':
-      return row.method;
+      return row.structure.modeIdentificationMethod;
   }
 }
 
@@ -418,7 +428,7 @@ export interface InitialMartyriaNumberFilterOption extends InitialMartyriaWordin
 
 export interface InitialMartyriaPlagalFilterOption extends InitialMartyriaWordingFilterOption<InitialMartyriaModeNamingScheme> {
   /** How the scheme names the plagal of the first mode, read aloud. */
-  example: string;
+  label: string;
 }
 
 export interface InitialMartyriaWordingFilters {
@@ -433,8 +443,7 @@ export interface InitialMartyriaWordingFilters {
 }
 
 const modeNamingSchemeOrder: InitialMartyriaModeNamingScheme[] = [
-  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
-  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+  ...relationalModeNamingSchemes,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
 ];
 
@@ -465,11 +474,13 @@ export function getInitialMartyriaWordingFilters(
 
   const numberFacets = new Map<string, InitialMartyriaNumberFacet>();
   for (const row of rows) {
-    const existing =
-      row.number == null ? undefined : numberFacets.get(row.number.key);
+    if (row.number == null) {
+      continue;
+    }
+    const existing = numberFacets.get(row.number.key);
     if (
-      row.number != null &&
-      (existing == null || compareOrder(row.number.order, existing.order) < 0)
+      existing == null ||
+      compareOrder(row.number.order, existing.order) < 0
     ) {
       numberFacets.set(row.number.key, row.number);
     }
@@ -489,7 +500,7 @@ export function getInitialMartyriaWordingFilters(
   }
 
   const methods = initialMartyriaWordingGroupMethods.filter((method) =>
-    rows.some((row) => row.method === method),
+    rows.some((row) => row.structure.modeIdentificationMethod === method),
   );
 
   return {
@@ -509,7 +520,7 @@ export function getInitialMartyriaWordingFilters(
         modeNamingSchemeOrder.filter((scheme) => plagalExamples.has(scheme)),
       )?.map((option) => ({
         ...option,
-        example: plagalExamples.get(option.value)!,
+        label: plagalExamples.get(option.value)!,
       })) ?? null,
     method: optionsOf('method', methods),
   };

@@ -276,6 +276,13 @@ const ordinalPostnominalAbsoluteReading: InitialMartyriaModeNameSemantics = {
   modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
 };
 
+/* The sign read as the ordinal of its authentic counterpart: Plagal of the First. */
+const ordinalPostnominalCounterpartReading: InitialMartyriaModeNameSemantics = {
+  numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+  numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+  modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+};
+
 export const initialMartyriaLexicons: Record<
   InitialMartyriaLanguageId,
   InitialMartyriaLexicon
@@ -311,12 +318,7 @@ export const initialMartyriaLexicons: Record<
       },
       graveWord: 'Βαρύς',
     },
-    modeSignAloneReading: {
-      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-      modeNamingScheme:
-        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
-    },
+    modeSignAloneReading: ordinalPostnominalCounterpartReading,
     label: 'Ἦχος',
     ordinalWords: {
       1: 'πρῶτος',
@@ -646,12 +648,7 @@ export const initialMartyriaLexicons: Record<
     usesGreekScript: false,
     transliteratedNoteNames: indonesianTransliteratedNoteNames,
     startingNotePrefix: 'dari',
-    modeSignAloneReading: {
-      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
-      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-      modeNamingScheme:
-        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
-    },
+    modeSignAloneReading: ordinalPostnominalCounterpartReading,
     label: 'Modus',
     ordinalWords: {
       1: 'Pertama',
@@ -695,7 +692,6 @@ const initialMartyriaLabelVariantLexicons: Partial<
     [INITIAL_MARTYRIA_LABEL_VARIANTS.Tone]: {
       ...initialMartyriaLexicons[INITIAL_MARTYRIA_LANGUAGE_IDS.English],
       label: 'Tone',
-      pronunciationOverrides: { label: 'Tone' },
     },
   },
 };

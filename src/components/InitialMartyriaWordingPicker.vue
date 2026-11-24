@@ -323,6 +323,7 @@ import {
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { capitalizeInitial } from '@/utils/capitalizeInitial';
 import {
   getInitialMartyriaLanguageName,
   getInitialMartyriaLanguageTextStyle,
@@ -537,49 +538,44 @@ interface FilterControl {
   }[];
 }
 
+const filterLabelSelectors: [
+  InitialMartyriaWordingFilterName,
+  DialogSelector,
+][] = [
+  ['number', ($) => $.dialog.initialMartyriaStyles.filters.number],
+  ['plagal', ($) => $.dialog.initialMartyriaStyles.filters.plagal],
+  ['method', ($) => $.dialog.initialMartyriaStyles.filters.method],
+];
+
 /** The filters the language offers, in the order they are shown. */
 const filterControls = computed(() => {
   const { number, plagal, method, allCounts } = filters.value;
-  const selection = filterSelection.value;
   const lang = languageId.value;
-  const controls: FilterControl[] = [];
-  if (number != null) {
-    controls.push({
-      name: 'number',
-      label: t(($) => $.dialog.initialMartyriaStyles.filters.number, { ns }),
-      value: selection.number,
-      allCount: allCounts.number,
-      options: number.map((option) => ({ ...option, lang })),
-    });
-  }
-  if (plagal != null) {
-    controls.push({
-      name: 'plagal',
-      label: t(($) => $.dialog.initialMartyriaStyles.filters.plagal, { ns }),
-      value: selection.plagal,
-      allCount: allCounts.plagal,
-      options: plagal.map((option) => ({
-        value: option.value,
-        label: option.example,
-        lang,
-        count: option.count,
-      })),
-    });
-  }
-  if (method != null) {
-    controls.push({
-      name: 'method',
-      label: t(($) => $.dialog.initialMartyriaStyles.filters.method, { ns }),
-      value: selection.method,
-      allCount: allCounts.method,
-      options: method.map((option) => ({
-        value: option.value,
-        label: getInitialMartyriaModeIdentificationMethodLabel(t, option.value),
-        count: option.count,
-      })),
-    });
-  }
-  return controls;
+  const optionsByName: Record<
+    InitialMartyriaWordingFilterName,
+    FilterControl['options'] | undefined
+  > = {
+    number: number?.map((option) => ({ ...option, lang })),
+    plagal: plagal?.map((option) => ({ ...option, lang })),
+    method: method?.map((option) => ({
+      ...option,
+      label: getInitialMartyriaModeIdentificationMethodLabel(t, option.value),
+    })),
+  };
+  return filterLabelSelectors.flatMap(([name, labelSelector]) => {
+    const options = optionsByName[name];
+    return options == null
+      ? []
+      : [
+          {
+            name,
+            label: t(labelSelector, { ns }),
+            value: filterSelection.value[name],
+            allCount: allCounts[name],
+            options,
+          } satisfies FilterControl,
+        ];
+  });
 });
 
 function setFilter(
@@ -683,11 +679,6 @@ function formatCaptionPart(part: InitialMartyriaCaptionPart) {
   }
 }
 
-function capitalizeInitial(value: string) {
-  const [first = '', ...rest] = [...value];
-  return `${first.toLocaleUpperCase(i18next.language)}${rest.join('')}`;
-}
-
 /**
  * A common wording keeps its curated caption; any other row is described by
  * the parts that set it apart from the rest of its group.
@@ -704,6 +695,7 @@ function getCaption(row: WordingRow) {
   }
   return capitalizeInitial(
     captionList.value.format(row.captionParts.map(formatCaptionPart)),
+    i18next.language,
   );
 }
 
@@ -720,15 +712,12 @@ function rowProps(row: WordingRow, groupKey: InitialMartyriaWordingGroupKey) {
     // own, as the other groups do in their headings.
     methodLabel:
       groupKey === INITIAL_MARTYRIA_COMMON_GROUP
-        ? getInitialMartyriaModeIdentificationMethodLabel(t, row.method)
+        ? getInitialMartyriaModeIdentificationMethodLabel(
+            t,
+            row.structure.modeIdentificationMethod,
+          )
         : null,
-    // A generated caption can quote the language's own number form or its
-    // word for the mode.
-    captionQuotesLanguage:
-      row.commonWordingNames.length === 0 &&
-      row.captionParts.some(
-        (part) => part.kind === 'number' || part.kind === 'labelPosition',
-      ),
+    captionQuotesLanguage: row.captionQuotesLanguage,
     selected: row.key === currentKey.value,
     inUse: row.key !== currentKey.value && props.usedWordingKeys.has(row.key),
   };

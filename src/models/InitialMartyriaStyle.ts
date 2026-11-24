@@ -376,8 +376,6 @@ export interface InitialMartyriaStyleResolution {
   structure: InitialMartyriaStructure;
   runs: ResolvedInitialMartyriaRun[];
   flowDirection: 'ltr' | 'rtl';
-  /** The complete spoken reading: the mode name, then the starting note. */
-  pronunciation: string;
 }
 
 export function cloneInitialMartyriaStyle(

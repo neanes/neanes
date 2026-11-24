@@ -31,7 +31,7 @@
         </span>
         <span
           class="w-full truncate text-center text-[11px] text-muted-foreground"
-          :lang="readingLanguage"
+          :lang="structure.languageId"
           :dir="readingDirection"
           :style="languageTextStyle"
           :title="readings[index]"
@@ -125,7 +125,6 @@ const readings = computed(() =>
   ),
 );
 
-const readingLanguage = computed(() => props.structure.languageId);
 const languageTextStyle = computed(() =>
   getInitialMartyriaLanguageTextStyle(props.structure.languageId),
 );

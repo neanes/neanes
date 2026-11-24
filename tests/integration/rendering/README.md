@@ -27,11 +27,12 @@ empty ranges, 96/192 DPI dimensions, transparent and opaque backgrounds, visible
 rich-text/RTL content, partial cancellation, file-write failure and recovery, and
 snapshot immutability. PNG artifacts are retained beside the PDFs.
 
-Native-print checks verify settled page geometry, canonical zoom, document title,
-parent-window association, source snapshot preservation, and renderer cleanup.
-`native-print-prepared.pdf` captures the prepared pages without sending a print
-job. Unit tests cover named paper and inch-to-micron conversion for custom and
-half-size paper.
+Native-print checks render a batched PDF and load it into a hidden built-in PDF
+viewer, the path used by Print. They verify that Electron's private
+`-pdf-ready-to-print` readiness event still fires, the viewer's parent window,
+the sanitized temporary file name, temporary file cleanup after success and
+failure, and source snapshot preservation. `native-print-prepared.pdf` is the
+PDF handed to the viewer; no print job is sent.
 
 Before merging, also check the real native print dialog: preview, paper size,
 orientation, cancellation/retry, and a physical print or system Save as PDF.

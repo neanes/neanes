@@ -73,6 +73,7 @@ import { OperationQueue } from '../../src/utils/OperationQueue';
 import { TestFileType } from '../../src/utils/TestFileType';
 import { installAutomation } from './automation/lifecycle';
 import { getNativePrintPageSize, getPageSize } from './export/pageSize';
+import { printPdf } from './export/printPdf';
 import { renderPdf } from './export/renderPdf';
 import { renderSnapshot } from './export/renderSnapshot';
 import { readScoreFile, writeScoreFile } from './files/scoreFiles';
@@ -842,7 +843,7 @@ let silentPdfSuccessCount = 0;
 let silentPdfFailCount = 0;
 
 function renderWorkspacePdfSnapshot(
-  args: ExportWorkspaceAsPdfArgs | PdfExportOptions,
+  args: ExportWorkspaceAsPdfArgs | PdfExportOptions | PrintWorkspaceArgs,
   owner: BrowserWindow = win!,
   signal = new AbortController().signal,
 ) {
@@ -1374,15 +1375,15 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
       return { success: false };
     }
     const owner = win;
-    const result = await renderSnapshot({
-      snapshot: args.snapshot,
+    // Print the batched PDF export rather than the score HTML: printing the
+    // whole score as one HTML document exhausts the renderer heap for long
+    // scores, while the PDF viewer prints pages incrementally.
+    const data = await renderWorkspacePdfSnapshot(args, owner);
+    const result = await printPdf({
+      data,
+      fileName: args.snapshot.title,
       parent: owner,
-      completeHasDialog: true,
-      signal: new AbortController().signal,
-      preload,
-      entry: path.join(process.env.DIST!, 'export.html'),
-      devServerUrl: url,
-      complete: (window) =>
+      print: (window) =>
         new Promise<{ success: boolean; failureReason: string }>((resolve) => {
           owner.webContents.send(IpcMainChannels.PrintWorkspacePrepared);
           window.webContents.print(

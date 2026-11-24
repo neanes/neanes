@@ -1384,6 +1384,7 @@ async function printWorkspace(args: PrintWorkspaceArgs) {
       devServerUrl: url,
       complete: (window) =>
         new Promise<{ success: boolean; failureReason: string }>((resolve) => {
+          owner.webContents.send(IpcMainChannels.PrintWorkspacePrepared);
           window.webContents.print(
             {
               pageSize: getNativePrintPageSize(args),

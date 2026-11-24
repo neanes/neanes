@@ -9,6 +9,7 @@ import type {
 
 export enum IpcMainChannels {
   ExportRendererSnapshot = 'ExportRendererSnapshot',
+  PrintWorkspacePrepared = 'PrintWorkspacePrepared',
   // Automation-only bridge; names stay centralized for preload validation.
   AutomationRequest = 'AutomationRequest',
   AutomationReset = 'AutomationReset',

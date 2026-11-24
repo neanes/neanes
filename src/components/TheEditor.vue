@@ -8644,6 +8644,13 @@ async function onFileMenuPrint(browserInitiated = false) {
       return;
     }
     nativePrintInProgress = true;
+    // Preparation can take a while for long scores; the main process reports
+    // when the native print dialog is about to open.
+    const toastId = toast.loading(
+      t(($) => $.toast.editor.printLoading, { ns: 'toast' }),
+    );
+    const dismiss = () => toast.dismiss(toastId);
+    EventBus.$on(IpcMainChannels.PrintWorkspacePrepared, dismiss);
     try {
       const workspace = selectedWorkspace.value;
       prepareWorkspaceForSerialization(workspace);
@@ -8654,6 +8661,8 @@ async function onFileMenuPrint(browserInitiated = false) {
     } catch (error) {
       console.error(error);
     } finally {
+      EventBus.$off(IpcMainChannels.PrintWorkspacePrepared, dismiss);
+      dismiss();
       nativePrintInProgress = false;
     }
     return;

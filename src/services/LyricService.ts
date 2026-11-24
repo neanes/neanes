@@ -1,3 +1,5 @@
+import { toRaw } from 'vue';
+
 import type {
   DropCapElement,
   MartyriaElement,
@@ -40,9 +42,12 @@ export class LyricService {
    * @returns A string containing the extracted lyrics.
    */
   extractLyrics(
-    elements: ScoreElement[],
+    reactiveElements: ScoreElement[],
     disableGreekMelismata: boolean,
   ): string {
+    // Read the raw elements. Extraction only reads, and Vue's proxy traps
+    // dominated its cost for large scores.
+    const elements = toRaw(reactiveElements);
     let lyrics = '';
 
     // Set to true if we need to add a space before the next character

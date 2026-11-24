@@ -181,6 +181,11 @@ try {
     ({ id }) => id === 'englishToneNumber',
   );
   assert.ok(tonePreset);
+  assert.equal(styleState.modeReadings.englishToneNumber[4], 'Tone Five');
+  assert.equal(
+    styleState.modeReadings[styleState.defaultStyleId][4],
+    'Ήχος Πλάγιος του Πρώτου',
+  );
   const tone = {
     ...tonePreset,
     id: 'english-tone',

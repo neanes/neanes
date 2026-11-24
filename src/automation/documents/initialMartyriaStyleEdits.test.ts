@@ -55,6 +55,24 @@ describe('initial martyria style edits: the sign group alone', () => {
 });
 
 describe('initial martyria style edits: presets', () => {
+  it('reads each style and preset aloud beside its definition', () => {
+    const score = new Score();
+    const read = readInitialMartyriaStyles(score, true);
+
+    expect(Object.keys(read.modeReadings)).toEqual([
+      ...read.styles.map(({ id }) => id),
+      ...read.presets!.map(({ id }) => id),
+    ]);
+    expect(read.modeReadings.englishModeNumbersWithSign[4]).toBe(
+      'Plagal of Mode One',
+    );
+    expect(read.modeReadings.englishToneNumber[4]).toBe('Tone Five');
+    expect(readInitialMartyriaStyles(score).modeReadings).toEqual({
+      [score.defaultInitialMartyriaStyleId]:
+        read.modeReadings[score.defaultInitialMartyriaStyleId],
+    });
+  });
+
   it('rejects a preset copied without an ID of its own', () => {
     const score = new Score();
     const preset = readInitialMartyriaStyles(score, true).presets!.find(

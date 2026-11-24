@@ -58,9 +58,14 @@ export const initialMartyriaModeIdentificationMethods = [
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
 ] as const;
 
+/*
+ * The enumeration order of the naming schemes. Where two schemes print alike
+ * (English [pl] Mode [sign]), the row keeps the first, so the plagal class
+ * comes first: that row reads Plagal Mode One.
+ */
 export const initialMartyriaModeNamingSchemes = [
-  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
 ] as const;
 

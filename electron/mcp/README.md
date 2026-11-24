@@ -1195,6 +1195,10 @@ the default typography, whose ID is only a placeholder), give it a new ID
 and display name, and send it in `edit_initial_martyria_styles.changes.upsert`.
 An upsert that keeps a preset's placeholder ID is rejected with
 `INVALID_INITIAL_MARTYRIA_STYLE`.
+`modeReadings` maps each listed style and preset ID to how it names modes
+1 to 8 aloud (for example `Plagal Mode One` beside `Plagal of Mode One`
+for mode 5), so you can tell apart wordings that print alike. It sits
+beside the definitions and is not sent back in an upsert.
 You can set the default in the same request with `changes.defaultStyleId`.
 To delete a style, send `changes.remove: [{id, replacementId}]` so any
 standalone or embedded uses can switch to a surviving style. Typography

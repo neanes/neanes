@@ -244,6 +244,15 @@ describe('ByzHtmlExporter', () => {
       '<x-f-zygos',
     ];
     expect(html.match(/<x-[a-z0-9-]+/gu)).toEqual([...tags, ...tags]);
+    expect(
+      html.match(
+        /<span class="byz--mode-key-signature" role="img" aria-label="[^"]*">/gu,
+      ),
+    ).toEqual(
+      Array(2).fill(
+        '<span class="byz--mode-key-signature" role="img" aria-label="Ήχος Πρώτος εκ του Πα">',
+      ),
+    );
     expect(html).not.toContain('byz--initial-martyria-');
     expect(html).not.toContain('data-neanes-mode-key=');
   });

@@ -15,6 +15,14 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
+import {
+  DEFAULT_INITIAL_MARTYRIA_WORDING_NAME,
+  getCommonInitialMartyriaWording,
+} from '@/models/InitialMartyriaCommonWordings';
+import {
+  getInitialMartyriaContext,
+  getInitialMartyriaPronunciation,
+} from '@/models/InitialMartyriaResolver';
 import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
@@ -94,6 +102,7 @@ interface ByzHtmlExporterConfig {
   classImageBox: string;
   classImageBoxInline: string;
   classModeKey: string;
+  classModeKeySignature: string;
   classModeKeyRightContainer: string;
   classModeKeyAmbitus: string;
   classModeKeyAmbitusText: string;
@@ -195,6 +204,7 @@ export class ByzHtmlExporter {
     classImageBox: 'byz--image-box',
     classImageBoxInline: 'byz--image-box-inline',
     classModeKey: 'byz--mode-key',
+    classModeKeySignature: 'byz--mode-key-signature',
     classModeKeyRightContainer: 'byz--mode-key-right-container',
     classModeKeyAmbitus: 'byz--mode-key-ambitus',
     classModeKeyAmbitusText: 'byz--mode-key-ambitus-text',
@@ -1348,7 +1358,16 @@ export class ByzHtmlExporter {
     embedded = false,
   ) {
     // BYZHTML's music fonts position marks on the original Greek glyphs.
-    let inner = this.exportModeKeySignature(element, indentation + 2);
+    // The glyphs have no reading of their own, so the signature carries the
+    // Greek reading of what they print.
+    const reading = getInitialMartyriaPronunciation(
+      getCommonInitialMartyriaWording(DEFAULT_INITIAL_MARTYRIA_WORDING_NAME)
+        .structure,
+      getInitialMartyriaContext(element),
+    );
+    let inner = `<span class="${this.config.classModeKeySignature}" role="img" aria-label="${escapeAttribute(reading)}">`;
+    inner += this.exportModeKeySignature(element, indentation + 2);
+    inner += '</span>';
 
     let rightContainer = false;
 
@@ -1978,4 +1997,13 @@ export class ByzHtmlExporter {
     map.set('modeDeltaCapital', 'x-mode-delta-capital');
     return map;
   }
+}
+
+/** Text safe inside a double-quoted HTML attribute. */
+function escapeAttribute(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }

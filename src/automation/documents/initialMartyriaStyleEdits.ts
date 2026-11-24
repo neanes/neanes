@@ -5,10 +5,15 @@ import {
   getCommonInitialMartyriaWordingCaptionSelector,
 } from '@/models/InitialMartyriaCommonWordings';
 import { isInitialMartyriaStructureSupported } from '@/models/InitialMartyriaGrammar';
-import { getSupportedInitialMartyriaLettering } from '@/models/InitialMartyriaResolver';
+import {
+  getInitialMartyriaModeReading,
+  getSupportedInitialMartyriaLettering,
+  modeKeyModes,
+} from '@/models/InitialMartyriaResolver';
 import {
   cloneInitialMartyriaStyle,
   getInitialMartyriaStyleNameKey,
+  type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type { Score } from '@/models/Score';
 import type { InitialMartyriaStyleUpdate } from '@/services/documents/initialMartyriaStyles';
@@ -28,23 +33,44 @@ export function readInitialMartyriaStyles(
   score: Score,
   includePresets = false,
 ) {
-  return {
-    styles: score.initialMartyriaStyles.map(cloneInitialMartyriaStyle),
-    defaultStyleId: score.defaultInitialMartyriaStyleId,
-    ...(includePresets
-      ? {
-          presets: commonInitialMartyriaWordings.map((wording) =>
-            createInitialMartyriaStyleFromWording(
-              wording,
-              getCommonInitialMartyriaWordingCaptionSelector(wording.name)(
-                resources.en,
-              ),
-              wording.name,
-            ),
+  const styles = score.initialMartyriaStyles.map(cloneInitialMartyriaStyle);
+  const presets = includePresets
+    ? commonInitialMartyriaWordings.map((wording) =>
+        createInitialMartyriaStyleFromWording(
+          wording,
+          getCommonInitialMartyriaWordingCaptionSelector(wording.name)(
+            resources.en,
           ),
-        }
-      : {}),
+          wording.name,
+        ),
+      )
+    : undefined;
+  return {
+    styles,
+    defaultStyleId: score.defaultInitialMartyriaStyleId,
+    ...(presets == null ? {} : { presets }),
+    modeReadings: getInitialMartyriaModeReadings([
+      ...styles,
+      ...(presets ?? []),
+    ]),
   };
+}
+
+/*
+ * How each listed definition names modes 1 to 8 aloud, keyed by ID. Wordings
+ * can print alike yet read differently (Plagal Mode One beside Plagal of
+ * Mode One), so the readings tell them apart. They sit beside the
+ * definitions so that a definition can still be copied as it is.
+ */
+function getInitialMartyriaModeReadings(styles: InitialMartyriaStyle[]) {
+  return Object.fromEntries(
+    styles.map((style) => [
+      style.id,
+      modeKeyModes.map((mode) =>
+        getInitialMartyriaModeReading(style.structure, mode),
+      ),
+    ]),
+  );
 }
 
 export function planInitialMartyriaStyleEdits(

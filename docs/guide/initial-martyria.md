@@ -23,12 +23,34 @@ A style controls the language, the wording of the mode name, whether a mode sign
 1. Open `Format > Initial Martyria Styles…`, or select an initial martyria and choose **Manage styles…** in Properties.
 2. Choose **Add style**. To revise a style already in the score, use its pencil button (**Change wording**).
 3. Choose a **Language**. The picker offers Greek, English, Spanish, Church Slavonic, Russian, Arabic, Romanian, and Indonesian. Some languages offer a choice of terms for the mode, such as **Mode** or **Tone** in English.
-4. Click the preview row you want. **Common** shows frequently used wordings, including [Sign without words](#add-a-bare-initial-martyria). Expand **More wordings** to see additional forms, grouped by how they identify the mode (**Sign only**, **Text and sign**, or **Text only**). Use a **Neume font** choice where available for traditional lettering drawn from the score's music font.
+4. Click the preview row you want. The list shows every wording the language allows. Frequently used wordings come first under **Common**, including the [bare initial martyria](#add-a-bare-initial-martyria), each labelled with how it shows the mode. The rest follow, grouped by how the mode is shown: **Number and sign**, **Number only**, and **Sign with mode word**. For Greek, the **Neume font** group at the top offers traditional lettering drawn from the score's music font. When you change a style's wording, the list opens at its current wording.
 5. In the styles list, give the style a name and choose its paragraph styles. Press **Update** to save the changes.
 
 Where available, enable **Transliterate starting note** to show a form such as `Pa` for `Πα`. When a wording includes a mode sign, Neanes adds the plagal abbreviation (`πλ`) in plagal modes.
 
+Each row previews the wording in a few modes. Under each preview is its reading, the way the initial martyria is read aloud, such as `Plagal of First Mode from Pa`. Screen readers use the same reading in the score and in HTML exports. The line under the previews names what sets the row apart from its neighbours, such as the number form or where the mode word sits.
+
+To narrow a long list, use the filters above it. **Number** keeps the wordings that write the number a given way, such as `1`, `1st`, `I`, `One`, or `First`. **Plagal modes** keeps one way of naming the plagal modes; see [Choosing a wording](#choosing-a-wording). **Mode shown by** keeps the wordings that show the mode one way: **Number and sign**, **Number only**, **Sign with mode word**, or **Sign alone**. Each option shows how many wordings it leaves, and an option that would leave none is unavailable. A filter appears only when the language offers more than one choice for it. All filters return to **All** when you change the language or the word for the mode. If the filters hide the style's current wording, the picker says so; choose **Clear filters** to show every wording again.
+
 Use **Duplicate** to make a variation of an existing style, for example to keep the same wording at a different size. Editing a style updates every initial martyria that uses it. If you delete a style in use, choose its replacement under **Use instead**.
+
+### Choosing a wording
+
+Wordings differ in how they name the plagal modes, where they put the number, and whether they repeat the name with the mode sign.
+
+**Naming the plagal modes.** Modes 5 to 8 are the plagal counterparts of the four authentic modes, apart from mode 7, the grave mode. A wording can name them in one of three ways:
+
+- **Named after the authentic mode.** The plagal mode takes the name of the authentic mode it belongs to: the plagal of the first mode is mode 5. This is the traditional Greek naming (`Ἦχος πλάγιος τοῦ πρώτου`) and the English `Plagal of First Mode`.
+- **Counted among the plagal modes.** The plagal modes are counted on their own, first to fourth: `First Plagal Mode` or `Plagal Mode One` is mode 5.
+- **Numbered 1 to 8.** Every mode has its own number, so mode 5 is `Mode 5` or `Fifth Mode`. Slavonic, Romanian, and other traditions that count the modes straight through use this naming.
+
+In the first two namings, mode 7 is named by its own word where the language has one, such as `Grave Mode` or `Ἦχος βαρύς`.
+
+**Number before or after the mode word.** Languages place numbers by their own grammar. English puts an ordinal before the word (`Fifth Mode`) and a cardinal after it (`Mode 5`); Spanish allows an ordinal on either side (`Quinto tono`, `Tono quinto`). The picker offers each order the language allows.
+
+**Number and sign.** A **Number and sign** wording prints the mode name and then the traditional sign, which repeats it. The sign keeps its traditional form, so `Mode 5` is followed by the sign of the plagal of the first mode. A **Sign with mode word** wording prints the sign in place of the number, and **Sign alone** prints no words at all.
+
+**One engraving, several readings.** Some wordings look identical on the page but are read differently. For example, Spanish `Tono V.` can be read as `Tono quinto` or `Tono cinco`, and the English sign beside `Mode` can be read as `Plagal Mode One` or `Plagal of Mode One`. The picker lists such an engraving once, with the reading shown under its previews, and screen readers use that reading.
 
 ### Set the default or style one initial martyria
 
@@ -66,7 +88,7 @@ Select the rich text box and enable **Inline** under **Positioning** in Properti
 A bare initial martyria shows the mode sign and starting note without spelling out the mode name. Use it when you want to introduce a hymn in your own words. Place the martyria beside your text in a rich text box so it still sets the starting pitch and scale for the music that follows.
 
 1. Open `Format > Initial Martyria Styles…` and choose **Add style**.
-2. Choose a **Language**, then select **Sign without words** under **Common**. For Greek, you can also choose it under **Neume font**.
+2. Choose a **Language**, then select the row marked **Sign alone** under **Common**. For Greek, you can also choose it under **Neume font**.
 3. Give the style a name and press **Update** to save it with the score.
 4. Type your heading in a rich text box and [insert an initial martyria](#insert-an-initial-martyria-in-rich-text) beside it. Select the inserted martyria and choose your new style under **Style** in Properties.
 

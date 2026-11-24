@@ -47,6 +47,31 @@ const modeIdentificationMethodSelectors: Record<
     $.dialog.initialMartyriaStyles.modeIdentificationMethods.modeSignAlone,
 };
 
+/*
+ * Fonts for a language's own words where interface fonts lack its marks:
+ * Church Slavonic numerals and words carry combining titla and breathings
+ * (U+0483, U+0486), which Old Standard, bundled with the app, draws. A combining
+ * mark must come from the same font as its letter, so the whole text is
+ * set in the font rather than falling back character by character.
+ */
+const languageTextFontFamilies: Partial<
+  Record<InitialMartyriaLanguageId, string>
+> = {
+  [INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic]: "'Old Standard', serif",
+};
+
+/**
+ * The inline style for text in a language's own words (its numerals,
+ * readings, and mode names) shown in the interface, or undefined where the
+ * interface font serves.
+ */
+export function getInitialMartyriaLanguageTextStyle(
+  languageId: InitialMartyriaLanguageId,
+) {
+  const fontFamily = languageTextFontFamilies[languageId];
+  return fontFamily == null ? undefined : { fontFamily };
+}
+
 export function getInitialMartyriaLanguageName(
   t: Translate,
   languageId: InitialMartyriaLanguageId,

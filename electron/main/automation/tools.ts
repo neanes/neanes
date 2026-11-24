@@ -68,7 +68,7 @@ const descriptions: Record<AutomationTool, string> = {
   close_document:
     'Close an editor workspace without saving or deleting score files. Requires the last read revision, even when discarding. Unsaved or recovered documents require explicit discardUnsavedChanges: true; otherwise UNSAVED_CHANGES is returned. Removes recovery data. Closing the last workspace creates a blank workspace and keeps the server running. Return includes the closed ID and resulting selected ID. Close only workspaces you introduced unless the user requests otherwise; open_document.created distinguishes new workspaces from reused ones.',
   get_initial_martyria_styles:
-    'List score-owned initial martyria styles and the defaultStyleId. includePresets:true also lists reusable wording templates. Copy a preset with a fresh ID and name before applying it. Read paragraph typography with get_paragraph_styles.',
+    'List score-owned initial martyria styles and the defaultStyleId. includePresets:true also lists reusable wording templates. modeReadings maps each listed style and preset ID to how it names modes 1-8 aloud, which tells apart wordings that print alike; it is not part of a definition. Copy a preset with a fresh ID and name before applying it. Read paragraph typography with get_paragraph_styles.',
   edit_initial_martyria_styles:
     'Manage score-owned initial martyria styles in one undo step. changes.upsert takes complete definitions, changes.defaultStyleId sets the default, and changes.remove takes {id,replacementId} pairs. Replacements must survive the batch and update standalone and embedded uses. Requires expectedRevision; never saves.',
   get_paragraph_styles:

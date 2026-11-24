@@ -53,7 +53,9 @@ style in the Greek "Traditional sign" wording lettered in the neume font.
 
 MCP lists score-owned definitions and, optionally, the common wordings as
 preset definitions (whose IDs are placeholders) with
-`get_initial_martyria_styles`. `edit_initial_martyria_styles` manages those
+`get_initial_martyria_styles`, with how each names modes 1 to 8 aloud
+(`modeReadings`, from the resolver's reading generator) beside the
+definitions. `edit_initial_martyria_styles` manages those
 definitions and the score default. It shares the editor's undoable style and
 reference updates. ModeKey edits use score-owned IDs or null to inherit the
 default. Rich text mode keys are edited inside the owning box with

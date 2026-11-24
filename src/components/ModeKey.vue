@@ -8,6 +8,12 @@
   >
     <span class="mode-key-main" :style="mainStyle">
       <span class="mode-key-signature" :dir="resolution.flowDirection">
+        <span
+          class="sr-only"
+          :lang="resolution.structure.languageId"
+          :dir="resolution.flowDirection"
+          >{{ resolution.pronunciation }}</span
+        >
         <template v-for="(run, index) in resolution.runs" :key="index">
           <span
             v-if="runLayouts[index].separatorBefore.kind !== 'none'"
@@ -41,6 +47,7 @@
             v-else-if="run.kind === 'startingPitch'"
             class="mode-key-run starting-pitch"
             :style="getRunStyle(run, runLayouts[index])"
+            aria-hidden="true"
             ><template
               v-for="[role, pitchNote] in [
                 ['primary', run.cluster.primary],

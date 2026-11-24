@@ -13,6 +13,7 @@ import {
 declare global {
   interface Window {
     __neanesLayoutVerify?: LayoutVerificationState;
+    __neanesParagraphCache?: { reused: number; rebuilt: number };
   }
 }
 

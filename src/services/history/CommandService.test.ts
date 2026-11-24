@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { reactive, toRaw } from 'vue';
 
+import { AddToCollectionCommand } from './commands/AddToCollectionCommand';
+import { CompositeCommand } from './commands/CompositeCommand';
+import { RemoveFromCollectionCommand } from './commands/RemoveFromCollectionCommand';
+import { ReplaceElementInCollectionCommand } from './commands/ReplaceElementInCollectionCommand';
 import { UpdatePropertiesCommand } from './commands/UpdatePropertiesCommand';
-import type { HistoryState } from './CommandService';
+import type { Command, HistoryState } from './CommandService';
 import { CommandService } from './CommandService';
 
 describe('history subscriptions', () => {
@@ -109,5 +113,58 @@ describe('history subscriptions', () => {
     second.redo();
     toRaw(first).redo();
     expect(states).toHaveLength(countAfterDispose);
+  });
+});
+
+describe('change subscriptions', () => {
+  it('reports the objects each executed, undone and redone command changes', () => {
+    const history = new CommandService();
+    const target = { title: '' };
+    const collection: object[] = [];
+    const element = {};
+    const changes: Array<readonly object[] | null> = [];
+    history.subscribeChanges((affected) => changes.push(affected));
+
+    history.execute(
+      new UpdatePropertiesCommand({ target, newValues: { title: 'First' } }),
+    );
+    history.execute(
+      new AddToCollectionCommand({ collection, elements: [element] }),
+    );
+    history.execute(
+      new CompositeCommand([
+        new RemoveFromCollectionCommand({ collection, element }),
+        new ReplaceElementInCollectionCommand({
+          collection: [target],
+          element,
+          replaceAtIndex: 0,
+        }),
+      ]),
+    );
+    history.undo();
+
+    expect(changes).toEqual([
+      [target],
+      [collection, element],
+      [collection, element, expect.anything(), element, target],
+      [collection, element, expect.anything(), element],
+    ]);
+  });
+
+  it('reports unknown changes as null', () => {
+    const history = new CommandService();
+    const changes: Array<readonly object[] | null> = [];
+    history.subscribeChanges((affected) => changes.push(affected));
+    const unknown: Command = {
+      execute: () => true,
+      undo: () => true,
+      redo: () => true,
+    };
+
+    history.execute(unknown);
+    history.execute(new CompositeCommand([unknown]));
+    history.undo();
+
+    expect(changes).toEqual([null, null, null]);
   });
 });

@@ -157,6 +157,7 @@ function createDriver(socket, main) {
   // difference.
   async function edit(label, action) {
     const before = (await verifyState())?.checks ?? 0;
+    await evaluate('globalThis.__reuseDrift = []');
     await action();
     let state;
     try {
@@ -180,11 +181,19 @@ function createDriver(socket, main) {
     await frame();
     state = await verifyState();
     if (state.failures > 0) {
+      console.log(
+        'DRIFT',
+        JSON.stringify(await evaluate('globalThis.__reuseDrift')),
+      );
       throw new Error(
         `${label}: layout differs from a full layout: ${JSON.stringify(state.firstDifference)}`,
       );
     }
-    console.log(`  ok ${label} (${state.checks - before} checks)`);
+    const cache = await evaluate('window.__neanesParagraphCache ?? null');
+    const reuse = cache
+      ? `, paragraphs reused ${cache.reused}, rebuilt ${cache.rebuilt}`
+      : '';
+    console.log(`  ok ${label} (${state.checks - before} checks${reuse})`);
     lastChecks = state.checks;
   }
 
@@ -244,6 +253,7 @@ function createDriver(socket, main) {
     elementCount,
     menu,
     verifyState,
+    evaluate,
     get lastChecks() {
       return lastChecks;
     },
@@ -514,6 +524,12 @@ try {
       await delay(1000);
       const initial = await driver.verifyState();
       if (initial?.failures) {
+        console.log(
+          'DRIFT',
+          JSON.stringify(
+            (await driver.evaluate?.('globalThis.__reuseDrift')) ?? null,
+          ),
+        );
         throw new Error(
           `initial layout differs from a full layout: ${JSON.stringify(initial.firstDifference)}`,
         );

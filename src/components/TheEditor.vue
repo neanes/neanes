@@ -263,6 +263,7 @@ import {
 import {
   LayoutService,
   type OverlayDiagnosticsContext,
+  ParagraphLayoutCache,
 } from '@/services/LayoutService';
 import { createParagraphStyleUpdateCommands } from '@/services/paragraphStyles';
 import {
@@ -5742,6 +5743,8 @@ async function runLiveSettlement(
 
   const lyricSelection = captureSelectedLyricSelection(true);
   const resized = result.applyHeights();
+  // Settlement writes measured heights outside commands.
+  getParagraphLayoutCache(source)?.markAllDirty();
   // Replay only the settled pass on the original elements. Preserve their
   // identities and compare update flags with the last published geometry.
   const trialOwner = rawOwner == null ? undefined : result.copies.get(rawOwner);
@@ -5794,13 +5797,69 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
   const finishVerification = layoutVerificationEnabled
     ? beginLayoutVerification(workspace, layoutOptions())
     : null;
-  const processedPages = LayoutService.processPages(workspace, layoutOptions());
+  const paragraphCache = getParagraphLayoutCache(workspace);
+  const processedPages = LayoutService.processPages(workspace, {
+    ...layoutOptions(),
+    paragraphCache,
+  });
   finishVerification?.(processedPages);
+  if (layoutVerificationEnabled && paragraphCache !== undefined) {
+    window.__neanesParagraphCache = {
+      reused: paragraphCache.reused,
+      rebuilt: paragraphCache.rebuilt,
+    };
+  }
   publishLayout(processedPages, null, lyricSelection);
   liveLayout.refresh(workspace);
 
   persistLayoutRecovery();
 }
+
+// The interactive layout reuses unchanged paragraphs from the previous layout
+// of the same workspace. Export, print, settlement and automation always lay
+// out from scratch.
+const paragraphLayoutCaches = new WeakMap<Workspace, ParagraphLayoutCache>();
+const paragraphLayoutCacheDisabled =
+  import.meta.env.VITE_LAYOUT_PARAGRAPH_CACHE_DISABLED === 'true';
+
+// Bumped when something every score depends on changes, such as fonts.
+let paragraphLayoutGeneration = 0;
+const paragraphLayoutCacheGenerations = new WeakMap<
+  ParagraphLayoutCache,
+  number
+>();
+
+function getParagraphLayoutCache(workspace: Workspace) {
+  if (paragraphLayoutCacheDisabled) {
+    return undefined;
+  }
+  const raw = toRaw(workspace);
+  let cache = paragraphLayoutCaches.get(raw);
+  if (cache === undefined) {
+    const created = new ParagraphLayoutCache();
+    raw.commandService.subscribeChanges((affected) =>
+      created.markDirty(affected),
+    );
+    paragraphLayoutCaches.set(raw, created);
+    cache = created;
+  }
+  if (
+    paragraphLayoutCacheGenerations.get(cache) !== paragraphLayoutGeneration
+  ) {
+    cache.markAllDirty();
+    paragraphLayoutCacheGenerations.set(cache, paragraphLayoutGeneration);
+  }
+  return cache;
+}
+
+// Layout inputs written without a command must be reported here.
+function markLayoutChanged(element: ScoreElement) {
+  getParagraphLayoutCache(selectedWorkspace.value)?.markDirty([element]);
+}
+
+watch(fonts, () => {
+  paragraphLayoutGeneration++;
+});
 
 function publishLayout(
   processedPages: Page[],
@@ -7041,6 +7100,7 @@ function updateRichTextBox(
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
     element.height = newValues.height;
+    markLayoutChanged(element);
     save();
     return;
   }
@@ -7137,6 +7197,7 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
+  markLayoutChanged(element);
   richTextBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -7151,6 +7212,7 @@ function updateTextBox(
       return;
     }
     element.height = newValues.height;
+    markLayoutChanged(element);
     save();
     return;
   }
@@ -7178,6 +7240,7 @@ function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
+  markLayoutChanged(element);
   textBoxCalculationCount.value++;
   saveDebounced();
 }

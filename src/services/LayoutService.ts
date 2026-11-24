@@ -9,6 +9,7 @@ import {
   PARAGRAPH_START,
   positionItems,
 } from 'tex-linebreak';
+import { toRaw } from 'vue';
 
 import type {
   DropCapElement,
@@ -361,6 +362,183 @@ interface PreparedParagraph {
   completed: CompletedParagraph;
 }
 
+// A paragraph from the previous layout. It is reused when none of the
+// elements Phase 1 reads for it changed. `writes` replays the element fields
+// its Phase 1 changed, because skipping the paragraph would otherwise leave
+// them as the score-wide passes before Phase 1 reset them.
+interface CachedParagraph {
+  elements: ScoreElement[];
+  // The neighbours Phase 1 reads: one element before, two after, and the
+  // next note after the paragraph.
+  neighbours: Array<ScoreElement | undefined>;
+  entry: Phase1CarriedState;
+  exit: Phase1CarriedState;
+  completed: CompletedParagraph;
+  writes: Array<{ element: ScoreElement; key: string; value: unknown }>;
+  debugFields?: Array<Record<string, unknown>>;
+}
+
+// Element fields that passes after Phase 1 write. Their values at the start
+// of a layout come from the previous layout, and some of them are read by
+// Phase 1, so they are compared like the score-wide pass results. Fields
+// that Phase 1 provably does not read (x, y, page, line, updated,
+// melismaWidth, hyphenOffsets) are left out. LayoutService.test.ts checks
+// this list against the source.
+export const fieldsWrittenAfterPhase1 = [
+  'adjustmentRatio',
+  'alignLeft',
+  'className',
+  'computedAlignment',
+  'computedColor',
+  'computedFontFamily',
+  'computedFontSize',
+  'computedFontStyle',
+  'computedFontVariantAlternates',
+  'computedFontVariantCaps',
+  'computedFontVariantLigatures',
+  'computedFontVariantNumeric',
+  'computedFontWeight',
+  'computedIsonOffsetY',
+  'computedLineHeight',
+  'computedMeasureBarLeft',
+  'computedMeasureBarLeftLeadingSpacing',
+  'computedMeasureBarLeftOffsetX',
+  'computedMeasureBarRight',
+  'computedMeasureBarRightOffsetX',
+  'computedMeasureBarRightTrailingSpacing',
+  'computedStrokeColor',
+  'computedStrokeWidth',
+  'computedUnderline',
+  'diagnostics',
+  'dir',
+  'footnoteId',
+  'footnoteMarker',
+  'footnoteMarkerOffset',
+  'footnoteMarkerTop',
+  'footnoteMarkers',
+  'footnoteNumber',
+  'footnoteOverflow',
+  'footnoteOverflowBottom',
+  'footnoteRuleThickness',
+  'footnoteRuleTop',
+  'height',
+  'indentation',
+  'innerHTML',
+  'isFullMelisma',
+  'isonOffsetYBeforeAdjustment',
+  'labelX',
+  'leadingLyricHyphenOffset',
+  'left',
+  'lines',
+  'lyricsHorizontalOffset',
+  'melismaText',
+  'minHeight',
+  'neumeWidth',
+  'paragraphEnd',
+  'physicalPageNumber',
+  'position',
+  'right',
+  'showLeadingLyricHyphen',
+  'textContent',
+  'top',
+  'visibility',
+  'width',
+] as const;
+export const fieldsWrittenAfterPhase1NotReadByPhase1 = [
+  'x',
+  'y',
+  'page',
+  'line',
+  'updated',
+  'melismaWidth',
+  'hyphenOffsets',
+] as const;
+
+const historyFieldsByType = new Map<ElementType, string[]>();
+
+// A two-lane hash of the fields an element carries over from the previous
+// layout. Values are numbers, strings, booleans, null or undefined; any
+// other value is hashed by identity of its JSON form.
+function hashHistoryFields(element: ScoreElement): [number, number] {
+  let fields = historyFieldsByType.get(element.elementType);
+  if (fields === undefined) {
+    fields = fieldsWrittenAfterPhase1.filter((key) => key in element);
+    historyFieldsByType.set(element.elementType, fields);
+  }
+  let a = 0x811c9dc5;
+  let b = 0x01000193;
+  const mix = (word: number) => {
+    a = Math.imul(a ^ word, 0x01000193);
+    b = Math.imul(b ^ word, 0x5bd1e995) ^ (b >>> 15);
+  };
+  const values = element as unknown as Record<string, unknown>;
+  for (const key of fields) {
+    const value = values[key];
+    if (typeof value === 'number') {
+      historyFloat[0] = value;
+      mix(historyWords[0]);
+      mix(historyWords[1]);
+    } else if (typeof value === 'string') {
+      mix(value.length + 1);
+      for (let i = 0; i < value.length; i++) {
+        mix(value.charCodeAt(i));
+      }
+    } else if (typeof value === 'boolean') {
+      mix(value ? -3 : -4);
+    } else if (value == null) {
+      mix(value === null ? -5 : -6);
+    } else {
+      const json = JSON.stringify(value) ?? '';
+      mix(-7);
+      for (let i = 0; i < json.length; i++) {
+        mix(json.charCodeAt(i));
+      }
+    }
+  }
+  return [a >>> 0, b >>> 0];
+}
+const historyFloat = new Float64Array(1);
+const historyWords = new Uint32Array(historyFloat.buffer);
+
+// Paragraph reuse for the editor's interactive layout. Edits report the
+// objects they change through markDirty (commands do so through
+// CommandService.subscribeChanges); anything unknown calls markAllDirty.
+// Results of the score-wide passes that run before Phase 1 (martyria
+// calculation, melisma planning) are compared per element, so their
+// cascades are found without being reported.
+export class ParagraphLayoutCache {
+  elements: ScoreElement[] | null = null;
+  globalKey: string | null = null;
+  paragraphs = new Map<ScoreElement, CachedParagraph>();
+  derived = new Map<ScoreElement, unknown[]>();
+  private dirty = new Set<object>();
+  private allDirty = true;
+  // Counts from the most recent layout, for profiling.
+  reused = 0;
+  rebuilt = 0;
+
+  markDirty(objects: readonly object[] | null) {
+    if (objects === null) {
+      this.allDirty = true;
+      return;
+    }
+    for (const object of objects) {
+      this.dirty.add(toRaw(object));
+    }
+  }
+
+  markAllDirty() {
+    this.allDirty = true;
+  }
+
+  takeChanges() {
+    const changes = { all: this.allDirty, objects: this.dirty };
+    this.allDirty = false;
+    this.dirty = new Set();
+    return changes;
+  }
+}
+
 interface ContentLine {
   paragraph: CompletedParagraph;
   paragraphLineIndex: number;
@@ -472,6 +650,9 @@ interface AtomicMelismaLayout {
 
 type LayoutInput = Pick<Workspace, 'score' | 'nextId'>;
 type LayoutOptions = LayoutDiagnosticsOptions & {
+  // Reuse unchanged paragraphs from the previous layout of the same score.
+  // Only the editor's interactive layout passes one.
+  paragraphCache?: ParagraphLayoutCache;
   provisionalFootnoteWidths?: boolean;
   breaksBefore?: ReadonlySet<ScoreElement>;
   onOverflowBreak?: (
@@ -525,6 +706,7 @@ export class LayoutService {
       score.defaultInitialMartyriaStyleId,
       options,
       false,
+      this.getParagraphCacheForLayout(options, hasFootnoteReferences),
     );
     const {
       layoutWorkspace,
@@ -902,6 +1084,72 @@ export class LayoutService {
     return pages;
   }
 
+  // Footnote numbering and marker widths are resolved after pagination, so
+  // scores with footnotes are laid out without paragraph reuse for now.
+  private static getParagraphCacheForLayout(
+    options: LayoutOptions | undefined,
+    hasFootnoteReferences: boolean,
+  ) {
+    const cache = options?.paragraphCache;
+    if (cache === undefined) {
+      return undefined;
+    }
+    if (options?.collectDiagnostics === true || hasFootnoteReferences) {
+      cache.markAllDirty();
+      return undefined;
+    }
+    return cache;
+  }
+
+  // Phase 1 inputs computed by the score-wide passes that run before it.
+  private static getPhase1DerivedInputs(
+    element: ScoreElement,
+    greekMelismaPairs: Map<NoteElement, NoteElement>,
+    atomicMelismaLayout: AtomicMelismaLayout,
+  ): unknown[] | null {
+    switch (element.elementType) {
+      case ElementType.Note: {
+        const note = element as NoteElement;
+        const boundary = atomicMelismaLayout.boundaries.get(note);
+        return [
+          // Written by addMelismas in the previous layout, but read by
+          // Phase 1 when deciding on a leading lyric hyphen.
+          note.melismaText,
+          note.noteIndicatorNeume,
+          note.scaleNotes.length,
+          ...note.scaleNotes,
+          note.scaleNotesVirtual.length,
+          ...note.scaleNotesVirtual,
+          greekMelismaPairs.get(note),
+          boundary?.width,
+          boundary?.protected,
+          boundary?.followsAtomicPrefix,
+          atomicMelismaLayout.centeringPlans.get(note)?.phase1Centered,
+          atomicMelismaLayout.potentiallyCenteredGroupEndNotes.has(note),
+        ];
+      }
+      case ElementType.Martyria: {
+        const martyria = element as MartyriaElement;
+        return [
+          martyria.error,
+          martyria.fthora,
+          martyria.fthoraCarry,
+          martyria.note,
+          martyria.quantitativeNeumeFthora,
+          martyria.quantitativeNeumeFthoraCarry,
+          martyria.rootSign,
+          martyria.scale,
+        ];
+      }
+      case ElementType.ModeKey: {
+        const modeKey = element as ModeKeyElement;
+        return [modeKey.ambitusHighNote, modeKey.ambitusLowNote];
+      }
+      default:
+        return null;
+    }
+  }
+
   private static prepareFootnotes(
     workspace: LayoutInput,
     musicalContexts: Map<ScoreElement, MusicalContext>,
@@ -1241,6 +1489,7 @@ export class LayoutService {
     defaultInitialMartyriaStyleId: string,
     options?: LayoutDiagnosticsOptions,
     hidePopulatedTerminator = false,
+    paragraphCache?: ParagraphLayoutCache,
   ) {
     // Always make sure this is an empty element at the end of the score.
     // If this case is true, we have a bug, but this will prevent
@@ -1372,19 +1621,301 @@ export class LayoutService {
     const paragraphs: PreparedParagraph[] = [];
     let paragraphStartIndex = 0;
     let paragraphEntry = carriedState();
+
+    // Paragraph reuse: see ParagraphLayoutCache.
+    const cache = layoutWorkspace.diagnostics == null ? paragraphCache : null;
+    const nextCachedParagraphs = new Map<ScoreElement, CachedParagraph>();
+    // Shallow copies of elements as they stood when the current paragraph
+    // started, taken before Phase 1 can write to them.
+    const snapshots = new Map<ScoreElement, Record<string, unknown>>();
+    const nextNoteIndex = (index: number) => {
+      for (let k = index + 1; k < elements.length; k++) {
+        if (elements[k].elementType === ElementType.Note) {
+          return k;
+        }
+      }
+      return -1;
+    };
+    const previousNoteIndex = (index: number) => {
+      for (let k = index - 1; k >= 0; k--) {
+        if (elements[k].elementType === ElementType.Note) {
+          return k;
+        }
+      }
+      return -1;
+    };
+    // Elements whose Phase 1 inputs may have changed since the last layout.
+    let changed: Uint8Array | null = null;
+    if (cache != null) {
+      const globalKey = JSON.stringify([
+        pageSetup,
+        paragraphStyles,
+        initialMartyriaStyles,
+        defaultInitialMartyriaStyleId,
+      ]);
+      const changes = cache.takeChanges();
+      const pairStarts = new Map<ScoreElement, ScoreElement>();
+      for (const [start, end] of greekMelismaPairs) {
+        pairStarts.set(end, start);
+      }
+      let clear =
+        changes.all ||
+        cache.elements !== elements ||
+        cache.globalKey !== globalKey;
+      changed = new Uint8Array(elements.length);
+      const markChanged = (index: number) => {
+        for (
+          let k = Math.max(0, index - 2);
+          k <= Math.min(elements.length - 1, index + 2);
+          k++
+        ) {
+          changed![k] = 1;
+        }
+        const previousNote = previousNoteIndex(index);
+        if (previousNote >= 0) {
+          changed![previousNote] = 1;
+        }
+        const nextNote = nextNoteIndex(index);
+        if (nextNote >= 0) {
+          changed![nextNote] = 1;
+        }
+        const pairStart = pairStarts.get(elements[index]);
+        if (
+          pairStart !== undefined &&
+          elements[pairStart.index] === pairStart
+        ) {
+          changed![pairStart.index] = 1;
+        }
+      };
+      const derived = new Map<ScoreElement, unknown[]>();
+      for (let k = 0; k < elements.length; k++) {
+        const element = elements[k];
+        const values = [
+          ...hashHistoryFields(element),
+          ...(this.getPhase1DerivedInputs(
+            element,
+            greekMelismaPairs,
+            atomicMelismaLayout,
+          ) ?? []),
+        ];
+        derived.set(element, values);
+        const previous = cache.derived.get(element);
+        if (
+          previous === undefined ||
+          previous.length !== values.length ||
+          previous.some((value, index) => !Object.is(value, values[index]))
+        ) {
+          markChanged(k);
+        }
+      }
+      for (const object of changes.objects) {
+        if (object === elements) {
+          // Structural edits are found by the identity checks below.
+          continue;
+        }
+        if ('elementType' in object) {
+          const index = (object as ScoreElement).index;
+          if (elements[index] === object) {
+            markChanged(index);
+          }
+          // Other elements (annotations, alternate lines, headers, footers,
+          // removed elements) are not read by this staff's Phase 1.
+          continue;
+        }
+        if (
+          object === pageSetup ||
+          paragraphStyles.includes(object as ParagraphStyle)
+        ) {
+          // Covered by the global key.
+          continue;
+        }
+        // Unknown objects may be inputs.
+        clear = true;
+      }
+      if (clear) {
+        cache.paragraphs.clear();
+      }
+      cache.elements = elements;
+      cache.globalKey = globalKey;
+      cache.derived = derived;
+      cache.reused = 0;
+      cache.rebuilt = 0;
+    }
+    const snapshot = (index: number) => {
+      const element = elements[index];
+      if (element !== undefined && !snapshots.has(element)) {
+        snapshots.set(element, { ...element });
+      }
+    };
+    const snapshotAhead = (index: number) => {
+      snapshot(index + 1);
+      snapshot(index + 2);
+      // A note can write to the next note, which may be further ahead.
+      const next = nextNoteIndex(index);
+      if (next >= 0) {
+        snapshot(next);
+      }
+    };
+    const neighboursOf = (startIndex: number, endIndex: number) => {
+      const next = nextNoteIndex(endIndex);
+      return [
+        elements[startIndex - 1],
+        elements[endIndex + 1],
+        elements[endIndex + 2],
+        next >= 0 ? elements[next] : undefined,
+      ];
+    };
+    const sameCarriedState = (
+      left: Phase1CarriedState,
+      right: Phase1CarriedState,
+    ) =>
+      left.greekMelismaIsActive === right.greekMelismaIsActive &&
+      Object.is(left.pendingGreekPairEndPx, right.pendingGreekPairEndPx) &&
+      deepEquals(left.greekMelismaSyllables, right.greekMelismaSyllables);
+    const tryReuseParagraph = (startIndex: number) => {
+      const cached = cache?.paragraphs.get(elements[startIndex]);
+      if (cached === undefined) {
+        return null;
+      }
+      const endIndex = startIndex + cached.elements.length - 1;
+      if (endIndex >= elements.length) {
+        return null;
+      }
+      for (let k = 0; k < cached.elements.length; k++) {
+        if (elements[startIndex + k] !== cached.elements[k]) {
+          return null;
+        }
+      }
+      const neighbours = neighboursOf(startIndex, endIndex);
+      if (neighbours.some((element, k) => element !== cached.neighbours[k])) {
+        return null;
+      }
+      const last = Math.min(elements.length - 1, endIndex + 2);
+      for (let k = Math.max(0, startIndex - 1); k <= last; k++) {
+        if (changed![k] === 1) {
+          return null;
+        }
+      }
+      const next = neighbours[3];
+      if (next !== undefined && changed![next.index] === 1) {
+        return null;
+      }
+      if (!sameCarriedState(carriedState(), cached.entry)) {
+        return null;
+      }
+      {
+        const skip = new Set([
+          'index',
+          'keyHelper',
+          'updated',
+          'x',
+          'y',
+          'page',
+          'line',
+          'melismaWidth',
+          'hyphenOffsets',
+        ]);
+        const w = globalThis as unknown as { __reuseDrift?: string[] };
+        w.__reuseDrift ??= [];
+        const first = Math.max(0, startIndex - 1);
+        for (let k = first; k <= last; k++) {
+          const before = cached.debugFields?.[k - first];
+          const now = elements[k] as unknown as Record<string, unknown>;
+          if (!before) {
+            continue;
+          }
+          for (const key in now) {
+            if (skip.has(key) || key.endsWith('Previous')) {
+              continue;
+            }
+            if (
+              JSON.stringify(now[key]) !== JSON.stringify(before[key]) &&
+              w.__reuseDrift.length < 30
+            ) {
+              w.__reuseDrift.push(
+                `p@${startIndex} el${k - startIndex} ${(now as { elementType?: string }).elementType}.${key}: ${JSON.stringify(before[key])?.slice(0, 50)} -> ${JSON.stringify(now[key])?.slice(0, 50)}`,
+              );
+            }
+          }
+        }
+      }
+      return { cached, endIndex };
+    };
     const recordParagraph = (endIndex: number) => {
+      const completed = layoutWorkspace.completedParagraphs.at(-1)!;
       paragraphs.push({
         startIndex: paragraphStartIndex,
         endIndex,
         entry: paragraphEntry,
         exit: carriedState(),
-        completed: layoutWorkspace.completedParagraphs.at(-1)!,
+        completed,
       });
+      if (cache == null) {
+        return;
+      }
+      const writes: CachedParagraph['writes'] = [];
+      for (const [element, before] of snapshots) {
+        const fields = element as unknown as Record<string, unknown>;
+        for (const key in fields) {
+          if (!Object.is(fields[key], before[key])) {
+            writes.push({ element, key, value: fields[key] });
+          }
+        }
+      }
+      const first = elements[paragraphStartIndex];
+      nextCachedParagraphs.set(first, {
+        elements: elements.slice(paragraphStartIndex, endIndex + 1),
+        neighbours: neighboursOf(paragraphStartIndex, endIndex),
+        entry: paragraphEntry,
+        exit: carriedState(),
+        completed,
+        writes,
+        debugFields: (() => {
+          const out: Array<Record<string, unknown>> = [];
+          const f = Math.max(0, paragraphStartIndex - 1);
+          const l = Math.min(elements.length - 1, endIndex + 2);
+          for (let k = f; k <= l; k++) {
+            out.push({ ...(snapshots.get(elements[k]) ?? elements[k]) });
+          }
+          return out;
+        })(),
+      });
+      cache.rebuilt++;
     };
     for (let i = 0; i < elements.length; i++) {
       if (layoutWorkspace.pendingParagraph.length === 0) {
         paragraphStartIndex = i;
         paragraphEntry = carriedState();
+        if (cache != null) {
+          const reuse = tryReuseParagraph(i);
+          if (reuse !== null) {
+            const { cached, endIndex } = reuse;
+            for (const { element, key, value } of cached.writes) {
+              (element as unknown as Record<string, unknown>)[key] = value;
+            }
+            layoutWorkspace.completedParagraphs.push(cached.completed);
+            phase1GreekMelismaIsActive = cached.exit.greekMelismaIsActive;
+            phase1GreekMelismaSyllables = cached.exit.greekMelismaSyllables;
+            pendingGreekPairEndPx = cached.exit.pendingGreekPairEndPx;
+            paragraphs.push({
+              startIndex: i,
+              endIndex,
+              entry: paragraphEntry,
+              exit: cached.exit,
+              completed: cached.completed,
+            });
+            nextCachedParagraphs.set(elements[i], cached);
+            cache.reused++;
+            i = endIndex;
+            continue;
+          }
+          snapshots.clear();
+          snapshot(i - 1);
+          snapshot(i);
+        }
+      }
+      if (cache != null) {
+        snapshotAhead(i);
       }
       if (this.isBreakElement(elements[i])) {
         phase1GreekMelismaSyllables = null;
@@ -2418,6 +2949,10 @@ export class LayoutService {
       if (layoutWorkspace.diagnostics != null) {
         layoutWorkspace.diagnostics.currentOwner = null;
       }
+    }
+
+    if (cache != null) {
+      cache.paragraphs = nextCachedParagraphs;
     }
 
     return {

@@ -174,6 +174,11 @@ import {
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
+// Collision boxes depend only on a note's glyphs and the font data, which, as
+// for the caches above, does not change for a given family. The cached boxes
+// are frozen so that a caller that mutates them fails instead of corrupting
+// later layouts.
+const noteCollisionGlyphBoxesCache = new Map<string, readonly NoteGlyphBox[]>();
 const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
 const maxAdjustmentRatioSearchLimit = 4096;
@@ -4279,6 +4284,14 @@ export class LayoutService {
     pageSetup: PageSetup,
     noteWidthArgs: GetNoteWidthArgs,
   ) {
+    // Most notes share a lyrics style, so resolve each distinct style and
+    // override combination once per layout. Paragraph styles do not change
+    // during a layout.
+    const lyricsFonts = new Map<
+      string,
+      { css: string; fontVariantCaps: string; height: number }
+    >();
+
     for (const element of elements) {
       if (element.elementType !== ElementType.Note) {
         continue;
@@ -4301,17 +4314,27 @@ export class LayoutService {
       noteElement.leadingLyricHyphenReservationWidth = 0;
 
       noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
-      const resolvedLyricsStyle = this.getResolvedLyricsStyle(
-        noteElement,
-        noteWidthArgs.paragraphStyles,
-      );
-      noteElement.lyricsFontCss = resolveFontCss(resolvedLyricsStyle);
-      noteElement.computedLyricsFontVariantCaps =
-        resolvedLyricsStyle.fontVariantCaps ?? 'normal';
-      noteElement.lyricsFontHeight =
-        TextMeasurementService.getCachedFontVerticalMetrics(
-          noteElement.lyricsFontCss,
-        ).height;
+      const overrides = noteElement.getParagraphStyleOverrides();
+      const lyricsFontKey = `${noteElement.lyricsParagraphStyleId}|${JSON.stringify(overrides)}`;
+      let lyricsFont = lyricsFonts.get(lyricsFontKey);
+      if (lyricsFont === undefined) {
+        const resolvedLyricsStyle = resolveParagraphStyle(
+          noteWidthArgs.paragraphStyles,
+          noteElement.lyricsParagraphStyleId,
+          overrides,
+        );
+        const css = resolveFontCss(resolvedLyricsStyle);
+        lyricsFont = {
+          css,
+          fontVariantCaps: resolvedLyricsStyle.fontVariantCaps ?? 'normal',
+          height:
+            TextMeasurementService.getCachedFontVerticalMetrics(css).height,
+        };
+        lyricsFonts.set(lyricsFontKey, lyricsFont);
+      }
+      noteElement.lyricsFontCss = lyricsFont.css;
+      noteElement.computedLyricsFontVariantCaps = lyricsFont.fontVariantCaps;
+      noteElement.lyricsFontHeight = lyricsFont.height;
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
     }
 
@@ -5032,6 +5055,30 @@ export class LayoutService {
       measureBarWidthMap,
       leftBarReserveOverride,
     );
+    const key = `${fontFamily}|${fontSize}|${glyphs
+      .map(
+        (glyph) =>
+          `${glyph.glyphName},${glyph.kind},${glyph.x},${glyph.y},${glyph.offsetX},${glyph.offsetY}`,
+      )
+      .join(';')}`;
+    let boxes = noteCollisionGlyphBoxesCache.get(key);
+    if (boxes === undefined) {
+      boxes = this.computeNoteCollisionGlyphBoxes(
+        fontFamily,
+        fontSize,
+        glyphs,
+      ).map((box) => Object.freeze(box));
+      noteCollisionGlyphBoxesCache.set(key, boxes);
+    }
+    // Callers may add to the returned array.
+    return [...boxes];
+  }
+
+  private static computeNoteCollisionGlyphBoxes(
+    fontFamily: string,
+    fontSize: number,
+    glyphs: NoteCollisionGlyph[],
+  ): NoteGlyphBox[] {
     const resolvedGlyphNames = fontService.resolveContextualSubstitutions(
       fontFamily,
       glyphs.map((glyph) => glyph.glyphName),
@@ -6552,17 +6599,6 @@ export class LayoutService {
     }
 
     return elementWidthPx;
-  }
-
-  private static getResolvedLyricsStyle(
-    noteElement: NoteElement,
-    paragraphStyles: ParagraphStyle[],
-  ) {
-    return resolveParagraphStyle(
-      paragraphStyles,
-      noteElement.lyricsParagraphStyleId,
-      noteElement.getParagraphStyleOverrides(),
-    );
   }
 
   private static getDefaultLyricsFont(paragraphStyles: ParagraphStyle[]) {

@@ -141,8 +141,14 @@ function absoluteDigitOrdinalStyle(
 }
 
 describe('Initial Martyria lexicons against Unicode CLDR', () => {
-  it('uses CLDR writing directions for every language', () => {
+  it('uses CLDR writing directions and left-to-right Church Slavonic', () => {
     for (const languageId of initialMartyriaLanguageIds) {
+      // CLDR 49 no longer provides a main locale file for Church Slavonic.
+      if (languageId === INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic) {
+        expect(initialMartyriaLexicons[languageId].direction).toBe('ltr');
+        continue;
+      }
+
       const layout = cldr.extractLayout(languageId) as CldrLayout;
       const expectedDirection =
         layout.orientation.characterOrder === 'right-to-left' ? 'rtl' : 'ltr';
@@ -530,28 +536,16 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     );
   });
 
-  it('uses CLDR Church Slavonic digit-ordinal punctuation', () => {
+  it('preserves Church Slavonic digit-ordinal punctuation', () => {
     const style = absoluteDigitOrdinalStyle(
       INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,
       INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
     );
 
-    expect(numeralsFor(style, false)).toEqual(
-      cldrValues('cu', 'renderDigitsOrdinal'),
-    );
+    expect(numeralsFor(style, false)).toEqual(modes.map((mode) => `${mode}.`));
   });
 
-  it('preserves attested Church Slavonic ordinal words absent from CLDR', () => {
-    expect(cldrValues('cu', 'renderSpelloutOrdinal')).toEqual([
-      '1.',
-      '2.',
-      '3.',
-      '4.',
-      '5.',
-      '6.',
-      '7.',
-      '8.',
-    ]);
+  it('preserves attested Church Slavonic ordinal words', () => {
     const postnominal = numeralsFor(
       absoluteWordStyle(
         INITIAL_MARTYRIA_LANGUAGE_IDS.ChurchSlavonic,

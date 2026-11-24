@@ -1,3 +1,5 @@
+import { toRaw } from 'vue';
+
 import type { ScoreElement } from '@/models/Element';
 import {
   AcceptsLyricsOption,
@@ -1271,7 +1273,10 @@ export class SaveService {
     return { score, repairedFootnoteReferences };
   }
 
-  public static SaveScoreToJson(s: Score) {
+  public static SaveScoreToJson(reactiveScore: Score) {
+    // Read through the raw score. Serialization only reads, and Vue's proxy
+    // traps (with dependency tracking) dominated its cost for large scores.
+    const s = toRaw(reactiveScore);
     const score = new Score_v1();
 
     score.staff = new Staff_v1();

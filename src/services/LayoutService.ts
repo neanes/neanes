@@ -343,6 +343,24 @@ interface CompletedParagraph {
   dropCapContinuationLines: number;
 }
 
+// Phase 1 state that carries from one paragraph into the next. Everything
+// else in the layout workspace is reset when a paragraph ends.
+interface Phase1CarriedState {
+  greekMelismaIsActive: boolean;
+  greekMelismaSyllables: MelismaSyllables | null;
+  pendingGreekPairEndPx: number | null;
+}
+
+// One paragraph built by Phase 1: the element range that produced it, the
+// carried state on entry and exit, and the broken paragraph.
+interface PreparedParagraph {
+  startIndex: number;
+  endIndex: number;
+  entry: Phase1CarriedState;
+  exit: Phase1CarriedState;
+  completed: CompletedParagraph;
+}
+
 interface ContentLine {
   paragraph: CompletedParagraph;
   paragraphLineIndex: number;
@@ -1346,7 +1364,28 @@ export class LayoutService {
     let phase1GreekMelismaIsActive = false;
     let phase1GreekMelismaSyllables: MelismaSyllables | null = null;
     let pendingGreekPairEndPx: number | null = null;
+    const carriedState = (): Phase1CarriedState => ({
+      greekMelismaIsActive: phase1GreekMelismaIsActive,
+      greekMelismaSyllables: phase1GreekMelismaSyllables,
+      pendingGreekPairEndPx,
+    });
+    const paragraphs: PreparedParagraph[] = [];
+    let paragraphStartIndex = 0;
+    let paragraphEntry = carriedState();
+    const recordParagraph = (endIndex: number) => {
+      paragraphs.push({
+        startIndex: paragraphStartIndex,
+        endIndex,
+        entry: paragraphEntry,
+        exit: carriedState(),
+        completed: layoutWorkspace.completedParagraphs.at(-1)!,
+      });
+    };
     for (let i = 0; i < elements.length; i++) {
+      if (layoutWorkspace.pendingParagraph.length === 0) {
+        paragraphStartIndex = i;
+        paragraphEntry = carriedState();
+      }
       if (this.isBreakElement(elements[i])) {
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
@@ -2302,6 +2341,7 @@ export class LayoutService {
                 neumeLineHeight,
                 neumeHeight,
               );
+              recordParagraph(i);
             }
             continue;
           }
@@ -2372,6 +2412,7 @@ export class LayoutService {
           neumeLineHeight,
           neumeHeight,
         );
+        recordParagraph(i);
       }
 
       if (layoutWorkspace.diagnostics != null) {
@@ -2381,6 +2422,7 @@ export class LayoutService {
 
     return {
       layoutWorkspace,
+      paragraphs,
       neumeHeight,
       neumeLineHeight,
       lyricsBaseline,

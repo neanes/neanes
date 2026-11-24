@@ -138,6 +138,7 @@ import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { accumulate, now, profile, startSpan } from '@/utils/layoutProfiler';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
@@ -479,10 +480,20 @@ export class LayoutService {
     workspace: LayoutInput,
     options?: LayoutOptions,
   ): Page[] {
+    return profile('processPages', () =>
+      this.processPagesUnprofiled(workspace, options),
+    );
+  }
+
+  private static processPagesUnprofiled(
+    workspace: LayoutInput,
+    options?: LayoutOptions,
+  ): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
 
+    let endPhase = startSpan('processPages.saveElementState');
     assignMissingElementIds(workspace);
     score.staves.forEach((staff) =>
       staff.elements.forEach((element, index) => {
@@ -501,7 +512,11 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
+    endPhase();
+    endPhase = startSpan('processPages.calculateMartyriae');
     const musicalContexts = this.calculateMartyriae(elements, pageSetup);
+    endPhase();
+    endPhase = startSpan('processPages.prepareFootnotes');
     const references = orderedFootnotes(score, true);
     const hasFootnoteReferences = references.length > 0;
     const footnotes = this.prepareFootnotes(
@@ -510,6 +525,8 @@ export class LayoutService {
       references,
       options,
     );
+    endPhase();
+    endPhase = startSpan('processPages.prepareContentLines');
     const content = this.prepareContentLines(
       elements,
       pageSetup,
@@ -518,6 +535,8 @@ export class LayoutService {
       score.defaultInitialMartyriaStyleId,
       options,
     );
+    endPhase();
+    endPhase = startSpan('processPages.headersAndFooters');
     const {
       layoutWorkspace,
       neumeHeight,
@@ -554,6 +573,8 @@ export class LayoutService {
       }
     }
 
+    endPhase();
+    endPhase = startSpan('processPages.paginate');
     const contentLines = this.getContentLines(
       layoutWorkspace.completedParagraphs,
     );
@@ -643,6 +664,8 @@ export class LayoutService {
           : undefined,
       },
     );
+    endPhase();
+    endPhase = startSpan('processPages.positionLines');
     const pages: Page[] = [];
     for (const [index, decision] of decisions.entries()) {
       const page = new Page();
@@ -726,7 +749,11 @@ export class LayoutService {
       });
     }
 
+    endPhase();
+    endPhase = startSpan('processPages.centerMeasureBars');
     this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
+    endPhase();
+    endPhase = startSpan('processPages.addMelismas');
     this.addMelismas(
       pages,
       pageSetup,
@@ -735,10 +762,14 @@ export class LayoutService {
       atomicMelismaLayout.centeringPlans,
     );
 
+    endPhase();
+    endPhase = startSpan('processPages.alignIsonIndicators');
     if (pageSetup.alignIsonIndicators) {
       this.alignIsonIndicators(pages, pageSetup);
     }
 
+    endPhase();
+    endPhase = startSpan('processPages.footnoteBodies');
     const markerGap = footnoteBodyMarkerGap(score.paragraphStyles);
     for (const physicalPage of pages) {
       if (physicalPage.footnotes.length === 0) {
@@ -854,6 +885,8 @@ export class LayoutService {
     }
 
     // Record element updates
+    endPhase();
+    endPhase = startSpan('processPages.checkElementState');
     score.staves.forEach((staff) =>
       staff.elements.forEach((element) => {
         if (
@@ -876,6 +909,7 @@ export class LayoutService {
     score.headersAndFooters.forEach((element) => {
       this.checkElementState(element);
     });
+    endPhase();
 
     if (layoutWorkspace.loggingEnabled) {
       console.log(
@@ -5899,11 +5933,13 @@ export class LayoutService {
     lineLengths: number | number[],
     maxAdjustmentRatio: number | null,
   ): LineBreakSolution {
+    const breakLinesStart = now();
     const breakpoints = breakLines(items, lineLengths, {
       maxAdjustmentRatio,
       initialMaxAdjustmentRatio: maxAdjustmentRatio ?? Number.POSITIVE_INFINITY,
       adjacentLooseTightPenalty: MAX_COST * 0.7,
     });
+    accumulate('breakLines', breakLinesStart);
     const ratios = adjustmentRatios(items, lineLengths, breakpoints);
 
     return {
@@ -6185,10 +6221,12 @@ export class LayoutService {
     if (workspace.loggingEnabled) {
       console.log('Breaking lines', pendingParagraph);
     }
+    const breakStart = now();
     const solution = this.breakParagraphOptimally(
       pendingParagraph,
       lineLengths,
     );
+    accumulate('breakParagraph', breakStart);
     const { breakpoints, ratios } = solution;
 
     // We have a winner

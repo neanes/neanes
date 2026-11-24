@@ -317,6 +317,12 @@ import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { isElectron } from '@/utils/isElectron';
 import {
+  layoutProfilingEnabled,
+  profile,
+  recordAsyncSpan,
+  startSpan,
+} from '@/utils/layoutProfiler';
+import {
   getModeKeyStyleReferences,
   getScoreModeKeyHosts,
 } from '@/utils/modeKeyStyleReferences';
@@ -6007,6 +6013,7 @@ async function runLiveSettlement(
   const trialOwner = rawOwner == null ? undefined : result.copies.get(rawOwner);
   const previousContent =
     rawOwner == null ? [] : contentKeys.map((key) => rawOwner[key]);
+  const endReplay = startSpan('settlement.replay');
   let processedPages: Page[];
   try {
     if (rawOwner !== null && trialOwner instanceof RichTextBoxElement) {
@@ -6028,7 +6035,11 @@ async function runLiveSettlement(
   for (const box of resized) {
     box.updated = true;
   }
-  publishLayout(processedPages, activeBox, lyricSelection);
+  profile('editor.publishLayout', () =>
+    publishLayout(processedPages, activeBox, lyricSelection),
+  );
+  endReplay();
+  profileRender(processedPages.length);
   return 'settled';
 }
 
@@ -6047,6 +6058,7 @@ function saveCommittedLyrics() {
 }
 
 function publishAndSettleLayout(preserveLyricDraft: boolean) {
+  const endLayout = startSpan('editor.layout');
   refineLayoutDebounced.cancel({ upcomingOnly: true });
   // Always publish a layout immediately. Settlement only refines it.
   const workspace = toRaw(selectedWorkspace.value);
@@ -6056,10 +6068,28 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
     : null;
   const processedPages = LayoutService.processPages(workspace, layoutOptions());
   finishVerification?.(processedPages);
-  publishLayout(processedPages, null, lyricSelection);
-  liveLayout.refresh(workspace);
+  profile('editor.publishLayout', () =>
+    publishLayout(processedPages, null, lyricSelection),
+  );
+  profile('editor.liveLayoutRefresh', () => liveLayout.refresh(workspace));
 
-  persistLayoutRecovery();
+  profile('editor.persistLayoutRecovery', persistLayoutRecovery);
+  endLayout();
+  profileRender(processedPages.length);
+}
+
+// Time Vue's patch of the published pages and the next painted frame.
+function profileRender(pageCount: number) {
+  if (!layoutProfilingEnabled) {
+    return;
+  }
+  const start = performance.now();
+  nextTick(() => {
+    recordAsyncSpan('editor.render', start, { pages: pageCount });
+    requestAnimationFrame(() =>
+      setTimeout(() => recordAsyncSpan('editor.frame', start)),
+    );
+  });
 }
 
 function publishLayout(
@@ -6330,7 +6360,9 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
     tempFileName: workspace.tempFileName,
     hasUnsavedChanges: workspace.hasUnsavedChanges,
     preserveCurrentSnapshot: workspace.isRecovered,
-    score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+    score: profile('editor.recoverySnapshot.serialize', () =>
+      JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+    ),
     sourceMtimeMs: workspace.sourceMtimeMs,
     sourceSize: workspace.sourceSize,
   };

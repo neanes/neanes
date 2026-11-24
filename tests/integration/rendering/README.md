@@ -8,8 +8,11 @@ node tests/integration/rendering/background-pdf-smoke.mjs /absolute/output/direc
 
 The script launches real Electron renderers using a temporary profile. It checks
 concurrent PDF output, rich-text readiness, snapshot immutability, cancellation,
-owner closure, failure cleanup, and successful export after failure. Output PDFs
-are retained for visual inspection. No MCP server, mocks, or DOM emulation is used.
+owner closure, failure cleanup, and successful export after failure. A 51-page
+PDF checks ordered batches, preserved document metadata, internal links to
+elements and rich-text span IDs in both directions across batch boundaries, and
+a lazy-loading rich-text image on the last page. Output PDFs are retained for visual inspection. No MCP server, mocks,
+or DOM emulation is used.
 
 The settling regression starts with incorrect saved heights for plain text,
 rich text, and repeated multipanel footers. It checks actual DOM geometry at the

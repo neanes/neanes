@@ -7,6 +7,7 @@ import { app, BrowserWindow } from 'electron';
 
 import { renderPdf } from '../../../electron/main/export/renderPdf';
 import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
+import { checkPdfBatches } from './backgroundPdfBatchChecks';
 import { checkPdfSettling } from './backgroundPdfSettlingChecks';
 import { checkBackgroundPng } from './backgroundPngChecks';
 import { checkPrintPreparation } from './backgroundPrintChecks';
@@ -91,6 +92,9 @@ async function run() {
   );
 
   await checkPdfSettling({ snapshot: english, root, output, owner });
+  assert.equal(BrowserWindow.getAllWindows().length, startCount);
+
+  await checkPdfBatches(english, render, output);
   assert.equal(BrowserWindow.getAllWindows().length, startCount);
 
   await checkBackgroundPng({ rich, arabic, root, output, owner });

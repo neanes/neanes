@@ -763,10 +763,9 @@ import {
 } from '@/services/FootnoteLayout';
 import { LayoutService } from '@/services/LayoutService';
 import { getLyricsBaseline } from '@/services/LyricsLayout';
-import {
-  getResizableTextBoxes,
-  type MeasuredTextBox,
-  type TextBoxHeightMeasurement,
+import type {
+  MeasuredTextBox,
+  TextBoxHeightMeasurement,
 } from '@/services/rendering/textBoxMeasurement';
 import {
   isDropCapElement,
@@ -1452,8 +1451,9 @@ function elementsToRender(elements: ScoreElement[]) {
     : elements.filter(shouldRender);
 }
 
-async function measureTextBoxes(): Promise<TextBoxHeightMeasurement[]> {
-  const resizable = new Set(getResizableTextBoxes(props.score));
+async function measureTextBoxes(
+  resizable: ReadonlySet<MeasuredTextBox>,
+): Promise<TextBoxHeightMeasurement[]> {
   const boxes = [
     ...(props.score.pageSetup.showHeader
       ? [{ element: header.value, name: `header-${props.pageIndex}` }]

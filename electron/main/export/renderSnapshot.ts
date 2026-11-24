@@ -5,6 +5,7 @@ import {
   IpcRendererChannels,
 } from '../../../src/ipc/ipcChannels';
 import type {
+  PdfRenderOptions,
   PngRenderOptions,
   ScoreRenderSnapshot,
   SnapshotRenderResult,
@@ -14,6 +15,9 @@ import type {
 export async function renderSnapshot<T>(options: {
   snapshot: ScoreRenderSnapshot;
   png?: PngRenderOptions;
+  pdf?: PdfRenderOptions & {
+    printBatch: (window: BrowserWindow, signal: AbortSignal) => Promise<void>;
+  };
   parent?: BrowserWindow;
   completeHasDialog?: boolean;
   writeImage?: (
@@ -51,6 +55,7 @@ export async function renderSnapshot<T>(options: {
   let started = false;
   let disposed = false;
   let completing = false;
+  let printingPdfBatch = false;
   const fail = (message: string) => {
     const error = new Error(`EXPORT_RENDER_FAILED: ${message}`);
     rendering.abort(error);
@@ -62,6 +67,10 @@ export async function renderSnapshot<T>(options: {
       event.sender.send(IpcMainChannels.ExportRendererSnapshot, {
         snapshot: options.snapshot,
         png: options.png,
+        pdf: options.pdf && {
+          batchSize: options.pdf.batchSize,
+          elementLinkBaseUrl: options.pdf.elementLinkBaseUrl,
+        },
       });
     }
   };
@@ -99,7 +108,33 @@ export async function renderSnapshot<T>(options: {
     }
   };
   const owner = options.parent?.webContents;
-  let timer = setTimeout(() => fail('Renderer timed out'), 45_000);
+  const startDeadline = () =>
+    setTimeout(() => fail('Renderer timed out'), 45_000);
+  let timer = startDeadline();
+  const pdf = options.pdf;
+  if (pdf) {
+    window.webContents.ipc.handle(
+      IpcRendererChannels.ExportRendererPdfBatch,
+      async () => {
+        if (!started || completing || printingPdfBatch) {
+          throw new Error('Unexpected PDF batch');
+        }
+        printingPdfBatch = true;
+        try {
+          await pdf.printBatch(window, rendering.signal);
+          clearTimeout(timer);
+          if (!disposed) {
+            timer = startDeadline();
+          }
+        } catch (error) {
+          fail(String(error));
+          throw error;
+        } finally {
+          printingPdfBatch = false;
+        }
+      },
+    );
+  }
   window.webContents.ipc.handle(
     IpcRendererChannels.ExportRendererImage,
     async (_event, pageNumber: number, data: string) => {
@@ -114,7 +149,7 @@ export async function renderSnapshot<T>(options: {
         throw error;
       } finally {
         if (!disposed) {
-          timer = setTimeout(() => fail('Renderer timed out'), 45_000);
+          timer = startDeadline();
         }
       }
     },
@@ -143,6 +178,11 @@ export async function renderSnapshot<T>(options: {
     ipcMain.removeListener(IpcRendererChannels.ExportRendererResult, onResult);
     options.signal.removeEventListener('abort', onAbort);
     if (!window.isDestroyed()) {
+      if (pdf) {
+        window.webContents.ipc.removeHandler(
+          IpcRendererChannels.ExportRendererPdfBatch,
+        );
+      }
       window.webContents.ipc.removeHandler(
         IpcRendererChannels.ExportRendererImage,
       );

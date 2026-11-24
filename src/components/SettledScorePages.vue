@@ -5,6 +5,7 @@
     ref="printPages"
     :workspace="workspace"
     :pages="pages"
+    :measurement-boxes="measurementBoxes"
     :fonts="fonts"
     :editor-language="editorLanguage"
     :overlays="overlays"
@@ -29,7 +30,10 @@ import {
   getBundledFontLoadDescriptors,
   getScoreFontLoadDescriptors,
 } from '@/services/rendering/fontReadiness';
-import type { TextBoxHeightMeasurement } from '@/services/rendering/textBoxMeasurement';
+import type {
+  MeasuredTextBox,
+  TextBoxHeightMeasurement,
+} from '@/services/rendering/textBoxMeasurement';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { WorkspaceLayoutSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
@@ -39,6 +43,7 @@ const props = defineProps<{
   fonts: string[];
   editorLanguage: string;
   overlays: ScoreOverlaySettings;
+  measurementBoxes?: ReadonlySet<MeasuredTextBox>;
 }>();
 const emit = defineEmits<{ ready: [pages: Page[]]; failed: [error: Error] }>();
 const pages = shallowRef<Page[] | null>(null);

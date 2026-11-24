@@ -93,6 +93,7 @@ export enum IpcRendererChannels {
   GetMcpLaunchConfiguration = 'GetMcpLaunchConfiguration',
   ExportSnapshotAsPng = 'ExportSnapshotAsPng',
   ExportRendererImage = 'ExportRendererImage',
+  ExportRendererPdfBatch = 'ExportRendererPdfBatch',
   ExportRendererReady = 'ExportRendererReady',
   ExportRendererResult = 'ExportRendererResult',
   // Automation-only bridge; implemented under src/automation/ and main/automation/.

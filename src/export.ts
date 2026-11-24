@@ -13,15 +13,15 @@ import type { SnapshotRenderRequest } from '@/services/rendering/scoreRenderSnap
 // This entry never imports the editor, router, recovery, or service worker.
 window.ipcRenderer.on(
   IpcMainChannels.ExportRendererSnapshot,
-  async ({ snapshot, png }: SnapshotRenderRequest) => {
+  async (request: SnapshotRenderRequest) => {
     const fail = (error: unknown) =>
       window.ipcRenderer.send(IpcRendererChannels.ExportRendererResult, {
         success: false,
         message: error instanceof Error ? error.message : String(error),
       });
     try {
-      await initializeI18n({ lng: snapshot.editorLanguage });
-      const app = createApp(ExportRenderer, { snapshot, png });
+      await initializeI18n({ lng: request.snapshot.editorLanguage });
+      const app = createApp(ExportRenderer, { ...request });
       app.use(I18NextVue, { i18next });
       app.config.errorHandler = fail;
       app.mount('#app');

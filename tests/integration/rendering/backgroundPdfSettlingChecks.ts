@@ -1,9 +1,14 @@
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { inflateSync } from 'node:zlib';
 
 import type { BrowserWindow } from 'electron';
+import {
+  decodePDFRawStream,
+  PDFArray,
+  PDFDocument,
+  PDFRawStream,
+} from 'pdf-lib';
 
 import { renderPdf } from '../../../electron/main/export/renderPdf';
 import { renderSnapshot } from '../../../electron/main/export/renderSnapshot';
@@ -23,22 +28,30 @@ interface BoxGeometry {
 }
 
 // Compare native PDF drawing commands, excluding timestamps and document IDs.
-function drawingStreams(pdf: Buffer) {
-  const source = pdf.toString('latin1');
-  const streams: string[] = [];
-  for (const match of source.matchAll(/\/Contents (\d+) 0 R/g)) {
-    const object = source.indexOf(`\n${match[1]} 0 obj\n`);
-    assert(object >= 0, 'Missing PDF page content object.');
-    const start = source.indexOf('stream\n', object) + 'stream\n'.length;
-    const dictionary = source.slice(object, start);
-    assert(dictionary.includes('/Filter /FlateDecode'));
-    const length = Number(dictionary.match(/\/Length (\d+)/)![1]);
-    const decoded = inflateSync(pdf.subarray(start, start + length)).toString(
-      'latin1',
-    );
+async function drawingStreams(pdf: Buffer) {
+  const document = await PDFDocument.load(pdf);
+  const streams = document.getPages().map((page) => {
+    const contents = page.node.Contents();
+    const objects =
+      contents instanceof PDFArray
+        ? contents
+            .asArray()
+            .map((ref) => document.context.lookup(ref, PDFRawStream))
+        : [contents];
+    const decoded = objects
+      .map((stream) => {
+        assert(
+          stream instanceof PDFRawStream,
+          'Missing PDF page content stream.',
+        );
+        return Buffer.from(decodePDFRawStream(stream).decode()).toString(
+          'latin1',
+        );
+      })
+      .join('\n');
     assert(decoded.includes('\nBT\n'), 'PDF page must contain text.');
-    streams.push(decoded);
-  }
+    return decoded;
+  });
   assert.equal(streams.length, 2, 'Both PDF pages must contain text.');
   return streams;
 }
@@ -169,7 +182,7 @@ export async function checkPdfSettling(options: {
     JSON.stringify(measured.pages, null, 2),
   );
 
-  const expected = drawingStreams(measured.pdf);
+  const expected = await drawingStreams(measured.pdf);
   for (const oversized of [false, true]) {
     const reference = structuredClone(snapshot);
     reference.score.staff.elements.slice(0, 2).forEach((element, i) => {
@@ -188,7 +201,7 @@ export async function checkPdfSettling(options: {
       pageSize: 'Letter',
     });
     assert.deepEqual(
-      drawingStreams(pdf),
+      await drawingStreams(pdf),
       expected,
       'PDF geometry must be independent of undersized or oversized saved heights.',
     );

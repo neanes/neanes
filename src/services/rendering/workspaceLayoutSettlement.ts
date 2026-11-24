@@ -7,6 +7,7 @@ import type { Workspace } from '@/models/Workspace';
 import { automaticFootnoteMarker } from '@/services/FootnoteMarker';
 import { elementFootnoteIds } from '@/services/FootnoteReferences';
 import { LayoutService } from '@/services/LayoutService';
+import { startSpan } from '@/utils/layoutProfiler';
 
 import { LayoutReconciliation } from './layoutReconciliation';
 import {
@@ -65,6 +66,7 @@ export class WorkspaceLayoutSettlement {
           ]),
         )
       : undefined;
+    const endPaginate = startSpan('settlement.paginate');
     const pages = LayoutService.processPages(this.workspace, {
       ...options,
       provisionalFootnoteWidths: this.provisional,
@@ -106,6 +108,7 @@ export class WorkspaceLayoutSettlement {
       // A new marker width can undo wrapping even at the same box width.
       this.heights.resetPageCaps(changedBoxes);
     }
+    endPaginate();
     return pages;
   }
 

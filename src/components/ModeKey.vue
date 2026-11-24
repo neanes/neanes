@@ -8,12 +8,6 @@
   >
     <span class="mode-key-main" :style="mainStyle">
       <span class="mode-key-signature" :dir="resolution.flowDirection">
-        <span
-          class="sr-only"
-          :lang="resolution.structure.languageId"
-          :dir="resolution.flowDirection"
-          >{{ pronunciation }}</span
-        >
         <template v-for="(run, index) in resolution.runs" :key="index">
           <span
             v-if="runLayouts[index].separatorBefore.kind !== 'none'"
@@ -47,7 +41,6 @@
             v-else-if="run.kind === 'startingPitch'"
             class="mode-key-run starting-pitch"
             :style="getRunStyle(run, runLayouts[index])"
-            aria-hidden="true"
             ><template
               v-for="[role, pitchNote] in [
                 ['primary', run.cluster.primary],
@@ -226,10 +219,6 @@ import type {
   InitialMartyriaRunLayout,
   InitialMartyriaSeparatorLayout,
 } from '@/models/InitialMartyriaLayout';
-import {
-  getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
-} from '@/models/InitialMartyriaResolver';
 import type {
   InitialMartyriaAppearance,
   InitialMartyriaStartingNoteRun,
@@ -263,14 +252,6 @@ type PitchRole = 'primary' | 'secondary';
 // component only applies zoom to what it stored.
 const layout = computed(() => props.element.computedInitialMartyriaLayout!);
 const resolution = computed(() => layout.value.resolution);
-// Only screen readers use the spoken reading, so it is built here, for the
-// mode keys that render, rather than on every layout pass.
-const pronunciation = computed(() =>
-  getInitialMartyriaPronunciation(
-    resolution.value.structure,
-    getInitialMartyriaContext(props.element),
-  ),
-);
 const runLayouts = computed(() => layout.value.runs);
 const baseTextAppearance = computed(() => layout.value.primaryAppearance);
 const rightContainer = ref<HTMLElement | null>(null);

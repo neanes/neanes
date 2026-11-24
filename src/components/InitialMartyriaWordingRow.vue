@@ -1,6 +1,6 @@
 <template>
   <div
-    class="border-b"
+    class="relative border-b"
     :class="
       selected && 'bg-accent/50 outline-2 -outline-offset-2 outline-foreground'
     "
@@ -13,6 +13,7 @@
       }"
       :aria-pressed="selected"
       :aria-label="accessibleName"
+      :aria-describedby="readingsId"
       @click="emit('select')"
     >
       <span
@@ -55,15 +56,29 @@
           {{ methodLabel }}
         </Badge>
         <Badge v-if="inUse" variant="secondary" class="text-[11px] font-normal">
-          {{ $t(($) => $.dialog.initialMartyriaStyles.inUse, { ns }) }}
+          {{ inUseLabel }}
         </Badge>
       </span>
     </button>
+    <!--
+      The readings, outside the button so that they keep their language: a
+      button's name and contents reach screen readers as plain text in the
+      interface language, which cannot switch to the reading's voice.
+    -->
+    <span
+      :id="readingsId"
+      class="sr-only"
+      :lang="structure.languageId"
+      :dir="readingDirection"
+      :style="languageTextStyle"
+      >{{ readings.join('. ') }}.</span
+    >
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { useTranslation } from 'i18next-vue';
+import { computed, useId } from 'vue';
 
 import InitialMartyriaSample from '@/components/InitialMartyriaSample.vue';
 import { Badge } from '@/components/ui/badge';
@@ -121,7 +136,7 @@ const martyriaStyle = computed(() =>
 
 const readings = computed(() =>
   props.samples.map((sample) =>
-    getInitialMartyriaPronunciation(props.structure, sample),
+    getInitialMartyriaPronunciation(props.structure, sample.readingContext),
   ),
 );
 
@@ -132,8 +147,20 @@ const readingDirection = computed(
   () => getInitialMartyriaLexicon(props.structure).direction,
 );
 
+const { t } = useTranslation();
+
+const readingsId = useId();
+
+const inUseLabel = computed(() =>
+  t(($) => $.dialog.initialMartyriaStyles.inUse, { ns }),
+);
+
+/*
+ * A short name in the interface language; the readings, in the wording's
+ * own language, describe it.
+ */
 const accessibleName = computed(() =>
-  [props.methodLabel, props.caption, ...readings.value]
+  [props.methodLabel, props.caption, props.inUse ? inUseLabel.value : null]
     .filter((part) => part != null)
     .join('. '),
 );

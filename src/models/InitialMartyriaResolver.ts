@@ -385,15 +385,32 @@ export function getInitialMartyriaModeReading(
 const keLowNoteValue = getScaleNoteValue(ScaleNote.KeLow);
 const zoHighNoteValue = getScaleNoteValue(ScaleNote.ZoHigh);
 
-/** The starting note read aloud: "from Pa", with its octave marked. */
+/** What a reading needs of an initial martyria: its mode and its notes. */
+type InitialMartyriaReadingContext = Pick<
+  InitialMartyriaContext,
+  'mode' | 'physicalNote' | 'pitchCluster'
+>;
+
+/*
+ * The starting note read aloud: "from Pa". It names the notes the martyria
+ * prints, since the reading stands in for them. A martyria that prints no
+ * note names its physical starting note, with its octave marked.
+ */
 function getInitialMartyriaStartingNoteReading(
   structure: InitialMartyriaStructure,
-  physicalNote: ScaleNote,
+  { physicalNote, pitchCluster }: InitialMartyriaReadingContext,
 ) {
   const lexicon = getInitialMartyriaLexicon(structure);
   const noteNames = lexicon.usesGreekScript
     ? originalGreekNoteNames
     : lexicon.transliteratedNoteNames;
+  const printedNames = [pitchCluster.primary, pitchCluster.secondary]
+    .filter((pitchNote) => pitchNote != null)
+    .map((pitchNote) => noteNames.names[pitchNote.note]);
+  if (printedNames.length > 0) {
+    return `${lexicon.startingNotePrefix} ${printedNames.join(' ')}`;
+  }
+
   const physicalNoteValue = getScaleNoteValue(physicalNote);
   const canonicalNote =
     initialMartyriaCanonicalNotesByScaleDegree[
@@ -411,18 +428,17 @@ function getInitialMartyriaStartingNoteReading(
 }
 
 /**
- * The spoken reading of an initial martyria: the mode name its structure
- * gives, then the starting note. Screen readers read it in place of the
- * signs and glyphs, which have no reading of their own.
+ * The reading shown under a wording picker preview: the spoken mode name
+ * followed by the starting note or notes.
  */
 export function getInitialMartyriaPronunciation(
   structure: InitialMartyriaStructure,
-  context: Pick<InitialMartyriaContext, 'mode' | 'physicalNote'>,
+  context: InitialMartyriaReadingContext,
 ) {
   const modeName = getInitialMartyriaModeReading(structure, context.mode);
   const startingNote = getInitialMartyriaStartingNoteReading(
     structure,
-    context.physicalNote,
+    context,
   );
   return `${modeName} ${startingNote}`;
 }

@@ -1,4 +1,6 @@
+import { ModeKeyElement } from '@/models/Element';
 import {
+  getInitialMartyriaContext,
   getInitialMartyriaPrintedForm,
   getSupportedInitialMartyriaLettering,
   modeKeyModes,
@@ -31,8 +33,8 @@ const sampleModeLabelSelectors: Record<ModeKeyMode, ModelSelector> = {
 };
 
 /**
- * A mode as previewed: its label, the template standing in for it, and that
- * template's starting note, which the preview's reading names.
+ * A mode as previewed: its label, the template standing in for it, and what
+ * the preview's reading needs of that template: its mode and its notes.
  */
 export function getSample(mode: ModeKeyMode) {
   const template = getSampleTemplate(mode);
@@ -40,7 +42,9 @@ export function getSample(mode: ModeKeyMode) {
     mode,
     labelSelector: sampleModeLabelSelectors[mode],
     templateId: template.id,
-    physicalNote: template.scaleNote,
+    readingContext: getInitialMartyriaContext(
+      ModeKeyElement.createFromTemplate(template),
+    ),
   };
 }
 

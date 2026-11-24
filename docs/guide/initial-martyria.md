@@ -28,7 +28,7 @@ A style controls the language, the wording of the mode name, whether a mode sign
 
 Where available, enable **Transliterate starting note** to show a form such as `Pa` for `Πα`. When a wording includes a mode sign, Neanes adds the plagal abbreviation (`πλ`) in plagal modes.
 
-Each row previews the wording in a few modes. Under each preview is its reading, the way the initial martyria is read aloud, such as `Plagal of First Mode from Pa`. Screen readers use the same reading in the score and in HTML exports. The line under the previews names what sets the row apart from its neighbours, such as the number form or where the mode word sits.
+Each row previews the wording in a few modes. Under each preview is its reading, the way the initial martyria is read aloud, such as `Plagal of First Mode from Pa`. The line under the previews names what sets the row apart from its neighbours, such as the number form or where the mode word sits.
 
 To narrow a long list, use the filters above it. **Number** keeps the wordings that write the number a given way, such as `1`, `1st`, `I`, `One`, or `First`. **Plagal modes** keeps one way of naming the plagal modes; see [Choosing a wording](#choosing-a-wording). **Mode shown by** keeps the wordings that show the mode one way: **Number and sign**, **Number only**, **Sign with mode word**, or **Sign alone**. Each option shows how many wordings it leaves, and an option that would leave none is unavailable. A filter appears only when the language offers more than one choice for it. All filters return to **All** when you change the language or the word for the mode. If the filters hide the style's current wording, the picker says so; choose **Clear filters** to show every wording again.
 
@@ -50,7 +50,7 @@ In the first two namings, mode 7 is named by its own word where the language has
 
 **Number and sign.** A **Number and sign** wording prints the mode name and then the traditional sign, which repeats it. The sign keeps its traditional form, so `Mode 5` is followed by the sign of the plagal of the first mode. A **Sign with mode word** wording prints the sign in place of the number, and **Sign alone** prints no words at all.
 
-**One engraving, several readings.** Some wordings look identical on the page but are read differently. For example, Spanish `Tono V.` can be read as `Tono quinto` or `Tono cinco`, and the English sign beside `Mode` can be read as `Plagal Mode One` or `Plagal of Mode One`. The picker lists such an engraving once, with the reading shown under its previews, and screen readers use that reading.
+**One engraving, several readings.** Some wordings look identical on the page but are read differently. For example, Spanish `Tono V.` can be read as `Tono quinto` or `Tono cinco`, and the English sign beside `Mode` can be read as `Plagal Mode One` or `Plagal of Mode One`. The picker lists such an engraving once, with the reading shown under its previews.
 
 ### Set the default or style one initial martyria
 

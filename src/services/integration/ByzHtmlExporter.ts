@@ -15,14 +15,6 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
-import {
-  DEFAULT_INITIAL_MARTYRIA_WORDING_NAME,
-  getCommonInitialMartyriaWording,
-} from '@/models/InitialMartyriaCommonWordings';
-import {
-  getInitialMartyriaContext,
-  getInitialMartyriaPronunciation,
-} from '@/models/InitialMartyriaResolver';
 import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
@@ -41,7 +33,6 @@ import {
 import type { Score } from '@/models/Score';
 import { fontCatalog } from '@/services/FontCatalog';
 import { GORTHMIKON, PELASTIKON } from '@/utils/constants';
-import { escapeHtmlAttribute } from '@/utils/escapeHtmlAttribute';
 import { type ResolvedFontStyle, resolveFontStyle } from '@/utils/fontStyle';
 import {
   FONT_VARIANT_CSS_NAMES,
@@ -103,7 +94,6 @@ interface ByzHtmlExporterConfig {
   classImageBox: string;
   classImageBoxInline: string;
   classModeKey: string;
-  classModeKeySignature: string;
   classModeKeyRightContainer: string;
   classModeKeyAmbitus: string;
   classModeKeyAmbitusText: string;
@@ -205,7 +195,6 @@ export class ByzHtmlExporter {
     classImageBox: 'byz--image-box',
     classImageBoxInline: 'byz--image-box-inline',
     classModeKey: 'byz--mode-key',
-    classModeKeySignature: 'byz--mode-key-signature',
     classModeKeyRightContainer: 'byz--mode-key-right-container',
     classModeKeyAmbitus: 'byz--mode-key-ambitus',
     classModeKeyAmbitusText: 'byz--mode-key-ambitus-text',
@@ -1316,6 +1305,7 @@ export class ByzHtmlExporter {
     return `<div class="${className}"${languageAttributes}${styleAttribute}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
 
+  // BYZHTML's music fonts position marks on the original Greek glyphs.
   private exportModeKeySignature(element: ModeKeyElement, indentation: number) {
     let inner = this.exportNeume(ModeSign.Ekhos, indentation);
 
@@ -1358,17 +1348,7 @@ export class ByzHtmlExporter {
     indentation: number,
     embedded = false,
   ) {
-    // BYZHTML's music fonts position marks on the original Greek glyphs.
-    // The glyphs have no reading of their own, so the signature carries the
-    // Greek reading of what they print.
-    const reading = getInitialMartyriaPronunciation(
-      getCommonInitialMartyriaWording(DEFAULT_INITIAL_MARTYRIA_WORDING_NAME)
-        .structure,
-      getInitialMartyriaContext(element),
-    );
-    let inner = `<span class="${this.config.classModeKeySignature}" role="img" aria-label="${escapeHtmlAttribute(reading)}">`;
-    inner += this.exportModeKeySignature(element, indentation + 2);
-    inner += '</span>';
+    let inner = this.exportModeKeySignature(element, indentation + 2);
 
     let rightContainer = false;
 

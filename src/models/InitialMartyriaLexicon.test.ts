@@ -1115,6 +1115,20 @@ describe('InitialMartyriaLexicon', () => {
     });
   });
 
+  it('reads the notes the martyria prints, or else its physical note', () => {
+    const english = styleFromWording('englishModeBeforeSign').structure;
+    const readingOf = (templateId: number) =>
+      getInitialMartyriaPronunciation(
+        english,
+        getInitialMartyriaContext(elementForTemplate(templateId)),
+      );
+
+    // Starts on Ke but prints Pa, which the reading names.
+    expect(readingOf(506)).toBe('Mode Five from Pa');
+    // Prints no note, so the reading names the high Pa it starts on.
+    expect(readingOf(105)).toBe("Mode One from Pa'");
+  });
+
   it('uses the note names defined by each structure', () => {
     const resolveNoteText = (label: string) => {
       const startingPitch = resolve(

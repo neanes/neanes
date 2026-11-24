@@ -1,9 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { RichTextBoxElement, TextBoxElement } from '@/models/Element';
+import {
+  EmptyElement,
+  NoteElement,
+  RichTextBoxElement,
+  type ScoreElement,
+  TextBoxElement,
+} from '@/models/Element';
 import { Line, Page } from '@/models/Page';
 
 import {
+  getSectionCount,
+  getSectionNumber,
+  indexSectionMarkers,
   resolveRunningMarkerPageMetadata,
   resolveRunningMarkerText,
 } from './runningMarkers';
@@ -91,5 +100,63 @@ describe('running markers', () => {
     expect(resolveRunningMarkerText(richTextBox)).toBe(
       'Chapter One Part A Appendix',
     );
+  });
+});
+
+function sectionMarker(text: string) {
+  const marker = new TextBoxElement();
+  marker.runningMarkerRole = 'section';
+  marker.content = text;
+  return marker;
+}
+
+function indexed(...elements: ScoreElement[]) {
+  elements.forEach((element, index) => (element.index = index));
+  return indexSectionMarkers(elements);
+}
+
+describe('section numbering', () => {
+  it('treats a score without section markers as one section', () => {
+    const index = indexed(new NoteElement(), new EmptyElement());
+
+    expect(getSectionCount(index)).toBe(1);
+    expect(getSectionNumber(index, 0)).toBe(1);
+    expect(getSectionNumber(index, 1)).toBe(1);
+  });
+
+  it('counts content before the first marker as an implicit section', () => {
+    const index = indexed(
+      new NoteElement(),
+      sectionMarker('A'),
+      new NoteElement(),
+      sectionMarker('B'),
+      new NoteElement(),
+    );
+
+    expect(getSectionCount(index)).toBe(3);
+    expect([0, 1, 2, 3, 4].map((i) => getSectionNumber(index, i))).toEqual([
+      1, 2, 2, 3, 3,
+    ]);
+  });
+
+  it('starts at the first marker when it opens the score', () => {
+    const index = indexed(
+      new EmptyElement(),
+      sectionMarker('A'),
+      new NoteElement(),
+      sectionMarker('B'),
+    );
+
+    expect(getSectionCount(index)).toBe(2);
+    expect([0, 1, 2, 3].map((i) => getSectionNumber(index, i))).toEqual([
+      1, 1, 1, 2,
+    ]);
+  });
+
+  it('ignores section markers without text', () => {
+    const index = indexed(new NoteElement(), sectionMarker('  '));
+
+    expect(getSectionCount(index)).toBe(1);
+    expect(getSectionNumber(index, 1)).toBe(1);
   });
 });

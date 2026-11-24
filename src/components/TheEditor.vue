@@ -327,7 +327,9 @@ import {
 import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import {
-  isSectionMarker,
+  getSectionCount,
+  getSectionNumber,
+  indexSectionMarkers,
   resolveRunningMarkerPageMetadata,
 } from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
@@ -1407,6 +1409,14 @@ const statusPositionElementOnPage = computed(() => {
     : getFirstElementForPage(statusPageNumber.value);
 });
 
+// Section markers and element indexes change only when a layout is
+// published, which replaces `pages`. Index the raw elements once per layout
+// instead of rescanning them through reactive proxies for every lookup.
+const sectionMarkerIndex = computed(() => {
+  void pages.value;
+  return indexSectionMarkers(toRaw(score.value.staff.elements));
+});
+
 const statusSectionNumber = computed(() => {
   const element = statusActiveElement.value;
 
@@ -1427,7 +1437,9 @@ const statusSectionNumber = computed(() => {
     : getSectionNumberForPage(statusPageNumber.value);
 });
 
-const statusSectionCount = computed(() => getSectionCount());
+const statusSectionCount = computed(() =>
+  getSectionCount(sectionMarkerIndex.value),
+);
 
 const statusContentLines = computed(() => {
   const page = filteredPages.value[statusPageNumber.value - 1];
@@ -1563,8 +1575,13 @@ const filteredPages = computed(() => {
   return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
 });
 
+// Running markers come from element content and positions, which change
+// only when a layout is published, so read the raw pages: walking every
+// element through reactive proxies was slow for long scores.
 const runningMarkerPageMetadata = computed(() =>
-  resolveRunningMarkerPageMetadata(filteredPages.value),
+  resolveRunningMarkerPageMetadata(
+    filteredPages.value.map((page) => toRaw(page)),
+  ),
 );
 
 provide(
@@ -2762,53 +2779,7 @@ function getPageElements(page: Page) {
 }
 
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
-  if (sectionMarkers.length === 0) {
-    return 1;
-  }
-
-  const firstScoreElementIndex = scoreElements[0].index;
-  const hasDefaultSectionBeforeFirstMarker =
-    sectionMarkers[0].index > firstScoreElementIndex;
-  const markersAtOrBeforeElement = sectionMarkers.filter(
-    (element) => element.index <= elementIndex,
-  ).length;
-
-  if (markersAtOrBeforeElement === 0) {
-    return 1;
-  }
-
-  return (
-    markersAtOrBeforeElement + (hasDefaultSectionBeforeFirstMarker ? 1 : 0)
-  );
-}
-
-function getSectionCount() {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
-  if (sectionMarkers.length === 0) {
-    return 1;
-  }
-
-  return (
-    sectionMarkers.length +
-    (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
-  );
+  return getSectionNumber(sectionMarkerIndex.value, elementIndex);
 }
 
 function setSelectionRange(element: ScoreElement) {

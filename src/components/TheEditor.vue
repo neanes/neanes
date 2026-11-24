@@ -273,6 +273,10 @@ import {
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import type { LiveLayoutOutcome } from '@/services/rendering/settleWorkspace';
+import {
+  beginLayoutVerification,
+  layoutVerificationEnabled,
+} from '@/services/rendering/verifyLayout';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
@@ -5816,11 +5820,12 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
   // Always publish a layout immediately. Settlement only refines it.
   const workspace = toRaw(selectedWorkspace.value);
   const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
-  publishLayout(
-    LayoutService.processPages(workspace, layoutOptions()),
-    null,
-    lyricSelection,
-  );
+  const finishVerification = layoutVerificationEnabled
+    ? beginLayoutVerification(workspace, layoutOptions())
+    : null;
+  const processedPages = LayoutService.processPages(workspace, layoutOptions());
+  finishVerification?.(processedPages);
+  publishLayout(processedPages, null, lyricSelection);
   liveLayout.refresh(workspace);
 
   persistLayoutRecovery();

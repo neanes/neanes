@@ -114,6 +114,8 @@
                 aria-hidden="true"
               />
             </template>
+            <!-- The first spacer stays outside the LTR wrapper so it sits
+                 next to the pitch name in RTL runs too. -->
             <span
               v-if="
                 hasPitchNote(run.cluster) &&
@@ -129,22 +131,20 @@
               dir="ltr"
               :style="{ top: withZoom(layout.neumeBaselineCorrection) }"
             >
-              <span
+              <template
                 v-for="(group, groupIndex) in run.cluster.trailingGlyphGroups"
                 :key="groupIndex"
-                class="pitch-trailing-group"
-                :style="
-                  groupIndex === 0
-                    ? undefined
-                    : {
-                        marginLeft: withZoom(
-                          runLayouts[index].pitch!.trailingGlueWidth,
-                        ),
-                      }
-                "
               >
-                <Neume v-for="neume in group" :key="neume" :neume="neume" />
-              </span>
+                <span
+                  v-if="groupIndex > 0"
+                  class="pitch-trailing-glue"
+                  :style="getPitchTrailingGlueStyle(runLayouts[index])"
+                  aria-hidden="true"
+                />
+                <span class="pitch-trailing-group">
+                  <Neume v-for="neume in group" :key="neume" :neume="neume" />
+                </span>
+              </template>
             </span>
           </span>
           <template

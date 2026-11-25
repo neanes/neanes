@@ -36,6 +36,27 @@ export interface ModeKeyTemplate {
   };
 }
 
+/** The element properties a mode-key template owns. */
+export const modeKeyTemplateFields = [
+  'templateId',
+  'mode',
+  'scale',
+  'scaleNote',
+  'fthora',
+  'martyria',
+  'fthoraAboveNote',
+  'fthoraAboveNote2',
+  'fthoraAboveQuantitativeNeumeRight',
+  'note',
+  'note2',
+  'quantitativeNeumeAboveNote',
+  'quantitativeNeumeAboveNote2',
+  'quantitativeNeumeRight',
+  'timeNeumeAboveQuantitativeNeumeRight',
+  'quantitativeNeumeRight2',
+  'gorgonAboveQuantitativeNeumeRight2',
+] as const;
+
 /** Keep each base and its marks together when shaping the starting pitch. */
 export function getModeKeyTrailingGlyphGroups(notation: {
   quantitativeNeumeRight?: QuantitativeNeume | null;

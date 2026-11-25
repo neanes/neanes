@@ -24,7 +24,7 @@ import {
 } from '@/models/Element';
 import type { Footnote } from '@/models/Footnote';
 import type { LyricSetup } from '@/models/LyricSetup';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+import { modeKeyTemplateFields, modeKeyTemplates } from '@/models/ModeKeys';
 import {
   getSecondaryNeume,
   getTertiaryNeume,
@@ -67,7 +67,6 @@ import {
   type ElementEditBatch,
   elementEditPropertySchemas,
 } from '../contracts/elementEditSchema';
-import { modeKeyTemplateFields } from '../contracts/modeKeyTemplates';
 import type { ElementDiscovery } from './elementDiscovery';
 import {
   childCollections,

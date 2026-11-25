@@ -54,8 +54,6 @@ export function buildContentPages(
   let page = createPage();
   pages.push(page);
   let height = 0;
-  // A drop cap can extend below the last line placed on the page.
-  let contentBottom = 0;
   let ids = new Set<string>();
   let explicitBreak = false;
   let previousChapter = '';
@@ -83,7 +81,7 @@ export function buildContentPages(
       height + candidate.height + candidate.additionalHeight;
     const fitBottom =
       requiredIds.size > 0
-        ? Math.max(contentBottom, candidateBottom)
+        ? Math.max(page.contentBottom, candidateBottom)
         : candidateBottom;
     return (
       fitBottom +
@@ -119,7 +117,6 @@ export function buildContentPages(
       page = createPage();
       pages.push(page);
       height = 0;
-      contentBottom = 0;
       ids = new Set();
       groupFits = overflow(candidate, groupIds, groupChapter) <= 0;
     }
@@ -137,14 +134,17 @@ export function buildContentPages(
       index++;
       line.footnoteIds.forEach((id) => ids.add(id));
       height += line.height;
-      contentBottom = Math.max(contentBottom, height + line.additionalHeight);
+      page.contentBottom = Math.max(
+        page.contentBottom,
+        height + line.additionalHeight,
+      );
       explicitBreak = line.pageBreak;
     }
-    page.contentBottom = contentBottom;
     page.footnoteIds = [...ids];
     page.footnoteOverflow =
       ids.size > 0 &&
-      contentBottom + sectionHeight(ids) > availableHeight(page.reservation);
+      page.contentBottom + sectionHeight(ids) >
+        availableHeight(page.reservation);
   }
   return pages;
 }

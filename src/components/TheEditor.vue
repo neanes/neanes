@@ -1472,12 +1472,11 @@ const statusEndOfContentLabel = computed(() => {
   if (!isNothingSelected()) {
     return null;
   }
-  const footnote = activeOrderedFootnote.value;
-  return footnote === undefined
+  return selectedWorkspace.value.activeFootnoteId === null
     ? t(($) => $.toolbar.status.endOfScore, { ns: 'toolbar' })
     : t(($) => $.toolbar.status.endOfFootnote, {
         ns: 'toolbar',
-        number: footnote.marker,
+        number: activeOrderedFootnote.value?.marker ?? '',
       });
 });
 
@@ -4276,10 +4275,11 @@ function onEscape() {
     return false;
   }
 
-  if (
-    isTextInputFocused() &&
-    pageBackgroundRef.value?.contains(document.activeElement)
-  ) {
+  if (isTextInputFocused()) {
+    // A text input outside the page handles its own Escape.
+    if (!pageBackgroundRef.value?.contains(document.activeElement)) {
+      return false;
+    }
     flushPendingRichTextEditors(selectedWorkspace.value);
     blurActiveElement();
     return true;
@@ -4316,11 +4316,13 @@ function resumeTextEditing() {
   return false;
 }
 
-// Clicking blank page space reaches the end of the main staff.
+// Clicking blank page space reaches the end of the main staff. A drag that
+// selects text and ends on blank space also clicks the page, so skip it.
 function onPageBackgroundClick() {
-  if (!printMode.value) {
-    activateFootnote(null);
+  if (printMode.value || !(window.getSelection()?.isCollapsed ?? true)) {
+    return;
   }
+  activateFootnote(null);
 }
 
 // Make a footnote (or the main staff, for null) the active staff with nothing

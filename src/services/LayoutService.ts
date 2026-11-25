@@ -932,9 +932,16 @@ export class LayoutService {
       paragraphStyles,
       BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
     );
-    return style.lineHeight == null
-      ? TextMeasurementService.getFontHeight(resolveFontCss(style))
-      : style.fontSize * style.lineHeight;
+    const textHeight =
+      style.lineHeight == null
+        ? TextMeasurementService.getFontHeight(resolveFontCss(style))
+        : style.fontSize * style.lineHeight;
+    // The label's marker renders with line-height 1 and may be larger than
+    // the footnote text.
+    return Math.max(
+      textHeight,
+      footnoteMarkerStyle(paragraphStyles, 'body').fontSize,
+    );
   }
 
   private static getContentLines(

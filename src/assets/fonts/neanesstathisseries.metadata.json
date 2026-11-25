@@ -8,6 +8,7 @@
     "winDescent": 0.466,
     "oligonMidpoint": 0.309,
     "initialMartyriaBaseline": 0.33,
+    "modeKeyQuantitativeBaseline": 0.226,
     "capitalHeight": 0.547,
     "elafronBounds": {
       "runningElafron": {

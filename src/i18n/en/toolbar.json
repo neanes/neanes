@@ -59,6 +59,8 @@
     "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
     "line": "Line {{ lineNumber }} of {{ lineCount }}",
     "column": "Column {{ columnNumber }} of {{ columnCount }}",
+    "startOfScore": "Start of score",
+    "startOfFootnote": "Start of footnote {{number}}",
     "endOfScore": "End of score",
     "endOfFootnote": "End of footnote {{number}}"
   },

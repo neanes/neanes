@@ -35,6 +35,8 @@
     "copyFormat": "Copy Format",
     "pasteFormat": "Paste Format",
     "find": "Find",
+    "goToStart": "Go to Start",
+    "goToEnd": "Go to End",
     "copyElementLink": "Copy Element Link",
     "preferences": "Preferences"
   },

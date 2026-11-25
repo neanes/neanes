@@ -82,6 +82,9 @@ export class Workspace {
   public selectedLyrics: NoteElement | null = null;
   public activeFootnoteId: string | null = null;
   public selectionRange: ScoreElementSelectionRange | null = null;
+  // With nothing selected, inserts go to the start of the active staff
+  // instead of the end. Editor state only; never saved.
+  public insertAtStart: boolean = false;
   public zoom: number = 1;
   public zoomFitMode: ZoomFitMode | null = null;
   public entryMode: EntryMode = EntryMode.Auto;

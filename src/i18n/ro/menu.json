@@ -35,6 +35,8 @@
     "copyFormat": "Copiază formatul",
     "pasteFormat": "Lipește formatul",
     "find": "Căutare",
+    "goToStart": "Salt la început",
+    "goToEnd": "Salt la sfârșit",
     "copyElementLink": "Copiază linkul elementului",
     "preferences": "Preferințe"
   },

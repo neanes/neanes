@@ -253,6 +253,10 @@
       :id="element.id === null ? undefined : `element-${element.id}`"
       :key="`element-${workspaceId}-${element.id}-${element.keyHelper}`"
       class="element-box"
+      :class="{
+        'start-caret': !printMode && interaction?.startCaretElement === element,
+        'start-caret-rtl': rtl,
+      }"
       :style="getElementStyle(element)"
       @contextmenu="emit('onScoreElementContextMenu', element)"
     >
@@ -1748,6 +1752,31 @@ defineExpose({
 
 .element-box {
   position: absolute;
+}
+
+/* Marks the start of the staff, the insertion point before the first
+   element. */
+.element-box.start-caret::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(-4px * var(--zoom, 1));
+  width: max(1px, calc(2px * var(--zoom, 1)));
+  background: currentColor;
+  pointer-events: none;
+  animation: start-caret-blink 1s steps(1) infinite;
+}
+
+.element-box.start-caret.start-caret-rtl::before {
+  left: auto;
+  right: calc(-4px * var(--zoom, 1));
+}
+
+@keyframes start-caret-blink {
+  50% {
+    opacity: 0;
+  }
 }
 
 .neume-box {

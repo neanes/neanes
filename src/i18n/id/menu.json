@@ -35,6 +35,8 @@
     "copyFormat": "Salin Format",
     "pasteFormat": "Tempel Format",
     "find": "Cari",
+    "goToStart": "Pergi ke awal",
+    "goToEnd": "Pergi ke akhir",
     "copyElementLink": "Salin Tautan Elemen",
     "preferences": "Preferensi"
   },

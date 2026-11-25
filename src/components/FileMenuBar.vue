@@ -163,6 +163,12 @@
             <PhMagnifyingGlass />
             {{ $t(($) => $.menu.edit.find, { ns: 'menu' }) }}
           </MenubarItem>
+          <MenubarItem @select="onClickGoToStart">
+            {{ $t(($) => $.menu.edit.goToStart, { ns: 'menu' }) }}
+          </MenubarItem>
+          <MenubarItem @select="onClickGoToEnd">
+            {{ $t(($) => $.menu.edit.goToEnd, { ns: 'menu' }) }}
+          </MenubarItem>
           <MenubarSeparator />
           <MenubarItem @select="onClickCopyFormat">
             <PhPaintBrush />
@@ -936,6 +942,14 @@ function onClickPasteFormat() {
 
 function onClickFind() {
   EventBus.$emit(IpcMainChannels.FileMenuFind);
+}
+
+function onClickGoToStart() {
+  EventBus.$emit(IpcMainChannels.FileMenuGoToStart);
+}
+
+function onClickGoToEnd() {
+  EventBus.$emit(IpcMainChannels.FileMenuGoToEnd);
 }
 
 function onClickPreviousTab() {

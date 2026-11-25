@@ -59,6 +59,8 @@
     "pageNumber": "Halaman {{ currentPageNumber }} dari {{ pageCount }}",
     "line": "Baris {{ lineNumber }} dari {{ lineCount }}",
     "column": "Kolom {{ columnNumber }} dari {{ columnCount }}",
+    "startOfScore": "Awal partitur",
+    "startOfFootnote": "Awal catatan kaki {{number}}",
     "endOfScore": "Akhir partitur",
     "endOfFootnote": "Akhir catatan kaki {{number}}"
   },

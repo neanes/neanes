@@ -59,6 +59,8 @@
     "pageNumber": "Pagina {{ currentPageNumber }} din {{ pageCount }}",
     "line": "Linie {{ lineNumber }} din {{ lineCount }}",
     "column": "Coloană {{ columnNumber }} din {{ columnCount }}",
+    "startOfScore": "Începutul partiturii",
+    "startOfFootnote": "Începutul notei de subsol {{number}}",
     "endOfScore": "Sfârșitul partiturii",
     "endOfFootnote": "Sfârșitul notei de subsol {{number}}"
   },

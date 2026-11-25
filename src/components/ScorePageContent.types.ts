@@ -18,6 +18,9 @@ export interface ScorePageInteraction {
   selectedAnnotationElement: AnnotationElement | null;
   selectedAlternateLineElement: AlternateLineElement | null;
   activeFootnoteId: string | null;
+  // The first element of the active staff when the editor is at the start of
+  // the staff. A caret is drawn before it.
+  startCaretElement: ScoreElement | null;
   isLyricsLocked(element: ScoreElement): boolean;
 }
 

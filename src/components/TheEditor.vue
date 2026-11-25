@@ -1466,18 +1466,22 @@ const statusColumnPosition = computed(() => {
   };
 });
 
-// With nothing selected, the status bar shows the append slot instead of a
-// line and column.
-const statusEndOfContentLabel = computed(() => {
+// With nothing selected, the status bar shows the insertion slot (the start
+// or end of the active staff) instead of a line and column.
+const statusInsertionSlotLabel = computed(() => {
   if (!isNothingSelected()) {
     return null;
   }
-  return selectedWorkspace.value.activeFootnoteId === null
-    ? t(($) => $.toolbar.status.endOfScore, { ns: 'toolbar' })
-    : t(($) => $.toolbar.status.endOfFootnote, {
-        ns: 'toolbar',
-        number: activeOrderedFootnote.value?.marker ?? '',
-      });
+  const atStart = selectedWorkspace.value.insertAtStart;
+  if (selectedWorkspace.value.activeFootnoteId === null) {
+    return atStart
+      ? t(($) => $.toolbar.status.startOfScore, { ns: 'toolbar' })
+      : t(($) => $.toolbar.status.endOfScore, { ns: 'toolbar' });
+  }
+  const number = activeOrderedFootnote.value?.marker ?? '';
+  return atStart
+    ? t(($) => $.toolbar.status.startOfFootnote, { ns: 'toolbar', number })
+    : t(($) => $.toolbar.status.endOfFootnote, { ns: 'toolbar', number });
 });
 
 const statusNeumeNoteDisplay = computed(() => {
@@ -1587,6 +1591,7 @@ const throttled = {
   moveToNextLyricBox: throttle(keydownThrottleIntervalMs, moveToNextLyricBox),
   moveLeft: throttle(keydownThrottleIntervalMs, moveLeft),
   moveRight: throttle(keydownThrottleIntervalMs, moveRight),
+  moveForward: throttle(keydownThrottleIntervalMs, moveForward),
   moveSelectionLeft: throttle(keydownThrottleIntervalMs, moveSelectionLeft),
   moveSelectionRight: throttle(keydownThrottleIntervalMs, moveSelectionRight),
   deleteSelectedElement: throttle(
@@ -1709,6 +1714,18 @@ watch(
       save();
     }
   },
+);
+
+// Selecting anything leaves the start of the staff. Sync, so a later
+// clearSelection() in the same tick returns to the end of the staff.
+watch(
+  () => !isNothingSelected(),
+  (somethingSelected) => {
+    if (somethingSelected) {
+      selectedWorkspace.value.insertAtStart = false;
+    }
+  },
+  { flush: 'sync' },
 );
 
 watch(selectedWorkspaceId, () => {
@@ -1918,6 +1935,8 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
+  EventBus.$on(IpcMainChannels.FileMenuGoToStart, onFileMenuGoToStart);
+  EventBus.$on(IpcMainChannels.FileMenuGoToEnd, onFileMenuGoToEnd);
   EventBus.$on(
     IpcMainChannels.FileMenuWindowPreviousTab,
     onFileMenuWindowPreviousTab,
@@ -2042,6 +2061,8 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
+  EventBus.$off(IpcMainChannels.FileMenuGoToStart, onFileMenuGoToStart);
+  EventBus.$off(IpcMainChannels.FileMenuGoToEnd, onFileMenuGoToEnd);
   EventBus.$off(
     IpcMainChannels.FileMenuWindowPreviousTab,
     onFileMenuWindowPreviousTab,
@@ -2155,6 +2176,9 @@ const pageInteraction = computed(() => ({
   selectedAlternateLineElement:
     selectedWorkspace.value.selectedAlternateLineElement,
   activeFootnoteId: selectedWorkspace.value.activeFootnoteId,
+  startCaretElement: selectedWorkspace.value.insertAtStart
+    ? (activeElements.value[0] ?? null)
+    : null,
   isLyricsLocked: (element: ScoreElement) =>
     staffForElement(element)?.lyrics.locked ?? true,
 }));
@@ -3220,27 +3244,57 @@ function canInsertElement() {
   return selectedElement.value != null || isNothingSelected();
 }
 
-// Inserts go after the selected element, or at the end of the active staff
-// when nothing is selected.
+// With nothing selected, inserts go to the start or end of the active staff.
+function insertionSlotIndex() {
+  return selectedWorkspace.value.insertAtStart
+    ? 0
+    : activeElements.value.length;
+}
+
+// Inserts go after the selected element, or into the insertion slot when
+// nothing is selected.
 function insertionIndexAfterSelection() {
   return selectedElement.value == null
-    ? activeElements.value.length
+    ? insertionSlotIndex()
     : selectedElementIndex.value + 1;
 }
 
-// The selected element, or the end of the active staff when nothing is
-// selected.
+// The selected element, or the insertion slot when nothing is selected.
 function insertionIndexOrSelection() {
   return selectedElement.value == null
-    ? activeElements.value.length
+    ? insertionSlotIndex()
     : selectedElementIndex.value;
 }
 
+// Clears the selection, which leaves the editor at the end of the active
+// staff.
 function clearSelection() {
   selectedElement.value = null;
   selectionRange.value = null;
   selectedLyrics.value = null;
   selectedHeaderFooterElement.value = null;
+  selectedWorkspace.value.insertAtStart = false;
+}
+
+// Leaves any text element being edited before moving the insertion point.
+function leaveTextEditing() {
+  if (isTextInputFocused()) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    blurActiveElement();
+  }
+}
+
+function goToStartOfStaff() {
+  leaveTextEditing();
+  clearSelection();
+  selectedWorkspace.value.insertAtStart = true;
+  scrollElementIntoView(activeElements.value[0]);
+}
+
+function goToEndOfStaff() {
+  leaveTextEditing();
+  clearSelection();
+  scrollElementIntoView(activeElements.value.at(-1));
 }
 
 function insertScoreElement(
@@ -4220,6 +4274,14 @@ function onKeydown(event: KeyboardEvent) {
       throttled.onSelectAllScoreElements();
       event.preventDefault();
       return;
+    } else if (event.code === 'Home' && !event.shiftKey) {
+      goToStartOfStaff();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'End' && !event.shiftKey) {
+      goToEndOfStaff();
+      event.preventDefault();
+      return;
     } else if (event.code === 'KeyI' && !event.shiftKey) {
       switch (entryMode.value) {
         case EntryMode.Auto:
@@ -4370,13 +4432,13 @@ function onKeydownNeume(event: KeyboardEvent) {
         if (!rtl.value) {
           throttled.moveLeft();
         } else {
-          throttled.moveRight();
+          throttled.moveForward();
         }
         handled = true;
         break;
       case 'ArrowRight':
         if (!rtl.value) {
-          throttled.moveRight();
+          throttled.moveForward();
         } else {
           throttled.moveLeft();
         }
@@ -5233,6 +5295,13 @@ function onPasteScoreElements(includeLyrics: boolean) {
     return;
   }
   if (clipboard.value.elements.length > 0 && canInsertElement()) {
+    // The start of the staff is a gap before the first element, so the first
+    // paste inserts there in every entry mode, as at the end of the staff.
+    if (selectedWorkspace.value.insertAtStart) {
+      onPasteScoreElementsInsert(includeLyrics);
+      return;
+    }
+
     switch (entryMode.value) {
       case EntryMode.Insert:
         onPasteScoreElementsInsert(includeLyrics);
@@ -5525,41 +5594,66 @@ function moveLeft() {
   } else if (selectionRange.value) {
     index = selectionRange.value.end;
   } else if (isNothingSelected()) {
-    index = activeElements.value.length;
+    index = insertionSlotIndex();
+  }
+
+  // Moving left from the first element reaches the start of the staff.
+  if (index === 0 && selectedElement.value != null) {
+    blurSelectedTextElement(index);
+    goToStartOfStaff();
+    return true;
   }
 
   if (index - 1 >= 0 && isNavigableElement(activeElements.value[index - 1])) {
-    // If the currently selected element is a drop cap or text box, blur it first
-    if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
-    } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
-    }
-
-    const element = activeElements.value[index - 1];
-    selectedElement.value = element;
-
-    // The end of the staff has no position on the page, so the last element's
-    // page may be offscreen and unmounted.
-    if (index === activeElements.value.length) {
-      void revealElement(element);
-    }
-
-    // If the newly selected element is a drop cap or text box, focus it once
-    // it has mounted
-    if (
-      element instanceof DropCapElement ||
-      element instanceof TextBoxElement
-    ) {
-      void focusTextElement(element);
-    } else if (element instanceof RichTextBoxElement) {
-      focusSelectedRichTextBoxEditor(element);
-    }
-
+    blurSelectedTextElement(index);
+    selectElementByKeyboard(activeElements.value[index - 1]);
     return true;
   }
 
   return false;
+}
+
+// Arrow key navigation toward the end of the staff. From the start of the
+// staff, this selects the first element. moveRight() is also used by entry
+// modes, so it never moves from the start.
+function moveForward() {
+  if (!selectedWorkspace.value.insertAtStart) {
+    moveRight();
+    return;
+  }
+
+  const element = activeElements.value[0];
+  if (element !== undefined && isNavigableElement(element)) {
+    selectElementByKeyboard(element);
+  }
+}
+
+// If the selected element is a drop cap or text box, blur it before the
+// selection moves.
+function blurSelectedTextElement(index: number) {
+  if (selectedElement.value?.elementType === ElementType.DropCap) {
+    getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
+  } else if (selectedElement.value?.elementType === ElementType.TextBox) {
+    getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
+  }
+}
+
+// The start and end of the staff have no position on the page, so the
+// element's page may be offscreen and unmounted. Text elements are focused
+// once their page has mounted.
+function selectElementByKeyboard(element: ScoreElement) {
+  const fromSlot = isNothingSelected();
+  selectedElement.value = element;
+
+  if (fromSlot) {
+    void revealElement(element);
+  }
+
+  if (element instanceof DropCapElement || element instanceof TextBoxElement) {
+    void focusTextElement(element);
+  } else if (element instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(element);
+  }
 }
 
 function moveRight() {
@@ -5655,6 +5749,14 @@ function moveSelectionRight() {
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value + 1]);
+  } else if (
+    selectedWorkspace.value.insertAtStart &&
+    activeElements.value.length > 0 &&
+    navigableElements.includes(activeElements.value[0].elementType)
+  ) {
+    // From the start of the staff, start the range on the first element.
+    selectionRange.value = { start: 0, end: 0 };
+    void revealElement(activeElements.value[0]);
   }
 }
 
@@ -9712,6 +9814,18 @@ function applyCopiedFormat(
   }
 }
 
+function onFileMenuGoToStart() {
+  if (!dialogOpen.value) {
+    goToStartOfStaff();
+  }
+}
+
+function onFileMenuGoToEnd() {
+  if (!dialogOpen.value) {
+    goToEndOfStaff();
+  }
+}
+
 function onFileMenuFind() {
   if (searchTextPanelIsOpen.value) {
     searchTextRef.value!.focus();
@@ -10997,10 +11111,10 @@ function renderTabLabel(tab: Tab) {
       </ButtonGroup>
       <ButtonGroup>
         <ButtonGroupText
-          v-if="statusEndOfContentLabel !== null"
+          v-if="statusInsertionSlotLabel !== null"
           data-slot="button-group-text"
         >
-          {{ statusEndOfContentLabel }}
+          {{ statusInsertionSlotLabel }}
         </ButtonGroupText>
         <template v-else>
           <ButtonGroupText data-slot="button-group-text">

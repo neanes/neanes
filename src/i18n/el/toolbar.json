@@ -58,7 +58,9 @@
     "section": "Ενότητα {{ sectionNumber }} από {{ sectionCount }}",
     "pageNumber": "Σελίδα {{ currentPageNumber }} από {{ pageCount }}",
     "line": "Γραμμή {{ lineNumber }} από {{ lineCount }}",
-    "column": "Στήλη {{ columnNumber }} από {{ columnCount }}"
+    "column": "Στήλη {{ columnNumber }} από {{ columnCount }}",
+    "endOfScore": "Τέλος παρτιτούρας",
+    "endOfFootnote": "Τέλος υποσημείωσης {{number}}"
   },
   "dropCap": {
     "lineSpan": "Έκταση Γραμμών"

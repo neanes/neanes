@@ -140,7 +140,7 @@ try {
     const args = { documentScope: 'editor', documentId: doc.documentId };
     const initial = await call('get_elements', args);
     await edit(args, [
-      { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+      { action: 'remove_range', start: 0, end: initial.collectionSize },
     ]);
     await edit(args, [
       {
@@ -525,7 +525,7 @@ try {
         {
           action: 'remove_range',
           start: 0,
-          end: initialTarget.collectionSize - 1,
+          end: initialTarget.collectionSize,
         },
         {
           action: 'insert',

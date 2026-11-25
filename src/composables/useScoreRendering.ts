@@ -2,7 +2,6 @@ import { computed, type CSSProperties, type Ref, type StyleValue } from 'vue';
 
 import {
   type DropCapElement,
-  type EmptyElement,
   type NoteElement,
   type ScoreElement,
 } from '@/models/Element';
@@ -305,13 +304,6 @@ export function useScoreRendering(score: Ref<Score>, zoom: Ref<number>) {
     } as CSSProperties;
   }
 
-  function getEmptyBoxStyle(element: EmptyElement) {
-    return {
-      width: withZoom(element.width),
-      height: withZoom(element.height),
-    } as StyleValue;
-  }
-
   function getElementStyle(element: ScoreElement) {
     return {
       left: !rtl.value ? withZoom(element.x) : undefined,
@@ -364,7 +356,6 @@ export function useScoreRendering(score: Ref<Score>, zoom: Ref<number>) {
     getFooterHorizontalRuleStyle,
     getLyricStyle,
     getLeadingLyricHyphenStyle,
-    getEmptyBoxStyle,
     getElementStyle,
     getMelismaStyle,
     getMelismaUnderscoreStyleInner,

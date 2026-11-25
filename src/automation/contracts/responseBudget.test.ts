@@ -71,7 +71,7 @@ describe('JSON result budgets', () => {
       ['Source Serif'],
     );
     applyElementEdits(workspace, plan);
-    expect(workspace.score.staff.elements).toHaveLength(1001);
+    expect(workspace.score.staff.elements).toHaveLength(1000);
     const result = {
       documentId: workspace.id,
       revision: 1,
@@ -79,7 +79,7 @@ describe('JSON result budgets', () => {
       title: '',
       hasUnsavedChanges: true,
       selected: false,
-      elementCount: 1001,
+      elementCount: 1000,
       applied: true,
       ...createdElementResult(plan.created, discovery, true),
     };

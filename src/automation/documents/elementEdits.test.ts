@@ -76,7 +76,6 @@ describe('validated element transactions', () => {
   it('constructs nested elements with local references in one reversible undo step', () => {
     const { workspace, discovery, edit } = document();
     const staff = workspace.score.staff.elements;
-    const sentinel = staff[0];
     const plan = edit([
       insert([
         {
@@ -130,7 +129,7 @@ describe('validated element transactions', () => {
     const after = saved(workspace);
     workspace.commandService.undo();
     expect(workspace.score.staff.elements).toBe(staff);
-    expect(staff).toEqual([sentinel]);
+    expect(staff).toEqual([]);
     workspace.commandService.redo();
     expect(saved(workspace)).toBe(after);
     expect(discovery.reference(staff[0])).toBe(ref);
@@ -158,7 +157,7 @@ describe('validated element transactions', () => {
     expect(workspace.hasUnsavedChanges).toBe(false);
     expect(discovery.reference(workspace.selectedElement)).toBe(ref);
     workspace.commandService.undo();
-    expect(workspace.score.staff.elements).toHaveLength(1);
+    expect(workspace.score.staff.elements).toHaveLength(0);
     workspace.commandService.redo();
     expect(saved(workspace)).toBe(before);
   });
@@ -596,7 +595,7 @@ describe('validated element transactions', () => {
     workspace.commandService.undo();
     expect(staff[0]).toBe(note);
     workspace.commandService.undo();
-    expect(staff).toHaveLength(1);
+    expect(staff).toHaveLength(0);
     workspace.commandService.redo();
     expect(staff[0]).toBe(note);
   });
@@ -665,7 +664,7 @@ describe('validated element transactions', () => {
         expectElements(original);
         expect(saved(workspace)).toBe(before);
         workspace.commandService.undo();
-        expectElements([original.at(-1)!]);
+        expectElements([]);
         workspace.commandService.redo();
         expectElements(original);
         workspace.commandService.redo();
@@ -737,7 +736,7 @@ describe('validated element transactions', () => {
       workspace.commandService.undo();
       expect(saved(workspace)).toBe(beforeProperty);
       workspace.commandService.undo();
-      expect(staff).toHaveLength(1);
+      expect(staff).toHaveLength(0);
       workspace.commandService.redo();
       expect(staff[0]).toBe(main);
       workspace.commandService.redo();
@@ -810,7 +809,7 @@ describe('validated element transactions', () => {
       ]),
     ).toThrow('LYRICS_LOCKED');
     workspace.commandService.undo();
-    expect(workspace.score.staff.elements).toHaveLength(1);
+    expect(workspace.score.staff.elements).toHaveLength(0);
     expect(workspace.score.staff.lyrics.locked).toBe(false);
     workspace.commandService.redo();
     expect((workspace.score.staff.elements[1] as NoteElement).lyrics).toBe(
@@ -1022,7 +1021,7 @@ describe('validated element transactions', () => {
         expect(workspace.hasUnsavedChanges).toBe(false);
       }
       workspace.commandService.undo();
-      expect(workspace.score.staff.elements).toHaveLength(1);
+      expect(workspace.score.staff.elements).toHaveLength(0);
       workspace.commandService.redo();
       expect(saved(workspace)).toBe(before);
       edit([{ action: 'assign_lyrics', start: 0, end: 3, text: 'complete' }]);
@@ -1211,7 +1210,7 @@ describe('validated element transactions', () => {
       expect(workspace.hasUnsavedChanges).toBe(false);
       expect(discovery.reference(workspace.score.staff.elements[0])).toBe(ref);
       workspace.commandService.undo();
-      expect(workspace.score.staff.elements).toHaveLength(1);
+      expect(workspace.score.staff.elements).toHaveLength(0);
     },
   );
 

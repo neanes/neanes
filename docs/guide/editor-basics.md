@@ -75,6 +75,11 @@ The selection is also the entry position:
 - A supporting sign changes the selected neume.
 - A new quantitative neume, martyria, tempo sign, or pasted passage uses the selected element as its starting point.
 - The active entry mode determines whether the next element is replaced, a new element is inserted, or only the selected element is changed.
+- Inserted text boxes, rich text boxes, initial martyriæ, and images go after the selected element.
+
+When nothing is selected, new music, pasted passages, and inserted elements are added at the end of the score, and the status bar shows **End of score**. Nothing is selected when you open a score, press <kbd>Right Arrow</kbd> on the last element, delete the last element, press <kbd>Escape</kbd>, or click blank space on the page. <kbd>Backspace</kbd> then deletes the last element, and <kbd>Left Arrow</kbd> selects it.
+
+<kbd>Escape</kbd> steps out one level at a time. While you are editing a text box or drop cap, the first <kbd>Escape</kbd> stops editing and leaves it selected, so you can copy, cut, or delete it as a whole; press <kbd>Enter</kbd> to resume editing. The next <kbd>Escape</kbd> clears the selection.
 
 If a command appears to affect the wrong place, first check which element is outlined and which entry mode is active.
 

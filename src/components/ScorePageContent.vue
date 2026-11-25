@@ -177,6 +177,38 @@
     class="footnote-rule"
     :style="footnoteRuleStyle"
   />
+  <div
+    v-for="footnote in page.footnotes"
+    :key="`footnote-body-${footnote.id}`"
+    :data-footnote-id="footnote.id"
+    class="footnote-body"
+    :class="{
+      active: !printMode && interaction?.activeFootnoteId === footnote.id,
+    }"
+    :style="footnoteBodyAreaStyle(footnote)"
+    @click.self="!printMode && emit('activateFootnote', footnote.id)"
+  />
+  <template v-if="!printMode">
+    <span
+      v-for="footnote in page.footnotes.filter(
+        (footnote) => footnote.lines.length === 0,
+      )"
+      :key="`footnote-placeholder-${footnote.id}`"
+      :data-footnote-id="footnote.id"
+      class="footnote-placeholder"
+      :style="footnotePlaceholderStyle(footnote)"
+    >
+      {{
+        interaction?.activeFootnoteId === footnote.id
+          ? i18next.t(($) => $.menu.footnotes.activePlaceholder, {
+              ns: 'menu',
+            })
+          : i18next.t(($) => $.menu.footnotes.emptyPlaceholder, {
+              ns: 'menu',
+            })
+      }}
+    </span>
+  </template>
   <button
     v-for="footnote in page.footnotes"
     :id="`footnote-${footnote.id}`"
@@ -188,6 +220,7 @@
     :title="
       i18next.t(($) => $.menu.footnotes.returnToReference, { ns: 'menu' })
     "
+    @click="!printMode && emit('activateFootnote', footnote.id)"
     @dblclick="
       !printMode && emit('returnToFootnoteReference', footnote.reference)
     "
@@ -465,24 +498,6 @@
           <div class="lyrics"></div>
         </div>
       </template>
-      <template v-else-if="isEmptyElement(element)">
-        <div
-          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
-          class="neume-box"
-        >
-          <span v-if="element.pageBreak" class="page-break"> <PhFile /></span>
-          <span v-if="element.lineBreak" class="line-break"
-            ><PhParagraph weight="fill"
-          /></span>
-          <EmptyNeumeBox
-            class="empty-neume-box"
-            :class="[{ selected: isSelected(element) }]"
-            :style="getEmptyBoxStyle(element as EmptyElement)"
-            @select-single="emit('selectElement', element)"
-          ></EmptyNeumeBox>
-          <div class="lyrics"></div>
-        </div>
-      </template>
       <template v-else-if="isTextBoxElement(element)">
         <span v-if="element.pageBreak" class="page-break-2"><PhFile /></span>
         <span v-if="element.lineBreak" class="line-break-2"
@@ -722,7 +737,6 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import ModeKey from '@/components/ModeKey.vue';
-import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
@@ -734,7 +748,6 @@ import type { ScoreOverlaySettings } from '@/models/EditorPreferences';
 import {
   type DropCapElement,
   ElementType,
-  type EmptyElement,
   FootnoteAnchorElement,
   type ImageBoxElement,
   isKeepWithNextActive,
@@ -748,7 +761,7 @@ import {
   type TextBoxElement,
 } from '@/models/Element';
 import type { BoxOverlayDiagnostics } from '@/models/LayoutDiagnostics';
-import type { Line, Page } from '@/models/Page';
+import type { Line, Page, PageFootnote } from '@/models/Page';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   getTextBoxParagraphStyleFallbackId,
@@ -770,7 +783,6 @@ import {
 } from '@/services/rendering/textBoxMeasurement';
 import {
   isDropCapElement,
-  isEmptyElement,
   isImageBoxElement,
   isMartyriaElement,
   isModeKeyElement,
@@ -864,7 +876,6 @@ const {
   getFooterHorizontalRuleStyle,
   getLyricStyle,
   getLeadingLyricHyphenStyle,
-  getEmptyBoxStyle,
   getElementStyle,
   getMelismaStyle,
   getMelismaUnderscoreStyleInner,
@@ -889,6 +900,28 @@ const footnoteRuleStyle = computed(() => {
     borderColor: props.score.pageSetup.footnoteRuleColor,
   };
 });
+function footnoteBodyAreaStyle(footnote: PageFootnote) {
+  const margins = getResolvedMarginsForPage(props.page);
+  return {
+    left: withZoom(margins.contentLeft),
+    top: withZoom(footnote.top),
+    width: withZoom(margins.contentWidth),
+    height: withZoom(footnote.height),
+  };
+}
+// The placeholder follows the label, outside the layout.
+function footnotePlaceholderStyle(footnote: PageFootnote) {
+  const style = footnoteBodyStyles.value.get(footnote.id)!;
+  return {
+    ...style,
+    transform: undefined,
+    left: rtl.value ? undefined : style.left,
+    right: rtl.value
+      ? withZoom(props.score.pageSetup.pageWidth - footnote.labelX)
+      : undefined,
+    paddingInline: withZoom(4),
+  };
+}
 const bodyMarkerTypography = computed(() =>
   footnoteMarkerStyle(props.score.paragraphStyles, 'body'),
 );
@@ -943,8 +976,7 @@ const footnoteBodyStyles = computed(() => {
         first &&
         (isSyllableElement(first) ||
           isMartyriaElement(first) ||
-          isTempoElement(first) ||
-          isEmptyElement(first))
+          isTempoElement(first))
       ) {
         contextCss.lineHeight = 'inherit';
         contextCss.fontFamily = props.score.pageSetup.neumeDefaultFontFamily;
@@ -1521,6 +1553,22 @@ defineExpose({
   cursor: default;
   white-space: nowrap;
 }
+.footnote-body {
+  position: absolute;
+}
+.footnote-body.active {
+  outline: 1px dashed color-mix(in srgb, currentColor 35%, transparent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, currentColor 3%, transparent);
+}
+.footnote-placeholder {
+  position: absolute;
+  white-space: nowrap;
+  font-style: italic;
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+}
 .footnote-body-marker {
   display: inline-block;
   line-height: 1;
@@ -1762,10 +1810,6 @@ defineExpose({
   opacity: 0.5;
 }
 
-.page.print .empty-neume-box {
-  visibility: hidden;
-}
-
 .page.print .text-box-container,
 .page.print .rich-text-box-container,
 .page.print .drop-cap-container,
@@ -1895,10 +1939,6 @@ defineExpose({
 }
 
 @media print {
-  .empty-neume-box {
-    visibility: hidden;
-  }
-
   .text-box-container {
     border: none;
     outline: none;

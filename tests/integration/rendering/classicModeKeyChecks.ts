@@ -12,10 +12,7 @@ import {
 } from '../../../src/models/InitialMartyriaCommonWordings';
 import { modeKeyTemplates } from '../../../src/models/ModeKeys';
 import { ModeSign, QuantitativeNeume } from '../../../src/models/Neumes';
-import {
-  EmptyElement,
-  ModeKeyElement,
-} from '../../../src/models/save/v1/Element';
+import { ModeKeyElement } from '../../../src/models/save/v1/Element';
 import type { InitialMartyriaStyle } from '../../../src/models/save/v1/InitialMartyriaStyle';
 import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 
@@ -68,7 +65,6 @@ export async function checkClassicModeKeys(options: {
       note: ModeSign.Pa,
       quantitativeNeumeRight: QuantitativeNeume.Oligon,
     }),
-    new EmptyElement(),
   );
   await renderSnapshot({
     snapshot,

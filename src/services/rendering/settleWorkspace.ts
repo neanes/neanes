@@ -24,7 +24,7 @@ export async function settleWorkspace(
     const templatePages =
       settlement.usesFootnoteTrials &&
       (score.pageSetup.showHeader || score.pageSetup.showFooter)
-        ? pages.filter((page) => !page.isEmpty)
+        ? pages
         : undefined;
     const heights = needsMeasurement ? await measure(templatePages) : [];
     if (

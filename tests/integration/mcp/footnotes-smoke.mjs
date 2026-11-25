@@ -176,7 +176,7 @@ try {
       },
     }));
     const inserted = await edit([
-      { action: 'remove_range', start: 0, end: existing.collectionSize - 1 },
+      { action: 'remove_range', start: 0, end: existing.collectionSize },
       { action: 'insert', elements: notes },
       {
         action: 'insert_footnote',
@@ -268,7 +268,7 @@ try {
     });
     assert.deepEqual(
       body.elements.map((entry) => entry.elementType),
-      ['TextBox', 'Note', 'Note', 'Empty'],
+      ['TextBox', 'Note', 'Note'],
     );
     const otherBody = await call('get_elements', {
       ...args,
@@ -493,7 +493,7 @@ try {
           ...args,
           collection: bodySelector,
         });
-        assert.equal(body.collectionSize, 5);
+        assert.equal(body.collectionSize, 4);
       });
       assert.deepEqual(
         (await call('get_elements', args)).elements.map(
@@ -562,7 +562,7 @@ try {
       assert.equal(
         (await call('get_elements', { ...args, collection: bodySelector }))
           .collectionSize,
-        4,
+        3,
       );
       await evaluate(
         `window._editor.selectedWorkspace.value.commandService.redo()`,
@@ -570,7 +570,7 @@ try {
       assert.equal(
         (await call('get_elements', { ...args, collection: bodySelector }))
           .collectionSize,
-        5,
+        4,
       );
       await evaluate(
         `window._editor.selectedWorkspace.value.commandService.undo()`,
@@ -784,7 +784,7 @@ try {
         footnoteId: copyMain.elements[0].properties.footnoteId,
       },
     });
-    assert.equal(copiedBody.collectionSize, 4);
+    assert.equal(copiedBody.collectionSize, 3);
     await closeDocument(call, args);
     for (const extension of ['byzx', 'byz']) {
       const reopened = await call('open_document', {
@@ -805,7 +805,7 @@ try {
         ...reopenedArgs,
         collection: bodySelector,
       });
-      assert.equal(reopenedBody.collectionSize, 4);
+      assert.equal(reopenedBody.collectionSize, 3);
       await closeDocument(call, reopenedArgs);
     }
     console.log(

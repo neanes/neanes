@@ -1,5 +1,4 @@
 import type { ScoreElement } from '@/models/save/v1/Element';
-import { EmptyElement } from '@/models/save/v1/Element';
 
 import { Footers } from './Footers';
 import type { Footnote } from './Footnote';
@@ -32,7 +31,7 @@ export class Score {
 }
 
 export class Staff {
-  public elements: ScoreElement[] = [new EmptyElement()];
+  public elements: ScoreElement[] = [];
   public lyrics: LyricSetup = new LyricSetup();
 }
 

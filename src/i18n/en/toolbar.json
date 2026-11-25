@@ -58,7 +58,9 @@
     "section": "Section {{ sectionNumber }} of {{ sectionCount }}",
     "pageNumber": "Page {{ currentPageNumber }} of {{ pageCount }}",
     "line": "Line {{ lineNumber }} of {{ lineCount }}",
-    "column": "Column {{ columnNumber }} of {{ columnCount }}"
+    "column": "Column {{ columnNumber }} of {{ columnCount }}",
+    "endOfScore": "End of score",
+    "endOfFootnote": "End of footnote {{number}}"
   },
   "dropCap": {
     "lineSpan": "Lines to Drop"

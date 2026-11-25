@@ -385,7 +385,6 @@ const navigableElements = [
   ElementType.Note,
   ElementType.Martyria,
   ElementType.Tempo,
-  ElementType.Empty,
   ElementType.DropCap,
   ElementType.TextBox,
   ElementType.ImageBox,
@@ -930,11 +929,7 @@ const isLyricsManagerOpen = computed(() => {
 });
 
 const pageCount = computed(() => {
-  return filteredPages.value.length;
-});
-
-const exportPageCount = computed(() => {
-  return pages.value.filter((page) => !page.isEmpty).length;
+  return pages.value.length;
 });
 
 const statusPageCount = computed(() => Math.max(1, pageCount.value));
@@ -1043,7 +1038,7 @@ const previousElementOnLine = computed(() => {
 const nextElementOnLine = computed(() => {
   const index = selectedElementIndex.value;
 
-  if (index + 1 >= activeElements.value.length - 1) {
+  if (index < 0 || index + 1 >= activeElements.value.length) {
     return null;
   }
 
@@ -1430,7 +1425,7 @@ const statusSectionNumber = computed(() => {
 const statusSectionCount = computed(() => getSectionCount());
 
 const statusContentLines = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
+  const page = pages.value[statusPageNumber.value - 1];
   const element = statusPositionElementOnPage.value;
   const body =
     element == null
@@ -1442,7 +1437,7 @@ const statusContentLines = computed(() => {
 });
 
 const statusLinePosition = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
+  const page = pages.value[statusPageNumber.value - 1];
   const lineCount = Math.max(statusContentLines.value.length, 1);
   const lineNumber =
     statusPositionElementOnPage.value?.line ??
@@ -1467,6 +1462,27 @@ const statusColumnPosition = computed(() => {
     columnNumber: elementIndex >= 0 ? elementIndex + 1 : 1,
     columnCount,
   };
+});
+
+// With nothing selected, the status bar shows the append slot instead of a
+// line and column.
+const statusEndOfContentLabel = computed(() => {
+  if (!isNothingSelected()) {
+    return null;
+  }
+  const activeId = selectedWorkspace.value.activeFootnoteId;
+  const footnote =
+    activeId === null
+      ? undefined
+      : orderedFootnotes(score.value).find(
+          ({ footnote }) => footnote.id === activeId,
+        );
+  return footnote === undefined
+    ? t(($) => $.toolbar.status.endOfScore, { ns: 'toolbar' })
+    : t(($) => $.toolbar.status.endOfFootnote, {
+        ns: 'toolbar',
+        number: footnote.marker,
+      });
 });
 
 const statusNeumeNoteDisplay = computed(() => {
@@ -1559,12 +1575,8 @@ const activeDialog = computed(
 );
 const dialogOpen = computed(() => activeDialog.value !== null);
 
-const filteredPages = computed(() => {
-  return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
-});
-
 const runningMarkerPageMetadata = computed(() =>
-  resolveRunningMarkerPageMetadata(filteredPages.value),
+  resolveRunningMarkerPageMetadata(pages.value),
 );
 
 provide(
@@ -2147,6 +2159,7 @@ const pageInteraction = computed(() => ({
   selectedAnnotationElement: selectedWorkspace.value.selectedAnnotationElement,
   selectedAlternateLineElement:
     selectedWorkspace.value.selectedAlternateLineElement,
+  activeFootnoteId: selectedWorkspace.value.activeFootnoteId,
   isLyricsLocked: (element: ScoreElement) =>
     staffForElement(element)?.lyrics.locked ?? true,
 }));
@@ -2154,6 +2167,7 @@ const pageHandlers: ScorePageHandlers = {
   selectElement: (element) => {
     selectedElement.value = element;
   },
+  activateFootnote: (id) => activateFootnote(id),
   returnToFootnoteReference: (element) => {
     selectedElement.value = element;
     pages.value[element.page - 1].isVisible = true;
@@ -2399,7 +2413,7 @@ function showExportReplyToast(
 }
 
 function getHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const pageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
@@ -2410,7 +2424,7 @@ function getHeaderForPageIndex(pageIndex: number) {
 }
 
 function getFooterForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const pageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
@@ -2423,8 +2437,7 @@ function getFooterForPageIndex(pageIndex: number) {
 function getHeaderFooterVariantForPageIndex(
   pageIndex: number,
 ): HeaderFooterVariant {
-  const physicalPageNumber =
-    filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const physicalPageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
   const isOddDisplayedPage = isDisplayedPageNumberOdd(
@@ -2508,9 +2521,9 @@ function getHeaderFooterBadgeStyle(
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {
-  const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
+  const physicalPageNumber = pages.value[pageIndex].physicalPageNumber;
   const lastPhysicalPageNumber =
-    filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+    pages.value[pages.value.length - 1].physicalPageNumber;
   const runningMarkers = runningMarkerPageMetadata.value[pageIndex];
 
   return {
@@ -2684,17 +2697,13 @@ function setTextRangeBoundary(
 }
 
 function getFirstElementForPage(pageNumber: number) {
-  const page = filteredPages.value[pageNumber - 1];
+  const page = pages.value[pageNumber - 1];
 
   if (!page) {
     return null;
   }
 
-  return (
-    page.lines
-      .flatMap((line) => line.elements)
-      .find((element) => element.elementType !== ElementType.Empty) ?? null
-  );
+  return page.lines.flatMap((line) => line.elements)[0] ?? null;
 }
 
 function getFirstLineNumberForPage(page: Page | undefined) {
@@ -2702,9 +2711,7 @@ function getFirstLineNumberForPage(page: Page | undefined) {
     return null;
   }
 
-  const lineIndex = page.lines.findIndex((line) =>
-    line.elements.some((element) => element.elementType !== ElementType.Empty),
-  );
+  const lineIndex = page.lines.findIndex((line) => line.elements.length > 0);
 
   return lineIndex >= 0 ? lineIndex + 1 : null;
 }
@@ -2716,22 +2723,20 @@ function getSectionNumberForPage(pageNumber: number) {
 }
 
 function getSectionAnchorIndexForPage(pageNumber: number) {
-  const page = filteredPages.value[pageNumber - 1];
+  const page = pages.value[pageNumber - 1];
 
   if (page == null) {
     return 0;
   }
 
-  const firstPageElement = getPageElements(page).find(
-    (element) => element.elementType !== ElementType.Empty,
-  );
+  const firstPageElement = getPageElements(page)[0];
 
   if (firstPageElement) {
     return firstPageElement.index;
   }
 
   for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
-    const prevPage = filteredPages.value[pageIndex];
+    const prevPage = pages.value[pageIndex];
 
     for (
       let lineIndex = prevPage.lines.length - 1;
@@ -2740,16 +2745,10 @@ function getSectionAnchorIndexForPage(pageNumber: number) {
     ) {
       const line = prevPage.lines[lineIndex];
 
-      for (
-        let elementIndex = line.elements.length - 1;
-        elementIndex >= 0;
-        elementIndex--
-      ) {
-        const element = line.elements[elementIndex];
+      const element = line.elements.at(-1);
 
-        if (element.elementType !== ElementType.Empty) {
-          return element.index;
-        }
+      if (element) {
+        return element.index;
       }
     }
   }
@@ -2762,9 +2761,7 @@ function getPageElements(page: Page) {
 }
 
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
+  const scoreElements = score.value.staff.elements;
 
   if (scoreElements.length === 0) {
     return 1;
@@ -2792,9 +2789,7 @@ function getSectionNumberForElementIndex(elementIndex: number) {
 }
 
 function getSectionCount() {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
+  const scoreElements = score.value.staff.elements;
 
   if (scoreElements.length === 0) {
     return 1;
@@ -2836,21 +2831,14 @@ function setSelectionRange(element: ScoreElement) {
 }
 
 function onSelectAllScoreElements() {
-  const firstElementIndex = activeElements.value.findIndex(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-  const lastElementIndex = activeElements.value.findLastIndex(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (firstElementIndex < 0 || lastElementIndex < 0) {
+  if (activeElements.value.length === 0) {
     return;
   }
 
   selectedElement.value = null;
   selectedLyrics.value = null;
   selectedHeaderFooterElement.value = null;
-  selectionRange.value = { start: firstElementIndex, end: lastElementIndex };
+  selectionRange.value = { start: 0, end: activeElements.value.length - 1 };
 }
 
 function getNormalizedSelectionRange() {
@@ -3245,10 +3233,68 @@ function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
   saveEditorEnvironment();
 }
 
-function isLastElement(element: ScoreElement) {
+// With nothing selected, inserts append to the end of the active staff.
+function isNothingSelected() {
+  const workspace = selectedWorkspace.value;
   return (
-    activeElements.value.indexOf(element) === activeElements.value.length - 1
+    workspace.selectedElement == null &&
+    workspace.selectionRange == null &&
+    workspace.selectedLyrics == null &&
+    workspace.selectedHeaderFooterElement == null &&
+    workspace.selectedAnnotationElement == null &&
+    workspace.selectedAlternateLineElement == null
   );
+}
+
+function canInsertElement() {
+  return selectedElement.value != null || isNothingSelected();
+}
+
+// Inserts go after the selected element, or at the end of the active staff
+// when nothing is selected.
+function insertionIndexAfterSelection() {
+  return selectedElement.value == null
+    ? activeElements.value.length
+    : selectedElementIndex.value + 1;
+}
+
+// The selected element, or the end of the active staff when nothing is
+// selected.
+function insertionIndexOrSelection() {
+  return selectedElement.value == null
+    ? activeElements.value.length
+    : selectedElementIndex.value;
+}
+
+function clearSelection() {
+  selectedElement.value = null;
+  selectionRange.value = null;
+  selectedLyrics.value = null;
+  selectedHeaderFooterElement.value = null;
+}
+
+function insertScoreElement(element: ScoreElement, insertAtIndex: number) {
+  addScoreElement(element, insertAtIndex);
+  scrollElementIntoView(element);
+}
+
+// Callers run save() synchronously after this, which lays out the element and
+// assigns its page and id. Pages are virtualized, so show the page first.
+function scrollElementIntoView(element: ScoreElement | undefined) {
+  if (element === undefined) {
+    return;
+  }
+  void nextTick(async () => {
+    const page = pages.value[element.page - 1];
+    if (page === undefined || element.id == null) {
+      return;
+    }
+    page.isVisible = true;
+    await nextTick();
+    pageBackgroundRef.value
+      ?.querySelector(`#${CSS.escape(`element-${element.id}`)}`)
+      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  });
 }
 
 function insertPelastikon() {
@@ -3267,7 +3313,7 @@ function addQuantitativeNeume(
   quantitativeNeume: QuantitativeNeume,
   secondaryGorgonNeume: GorgonNeume | null = null,
 ) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3295,12 +3341,12 @@ function addQuantitativeNeume(
 
   switch (entryMode.value) {
     case EntryMode.Auto:
-      if (!isLastElement(selectedElement.value) && !moveRight()) {
+      if (selectedElement.value != null && !moveRight()) {
         return;
       }
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element, activeElements.value.length);
         selectedElement.value = element;
       } else {
         if (selectedElement.value.elementType === ElementType.Note) {
@@ -3330,24 +3376,21 @@ function addQuantitativeNeume(
       }
       break;
     case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        if (selectedElement.value.elementType === ElementType.Note) {
-          const selectedElementAsNote = selectedElement.value as NoteElement;
+      if (selectedElement.value?.elementType === ElementType.Note) {
+        const selectedElementAsNote = selectedElement.value as NoteElement;
 
-          element.isMelisma = selectedElementAsNote.isMelisma;
-          element.isHyphen = selectedElementAsNote.isHyphen;
-        }
-
-        addScoreElement(element, selectedElementIndex.value + 1);
+        element.isMelisma = selectedElementAsNote.isMelisma;
+        element.isHyphen = selectedElementAsNote.isHyphen;
       }
+
+      insertScoreElement(element, insertionIndexAfterSelection());
       selectedElement.value = element;
       break;
 
     case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element, activeElements.value.length);
+        selectedElement.value = element;
       } else if (selectedElement.value.elementType === ElementType.Note) {
         if (
           (selectedElement.value as NoteElement).quantitativeNeume !==
@@ -3401,7 +3444,7 @@ function addNeumeCombination(combo: NeumeCombination) {
 }
 
 function addAutoMartyria(alignRight?: boolean, note?: Note) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3417,8 +3460,8 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
     case EntryMode.Auto:
       moveRight();
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element, activeElements.value.length);
         selectedElement.value = element;
       } else {
         if (selectedElement.value.elementType != ElementType.Martyria) {
@@ -3427,16 +3470,13 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
       }
       break;
     case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        addScoreElement(element, selectedElementIndex.value + 1);
-      }
+      insertScoreElement(element, insertionIndexAfterSelection());
       selectedElement.value = element;
       break;
     case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element, activeElements.value.length);
+        selectedElement.value = element;
       } else if (selectedElement.value.elementType != ElementType.Martyria) {
         selectedElement.value = switchToMartyria(selectedElement.value);
       }
@@ -3447,7 +3487,7 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
 }
 
 function addTempo(neume: TempoSign) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3461,8 +3501,8 @@ function addTempo(neume: TempoSign) {
     case EntryMode.Auto:
       moveRight();
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element, activeElements.value.length);
         selectedElement.value = element;
       } else {
         if (selectedElement.value.elementType === ElementType.Tempo) {
@@ -3477,16 +3517,13 @@ function addTempo(neume: TempoSign) {
       }
       break;
     case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        addScoreElement(element, selectedElementIndex.value + 1);
-      }
+      insertScoreElement(element, insertionIndexAfterSelection());
       selectedElement.value = element;
       break;
     case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element, activeElements.value.length);
+        selectedElement.value = element;
       } else if (selectedElement.value.elementType === ElementType.Tempo) {
         if ((selectedElement.value as TempoElement).neume !== neume) {
           updateTempo(selectedElement.value as TempoElement, {
@@ -3503,18 +3540,19 @@ function addTempo(neume: TempoSign) {
 }
 
 function addDropCap(after: boolean) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
   const element = new DropCapElement();
   element.lineSpan = score.value.pageSetup.dropCapDefaultLineSpan;
 
-  if (after && !isLastElement(selectedElement.value)) {
-    addScoreElement(element, selectedElementIndex.value + 1);
-  } else {
-    addScoreElement(element, selectedElementIndex.value);
-  }
+  insertScoreElement(
+    element,
+    after || selectedElement.value == null
+      ? insertionIndexAfterSelection()
+      : selectedElementIndex.value,
+  );
 
   selectedElement.value = element;
   save();
@@ -3571,7 +3609,7 @@ function publishHistoryState(state: HistoryState) {
     )
   ) {
     workspace.activeFootnoteId = null;
-    workspace.selectedElement = workspace.score.staff.elements.at(-1)!;
+    workspace.selectedElement = null;
     workspace.selectedLyrics = null;
     workspace.selectedAnnotationElement = null;
     workspace.selectedAlternateLineElement = null;
@@ -3609,9 +3647,12 @@ function openFootnote(
     return;
   }
   page.isVisible = true;
-  selectedElement.value = footnote.staff.elements.at(
-    footnote.staff.elements.length > 1 ? -2 : -1,
-  )!;
+  const last = footnote.staff.elements.at(-1);
+  if (last === undefined) {
+    activateFootnote(footnote.id);
+  } else {
+    selectedElement.value = last;
+  }
   if (selectedElement.value instanceof RichTextBoxElement) {
     focusSelectedRichTextBoxEditor(selectedElement.value);
   }
@@ -3648,7 +3689,7 @@ function togglePageBreak() {
   if (!isMainStaff.value) {
     return;
   }
-  if (selectedElement.value && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value) {
     commandService.value.execute(
       scoreElementCommandFactory.create('update-properties', {
         target: selectedElement.value,
@@ -3665,7 +3706,7 @@ function togglePageBreak() {
 }
 
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
-  if (selectedElement.value && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value) {
     // Requesting the alignment a break already has removes it; requesting the
     // other alignment switches the break rather than clearing it.
     const lineBreak = !(
@@ -3835,7 +3876,7 @@ function getTextBoxComponentRefs<T>(
     components.push(component);
   }
 
-  for (let pageIndex = 0; pageIndex < filteredPages.value.length; pageIndex++) {
+  for (let pageIndex = 0; pageIndex < pages.value.length; pageIndex++) {
     const pageContent = getPageContent(pageIndex);
     if (pageContent == null) {
       continue;
@@ -4158,14 +4199,7 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (
-    event.code === 'Escape' &&
-    selectedWorkspace.value.activeFootnoteId !== null &&
-    selectedElement.value instanceof RichTextBoxElement &&
-    isTextInputFocused()
-  ) {
-    flushPendingRichTextEditors(selectedWorkspace.value);
-    blurActiveElement();
+  if (event.code === 'Escape' && onEscape()) {
     event.preventDefault();
     return;
   }
@@ -4251,17 +4285,92 @@ function onKeydown(event: KeyboardEvent) {
     return onKeydownLyrics(event);
   }
 
-  if (selectedElement.value?.elementType === ElementType.DropCap) {
-    return onKeydownDropCap(event);
+  // A text element that is selected but not being edited is handled like any
+  // other element.
+  if (isTextInputFocused()) {
+    if (selectedElement.value?.elementType === ElementType.DropCap) {
+      return onKeydownDropCap(event);
+    }
+
+    if (selectedElement.value?.elementType === ElementType.TextBox) {
+      return onKeydownTextBox(event);
+    }
+
+    return;
   }
 
-  if (selectedElement.value?.elementType === ElementType.TextBox) {
-    return onKeydownTextBox(event);
+  if (event.code === 'Enter' && resumeTextEditing()) {
+    event.preventDefault();
+    return;
   }
 
-  if (!isTextInputFocused()) {
-    return onKeydownNeume(event);
+  return onKeydownNeume(event);
+}
+
+// Escape steps out one level: stop editing a text element (it stays selected),
+// then clear the selection, then leave the active footnote.
+function onEscape() {
+  if (selectedLyrics.value != null) {
+    return false;
   }
+
+  if (
+    isTextInputFocused() &&
+    pageBackgroundRef.value?.contains(document.activeElement)
+  ) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    blurActiveElement();
+    return true;
+  }
+
+  if (!isNothingSelected()) {
+    clearSelection();
+    return true;
+  }
+
+  if (selectedWorkspace.value.activeFootnoteId !== null) {
+    activateFootnote(null);
+    return true;
+  }
+
+  return false;
+}
+
+function resumeTextEditing() {
+  const element = selectedElement.value;
+
+  if (element instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(element);
+    return true;
+  }
+
+  if (element instanceof TextBoxElement || element instanceof DropCapElement) {
+    getElementComponentForElement<
+      InstanceType<typeof DropCap | typeof TextBox>
+    >(element)?.focus();
+    return true;
+  }
+
+  return false;
+}
+
+// Clicking blank page space reaches the end of the main staff.
+function onPageBackgroundClick() {
+  if (!printMode.value) {
+    activateFootnote(null);
+  }
+}
+
+// Make a footnote (or the main staff, for null) the active staff with nothing
+// selected, so that typing appends to it.
+function activateFootnote(id: string | null) {
+  const workspace = selectedWorkspace.value;
+  if (workspace.activeFootnoteId !== id) {
+    flushPendingRichTextEditors(workspace);
+    flushLyricsAssignment(workspace);
+  }
+  clearSelection();
+  workspace.activeFootnoteId = id;
 }
 
 function onKeydownNeume(event: KeyboardEvent) {
@@ -4282,7 +4391,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     switch (event.code) {
       case 'End':
         if (selectedWorkspace.value.activeFootnoteId !== null) {
-          selectedElement.value = activeElements.value.at(-1)!;
+          clearSelection();
           handled = true;
         }
         break;
@@ -4335,12 +4444,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
   }
 
-  if (
-    selectedElement.value != null &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.altKey
-  ) {
+  if (canInsertElement() && !event.ctrlKey && !event.metaKey && !event.altKey) {
     if (neumeKeyboard.isModifier(event.code)) {
       keyboardModifier.value = event.code;
       handled = true;
@@ -4355,7 +4459,7 @@ function onKeydownNeume(event: KeyboardEvent) {
       handled = true;
 
       if (quantitativeMapping.acceptsLyricsOption != null) {
-        if (selectedElement.value.elementType === ElementType.Note) {
+        if (selectedElement.value?.elementType === ElementType.Note) {
           throttled.updateNoteAndSave(selectedElement.value as NoteElement, {
             acceptsLyrics: quantitativeMapping.acceptsLyricsOption,
           });
@@ -4402,7 +4506,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
 
     if (
-      selectedElement.value.elementType === ElementType.Note &&
+      selectedElement.value?.elementType === ElementType.Note &&
       !event.repeat
     ) {
       const noteElement = selectedElement.value as NoteElement;
@@ -4555,7 +4659,7 @@ function onKeydownNeume(event: KeyboardEvent) {
         });
       }
     } else if (
-      selectedElement.value.elementType === ElementType.Martyria &&
+      selectedElement.value?.elementType === ElementType.Martyria &&
       !event.repeat
     ) {
       const martyriaElement = selectedElement.value as MartyriaElement;
@@ -5019,31 +5123,20 @@ function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   };
 }
 
-const canCutCopySelected = computed(
-  () => getSelectedNonEmptyElements().length > 0,
-);
+const canCutCopySelected = computed(() => getSelectedElements().length > 0);
 
 const canPasteSelected = computed(
-  () => clipboard.value.elements.length > 0 && selectedElement.value != null,
+  () => clipboard.value.elements.length > 0 && canInsertElement(),
 );
 
-const canSelectAllElements = computed(() =>
-  activeElements.value.some(
-    (element) => element.elementType !== ElementType.Empty,
-  ),
-);
+const canSelectAllElements = computed(() => activeElements.value.length > 0);
 
-function getSelectedNonEmptyElements() {
+function getSelectedElements() {
   if (selectionRange.value != null) {
-    return [...selectedRangeElements.value].filter(
-      (element) => element.elementType !== ElementType.Empty,
-    );
+    return [...selectedRangeElements.value];
   }
 
-  if (
-    selectedElement.value != null &&
-    selectedElement.value.elementType !== ElementType.Empty
-  ) {
+  if (selectedElement.value != null) {
     return [selectedElement.value];
   }
 
@@ -5057,7 +5150,7 @@ function onCutScoreElements() {
       selectionRange.value.end,
     );
 
-    const elementsToCut = getSelectedNonEmptyElements();
+    const elementsToCut = getSelectedElements();
 
     clipboard.value = createClipboardState(elementsToCut);
 
@@ -5065,31 +5158,24 @@ function onCutScoreElements() {
 
     refreshStaffLyrics();
 
-    selectedElement.value =
-      activeElements.value[Math.min(start, activeElements.value.length - 1)];
+    selectedElement.value = activeElements.value[start] ?? null;
 
     save();
-  } else if (
-    selectedElement.value != null &&
-    selectedElement.value.elementType !== ElementType.Empty
-  ) {
+  } else if (selectedElement.value != null) {
     const currentIndex = selectedElementIndex.value;
 
     clipboard.value = createClipboardState([selectedElement.value]);
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value =
-      activeElements.value[
-        Math.min(currentIndex, activeElements.value.length - 1)
-      ];
+    selectedElement.value = activeElements.value[currentIndex] ?? null;
 
     save();
   }
 }
 
 function onCopyScoreElements() {
-  const elementsToCopy = getSelectedNonEmptyElements();
+  const elementsToCopy = getSelectedElements();
 
   if (elementsToCopy.length > 0) {
     clipboard.value = createClipboardState(elementsToCopy);
@@ -5170,7 +5256,7 @@ function onPasteScoreElements(includeLyrics: boolean) {
     toast.error(t(($) => $.menu.footnotes.nested, { ns: 'menu' }));
     return;
   }
-  if (clipboard.value.elements.length > 0 && selectedElement.value != null) {
+  if (clipboard.value.elements.length > 0 && canInsertElement()) {
     switch (entryMode.value) {
       case EntryMode.Insert:
         onPasteScoreElementsInsert(includeLyrics);
@@ -5186,13 +5272,11 @@ function onPasteScoreElements(includeLyrics: boolean) {
 }
 
 function onPasteScoreElementsInsert(includeLyrics: boolean) {
-  if (selectedElement.value == null || clipboard.value.elements.length === 0) {
+  if (clipboard.value.elements.length === 0) {
     return;
   }
 
-  const insertAtIndex = isLastElement(selectedElement.value)
-    ? selectedElementIndex.value
-    : selectedElementIndex.value + 1;
+  const insertAtIndex = insertionIndexAfterSelection();
 
   const {
     importedStylesCommand,
@@ -5219,11 +5303,12 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
   refreshStaffLyrics();
 
   selectedElement.value = newElements.at(-1)!;
+  scrollElementIntoView(newElements[0]);
   save();
 }
 
 function onPasteScoreElementsEdit(includeLyrics: boolean) {
-  if (selectedElement.value == null || clipboard.value.elements.length === 0) {
+  if (clipboard.value.elements.length === 0) {
     return;
   }
 
@@ -5238,7 +5323,8 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     commands.push(importedStylesCommand);
   }
 
-  let currentIndex = selectedElementIndex.value;
+  const startIndex = insertionIndexOrSelection();
+  let currentIndex = startIndex;
 
   for (const clipboardElement of pastedElements) {
     const currentElement = activeElements.value[currentIndex];
@@ -5252,7 +5338,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
       commands.push(...footnoteRemovalCommands(score.value, [currentElement]));
     }
 
-    if (currentIndex >= activeElements.value.length - 1) {
+    if (currentIndex >= activeElements.value.length) {
       commands.push(
         scoreElementCommandFactory.create('add-to-collection', {
           elements: [clipboardElement],
@@ -5417,12 +5503,17 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     refreshStaffLyrics();
   }
 
+  if (selectedElement.value == null) {
+    selectedElement.value = pastedElements.at(-1)!;
+  }
+  scrollElementIntoView(activeElements.value[startIndex]);
+
   save();
 }
 
 function onPasteScoreElementsAuto(includeLyrics: boolean) {
   moveRight();
-  const currentIndex = selectedElementIndex.value;
+  const currentIndex = insertionIndexOrSelection();
 
   onPasteScoreElementsEdit(includeLyrics);
 
@@ -5456,6 +5547,8 @@ function moveLeft() {
     index = activeElements.value.indexOf(selectedElement.value);
   } else if (selectionRange.value) {
     index = selectionRange.value.end;
+  } else if (isNothingSelected()) {
+    index = activeElements.value.length;
   }
 
   if (index - 1 >= 0 && isNavigableElement(activeElements.value[index - 1])) {
@@ -5492,16 +5585,23 @@ function moveRight() {
     index = selectionRange.value.end;
   }
 
+  const isLast = index === activeElements.value.length - 1;
+
   if (
     index >= 0 &&
-    index + 1 < activeElements.value.length &&
-    isNavigableElement(activeElements.value[index + 1])
+    (isLast || isNavigableElement(activeElements.value[index + 1]))
   ) {
     // If the currently selected element is a drop cap, blur it first
     if (selectedElement.value?.elementType === ElementType.DropCap) {
       getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
     } else if (selectedElement.value?.elementType === ElementType.TextBox) {
       getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
+    }
+
+    // Moving right from the last element reaches the end of the staff.
+    if (isLast) {
+      clearSelection();
+      return true;
     }
 
     selectedElement.value = activeElements.value[index + 1];
@@ -5545,7 +5645,7 @@ function moveSelectionLeft() {
 function moveSelectionRight() {
   if (selectionRange.value != null) {
     if (
-      selectionRange.value.end + 1 < activeElements.value.length - 1 &&
+      selectionRange.value.end + 1 < activeElements.value.length &&
       navigableElements.includes(
         activeElements.value[selectionRange.value.end + 1].elementType,
       )
@@ -5554,7 +5654,7 @@ function moveSelectionRight() {
     }
   } else if (
     selectedElement.value != null &&
-    selectedElementIndex.value + 1 < activeElements.value.length - 1 &&
+    selectedElementIndex.value + 1 < activeElements.value.length &&
     navigableElements.includes(
       activeElements.value[selectedElementIndex.value + 1].elementType,
     )
@@ -6065,9 +6165,6 @@ async function load() {
 
   addWorkspace(workspace);
   selectedWorkspace.value = workspace;
-
-  selectedElement.value =
-    score.value.staff.elements[score.value.staff.elements.length - 1];
 }
 
 /**
@@ -7473,22 +7570,16 @@ function deleteSelectedElement() {
     return;
   }
 
-  if (selectedElement.value != null && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value != null) {
     const index = selectedElementIndex.value;
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value =
-      activeElements.value[
-        selectedWorkspace.value.activeFootnoteId !== null &&
-        activeElements.value.length > 1
-          ? Math.min(index, activeElements.value.length - 2)
-          : index
-      ];
+    selectedElement.value = activeElements.value[index] ?? null;
 
     save();
   } else if (selectionRange.value != null) {
-    const elementsToDelete = getSelectedNonEmptyElements();
+    const elementsToDelete = getSelectedElements();
 
     commandService.value.executeAsBatch(removalCommands(elementsToDelete));
 
@@ -7499,8 +7590,7 @@ function deleteSelectedElement() {
       selectionRange.value.end,
     );
 
-    selectedElement.value =
-      activeElements.value[Math.min(start, activeElements.value.length - 1)];
+    selectedElement.value = activeElements.value[start] ?? null;
 
     save();
   }
@@ -7518,12 +7608,15 @@ function deletePreviousElement() {
     return;
   }
 
-  if (
-    selectedElement.value &&
-    selectedElementIndex.value > 0 &&
-    isNavigableElement(activeElements.value[selectedElementIndex.value - 1])
-  ) {
-    removeScoreElement(activeElements.value[selectedElementIndex.value - 1]);
+  // With nothing selected, the previous element is the last one.
+  const index = selectedElement.value
+    ? selectedElementIndex.value
+    : isNothingSelected()
+      ? activeElements.value.length
+      : -1;
+
+  if (index > 0 && isNavigableElement(activeElements.value[index - 1])) {
+    removeScoreElement(activeElements.value[index - 1]);
 
     save();
   }
@@ -8162,14 +8255,13 @@ function performZoomToFit() {
 }
 
 function getCurrentPhysicalPageNumber() {
-  if (filteredPages.value.length === 0) {
+  if (pages.value.length === 0) {
     return 1;
   }
 
-  const pageIndex =
-    clamp(currentPageNumber.value, 1, filteredPages.value.length) - 1;
+  const pageIndex = clamp(currentPageNumber.value, 1, pages.value.length) - 1;
 
-  return filteredPages.value[pageIndex].physicalPageNumber;
+  return pages.value[pageIndex].physicalPageNumber;
 }
 
 function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
@@ -8445,8 +8537,6 @@ function onFileMenuNewScore() {
 
   selectedWorkspace.value = workspace;
 
-  selectedElement.value =
-    score.value.staff.elements[score.value.staff.elements.length - 1];
   save();
 }
 
@@ -8556,7 +8646,7 @@ async function awaitBrowserPrintPages(workspace: Workspace) {
         return isLayoutCurrent;
       }
       const pageContents = scorePageContents.value ?? [];
-      if (pageContents.length !== filteredPages.value.length) {
+      if (pageContents.length !== pages.value.length) {
         break;
       }
 
@@ -9128,17 +9218,6 @@ function onFileMenuInsertAlternateLine() {
   }
 }
 
-function contentInsertionIndex() {
-  return (
-    selectedElementIndex.value +
-    (selectedWorkspace.value.activeFootnoteId !== null &&
-    selectedElement.value !== null &&
-    !isLastElement(selectedElement.value)
-      ? 1
-      : 0)
-  );
-}
-
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
@@ -9147,7 +9226,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
       ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
       : getTextBoxParagraphStyleFallbackId(element.inline);
 
-  addScoreElement(element, contentInsertionIndex());
+  insertScoreElement(element, insertionIndexAfterSelection());
 
   selectedElement.value = element;
 
@@ -9170,7 +9249,7 @@ function onFileMenuInsertRichTextBox() {
     setRichTextLanguage(element, 'ar', 'rtl');
   }
 
-  addScoreElement(element, contentInsertionIndex());
+  insertScoreElement(element, insertionIndexAfterSelection());
 
   selectedElement.value = element;
 
@@ -9180,7 +9259,7 @@ function onFileMenuInsertRichTextBox() {
 function onFileMenuInsertModeKey() {
   const element = createDefaultModeKey(score.value.pageSetup);
 
-  addScoreElement(element, contentInsertionIndex());
+  insertScoreElement(element, insertionIndexAfterSelection());
 
   selectedElement.value = element;
 
@@ -9204,7 +9283,7 @@ function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
   element.imageWidth = args.imageWidth;
   element.imageHeight = args.imageHeight;
 
-  addScoreElement(element, contentInsertionIndex());
+  insertScoreElement(element, insertionIndexAfterSelection());
 
   selectedElement.value = element;
 
@@ -9350,18 +9429,18 @@ function onFileMenuUndo() {
     refreshLyricsAfterHistoryReplay();
 
     if (currentIndex > -1) {
-      // If the selected element was removed during the undo process, choose a new one
-      const clampedIndex = Math.min(
-        currentIndex,
-        activeElements.value.length - 1,
-      );
+      // If the selected element was removed during the undo process, choose a
+      // new one, or the end of the staff.
+      const element = activeElements.value[currentIndex] ?? null;
 
-      if (selectedElement.value !== activeElements.value[clampedIndex]) {
-        selectedElement.value = activeElements.value[clampedIndex];
+      if (selectedElement.value !== element) {
+        selectedElement.value = element;
       }
 
       // Undo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
+      if (element != null) {
+        element.keyHelper++;
+      }
     }
   });
 
@@ -9379,18 +9458,18 @@ function onFileMenuRedo() {
     refreshLyricsAfterHistoryReplay();
 
     if (currentIndex > -1) {
-      // If the selected element was removed during the redo process, choose a new one
-      const clampedIndex = Math.min(
-        currentIndex,
-        activeElements.value.length - 1,
-      );
+      // If the selected element was removed during the redo process, choose a
+      // new one, or the end of the staff.
+      const element = activeElements.value[currentIndex] ?? null;
 
-      if (selectedElement.value !== activeElements.value[clampedIndex]) {
-        selectedElement.value = activeElements.value[clampedIndex];
+      if (selectedElement.value !== element) {
+        selectedElement.value = element;
       }
 
       // Redo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
+      if (element != null) {
+        element.keyHelper++;
+      }
     }
   });
 
@@ -9457,7 +9536,7 @@ async function onFileMenuCopyAsHtml() {
 
   let copiedElements: ScoreElement[] = [];
 
-  const selectedScoreElements = getSelectedNonEmptyElements();
+  const selectedScoreElements = getSelectedElements();
 
   if (selectedScoreElements.length > 0) {
     copiedElements = selectedScoreElements;
@@ -10290,7 +10369,7 @@ const contextMenuImageBox = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isImageBoxElement);
 });
 
-function getContextMenuSelectedNonEmptyElements() {
+function getContextMenuSelectedElements() {
   const element = scoreContextMenuTarget.value;
 
   if (element == null) {
@@ -10298,14 +10377,14 @@ function getContextMenuSelectedNonEmptyElements() {
   }
 
   if (selectionRange.value != null && isSelected(element)) {
-    return getSelectedNonEmptyElements();
+    return getSelectedElements();
   }
 
-  return element.elementType !== ElementType.Empty ? [element] : [];
+  return [element];
 }
 
 function getContextMenuSelectedNoteElements() {
-  const selectedElements = getContextMenuSelectedNonEmptyElements();
+  const selectedElements = getContextMenuSelectedElements();
 
   if (
     selectedElements.length < 2 ||
@@ -10326,7 +10405,7 @@ function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
     return null;
   }
 
-  const selectedElements = getContextMenuSelectedNonEmptyElements();
+  const selectedElements = getContextMenuSelectedElements();
 
   return selectedElements.length > 0 && selectedElements.every(predicate)
     ? element
@@ -10648,7 +10727,7 @@ function renderTabLabel(tab: Tab) {
                   @wheel="onPageBackgroundWheel"
                 >
                   <div
-                    v-for="(page, pageIndex) in filteredPages"
+                    v-for="(page, pageIndex) in pages"
                     :key="`page-${pageIndex}`"
                     ref="pagesRef"
                     v-observe-visibility="{
@@ -10659,6 +10738,7 @@ function renderTabLabel(tab: Tab) {
                     class="page"
                     :style="getPageStyle(page)"
                     :class="{ print: printMode }"
+                    @click.self="onPageBackgroundClick"
                   >
                     <ScorePageContent
                       v-if="page.isVisible || printMode"
@@ -10933,7 +11013,13 @@ function renderTabLabel(tab: Tab) {
         </ButtonGroupText>
       </ButtonGroup>
       <ButtonGroup>
-        <ButtonGroupText data-slot="button-group-text">
+        <ButtonGroupText
+          v-if="statusEndOfContentLabel !== null"
+          data-slot="button-group-text"
+        >
+          {{ statusEndOfContentLabel }}
+        </ButtonGroupText>
+        <ButtonGroupText v-else data-slot="button-group-text">
           {{
             $t(($) => $.toolbar.status.line, {
               ns: 'toolbar',
@@ -10942,7 +11028,10 @@ function renderTabLabel(tab: Tab) {
             })
           }}
         </ButtonGroupText>
-        <ButtonGroupText data-slot="button-group-text">
+        <ButtonGroupText
+          v-if="statusEndOfContentLabel === null"
+          data-slot="button-group-text"
+        >
           {{
             $t(($) => $.toolbar.status.column, {
               ns: 'toolbar',
@@ -11068,7 +11157,7 @@ function renderTabLabel(tab: Tab) {
       v-model:page-range="selectedWorkspace.exportPageRange"
       :loading="exportInProgress"
       :default-format="exportFormat"
-      :page-count="exportPageCount"
+      :page-count="pageCount"
       :show-item-in-folder-supported="ipcService.isShowItemInFolderSupported()"
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"

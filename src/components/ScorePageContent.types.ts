@@ -17,6 +17,7 @@ export interface ScorePageInteraction {
   selectedHeaderFooterElement: ScoreElement | null;
   selectedAnnotationElement: AnnotationElement | null;
   selectedAlternateLineElement: AlternateLineElement | null;
+  activeFootnoteId: string | null;
   isLyricsLocked(element: ScoreElement): boolean;
 }
 
@@ -24,6 +25,7 @@ export interface ScorePageInteraction {
 export interface ScorePageEvents {
   selectElement: [element: ScoreElement];
   returnToFootnoteReference: [element: ScoreElement];
+  activateFootnote: [id: string];
   selectLyrics: [element: NoteElement];
   selectHeaderFooter: [element: ScoreElement];
   selectHeaderRichTextBox: [pageIndex: number];

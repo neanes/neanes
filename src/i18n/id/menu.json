@@ -110,6 +110,8 @@
     "unsupportedExport": "Format ekspor ini belum mendukung catatan kaki. Gunakan PDF atau PNG untuk mempertahankannya.",
     "lyrics": "Lirik Catatan Kaki {{number}}",
     "pasteUnavailable": "Referensi catatan kaki hanya dapat ditempel dari Neanes ke kotak teks kaya di partitur utama.",
-    "properties": "Properti Catatan Kaki…"
+    "properties": "Properti Catatan Kaki…",
+    "emptyPlaceholder": "Catatan kaki kosong",
+    "activePlaceholder": "Ketik neuma atau sisipkan teks"
   }
 }

@@ -8,7 +8,6 @@ import type { BrowserWindow } from 'electron';
 import { renderPdf } from '../../../electron/main/export/renderPdf';
 import { renderSnapshot } from '../../../electron/main/export/renderSnapshot';
 import {
-  EmptyElement,
   RichTextBoxElement,
   TextBoxElement,
 } from '../../../src/models/save/v1/Element';
@@ -73,7 +72,7 @@ export async function checkPdfSettling(options: {
   footer.contentRight =
     '<p>Footer right</p><p>Second line</p><p>Third line</p><p>Fourth line</p>';
   footer.height = 1;
-  snapshot.score.staff.elements = [plain, rich, new EmptyElement()];
+  snapshot.score.staff.elements = [plain, rich];
   Object.assign(snapshot.score.pageSetup, {
     pageSize: 'Letter',
     pageWidth: 816,

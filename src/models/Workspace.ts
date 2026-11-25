@@ -14,7 +14,6 @@ import type {
   NoteElement,
   ScoreElement,
 } from './Element';
-import { ElementType } from './Element';
 import type { LyricSetup } from './LyricSetup';
 import { Score } from './Score';
 import type { ScoreElementSelectionRange } from './ScoreElementSelectionRange';
@@ -189,7 +188,7 @@ export function assignMissingElementIds(
 ) {
   for (const staff of workspace.score.staves) {
     for (const element of staff.elements) {
-      if (element.id == null && element.elementType !== ElementType.Empty) {
+      if (element.id == null) {
         element.id = workspace.nextId;
       }
     }

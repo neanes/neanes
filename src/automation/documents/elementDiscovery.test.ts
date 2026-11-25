@@ -8,7 +8,6 @@ import {
   AnnotationElement,
   DropCapElement,
   ElementType,
-  EmptyElement,
   ImageBoxElement,
   MartyriaElement,
   ModeKeyElement,
@@ -273,7 +272,6 @@ describe('typed element discovery', () => {
       new ImageBoxElement(),
       new AnnotationElement(),
       new AlternateLineElement(),
-      new EmptyElement(),
     ];
     // Cover both explicit normal resets and inherited line heights.
     (score.staff.elements[3] as TextBoxElement).lineHeight = null;
@@ -327,7 +325,7 @@ describe('typed element discovery', () => {
     });
     expect(elementCatalogSchema.parse(catalog)).toEqual(catalog);
     expect(catalog.neumes!.QuantitativeNeume).toContain('Oligon');
-    expect(catalog.elementTypes).toHaveLength(11);
+    expect(catalog.elementTypes).toHaveLength(10);
     const noteSchema = catalog.elementTypes.find(
       (type) => type.elementType === 'Note',
     )!.properties!;
@@ -459,7 +457,6 @@ describe('typed element discovery', () => {
       spaceAfter: 0,
     });
     expect(selected.elements[1].properties).toEqual({ lineHeight: null });
-    expect(selected.elements[2].properties).toEqual({});
     expect(z.strictObject(elementPageShape).parse(selected)).toEqual(selected);
     expect(selected.elements.map((e) => e.elementRef)).toEqual(
       full.elements.map((e) => e.elementRef),
@@ -662,11 +659,11 @@ describe('typed element discovery', () => {
     });
     expect(second.elements.map((e) => e.index)).toEqual([2]);
     expect(second.nextOffset).toBeNull();
-    expect(reader.read(score, { ...query(), start: 4 }).elements).toEqual([]);
+    expect(reader.read(score, { ...query(), start: 3 }).elements).toEqual([]);
     for (const range of [
       { start: 3, end: 2 },
-      { start: 5 },
-      { end: 5 },
+      { start: 4 },
+      { end: 4 },
       { offset: 5 },
     ]) {
       expect(() => reader.read(score, { ...query(), ...range })).toThrow(

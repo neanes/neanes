@@ -345,9 +345,6 @@ export const elementPropertySchemas = {
     bpm: z.number(),
     spaceAfter: z.number(),
   }),
-  [ElementType.Empty]: z.strictObject({
-    ...breaks,
-  }),
   [ElementType.TextBox]: z.strictObject({
     ...breaks,
     paragraphStyleId: z.string(),

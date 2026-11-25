@@ -5,7 +5,6 @@ import {
   AnnotationElement,
   DropCapElement,
   ElementType,
-  EmptyElement,
   ImageBoxElement,
   LineBreakType,
   MartyriaElement,
@@ -57,7 +56,6 @@ import {
   AnnotationElement as AnnotationElement_v1,
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
-  EmptyElement as EmptyElement_v1,
   ImageBoxElement as ImageBoxElement_v1,
   LineBreakType as LineBreakType_v1,
   MartyriaElement as MartyriaElement_v1,
@@ -1331,15 +1329,12 @@ export class SaveService {
   public static SaveElements(elements: ScoreElement[]): ScoreElement_v1[] {
     const result: ScoreElement_v1[] = [];
     for (const e of elements) {
-      let element: ScoreElement_v1 = new EmptyElement_v1();
+      let element: ScoreElement_v1;
 
       switch (e.elementType) {
         case ElementType.DropCap:
           element = new DropCapElement_v1();
           this.SaveDropCap(element as DropCapElement_v1, e as DropCapElement);
-          break;
-        case ElementType.Empty:
-          element = new EmptyElement_v1();
           break;
         case ElementType.Martyria:
           element = new MartyriaElement_v1();
@@ -1380,6 +1375,7 @@ export class SaveService {
           break;
         default:
           console.warn('Unrecognized element in score', e.elementType);
+          continue;
       }
 
       element.id = e.id ?? undefined;
@@ -2141,7 +2137,14 @@ export class SaveService {
     const result: ScoreElement[] = [];
     for (let i = 0; i < elements.length; i++) {
       const e = elements[i];
-      let element: ScoreElement = new EmptyElement();
+
+      // Files used to end every staff with an Empty sentinel element. Any
+      // break it carried is discarded.
+      if ((e.elementType as string) === 'Empty') {
+        continue;
+      }
+
+      let element: ScoreElement;
 
       switch (e.elementType) {
         case ElementType_v1.DropCap:
@@ -2151,9 +2154,6 @@ export class SaveService {
             e as DropCapElement_v1,
             pageSetup,
           );
-          break;
-        case ElementType_v1.Empty:
-          element = new EmptyElement();
           break;
         case ElementType_v1.Martyria:
           element = new MartyriaElement();
@@ -2210,6 +2210,7 @@ export class SaveService {
             'v1',
             e.elementType,
           );
+          continue;
       }
 
       const legacyElement = e as ScoreElement_v1 &

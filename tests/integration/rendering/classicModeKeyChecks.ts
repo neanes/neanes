@@ -135,16 +135,34 @@ export async function checkClassicModeKeys(options: {
         glyphs: string;
         fonts: string[];
         finite: boolean;
+        pitchGapWidth: number | null;
+        pitchWordSpaceWidth: number | null;
       }[] = await window.webContents.executeJavaScript(`
+          const context = document.createElement('canvas').getContext('2d');
           [...document.querySelectorAll('.mode-key-container')].map(key => {
             const signature = key.querySelector('.mode-key-signature');
             const runs = [...signature.querySelectorAll('.mode-key-run')];
             const rect = key.getBoundingClientRect();
+            const trailing = signature.querySelector('.pitch-trailing');
+            const note = Array.from(
+              trailing?.parentElement.querySelectorAll('.starting-pitch-note > :not(.pitch-mark)') ?? [],
+            ).at(-1);
+            let pitchWordSpaceWidth = null;
+            if (note && !note.classList.contains('neume')) {
+              const font = getComputedStyle(note);
+              context.font = [font.fontStyle, font.fontWeight, font.fontSize, font.fontFamily].join(' ');
+              context.fontVariantCaps = font.fontVariantCaps;
+              pitchWordSpaceWidth = context.measureText(' ').width;
+            }
             return {
               textRuns: runs.filter(run => !run.querySelector('.neume')).length,
               glyphs: [...signature.querySelectorAll('.neume')].map(glyph => glyph.textContent).join(''),
               fonts: runs.map(run => getComputedStyle(run).fontFamily),
               finite: [rect.width, rect.height, rect.top].every(Number.isFinite) && rect.height > 0,
+              pitchGapWidth: note
+                ? trailing.getBoundingClientRect().left - note.parentElement.getBoundingClientRect().right
+                : null,
+              pitchWordSpaceWidth,
             };
           })
         `);
@@ -181,6 +199,23 @@ export async function checkClassicModeKeys(options: {
           traditional.fonts.some((font) => font.includes('GFS Didot')),
           `Traditional Greek does not use GFS Didot in template ${template}`,
         );
+        const notation = modeKeyTemplates[index / 2];
+        if (notation.note != null && notation.quantitativeNeumeRight != null) {
+          // Both styles use the same Greek text appearance. Classic uses it
+          // for the word space even though its starting note is a glyph.
+          const expected = traditional.pitchWordSpaceWidth;
+          assert(
+            expected != null && expected > 0,
+            `Expected a word space width in template ${template}`,
+          );
+          for (const [offset, key] of [classic, traditional].entries()) {
+            const width = key.pitchGapWidth;
+            assert(
+              width != null && Math.abs(width - expected) < 0.05,
+              `${styleOf(index + offset)} pitch gap in template ${template} is ${width}px, expected a ${expected}px word space`,
+            );
+          }
+        }
       }
       await writeFile(
         path.join(options.output, 'classic-mode-keys.pdf'),

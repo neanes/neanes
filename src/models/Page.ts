@@ -14,6 +14,7 @@ export interface PageFootnote {
 
 export class Page {
   public lines: Line[] = [];
+  public contentTop = 0;
   public footnotes: PageFootnote[] = [];
   public footnoteRuleTop: number | null = null;
   public footnoteRuleThickness = 0;

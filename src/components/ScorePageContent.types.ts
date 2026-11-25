@@ -10,6 +10,13 @@ import type {
   TextBoxElement,
 } from '@/models/Element';
 
+// The caret is drawn before the first element (start of the staff), after the
+// last element (end of the staff), or, when the staff is empty, where its
+// first element will go. A null footnote id is the main score.
+export type InsertionCaret =
+  | { kind: 'element'; element: ScoreElement; after: boolean }
+  | { kind: 'empty'; footnoteId: string | null };
+
 export interface ScorePageInteraction {
   isSelected(element: ScoreElement): boolean;
   isAudioSelected(element: ScoreElement): boolean;
@@ -18,9 +25,8 @@ export interface ScorePageInteraction {
   selectedAnnotationElement: AnnotationElement | null;
   selectedAlternateLineElement: AlternateLineElement | null;
   activeFootnoteId: string | null;
-  // The first element of the active staff when the editor is at the start of
-  // the staff. A caret is drawn before it.
-  startCaretElement: ScoreElement | null;
+  // With nothing selected, the insertion caret of the active staff.
+  insertionCaret: InsertionCaret | null;
   isLyricsLocked(element: ScoreElement): boolean;
 }
 

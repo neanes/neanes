@@ -113,7 +113,6 @@
     "lyrics": "Versurile notei de subsol {{number}}",
     "pasteUnavailable": "Referințele la note de subsol pot fi lipite doar din Neanes într-o casetă de text îmbogățit din partitura principală.",
     "properties": "Proprietățile notei de subsol…",
-    "emptyPlaceholder": "Notă de subsol goală",
-    "activePlaceholder": "Tastați neume sau inserați text"
+    "emptyPlaceholder": "Notă de subsol goală"
   }
 }

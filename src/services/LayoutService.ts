@@ -629,6 +629,8 @@ export class LayoutService {
     for (const [index, decision] of decisions.entries()) {
       const page = new Page();
       page.physicalPageNumber = index + 1;
+      page.contentTop =
+        pageSetup.topMargin + decision.reservation.extraHeaderHeightPx;
       page.footnoteOverflow = decision.footnoteOverflow;
       const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
       for (const placement of decision.lines) {
@@ -639,9 +641,7 @@ export class LayoutService {
             contentLines[placement.index],
             pageSetup,
             margins,
-            pageSetup.topMargin +
-              decision.reservation.extraHeaderHeightPx +
-              placement.top,
+            page.contentTop + placement.top,
             page.physicalPageNumber,
             page.lines.length + 1,
             previousLine,

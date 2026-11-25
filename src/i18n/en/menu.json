@@ -113,7 +113,6 @@
     "lyrics": "Footnote {{number}} Lyrics",
     "pasteUnavailable": "Footnote references can only be pasted from Neanes into a rich textbox in the main score.",
     "properties": "Footnote Properties…",
-    "emptyPlaceholder": "Empty footnote",
-    "activePlaceholder": "Type neumes or insert text"
+    "emptyPlaceholder": "Empty footnote"
   }
 }

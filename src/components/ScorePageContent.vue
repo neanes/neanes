@@ -196,18 +196,23 @@
       :key="`footnote-placeholder-${footnote.id}`"
       :data-footnote-id="footnote.id"
       class="footnote-placeholder"
+      :class="emptyCaret?.footnoteId === footnote.id ? caretClass : undefined"
       :style="footnotePlaceholderStyle(footnote)"
     >
-      {{
-        interaction?.activeFootnoteId === footnote.id
-          ? i18next.t(($) => $.menu.footnotes.activePlaceholder, {
-              ns: 'menu',
-            })
-          : i18next.t(($) => $.menu.footnotes.emptyPlaceholder, {
-              ns: 'menu',
-            })
-      }}
+      <span
+        v-if="interaction?.activeFootnoteId !== footnote.id"
+        class="placeholder-text"
+        >{{
+          i18next.t(($) => $.menu.footnotes.emptyPlaceholder, { ns: 'menu' })
+        }}</span
+      >
     </span>
+    <span
+      v-if="showEmptyScoreCaret"
+      class="empty-score-caret"
+      :class="caretClass"
+      :style="emptyScoreCaretStyle"
+    />
   </template>
   <button
     v-for="footnote in page.footnotes"
@@ -253,10 +258,7 @@
       :id="element.id === null ? undefined : `element-${element.id}`"
       :key="`element-${workspaceId}-${element.id}-${element.keyHelper}`"
       class="element-box"
-      :class="{
-        'start-caret': !printMode && interaction?.startCaretElement === element,
-        'start-caret-rtl': rtl,
-      }"
+      :class="caretElement === element ? caretClass : undefined"
       :style="getElementStyle(element)"
       @contextmenu="emit('onScoreElementContextMenu', element)"
     >
@@ -926,6 +928,41 @@ function footnotePlaceholderStyle(footnote: PageFootnote) {
     paddingInline: withZoom(4),
   };
 }
+const caret = computed(() =>
+  props.printMode ? null : (props.interaction?.insertionCaret ?? null),
+);
+const caretElement = computed(() =>
+  caret.value?.kind === 'element' ? caret.value.element : null,
+);
+const emptyCaret = computed(() =>
+  caret.value?.kind === 'empty' ? caret.value : null,
+);
+// The caret is drawn on the inline end side after the last element. With
+// physical offsets, that is the right side, mirrored for RTL scores.
+const caretClass = computed(() => {
+  const after = caret.value?.kind === 'element' && caret.value.after;
+  return after !== rtl.value
+    ? 'insertion-caret insertion-caret-right'
+    : 'insertion-caret';
+});
+// An empty main score has its caret where the first line goes on the first
+// page.
+const showEmptyScoreCaret = computed(
+  () => props.pageIndex === 0 && emptyCaret.value?.footnoteId === null,
+);
+const emptyScoreCaretStyle = computed(() => {
+  const margins = getResolvedMarginsForPage(props.page);
+  const pageSetup = props.score.pageSetup;
+  return {
+    left: rtl.value ? undefined : withZoom(margins.contentLeft),
+    right: rtl.value
+      ? withZoom(pageSetup.pageWidth - margins.contentRight)
+      : undefined,
+    top: withZoom(props.page.contentTop),
+    // With the inherited line height, one line is as tall as a neume box.
+    fontSize: withZoom(pageSetup.neumeDefaultFontSize),
+  } as CSSProperties;
+});
 const bodyMarkerTypography = computed(() =>
   footnoteMarkerStyle(props.score.paragraphStyles, 'body'),
 );
@@ -1565,13 +1602,20 @@ defineExpose({
   outline-offset: 2px;
   background: color-mix(in srgb, currentColor 3%, transparent);
 }
-.footnote-placeholder {
+.footnote-placeholder,
+.empty-score-caret {
   position: absolute;
-  white-space: nowrap;
-  font-style: italic;
-  opacity: 0.45;
   pointer-events: none;
   user-select: none;
+  /* Keeps one line of height for the caret when there is no text. */
+  min-height: 1lh;
+}
+.footnote-placeholder {
+  white-space: nowrap;
+}
+.placeholder-text {
+  font-style: italic;
+  opacity: 0.45;
 }
 .footnote-body-marker {
   display: inline-block;
@@ -1754,26 +1798,31 @@ defineExpose({
   position: absolute;
 }
 
-/* Marks the start of the staff, the insertion point before the first
-   element. */
-.element-box.start-caret::before {
+/* Marks the insertion point at the start of the staff (before the first
+   element), at the end (after the last element), or, in an empty staff, where
+   its first element will go. The box's height sets the caret's height. */
+.insertion-caret::before {
   content: '';
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(-4px * var(--zoom, 1));
+  left: var(--caret-offset, 0);
   width: max(1px, calc(2px * var(--zoom, 1)));
   background: currentColor;
   pointer-events: none;
-  animation: start-caret-blink 1s steps(1) infinite;
+  animation: insertion-caret-blink 1s steps(1) infinite;
 }
 
-.element-box.start-caret.start-caret-rtl::before {
+.insertion-caret.insertion-caret-right::before {
   left: auto;
-  right: calc(-4px * var(--zoom, 1));
+  right: var(--caret-offset, 0);
 }
 
-@keyframes start-caret-blink {
+.element-box.insertion-caret {
+  --caret-offset: calc(-4px * var(--zoom, 1));
+}
+
+@keyframes insertion-caret-blink {
   50% {
     opacity: 0;
   }

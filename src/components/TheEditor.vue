@@ -65,7 +65,10 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RecoveryDialog from '@/components/RecoveryDialog.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
-import type { ScorePageHandlers } from '@/components/ScorePageContent.types';
+import type {
+  InsertionCaret,
+  ScorePageHandlers,
+} from '@/components/ScorePageContent.types';
 import ScorePageContent from '@/components/ScorePageContent.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
@@ -2167,6 +2170,21 @@ async function initialize() {
 const { resolvedDefaultLyricsStyle, getResolvedMarginsForPage } =
   useScoreRendering(score, zoom);
 
+// With nothing selected, a caret marks the insertion slot at the start or end
+// of the active staff, so it is clear where typed neumes will go.
+const insertionCaret = computed<InsertionCaret | null>(() => {
+  if (!isNothingSelected()) {
+    return null;
+  }
+  const atStart = selectedWorkspace.value.insertAtStart;
+  const element = atStart
+    ? activeElements.value[0]
+    : activeElements.value.at(-1);
+  return element == null
+    ? { kind: 'empty', footnoteId: selectedWorkspace.value.activeFootnoteId }
+    : { kind: 'element', element, after: !atStart };
+});
+
 const pageInteraction = computed(() => ({
   isSelected,
   isAudioSelected,
@@ -2176,9 +2194,7 @@ const pageInteraction = computed(() => ({
   selectedAlternateLineElement:
     selectedWorkspace.value.selectedAlternateLineElement,
   activeFootnoteId: selectedWorkspace.value.activeFootnoteId,
-  startCaretElement: selectedWorkspace.value.insertAtStart
-    ? (activeElements.value[0] ?? null)
-    : null,
+  insertionCaret: insertionCaret.value,
   isLyricsLocked: (element: ScoreElement) =>
     staffForElement(element)?.lyrics.locked ?? true,
 }));

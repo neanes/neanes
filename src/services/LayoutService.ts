@@ -3186,6 +3186,24 @@ export class LayoutService {
       }
       return null;
     };
+    const getWordSpaceLayout = (
+      appearance: InitialMartyriaAppearance,
+    ): InitialMartyriaSeparatorLayout => {
+      const wordSpaceFont: InitialMartyriaWordSpaceFont = {
+        fontFamily: appearance.fontFamily,
+        fontStyle: appearance.fontStyle,
+        fontSize: appearance.fontSize,
+      };
+      return {
+        kind: 'wordSpace',
+        width: TextMeasurementService.getTextWidth(
+          ' ',
+          resolveFontCss(wordSpaceFont),
+          appearance.fontVariantCaps,
+        ),
+        wordSpaceFont,
+      };
+    };
     // The separator in the slot before runs[index]; index === runs.length is
     // the slot after the last run.
     const getSeparatorLayout = (
@@ -3196,24 +3214,11 @@ export class LayoutService {
         return { kind, width: 0, wordSpaceFont: null };
       }
       if (kind === 'wordSpace') {
-        const appearance =
+        return getWordSpaceLayout(
           getWordSpaceOwner(runs[index - 1]) ??
-          getWordSpaceOwner(runs[index]) ??
-          baseTextAppearance;
-        const wordSpaceFont: InitialMartyriaWordSpaceFont = {
-          fontFamily: appearance.fontFamily,
-          fontStyle: appearance.fontStyle,
-          fontSize: appearance.fontSize,
-        };
-        return {
-          kind,
-          width: TextMeasurementService.getTextWidth(
-            ' ',
-            resolveFontCss(wordSpaceFont),
-            appearance.fontVariantCaps,
-          ),
-          wordSpaceFont,
-        };
+            getWordSpaceOwner(runs[index]) ??
+            baseTextAppearance,
+        );
       }
       return {
         kind,
@@ -3327,13 +3332,22 @@ export class LayoutService {
           glyphAppearance.fontFamily,
           glyphAppearance.fontSize,
         );
+        const firstTrailingGlyph = run.cluster.trailingGlyphGroups[0]?.[0];
+        const noteToTrailingWidth =
+          firstTrailingGlyph === element.quantitativeNeumeRight ||
+          firstTrailingGlyph === element.quantitativeNeumeRight2
+            ? getWordSpaceLayout(getWordSpaceOwner(run) ?? baseTextAppearance)
+                .width
+            : trailingGlueWidth;
         const glyphStrokeOverflow = glyphAppearance.strokeWidth / 2;
         for (const [
           groupIndex,
           group,
         ] of run.cluster.trailingGlyphGroups.entries()) {
-          if (groupIndex > 0 || primary != null || secondary != null) {
+          if (groupIndex > 0) {
             width += trailingGlueWidth;
+          } else if (primary != null || secondary != null) {
+            width += noteToTrailingWidth;
           }
           const trailingGlyphText = group
             .map((neume) => glyphText(neume, glyphAppearance.fontFamily))
@@ -3363,6 +3377,7 @@ export class LayoutService {
             primary,
             secondary,
             clusterSeparatorWidth,
+            noteToTrailingWidth,
             trailingGlueWidth,
           },
         });

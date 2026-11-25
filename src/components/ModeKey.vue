@@ -121,8 +121,13 @@
                 hasPitchNote(run.cluster) &&
                 run.cluster.trailingGlyphGroups.length > 0
               "
-              class="pitch-trailing-glue"
-              :style="getPitchTrailingGlueStyle(runLayouts[index])"
+              class="pitch-note-to-trailing"
+              :style="
+                getFixedSeparatorStyle(
+                  run,
+                  runLayouts[index].pitch!.noteToTrailingWidth,
+                )
+              "
               aria-hidden="true"
             />
             <span

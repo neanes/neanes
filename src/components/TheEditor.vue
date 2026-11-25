@@ -2739,34 +2739,23 @@ function getSectionNumberForPage(pageNumber: number) {
 }
 
 function getSectionAnchorIndexForPage(pageNumber: number) {
-  const page = pages.value[pageNumber - 1];
-
-  if (page == null) {
+  if (pages.value[pageNumber - 1] == null) {
     return 0;
   }
 
-  const firstPageElement = page.lines.find((line) => line.elements.length > 0)
-    ?.elements[0];
+  const firstPageElement = getFirstElementForPage(pageNumber);
 
   if (firstPageElement) {
     return firstPageElement.index;
   }
 
   for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
-    const prevPage = pages.value[pageIndex];
+    const element = pages.value[pageIndex].lines
+      .findLast((line) => line.elements.length > 0)
+      ?.elements.at(-1);
 
-    for (
-      let lineIndex = prevPage.lines.length - 1;
-      lineIndex >= 0;
-      lineIndex--
-    ) {
-      const line = prevPage.lines[lineIndex];
-
-      const element = line.elements.at(-1);
-
-      if (element) {
-        return element.index;
-      }
+    if (element) {
+      return element.index;
     }
   }
 
@@ -3227,7 +3216,8 @@ function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
   saveEditorEnvironment();
 }
 
-// With nothing selected, inserts append to the end of the active staff.
+// With nothing selected, inserts go to the insertion slot at the start or end
+// of the active staff.
 function isNothingSelected() {
   const workspace = selectedWorkspace.value;
   return (
@@ -3266,8 +3256,8 @@ function insertionIndexOrSelection() {
     : selectedElementIndex.value;
 }
 
-// Clears the selection, which leaves the editor at the end of the active
-// staff.
+// Clears the selection, which leaves the insertion slot at the end of the
+// active staff.
 function clearSelection() {
   selectedElement.value = null;
   selectionRange.value = null;
@@ -4349,8 +4339,7 @@ function onEscape() {
     if (!pageBackgroundRef.value?.contains(document.activeElement)) {
       return false;
     }
-    flushPendingRichTextEditors(selectedWorkspace.value);
-    blurActiveElement();
+    leaveTextEditing();
     return true;
   }
 
@@ -4424,7 +4413,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     switch (event.code) {
       case 'End':
         if (selectedWorkspace.value.activeFootnoteId !== null) {
-          clearSelection();
+          goToEndOfStaff();
           handled = true;
         }
         break;
@@ -5368,8 +5357,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     commands.push(importedStylesCommand);
   }
 
-  const startIndex = insertionIndexOrSelection();
-  let currentIndex = startIndex;
+  let currentIndex = insertionIndexOrSelection();
 
   for (const clipboardElement of pastedElements) {
     const currentElement = activeElements.value[currentIndex];
@@ -5645,13 +5633,17 @@ function selectElementByKeyboard(element: ScoreElement) {
   const fromSlot = isNothingSelected();
   selectedElement.value = element;
 
+  if (element instanceof DropCapElement || element instanceof TextBoxElement) {
+    // focusTextElement() reveals the element itself.
+    void focusTextElement(element);
+    return;
+  }
+
   if (fromSlot) {
     void revealElement(element);
   }
 
-  if (element instanceof DropCapElement || element instanceof TextBoxElement) {
-    void focusTextElement(element);
-  } else if (element instanceof RichTextBoxElement) {
+  if (element instanceof RichTextBoxElement) {
     focusSelectedRichTextBoxEditor(element);
   }
 }
@@ -5671,12 +5663,7 @@ function moveRight() {
     index >= 0 &&
     (isLast || isNavigableElement(activeElements.value[index + 1]))
   ) {
-    // If the currently selected element is a drop cap, blur it first
-    if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
-    } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
-    }
+    blurSelectedTextElement(index);
 
     // Moving right from the last element reaches the end of the staff.
     if (isLast) {
@@ -5719,15 +5706,9 @@ function moveSelectionLeft() {
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value - 1]);
-  } else if (
-    isNothingSelected() &&
-    activeElements.value.length > 0 &&
-    navigableElements.includes(activeElements.value.at(-1)!.elementType)
-  ) {
+  } else if (isNothingSelected()) {
     // From the end of the staff, start the range on the last element.
-    const end = activeElements.value.length - 1;
-    selectionRange.value = { start: end, end };
-    void revealElement(activeElements.value[end]);
+    startSelectionRangeAt(activeElements.value.length - 1);
   }
 }
 
@@ -5749,15 +5730,22 @@ function moveSelectionRight() {
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value + 1]);
-  } else if (
-    selectedWorkspace.value.insertAtStart &&
-    activeElements.value.length > 0 &&
-    navigableElements.includes(activeElements.value[0].elementType)
-  ) {
+  } else if (selectedWorkspace.value.insertAtStart) {
     // From the start of the staff, start the range on the first element.
-    selectionRange.value = { start: 0, end: 0 };
-    void revealElement(activeElements.value[0]);
+    startSelectionRangeAt(0);
   }
+}
+
+function startSelectionRangeAt(index: number) {
+  const element = activeElements.value[index];
+  if (
+    element === undefined ||
+    !navigableElements.includes(element.elementType)
+  ) {
+    return;
+  }
+  selectionRange.value = { start: index, end: index };
+  void revealElement(element);
 }
 
 function getNextLyricBoxIndex() {
@@ -9503,6 +9491,26 @@ async function onFileMenuSaveAs() {
   }
 }
 
+// If the selected element was removed by undo or redo, select the element now
+// at its index, or the end of the staff.
+function reselectAfterHistoryReplay(previousIndex: number) {
+  if (previousIndex < 0) {
+    return;
+  }
+
+  const element = activeElements.value[previousIndex] ?? null;
+
+  if (selectedElement.value !== element) {
+    selectedElement.value = element;
+  }
+
+  // History replay can affect the note display in the neume toolbar, so force
+  // a refresh here.
+  if (element != null) {
+    element.keyHelper++;
+  }
+}
+
 function onFileMenuUndo() {
   // Commit debounced lyrics before replay so they cannot overwrite restored notes.
   flushLyricsAssignment(selectedWorkspace.value);
@@ -9513,20 +9521,7 @@ function onFileMenuUndo() {
 
     refreshLyricsAfterHistoryReplay();
 
-    if (currentIndex > -1) {
-      // If the selected element was removed during the undo process, choose a
-      // new one, or the end of the staff.
-      const element = activeElements.value[currentIndex] ?? null;
-
-      if (selectedElement.value !== element) {
-        selectedElement.value = element;
-      }
-
-      // Undo can affect the note display in the neume toolbar, so force a refresh here.
-      if (element != null) {
-        element.keyHelper++;
-      }
-    }
+    reselectAfterHistoryReplay(currentIndex);
   });
 
   save();
@@ -9542,20 +9537,7 @@ function onFileMenuRedo() {
 
     refreshLyricsAfterHistoryReplay();
 
-    if (currentIndex > -1) {
-      // If the selected element was removed during the redo process, choose a
-      // new one, or the end of the staff.
-      const element = activeElements.value[currentIndex] ?? null;
-
-      if (selectedElement.value !== element) {
-        selectedElement.value = element;
-      }
-
-      // Redo can affect the note display in the neume toolbar, so force a refresh here.
-      if (element != null) {
-        element.keyHelper++;
-      }
-    }
+    reselectAfterHistoryReplay(currentIndex);
   });
 
   save();

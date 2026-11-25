@@ -237,6 +237,8 @@
     "diatonic": "Diatonic",
     "enharmonic": "Enharmonic",
     "pentaphonicMakamFerahnak": "Pentaphonic (Makam Ferâhnâk)",
-    "diphonic": "Diphonic"
+    "diphonic": "Diphonic",
+    "sticheraricFromNi": "Sticheraric from Ni",
+    "slowDiphonic": "Slow Diphonic"
   }
 }

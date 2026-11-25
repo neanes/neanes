@@ -237,6 +237,8 @@
     "diatonic": "Диатонический",
     "enharmonic": "Энгармонический",
     "pentaphonicMakamFerahnak": "Пентафонический (макам Ферахнак)",
-    "diphonic": "Дифонический"
+    "diphonic": "Дифонический",
+    "sticheraricFromNi": "Стихирарический от Ни",
+    "slowDiphonic": "Медленный дифонический"
   }
 }

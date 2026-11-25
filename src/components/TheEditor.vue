@@ -163,7 +163,7 @@ import type {
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+import { modeKeyTemplateFields, modeKeyTemplates } from '@/models/ModeKeys';
 import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
@@ -7239,42 +7239,12 @@ function updateModeKeyFromTemplate(
   updateModeKey(element, getModeKeyTemplateUpdates(template));
 }
 
-function getModeKeyTemplateUpdates(template: ModeKeyElement) {
-  const {
-    templateId,
-    mode,
-    scale,
-    scaleNote,
-    fthora,
-    martyria,
-    fthoraAboveNote,
-    fthoraAboveNote2,
-    fthoraAboveQuantitativeNeumeRight,
-    note,
-    note2,
-    quantitativeNeumeAboveNote,
-    quantitativeNeumeAboveNote2,
-    quantitativeNeumeRight,
-  } = template;
-
-  const newValues = {
-    templateId,
-    mode,
-    scale,
-    scaleNote,
-    fthora,
-    martyria,
-    fthoraAboveNote,
-    fthoraAboveNote2,
-    fthoraAboveQuantitativeNeumeRight,
-    note,
-    note2,
-    quantitativeNeumeAboveNote,
-    quantitativeNeumeAboveNote2,
-    quantitativeNeumeRight,
-  };
-
-  return newValues;
+function getModeKeyTemplateUpdates(
+  template: ModeKeyElement,
+): Partial<ModeKeyElement> {
+  return Object.fromEntries(
+    modeKeyTemplateFields.map((key) => [key, template[key]]),
+  );
 }
 
 function applyModeKeyDialogTemplate(template: ModeKeyElement) {

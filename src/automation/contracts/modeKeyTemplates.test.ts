@@ -14,9 +14,9 @@ describe('mode-key catalog', () => {
   it('publishes every template with descriptions in a bounded summary response', () => {
     const result = getModeKeyTemplates({});
     expect(result.templates).toHaveLength(modeKeyTemplates.length);
-    expect(result.templates).toHaveLength(44);
+    expect(result.templates).toHaveLength(46);
     expect(new Set(result.templates.map((item) => item.templateId)).size).toBe(
-      44,
+      46,
     );
     expect(JSON.stringify(result).length).toBeLessThan(10000);
     const outcome = { success: true, result };

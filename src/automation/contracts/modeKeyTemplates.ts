@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import englishModel from '@/i18n/en/model.json';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+import { modeKeyTemplateFields, modeKeyTemplates } from '@/models/ModeKeys';
 import { Scale, ScaleNote } from '@/models/Scales';
 
 export const modeKeyTemplatesQuerySchema = z.strictObject({
@@ -45,23 +45,6 @@ export function getModeKeyTemplates(
       })),
   };
 }
-
-export const modeKeyTemplateFields = [
-  'templateId',
-  'mode',
-  'scale',
-  'scaleNote',
-  'fthora',
-  'martyria',
-  'fthoraAboveNote',
-  'fthoraAboveNote2',
-  'fthoraAboveQuantitativeNeumeRight',
-  'note',
-  'note2',
-  'quantitativeNeumeAboveNote',
-  'quantitativeNeumeAboveNote2',
-  'quantitativeNeumeRight',
-] as const;
 
 export function modeKeyEditIssue(
   properties: Record<string, unknown>,

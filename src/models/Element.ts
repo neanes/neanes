@@ -1306,6 +1306,9 @@ export class ModeKeyElement extends ScoreElement {
   public fthoraAboveNote2: Fthora | null = null;
   public fthoraAboveQuantitativeNeumeRight: Fthora | null = null;
   public quantitativeNeumeRight: QuantitativeNeume | null = null;
+  public timeNeumeAboveQuantitativeNeumeRight: TimeNeume | null = null;
+  public quantitativeNeumeRight2: QuantitativeNeume | null = null;
+  public gorgonAboveQuantitativeNeumeRight2: GorgonNeume | null = null;
   public quantitativeNeumeAboveNote: ModeSign | null = null;
   public quantitativeNeumeAboveNote2: ModeSign | null = null;
   // Typography overrides on top of the initial martyria style; null inherits.
@@ -1387,6 +1390,11 @@ export class ModeKeyElement extends ScoreElement {
     element.quantitativeNeumeAboveNote2 =
       template.quantitativeNeumeAboveNote2 || null;
     element.quantitativeNeumeRight = template.quantitativeNeumeRight || null;
+    element.timeNeumeAboveQuantitativeNeumeRight =
+      template.timeNeumeAboveQuantitativeNeumeRight ?? null;
+    element.quantitativeNeumeRight2 = template.quantitativeNeumeRight2 ?? null;
+    element.gorgonAboveQuantitativeNeumeRight2 =
+      template.gorgonAboveQuantitativeNeumeRight2 ?? null;
     element.alignment = alignment || TextBoxAlignment.Center;
 
     if (
@@ -1428,6 +1436,11 @@ export class ModeKeyElement extends ScoreElement {
       quantitativeNeumeAboveNote: this.quantitativeNeumeAboveNote,
       quantitativeNeumeAboveNote2: this.quantitativeNeumeAboveNote2,
       quantitativeNeumeRight: this.quantitativeNeumeRight,
+      timeNeumeAboveQuantitativeNeumeRight:
+        this.timeNeumeAboveQuantitativeNeumeRight,
+      quantitativeNeumeRight2: this.quantitativeNeumeRight2,
+      gorgonAboveQuantitativeNeumeRight2:
+        this.gorgonAboveQuantitativeNeumeRight2,
       fontSize: this.fontSize,
       strokeWidth: this.strokeWidth,
       marginBottom: this.marginBottom,

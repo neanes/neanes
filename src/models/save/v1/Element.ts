@@ -299,6 +299,11 @@ export class ModeKeyElement extends ScoreElement {
   public fthoraAboveNote2: Fthora | undefined = undefined;
   public fthoraAboveQuantitativeNeumeRight: Fthora | undefined = undefined;
   public quantitativeNeumeRight: QuantitativeNeume | undefined = undefined;
+  public timeNeumeAboveQuantitativeNeumeRight: TimeNeume | undefined =
+    undefined;
+  public quantitativeNeumeRight2: QuantitativeNeume | undefined = undefined;
+  public gorgonAboveQuantitativeNeumeRight2: GorgonNeume | undefined =
+    undefined;
   public quantitativeNeumeAboveNote: ModeSign | undefined = undefined;
   public quantitativeNeumeAboveNote2: ModeSign | undefined = undefined;
   public color: string | undefined = undefined;

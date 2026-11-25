@@ -77,9 +77,9 @@ The selection is also the entry position:
 - The active entry mode determines whether the next element is replaced, a new element is inserted, or only the selected element is changed.
 - Inserted text boxes, rich text boxes, initial martyriæ, and images go after the selected element.
 
-When nothing is selected, new music, pasted passages, and inserted elements are added at the end of the score, and the status bar shows **End of score**. Nothing is selected when you open a score, press <kbd>Right Arrow</kbd> on the last element, delete the last element, press <kbd>Escape</kbd>, or click blank space on the page. <kbd>Backspace</kbd> then deletes the last element, and <kbd>Left Arrow</kbd> selects it.
+When nothing is selected, the status bar shows where new music, pasted passages, and inserted elements will go. **Start of score** inserts before the first element, and **End of score** appends after the last element. Opening a score or clicking blank space on the page puts you at the end.
 
-To add elements before the first one, press <kbd>Left Arrow</kbd> on the first element, press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Home</kbd>, or choose **Edit > Go to Start**. The status bar shows **Start of score**, and new elements are inserted at the beginning. <kbd>Right Arrow</kbd> then selects the first element. <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>End</kbd> or **Edit > Go to End** returns to the end of the score.
+Choose **Edit > Go to Start** or **Edit > Go to End** to move the insertion point. When the focus is outside a text field, you can also press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Home</kbd> or <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>End</kbd>.
 
 <kbd>Escape</kbd> steps out one level at a time. While you are editing a text box or drop cap, the first <kbd>Escape</kbd> stops editing and leaves it selected, so you can copy, cut, or delete it as a whole; press <kbd>Enter</kbd> to resume editing. The next <kbd>Escape</kbd> clears the selection.
 
@@ -87,7 +87,9 @@ If a command appears to affect the wrong place, first check which element is out
 
 ### Move through the score
 
-Click an element, then use <kbd>Left Arrow</kbd> and <kbd>Right Arrow</kbd> to move between elements. In a right-to-left score, the arrow keys still follow the visual direction of the score.
+Click a neume, then use <kbd>Left Arrow</kbd> and <kbd>Right Arrow</kbd> to move between elements. If the score begins or ends with a neume, you can press an arrow to move past it to the insertion point. In a left-to-right score, press <kbd>Left Arrow</kbd> to reach **Start of score** or <kbd>Right Arrow</kbd> to reach **End of score**. Use the opposite arrow to select that neume again. These keys are reversed in a right-to-left score. If the first or last element is a rich text box, click it to select it.
+
+At **End of score**, press <kbd>Backspace</kbd> to delete a final neume.
 
 Use <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Down Arrow</kbd> on a neume to move to its lyric box. Use <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>Up Arrow</kbd> to return to the neume.
 

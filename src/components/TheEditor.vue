@@ -1731,18 +1731,6 @@ watch(
   { flush: 'sync' },
 );
 
-// Selecting any other element ends an Auto entry run from the start of the
-// staff.
-watch(
-  () => selectedElement.value,
-  (element) => {
-    if (element == null || toRaw(element) !== autoStartRunElement) {
-      autoStartRunElement = null;
-    }
-  },
-  { flush: 'sync' },
-);
-
 watch(selectedWorkspaceId, () => {
   window.document.title = windowTitle.value;
 
@@ -2840,6 +2828,13 @@ function setSelectionRange(element: ScoreElement) {
     selectedElement.value = null;
   } else if (selectionRange.value != null) {
     selectionRange.value.end = elementIndex;
+  } else if (isNothingSelected()) {
+    // From the insertion slot, the range starts at the nearest element, as
+    // with Shift+Arrow.
+    const start = selectedWorkspace.value.insertAtStart
+      ? 0
+      : activeElements.value.length - 1;
+    selectionRange.value = { start, end: elementIndex };
   }
 }
 
@@ -3315,27 +3310,6 @@ function goToEndOfStaff() {
   scrollElementIntoView(activeElements.value.at(-1));
 }
 
-// In Auto entry mode, entries made from the start of the staff keep inserting
-// after one another instead of overwriting the elements that follow them.
-// This is the last element of that run while it stays selected.
-let autoStartRunElement: ScoreElement | null = null;
-
-function continuesAutoStartRun() {
-  return (
-    autoStartRunElement != null &&
-    toRaw(selectedElement.value) === autoStartRunElement
-  );
-}
-
-// Inserts into the insertion slot (nothing selected) or after the selected
-// last element of a run from the start of the staff.
-function insertAutoEntryElement(element: ScoreElement) {
-  const continuesStartRun =
-    selectedWorkspace.value.insertAtStart || selectedElement.value != null;
-  insertScoreElement(element);
-  autoStartRunElement = continuesStartRun ? toRaw(element) : null;
-}
-
 function insertScoreElement(
   element: ScoreElement,
   insertAtIndex = insertionIndexAfterSelection(),
@@ -3412,16 +3386,12 @@ function addQuantitativeNeume(
 
   switch (entryMode.value) {
     case EntryMode.Auto:
-      if (
-        selectedElement.value != null &&
-        !continuesAutoStartRun() &&
-        !moveRight()
-      ) {
+      if (selectedElement.value != null && !moveRight()) {
         return;
       }
 
-      if (selectedElement.value == null || continuesAutoStartRun()) {
-        insertAutoEntryElement(element);
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType === ElementType.Note) {
           if (
@@ -3530,12 +3500,10 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
 
   switch (entryMode.value) {
     case EntryMode.Auto:
-      if (selectedElement.value != null && !continuesAutoStartRun()) {
-        moveRight();
-      }
+      moveRight();
 
-      if (selectedElement.value == null || continuesAutoStartRun()) {
-        insertAutoEntryElement(element);
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType != ElementType.Martyria) {
           selectedElement.value = switchToMartyria(selectedElement.value);
@@ -3570,12 +3538,10 @@ function addTempo(neume: TempoSign) {
 
   switch (entryMode.value) {
     case EntryMode.Auto:
-      if (selectedElement.value != null && !continuesAutoStartRun()) {
-        moveRight();
-      }
+      moveRight();
 
-      if (selectedElement.value == null || continuesAutoStartRun()) {
-        insertAutoEntryElement(element);
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType === ElementType.Tempo) {
           if ((selectedElement.value as TempoElement).neume !== neume) {

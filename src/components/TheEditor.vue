@@ -4268,11 +4268,6 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (event.code === 'Escape' && onEscape()) {
-    event.preventDefault();
-    return;
-  }
-
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
   if (platformService.isMac && isTextInputFocused()) {
@@ -4280,6 +4275,13 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   if (event.defaultPrevented || editorShortcutIgnored) {
+    return;
+  }
+
+  // Docked panes ignore editor shortcuts, so Escape there leaves the score
+  // selection alone.
+  if (event.code === 'Escape' && onEscape()) {
+    event.preventDefault();
     return;
   }
 

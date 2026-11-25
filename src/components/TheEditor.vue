@@ -3254,21 +3254,25 @@ function insertScoreElement(
 
 // Callers run save() synchronously after this, which lays out the element and
 // assigns its page and id. Pages are virtualized, so show the page first.
-function scrollElementIntoView(element: ScoreElement | undefined) {
-  if (element === undefined) {
+function scrollElementIntoView(element: ScoreElement | null | undefined) {
+  if (element == null) {
     return;
   }
-  void nextTick(async () => {
-    const page = pages.value[element.page - 1];
-    if (page === undefined || element.id == null) {
-      return;
-    }
-    page.isVisible = true;
-    await nextTick();
-    pageBackgroundRef.value
-      ?.querySelector(`#${CSS.escape(`element-${element.id}`)}`)
-      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  });
+  void nextTick(() => revealElement(element));
+}
+
+// Mount the laid-out element's page, then scroll to the element. Resolves once
+// the page has rendered.
+async function revealElement(element: ScoreElement) {
+  const page = pages.value[element.page - 1];
+  if (page === undefined || element.id == null) {
+    return;
+  }
+  page.isVisible = true;
+  await nextTick();
+  pageBackgroundRef.value
+    ?.querySelector(`#${CSS.escape(`element-${element.id}`)}`)
+    ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
 function insertPelastikon() {
@@ -3518,17 +3522,20 @@ function addDropCap(after: boolean) {
   );
   save();
 
-  focusInsertedTextElement(element);
+  void focusTextElement(element);
 }
 
-function focusInsertedTextElement(element: DropCapElement | TextBoxElement) {
-  nextTick(() => {
-    if (toRaw(selectedElement.value) === element) {
-      getElementComponentForElement<
-        InstanceType<typeof DropCap | typeof TextBox>
-      >(element)?.focus();
-    }
-  });
+// The element's page may be unmounted, so wait for the layout from save() and
+// for the page to render before focusing.
+async function focusTextElement(element: DropCapElement | TextBoxElement) {
+  await nextTick();
+  await revealElement(element);
+  // Callers may pass either the raw element or its reactive proxy.
+  if (toRaw(selectedElement.value) === toRaw(element)) {
+    getElementComponentForElement<
+      InstanceType<typeof DropCap | typeof TextBox>
+    >(element)?.focus();
+  }
 }
 
 function onClickAddImage() {
@@ -5126,6 +5133,7 @@ function onCutScoreElements() {
 
     refreshStaffLyrics();
 
+    selectionRange.value = null;
     selectedElement.value = activeElements.value[start] ?? null;
 
     save();
@@ -5271,7 +5279,7 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
   refreshStaffLyrics();
 
   selectedElement.value = newElements.at(-1)!;
-  scrollElementIntoView(newElements[0]);
+  scrollElementIntoView(selectedElement.value);
   save();
 }
 
@@ -5474,7 +5482,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   if (selectedElement.value == null) {
     selectedElement.value = pastedElements.at(-1)!;
   }
-  scrollElementIntoView(activeElements.value[startIndex]);
+  scrollElementIntoView(selectedElement.value);
 
   save();
 }
@@ -5488,6 +5496,7 @@ function onPasteScoreElementsAuto(includeLyrics: boolean) {
   // Set the selected element to the last element that was pasted
   selectedElement.value =
     activeElements.value[currentIndex + clipboard.value.elements.length - 1];
+  scrollElementIntoView(selectedElement.value);
 }
 
 function getLyricLength(element: NoteElement) {
@@ -5527,15 +5536,24 @@ function moveLeft() {
       getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
     }
 
-    selectedElement.value = activeElements.value[index - 1];
+    const element = activeElements.value[index - 1];
+    selectedElement.value = element;
 
-    // If the newly selected element is a drop cap or text box, focus it
-    if (selectedElement.value.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index - 1)!.focus();
-    } else if (selectedElement.value.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index - 1)!.focus();
-    } else if (selectedElement.value instanceof RichTextBoxElement) {
-      focusSelectedRichTextBoxEditor(selectedElement.value);
+    // The end of the staff has no position on the page, so the last element's
+    // page may be offscreen and unmounted.
+    if (index === activeElements.value.length) {
+      void revealElement(element);
+    }
+
+    // If the newly selected element is a drop cap or text box, focus it once
+    // it has mounted
+    if (
+      element instanceof DropCapElement ||
+      element instanceof TextBoxElement
+    ) {
+      void focusTextElement(element);
+    } else if (element instanceof RichTextBoxElement) {
+      focusSelectedRichTextBoxEditor(element);
     }
 
     return true;
@@ -5607,6 +5625,15 @@ function moveSelectionLeft() {
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value - 1]);
+  } else if (
+    isNothingSelected() &&
+    activeElements.value.length > 0 &&
+    navigableElements.includes(activeElements.value.at(-1)!.elementType)
+  ) {
+    // From the end of the staff, start the range on the last element.
+    const end = activeElements.value.length - 1;
+    selectionRange.value = { start: end, end };
+    void revealElement(activeElements.value[end]);
   }
 }
 
@@ -7558,6 +7585,7 @@ function deleteSelectedElement() {
       selectionRange.value.end,
     );
 
+    selectionRange.value = null;
     selectedElement.value = activeElements.value[start] ?? null;
 
     save();
@@ -9193,7 +9221,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
 
   save();
 
-  focusInsertedTextElement(element);
+  void focusTextElement(element);
 }
 
 function onFileMenuInsertRichTextBox() {

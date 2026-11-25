@@ -58,10 +58,11 @@ Use **Reset position** to clear the offsets. Turn off **Override position** to r
 
 ## Set up footnotes throughout the score
 
-Open `File > Page Setup` and select **Footnotes**. These settings control the automatic markers and the separator above the footnote area:
+Open `File > Page Setup` and select **Footnotes**. These settings control where footnotes appear, the automatic markers, and the separator above the footnote area:
 
 | Setting                                          | Use it to...                                                                                                                                                |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Location**                                     | Place footnotes at the **Bottom of page** or **Below text**, directly after the page's last line of the main score.                                         |
 | **Format**                                       | Choose numbers (`1, 2, 3, …`), the standard symbol sequence (`*, †, ‡, …`), or asterisks (`*, **, ***, …`).                                                 |
 | **Numbering**                                    | Keep one **Continuous** sequence, **Restart each page**, or **Restart each section**. Section restarts follow text boxes with a **Section** running marker. |
 | **Starts at**                                    | Choose the first number or symbol in each sequence. For symbols, type a symbol from the selected sequence or use the adjacent arrow buttons.                |
@@ -73,7 +74,7 @@ Open `File > Page Setup` and select **Footnotes**. These settings control the au
 | **Separator Thickness (pt)**                     | Set the thickness of the separator. Defaults to **1 pt**.                                                                                                   |
 | **Color**                                        | Choose the separator color. Defaults to black.                                                                                                              |
 
-The spacing defaults match the nominal values of the standard 10 pt LaTeX classes. The default separator thickness matches the header and footer rules. These measurements stay fixed when font sizes change. The footnotes sit at the bottom of the page’s content area, so the space above the separator may be larger than the minimum. Older scores without saved spacing settings use these defaults when opened, which can change pagination.
+The spacing defaults match the nominal values of the standard 10 pt LaTeX classes. The default separator thickness matches the header and footer rules. These measurements stay fixed when font sizes change. With **Bottom of page**, the footnotes sit at the bottom of the page’s content area, so the space above the separator may be larger than the minimum. Older scores without saved spacing settings use these defaults when opened, which can change pagination.
 
 Parentheses make a musical footnote marker easier to notice and distinguish it from a measure number indicating a beat count. Enable them when a bare number or symbol could be mistaken for part of the notation.
 

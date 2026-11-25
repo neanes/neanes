@@ -332,6 +332,45 @@ try {
       } finally {
         await send('Emulation.setEmulatedMedia', { features: [] });
       }
+      // Below Text places the separator after the last main-score line
+      // instead of above the bottom margin.
+      const footnoteGeometry = () =>
+        evaluate(`(() => {
+          const page = document.querySelector('.page-background .page');
+          const origin = page.getBoundingClientRect().top;
+          const rule = page.querySelector('.footnote-rule').getBoundingClientRect();
+          const text = [...page.querySelectorAll('.line:not([data-footnote-id]) .element-box')]
+            .map(element => element.getBoundingClientRect().bottom);
+          const body = page.querySelector('.footnote-body').getBoundingClientRect();
+          return {
+            ruleTop: rule.top - origin,
+            textBottom: Math.max(...text) - origin,
+            bodyTop: body.top - origin,
+          };
+        })()`);
+      const atBottom = await footnoteGeometry();
+      const setLocation = async (footnoteLocation) =>
+        call('update_page_setup', {
+          ...args,
+          expectedRevision: (await call('get_document_properties', args))
+            .revision,
+          changes: { footnoteLocation },
+        });
+      await setLocation('belowText');
+      assert.equal(
+        (await call('get_page_setup', args)).settings.footnoteLocation,
+        'belowText',
+      );
+      await eventually(async () => {
+        const belowText = await footnoteGeometry();
+        assert.ok(belowText.ruleTop < atBottom.ruleTop - 100);
+        assert.ok(belowText.ruleTop > belowText.textBottom);
+        assert.ok(belowText.bodyTop > belowText.ruleTop);
+      });
+      await setLocation('bottomOfPage');
+      await eventually(async () =>
+        assert.equal((await footnoteGeometry()).ruleTop, atBottom.ruleTop),
+      );
       await evaluateMain(
         `process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes('/index.html')).webContents.send('FileMenuViewPaneVisibility', {paneId:'lyrics', visible:true})`,
       );

@@ -145,6 +145,19 @@ describe('whole-footnote page selection', () => {
     expect(pages[1].lines.map((line) => line.top)).toEqual([0, 20]);
   });
 
+  it('reports the content bottom of each page, including a drop-cap span', () => {
+    const dropCap = { ...line(20), additionalHeight: 30 };
+    const pages = paginate([line(10), dropCap, line(60), line(15)]);
+    expect(membership(pages)).toEqual([[0, 1, 2], [3]]);
+    expect(pages.map((page) => page.contentBottom)).toEqual([90, 15]);
+
+    const tallDropCap = paginate([
+      line(10),
+      { ...line(20), additionalHeight: 40 },
+    ]);
+    expect(tallDropCap[0].contentBottom).toBe(70);
+  });
+
   it('reports overflow when a drop cap extends into the footnote on its own line', () => {
     const anchor = { ...line(20, ['a']), additionalHeight: 60 };
     const pages = paginate([anchor], new Map([['a', 10]]));

@@ -1,5 +1,6 @@
 import type {
   FootnoteFormat,
+  FootnoteLocation,
   FootnoteNumbering,
   FootnoteSymbolSequence,
 } from '@/models/FootnoteNumbering';
@@ -45,6 +46,7 @@ export class PageSetup {
   public firstPageNumber = 1;
   public footnoteFormat: FootnoteFormat | undefined = undefined;
   public footnoteNumbering: FootnoteNumbering | undefined = undefined;
+  public footnoteLocation: FootnoteLocation | undefined = undefined;
   public footnoteSymbolSequence: FootnoteSymbolSequence | undefined = undefined;
   public firstFootnoteNumber: number | undefined = undefined;
   public footnoteReferenceParentheses: boolean | undefined = undefined;

@@ -468,6 +468,7 @@ describe('footnote ownership', () => {
     workspace.score.pageSetup.footnoteRuleColor = '#800000';
     workspace.score.pageSetup.showFootnoteHorizontalRule = false;
     workspace.score.pageSetup.footnoteReferenceParentheses = false;
+    workspace.score.pageSetup.footnoteLocation = 'belowText';
     reference.footnoteNumber = 12;
     const saved = SaveService.SaveScoreToJson(workspace.score);
     const loaded = SaveService.LoadScoreFromJson(
@@ -481,16 +482,19 @@ describe('footnote ownership', () => {
     expect(loaded.pageSetup.footnoteSpaceBelowRule).toBe(0.3);
     expect(loaded.pageSetup.footnoteRuleThickness).toBe(0.05);
     expect(loaded.pageSetup.footnoteRuleColor).toBe('#800000');
+    expect(loaded.pageSetup.footnoteLocation).toBe('belowText');
 
     delete saved.pageSetup.footnoteSpaceAboveRule;
     delete saved.pageSetup.footnoteSpaceBelowRule;
     delete saved.pageSetup.footnoteRuleThickness;
     delete saved.pageSetup.footnoteRuleColor;
+    delete saved.pageSetup.footnoteLocation;
     const defaults = SaveService.LoadScoreFromJson(saved).pageSetup;
     expect(defaults.footnoteSpaceAboveRule).toBe(Unit.fromPt(6));
     expect(defaults.footnoteSpaceBelowRule).toBe(Unit.fromPt(2.6));
     expect(defaults.footnoteRuleThickness).toBe(Unit.fromPt(1));
     expect(defaults.footnoteRuleColor).toBe('#000000');
+    expect(defaults.footnoteLocation).toBe('bottomOfPage');
     expect(loaded.pageSetup.showFootnoteHorizontalRule).toBe(false);
     expect(loaded.pageSetup.footnoteReferenceParentheses).toBe(false);
     delete saved.pageSetup.footnoteReferenceParentheses;

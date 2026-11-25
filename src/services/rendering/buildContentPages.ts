@@ -15,6 +15,8 @@ export interface PageReservation {
 
 export interface ContentPage {
   lines: { index: number; top: number }[];
+  // Bottom of the placed content, including any drop-cap span.
+  contentBottom: number;
   footnoteIds: string[];
   footnoteOverflow: boolean;
   reservation: PageReservation;
@@ -44,6 +46,7 @@ export function buildContentPages(
   const pages: ContentPage[] = [];
   const createPage = (): ContentPage => ({
     lines: [],
+    contentBottom: 0,
     footnoteIds: [],
     footnoteOverflow: false,
     reservation: constraints.getReservation(pages.length + 1, false),
@@ -137,6 +140,7 @@ export function buildContentPages(
       contentBottom = Math.max(contentBottom, height + line.additionalHeight);
       explicitBreak = line.pageBreak;
     }
+    page.contentBottom = contentBottom;
     page.footnoteIds = [...ids];
     page.footnoteOverflow =
       ids.size > 0 &&

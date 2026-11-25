@@ -793,6 +793,8 @@ export class LayoutService {
           line.footnoteId = body.id;
           top += candidate.height;
         }
+        // An empty body has no lines but still reserves its label line.
+        top = body.top + body.height;
         const bodyPage = new Page();
         bodyPage.physicalPageNumber = physicalPage.physicalPageNumber;
         bodyPage.lines = body.lines;

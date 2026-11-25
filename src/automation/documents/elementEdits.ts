@@ -327,7 +327,7 @@ export function planElementEdits(
       ) {
         throw new Error('INVALID_ELEMENT_EDIT');
       }
-      update[key] = Reflect.get(defaults!, key);
+      update[key] = Reflect.get(defaults, key);
     }
     Object.assign(update, properties);
     if (typeof properties.imagePath === 'string') {

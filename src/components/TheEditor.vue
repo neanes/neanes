@@ -906,14 +906,16 @@ const resizableTextBoxElements = computed(() => {
 });
 
 const lyrics = computed(() => activeStaff.value.lyrics.text);
-const activeLyricsLabel = computed(() => {
+const activeOrderedFootnote = computed(() => {
   const activeId = selectedWorkspace.value.activeFootnoteId;
-  if (activeId === null) {
-    return t(($) => $.menu.view.lyrics, { ns: 'menu' });
-  }
-  const footnote = orderedFootnotes(score.value).find(
-    ({ footnote }) => footnote.id === activeId,
-  );
+  return activeId === null
+    ? undefined
+    : orderedFootnotes(score.value).find(
+        ({ footnote }) => footnote.id === activeId,
+      );
+});
+const activeLyricsLabel = computed(() => {
+  const footnote = activeOrderedFootnote.value;
   return footnote === undefined
     ? t(($) => $.menu.view.lyrics, { ns: 'menu' })
     : t(($) => $.menu.footnotes.lyrics, {
@@ -1470,13 +1472,7 @@ const statusEndOfContentLabel = computed(() => {
   if (!isNothingSelected()) {
     return null;
   }
-  const activeId = selectedWorkspace.value.activeFootnoteId;
-  const footnote =
-    activeId === null
-      ? undefined
-      : orderedFootnotes(score.value).find(
-          ({ footnote }) => footnote.id === activeId,
-        );
+  const footnote = activeOrderedFootnote.value;
   return footnote === undefined
     ? t(($) => $.toolbar.status.endOfScore, { ns: 'toolbar' })
     : t(($) => $.toolbar.status.endOfFootnote, {
@@ -2170,12 +2166,7 @@ const pageHandlers: ScorePageHandlers = {
   activateFootnote: (id) => activateFootnote(id),
   returnToFootnoteReference: (element) => {
     selectedElement.value = element;
-    pages.value[element.page - 1].isVisible = true;
-    nextTick(() =>
-      pageBackgroundRef.value
-        ?.querySelector(`#element-${element.id}`)
-        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
-    );
+    scrollElementIntoView(element);
   },
   selectLyrics: (element) => {
     selectedLyrics.value = element;
@@ -2703,7 +2694,9 @@ function getFirstElementForPage(pageNumber: number) {
     return null;
   }
 
-  return page.lines.flatMap((line) => line.elements)[0] ?? null;
+  return (
+    page.lines.find((line) => line.elements.length > 0)?.elements[0] ?? null
+  );
 }
 
 function getFirstLineNumberForPage(page: Page | undefined) {
@@ -2729,7 +2722,8 @@ function getSectionAnchorIndexForPage(pageNumber: number) {
     return 0;
   }
 
-  const firstPageElement = getPageElements(page)[0];
+  const firstPageElement = page.lines.find((line) => line.elements.length > 0)
+    ?.elements[0];
 
   if (firstPageElement) {
     return firstPageElement.index;
@@ -2756,25 +2750,13 @@ function getSectionAnchorIndexForPage(pageNumber: number) {
   return 0;
 }
 
-function getPageElements(page: Page) {
-  return page.lines.flatMap((line) => line.elements);
-}
-
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = score.value.staff.elements;
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
+  const sectionMarkers = score.value.staff.elements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
 
-  const firstScoreElementIndex = scoreElements[0].index;
-  const hasDefaultSectionBeforeFirstMarker =
-    sectionMarkers[0].index > firstScoreElementIndex;
+  const hasDefaultSectionBeforeFirstMarker = sectionMarkers[0].index > 0;
   const markersAtOrBeforeElement = sectionMarkers.filter(
     (element) => element.index <= elementIndex,
   ).length;
@@ -2789,21 +2771,12 @@ function getSectionNumberForElementIndex(elementIndex: number) {
 }
 
 function getSectionCount() {
-  const scoreElements = score.value.staff.elements;
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
+  const sectionMarkers = score.value.staff.elements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
 
-  return (
-    sectionMarkers.length +
-    (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
-  );
+  return sectionMarkers.length + (sectionMarkers[0].index > 0 ? 1 : 0);
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -2835,9 +2808,7 @@ function onSelectAllScoreElements() {
     return;
   }
 
-  selectedElement.value = null;
-  selectedLyrics.value = null;
-  selectedHeaderFooterElement.value = null;
+  clearSelection();
   selectionRange.value = { start: 0, end: activeElements.value.length - 1 };
 }
 
@@ -3273,8 +3244,12 @@ function clearSelection() {
   selectedHeaderFooterElement.value = null;
 }
 
-function insertScoreElement(element: ScoreElement, insertAtIndex: number) {
+function insertScoreElement(
+  element: ScoreElement,
+  insertAtIndex = insertionIndexAfterSelection(),
+) {
   addScoreElement(element, insertAtIndex);
+  selectedElement.value = element;
   scrollElementIntoView(element);
 }
 
@@ -3346,8 +3321,7 @@ function addQuantitativeNeume(
       }
 
       if (selectedElement.value == null) {
-        insertScoreElement(element, activeElements.value.length);
-        selectedElement.value = element;
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType === ElementType.Note) {
           if (
@@ -3383,14 +3357,12 @@ function addQuantitativeNeume(
         element.isHyphen = selectedElementAsNote.isHyphen;
       }
 
-      insertScoreElement(element, insertionIndexAfterSelection());
-      selectedElement.value = element;
+      insertScoreElement(element);
       break;
 
     case EntryMode.Edit:
       if (selectedElement.value == null) {
-        insertScoreElement(element, activeElements.value.length);
-        selectedElement.value = element;
+        insertScoreElement(element);
       } else if (selectedElement.value.elementType === ElementType.Note) {
         if (
           (selectedElement.value as NoteElement).quantitativeNeume !==
@@ -3461,8 +3433,7 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
       moveRight();
 
       if (selectedElement.value == null) {
-        insertScoreElement(element, activeElements.value.length);
-        selectedElement.value = element;
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType != ElementType.Martyria) {
           selectedElement.value = switchToMartyria(selectedElement.value);
@@ -3470,13 +3441,11 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
       }
       break;
     case EntryMode.Insert:
-      insertScoreElement(element, insertionIndexAfterSelection());
-      selectedElement.value = element;
+      insertScoreElement(element);
       break;
     case EntryMode.Edit:
       if (selectedElement.value == null) {
-        insertScoreElement(element, activeElements.value.length);
-        selectedElement.value = element;
+        insertScoreElement(element);
       } else if (selectedElement.value.elementType != ElementType.Martyria) {
         selectedElement.value = switchToMartyria(selectedElement.value);
       }
@@ -3502,8 +3471,7 @@ function addTempo(neume: TempoSign) {
       moveRight();
 
       if (selectedElement.value == null) {
-        insertScoreElement(element, activeElements.value.length);
-        selectedElement.value = element;
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType === ElementType.Tempo) {
           if ((selectedElement.value as TempoElement).neume !== neume) {
@@ -3517,13 +3485,11 @@ function addTempo(neume: TempoSign) {
       }
       break;
     case EntryMode.Insert:
-      insertScoreElement(element, insertionIndexAfterSelection());
-      selectedElement.value = element;
+      insertScoreElement(element);
       break;
     case EntryMode.Edit:
       if (selectedElement.value == null) {
-        insertScoreElement(element, activeElements.value.length);
-        selectedElement.value = element;
+        insertScoreElement(element);
       } else if (selectedElement.value.elementType === ElementType.Tempo) {
         if ((selectedElement.value as TempoElement).neume !== neume) {
           updateTempo(selectedElement.value as TempoElement, {
@@ -3549,12 +3515,8 @@ function addDropCap(after: boolean) {
 
   insertScoreElement(
     element,
-    after || selectedElement.value == null
-      ? insertionIndexAfterSelection()
-      : selectedElementIndex.value,
+    after ? insertionIndexAfterSelection() : insertionIndexOrSelection(),
   );
-
-  selectedElement.value = element;
   save();
 
   focusInsertedTextElement(element);
@@ -5123,7 +5085,11 @@ function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   };
 }
 
-const canCutCopySelected = computed(() => getSelectedElements().length > 0);
+const canCutCopySelected = computed(() =>
+  selectionRange.value != null
+    ? selectedRangeElements.value.size > 0
+    : selectedElement.value != null,
+);
 
 const canPasteSelected = computed(
   () => clipboard.value.elements.length > 0 && canInsertElement(),
@@ -7608,12 +7574,7 @@ function deletePreviousElement() {
     return;
   }
 
-  // With nothing selected, the previous element is the last one.
-  const index = selectedElement.value
-    ? selectedElementIndex.value
-    : isNothingSelected()
-      ? activeElements.value.length
-      : -1;
+  const index = canInsertElement() ? insertionIndexOrSelection() : -1;
 
   if (index > 0 && isNavigableElement(activeElements.value[index - 1])) {
     removeScoreElement(activeElements.value[index - 1]);
@@ -9226,9 +9187,7 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
       ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
       : getTextBoxParagraphStyleFallbackId(element.inline);
 
-  insertScoreElement(element, insertionIndexAfterSelection());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 
@@ -9249,9 +9208,7 @@ function onFileMenuInsertRichTextBox() {
     setRichTextLanguage(element, 'ar', 'rtl');
   }
 
-  insertScoreElement(element, insertionIndexAfterSelection());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 }
@@ -9259,9 +9216,7 @@ function onFileMenuInsertRichTextBox() {
 function onFileMenuInsertModeKey() {
   const element = createDefaultModeKey(score.value.pageSetup);
 
-  insertScoreElement(element, insertionIndexAfterSelection());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   openModeKeyDialog();
 
@@ -9283,9 +9238,7 @@ function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
   element.imageWidth = args.imageWidth;
   element.imageHeight = args.imageHeight;
 
-  insertScoreElement(element, insertionIndexAfterSelection());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 }
@@ -11019,27 +10972,26 @@ function renderTabLabel(tab: Tab) {
         >
           {{ statusEndOfContentLabel }}
         </ButtonGroupText>
-        <ButtonGroupText v-else data-slot="button-group-text">
-          {{
-            $t(($) => $.toolbar.status.line, {
-              ns: 'toolbar',
-              lineNumber: statusLinePosition.lineNumber,
-              lineCount: statusLinePosition.lineCount,
-            })
-          }}
-        </ButtonGroupText>
-        <ButtonGroupText
-          v-if="statusEndOfContentLabel === null"
-          data-slot="button-group-text"
-        >
-          {{
-            $t(($) => $.toolbar.status.column, {
-              ns: 'toolbar',
-              columnNumber: statusColumnPosition.columnNumber,
-              columnCount: statusColumnPosition.columnCount,
-            })
-          }}
-        </ButtonGroupText>
+        <template v-else>
+          <ButtonGroupText data-slot="button-group-text">
+            {{
+              $t(($) => $.toolbar.status.line, {
+                ns: 'toolbar',
+                lineNumber: statusLinePosition.lineNumber,
+                lineCount: statusLinePosition.lineCount,
+              })
+            }}
+          </ButtonGroupText>
+          <ButtonGroupText data-slot="button-group-text">
+            {{
+              $t(($) => $.toolbar.status.column, {
+                ns: 'toolbar',
+                columnNumber: statusColumnPosition.columnNumber,
+                columnCount: statusColumnPosition.columnCount,
+              })
+            }}
+          </ButtonGroupText>
+        </template>
         <ButtonGroupText
           v-if="statusNeumeNoteDisplay"
           data-slot="button-group-text"

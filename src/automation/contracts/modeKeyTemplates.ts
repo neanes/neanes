@@ -61,6 +61,9 @@ export const modeKeyTemplateFields = [
   'quantitativeNeumeAboveNote',
   'quantitativeNeumeAboveNote2',
   'quantitativeNeumeRight',
+  'timeNeumeAboveQuantitativeNeumeRight',
+  'quantitativeNeumeRight2',
+  'gorgonAboveQuantitativeNeumeRight2',
 ] as const;
 
 export function modeKeyEditIssue(

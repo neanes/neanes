@@ -2005,6 +2005,11 @@ export class SaveService {
     element.quantitativeNeumeAboveNote2 =
       e.quantitativeNeumeAboveNote2 || undefined;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || undefined;
+    element.timeNeumeAboveQuantitativeNeumeRight =
+      e.timeNeumeAboveQuantitativeNeumeRight ?? undefined;
+    element.quantitativeNeumeRight2 = e.quantitativeNeumeRight2 ?? undefined;
+    element.gorgonAboveQuantitativeNeumeRight2 =
+      e.gorgonAboveQuantitativeNeumeRight2 ?? undefined;
     element.martyria = e.martyria;
     element.color = e.color ?? undefined;
     element.fontSize = e.fontSize ?? undefined;
@@ -3123,6 +3128,11 @@ export class SaveService {
     element.quantitativeNeumeAboveNote = e.quantitativeNeumeAboveNote ?? null;
     element.quantitativeNeumeAboveNote2 = e.quantitativeNeumeAboveNote2 ?? null;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight ?? null;
+    element.timeNeumeAboveQuantitativeNeumeRight =
+      e.timeNeumeAboveQuantitativeNeumeRight ?? null;
+    element.quantitativeNeumeRight2 = e.quantitativeNeumeRight2 ?? null;
+    element.gorgonAboveQuantitativeNeumeRight2 =
+      e.gorgonAboveQuantitativeNeumeRight2 ?? null;
     element.martyria = e.martyria;
     element.color = e.color ?? null;
     element.fontSize = e.fontSize ?? null;

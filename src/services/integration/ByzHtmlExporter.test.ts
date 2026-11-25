@@ -17,10 +17,12 @@ import { styleFromWording } from '@/models/InitialMartyriaStyle.testHelpers';
 import { modeKeyTemplates } from '@/models/ModeKeys';
 import {
   Fthora,
+  GorgonNeume,
   Ison,
   ModeSign,
   QuantitativeNeume,
   TempoSign,
+  TimeNeume,
 } from '@/models/Neumes';
 import { PageSetup } from '@/models/PageSetup';
 import {
@@ -216,6 +218,9 @@ describe('ByzHtmlExporter', () => {
     modeKey.fthoraAboveNote2 = Fthora.SoftChromaticThi_Top;
     modeKey.quantitativeNeumeRight = QuantitativeNeume.OligonPlusKentimaAbove;
     modeKey.fthoraAboveQuantitativeNeumeRight = Fthora.Zygos_Top;
+    modeKey.timeNeumeAboveQuantitativeNeumeRight = TimeNeume.Klasma_Top;
+    modeKey.quantitativeNeumeRight2 = QuantitativeNeume.Ison;
+    modeKey.gorgonAboveQuantitativeNeumeRight2 = GorgonNeume.Argon;
 
     const richText = new RichTextBoxElement();
     richText.content = `<p>Before ${embeddedModeKeyHtml(modeKey, '&nbsp;')} after</p>`;
@@ -241,7 +246,10 @@ describe('ByzHtmlExporter', () => {
       '<x-mode-di',
       '<x-f-sc-di',
       '<x-o3',
+      '<x-kl',
       '<x-f-zygos',
+      '<x-i',
+      '<x-argon',
     ];
     expect(html.match(/<x-[a-z0-9-]+/gu)).toEqual([...tags, ...tags]);
     expect(html).not.toContain('byz--initial-martyria-');

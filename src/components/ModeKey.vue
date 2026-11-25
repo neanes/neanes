@@ -117,18 +117,35 @@
             <span
               v-if="
                 hasPitchNote(run.cluster) &&
-                run.cluster.trailingGlyphs.length > 0
+                run.cluster.trailingGlyphGroups.length > 0
               "
               class="pitch-trailing-glue"
               :style="getPitchTrailingGlueStyle(runLayouts[index])"
               aria-hidden="true"
             />
-            <Neume
-              v-for="neume in run.cluster.trailingGlyphs"
-              :key="neume"
-              :neume="neume"
-              :style="getTrailingPitchGlyphStyle(run, runLayouts[index])"
-            />
+            <span
+              v-if="run.cluster.trailingGlyphGroups.length > 0"
+              class="pitch-trailing"
+              dir="ltr"
+              :style="{ top: withZoom(layout.neumeBaselineCorrection) }"
+            >
+              <span
+                v-for="(group, groupIndex) in run.cluster.trailingGlyphGroups"
+                :key="groupIndex"
+                class="pitch-trailing-group"
+                :style="
+                  groupIndex === 0
+                    ? undefined
+                    : {
+                        marginLeft: withZoom(
+                          runLayouts[index].pitch!.trailingGlueWidth,
+                        ),
+                      }
+                "
+              >
+                <Neume v-for="neume in group" :key="neume" :neume="neume" />
+              </span>
+            </span>
           </span>
           <template
             v-else-if="
@@ -560,17 +577,6 @@ function getPitchGlyphStyle(
   } as CSSProperties;
 }
 
-function getTrailingPitchGlyphStyle(
-  run: InitialMartyriaStartingNoteRun,
-  runLayout: InitialMartyriaRunLayout,
-) {
-  return {
-    ...getPitchGlyphStyle(run, runLayout),
-    position: 'relative',
-    top: withZoom(layout.value.neumeBaselineCorrection),
-  } as CSSProperties;
-}
-
 function hasPitchNote(cluster: InitialMartyriaStartingNoteRun['cluster']) {
   return cluster.primary != null || cluster.secondary != null;
 }
@@ -641,6 +647,15 @@ function getPitchTrailingGlueStyle(runLayout: InitialMartyriaRunLayout) {
   display: inline-block;
   position: relative;
   width: 0;
+}
+
+.pitch-trailing,
+.pitch-trailing-group {
+  display: inline-block;
+}
+
+.pitch-trailing {
+  position: relative;
 }
 
 .ambitus {

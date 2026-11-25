@@ -305,7 +305,7 @@ export interface InitialMartyriaPitchNote {
 export interface InitialMartyriaPitchCluster {
   primary: InitialMartyriaPitchNote | null;
   secondary: InitialMartyriaPitchNote | null;
-  trailingGlyphs: Neume[];
+  trailingGlyphGroups: Neume[][];
 }
 
 export interface InitialMartyriaContext {

@@ -753,6 +753,15 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 modeKey.quantitativeNeumeAboveNote2,
               ),
               quantitativeNeumeRight: glyphName(modeKey.quantitativeNeumeRight),
+              timeNeumeAboveQuantitativeNeumeRight: glyphName(
+                modeKey.timeNeumeAboveQuantitativeNeumeRight,
+              ),
+              quantitativeNeumeRight2: glyphName(
+                modeKey.quantitativeNeumeRight2,
+              ),
+              gorgonAboveQuantitativeNeumeRight2: glyphName(
+                modeKey.gorgonAboveQuantitativeNeumeRight2,
+              ),
               fthoraAboveQuantitativeNeumeRight: glyphName(
                 modeKey.fthoraAboveQuantitativeNeumeRight,
               ),
@@ -1056,6 +1065,9 @@ interface LatexModeKeyElement extends LatexBaseElement {
   fthoraAboveNote2?: SbmuflGlyphName;
   quantitativeNeumeAboveNote2?: SbmuflGlyphName;
   quantitativeNeumeRight?: SbmuflGlyphName;
+  timeNeumeAboveQuantitativeNeumeRight?: SbmuflGlyphName;
+  quantitativeNeumeRight2?: SbmuflGlyphName;
+  gorgonAboveQuantitativeNeumeRight2?: SbmuflGlyphName;
   fthoraAboveQuantitativeNeumeRight?: SbmuflGlyphName;
   tempo?: SbmuflGlyphName;
   tempoAlignRight?: boolean;

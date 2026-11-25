@@ -7255,6 +7255,9 @@ function getModeKeyTemplateUpdates(template: ModeKeyElement) {
     quantitativeNeumeAboveNote,
     quantitativeNeumeAboveNote2,
     quantitativeNeumeRight,
+    timeNeumeAboveQuantitativeNeumeRight,
+    quantitativeNeumeRight2,
+    gorgonAboveQuantitativeNeumeRight2,
   } = template;
 
   const newValues = {
@@ -7272,6 +7275,9 @@ function getModeKeyTemplateUpdates(template: ModeKeyElement) {
     quantitativeNeumeAboveNote,
     quantitativeNeumeAboveNote2,
     quantitativeNeumeRight,
+    timeNeumeAboveQuantitativeNeumeRight,
+    quantitativeNeumeRight2,
+    gorgonAboveQuantitativeNeumeRight2,
   };
 
   return newValues;

@@ -1,5 +1,4 @@
 import type { ModeKeyElement } from '@/models/Element';
-import type { Neume } from '@/models/Neumes';
 import { ModeSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
 import {
@@ -52,6 +51,7 @@ import {
   type ResolvedInitialMartyriaRun,
   type ResolvedInitialMartyriaStyle,
 } from './InitialMartyriaStyle';
+import { getModeKeyTrailingGlyphGroups } from './ModeKeys';
 
 type InitialMartyriaComponent =
   | {
@@ -630,10 +630,7 @@ export function getInitialMartyriaContext(
             quantitativeNeumeAbove: element.quantitativeNeumeAboveNote2,
           }
         : null,
-      trailingGlyphs: [
-        element.quantitativeNeumeRight,
-        element.fthoraAboveQuantitativeNeumeRight,
-      ].filter((neume) => neume != null) as Neume[],
+      trailingGlyphGroups: getModeKeyTrailingGlyphGroups(element),
     },
   };
 }

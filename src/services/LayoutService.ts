@@ -3327,15 +3327,21 @@ export class LayoutService {
           glyphAppearance.fontFamily,
           glyphAppearance.fontSize,
         );
-        if (run.cluster.trailingGlyphs.length > 0) {
-          const trailingGlyphText = run.cluster.trailingGlyphs
+        const glyphStrokeOverflow = glyphAppearance.strokeWidth / 2;
+        for (const [
+          groupIndex,
+          group,
+        ] of run.cluster.trailingGlyphGroups.entries()) {
+          if (groupIndex > 0 || primary != null || secondary != null) {
+            width += trailingGlueWidth;
+          }
+          const trailingGlyphText = group
             .map((neume) => glyphText(neume, glyphAppearance.fontFamily))
             .join('');
           const trailingMetrics = TextMeasurementService.getTextMetrics(
             trailingGlyphText,
             glyphFont,
           );
-          const glyphStrokeOverflow = glyphAppearance.strokeWidth / 2;
           includeInk(
             neumeBaselineCorrection -
               trailingMetrics.actualBoundingBoxAscent -
@@ -3344,9 +3350,6 @@ export class LayoutService {
               trailingMetrics.actualBoundingBoxDescent +
               glyphStrokeOverflow,
           );
-          if (primary != null || secondary != null) {
-            width += trailingGlueWidth;
-          }
           width += trailingMetrics.width;
         }
         runLayouts.push({

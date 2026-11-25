@@ -24,6 +24,9 @@ export const MODE_KEY_MODEL_ATTRIBUTES = [
   'fthoraAboveNote2',
   'fthoraAboveQuantitativeNeumeRight',
   'quantitativeNeumeRight',
+  'timeNeumeAboveQuantitativeNeumeRight',
+  'quantitativeNeumeRight2',
+  'gorgonAboveQuantitativeNeumeRight2',
   'quantitativeNeumeAboveNote',
   'quantitativeNeumeAboveNote2',
   'fontSize',
@@ -63,6 +66,11 @@ export function getModeKeyModelAttributes(
     fthoraAboveQuantitativeNeumeRight:
       element.fthoraAboveQuantitativeNeumeRight,
     quantitativeNeumeRight: element.quantitativeNeumeRight,
+    timeNeumeAboveQuantitativeNeumeRight:
+      element.timeNeumeAboveQuantitativeNeumeRight,
+    quantitativeNeumeRight2: element.quantitativeNeumeRight2,
+    gorgonAboveQuantitativeNeumeRight2:
+      element.gorgonAboveQuantitativeNeumeRight2,
     quantitativeNeumeAboveNote: element.quantitativeNeumeAboveNote,
     quantitativeNeumeAboveNote2: element.quantitativeNeumeAboveNote2,
     fontSize: element.fontSize,

@@ -1176,6 +1176,11 @@ template. It preserves unrelated style, alignment, tempo/BPM, break, attraction,
 and ambitus settings on updates. Styling and tempo updates alone need no template
 pair. These actions use the existing revision checks and atomic undo transaction.
 
+Trailing starting-pitch notation uses `quantitativeNeumeRight` with optional
+`timeNeumeAboveQuantitativeNeumeRight` and `fthoraAboveQuantitativeNeumeRight`.
+`quantitativeNeumeRight2` carries the second base and
+`gorgonAboveQuantitativeNeumeRight2` its optional mark.
+
 `useOptionalDiatonicFthoras` is an operation input, not a stored element property.
 It adds the optional diatonic sign when supported. False never removes built-in
 fthoras; either value is accepted without effect for templates with no optional

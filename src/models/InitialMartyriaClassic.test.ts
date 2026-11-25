@@ -33,7 +33,7 @@ function getRunNeumes(run: ResolvedInitialMartyriaRun): Neume[] {
   if (run.kind !== 'startingPitch') {
     return [];
   }
-  const { primary, secondary, trailingGlyphs } = run.cluster;
+  const { primary, secondary, trailingGlyphGroups } = run.cluster;
   return [
     ...[primary, secondary].flatMap((note) =>
       note == null
@@ -42,7 +42,7 @@ function getRunNeumes(run: ResolvedInitialMartyriaRun): Neume[] {
             (neume) => neume != null,
           ),
     ),
-    ...trailingGlyphs,
+    ...trailingGlyphGroups.flat(),
   ];
 }
 
@@ -116,7 +116,10 @@ describe('Classic initial martyria', () => {
           element.fthoraAboveNote2,
           element.quantitativeNeumeAboveNote2,
           element.quantitativeNeumeRight,
+          element.timeNeumeAboveQuantitativeNeumeRight,
           element.fthoraAboveQuantitativeNeumeRight,
+          element.quantitativeNeumeRight2,
+          element.gorgonAboveQuantitativeNeumeRight2,
         ].filter((neume) => neume != null);
         expect(resolution.runs.flatMap(getRunNeumes)).toEqual(notation);
         expect(

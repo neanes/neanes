@@ -1,4 +1,11 @@
-import { Fthora, ModeSign, QuantitativeNeume } from '@/models/Neumes';
+import {
+  Fthora,
+  GorgonNeume,
+  ModeSign,
+  type Neume,
+  QuantitativeNeume,
+  TimeNeume,
+} from '@/models/Neumes';
 
 import type { ModelSelector } from './NeumeI18nMappings';
 import { Scale, ScaleNote } from './Scales';
@@ -21,9 +28,38 @@ export interface ModeKeyTemplate {
   quantitativeNeumeAboveNote?: ModeSign;
   quantitativeNeumeAboveNote2?: ModeSign;
   quantitativeNeumeRight?: QuantitativeNeume;
+  timeNeumeAboveQuantitativeNeumeRight?: TimeNeume;
+  quantitativeNeumeRight2?: QuantitativeNeume;
+  gorgonAboveQuantitativeNeumeRight2?: GorgonNeume;
   optionalFthoras?: {
     fthoraAboveNote?: Fthora;
   };
+}
+
+/** Keep each base and its marks together when shaping the starting pitch. */
+export function getModeKeyTrailingGlyphGroups(notation: {
+  quantitativeNeumeRight?: QuantitativeNeume | null;
+  fthoraAboveQuantitativeNeumeRight?: Fthora | null;
+  timeNeumeAboveQuantitativeNeumeRight?: TimeNeume | null;
+  quantitativeNeumeRight2?: QuantitativeNeume | null;
+  gorgonAboveQuantitativeNeumeRight2?: GorgonNeume | null;
+}): Neume[][] {
+  const first = [
+    notation.quantitativeNeumeRight,
+    notation.quantitativeNeumeRight == null
+      ? null
+      : notation.timeNeumeAboveQuantitativeNeumeRight,
+    notation.fthoraAboveQuantitativeNeumeRight,
+  ].filter((neume) => neume != null);
+  const second =
+    notation.quantitativeNeumeRight2 == null
+      ? []
+      : [
+          notation.quantitativeNeumeRight2,
+          notation.gorgonAboveQuantitativeNeumeRight2,
+        ].filter((neume) => neume != null);
+
+  return [first, second].filter((group) => group.length > 0);
 }
 
 export const modeKeyTemplates: ModeKeyTemplate[] = [
@@ -104,6 +140,17 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     quantitativeNeumeRight:
       QuantitativeNeume.OligonPlusHypsiliPlusKentimaVertical,
     fthoraAboveQuantitativeNeumeRight: Fthora.DiatonicPa_Top,
+  },
+  {
+    id: 107,
+    mode: 1,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.Ni,
+    description: ($) => $.model.initialMartyria.sticheraricFromNi,
+    martyria: ModeSign.AlphaWithDeltaHat,
+    note: ModeSign.Pa,
+    quantitativeNeumeRight: QuantitativeNeume.Apostrophos,
+    timeNeumeAboveQuantitativeNeumeRight: TimeNeume.Klasma_Top,
   },
   {
     id: 200,
@@ -487,6 +534,19 @@ export const modeKeyTemplates: ModeKeyTemplate[] = [
     martyria: ModeSign.Delta,
     note: ModeSign.Ni,
     quantitativeNeumeRight: QuantitativeNeume.KentemataPlusOligon,
+  },
+  {
+    id: 805,
+    mode: 8,
+    scale: Scale.Diatonic,
+    scaleNote: ScaleNote.Vou,
+    description: ($) => $.model.initialMartyria.slowDiphonic,
+    martyria: ModeSign.Delta,
+    note: ModeSign.Ni,
+    quantitativeNeumeRight: QuantitativeNeume.Ison,
+    timeNeumeAboveQuantitativeNeumeRight: TimeNeume.Klasma_Top,
+    quantitativeNeumeRight2: QuantitativeNeume.KentemataPlusOligon,
+    gorgonAboveQuantitativeNeumeRight2: GorgonNeume.Argon,
   },
   {
     id: 803,

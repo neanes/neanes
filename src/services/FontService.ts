@@ -13,6 +13,8 @@ interface Metrics {
   winDescent: number;
   oligonMidpoint: number;
   initialMartyriaBaseline: number;
+  /** Height of the shared quantitative-neume baseline above the font origin, in em. */
+  modeKeyQuantitativeBaseline: number;
   capitalHeight: number;
   elafronBounds: Partial<Record<SbmuflGlyphName, HorizontalBounds>>;
 }

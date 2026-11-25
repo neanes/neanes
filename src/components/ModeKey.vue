@@ -134,7 +134,6 @@
               v-if="run.cluster.trailingGlyphGroups.length > 0"
               class="pitch-trailing"
               dir="ltr"
-              :style="{ top: withZoom(layout.neumeBaselineCorrection) }"
             >
               <template
                 v-for="(group, groupIndex) in run.cluster.trailingGlyphGroups"
@@ -146,7 +145,16 @@
                   :style="getPitchTrailingGlueStyle(runLayouts[index])"
                   aria-hidden="true"
                 />
-                <span class="pitch-trailing-group">
+                <span
+                  class="pitch-trailing-group"
+                  :style="{
+                    top: withZoom(
+                      runLayouts[index].pitch!.trailingGlyphTopOffsets[
+                        groupIndex
+                      ],
+                    ),
+                  }"
+                >
                   <Neume v-for="neume in group" :key="neume" :neume="neume" />
                 </span>
               </template>
@@ -659,7 +667,7 @@ function getPitchTrailingGlueStyle(runLayout: InitialMartyriaRunLayout) {
   display: inline-block;
 }
 
-.pitch-trailing {
+.pitch-trailing-group {
   position: relative;
 }
 

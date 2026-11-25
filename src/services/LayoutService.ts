@@ -3147,9 +3147,9 @@ export class LayoutService {
       glyphFontSize,
     });
     const runs = resolution.runs;
+    const fontMetrics = fontService.getMetrics(neumeFontFamily);
     const neumeBaselineCorrection = getInitialMartyriaNeumeBaselineCorrection({
-      initialMartyriaBaseline:
-        fontService.getMetrics(neumeFontFamily).initialMartyriaBaseline,
+      initialMartyriaBaseline: fontMetrics.initialMartyriaBaseline,
       glyphFontSize,
     });
     const accessory = resolveInitialMartyriaAccessoryLayout({
@@ -3332,13 +3332,19 @@ export class LayoutService {
           glyphAppearance.fontFamily,
           glyphAppearance.fontSize,
         );
+        const isTrailingQuantitativeNeume = (neume: Neume | undefined) =>
+          neume === element.quantitativeNeumeRight ||
+          neume === element.quantitativeNeumeRight2;
         const firstTrailingGlyph = run.cluster.trailingGlyphGroups[0]?.[0];
-        const noteToTrailingWidth =
-          firstTrailingGlyph === element.quantitativeNeumeRight ||
-          firstTrailingGlyph === element.quantitativeNeumeRight2
-            ? getWordSpaceLayout(getWordSpaceOwner(run) ?? baseTextAppearance)
-                .width
-            : trailingGlueWidth;
+        const noteToTrailingWidth = isTrailingQuantitativeNeume(
+          firstTrailingGlyph,
+        )
+          ? getWordSpaceLayout(getWordSpaceOwner(run) ?? baseTextAppearance)
+              .width
+          : trailingGlueWidth;
+        const quantitativeTopOffset =
+          fontMetrics.modeKeyQuantitativeBaseline * glyphAppearance.fontSize;
+        const trailingGlyphTopOffsets: number[] = [];
         const glyphStrokeOverflow = glyphAppearance.strokeWidth / 2;
         for (const [
           groupIndex,
@@ -3356,11 +3362,15 @@ export class LayoutService {
             trailingGlyphText,
             glyphFont,
           );
+          const topOffset = isTrailingQuantitativeNeume(group[0])
+            ? quantitativeTopOffset
+            : neumeBaselineCorrection;
+          trailingGlyphTopOffsets.push(topOffset);
           includeInk(
-            neumeBaselineCorrection -
+            topOffset -
               trailingMetrics.actualBoundingBoxAscent -
               glyphStrokeOverflow,
-            neumeBaselineCorrection +
+            topOffset +
               trailingMetrics.actualBoundingBoxDescent +
               glyphStrokeOverflow,
           );
@@ -3379,6 +3389,7 @@ export class LayoutService {
             clusterSeparatorWidth,
             noteToTrailingWidth,
             trailingGlueWidth,
+            trailingGlyphTopOffsets,
           },
         });
         continue;
@@ -3506,7 +3517,6 @@ export class LayoutService {
       primaryAppearance: baseTextAppearance,
       runs: runLayouts,
       trailingSeparator,
-      neumeBaselineCorrection,
       accessory,
       ambitus,
     };

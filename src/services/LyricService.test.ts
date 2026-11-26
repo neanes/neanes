@@ -1,5 +1,6 @@
 import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
+import { effect, reactive, stop } from 'vue';
 
 import type { ScoreElement } from '../models/Element';
 import {
@@ -42,6 +43,25 @@ describe('LyricService (English)', () => {
     expect(first.isHyphen).toBe(true);
     expect(second.lyrics).toBe('le');
     expect(lyricService.extractLyrics(elements, false)).toBe('Al-le');
+  });
+
+  it('extracts reactive elements like raw elements without tracking them', () => {
+    const lyricService = new LyricService();
+    const raw: ScoreElement[] = [createNote('one'), createNote('two')];
+    const elements = reactive(raw);
+
+    expect(lyricService.extractLyrics(elements, false)).toBe(
+      lyricService.extractLyrics(raw, false),
+    );
+
+    let runs = 0;
+    const runner = effect(() => {
+      runs++;
+      lyricService.extractLyrics(elements, false);
+    });
+    (elements[0] as NoteElement).lyrics = 'three';
+    expect(runs).toBe(1);
+    stop(runner);
   });
 
   it('should extract single word', () => {

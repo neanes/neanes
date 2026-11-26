@@ -291,6 +291,36 @@ describe('LayoutService.calculateMartyriae', () => {
   });
 });
 
+describe('LayoutService.findFinalAndNextElement at a page boundary', () => {
+  it.each([true, false])(
+    'reads the following note only without a page break (pageBreak=%s)',
+    (pageBreak) => {
+      const start = new NoteElement();
+      start.isMelisma = true;
+      start.isMelismaStart = true;
+
+      const lastNote = new NoteElement();
+      lastNote.isMelisma = true;
+
+      const tempo = new TempoElement();
+      tempo.pageBreak = pageBreak;
+
+      const continuation = new NoteElement();
+      continuation.isMelisma = true;
+
+      const result = LayoutService.findFinalAndNextElement(
+        getLine(start, lastNote, tempo),
+        start,
+        continuation,
+        1,
+      );
+
+      expect(result.finalElement).toBe(pageBreak ? lastNote : tempo);
+      expect(result.nextElement).toBe(pageBreak ? null : continuation);
+    },
+  );
+});
+
 describe.each([true, false])(
   'LayoutService.findFinalAndNextElement',
   (isHyphen) => {

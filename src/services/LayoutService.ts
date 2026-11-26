@@ -765,6 +765,7 @@ export class LayoutService {
       defaultLyricsFontCss,
       measureBarWidthMap,
       atomicMelismaLayout.centeringPlans,
+      content.blockedPageMelismaNotes,
     );
 
     endPhase();
@@ -863,6 +864,7 @@ export class LayoutService {
           prepared.content.defaultLyricsFontCss,
           prepared.content.measureBarWidthMap,
           prepared.content.atomicMelismaLayout.centeringPlans,
+          prepared.content.blockedPageMelismaNotes,
         );
         if (setup.alignIsonIndicators) {
           this.alignIsonIndicators([bodyPage], setup);
@@ -1454,14 +1456,24 @@ export class LayoutService {
         completed: layoutWorkspace.completedParagraphs.at(-1)!,
       });
     };
+    // Orphaned continuation notes stay editable after a hard page break.
+    let afterPageBreak = false;
+    const blockedPageMelismaNotes = new Set<NoteElement>();
     for (let i = 0; i < elements.length; i++) {
+      const element = elements[i];
       if (layoutWorkspace.pendingParagraph.length === 0) {
         paragraphStartIndex = i;
         paragraphEntry = carriedState();
       }
-      if (this.isBreakElement(elements[i])) {
+      if (this.isBreakElement(element)) {
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
+      } else if (element.elementType === ElementType.Note) {
+        if (afterPageBreak && this.isPartOfSameMelisma(element)) {
+          blockedPageMelismaNotes.add(element as NoteElement);
+        } else {
+          afterPageBreak = false;
+        }
       }
       if (layoutWorkspace.diagnostics != null) {
         layoutWorkspace.diagnostics.currentOwner = elements[i];
@@ -1773,6 +1785,7 @@ export class LayoutService {
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
           const nextGeneratedBounds =
+            !noteElement.pageBreak &&
             greekPairEnd == null &&
             nextNoteElement != null &&
             nextNoteElement.lyrics.length === 0 &&
@@ -1806,6 +1819,8 @@ export class LayoutService {
           }
           if (
             noteElement.isHyphen &&
+            !noteElement.pageBreak &&
+            !blockedPageMelismaNotes.has(noteElement) &&
             nextNoteElement != null &&
             nextNoteElement.lyricsWidth > 0 &&
             LayoutService.mayShowLeadingLyricHyphen(
@@ -2405,6 +2420,12 @@ export class LayoutService {
           );
       }
 
+      if (element.pageBreak) {
+        afterPageBreak = true;
+        phase1GreekMelismaIsActive = false;
+        phase1GreekMelismaSyllables = null;
+        pendingGreekPairEndPx = null;
+      }
       this.addHSpace(this.getSpaceAfter(elements[i]), layoutWorkspace);
 
       // A block element terminates its own line.
@@ -2477,6 +2498,7 @@ export class LayoutService {
       defaultLyricsFontCss,
       measureBarWidthMap,
       atomicMelismaLayout,
+      blockedPageMelismaNotes,
     };
   }
 
@@ -4137,9 +4159,7 @@ export class LayoutService {
       this.getUnpunctuatedLyricWidth(noteElement) >
         noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
       (!noteElement.isHyphen ||
-        (nextNoteElement != null &&
-          nextNoteElement.isMelisma &&
-          !nextNoteElement.isMelismaStart))
+        (!noteElement.pageBreak && this.isPartOfSameMelisma(nextNoteElement)))
     );
   }
 
@@ -4237,7 +4257,10 @@ export class LayoutService {
         noteIndex++;
       }
 
-      if (this.hasNonNoteMelismaContinuation(elements, noteIndex + 1)) {
+      if (
+        !note.pageBreak &&
+        this.hasNonNoteMelismaContinuation(elements, noteIndex + 1)
+      ) {
         continue;
       }
       const centeringPlan = { phase1Centered: false };
@@ -7042,6 +7065,7 @@ export class LayoutService {
     defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
     centeringPlans: ReadonlyMap<NoteElement, MelismaCenteringPlan>,
+    blockedPageMelismaNotes: ReadonlySet<NoteElement>,
   ) {
     // First calculate some constants
 
@@ -7120,8 +7144,10 @@ export class LayoutService {
           const isIntermediateMelismaAtStartOfLine =
             index === indexOfFirstNote &&
             element.isMelisma &&
-            !element.isMelismaStart;
+            !element.isMelismaStart &&
+            !blockedPageMelismaNotes.has(element);
           const mayShowLeadingLyricHyphen =
+            !blockedPageMelismaNotes.has(element) &&
             LayoutService.mayShowLeadingLyricHyphen(
               element,
               pageSetup,
@@ -7387,8 +7413,12 @@ export class LayoutService {
           }
         }
 
+        const endsWithPageBreak = line.elements.at(-1)?.pageBreak === true;
+        if (endsWithPageBreak) {
+          phase2GreekMelismaIsActive = false;
+        }
         previousLineEndingMayShowLeadingLyricHyphen =
-          lineEndingMayShowLeadingLyricHyphen;
+          !endsWithPageBreak && lineEndingMayShowLeadingLyricHyphen;
       }
     }
   }
@@ -10068,6 +10098,9 @@ export class LayoutService {
           pairs.set(note, next);
         }
       }
+      if (element.pageBreak) {
+        greekIsActive = false;
+      }
     }
     return pairs;
   }
@@ -10156,6 +10189,9 @@ export class LayoutService {
           resolvedMargins,
         )) {
           texts.set(note, text);
+        }
+        if (line.elements.at(-1)?.pageBreak) {
+          syllables = null;
         }
       }
     }
@@ -10367,11 +10403,14 @@ export class LayoutService {
         if (crossedNonNoteElement) {
           return true;
         }
+        if (element.pageBreak) {
+          return false;
+        }
 
         continue;
       }
 
-      if (!this.isMelismaContinuationElement(element)) {
+      if (element.pageBreak || !this.isMelismaContinuationElement(element)) {
         return false;
       }
 
@@ -10427,6 +10466,10 @@ export class LayoutService {
     firstElementOnNextLine: ScoreElement | null,
     startIndex: number,
   ) {
+    if (line.elements.at(-1)?.pageBreak) {
+      firstElementOnNextLine = null;
+    }
+
     let finalElement:
       NoteElement | MartyriaElement | TempoElement | TextBoxElement | null =
       null;

@@ -435,6 +435,10 @@
     "enableDeveloperPanel": "Enable Developer Panel",
     "tempoDefaults": "Tempo Defaults",
     "bpm": "BPM",
+    "smartQuotes": "Smart Quotes",
+    "quoteStyle": "Quote Style",
+    "quoteStyleInterfaceLanguage": "Same as interface language",
+    "smartQuotesDescription": "Converts typed straight quotes to the quotation marks and apostrophes of the chosen language. Rich text marked with a language uses that language. Press Backspace right after a conversion to keep the straight quote.",
     "sections": {
       "general": "General",
       "appearance": "Appearance",

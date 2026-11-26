@@ -5,6 +5,7 @@
     class="contenteditable"
     :contenteditable="contentEditable"
     :style="style"
+    @beforeinput="onBeforeInput"
     @blur="onBlur"
     @focus="$emit('focus')"
     @click="$emit('click')"
@@ -16,6 +17,8 @@
 <script setup lang="ts">
 import type { StyleValue } from 'vue';
 import { computed, onMounted, useTemplateRef } from 'vue';
+
+import { useSmartQuotes } from '@/composables/useSmartQuotes';
 
 const emit = defineEmits(['click', 'focus', 'blur', 'onEditorReady']);
 const props = defineProps({
@@ -42,6 +45,7 @@ const props = defineProps({
 });
 
 const span = useTemplateRef<HTMLElement>('span');
+const onBeforeInput = useSmartQuotes();
 
 const contentEditable = computed(() => {
   return props.editable

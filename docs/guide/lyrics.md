@@ -127,6 +127,26 @@ Select a lyric beneath a neume to use the text controls in the bottom toolbar. Y
 
 For consistent formatting throughout the score, choose `Format > Paragraph Styles` and modify the built-in **Lyrics** style instead of formatting each neume separately. See [Apply a style](/guide/text-and-styles.html#apply-a-style).
 
+## Type quotation marks and apostrophes
+
+Neanes converts straight quotes to typographic quotation marks as you type. This applies to lyrics, drop caps, text boxes, and the Lyrics pane.
+
+- `"` opens a quotation at the start of the text, after a space, or after an opening bracket. Elsewhere it closes the quotation.
+- `'` opens a nested quotation in the same places.
+- Elsewhere, `'` closes a nested quotation that is still open in the same text.
+- Otherwise `'` becomes an apostrophe (`’`).
+
+The quotation marks follow **Quote Style** in `Edit > Preferences > Editing`.
+
+| Quote Style               | `"` | `'` |
+| ------------------------- | --- | --- |
+| English, Bahasa Indonesia | “…” | ‘…’ |
+| Ελληνικά                  | «…» | “…” |
+| Română                    | „…” | «…» |
+| Русский                   | «…» | „…“ |
+
+To keep a straight quote, press Backspace right after Neanes converts it. To type an apostrophe at the start of a word, such as `’tis`, type `’` directly. Turn off **Smart Quotes** to type straight quotes everywhere. Pasted text and text already in the score are not changed. See [Set application preferences](/guide/editor-basics.html#set-application-preferences).
+
 ## Create a prosomoion from an automelon
 
 A prosomoion uses the melodic pattern of an automelon with different words. Neanes can preserve the automelon's syllable and melisma pattern while you replace its text.

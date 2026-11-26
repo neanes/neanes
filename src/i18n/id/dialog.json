@@ -435,6 +435,10 @@
     "enableDeveloperPanel": "Aktifkan Panel Pengembang",
     "tempoDefaults": "Default Tempo",
     "bpm": "BPM",
+    "smartQuotes": "Tanda Kutip Cerdas",
+    "quoteStyle": "Gaya Tanda Kutip",
+    "quoteStyleInterfaceLanguage": "Sama dengan bahasa antarmuka",
+    "smartQuotesDescription": "Mengubah tanda kutip lurus yang diketik menjadi tanda kutip dan apostrof bahasa yang dipilih. Teks kaya yang ditandai dengan bahasa menggunakan bahasa tersebut. Tekan Backspace tepat setelah konversi untuk mempertahankan tanda kutip lurus.",
     "sections": {
       "general": "Umum",
       "appearance": "Tampilan",

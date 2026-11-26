@@ -294,6 +294,64 @@
                     </Field>
                   </FieldGroup>
                 </FieldSet>
+
+                <Field v-if="section === 'editing'" orientation="horizontal">
+                  <Switch
+                    id="editor-preferences-smart-quotes"
+                    :model-value="form.smartQuotes"
+                    @update:model-value="form.smartQuotes = $event === true"
+                  />
+                  <FieldLabel for="editor-preferences-smart-quotes">
+                    {{
+                      $t(($) => $.dialog.preferences.smartQuotes, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </FieldLabel>
+                </Field>
+
+                <Field v-if="section === 'editing'">
+                  <FieldLabel for="editor-preferences-quote-style">
+                    {{
+                      $t(($) => $.dialog.preferences.quoteStyle, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </FieldLabel>
+                  <Select
+                    v-model="quoteStyleSelectValue"
+                    :disabled="!form.smartQuotes"
+                  >
+                    <SelectTrigger
+                      id="editor-preferences-quote-style"
+                      class="w-full"
+                    >
+                      <SelectValue>{{ selectedQuoteStyleLabel }}</SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem :value="QUOTE_STYLE_INTERFACE_VALUE">
+                          {{ quoteStyleInterfaceLabel }}
+                        </SelectItem>
+                        <SelectItem
+                          v-for="locale in supportedLocales"
+                          :key="locale.code"
+                          :value="locale.code"
+                          :text-value="locale.name"
+                        >
+                          {{ getQuoteStyleLabel(locale.code) }}
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <FieldDescription>
+                    {{
+                      $t(($) => $.dialog.preferences.smartQuotesDescription, {
+                        ns: 'dialog',
+                      })
+                    }}
+                  </FieldDescription>
+                </Field>
               </FieldGroup></ScrollArea
             ></TabsContent
           >
@@ -373,6 +431,7 @@ import { ButtonMenuMode, EditorPreferences } from '@/models/EditorPreferences';
 import { getTempoSignLabelSelector } from '@/models/NeumeI18nMappings';
 import { TempoSign } from '@/models/Neumes';
 import type { PageSetup } from '@/models/PageSetup';
+import { getQuoteStyleExample, type QuoteStyle } from '@/utils/smartQuotes';
 
 import InputBpm from './InputBpm.vue';
 
@@ -431,6 +490,24 @@ const menuInteractionLabel = computed(() =>
     { ns: 'dialog' },
   ),
 );
+const QUOTE_STYLE_INTERFACE_VALUE = '__interface_language__';
+const quoteStyleSelectValue = computed({
+  get() {
+    return form.value.quoteStyle || QUOTE_STYLE_INTERFACE_VALUE;
+  },
+  set(value: string) {
+    form.value.quoteStyle =
+      value === QUOTE_STYLE_INTERFACE_VALUE ? '' : (value as QuoteStyle);
+  },
+});
+const quoteStyleInterfaceLabel = computed(() =>
+  t(($) => $.dialog.preferences.quoteStyleInterfaceLanguage, { ns: 'dialog' }),
+);
+const selectedQuoteStyleLabel = computed(() =>
+  form.value.quoteStyle
+    ? getQuoteStyleLabel(form.value.quoteStyle)
+    : quoteStyleInterfaceLabel.value,
+);
 const tempoSigns = [
   TempoSign.VerySlow,
   TempoSign.Slower,
@@ -477,9 +554,18 @@ function resetToSystemDefaults() {
     colorModeValue.value = 'auto';
   } else if (section.value === 'editing') {
     form.value.tempoDefaults = defaults.tempoDefaults;
+    form.value.smartQuotes = defaults.smartQuotes;
+    form.value.quoteStyle = defaults.quoteStyle;
   } else if (section.value === 'advanced') {
     form.value.showDeveloperPanels = defaults.showDeveloperPanels;
   }
+}
+
+function getQuoteStyleLabel(style: QuoteStyle) {
+  const name =
+    supportedLocales.find((locale) => locale.code === style)?.name ?? style;
+
+  return `${name} ${getQuoteStyleExample(style)}`;
 }
 
 function getTempoInputId(tempo: TempoSign) {

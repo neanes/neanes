@@ -53,6 +53,7 @@ Choose `Edit > Preferences` to change settings that apply throughout Neanes. Cha
 - **Color Mode** sets the interface to **Light** or **Dark**. Choose **System** to follow your operating system's appearance setting.
 - **Menu Interaction** controls toolbar buttons that contain a family of related signs. With **Press and hold to select**, hold the button, move to the desired sign, and release. With **Click to open menu**, click the button and then click a sign.
 - **Tempo Defaults** sets the BPM used when you add each kind of tempo sign, including a tempo attached to a martyria. To give one tempo sign a different speed, select it in the score and change **BPM** in Properties. Changing a default does not alter tempo signs already in the score.
+- **Smart Quotes** converts typed straight quotes (`'` and `"`) to typographic quotation marks and apostrophes. It is on by default. **Quote Style** chooses the language whose quotation marks are used. **Same as interface language** follows the **Language** setting. Rich text marked with a language uses that language's quotation marks. See [Type quotation marks and apostrophes](/guide/lyrics.html#type-quotation-marks-and-apostrophes).
 
 Preferences are remembered between sessions. Choose **Use System Default** to restore the defaults for the current section.
 

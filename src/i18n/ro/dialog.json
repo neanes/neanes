@@ -435,6 +435,10 @@
     "enableDeveloperPanel": "Activează panoul pentru dezvoltatori",
     "tempoDefaults": "Tempouri implicite",
     "bpm": "BPM",
+    "smartQuotes": "Ghilimele Inteligente",
+    "quoteStyle": "Stil Ghilimele",
+    "quoteStyleInterfaceLanguage": "La fel ca limba interfeței",
+    "smartQuotesDescription": "Convertește ghilimelele drepte tastate în ghilimelele și apostrofurile limbii alese. Textul formatat marcat cu o limbă folosește acea limbă. Apăsați Backspace imediat după o conversie pentru a păstra ghilimeaua dreaptă.",
     "sections": {
       "general": "General",
       "appearance": "Aspect",

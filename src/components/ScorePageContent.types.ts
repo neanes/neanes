@@ -10,12 +10,11 @@ import type {
   TextBoxElement,
 } from '@/models/Element';
 
-// The caret is drawn before the first element (start of the staff), after the
-// last element (end of the staff), or, when the staff is empty, where its
-// first element will go. A null footnote id is the main score.
+// The caret is anchored to an element, the start of a page, or an empty footnote.
 export type InsertionCaret =
   | { kind: 'element'; element: ScoreElement; after: boolean }
-  | { kind: 'empty'; footnoteId: string | null };
+  | { kind: 'page'; pageNumber: number }
+  | { kind: 'emptyFootnote'; footnoteId: string };
 
 export interface ScorePageInteraction {
   isSelected(element: ScoreElement): boolean;

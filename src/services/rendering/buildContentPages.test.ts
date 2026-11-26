@@ -87,11 +87,14 @@ describe('whole-footnote page selection', () => {
     expect(pages[0].footnoteIds).toEqual(['a']);
   });
 
-  it('honors explicit breaks without adding a trailing empty page', () => {
+  it('creates a page for an explicit break at the end of the score', () => {
     const lines = [line(10), line(10), line(10)];
     lines[0].pageBreak = true;
     lines[2].pageBreak = true;
-    expect(membership(paginate(lines))).toEqual([[0], [1, 2]]);
+    expect(membership(paginate(lines))).toEqual([[0], [1, 2], []]);
+
+    lines.push(line(10));
+    expect(membership(paginate(lines))).toEqual([[0], [1, 2], [3]]);
   });
 
   it('reports chapter-opening overflow breaks and honors remembered boundaries on a later pass', () => {

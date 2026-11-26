@@ -146,5 +146,8 @@ export function buildContentPages(
       page.contentBottom + sectionHeight(ids) >
         availableHeight(page.reservation);
   }
+  if (explicitBreak) {
+    pages.push(createPage());
+  }
   return pages;
 }

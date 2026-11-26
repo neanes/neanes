@@ -196,7 +196,9 @@
       :key="`footnote-placeholder-${footnote.id}`"
       :data-footnote-id="footnote.id"
       class="footnote-placeholder"
-      :class="emptyCaret?.footnoteId === footnote.id ? caretClass : undefined"
+      :class="
+        emptyFootnoteCaret?.footnoteId === footnote.id ? caretClass : undefined
+      "
       :style="footnotePlaceholderStyle(footnote)"
     >
       <span
@@ -208,10 +210,10 @@
       >
     </span>
     <span
-      v-if="showEmptyScoreCaret"
-      class="empty-score-caret"
+      v-if="showPageStartCaret"
+      class="page-start-caret"
       :class="caretClass"
-      :style="emptyScoreCaretStyle"
+      :style="pageStartCaretStyle"
     />
   </template>
   <button
@@ -934,8 +936,8 @@ const caret = computed(() =>
 const caretElement = computed(() =>
   caret.value?.kind === 'element' ? caret.value.element : null,
 );
-const emptyCaret = computed(() =>
-  caret.value?.kind === 'empty' ? caret.value : null,
+const emptyFootnoteCaret = computed(() =>
+  caret.value?.kind === 'emptyFootnote' ? caret.value : null,
 );
 // The caret is drawn on the inline end side after the last element. With
 // physical offsets, that is the right side, mirrored for RTL scores.
@@ -945,12 +947,12 @@ const caretClass = computed(() => {
     ? 'insertion-caret insertion-caret-right'
     : 'insertion-caret';
 });
-// An empty main score has its caret where the first line goes on the first
-// page.
-const showEmptyScoreCaret = computed(
-  () => props.pageIndex === 0 && emptyCaret.value?.footnoteId === null,
+const showPageStartCaret = computed(
+  () =>
+    caret.value?.kind === 'page' &&
+    caret.value.pageNumber === props.page.physicalPageNumber,
 );
-const emptyScoreCaretStyle = computed(() => {
+const pageStartCaretStyle = computed(() => {
   const margins = getResolvedMarginsForPage(props.page);
   const pageSetup = props.score.pageSetup;
   return {
@@ -1603,7 +1605,7 @@ defineExpose({
   background: color-mix(in srgb, currentColor 3%, transparent);
 }
 .footnote-placeholder,
-.empty-score-caret {
+.page-start-caret {
   position: absolute;
   pointer-events: none;
   user-select: none;

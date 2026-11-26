@@ -16,7 +16,7 @@ try {
   const { evaluate, send } = await app.debugger('renderer');
   await app.ready();
   await send('Emulation.setFocusEmulationEnabled', { enabled: true });
-  const document = await eventually(async () => {
+  const target = await eventually(async () => {
     const result = await evaluate(`(() => {
       const e = window._editor;
       if (e?.selectedWorkspace.value.filePath !== ${JSON.stringify(score)}) {
@@ -27,13 +27,44 @@ try {
         (item) => ['Oligon', 'Ison', 'Apostrophos'].includes(item.quantitativeNeume),
       );
       e.selectedElement.value = note;
-      return { elements: elements.length, page: note.page };
+      document.querySelectorAll('.page')[note.page - 1]?.scrollIntoView({ block: 'center' });
+      return { elements: elements.length, page: note.page, noteId: note.id };
     })()`);
     assert.ok(result, 'Score has not opened');
     return result;
   });
+  await eventually(async () => {
+    const visible = await evaluate(`(() => {
+      const note = document.getElementById('element-${target.noteId}');
+      if (!note) return false;
+      const viewport = note.closest('.page-background').getBoundingClientRect();
+      const bounds = note.getBoundingClientRect();
+      if (bounds.top >= viewport.top && bounds.bottom <= viewport.bottom) {
+        return true;
+      }
+      note.scrollIntoView({ block: 'center' });
+      return false;
+    })()`);
+    assert.ok(visible, 'The note to edit is not visible');
+  });
+  const observeKeyPaint = await evaluate(`(() => {
+    if (!PerformanceObserver.supportedEntryTypes.includes('event')) return false;
+    const events = [];
+    window.__neanesProfileKeyEvents = events;
+    new PerformanceObserver((list) => {
+      for (const event of list.getEntriesByName('keydown')) {
+        events.push({
+          start: event.startTime,
+          end: event.startTime + event.duration,
+          duration: event.duration,
+          processingStart: event.processingStart,
+          processingEnd: event.processingEnd,
+        });
+      }
+    }).observe({ type: 'event', durationThreshold: 16 });
+    return true;
+  })()`);
   const samples = [];
-  const paragraphSamples = [];
   if (cpuProfilePath) {
     await send('Profiler.enable');
     await send('Profiler.setSamplingInterval', { interval: 500 });
@@ -54,53 +85,142 @@ try {
         windowsVirtualKeyCode: 71,
       });
     }
-    const entries = await eventually(async () => {
+    const timing = await eventually(async () => {
       const sample = await evaluate(`({
         gorgon: window._editor.selectedElement.value.gorgonNeume,
         entries: window.__neanesLayoutProfile.filter((entry) => entry.start >= ${before.time}),
+        keyEvents: window.__neanesProfileKeyEvents ?? [],
       })`);
       assert.notEqual(sample.gorgon, before.gorgon, 'Gorgon did not change');
-      assert.ok(sample.entries.some(({ name }) => name === 'processPages'));
-      return sample.entries;
-    });
-    const layout = entries.find(({ name }) => name === 'processPages');
-    if (attempt >= 4) {
-      samples.push(
-        entries.filter(
-          ({ start, name, parent }) =>
-            start >= layout.start &&
-            start <= layout.start + layout.duration &&
-            (name === 'processPages' ||
-              parent === 'processPages' ||
-              parent === 'processPages.prepareContentLines'),
-        ),
-      );
+      const { entries } = sample;
       const editor = entries.find(({ name }) => name === 'editor.layout');
-      paragraphSamples.push(editor?.detail ?? {});
+      assert.ok(editor, 'The edit did not run an interactive layout');
+      const layout = entries.find(
+        ({ name, start }) => name === 'processPages' && start >= editor.start,
+      );
+      assert.ok(layout, 'The edit did not run processPages');
+      const render = entries.find(
+        ({ name, start }) =>
+          name === 'editor.render' && start >= editor.start + editor.duration,
+      );
+      assert.ok(render, 'The updated view has not rendered');
+      const frame = entries.find(
+        ({ name, start }) => name === 'editor.frame' && start === render.start,
+      );
+      assert.ok(frame, 'The next frame has not completed');
+      const keyPaint = sample.keyEvents.find(
+        (event) =>
+          event.start >= before.time &&
+          event.processingStart <= editor.start &&
+          event.processingEnd >= editor.start + editor.duration,
+      );
+      assert.ok(
+        keyPaint || !observeKeyPaint,
+        'No paint timing for the edited key',
+      );
+      return { entries, editor, layout, render, frame, keyPaint };
+    });
+    if (attempt >= 4) {
+      samples.push(timing);
     }
   }
   if (cpuProfilePath) {
     const { profile } = await send('Profiler.stop');
     await writeFile(cpuProfilePath, JSON.stringify(profile));
   }
-  const phases = samples[0].map(({ name }) => name);
-  console.log(document);
+  const layoutPhases = samples[0].entries
+    .filter(
+      ({ parent }) =>
+        parent === 'processPages' ||
+        parent === 'processPages.prepareContentLines',
+    )
+    .map(({ name }) => name);
+  const editorPhases = [
+    'processPages',
+    'editor.publishLayout',
+    'editor.liveLayoutRefresh',
+    'editor.persistLayoutRecovery',
+    'editor.layout',
+    'editor.render',
+    'editor.frame',
+  ];
+  console.log(target);
   function median(times) {
     const sorted = times.toSorted((a, b) => a - b);
     const mid = sorted.length / 2;
     return (sorted[mid - 1] + sorted[mid]) / 2;
   }
-  for (const phase of phases) {
+  function report(name, times) {
+    console.log(`${name} ${median(times).toFixed(1)} ms`);
+  }
+  for (const phase of [...layoutPhases, ...editorPhases]) {
     const times = samples.map(
-      (sample) => sample.find(({ name }) => name === phase).duration,
+      ({ entries }) => entries.find(({ name }) => name === phase)?.duration,
     );
-    console.log(`${phase} ${median(times).toFixed(1)} ms`);
+    if (times.every(Number.isFinite)) {
+      report(phase, times);
+    }
   }
   for (const phase of ['breakParagraph', 'breakLines']) {
-    const times = paragraphSamples.map((sample) => parseFloat(sample[phase]));
+    const times = samples.map(({ editor }) =>
+      parseFloat(editor.detail?.[phase]),
+    );
     if (times.every(Number.isFinite)) {
-      console.log(`${phase} ${median(times).toFixed(1)} ms`);
+      report(phase, times);
     }
+  }
+  const frameEnd = ({ frame }) => frame.start + frame.duration;
+  report(
+    'layout start to next frame',
+    samples.map((sample) => frameEnd(sample) - sample.editor.start),
+  );
+  report(
+    'processPages end to next frame',
+    samples.map(
+      (sample) =>
+        frameEnd(sample) - sample.layout.start - sample.layout.duration,
+    ),
+  );
+  report(
+    'Vue patch to next frame',
+    samples.map(({ render, frame }) => frame.duration - render.duration),
+  );
+  const shares = samples.map(
+    (sample) =>
+      (100 *
+        (frameEnd(sample) - sample.layout.start - sample.layout.duration)) /
+      (frameEnd(sample) - sample.editor.start),
+  );
+  console.log(`post-processPages share ${median(shares).toFixed(1)}%`);
+  if (observeKeyPaint) {
+    report(
+      'keydown to next paint (Event Timing)',
+      samples.map(({ keyPaint }) => keyPaint.duration),
+    );
+    report(
+      'layout start to next paint (Event Timing)',
+      samples.map(({ keyPaint, editor }) => keyPaint.end - editor.start),
+    );
+    report(
+      'processPages end to next paint (Event Timing)',
+      samples.map(
+        ({ keyPaint, layout }) => keyPaint.end - layout.start - layout.duration,
+      ),
+    );
+    report(
+      'Vue patch to next paint (Event Timing)',
+      samples.map(
+        ({ keyPaint, render }) => keyPaint.end - render.start - render.duration,
+      ),
+    );
+    const paintShares = samples.map(
+      ({ keyPaint, editor, layout }) =>
+        (100 * (keyPaint.end - layout.start - layout.duration)) /
+        (keyPaint.end - editor.start),
+    );
+    console.log(
+      `post-processPages share (Event Timing) ${median(paintShares).toFixed(1)}%`,
+    );
   }
 } finally {
   await app.close();

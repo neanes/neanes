@@ -87,8 +87,12 @@ node tests/integration/layout/profile-edits.mjs /path/to/long-doc-with-melisma.b
 ```
 
 The benchmark opens a temporary copy of the score in a disposable profile. It
-toggles the gorgon on a note near the middle of the score and prints the median
-synchronous layout time per phase for ten edits after four warm-up edits.
+scrolls to a note near the middle of the score and toggles its gorgon. It reports
+median layout, publishing, Vue flush, and next-frame timings for ten edits after
+four warm-up edits. The frame marker is a timer queued from an animation-frame
+callback. When Chromium exposes Event Timing, the benchmark also reports the
+keydown-to-next-paint duration and uses that paint timestamp to measure the gap
+from layout to paint. Event Timing durations are rounded to 8 ms.
 
 For a sampled renderer CPU profile of the timed edits, build with source maps
 and pass a second path. Load the resulting file in Chromium DevTools and inspect

@@ -1271,6 +1271,10 @@ export class SaveService {
     return { score, repairedFootnoteReferences };
   }
 
+  /**
+   * Serializes the current score. Callers that need reactive updates must
+   * track score changes explicitly.
+   */
   public static SaveScoreToJson(reactiveScore: Score) {
     // Read through the raw score. Serialization only reads, and Vue's proxy
     // traps (with dependency tracking) dominated its cost for large scores.

@@ -37,8 +37,9 @@ export type UpdateDropCapCallback = (
 
 export class LyricService {
   /**
-   * Extracts lyrics from score elements
-   * @param elements The elements from which lyrics are extracted
+   * Extracts lyrics from score elements. Callers that need reactive updates
+   * must track changes to the elements explicitly.
+   * @param reactiveElements The elements from which lyrics are extracted
    * @returns A string containing the extracted lyrics.
    */
   extractLyrics(

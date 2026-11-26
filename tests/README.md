@@ -90,6 +90,17 @@ The benchmark opens a temporary copy of the score in a disposable profile. It
 toggles the gorgon on a note near the middle of the score and prints the median
 synchronous layout time per phase for ten edits after four warm-up edits.
 
+For a sampled renderer CPU profile of the timed edits, build with source maps
+and pass a second path. Load the resulting file in Chromium DevTools and inspect
+the `prepareContentLines` call tree.
+
+```sh
+VITE_LAYOUT_PROFILING_ENABLED=true npx vite build --sourcemap
+node tests/integration/layout/profile-edits.mjs /path/to/score.byz /tmp/layout.cpuprofile
+```
+
+Run without the CPU profile path when measuring wall-clock timings.
+
 ## Local Linux tests with Docker
 
 With Docker Desktop running, use the Linux runner from the repository root:

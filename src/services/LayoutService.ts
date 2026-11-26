@@ -1345,7 +1345,10 @@ export class LayoutService {
       paragraphStyles: paragraphStyles,
     };
 
+    const endGeometry = startSpan('prepareContentLines.noteGeometry');
     this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
+    endGeometry();
+    const endMelismas = startSpan('prepareContentLines.melismas');
     const greekMelismaPairs = this.prepareGreekMelismaPairs(
       elements,
       pageSetup,
@@ -1357,6 +1360,8 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
     );
+
+    endMelismas();
 
     // Keep this encoding's elasticity non-negative so adjustment ratios retain
     // their conventional meaning and tex-linebreak can use its suffix-floor
@@ -1394,6 +1399,22 @@ export class LayoutService {
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
+    const endParagraphs = startSpan('prepareContentLines.paragraphs');
+    // Adjacent note boundaries share a note. Its collision inputs are fixed
+    // during encoding, so only retain the last note's boxes.
+    let collisionNote: NoteElement | null = null;
+    let collisionBoxes: NoteGlyphBox[] = [];
+    const getCollisionBoxes = (note: NoteElement) => {
+      if (note !== collisionNote) {
+        collisionBoxes = this.getNoteCollisionGlyphBoxes(
+          note,
+          pageSetup,
+          measureBarWidthMap,
+        );
+        collisionNote = note;
+      }
+      return collisionBoxes;
+    };
     let phase1GreekMelismaIsActive = false;
     let phase1GreekMelismaSyllables: MelismaSyllables | null = null;
     let pendingGreekPairEndPx: number | null = null;
@@ -1826,6 +1847,7 @@ export class LayoutService {
                   layoutWorkspace,
                   minimumLyricGap,
                   measureBarWidthMap,
+                  getCollisionBoxes,
                 ));
           const m_i = Math.max(
             ordinaryBoundaryWidth,
@@ -2422,6 +2444,8 @@ export class LayoutService {
       );
       recordParagraph(elements.length - 1);
     }
+
+    endParagraphs();
 
     return {
       layoutWorkspace,
@@ -4626,6 +4650,7 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
     inlineSpacing: number,
     leftTuck: number,
+    getCollisionBoxes?: (note: NoteElement) => NoteGlyphBox[],
   ) {
     const noteVisualMinimumWidth = this.getNoteVisualMinimumSpacing(
       noteElement,
@@ -4633,6 +4658,7 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
       inlineSpacing,
+      getCollisionBoxes,
     );
     // A zero visual minimum is the collision helper's generic lower clamp,
     // not a real geometry requirement when the user deliberately requests
@@ -4696,6 +4722,7 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     minimumLyricGap: number,
     measureBarWidthMap: Map<MeasureBar, number>,
+    getCollisionBoxes: (note: NoteElement) => NoteGlyphBox[],
   ) {
     // Base m_i without the lyric-collision term ell_i. Can be
     // negative when T_i^left is large, i.e. when the cancellation
@@ -4770,6 +4797,7 @@ export class LayoutService {
         measureBarWidthMap,
         inlineSpacing,
         leftTuck,
+        getCollisionBoxes,
       );
     const ordinaryBaseWidth =
       inlineSpacing + rightProjection - leftTuck - rightTuck;
@@ -4915,21 +4943,15 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
     clearance: number,
+    getCollisionBoxes: (note: NoteElement) => NoteGlyphBox[] = (note) =>
+      this.getNoteCollisionGlyphBoxes(note, pageSetup, measureBarWidthMap),
   ) {
     if (right == null) {
       return 0;
     }
 
-    const leftBoxes = this.getNoteCollisionGlyphBoxes(
-      left,
-      pageSetup,
-      measureBarWidthMap,
-    );
-    const rightBoxes = this.getNoteCollisionGlyphBoxes(
-      right,
-      pageSetup,
-      measureBarWidthMap,
-    );
+    const leftBoxes = getCollisionBoxes(left);
+    const rightBoxes = getCollisionBoxes(right);
 
     return this.getMinimumSpacingForNoteGlyphBoxes(
       left.neumeWidth,

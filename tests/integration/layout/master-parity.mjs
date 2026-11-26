@@ -21,6 +21,7 @@ import { rolldown } from 'rolldown';
 import { createSmokeApp } from '../mcp/smokeApp.mjs';
 import { eventually } from '../mcp/smokePolling.mjs';
 import { arabicRtlScore } from './arabicRtl.mjs';
+import { readCorpus } from './corpus.mjs';
 
 const { values } = parseArgs({
   options: {
@@ -28,14 +29,18 @@ const { values } = parseArgs({
     candidate: { type: 'string' },
     approved: { type: 'string' },
     book: { type: 'string' },
+    corpus: { type: 'string' },
     'scroll-test': { type: 'string' },
     output: { type: 'string' },
     only: { type: 'string', multiple: true },
   },
 });
 assert.ok(
-  values.baseline && values.approved && values.book && values.output,
-  'Usage: master-parity.mjs --baseline <master build> --approved <melisma-fixes build> --book <score.byz> --output <report.jsonl> [--scroll-test <score.byz>]',
+  values.baseline &&
+    values.approved &&
+    (values.corpus || values.book) &&
+    values.output,
+  'Usage: master-parity.mjs --baseline <master build> --approved <melisma-fixes build> (--corpus <manifest.json> | --book <score.byz>) --output <report.jsonl> [--scroll-test <score.byz>]',
 );
 const candidate = path.resolve(values.candidate ?? process.cwd());
 const baseline = path.resolve(values.baseline);
@@ -119,6 +124,17 @@ async function* records(file) {
   }
 }
 
+const generated = [
+  'Gorgon',
+  'FthoraTop',
+  'FthoraBottom',
+  'Accidentals',
+  'Measures',
+  'Ison',
+  'Random',
+  'DropCaps',
+].map((type) => ({ name: `generated-${type}`, type }));
+
 async function corpus() {
   const exampleDir = path.join(candidate, 'examples');
   const examples = (await readdir(exampleDir))
@@ -141,19 +157,6 @@ async function corpus() {
     ...examples,
     { name: 'verify-layout', file: input },
     { name: 'verify-layout-rtl', file: rtl },
-    ...[
-      'Gorgon',
-      'FthoraTop',
-      'FthoraBottom',
-      'Accidentals',
-      'Measures',
-      'Ison',
-      'Random',
-      'DropCaps',
-    ].map((type) => ({ name: `generated-${type}`, type })),
-    ...(values['scroll-test']
-      ? [{ name: 'scroll-test', file: path.resolve(values['scroll-test']) }]
-      : []),
     { name: 'long-doc-with-melisma', file: book },
   ];
 }
@@ -178,7 +181,16 @@ try {
 
   async function* checkCorpus() {
     yield JSON.stringify({ allowedChanges }) + '\n';
-    const fixtures = await corpus();
+    const frozen = values.corpus
+      ? await readCorpus(values.corpus)
+      : await corpus();
+    const fixtures = [...frozen, ...generated];
+    if (values['scroll-test']) {
+      fixtures.push({
+        name: 'scroll-test',
+        file: path.resolve(values['scroll-test']),
+      });
+    }
     for (const name of values.only ?? []) {
       assert.ok(
         fixtures.some((fixture) => fixture.name === name),
@@ -198,12 +210,20 @@ try {
       let allowed = 0;
       let unexpected = 0;
       let index = 0;
+      let pageCounts;
       while (true) {
         const row = await Promise.all(inputs.map((input) => input.next()));
         if (row.every(({ done }) => done)) {
           break;
         }
         const [master, reference, current] = row.map(({ value }) => value);
+        if (index === 0) {
+          pageCounts = {
+            master: master.length,
+            approved: reference.length,
+            candidate: current.length,
+          };
+        }
         const elementId =
           index === 0
             ? null
@@ -256,8 +276,17 @@ try {
         }
         index++;
       }
+      yield (
+        JSON.stringify({
+          score: fixture.name,
+          pageCounts,
+          elements: index - 1,
+          allowed,
+          unexpected,
+        }) + '\n'
+      );
       console.log(
-        `${unexpected ? 'FAIL' : 'PASS'} ${fixture.name}: ${index - 1} elements, ${allowed} approved and ${unexpected} unexpected differences`,
+        `${unexpected ? 'FAIL' : 'PASS'} ${fixture.name}: ${pageCounts.candidate} pages, ${index - 1} elements, ${allowed} approved and ${unexpected} unexpected differences`,
       );
       if (unexpected) {
         process.exitCode = 1;

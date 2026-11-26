@@ -2166,6 +2166,8 @@ async function initialize() {
     workspaces,
     ...(layoutProfilingEnabled && {
       layoutProfile: {
+        setGorgon,
+        updateLyrics,
         toggleLineBreak,
         flushRender: () => nextTick(),
         updateZoom,

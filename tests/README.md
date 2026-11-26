@@ -142,6 +142,73 @@ The JSONL report includes each difference and its approval status. An approved
 difference must also be reproduced by the reference build. Use `--only` to
 rerun an individual score by its printed name.
 
+## Phase C layout corpus and metrics
+
+Create the corpus once, outside the worktree. The manifest records file
+digests and the ordered source paths and digests for each combined score.
+Both runners verify the corpus file digests. Lyrics are unlocked in the
+corpus copies so each score can run the direct lyric edit. Keep the generated
+scores local.
+
+```sh
+CORPUS=/path/to/local-layout-corpus
+node tests/integration/layout/build-corpus.mjs \
+  --basil /path/to/basil/byzantine-music \
+  --book /path/to/long-doc-with-melisma.byz --output "$CORPUS"
+```
+
+The corpus includes the repository examples, the scripted LTR and Arabic RTL
+fixtures, the repeated stress book, all Antiphons and Mother of God chants,
+and a larger anthology of Basil scores with compatible page, paragraph, and
+header settings. Four volumes use the first 70, 132, 198, and 277 chants of
+the anthology to target 100, 200, 300, and 500 pages. The combined scores
+use bundled Source Serif for text, including inline rich text, and retain
+the Neanes notation font. Each chant starts a new page under the shared
+page-number footer. The manifest
+records source files excluded from the anthology for differing settings.
+
+For each package, collect timings serially on an otherwise idle machine.
+Build the previous package and candidate with the same profiling flags and
+run each during the same session. Run the reference first without
+`--previous`, then pass that report to the candidate run. Use a fresh output
+name for each report. Rerun both revisions when a result may be noise.
+
+```sh
+VITE_LAYOUT_VERIFY_ENABLED=false VITE_LAYOUT_PROFILING_ENABLED=true npx vite build
+node tests/integration/layout/corpus-metrics.mjs \
+  --corpus "$CORPUS/manifest.json" --output /tmp/candidate-metrics.json \
+  --previous /tmp/previous-metrics.json > /tmp/candidate-metrics.md
+```
+
+Omit `--previous` to collect the initial baseline. Each file gets a disposable
+app profile. The runner alternates a middle gorgon, a middle lyric, and an
+early explicit line break in separate workloads. Direct lyric edits apply to
+scores with unlocked lyrics. Each workload runs 4 warmups and 20 measured
+edits. Layout time is the sum of the edit's `processPages` spans. Editor update
+time starts at the edit command and ends after the Vue patch. Reports retain
+the sample data and staff indexes so comparisons use the same edit targets.
+The table flags median or p95 increases of at least 15% and at least 0.5 ms
+for layout or 2 ms for the editor update. Investigate repeatable increases at
+each score size. Reuse share is available when the layout span reports its
+`detail.status`. Use `--only` with a score name from the table for a focused rerun.
+
+Rebuild the candidate with the parity capture plugin and run the separate
+layout comparison against pinned master and the approved-fixes reference.
+
+```sh
+VITE_LAYOUT_VERIFY_ENABLED=false VITE_LAYOUT_PROFILING_ENABLED=false \
+  node tests/integration/layout/parity-build.mjs
+node tests/integration/layout/master-parity.mjs \
+  --baseline /path/to/master-baseline --approved /path/to/approved-fixes \
+  --corpus "$CORPUS/manifest.json" --output /tmp/candidate-parity.jsonl
+```
+
+Parity includes the same frozen files plus the built-in generated test scores.
+Its JSONL includes page and element counts per score and the approved and
+unexpected differences. On macOS, run both Electron commands outside the
+agent command sandbox. Include the metrics, parity results, and any regression
+investigation in the package completion update.
+
 ## Layout profiling
 
 Use a profiling build and run the benchmark from the repository root. On macOS,

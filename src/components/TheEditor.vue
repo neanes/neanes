@@ -2163,6 +2163,31 @@ async function initialize() {
     selectedElement,
     selectedWorkspace,
     workspaces,
+    ...(layoutVerificationEnabled && {
+      layoutTest: {
+        history: () => ({ canUndo: canUndo.value, canRedo: canRedo.value }),
+        setEntryMode: updateEntryMode,
+        addQuantitativeNeume,
+        addAutoMartyria,
+        insertModeKeyWithAmbitus() {
+          const element = createDefaultModeKey(score.value.pageSetup);
+          element.showAmbitus = true;
+          insertScoreElement(element);
+          save();
+        },
+        updateNoteFthora,
+        updateLyrics,
+        updateModeKey,
+        updateMartyria,
+        setIson,
+        setMeasureBarNote,
+        toggleLineBreak,
+        togglePageBreak,
+        deleteSelectedElement,
+        replayHistory,
+        flushRender: () => nextTick(),
+      },
+    }),
   };
 
   try {

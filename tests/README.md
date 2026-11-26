@@ -76,6 +76,42 @@ node tests/integration/layout/verify-edits.mjs --skip-build --only verify-layout
 The check uses the dev-only oracle, so it is slow on long scores. With the
 flag on, a difference is also logged in the renderer with `console.error`.
 
+## Randomized layout verification
+
+Run `random-edits.mjs` from the repository root. It builds with the same layout
+oracle and launches a disposable Electron editor per score and seed. On macOS,
+run the Electron command outside the agent command sandbox.
+
+```sh
+node tests/integration/layout/random-edits.mjs
+node tests/integration/layout/random-edits.mjs --skip-build --steps 1000 --seed 1 --seed 20261126
+node tests/integration/layout/random-edits.mjs --skip-build --score /path/to/book.byz --steps 20
+```
+
+The defaults are 200 edits with seed 1 on each of the bundled LTR and Melkite RTL
+fixtures. Repeat `--seed` and `--score` to run a matrix. Supplied `.byz` and
+`.byzx` scores are copied and used with their saved direction. The runner selects
+targets both across the score and near the previous edit. It calls the same
+editor handlers used for note, pitch (fthora), lyric, melisma, ison, bar, break,
+martyria, mode key with ambitus, insertion, deletion, end-of-score entry, and
+history changes. The handlers are exposed to the runner only in oracle builds.
+Every edit must advance the content revision and run at least one synchronous
+oracle comparison. The summary shows which edit types ran and how often.
+
+A failed sequence stops at its first error while the remaining score/seed pairs
+continue. The failure directory contains a copy of the input and a JSON trace
+with the seed, actions through the failing step, and the oracle difference with
+edit and element locations when available. Replay that exact sequence using the
+same build and fonts. The runner prints a ready-to-run command.
+
+```sh
+node tests/integration/layout/random-edits.mjs --skip-build --replay /path/to/failure.json
+```
+
+The oracle compares the synchronous layout, including placements and persisted
+musical fields. Use the scripted UI checks for input behavior and the settlement
+checks for asynchronously measured rich text.
+
 ## Layout profiling
 
 Use a profiling build and run the benchmark from the repository root. On macOS,

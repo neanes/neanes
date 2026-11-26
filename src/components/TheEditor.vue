@@ -276,6 +276,7 @@ import {
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import type { LiveLayoutOutcome } from '@/services/rendering/settleWorkspace';
+import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
 import {
   beginLayoutVerification,
   layoutVerificationEnabled,
@@ -2163,6 +2164,29 @@ async function initialize() {
     selectedElement,
     selectedWorkspace,
     workspaces,
+    ...(layoutProfilingEnabled && {
+      layoutProfile: {
+        toggleLineBreak,
+        flushRender: () => nextTick(),
+        updateZoom,
+        saveFile: () => saveWorkspace(selectedWorkspace.value),
+        async measureAllTextBoxes() {
+          const workspace = toRaw(selectedWorkspace.value);
+          const boxes = new Set(getResizableTextBoxes(workspace.score));
+          const start = performance.now();
+          const heights = await liveLayoutMeasurement.start(
+            workspace,
+            undefined,
+            boxes,
+          );
+          return {
+            duration: performance.now() - start,
+            boxes: boxes.size,
+            heights: heights.map(({ element, height }) => [element.id, height]),
+          };
+        },
+      },
+    }),
     ...(layoutVerificationEnabled && {
       layoutTest: {
         history: () => ({ canUndo: canUndo.value, canRedo: canRedo.value }),
@@ -7355,6 +7379,7 @@ function updateRichTextBox(
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
     element.height = newValues.height;
+    profileMeasuredHeightWrite(element);
     save();
     return;
   }
@@ -7444,6 +7469,12 @@ function flushPendingAnnotationEditor() {
   }
 }
 
+function profileMeasuredHeightWrite(element: ScoreElement) {
+  if (layoutProfilingEnabled) {
+    performance.mark('editor.textBoxHeightWrite', { detail: element.id });
+  }
+}
+
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   if (settleFootnoteReferences.value) {
     return;
@@ -7451,6 +7482,7 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
+  profileMeasuredHeightWrite(element);
   richTextBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -7465,6 +7497,7 @@ function updateTextBox(
       return;
     }
     element.height = newValues.height;
+    profileMeasuredHeightWrite(element);
     save();
     return;
   }
@@ -7492,6 +7525,7 @@ function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
+  profileMeasuredHeightWrite(element);
   textBoxCalculationCount.value++;
   saveDebounced();
 }

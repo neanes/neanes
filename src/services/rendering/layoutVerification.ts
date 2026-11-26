@@ -33,6 +33,25 @@ interface Context {
   visited: Map<object, object>;
   elementId: number | null;
   elementPath: string | null;
+  // Set when a number matched only within ROUNDING_TOLERANCE.
+  rounded: boolean;
+  report?: (result: LayoutDifference) => void;
+}
+
+// Numbers may differ by floating-point rounding: the same geometry computed
+// from a different page origin can differ in the last bits (about 1e-13 px).
+// Real layout differences are many orders of magnitude larger.
+const ROUNDING_TOLERANCE = 1e-6;
+
+function sameNumber(actual: number, expected: number, context: Context) {
+  if (actual === expected || Object.is(actual, expected)) {
+    return true;
+  }
+  if (Math.abs(actual - expected) <= ROUNDING_TOLERANCE) {
+    context.rounded = true;
+    return true;
+  }
+  return false;
 }
 
 function describe(value: unknown): unknown {
@@ -53,18 +72,23 @@ function difference(
   path: string,
   actual: unknown,
   expected: unknown,
-): LayoutDifference {
+): LayoutDifference | null {
   const field =
     context.elementPath !== null && path.startsWith(context.elementPath)
       ? path.slice(context.elementPath.length).replace(/^\./, '')
       : path;
-  return {
+  const result = {
     path,
     elementId: context.elementId,
     field,
     actual: describe(actual),
     expected: describe(expected),
   };
+  if (context.report) {
+    context.report(result);
+    return null;
+  }
+  return result;
 }
 
 function compareValues(
@@ -86,9 +110,11 @@ function compareValues(
     typeof actual !== 'object' ||
     typeof expected !== 'object'
   ) {
-    return Object.is(actual, expected)
-      ? null
-      : difference(context, path, actual, expected);
+    const same =
+      typeof actual === 'number' && typeof expected === 'number'
+        ? sameNumber(actual, expected, context)
+        : Object.is(actual, expected);
+    return same ? null : difference(context, path, actual, expected);
   }
   if (actual === expected) {
     return null;
@@ -108,9 +134,21 @@ function compareValues(
   if (Array.isArray(actual)) {
     const other = expected as unknown[];
     if (actual.length !== other.length) {
-      return difference(context, `${path}.length`, actual.length, other.length);
+      const result = difference(
+        context,
+        `${path}.length`,
+        actual.length,
+        other.length,
+      );
+      if (result !== null) {
+        return result;
+      }
     }
-    for (let index = 0; index < actual.length; index++) {
+    for (
+      let index = 0;
+      index < Math.min(actual.length, other.length);
+      index++
+    ) {
       const result = compareValues(
         actual[index],
         other[index],
@@ -143,7 +181,17 @@ function compareFields(
   context: Context,
 ): LayoutDifference | null {
   const keys = new Set([...Object.keys(actual), ...Object.keys(expected)]);
+  // Report the changed field rather than the flag derived from it.
+  if (keys.delete('updated')) {
+    keys.add('updated');
+  }
   for (const key of keys) {
+    // `updated` records whether any field changed since the previous layout,
+    // so rounding noise in either layout can flip it. Fields that differ by
+    // more than the tolerance are reported before it is reached.
+    if (key === 'updated' && context.rounded) {
+      continue;
+    }
     const result = compareValues(
       actual[key],
       expected[key],
@@ -169,6 +217,7 @@ export function compareElementFields(
     visited: new Map([[actual, expected]]),
     elementId: actual.id ?? null,
     elementPath,
+    rounded: false,
   };
   if (Object.getPrototypeOf(actual) !== Object.getPrototypeOf(expected)) {
     return difference(context, elementPath, actual, expected);
@@ -193,6 +242,7 @@ export function comparePages(
     visited: new Map(),
     elementId: null,
     elementPath: null,
+    rounded: false,
   };
   const result = compareValues(actual, expected, 'pages', context);
   if (result === null || !/\.elements\[\d+\]$/.test(result.path)) {
@@ -247,6 +297,24 @@ export function compareLayouts(
     }
   }
   return null;
+}
+
+// A cross-build snapshot contains plain data and stable element references.
+export function reportSnapshotDifferences(
+  actual: unknown,
+  expected: unknown,
+  path: string,
+  elementId: number | null,
+  report: (difference: LayoutDifference) => void,
+) {
+  compareValues(actual, expected, path, {
+    copies: new Map(),
+    visited: new Map(),
+    elementId,
+    elementPath: elementId === null ? null : path,
+    rounded: false,
+    report,
+  });
 }
 
 export function recordLayoutVerification(

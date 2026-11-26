@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createSmokeApp } from '../mcp/smokeApp.mjs';
 import { eventually } from '../mcp/smokePolling.mjs';
+import { arabicRtlScore } from './arabicRtl.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const committedFixture = path.join(here, 'fixtures', 'verify-layout.byzx');
@@ -71,8 +72,7 @@ async function prepareFile(fixture) {
   );
   if (fixture.rtl) {
     const score = JSON.parse(await readFile(fixture.file, 'utf8'));
-    score.pageSetup.melkiteRtl = true;
-    await writeFile(target, JSON.stringify(score));
+    await writeFile(target, JSON.stringify(arabicRtlScore(score)));
   } else {
     await copyFile(fixture.file, target);
   }
@@ -260,7 +260,8 @@ const keyCodes = {
   Delete: 46,
 };
 
-async function runEdits(driver) {
+async function runEdits(driver, rtl) {
+  const lyric = rtl ? 'آمين' : 'καλλιφωνότατα';
   const { editor, key, click, edit, select, setInsertMode, elementCount } =
     driver;
   const noteIndex = (which) => `(() => {
@@ -361,14 +362,14 @@ async function runEdits(driver) {
     '(() => { const n = document.activeElement; const r = document.createRange(); r.selectNodeContents(n); const s = getSelection(); s.removeAllRanges(); s.addRange(r); })()',
   );
   await edit('commit lyrics', async () => {
-    for (const character of 'καλλιφωνότατα') {
+    for (const character of lyric) {
       await driver.key('KeyA', { key: character, text: character });
     }
     await key('Tab', { key: 'Tab' });
   });
   assert.ok(
     await editor(
-      "return e.elements.value.some((x) => x.lyrics === 'καλλιφωνότατα');",
+      `return e.elements.value.some((x) => x.lyrics?.replaceAll('ـ', '') === ${JSON.stringify(lyric)});`,
     ),
     'Lyrics were not committed',
   );
@@ -523,7 +524,7 @@ try {
           `initial layout differs from a full layout: ${JSON.stringify(initial.firstDifference)}`,
         );
       }
-      await runEdits(driver);
+      await runEdits(driver, fixture.rtl === true);
       const final = await driver.verifyState();
       console.log(`PASS ${fixture.name}: ${final.checks} verified layouts`);
     } catch (error) {

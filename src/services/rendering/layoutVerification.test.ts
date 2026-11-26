@@ -8,6 +8,7 @@ import {
   compareLayouts,
   createLayoutVerificationState,
   recordLayoutVerification,
+  reportSnapshotDifferences,
 } from './layoutVerification';
 
 function copyElement<T extends ScoreElement>(element: T): T {
@@ -193,16 +194,72 @@ describe('layout verification', () => {
     });
   });
 
-  it('treats NaN as equal and distinguishes -0 from 0', () => {
+  it('treats NaN as equal and -0 as 0', () => {
     const { actual, expected, elements, copies, note } = buildLayouts();
     note.x = Number.NaN;
     copies.get(note)!.x = Number.NaN;
     expect(compareLayouts(actual, expected, elements, copies)).toBeNull();
     note.x = -0;
     copies.get(note)!.x = 0;
+    expect(compareLayouts(actual, expected, elements, copies)).toBeNull();
+  });
+
+  it('accepts floating-point rounding differences', () => {
+    const { actual, expected, elements, copies, note } = buildLayouts();
+    note.x = 3.72478722090014;
+    copies.get(note)!.x = 3.7247872209001116;
+    expect(compareLayouts(actual, expected, elements, copies)).toBeNull();
+    actual[1].footnotes[0].top = 100 + 1e-9;
+    expect(compareLayouts(actual, expected, elements, copies)).toBeNull();
+    note.x = 3.7248;
     expect(compareLayouts(actual, expected, elements, copies)).toMatchObject({
       field: 'x',
     });
+  });
+
+  it('ignores the updated flag only when rounding explains it', () => {
+    const { actual, expected, elements, copies, note, martyria } =
+      buildLayouts();
+    note.updated = false;
+    copies.get(note)!.updated = true;
+    expect(compareLayouts(actual, expected, elements, copies)).toMatchObject({
+      field: 'updated',
+    });
+    note.x = 10 + 1e-12;
+    expect(compareLayouts(actual, expected, elements, copies)).toBeNull();
+    // Rounding on one element does not excuse another element's flag.
+    martyria.updated = false;
+    copies.get(martyria)!.updated = true;
+    expect(compareLayouts(actual, expected, elements, copies)).toMatchObject({
+      path: 'element 2.updated',
+    });
+  });
+
+  it('reports each snapshot difference with its element and field', () => {
+    const differences: unknown[] = [];
+    reportSnapshotDifferences(
+      { x: 1 + 1e-9, y: 20, width: 30, updated: true },
+      { x: 1, y: 25, width: 35, updated: false },
+      'element 7',
+      7,
+      (difference) => differences.push(difference),
+    );
+    expect(differences).toEqual([
+      {
+        path: 'element 7.y',
+        elementId: 7,
+        field: 'y',
+        actual: 20,
+        expected: 25,
+      },
+      {
+        path: 'element 7.width',
+        elementId: 7,
+        field: 'width',
+        actual: 30,
+        expected: 35,
+      },
+    ]);
   });
 
   it('reports elements without a copy', () => {

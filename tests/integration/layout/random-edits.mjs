@@ -9,11 +9,13 @@ import { parseArgs } from 'node:util';
 
 import { createSmokeApp } from '../mcp/smokeApp.mjs';
 import { eventually } from '../mcp/smokePolling.mjs';
+import { arabicRtlScore } from './arabicRtl.mjs';
 
 const { values } = parseArgs({
   options: {
     help: { type: 'boolean' },
     'skip-build': { type: 'boolean' },
+    facing: { type: 'boolean' },
     seed: { type: 'string', multiple: true },
     steps: { type: 'string' },
     score: { type: 'string', multiple: true },
@@ -23,7 +25,7 @@ const { values } = parseArgs({
 
 if (values.help) {
   console.log(
-    'Usage: node tests/integration/layout/random-edits.mjs [--skip-build]\n' +
+    'Usage: node tests/integration/layout/random-edits.mjs [--skip-build] [--facing]\n' +
       '       [--seed <uint32>] [--steps <count>] [--score <file.byz|file.byzx>]\n' +
       '       or [--replay <failure.json>]. Repeat --seed or --score for a matrix.',
   );
@@ -80,7 +82,10 @@ const fixtures = replay
 if (!values['skip-build']) {
   const build = spawnSync('npx', ['vite', 'build'], {
     stdio: 'inherit',
-    env: { ...process.env, VITE_LAYOUT_VERIFY_ENABLED: 'true' },
+    env: {
+      ...process.env,
+      VITE_LAYOUT_VERIFY_ENABLED: 'true',
+    },
   });
   if (build.error) {
     throw build.error;
@@ -104,6 +109,15 @@ function createRandom(seed) {
 function chooseEdit(editor, rolls, lastIndex) {
   const [kindRoll, startRoll, directionRoll, variantRoll, localityRoll] = rolls;
   const elements = editor.elements.value;
+  // Melkite RTL takes only Arabic lyrics, with tatweel for melismas.
+  const rtl = editor.score.value.pageSetup.melkiteRtl;
+  const words = rtl
+    ? [
+        '\u0622\u0645\u064a\u0646',
+        '\u0631\u0628\u0651',
+        '\u0647\u0644\u0644\u064a\u0644\u0648\u064a\u0627',
+      ]
+    : ['amen', 'kyrie', 'alleluia'];
   const history = editor.layoutTest.history();
   const editKinds = [
     'neume',
@@ -177,19 +191,26 @@ function chooseEdit(editor, rolls, lastIndex) {
         return {
           kind,
           target,
-          value: element.lyrics.includes('amen') ? 'kyrie' : 'amen',
+          // The editor can keep a tatweel joining an Arabic lyric.
+          value:
+            element.lyrics.replaceAll('\u0640', '') === words[0]
+              ? words[1]
+              : words[0],
         };
       case 'melisma': {
-        const rtl = editor.score.value.pageSetup.melkiteRtl;
         const marker = rtl ? '\u0640' : directionRoll < 0.5 ? '_' : '-';
+        // A word ending in the marker starts a melisma; LTR also covers Greek.
+        const word = rtl
+          ? words[2]
+          : '\u03b1\u03bb\u03bb\u03b7\u03bb\u03bf\u03c5\u03ca';
         return {
           kind,
           target,
           value: element.isMelisma
-            ? 'alleluia'
+            ? words[2]
             : variantRoll < 0.5
               ? marker
-              : `\u03b1\u03bb\u03bb\u03b7\u03bb\u03bf\u03c5\u03ca${marker}`,
+              : `${word}${marker}`,
         };
       }
       case 'modeKey':
@@ -233,6 +254,9 @@ async function applyEdit(editor, { kind, target, value }) {
       index: element.index,
       page: element.page,
       line: element.line,
+      lyrics: element.lyrics,
+      isMelisma: element.isMelisma,
+      isMelismaStart: element.isMelismaStart,
     };
   const element = target ? editor.elements.value[target.index] : null;
   if (target && element?.elementType !== target.type) {
@@ -323,9 +347,24 @@ async function runSequence(fixture, seed) {
   let result;
   let snapshotReady = false;
   try {
-    if (fixture.rtl) {
+    // A replay's saved input already includes its page setup variant.
+    const facing = !replay && values.facing;
+    if (fixture.rtl || facing) {
+      assert.equal(
+        path.extname(fixture.file),
+        '.byzx',
+        'Page setup variants need a .byzx score',
+      );
       const score = JSON.parse(await readFile(fixture.file, 'utf8'));
-      score.pageSetup.melkiteRtl = true;
+      if (fixture.rtl) {
+        arabicRtlScore(score);
+      }
+      if (facing) {
+        // Unequal inside/outside margins move lines that change page parity.
+        score.pageSetup.facingPages = true;
+        score.pageSetup.leftMargin = 120;
+        score.pageSetup.rightMargin = 72.5;
+      }
       await writeFile(file, JSON.stringify(score));
     } else {
       await copyFile(fixture.file, file);
@@ -401,7 +440,7 @@ async function runSequence(fixture, seed) {
       `FAIL ${fixture.name} seed=${seed} step=${trace.edits.length}: ${error.message}`,
     );
     if (result?.difference) {
-      console.error(JSON.stringify(result.difference));
+      console.error(JSON.stringify(result));
     }
     if (snapshotReady) {
       const output = await mkdtemp(

@@ -59,7 +59,7 @@ Fixtures:
 - `layout/fixtures/verify-layout.byzx`: drop caps, lyric paragraph-style and
   local overrides, Greek hyphen and underscore melismas across an explicit line
   break, and martyriae whose bars transfer at automatic breaks. The script also
-  runs it with `melkiteRtl` enabled.
+  runs an Arabic-lyrics variant with `melkiteRtl` enabled.
 - Test files from `TestFileGenerator` (Gorgon, FthoraTop, FthoraBottom,
   Accidentals, Measures, Ison, Random, DropCaps), created through the
   Generate Test File menu channel.
@@ -85,11 +85,14 @@ run the Electron command outside the agent command sandbox.
 ```sh
 node tests/integration/layout/random-edits.mjs
 node tests/integration/layout/random-edits.mjs --skip-build --steps 1000 --seed 1 --seed 20261126
+node tests/integration/layout/random-edits.mjs --skip-build --facing --steps 1000 --seed 1 --seed 20261126
 node tests/integration/layout/random-edits.mjs --skip-build --score /path/to/book.byz --steps 20
 ```
 
 The defaults are 200 edits with seed 1 on each of the bundled LTR and Melkite RTL
-fixtures. Repeat `--seed` and `--score` to run a matrix. Supplied `.byz` and
+fixtures. Use `--facing` to exercise unequal inside and outside margins on
+the bundled fixtures or on a supplied `.byzx` file. Repeat `--seed` and
+`--score` to run a matrix. Supplied `.byz` and
 `.byzx` scores are copied and used with their saved direction. The runner selects
 targets both across the score and near the previous edit. It calls the same
 editor handlers used for note, pitch (fthora), lyric, melisma, ison, bar, break,
@@ -109,8 +112,35 @@ node tests/integration/layout/random-edits.mjs --skip-build --replay /path/to/fa
 ```
 
 The oracle compares the synchronous layout, including placements and persisted
-musical fields. Use the scripted UI checks for input behavior and the settlement
+musical fields, with a numeric tolerance of 1e-6. Use the scripted UI checks
+for input behavior and the settlement
 checks for asynchronously measured rich text.
+
+## Full layout parity against master
+
+Build each of the three Electron checkouts with the same test-only capture
+plugin. Install the pinned dependencies in each checkout first. Use master
+`af40dbce` as the baseline and `d40e4d55` as the reference for the two approved
+explicit-break melisma fixes. The baseline and reference builds can be reused.
+
+```sh
+PARITY_BUILD=/path/to/c1/tests/integration/layout/parity-build.mjs
+(cd /path/to/master-baseline && node "$PARITY_BUILD")
+(cd /path/to/approved-fixes && node "$PARITY_BUILD")
+node "$PARITY_BUILD" # from the C1 checkout
+
+node tests/integration/layout/master-parity.mjs \
+  --baseline /path/to/master-baseline --approved /path/to/approved-fixes \
+  --book /path/to/long-doc-with-melisma.byz --output /tmp/layout-parity.jsonl
+```
+
+On macOS, run the comparison outside the agent command sandbox. The runner
+captures pages and element fields before on-page measurements on each score
+in `examples/`, the scripted fixtures, and the book. Pass
+`--scroll-test /path/to/scroll-test.byz` to include the optional local fixture.
+The JSONL report includes each difference and its approval status. An approved
+difference must also be reproduced by the reference build. Use `--only` to
+rerun an individual score by its printed name.
 
 ## Layout profiling
 
@@ -140,6 +170,15 @@ node tests/integration/layout/profile-edits.mjs /path/to/score.byz /tmp/layout.c
 ```
 
 Run without the CPU profile path when measuring wall-clock timings.
+
+The same profiling build supports the line-break and text-box measurements.
+The lyric focus check also runs on an ordinary Electron build.
+
+```sh
+node tests/integration/layout/profile-line-shifts.mjs /path/to/long-doc-with-melisma.byz
+node tests/integration/layout/profile-text-box-heights.mjs /path/to/long-doc-with-melisma.byz
+node tests/integration/layout/check-lyric-focus.mjs /path/to/long-doc-with-melisma.byz
+```
 
 ## Local Linux tests with Docker
 

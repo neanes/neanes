@@ -228,3 +228,54 @@ export function isSectionMarker(element: ScoreElement) {
     resolveRunningMarkerText(marker) !== null
   );
 }
+
+// Section numbering for a staff, resolved once so that lookups do not rescan
+// every element (or re-parse rich-text markers).
+export interface SectionMarkerIndex {
+  // Element indexes of the section markers, in ascending order.
+  markerIndexes: number[];
+  // Whether content precedes the first marker, forming an implicit first
+  // section.
+  hasLeadingSection: boolean;
+}
+
+export function indexSectionMarkers(
+  elements: readonly ScoreElement[],
+): SectionMarkerIndex {
+  const markerIndexes = elements
+    .filter(isSectionMarker)
+    .map((element) => element.index);
+
+  return {
+    markerIndexes,
+    hasLeadingSection: markerIndexes.length > 0 && markerIndexes[0] > 0,
+  };
+}
+
+export function getSectionCount({
+  markerIndexes,
+  hasLeadingSection,
+}: SectionMarkerIndex) {
+  return markerIndexes.length === 0
+    ? 1
+    : markerIndexes.length + (hasLeadingSection ? 1 : 0);
+}
+
+export function getSectionNumber(
+  { markerIndexes, hasLeadingSection }: SectionMarkerIndex,
+  elementIndex: number,
+) {
+  // Count the markers at or before the element (upper bound).
+  let low = 0;
+  let high = markerIndexes.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (markerIndexes[mid] <= elementIndex) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low === 0 ? 1 : low + (hasLeadingSection ? 1 : 0);
+}

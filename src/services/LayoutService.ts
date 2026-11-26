@@ -1408,10 +1408,10 @@ export class LayoutService {
     // Adjacent note boundaries share a note. Its collision inputs are fixed
     // during encoding, so only retain the last note's boxes.
     let collisionNote: NoteElement | null = null;
-    let collisionBoxes: NoteGlyphBox[] = [];
+    let collisionBoxes: readonly NoteGlyphBox[] = [];
     const getCollisionBoxes = (note: NoteElement) => {
       if (note !== collisionNote) {
-        collisionBoxes = this.getNoteCollisionGlyphBoxes(
+        collisionBoxes = this.getCachedNoteCollisionGlyphBoxes(
           note,
           pageSetup,
           measureBarWidthMap,
@@ -1419,6 +1419,20 @@ export class LayoutService {
         collisionNote = note;
       }
       return collisionBoxes;
+    };
+    // Measure each mode-key font once during this pass. A later pass can
+    // then pick up newly loaded fonts.
+    const modeKeyFontMetrics = new Map<
+      string,
+      ReturnType<typeof TextMeasurementService.getFontVerticalMetrics>
+    >();
+    const getModeKeyFontMetrics = (font: string) => {
+      let metrics = modeKeyFontMetrics.get(font);
+      if (metrics === undefined) {
+        metrics = TextMeasurementService.getFontVerticalMetrics(font);
+        modeKeyFontMetrics.set(font, metrics);
+      }
+      return metrics;
     };
     let phase1GreekMelismaIsActive = false;
     let phase1GreekMelismaSyllables: MelismaSyllables | null = null;
@@ -1560,6 +1574,8 @@ export class LayoutService {
             modeKeyElement,
             pageSetup,
             resolvedInitialMartyriaStyle,
+            false,
+            getModeKeyFontMetrics,
           );
           this.addBox(
             pageSetup.innerPageWidth,
@@ -3137,6 +3153,8 @@ export class LayoutService {
     pageSetup: PageSetup,
     resolvedStyle: ResolvedInitialMartyriaStyle,
     embedded = false,
+    getFontMetrics = (font: string) =>
+      TextMeasurementService.getFontVerticalMetrics(font),
   ) {
     const { primaryAppearance } = resolvedStyle;
 
@@ -3149,6 +3167,7 @@ export class LayoutService {
       element,
       pageSetup,
       resolvedStyle,
+      getFontMetrics,
     );
 
     if (!embedded) {
@@ -3168,6 +3187,7 @@ export class LayoutService {
             sample,
             pageSetup,
             resolvedStyle,
+            getFontMetrics,
           ).layout.inkBounds;
         },
       );
@@ -3188,6 +3208,7 @@ export class LayoutService {
     element: ModeKeyElement,
     pageSetup: PageSetup,
     resolvedStyle: ResolvedInitialMartyriaStyle,
+    getFontMetrics: typeof TextMeasurementService.getFontVerticalMetrics,
   ) {
     const neumeFontFamily = element.computedFontFamily;
     const neumeFontSize = element.computedFontSize;
@@ -3214,8 +3235,9 @@ export class LayoutService {
       neumeBaselineCorrection,
     });
     const baseFont = resolveFontCss(baseTextAppearance);
-    let top = -TextMeasurementService.getFontBoundingBoxAscent(baseFont);
-    let bottom = TextMeasurementService.getFontBoundingBoxDescent(baseFont);
+    const baseFontMetrics = getFontMetrics(baseFont);
+    let top = -baseFontMetrics.ascent;
+    let bottom = baseFontMetrics.descent;
     const inkBounds = { top: 0, bottom: 0 };
     const includeInk = (inkTop: number, inkBottom: number) => {
       inkBounds.top = Math.min(inkBounds.top, inkTop);
@@ -3228,7 +3250,7 @@ export class LayoutService {
       fontStyle: DEFAULT_FONT_STYLE,
       fontSize: neumeFontSize,
     });
-    let flowTop = -TextMeasurementService.getFontBoundingBoxAscent(flowFont);
+    let flowTop = -getFontMetrics(flowFont).ascent;
     let width = 0;
 
     // The text whose font a word space next to a run is set in.
@@ -3319,9 +3341,9 @@ export class LayoutService {
           baselineShift: 0,
           stackedCharacters: {
             geometry,
-            lineHeight: TextMeasurementService.getFontHeight(
+            lineHeight: getFontMetrics(
               resolveFontCss({ fontFamily, fontStyle, fontSize }),
-            ),
+            ).height,
           },
           pitch: null,
         });
@@ -3341,8 +3363,8 @@ export class LayoutService {
         });
         flowTop = Math.min(
           flowTop,
-          -TextMeasurementService.getFontBoundingBoxAscent(glyphFont),
-          -TextMeasurementService.getFontBoundingBoxAscent(noteTextFont),
+          -getFontMetrics(glyphFont).ascent,
+          -getFontMetrics(noteTextFont).ascent,
         );
         // Glyph notes sit on the neume baseline like every other glyph; the
         // marks above them move with them.
@@ -3465,10 +3487,7 @@ export class LayoutService {
         appearance.fontVariantCaps,
       );
       width += metrics.width;
-      flowTop = Math.min(
-        flowTop,
-        -TextMeasurementService.getFontBoundingBoxAscent(font),
-      );
+      flowTop = Math.min(flowTop, -getFontMetrics(font).ascent);
       const glyphBaselineCorrection =
         run.kind === 'glyph' ? neumeBaselineCorrection : 0;
       includeInk(
@@ -4654,18 +4673,6 @@ export class LayoutService {
     this.addPenalty(workspace, MAX_COST, 0, 'prevent-break');
   }
 
-  private static resolvePreferredInterNoteSpacing(
-    naturalWidth: number,
-    preferredMinimumWidths: Array<number | null>,
-  ) {
-    return Math.max(
-      naturalWidth,
-      ...preferredMinimumWidths.filter(
-        (width): width is number => width != null,
-      ),
-    );
-  }
-
   private static getStructuralInterNoteMinimumWidths(
     noteElement: NoteElement,
     nextNoteElement: NoteElement,
@@ -4673,7 +4680,7 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
     inlineSpacing: number,
     leftTuck: number,
-    getCollisionBoxes?: (note: NoteElement) => NoteGlyphBox[],
+    getCollisionBoxes?: (note: NoteElement) => readonly NoteGlyphBox[],
   ) {
     const noteVisualMinimumWidth = this.getNoteVisualMinimumSpacing(
       noteElement,
@@ -4729,10 +4736,11 @@ export class LayoutService {
         0,
       );
 
-    return this.resolvePreferredInterNoteSpacing(inlineSpacing, [
-      visualMinimumWidth,
-      measureBarMinimumWidth,
-    ]);
+    return Math.max(
+      inlineSpacing,
+      visualMinimumWidth ?? -Infinity,
+      measureBarMinimumWidth ?? -Infinity,
+    );
   }
 
   private static calculateInterNoteSpacing(
@@ -4745,7 +4753,7 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     minimumLyricGap: number,
     measureBarWidthMap: Map<MeasureBar, number>,
-    getCollisionBoxes: (note: NoteElement) => NoteGlyphBox[],
+    getCollisionBoxes: (note: NoteElement) => readonly NoteGlyphBox[],
   ) {
     // Base m_i without the lyric-collision term ell_i. Can be
     // negative when T_i^left is large, i.e. when the cancellation
@@ -4763,9 +4771,7 @@ export class LayoutService {
             measureBarWidthMap,
           );
 
-        return this.resolvePreferredInterNoteSpacing(baseWidth, [
-          terminalMeasureBarMinimum,
-        ]);
+        return Math.max(baseWidth, terminalMeasureBarMinimum);
       }
 
       if (!this.shouldUseMeasureBarMinimumForNonNoteSpacing(nextElement)) {
@@ -4778,9 +4784,7 @@ export class LayoutService {
         workspace.pageSetup,
         measureBarWidthMap,
       );
-      return this.resolvePreferredInterNoteSpacing(baseWidth, [
-        measureBarMinimum,
-      ]);
+      return Math.max(baseWidth, measureBarMinimum);
     }
 
     const currentOverhangs = this.getNeumeOverhangs(
@@ -4871,13 +4875,14 @@ export class LayoutService {
           this.getLyricTextLeft(nextNoteElement)
         : null;
 
-    return this.resolvePreferredInterNoteSpacing(baseWidth, [
-      visualMinimumWidth,
-      measureBarMinimumWidth,
-      lyricMinimumWidth,
-      melismaMinimumWidth,
-      centeredMelismaFollowingLyricMinimumWidth,
-    ]);
+    return Math.max(
+      baseWidth,
+      visualMinimumWidth ?? -Infinity,
+      measureBarMinimumWidth ?? -Infinity,
+      lyricMinimumWidth ?? -Infinity,
+      melismaMinimumWidth ?? -Infinity,
+      centeredMelismaFollowingLyricMinimumWidth ?? -Infinity,
+    );
   }
 
   private static shouldUseMeasureBarMinimumForNonNoteSpacing(
@@ -4966,8 +4971,9 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
     clearance: number,
-    getCollisionBoxes: (note: NoteElement) => NoteGlyphBox[] = (note) =>
-      this.getNoteCollisionGlyphBoxes(note, pageSetup, measureBarWidthMap),
+    getCollisionBoxes: (note: NoteElement) => readonly NoteGlyphBox[] = (
+      note,
+    ) => this.getNoteCollisionGlyphBoxes(note, pageSetup, measureBarWidthMap),
   ) {
     if (right == null) {
       return 0;
@@ -4994,8 +5000,8 @@ export class LayoutService {
 
   private static getMinimumSpacingForNoteGlyphBoxes(
     leftWidth: number,
-    leftBoxes: NoteGlyphBox[],
-    rightBoxes: NoteGlyphBox[],
+    leftBoxes: readonly NoteGlyphBox[],
+    rightBoxes: readonly NoteGlyphBox[],
     clearance: number,
     verticalTolerance = 0,
   ) {
@@ -5047,6 +5053,23 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
     leftBarReserveOverride: number | null = null,
   ) {
+    // Callers may add to the returned array.
+    return [
+      ...this.getCachedNoteCollisionGlyphBoxes(
+        noteElement,
+        pageSetup,
+        measureBarWidthMap,
+        leftBarReserveOverride,
+      ),
+    ];
+  }
+
+  private static getCachedNoteCollisionGlyphBoxes(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    leftBarReserveOverride: number | null = null,
+  ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
     const glyphs = this.getNoteCollisionGlyphs(
@@ -5055,12 +5078,16 @@ export class LayoutService {
       measureBarWidthMap,
       leftBarReserveOverride,
     );
-    const key = `${fontFamily}|${fontSize}|${glyphs
-      .map(
-        (glyph) =>
-          `${glyph.glyphName},${glyph.kind},${glyph.x},${glyph.y},${glyph.offsetX},${glyph.offsetY}`,
-      )
-      .join(';')}`;
+    let key = `${fontFamily}|${fontSize}|`;
+    for (const glyph of glyphs) {
+      const offsetX = glyph.offsetX ?? 0;
+      const offsetY = glyph.offsetY ?? 0;
+      key += `${glyph.glyphName},${glyph.kind}`;
+      if (glyph.x !== 0 || glyph.y !== 0 || offsetX !== 0 || offsetY !== 0) {
+        key += `,${glyph.x},${glyph.y},${offsetX},${offsetY}`;
+      }
+      key += ';';
+    }
     let boxes = noteCollisionGlyphBoxesCache.get(key);
     if (boxes === undefined) {
       boxes = this.computeNoteCollisionGlyphBoxes(
@@ -5070,8 +5097,7 @@ export class LayoutService {
       ).map((box) => Object.freeze(box));
       noteCollisionGlyphBoxesCache.set(key, boxes);
     }
-    // Callers may add to the returned array.
-    return [...boxes];
+    return boxes;
   }
 
   private static computeNoteCollisionGlyphBoxes(
@@ -5147,16 +5173,7 @@ export class LayoutService {
       y: 0,
     });
 
-    for (const mark of this.getNoteCollisionMarks(noteElement)) {
-      glyphs.push({
-        glyphName: NeumeMappingService.getMapping(mark.neume).glyphName,
-        kind: 'mark',
-        x: bodyLeft,
-        y: 0,
-        offsetX: mark.offsetX,
-        offsetY: mark.offsetY,
-      });
-    }
+    this.addNoteCollisionMarkGlyphs(glyphs, noteElement, bodyLeft);
 
     if (noteElement.vareia && pageSetup.melkiteRtl) {
       glyphs.push(
@@ -5270,44 +5287,45 @@ export class LayoutService {
     );
   }
 
-  private static getNoteCollisionMarks(noteElement: NoteElement) {
-    const marks: Array<{
-      neume: Neume;
-      offsetX?: number | null;
-      offsetY?: number | null;
-    }> = [];
-
+  private static addNoteCollisionMarkGlyphs(
+    glyphs: NoteCollisionGlyph[],
+    note: NoteElement,
+    bodyLeft: number,
+  ) {
     const add = (
       neume: Neume | null | undefined,
       offsetX?: number | null,
       offsetY?: number | null,
     ) => {
       if (neume != null && !isTieNeume(neume)) {
-        marks.push({ neume, offsetX, offsetY });
+        glyphs.push({
+          glyphName: NeumeMappingService.getMapping(neume).glyphName,
+          kind: 'mark',
+          x: bodyLeft,
+          y: 0,
+          offsetX,
+          offsetY,
+        });
       }
     };
 
     for (const slot of noteMarkSlots) {
-      add(
-        slot.neume(noteElement),
-        slot.offsetX(noteElement),
-        slot.offsetY(noteElement),
-      );
+      const neume = slot.neume(note);
+      if (neume != null) {
+        add(neume, slot.offsetX(note), slot.offsetY(note));
+      }
     }
 
-    const measureBarLeft =
-      noteElement.measureBarLeft ?? noteElement.computedMeasureBarLeft;
+    const measureBarLeft = note.measureBarLeft ?? note.computedMeasureBarLeft;
     if (isMeasureBarAboveVariant(measureBarLeft)) {
       add(
         measureBarLeft,
-        noteElement.measureBarLeftOffsetX,
-        noteElement.measureBarLeftOffsetY,
+        note.measureBarLeftOffsetX,
+        note.measureBarLeftOffsetY,
       );
     }
 
-    add(noteElement.tie, noteElement.tieOffsetX, noteElement.tieOffsetY);
-
-    return marks;
+    add(note.tie, note.tieOffsetX, note.tieOffsetY);
   }
 
   private static getMartyriaCollisionGlyphBoxes(
@@ -8628,10 +8646,14 @@ export class LayoutService {
   }
 
   private static getNoteNeumesForMeasurement(noteElement: NoteElement) {
-    return [
-      noteElement.quantitativeNeume,
-      ...noteMarkSlots.map((slot) => slot.neume(noteElement)),
-    ].filter((x) => x != null);
+    const neumes: Neume[] = [noteElement.quantitativeNeume];
+    for (const slot of noteMarkSlots) {
+      const neume = slot.neume(noteElement);
+      if (neume != null) {
+        neumes.push(neume);
+      }
+    }
+    return neumes;
   }
 
   private static getNoteNeumesForInkMeasurement(noteElement: NoteElement) {

@@ -291,32 +291,34 @@ describe('LayoutService.calculateMartyriae', () => {
   });
 });
 
-describe('LayoutService.findFinalAndNextElement at a page boundary', () => {
-  it.each([true, false])(
-    'reads the following note only without a page break (pageBreak=%s)',
-    (pageBreak) => {
+describe('Melisma continuation across line breaks', () => {
+  it.each(['automatic', 'lineBreak', 'pageBreak'] as const)(
+    'uses the next line only for an automatic wrap (%s)',
+    (breakType) => {
       const start = new NoteElement();
       start.isMelisma = true;
       start.isMelismaStart = true;
-
-      const lastNote = new NoteElement();
-      lastNote.isMelisma = true;
-
-      const tempo = new TempoElement();
-      tempo.pageBreak = pageBreak;
-
       const continuation = new NoteElement();
       continuation.isMelisma = true;
+      const tempo = new TempoElement();
+      if (breakType !== 'automatic') {
+        tempo[breakType] = true;
+      }
+      const following = new NoteElement();
+      following.isMelisma = true;
 
-      const result = LayoutService.findFinalAndNextElement(
-        getLine(start, lastNote, tempo),
-        start,
-        continuation,
-        1,
+      const { finalElement, nextElement } =
+        LayoutService.findFinalAndNextElement(
+          getLine(start, continuation, tempo),
+          start,
+          following,
+          1,
+        );
+
+      expect(finalElement).toBe(
+        breakType === 'automatic' ? tempo : continuation,
       );
-
-      expect(result.finalElement).toBe(pageBreak ? lastNote : tempo);
-      expect(result.nextElement).toBe(pageBreak ? null : continuation);
+      expect(nextElement).toBe(breakType === 'automatic' ? following : null);
     },
   );
 });

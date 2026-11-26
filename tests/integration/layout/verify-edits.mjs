@@ -340,8 +340,13 @@ async function runEdits(driver) {
   // Commit lyrics on a visible note.
   const lyricIndex = await editor(`return ${noteIndex('() => 1')};`);
   await select(String(lyricIndex));
+  const lyricTarget = await editor(`
+    const { id, page } = e.selectedElement.value;
+    document.querySelectorAll('.page')[page - 1]?.scrollIntoView({ block: 'center' });
+    return \`#element-\${CSS.escape(String(id))} .lyrics\`;
+  `);
   await click(
-    `(() => { const s = window._editor.selectedElement.value; const page = document.querySelectorAll('.page')[s.page - 1]; return [...(page?.querySelectorAll('.neume-box .lyrics') ?? [])].find((n) => n.closest('.neume-box').querySelector('.selected')) ?? page?.querySelector('.neume-box .lyrics'); })()`,
+    `document.querySelector(${JSON.stringify(lyricTarget)})`,
     'lyrics of the selected note',
   );
   await eventually(async () =>

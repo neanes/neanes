@@ -203,6 +203,23 @@ describe('reactive score serialization', () => {
     expect(runs).toBe(1);
     stop(runner);
   });
+
+  it('does not track styles merged from a reactive array', () => {
+    const score = reactive(createScore());
+    // Pasting a format merges imported styles by spreading the score's
+    // reactive array, so the raw array holds proxies for existing styles.
+    score.paragraphStyles = [...score.paragraphStyles, new ParagraphStyle()];
+    let runs = 0;
+    const runner = effect(() => {
+      runs++;
+      SaveService.SaveScoreToJson(score);
+    });
+
+    score.paragraphStyles[0].displayName = 'Renamed';
+
+    expect(runs).toBe(1);
+    stop(runner);
+  });
 });
 
 describe('martyria quantitative-neume fthora serialization', () => {

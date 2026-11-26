@@ -1274,6 +1274,9 @@ export class SaveService {
   public static SaveScoreToJson(reactiveScore: Score) {
     // Read through the raw score. Serialization only reads, and Vue's proxy
     // traps (with dependency tracking) dominated its cost for large scores.
+    // Collections built by spreading a reactive array (for example styles
+    // merged on paste) hold proxies inside the raw score, so collection
+    // entries are unwrapped too.
     const s = toRaw(reactiveScore);
     const score = new Score_v1();
 
@@ -1292,11 +1295,13 @@ export class SaveService {
     }
     this.SavePageSetup(score.pageSetup, s.pageSetup);
     score.paragraphStyles = s.paragraphStyles.map((style) =>
-      this.SaveParagraphStyle(style),
+      this.SaveParagraphStyle(toRaw(style)),
     );
     score.initialMartyriaStyles =
       s.initialMartyriaStyles.length > 0
-        ? s.initialMartyriaStyles.map(saveInitialMartyriaStyle)
+        ? s.initialMartyriaStyles.map((style) =>
+            saveInitialMartyriaStyle(toRaw(style)),
+          )
         : undefined;
     score.defaultInitialMartyriaStyleId = s.defaultInitialMartyriaStyleId;
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
@@ -1317,7 +1322,7 @@ export class SaveService {
     score.footnotes =
       s.footnotes.length === 0
         ? undefined
-        : s.footnotes.map((footnote) => this.SaveFootnote(footnote));
+        : s.footnotes.map((footnote) => this.SaveFootnote(toRaw(footnote)));
 
     return score;
   }
@@ -1333,7 +1338,8 @@ export class SaveService {
 
   public static SaveElements(elements: ScoreElement[]): ScoreElement_v1[] {
     const result: ScoreElement_v1[] = [];
-    for (const e of elements) {
+    for (const entry of elements) {
+      const e = toRaw(entry);
       let element: ScoreElement_v1;
 
       switch (e.elementType) {

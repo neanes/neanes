@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ScoreElement } from '@/models/Element';
-import {
-  EmptyElement,
-  MartyriaElement,
-  NoteElement,
-  TextBoxElement,
-} from '@/models/Element';
+import { MartyriaElement, NoteElement, TextBoxElement } from '@/models/Element';
 import { Line, Page } from '@/models/Page';
 
 import {
@@ -36,8 +31,7 @@ function buildLayouts() {
   martyria.x = 40;
   const textBox = new TextBoxElement();
   textBox.id = 3;
-  const empty = new EmptyElement();
-  const elements: ScoreElement[] = [note, martyria, textBox, empty];
+  const elements: ScoreElement[] = [note, martyria, textBox];
 
   const copies = new Map<ScoreElement, ScoreElement>(
     elements.map((element) => [element, copyElement(element)]),
@@ -52,7 +46,7 @@ function buildLayouts() {
     const second = new Page();
     second.physicalPageNumber = 2;
     const secondLine = new Line();
-    secondLine.elements = [map(textBox), map(empty)];
+    secondLine.elements = [map(textBox)];
     second.lines.push(secondLine);
     second.footnotes.push({
       id: 'f',

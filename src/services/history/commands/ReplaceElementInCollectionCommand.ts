@@ -11,6 +11,14 @@ export class ReplaceElementInCollectionCommand<T> implements Command {
 
   constructor(private args: ReplaceElementInCollectionCommandArgs<T>) {}
 
+  public affectedObjects() {
+    return [
+      this.args.collection,
+      this.args.element,
+      ...(this.replacedElement === undefined ? [] : [this.replacedElement]),
+    ] as object[];
+  }
+
   public execute() {
     this.replacedElement = this.args.collection[this.args.replaceAtIndex];
 

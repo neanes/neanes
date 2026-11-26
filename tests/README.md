@@ -76,6 +76,20 @@ node tests/integration/layout/verify-edits.mjs --skip-build --only verify-layout
 The check uses the dev-only oracle, so it is slow on long scores. With the
 flag on, a difference is also logged in the renderer with `console.error`.
 
+## Layout profiling
+
+Use a profiling build and run the benchmark from the repository root. On macOS,
+run the Electron command outside the agent command sandbox.
+
+```sh
+VITE_LAYOUT_PROFILING_ENABLED=true npx vite build
+node tests/integration/layout/profile-edits.mjs /path/to/long-doc-with-melisma.byz
+```
+
+The benchmark opens a temporary copy of the score in a disposable profile. It
+toggles the gorgon on a note near the middle of the score and prints the median
+synchronous layout time per phase for ten edits after four warm-up edits.
+
 ## Local Linux tests with Docker
 
 With Docker Desktop running, use the Linux runner from the repository root:

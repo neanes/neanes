@@ -5,6 +5,8 @@ export interface StateEdit<State extends object> {
   apply(): void;
   restore(state: State): void;
   equals(left: State, right: State): boolean;
+  // The objects the edit changes, when known.
+  targets?: readonly object[];
 }
 
 // The editing layer defines the state boundary; history only replays it.
@@ -14,6 +16,10 @@ export class StateEditCommand<State extends object> implements Command {
   private applied = false;
 
   constructor(private readonly edit: StateEdit<State>) {}
+
+  public affectedObjects() {
+    return this.edit.targets ?? null;
+  }
 
   public execute() {
     this.before = this.edit.capture();

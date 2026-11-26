@@ -11,6 +11,10 @@ export class AddToCollectionCommand<T> implements Command {
 
   constructor(private args: AddToCollectionCommandArgs<T>) {}
 
+  public affectedObjects() {
+    return [this.args.collection, ...this.args.elements] as object[];
+  }
+
   public execute() {
     if (this.args.elements.length === 0) {
       return false;

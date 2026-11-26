@@ -276,7 +276,10 @@ import {
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import type { LiveLayoutOutcome } from '@/services/rendering/settleWorkspace';
-import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
+import {
+  changedTextBoxHeights,
+  getResizableTextBoxes,
+} from '@/services/rendering/textBoxMeasurement';
 import {
   beginLayoutVerification,
   layoutVerificationEnabled,
@@ -821,6 +824,8 @@ const selectedWorkspace = computed({
       throw error;
     }
 
+    void measureOpenedTextBoxes(value);
+
     // Scroll to the new workspace's saved scroll position
     // Use nextTick to scroll after the DOM has refreshed
     nextTick(() => {
@@ -844,6 +849,13 @@ const settleFootnoteReferences = computed(() =>
 );
 const { textBoxes: liveLayoutMeasurement } = useWorkspaceMeasurements();
 const liveTextBoxMeasurement = liveLayoutMeasurement.pending;
+const { textBoxes: openedLayoutMeasurement } = useWorkspaceMeasurements();
+const openedTextBoxMeasurement = openedLayoutMeasurement.pending;
+// Raw workspaces whose text boxes were measured after their first layout.
+const measuredOpenedWorkspaces = new WeakSet<Workspace>();
+// Whether on-page height writes arrived while the selected workspace was
+// being measured. That measurement's layout applies them.
+let openMeasurementWrites: { written: boolean } | null = null;
 const liveLayout = useLiveWorkspaceLayout({
   selectedWorkspace: () => selectedWorkspace.value,
   enabled: () => settleFootnoteReferences.value,
@@ -7471,6 +7483,102 @@ function flushPendingAnnotationEditor() {
   }
 }
 
+// Saved heights are wrong for boxes that were never rendered before saving
+// (for example generated, pasted or MCP-built content). Measure every box off
+// screen once, after the workspace's first layout, and apply all heights in
+// one layout. Otherwise each box writes its height when it first renders on a
+// page, and each write lays out the whole score again.
+async function measureOpenedTextBoxes(workspace: Workspace) {
+  const source = toRaw(workspace);
+  if (measuredOpenedWorkspaces.has(source)) {
+    return;
+  }
+  measuredOpenedWorkspaces.add(source);
+  const score = toRaw(source.score);
+  // Settlement measures its scores on every layout. Header and footer heights
+  // depend on each page's tokens, so they are only measured on their pages.
+  const templates = new Set(score.headersAndFooters.map(toRaw));
+  const boxes = new Set(
+    needsFootnoteSettlement(score)
+      ? []
+      : getResizableTextBoxes(score).filter((box) => !templates.has(box)),
+  );
+  const start = performance.now();
+  if (boxes.size === 0) {
+    recordAsyncSpan('editor.measureOpenedTextBoxes', start, {
+      boxes: 0,
+      changed: 0,
+      layouts: 0,
+    });
+    return;
+  }
+  const revision = source.contentRevision;
+  const isSelected = () => toRaw(selectedWorkspace.value) === source;
+  let changed = 0;
+  const writes = { written: false };
+  openMeasurementWrites = writes;
+  // One measurement at a time. A canceled one measures again the next time
+  // its workspace is selected.
+  openedLayoutMeasurement.cancel();
+  try {
+    // Standalone boxes take their scrollable height caps from the layout
+    // that was just published. Measuring them in template pages instead
+    // would mount every page (3.4 s instead of 0.13 s on a 601-page score).
+    const heights = await openedLayoutMeasurement.start(
+      source,
+      undefined,
+      boxes,
+    );
+    if (
+      isSelected() &&
+      toRaw(source.score) === score &&
+      source.contentRevision === revision
+    ) {
+      const changes = changedTextBoxHeights(heights);
+      for (const [element, height] of changes) {
+        // Measured on raw elements; write through the proxy so that mounted
+        // boxes update.
+        reactive(element).height = height;
+      }
+      changed = changes.size;
+    } else {
+      // Measure again the next time the workspace is selected.
+      measuredOpenedWorkspaces.delete(source);
+    }
+  } catch (error) {
+    measuredOpenedWorkspaces.delete(source);
+    if (!(error instanceof Error && error.message === 'DOCUMENT_NOT_FOUND')) {
+      console.error(error);
+    }
+  } finally {
+    if (openMeasurementWrites === writes) {
+      openMeasurementWrites = null;
+    }
+    const relayout = (changed > 0 || writes.written) && isSelected();
+    recordAsyncSpan('editor.measureOpenedTextBoxes', start, {
+      boxes: boxes.size,
+      changed,
+      layouts: relayout ? 1 : 0,
+    });
+    if (relayout) {
+      save();
+    }
+  }
+}
+
+// Defers an on-page height write to the measurement of the selected
+// workspace, if one is running.
+function deferToOpenMeasurement() {
+  if (
+    openMeasurementWrites === null ||
+    openedTextBoxMeasurement.value?.workspace.id !== selectedWorkspace.value.id
+  ) {
+    return false;
+  }
+  openMeasurementWrites.written = true;
+  return true;
+}
+
 function profileMeasuredHeightWrite(element: ScoreElement) {
   if (layoutProfilingEnabled) {
     performance.mark('editor.textBoxHeightWrite', { detail: element.id });
@@ -7486,6 +7594,9 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   element.height = height;
   profileMeasuredHeightWrite(element);
   richTextBoxCalculationCount.value++;
+  if (deferToOpenMeasurement()) {
+    return;
+  }
   saveDebounced();
 }
 
@@ -7529,6 +7640,9 @@ function updateTextBoxHeight(element: TextBoxElement, height: number) {
   element.height = height;
   profileMeasuredHeightWrite(element);
   textBoxCalculationCount.value++;
+  if (deferToOpenMeasurement()) {
+    return;
+  }
   saveDebounced();
 }
 
@@ -10384,6 +10498,7 @@ function addAndSelectWorkspace(workspace: Workspace) {
 // detaches the selected workspace must select another one.
 function detachWorkspace(workspace: Workspace) {
   disposeAutomationWorkspace(workspace);
+  openedLayoutMeasurement.cancel(workspace);
   cancelLyricsAssignment(workspace);
   clearRecoverySnapshotTimer(workspace.id);
 
@@ -11435,6 +11550,16 @@ function renderTabLabel(tab: Tab) {
       :editor-language="ckeditorLanguage"
       @complete="liveLayoutMeasurement.complete"
       @failed="liveLayoutMeasurement.fail"
+    />
+    <WorkspaceTextBoxMeasurement
+      v-if="openedTextBoxMeasurement"
+      :key="openedTextBoxMeasurement.id"
+      :workspace="openedTextBoxMeasurement.workspace"
+      :measurement-boxes="openedTextBoxMeasurement.measurementBoxes"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="openedLayoutMeasurement.complete"
+      @failed="openedLayoutMeasurement.fail"
     />
     <WorkspacePageMeasurement
       v-if="workspacePageMeasurement"

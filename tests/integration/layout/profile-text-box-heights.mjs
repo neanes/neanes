@@ -1,6 +1,8 @@
-// B4: how often measured text box heights are written outside commands while
+// How often measured text box heights are written outside commands while
 // opening, scrolling, editing and zooming, what layouts they cause, and
-// whether measuring every box off screen up front gives the same heights.
+// whether measuring every box off screen gives the on-page heights. Opening a
+// score measures its boxes off screen and applies them in one layout, so a
+// scroll through the whole score after opening must write no heights.
 // Build with VITE_LAYOUT_PROFILING_ENABLED=true.
 //
 //   node tests/integration/layout/profile-text-box-heights.mjs score.byz
@@ -71,6 +73,7 @@ async function since(editor, start, idleMs) {
       .filter((entry) => entry.startTime >= start.time);
   const writes = entries('editor.textBoxHeightWrite');
   const layouts = entries('editor.layout');
+  const openMeasurements = entries('editor.measureOpenedTextBoxes');
   const boxes = editor.elements.value.filter(
     (element) => element.elementType === 'TextBox' && !element.inline,
   );
@@ -78,6 +81,10 @@ async function since(editor, start, idleMs) {
     writes: writes.length,
     distinctBoxes: new Set(writes.map(({ detail }) => detail)).size,
     durations: layouts.map(({ duration }) => Math.round(duration)),
+    openMeasurements: openMeasurements.map(({ duration, detail }) => ({
+      duration: Math.round(duration),
+      ...detail,
+    })),
     unmeasured: boxes.filter((box) => box.height === 20).length,
     pages: document.querySelectorAll('.page').length,
     boxes: boxes.length,
@@ -125,12 +132,43 @@ async function editTwice(editor, { page, viewPage }) {
 }
 
 function report(name, result) {
+  const measured = result.openMeasurements
+    .map(
+      ({ duration, boxes, changed, layouts }) =>
+        `; open measurement ${duration} ms, ${changed}/${boxes} heights ` +
+        `changed, ${layouts} layouts`,
+    )
+    .join('');
   console.log(
     `${name}: ${result.writes} height writes (${result.distinctBoxes} boxes), ` +
       `${result.durations.length} layouts, ms [${result.durations.join(',')}]; ` +
       `still at 20 px: ${result.unmeasured}/${result.boxes}; ` +
-      `pages ${result.pages}`,
+      `pages ${result.pages}${measured}`,
   );
+}
+
+// Runs in the renderer: wait for the open measurement of a score with
+// resizable boxes.
+async function measuredOnOpen() {
+  const deadline = performance.now() + 120_000;
+  const done = () =>
+    performance.getEntriesByName('editor.measureOpenedTextBoxes').length > 0;
+  while (!done() && performance.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+}
+
+async function opened(inEditor) {
+  await inEditor(measuredOnOpen);
+  return inEditor(since, { time: 0 }, 3000);
+}
+
+// Opening measures once and lays out at most once more; no box writes its
+// height on the first pages.
+function checkOpen(result) {
+  assert.equal(result.openMeasurements.length, 1, 'One open measurement');
+  assert.ok(result.openMeasurements[0].layouts <= 1, 'Layouts by measurement');
+  assert.equal(result.writes, 0, 'Height writes on open');
 }
 
 const output = await mkdtemp(path.join(tmpdir(), 'neanes-measured-book-'));
@@ -140,7 +178,9 @@ try {
     const { app, score, inEditor } = await openApp(source);
     try {
       let start;
-      report('open (first 3 s)', await inEditor(since, { time: 0 }, 3000));
+      const open = await opened(inEditor);
+      report('open (measured, then 3 s)', open);
+      checkOpen(open);
 
       const measured = await inEditor((editor) =>
         editor.layoutProfile.measureAllTextBoxes(),
@@ -151,25 +191,10 @@ try {
       const offscreen = new Map(measured.heights);
 
       start = await inEditor(mark);
-      await inEditor(sweep, { from: 2, to: 100, paceMs: 100 });
-      report(
-        'fast scroll pages 2-100 (100 ms/page)',
-        await inEditor(since, start, 1000),
-      );
-
-      start = await inEditor(mark);
-      await inEditor(sweep, { from: 101, to: 130, paceMs: 600 });
-      report(
-        'reading scroll pages 101-130 (600 ms/page)',
-        await inEditor(since, start, 1000),
-      );
-
-      start = await inEditor(mark);
-      await inEditor(sweep, { from: 1, to: 130, paceMs: 100 });
-      report(
-        're-scroll visited pages 1-130',
-        await inEditor(since, start, 1000),
-      );
+      await inEditor(sweep, { from: 2, to: 10_000, paceMs: 60 });
+      const scrolled = await inEditor(since, start, 1500);
+      report('scroll pages 2-end (60 ms/page)', scrolled);
+      assert.equal(scrolled.writes, 0, 'Height writes on the first scroll');
 
       start = await inEditor(mark);
       await inEditor(editTwice, { page: 50, viewPage: 50 });
@@ -193,13 +218,6 @@ try {
       });
       report(
         'zoom 1 -> 1.25 -> 1 on page 120',
-        await inEditor(since, start, 1500),
-      );
-
-      start = await inEditor(mark);
-      await inEditor(sweep, { from: 131, to: 10_000, paceMs: 60 });
-      report(
-        'fast scroll pages 131-end (60 ms/page)',
         await inEditor(since, start, 1500),
       );
 
@@ -234,13 +252,14 @@ try {
   }
   const { app, inEditor } = await openApp(saved);
   try {
-    report(
-      'reopen saved file (first 3 s)',
-      await inEditor(since, { time: 0 }, 3000),
-    );
+    const reopened = await opened(inEditor);
+    report('reopen saved file (measured, then 3 s)', reopened);
+    checkOpen(reopened);
     const start = await inEditor(mark);
     await inEditor(sweep, { from: 2, to: 10_000, paceMs: 60 });
-    report('reopened: scroll pages 2-end', await inEditor(since, start, 1500));
+    const scrolled = await inEditor(since, start, 1500);
+    report('reopened: scroll pages 2-end', scrolled);
+    assert.equal(scrolled.writes, 0, 'Height writes on the reopened scroll');
   } finally {
     await app.close();
   }

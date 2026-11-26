@@ -144,6 +144,18 @@ async function measure(fixture, previous) {
       assert.ok(opened, 'Score has not opened');
       return opened;
     });
+    // Opening measures text boxes off screen and lays out again with the
+    // measured heights. Time edits after that, not during it.
+    await eventually(
+      async () =>
+        assert.ok(
+          await evaluate(
+            `performance.getEntriesByName('editor.measureOpenedTextBoxes').length > 0`,
+          ),
+          'Text boxes were not measured on open',
+        ),
+      { timeoutMs: 120_000 },
+    );
     const workloads = [];
     for (const [kind, picked] of Object.entries(targets)) {
       if (kind === 'lyric' && lyricsLocked) {

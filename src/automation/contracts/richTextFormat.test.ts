@@ -269,7 +269,6 @@ describe('rich-text authoring discovery', () => {
     });
     expect(body.elements.map((element) => element.elementType)).toEqual([
       'RichTextBox',
-      'Empty',
     ]);
     expect(body.elements[0].properties).toHaveProperty(
       'content',

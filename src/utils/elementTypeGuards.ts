@@ -1,7 +1,6 @@
 import {
   type DropCapElement,
   ElementType,
-  type EmptyElement,
   type ImageBoxElement,
   type MartyriaElement,
   type ModeKeyElement,
@@ -26,10 +25,6 @@ export function isMartyriaElement(
 
 export function isTempoElement(element: ScoreElement): element is TempoElement {
   return element.elementType == ElementType.Tempo;
-}
-
-export function isEmptyElement(element: ScoreElement): element is EmptyElement {
-  return element.elementType == ElementType.Empty;
 }
 
 export function isTextBoxElement(

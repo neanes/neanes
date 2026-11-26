@@ -273,7 +273,7 @@ describe('save state identity', () => {
     workspace.score.staff.elements.push(box);
     const state = captureDocumentSaveState(workspace);
     const rawBox = toRaw(
-      workspace.score.staff.elements[1],
+      workspace.score.staff.elements[0],
     ) as RichTextBoxElement;
     rawBox.height = 100;
     expect(workspace.contentRevision).toBe(state.contentRevision);

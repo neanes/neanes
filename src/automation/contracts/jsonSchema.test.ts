@@ -206,7 +206,7 @@ describe('compact tool schemas', () => {
 
   it('provides small inventory and focused read/edit schemas on demand', () => {
     const inventory = getElementCatalog();
-    expect(inventory.elementTypes).toHaveLength(11);
+    expect(inventory.elementTypes).toHaveLength(10);
     expect(
       inventory.elementTypes.every(
         (type) => !('properties' in type) && !('editProperties' in type),

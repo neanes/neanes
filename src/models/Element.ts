@@ -46,7 +46,6 @@ export enum ElementType {
   Note = 'Note',
   Martyria = 'Martyria',
   Tempo = 'Tempo',
-  Empty = 'Empty',
   TextBox = 'TextBox',
   RichTextBox = 'RichTextBox',
   DropCap = 'DropCap',
@@ -1045,16 +1044,6 @@ export class TempoElement extends ScoreElement {
   }
 }
 
-export class EmptyElement extends ScoreElement {
-  public readonly elementType: ElementType = ElementType.Empty;
-
-  public height: number = 0;
-
-  public clone() {
-    return new EmptyElement();
-  }
-}
-
 export { TextBoxAlignment };
 
 export type RunningMarkerRole = 'chapter' | 'section';
@@ -1722,7 +1711,6 @@ export function canKeepWithNext(
     !element.lineBreak &&
     !element.pageBreak &&
     nextElement !== null &&
-    nextElement.elementType !== ElementType.Empty &&
     !isBlockElement(nextElement) &&
     !isAutomaticBreakProhibited(element, nextElement)
   );

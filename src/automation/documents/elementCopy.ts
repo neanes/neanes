@@ -73,25 +73,22 @@ export function planElementCopy(
 ): ElementEditPlan {
   const sourceElements = source.score.staff.elements;
   const destinationElements = destination.score.staff.elements;
-  const end = range.end ?? sourceElements.length - 1;
-  const index = range.index ?? destinationElements.length - 1;
+  const end = range.end ?? sourceElements.length;
+  const index = range.index ?? destinationElements.length;
   if (
     !Number.isInteger(range.start) ||
     !Number.isInteger(end) ||
     !Number.isInteger(index) ||
     range.start < 0 ||
     end < range.start ||
-    end > sourceElements.length - 1 ||
+    end > sourceElements.length ||
     index < 0 ||
-    index > destinationElements.length - 1 ||
+    index > destinationElements.length ||
     end - range.start > 1000
   ) {
     throw new Error('INVALID_ELEMENT_RANGE');
   }
   const elements = sourceElements.slice(range.start, end);
-  if (elements.some((element) => element.elementType === ElementType.Empty)) {
-    throw new Error('INVALID_ELEMENT_RANGE');
-  }
   const plan: ElementEditPlan = {
     commands: [],
     fontFamilies: [],

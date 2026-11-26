@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   canKeepWithNext,
   DropCapElement,
-  EmptyElement,
   ImageBoxElement,
   isAutomaticBreakProhibited,
   isBlockElement,
@@ -75,12 +74,8 @@ describe('canKeepWithNext', () => {
     expect(canKeepWithNext(new NoteElement(), block)).toBe(false);
   });
 
-  it('rejects a keep on or before the terminal empty element', () => {
-    // The empty element is always last, so pass it a following element to
-    // exercise its own guard rather than the missing-next-element one.
-    expect(canKeepWithNext(new EmptyElement(), new NoteElement())).toBe(false);
+  it('rejects a keep on the last element', () => {
     expect(canKeepWithNext(new NoteElement(), null)).toBe(false);
-    expect(canKeepWithNext(new NoteElement(), new EmptyElement())).toBe(false);
   });
 
   it('rejects a boundary before a martyria', () => {
@@ -129,7 +124,6 @@ describe('Element clipboard and paragraph-style overrides', () => {
     { label: 'drop cap', createElement: () => new DropCapElement() },
     { label: 'image box', createElement: () => new ImageBoxElement() },
     { label: 'mode key', createElement: () => new ModeKeyElement() },
-    { label: 'empty element', createElement: () => new EmptyElement() },
   ])('drops the $label break state when cloning', ({ createElement }) => {
     const element = createElement();
     element.lineBreak = true;

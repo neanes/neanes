@@ -24,6 +24,8 @@ The reference appears as a superscript in the original text. Footnote insertion 
 
 Click the music or text in a footnote to work with it using the usual editor controls. A footnote can contain both music and text.
 
+The footnote you are editing has a light outline. Click blank space in a footnote, or its label, to edit it with nothing selected; new music and inserted text are then added at the end of that footnote, and the status bar shows **End of footnote**. Press <kbd>Escape</kbd> to clear the selection, and again to leave the footnote. An empty footnote shows a placeholder in the editor; it is never printed or exported, and an empty footnote keeps only its label line on the page.
+
 - To return to a musical footnote, right-click its note or martyria and choose **Edit footnote**, followed by its marker.
 - To open a footnote from rich text, double-click its superscript marker.
 - To return to the passage in the main score, double-click the footnote's label at the bottom of the page. Neanes selects the reference and scrolls it into view.

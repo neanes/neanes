@@ -43,7 +43,7 @@ try {
     });
   const initial = await call('get_elements', args);
   await edit([
-    { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+    { action: 'remove_range', start: 0, end: initial.collectionSize },
     {
       action: 'insert',
       elements: [
@@ -427,7 +427,7 @@ try {
     {
       action: 'remove_range',
       start: 0,
-      end: placementInitial.collectionSize - 1,
+      end: placementInitial.collectionSize,
     },
     {
       action: 'insert',

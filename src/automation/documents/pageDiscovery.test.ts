@@ -71,7 +71,7 @@ describe('settled page discovery', () => {
       source.pageSetup.showHeader = false;
       source.pageSetup.showFooter = false;
       source.staff.elements.unshift(
-        ...Array.from({ length: 999 }, () => new NoteElement()),
+        ...Array.from({ length: 1000 }, () => new NoteElement()),
       );
       const copy = cloneScoreForLayout(source);
       const pages = Array.from(

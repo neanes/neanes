@@ -58,7 +58,11 @@
     "section": "Раздел {{ sectionNumber }} из {{ sectionCount }}",
     "pageNumber": "Страница {{ currentPageNumber }} из {{ pageCount }}",
     "line": "Строка {{ lineNumber }} из {{ lineCount }}",
-    "column": "Столбец {{ columnNumber }} из {{ columnCount }}"
+    "column": "Столбец {{ columnNumber }} из {{ columnCount }}",
+    "startOfScore": "Начало партитуры",
+    "startOfFootnote": "Начало сноски {{number}}",
+    "endOfScore": "Конец партитуры",
+    "endOfFootnote": "Конец сноски {{number}}"
   },
   "dropCap": {
     "lineSpan": "Количество строк для буквицы"

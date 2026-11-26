@@ -70,11 +70,11 @@ If a sign appears on the wrong component, undo it, choose the intended component
 
 A score can contain more than the initial martyria created with a new score. Use another standard initial martyria when a later hymn or section begins in a new mode:
 
-1. Select the element that should follow the new initial martyria.
+1. Select the element that should precede the new initial martyria. To add it at the end of the score, select nothing.
 2. Choose `Insert > Initial Martyria`.
 3. In the Initial Martyria dialog, choose a mode on the left and one of its supplied martyriæ on the right.
 
-Neanes inserts the initial martyria before the selected element and uses it to establish the note and scale for the music that follows. To change it later, double-click it, right-click it and choose `Change Initial Martyria`, or use **Change Initial Martyria** in its bottom toolbar.
+Neanes inserts the initial martyria after the selected element and uses it to establish the note and scale for the music that follows. To change it later, double-click it, right-click it and choose `Change Initial Martyria`, or use **Change Initial Martyria** in its bottom toolbar.
 
 For wording and typography, the ambitus, or an initial martyria within a line of music, see [Initial Martyriæ](/guide/initial-martyria.html).
 

@@ -23,7 +23,6 @@ import type {
 } from '@/models/Element';
 import {
   ElementType,
-  EmptyElement,
   FootnoteAnchorElement,
   isAutomaticBreakProhibited,
   isBlockElement,
@@ -174,7 +173,6 @@ import {
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
-const emptyElementWidth = 39;
 const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
 const maxAdjustmentRatioSearchLimit = 4096;
@@ -501,7 +499,6 @@ export class LayoutService {
       score.initialMartyriaStyles,
       score.defaultInitialMartyriaStyleId,
       options,
-      false,
     );
     const {
       layoutWorkspace,
@@ -632,6 +629,8 @@ export class LayoutService {
     for (const [index, decision] of decisions.entries()) {
       const page = new Page();
       page.physicalPageNumber = index + 1;
+      page.contentTop =
+        pageSetup.topMargin + decision.reservation.extraHeaderHeightPx;
       page.footnoteOverflow = decision.footnoteOverflow;
       const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
       for (const placement of decision.lines) {
@@ -642,9 +641,7 @@ export class LayoutService {
             contentLines[placement.index],
             pageSetup,
             margins,
-            pageSetup.topMargin +
-              decision.reservation.extraHeaderHeightPx +
-              placement.top,
+            page.contentTop + placement.top,
             page.physicalPageNumber,
             page.lines.length + 1,
             previousLine,
@@ -792,17 +789,6 @@ export class LayoutService {
           line.footnoteId = body.id;
           top += candidate.height;
         }
-        const staff = score.footnotes.find(
-          (footnote) => footnote.id === body.id,
-        )!.staff;
-        if (staff.elements.length > 1) {
-          const last = staff.elements.at(-2)!;
-          const terminal = staff.elements.at(-1)!;
-          terminal.page = last.page;
-          terminal.line = last.line;
-          terminal.x = last.x + last.width;
-          terminal.y = last.y;
-        }
         const bodyPage = new Page();
         bodyPage.physicalPageNumber = physicalPage.physicalPageNumber;
         bodyPage.lines = body.lines;
@@ -909,7 +895,6 @@ export class LayoutService {
           score.initialMartyriaStyles,
           score.defaultInitialMartyriaStyleId,
           options,
-          true,
         );
         const lines = this.getContentLines(
           content.layoutWorkspace.completedParagraphs,
@@ -931,10 +916,31 @@ export class LayoutService {
             content,
             lines,
             gutter,
-            height: lines.reduce((sum, line) => sum + line.height, 0),
+            // An empty body still shows its label line.
+            height:
+              lines.length === 0
+                ? this.getEmptyFootnoteHeight(score.paragraphStyles)
+                : lines.reduce((sum, line) => sum + line.height, 0),
           },
         ] as const;
       }),
+    );
+  }
+
+  private static getEmptyFootnoteHeight(paragraphStyles: ParagraphStyle[]) {
+    const style = resolveParagraphStyle(
+      paragraphStyles,
+      BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText,
+    );
+    const textHeight =
+      style.lineHeight == null
+        ? TextMeasurementService.getFontHeight(resolveFontCss(style))
+        : style.fontSize * style.lineHeight;
+    // The label's marker renders with line-height 1 and may be larger than
+    // the footnote text.
+    return Math.max(
+      textHeight,
+      footnoteMarkerStyle(paragraphStyles, 'body').fontSize,
     );
   }
 
@@ -1217,15 +1223,7 @@ export class LayoutService {
     initialMartyriaStyles: InitialMartyriaStyle[],
     defaultInitialMartyriaStyleId: string,
     options?: LayoutDiagnosticsOptions,
-    hidePopulatedTerminator = false,
   ) {
-    // Always make sure this is an empty element at the end of the score.
-    // If this case is true, we have a bug, but this will prevent
-    // users corrupting their score.
-    if (elements[elements.length - 1].elementType !== ElementType.Empty) {
-      elements.push(new EmptyElement());
-    }
-
     const layoutWorkspace: LayoutWorkspace = {
       pageSetup,
       pendingParagraph: [],
@@ -2279,47 +2277,6 @@ export class LayoutService {
 
           break;
         }
-        case ElementType.Empty: {
-          if (i !== elements.length - 1) {
-            throw new Error('Unexpected empty element at index ' + i);
-          }
-
-          const emptyElement = elements[i] as EmptyElement;
-          if (hidePopulatedTerminator && elements.length > 1) {
-            // The sentinel remains in the model for editing, but owns no layout.
-            emptyElement.width = 0;
-            emptyElement.height = 0;
-            if (layoutWorkspace.pendingParagraph.length > 0) {
-              this.endParagraph(
-                false,
-                layoutWorkspace,
-                measureBarWidthMap,
-                neumeLineHeight,
-                neumeHeight,
-              );
-            }
-            continue;
-          }
-          const previousElement = this.getElementAt(elements, i - 1);
-          const followsNonRightAlignedMartyria =
-            previousElement?.elementType === ElementType.Martyria &&
-            !(previousElement as MartyriaElement).alignRight;
-          emptyElement.height = neumeHeight;
-
-          this.addLyricReservation(
-            emptyElementWidth,
-            emptyElement,
-            layoutWorkspace,
-            undefined,
-            followsNonRightAlignedMartyria ? true : undefined,
-          );
-          this.addBox(emptyElementWidth, emptyElement, layoutWorkspace);
-          this.addGlue(standardGlue, layoutWorkspace, 'standard');
-
-          lineBreak = true;
-
-          break;
-        }
         default:
           throw new Error(
             `Unhandled element type in layout service: ${elements[i].elementType}`,
@@ -2372,6 +2329,17 @@ export class LayoutService {
       if (layoutWorkspace.diagnostics != null) {
         layoutWorkspace.diagnostics.currentOwner = null;
       }
+    }
+
+    // The last element did not end its paragraph.
+    if (layoutWorkspace.pendingParagraph.length > 0) {
+      this.endParagraph(
+        false,
+        layoutWorkspace,
+        measureBarWidthMap,
+        neumeLineHeight,
+        neumeHeight,
+      );
     }
 
     return {
@@ -2518,26 +2486,6 @@ export class LayoutService {
         },
         collisionBoxes: [],
         glyph: tempoElement.neume,
-        inkBox: null,
-        leftProjection: null,
-        leftTuck: null,
-        lyricBox: null,
-        rightProjection: null,
-        rightTuck: null,
-        rootNeume: null,
-      };
-    }
-
-    if (element.elementType === ElementType.Empty) {
-      return {
-        advanceBox: {
-          height: (element as EmptyElement).height,
-          left: 0,
-          top: 0,
-          width: element.width,
-        },
-        collisionBoxes: [],
-        glyph: null,
         inkBox: null,
         leftProjection: null,
         leftTuck: null,
@@ -2899,8 +2847,6 @@ export class LayoutService {
       }
       case ElementType.DropCap:
         return 'drop-cap';
-      case ElementType.Empty:
-        return 'empty';
       default:
         return String(element.elementType);
     }
@@ -4677,7 +4623,7 @@ export class LayoutService {
       const baseWidth =
         this.getInlineSpacing(workspace.pageSetup) + rightProjection;
 
-      if (nextElement?.elementType === ElementType.Empty) {
+      if (nextElement == null) {
         const terminalMeasureBarMinimum =
           this.getTerminalMeasureBarRightSpacing(
             noteElement,
@@ -6330,7 +6276,6 @@ export class LayoutService {
         case ElementType.Martyria:
         case ElementType.Tempo:
         case ElementType.DropCap:
-        case ElementType.Empty:
           hasNeumeContent = true;
           break;
       }
@@ -7475,9 +7420,7 @@ export class LayoutService {
             }
           } else if (
             measureBarRight &&
-            (followedByRightAlignedMartyria ||
-              nextElement == null ||
-              nextElement.elementType === ElementType.Empty)
+            (followedByRightAlignedMartyria || nextElement == null)
           ) {
             owner.computedMeasureBarRightTrailingSpacing =
               this.getTerminalMeasureBarRightSpacing(
@@ -7488,8 +7431,7 @@ export class LayoutService {
             if (
               !pageSetup.melkiteRtl &&
               owner.elementType === ElementType.Note &&
-              (nextElement == null ||
-                nextElement.elementType === ElementType.Empty) &&
+              nextElement == null &&
               !(owner as NoteElement).lineBreak &&
               !(owner as NoteElement).pageBreak &&
               (owner as NoteElement).measureBarRight == null &&

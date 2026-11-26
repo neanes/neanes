@@ -65,7 +65,10 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RecoveryDialog from '@/components/RecoveryDialog.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
-import type { ScorePageHandlers } from '@/components/ScorePageContent.types';
+import type {
+  InsertionCaret,
+  ScorePageHandlers,
+} from '@/components/ScorePageContent.types';
 import ScorePageContent from '@/components/ScorePageContent.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
@@ -385,7 +388,6 @@ const navigableElements = [
   ElementType.Note,
   ElementType.Martyria,
   ElementType.Tempo,
-  ElementType.Empty,
   ElementType.DropCap,
   ElementType.TextBox,
   ElementType.ImageBox,
@@ -907,14 +909,16 @@ const resizableTextBoxElements = computed(() => {
 });
 
 const lyrics = computed(() => activeStaff.value.lyrics.text);
-const activeLyricsLabel = computed(() => {
+const activeOrderedFootnote = computed(() => {
   const activeId = selectedWorkspace.value.activeFootnoteId;
-  if (activeId === null) {
-    return t(($) => $.menu.view.lyrics, { ns: 'menu' });
-  }
-  const footnote = orderedFootnotes(score.value).find(
-    ({ footnote }) => footnote.id === activeId,
-  );
+  return activeId === null
+    ? undefined
+    : orderedFootnotes(score.value).find(
+        ({ footnote }) => footnote.id === activeId,
+      );
+});
+const activeLyricsLabel = computed(() => {
+  const footnote = activeOrderedFootnote.value;
   return footnote === undefined
     ? t(($) => $.menu.view.lyrics, { ns: 'menu' })
     : t(($) => $.menu.footnotes.lyrics, {
@@ -930,11 +934,7 @@ const isLyricsManagerOpen = computed(() => {
 });
 
 const pageCount = computed(() => {
-  return filteredPages.value.length;
-});
-
-const exportPageCount = computed(() => {
-  return pages.value.filter((page) => !page.isEmpty).length;
+  return pages.value.length;
 });
 
 const statusPageCount = computed(() => Math.max(1, pageCount.value));
@@ -1043,7 +1043,7 @@ const previousElementOnLine = computed(() => {
 const nextElementOnLine = computed(() => {
   const index = selectedElementIndex.value;
 
-  if (index + 1 >= activeElements.value.length - 1) {
+  if (index < 0 || index + 1 >= activeElements.value.length) {
     return null;
   }
 
@@ -1430,7 +1430,7 @@ const statusSectionNumber = computed(() => {
 const statusSectionCount = computed(() => getSectionCount());
 
 const statusContentLines = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
+  const page = pages.value[statusPageNumber.value - 1];
   const element = statusPositionElementOnPage.value;
   const body =
     element == null
@@ -1442,7 +1442,7 @@ const statusContentLines = computed(() => {
 });
 
 const statusLinePosition = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
+  const page = pages.value[statusPageNumber.value - 1];
   const lineCount = Math.max(statusContentLines.value.length, 1);
   const lineNumber =
     statusPositionElementOnPage.value?.line ??
@@ -1467,6 +1467,24 @@ const statusColumnPosition = computed(() => {
     columnNumber: elementIndex >= 0 ? elementIndex + 1 : 1,
     columnCount,
   };
+});
+
+// With nothing selected, the status bar shows the insertion slot (the start
+// or end of the active staff) instead of a line and column.
+const statusInsertionSlotLabel = computed(() => {
+  if (!isNothingSelected()) {
+    return null;
+  }
+  const atStart = selectedWorkspace.value.insertAtStart;
+  if (selectedWorkspace.value.activeFootnoteId === null) {
+    return atStart
+      ? t(($) => $.toolbar.status.startOfScore, { ns: 'toolbar' })
+      : t(($) => $.toolbar.status.endOfScore, { ns: 'toolbar' });
+  }
+  const number = activeOrderedFootnote.value?.marker ?? '';
+  return atStart
+    ? t(($) => $.toolbar.status.startOfFootnote, { ns: 'toolbar', number })
+    : t(($) => $.toolbar.status.endOfFootnote, { ns: 'toolbar', number });
 });
 
 const statusNeumeNoteDisplay = computed(() => {
@@ -1559,12 +1577,8 @@ const activeDialog = computed(
 );
 const dialogOpen = computed(() => activeDialog.value !== null);
 
-const filteredPages = computed(() => {
-  return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
-});
-
 const runningMarkerPageMetadata = computed(() =>
-  resolveRunningMarkerPageMetadata(filteredPages.value),
+  resolveRunningMarkerPageMetadata(pages.value),
 );
 
 provide(
@@ -1580,6 +1594,7 @@ const throttled = {
   moveToNextLyricBox: throttle(keydownThrottleIntervalMs, moveToNextLyricBox),
   moveLeft: throttle(keydownThrottleIntervalMs, moveLeft),
   moveRight: throttle(keydownThrottleIntervalMs, moveRight),
+  moveForward: throttle(keydownThrottleIntervalMs, moveForward),
   moveSelectionLeft: throttle(keydownThrottleIntervalMs, moveSelectionLeft),
   moveSelectionRight: throttle(keydownThrottleIntervalMs, moveSelectionRight),
   deleteSelectedElement: throttle(
@@ -1702,6 +1717,18 @@ watch(
       save();
     }
   },
+);
+
+// Selecting anything leaves the start of the staff. Sync, so a later
+// clearSelection() in the same tick returns to the end of the staff.
+watch(
+  () => !isNothingSelected(),
+  (somethingSelected) => {
+    if (somethingSelected) {
+      selectedWorkspace.value.insertAtStart = false;
+    }
+  },
+  { flush: 'sync' },
 );
 
 watch(selectedWorkspaceId, () => {
@@ -1911,6 +1938,8 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
+  EventBus.$on(IpcMainChannels.FileMenuGoToStart, onFileMenuGoToStart);
+  EventBus.$on(IpcMainChannels.FileMenuGoToEnd, onFileMenuGoToEnd);
   EventBus.$on(
     IpcMainChannels.FileMenuWindowPreviousTab,
     onFileMenuWindowPreviousTab,
@@ -2035,6 +2064,8 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
+  EventBus.$off(IpcMainChannels.FileMenuGoToStart, onFileMenuGoToStart);
+  EventBus.$off(IpcMainChannels.FileMenuGoToEnd, onFileMenuGoToEnd);
   EventBus.$off(
     IpcMainChannels.FileMenuWindowPreviousTab,
     onFileMenuWindowPreviousTab,
@@ -2139,6 +2170,21 @@ async function initialize() {
 const { resolvedDefaultLyricsStyle, getResolvedMarginsForPage } =
   useScoreRendering(score, zoom);
 
+// With nothing selected, a caret marks the insertion slot at the start or end
+// of the active staff, so it is clear where typed neumes will go.
+const insertionCaret = computed<InsertionCaret | null>(() => {
+  if (!isNothingSelected()) {
+    return null;
+  }
+  const atStart = selectedWorkspace.value.insertAtStart;
+  const element = atStart
+    ? activeElements.value[0]
+    : activeElements.value.at(-1);
+  return element == null
+    ? { kind: 'empty', footnoteId: selectedWorkspace.value.activeFootnoteId }
+    : { kind: 'element', element, after: !atStart };
+});
+
 const pageInteraction = computed(() => ({
   isSelected,
   isAudioSelected,
@@ -2147,6 +2193,8 @@ const pageInteraction = computed(() => ({
   selectedAnnotationElement: selectedWorkspace.value.selectedAnnotationElement,
   selectedAlternateLineElement:
     selectedWorkspace.value.selectedAlternateLineElement,
+  activeFootnoteId: selectedWorkspace.value.activeFootnoteId,
+  insertionCaret: insertionCaret.value,
   isLyricsLocked: (element: ScoreElement) =>
     staffForElement(element)?.lyrics.locked ?? true,
 }));
@@ -2154,14 +2202,10 @@ const pageHandlers: ScorePageHandlers = {
   selectElement: (element) => {
     selectedElement.value = element;
   },
+  activateFootnote: (id) => activateFootnote(id),
   returnToFootnoteReference: (element) => {
     selectedElement.value = element;
-    pages.value[element.page - 1].isVisible = true;
-    nextTick(() =>
-      pageBackgroundRef.value
-        ?.querySelector(`#element-${element.id}`)
-        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
-    );
+    scrollElementIntoView(element);
   },
   selectLyrics: (element) => {
     selectedLyrics.value = element;
@@ -2399,7 +2443,7 @@ function showExportReplyToast(
 }
 
 function getHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const pageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
@@ -2410,7 +2454,7 @@ function getHeaderForPageIndex(pageIndex: number) {
 }
 
 function getFooterForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const pageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
@@ -2423,8 +2467,7 @@ function getFooterForPageIndex(pageIndex: number) {
 function getHeaderFooterVariantForPageIndex(
   pageIndex: number,
 ): HeaderFooterVariant {
-  const physicalPageNumber =
-    filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const physicalPageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
   const isOddDisplayedPage = isDisplayedPageNumberOdd(
@@ -2508,9 +2551,9 @@ function getHeaderFooterBadgeStyle(
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {
-  const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
+  const physicalPageNumber = pages.value[pageIndex].physicalPageNumber;
   const lastPhysicalPageNumber =
-    filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+    pages.value[pages.value.length - 1].physicalPageNumber;
   const runningMarkers = runningMarkerPageMetadata.value[pageIndex];
 
   return {
@@ -2684,16 +2727,14 @@ function setTextRangeBoundary(
 }
 
 function getFirstElementForPage(pageNumber: number) {
-  const page = filteredPages.value[pageNumber - 1];
+  const page = pages.value[pageNumber - 1];
 
   if (!page) {
     return null;
   }
 
   return (
-    page.lines
-      .flatMap((line) => line.elements)
-      .find((element) => element.elementType !== ElementType.Empty) ?? null
+    page.lines.find((line) => line.elements.length > 0)?.elements[0] ?? null
   );
 }
 
@@ -2702,9 +2743,7 @@ function getFirstLineNumberForPage(page: Page | undefined) {
     return null;
   }
 
-  const lineIndex = page.lines.findIndex((line) =>
-    line.elements.some((element) => element.elementType !== ElementType.Empty),
-  );
+  const lineIndex = page.lines.findIndex((line) => line.elements.length > 0);
 
   return lineIndex >= 0 ? lineIndex + 1 : null;
 }
@@ -2716,68 +2755,36 @@ function getSectionNumberForPage(pageNumber: number) {
 }
 
 function getSectionAnchorIndexForPage(pageNumber: number) {
-  const page = filteredPages.value[pageNumber - 1];
-
-  if (page == null) {
+  if (pages.value[pageNumber - 1] == null) {
     return 0;
   }
 
-  const firstPageElement = getPageElements(page).find(
-    (element) => element.elementType !== ElementType.Empty,
-  );
+  const firstPageElement = getFirstElementForPage(pageNumber);
 
   if (firstPageElement) {
     return firstPageElement.index;
   }
 
   for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
-    const prevPage = filteredPages.value[pageIndex];
+    const element = pages.value[pageIndex].lines
+      .findLast((line) => line.elements.length > 0)
+      ?.elements.at(-1);
 
-    for (
-      let lineIndex = prevPage.lines.length - 1;
-      lineIndex >= 0;
-      lineIndex--
-    ) {
-      const line = prevPage.lines[lineIndex];
-
-      for (
-        let elementIndex = line.elements.length - 1;
-        elementIndex >= 0;
-        elementIndex--
-      ) {
-        const element = line.elements[elementIndex];
-
-        if (element.elementType !== ElementType.Empty) {
-          return element.index;
-        }
-      }
+    if (element) {
+      return element.index;
     }
   }
 
   return 0;
 }
 
-function getPageElements(page: Page) {
-  return page.lines.flatMap((line) => line.elements);
-}
-
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
+  const sectionMarkers = score.value.staff.elements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
 
-  const firstScoreElementIndex = scoreElements[0].index;
-  const hasDefaultSectionBeforeFirstMarker =
-    sectionMarkers[0].index > firstScoreElementIndex;
+  const hasDefaultSectionBeforeFirstMarker = sectionMarkers[0].index > 0;
   const markersAtOrBeforeElement = sectionMarkers.filter(
     (element) => element.index <= elementIndex,
   ).length;
@@ -2792,23 +2799,12 @@ function getSectionNumberForElementIndex(elementIndex: number) {
 }
 
 function getSectionCount() {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
+  const sectionMarkers = score.value.staff.elements.filter(isSectionMarker);
   if (sectionMarkers.length === 0) {
     return 1;
   }
 
-  return (
-    sectionMarkers.length +
-    (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
-  );
+  return sectionMarkers.length + (sectionMarkers[0].index > 0 ? 1 : 0);
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -2836,21 +2832,12 @@ function setSelectionRange(element: ScoreElement) {
 }
 
 function onSelectAllScoreElements() {
-  const firstElementIndex = activeElements.value.findIndex(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-  const lastElementIndex = activeElements.value.findLastIndex(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (firstElementIndex < 0 || lastElementIndex < 0) {
+  if (activeElements.value.length === 0) {
     return;
   }
 
-  selectedElement.value = null;
-  selectedLyrics.value = null;
-  selectedHeaderFooterElement.value = null;
-  selectionRange.value = { start: firstElementIndex, end: lastElementIndex };
+  clearSelection();
+  selectionRange.value = { start: 0, end: activeElements.value.length - 1 };
 }
 
 function getNormalizedSelectionRange() {
@@ -3245,10 +3232,107 @@ function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
   saveEditorEnvironment();
 }
 
-function isLastElement(element: ScoreElement) {
+// With nothing selected, inserts go to the insertion slot at the start or end
+// of the active staff.
+function isNothingSelected() {
+  const workspace = selectedWorkspace.value;
   return (
-    activeElements.value.indexOf(element) === activeElements.value.length - 1
+    workspace.selectedElement == null &&
+    workspace.selectionRange == null &&
+    workspace.selectedLyrics == null &&
+    workspace.selectedHeaderFooterElement == null &&
+    workspace.selectedAnnotationElement == null &&
+    workspace.selectedAlternateLineElement == null
   );
+}
+
+function canInsertElement() {
+  return selectedElement.value != null || isNothingSelected();
+}
+
+// With nothing selected, inserts go to the start or end of the active staff.
+function insertionSlotIndex() {
+  return selectedWorkspace.value.insertAtStart
+    ? 0
+    : activeElements.value.length;
+}
+
+// Inserts go after the selected element, or into the insertion slot when
+// nothing is selected.
+function insertionIndexAfterSelection() {
+  return selectedElement.value == null
+    ? insertionSlotIndex()
+    : selectedElementIndex.value + 1;
+}
+
+// The selected element, or the insertion slot when nothing is selected.
+function insertionIndexOrSelection() {
+  return selectedElement.value == null
+    ? insertionSlotIndex()
+    : selectedElementIndex.value;
+}
+
+// Clears the selection, which leaves the insertion slot at the end of the
+// active staff.
+function clearSelection() {
+  selectedElement.value = null;
+  selectionRange.value = null;
+  selectedLyrics.value = null;
+  selectedHeaderFooterElement.value = null;
+  selectedWorkspace.value.insertAtStart = false;
+}
+
+// Leaves any text element being edited before moving the insertion point.
+function leaveTextEditing() {
+  if (isTextInputFocused()) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    blurActiveElement();
+  }
+}
+
+function goToStartOfStaff() {
+  leaveTextEditing();
+  clearSelection();
+  selectedWorkspace.value.insertAtStart = true;
+  scrollElementIntoView(activeElements.value[0]);
+}
+
+function goToEndOfStaff() {
+  leaveTextEditing();
+  clearSelection();
+  scrollElementIntoView(activeElements.value.at(-1));
+}
+
+function insertScoreElement(
+  element: ScoreElement,
+  insertAtIndex = insertionIndexAfterSelection(),
+) {
+  addScoreElement(element, insertAtIndex);
+  selectedElement.value = element;
+  scrollElementIntoView(element);
+}
+
+// Callers run save() synchronously after this, which lays out the element and
+// assigns its page and id. Pages are virtualized, so show the page first.
+function scrollElementIntoView(element: ScoreElement | null | undefined) {
+  if (element == null) {
+    return;
+  }
+  void nextTick(() => revealElement(element));
+}
+
+// Mount the laid-out element's page, then scroll to the element. Resolves once
+// the page has rendered.
+async function revealElement(element: ScoreElement) {
+  const page = pages.value[element.page - 1];
+  if (page === undefined || element.id == null) {
+    return;
+  }
+  page.isVisible = true;
+  await nextTick();
+  pageBackgroundRef.value
+    ?.querySelector(`#${CSS.escape(`element-${element.id}`)}`)
+    ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
 function insertPelastikon() {
@@ -3267,7 +3351,7 @@ function addQuantitativeNeume(
   quantitativeNeume: QuantitativeNeume,
   secondaryGorgonNeume: GorgonNeume | null = null,
 ) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3295,13 +3379,12 @@ function addQuantitativeNeume(
 
   switch (entryMode.value) {
     case EntryMode.Auto:
-      if (!isLastElement(selectedElement.value) && !moveRight()) {
+      if (selectedElement.value != null && !moveRight()) {
         return;
       }
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-        selectedElement.value = element;
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType === ElementType.Note) {
           if (
@@ -3330,24 +3413,19 @@ function addQuantitativeNeume(
       }
       break;
     case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        if (selectedElement.value.elementType === ElementType.Note) {
-          const selectedElementAsNote = selectedElement.value as NoteElement;
+      if (selectedElement.value?.elementType === ElementType.Note) {
+        const selectedElementAsNote = selectedElement.value as NoteElement;
 
-          element.isMelisma = selectedElementAsNote.isMelisma;
-          element.isHyphen = selectedElementAsNote.isHyphen;
-        }
-
-        addScoreElement(element, selectedElementIndex.value + 1);
+        element.isMelisma = selectedElementAsNote.isMelisma;
+        element.isHyphen = selectedElementAsNote.isHyphen;
       }
-      selectedElement.value = element;
+
+      insertScoreElement(element);
       break;
 
     case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else if (selectedElement.value.elementType === ElementType.Note) {
         if (
           (selectedElement.value as NoteElement).quantitativeNeume !==
@@ -3401,7 +3479,7 @@ function addNeumeCombination(combo: NeumeCombination) {
 }
 
 function addAutoMartyria(alignRight?: boolean, note?: Note) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3417,9 +3495,8 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
     case EntryMode.Auto:
       moveRight();
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-        selectedElement.value = element;
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType != ElementType.Martyria) {
           selectedElement.value = switchToMartyria(selectedElement.value);
@@ -3427,16 +3504,11 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
       }
       break;
     case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        addScoreElement(element, selectedElementIndex.value + 1);
-      }
-      selectedElement.value = element;
+      insertScoreElement(element);
       break;
     case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else if (selectedElement.value.elementType != ElementType.Martyria) {
         selectedElement.value = switchToMartyria(selectedElement.value);
       }
@@ -3447,7 +3519,7 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
 }
 
 function addTempo(neume: TempoSign) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3461,9 +3533,8 @@ function addTempo(neume: TempoSign) {
     case EntryMode.Auto:
       moveRight();
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-        selectedElement.value = element;
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType === ElementType.Tempo) {
           if ((selectedElement.value as TempoElement).neume !== neume) {
@@ -3477,16 +3548,11 @@ function addTempo(neume: TempoSign) {
       }
       break;
     case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        addScoreElement(element, selectedElementIndex.value + 1);
-      }
-      selectedElement.value = element;
+      insertScoreElement(element);
       break;
     case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else if (selectedElement.value.elementType === ElementType.Tempo) {
         if ((selectedElement.value as TempoElement).neume !== neume) {
           updateTempo(selectedElement.value as TempoElement, {
@@ -3503,33 +3569,33 @@ function addTempo(neume: TempoSign) {
 }
 
 function addDropCap(after: boolean) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
   const element = new DropCapElement();
   element.lineSpan = score.value.pageSetup.dropCapDefaultLineSpan;
 
-  if (after && !isLastElement(selectedElement.value)) {
-    addScoreElement(element, selectedElementIndex.value + 1);
-  } else {
-    addScoreElement(element, selectedElementIndex.value);
-  }
-
-  selectedElement.value = element;
+  insertScoreElement(
+    element,
+    after ? insertionIndexAfterSelection() : insertionIndexOrSelection(),
+  );
   save();
 
-  focusInsertedTextElement(element);
+  void focusTextElement(element);
 }
 
-function focusInsertedTextElement(element: DropCapElement | TextBoxElement) {
-  nextTick(() => {
-    if (toRaw(selectedElement.value) === element) {
-      getElementComponentForElement<
-        InstanceType<typeof DropCap | typeof TextBox>
-      >(element)?.focus();
-    }
-  });
+// The element's page may be unmounted, so wait for the layout from save() and
+// for the page to render before focusing.
+async function focusTextElement(element: DropCapElement | TextBoxElement) {
+  await nextTick();
+  await revealElement(element);
+  // Callers may pass either the raw element or its reactive proxy.
+  if (toRaw(selectedElement.value) === toRaw(element)) {
+    getElementComponentForElement<
+      InstanceType<typeof DropCap | typeof TextBox>
+    >(element)?.focus();
+  }
 }
 
 function onClickAddImage() {
@@ -3571,7 +3637,7 @@ function publishHistoryState(state: HistoryState) {
     )
   ) {
     workspace.activeFootnoteId = null;
-    workspace.selectedElement = workspace.score.staff.elements.at(-1)!;
+    workspace.selectedElement = null;
     workspace.selectedLyrics = null;
     workspace.selectedAnnotationElement = null;
     workspace.selectedAlternateLineElement = null;
@@ -3609,9 +3675,12 @@ function openFootnote(
     return;
   }
   page.isVisible = true;
-  selectedElement.value = footnote.staff.elements.at(
-    footnote.staff.elements.length > 1 ? -2 : -1,
-  )!;
+  const last = footnote.staff.elements.at(-1);
+  if (last === undefined) {
+    activateFootnote(footnote.id);
+  } else {
+    selectedElement.value = last;
+  }
   if (selectedElement.value instanceof RichTextBoxElement) {
     focusSelectedRichTextBoxEditor(selectedElement.value);
   }
@@ -3648,7 +3717,7 @@ function togglePageBreak() {
   if (!isMainStaff.value) {
     return;
   }
-  if (selectedElement.value && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value) {
     commandService.value.execute(
       scoreElementCommandFactory.create('update-properties', {
         target: selectedElement.value,
@@ -3665,7 +3734,7 @@ function togglePageBreak() {
 }
 
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
-  if (selectedElement.value && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value) {
     // Requesting the alignment a break already has removes it; requesting the
     // other alignment switches the break rather than clearing it.
     const lineBreak = !(
@@ -3835,7 +3904,7 @@ function getTextBoxComponentRefs<T>(
     components.push(component);
   }
 
-  for (let pageIndex = 0; pageIndex < filteredPages.value.length; pageIndex++) {
+  for (let pageIndex = 0; pageIndex < pages.value.length; pageIndex++) {
     const pageContent = getPageContent(pageIndex);
     if (pageContent == null) {
       continue;
@@ -4158,14 +4227,7 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (
-    event.code === 'Escape' &&
-    selectedWorkspace.value.activeFootnoteId !== null &&
-    selectedElement.value instanceof RichTextBoxElement &&
-    isTextInputFocused()
-  ) {
-    flushPendingRichTextEditors(selectedWorkspace.value);
-    blurActiveElement();
+  if (event.code === 'Escape' && onEscape()) {
     event.preventDefault();
     return;
   }
@@ -4218,6 +4280,14 @@ function onKeydown(event: KeyboardEvent) {
       throttled.onSelectAllScoreElements();
       event.preventDefault();
       return;
+    } else if (event.code === 'Home' && !event.shiftKey) {
+      goToStartOfStaff();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'End' && !event.shiftKey) {
+      goToEndOfStaff();
+      event.preventDefault();
+      return;
     } else if (event.code === 'KeyI' && !event.shiftKey) {
       switch (entryMode.value) {
         case EntryMode.Auto:
@@ -4251,17 +4321,94 @@ function onKeydown(event: KeyboardEvent) {
     return onKeydownLyrics(event);
   }
 
-  if (selectedElement.value?.elementType === ElementType.DropCap) {
-    return onKeydownDropCap(event);
+  // A text element that is selected but not being edited is handled like any
+  // other element.
+  if (isTextInputFocused()) {
+    if (selectedElement.value?.elementType === ElementType.DropCap) {
+      return onKeydownDropCap(event);
+    }
+
+    if (selectedElement.value?.elementType === ElementType.TextBox) {
+      return onKeydownTextBox(event);
+    }
+
+    return;
   }
 
-  if (selectedElement.value?.elementType === ElementType.TextBox) {
-    return onKeydownTextBox(event);
+  if (event.code === 'Enter' && resumeTextEditing()) {
+    event.preventDefault();
+    return;
   }
 
-  if (!isTextInputFocused()) {
-    return onKeydownNeume(event);
+  return onKeydownNeume(event);
+}
+
+// Escape steps out one level: stop editing a text element (it stays selected),
+// then clear the selection, then leave the active footnote.
+function onEscape() {
+  if (selectedLyrics.value != null) {
+    return false;
   }
+
+  if (isTextInputFocused()) {
+    // A text input outside the page handles its own Escape.
+    if (!pageBackgroundRef.value?.contains(document.activeElement)) {
+      return false;
+    }
+    leaveTextEditing();
+    return true;
+  }
+
+  if (!isNothingSelected()) {
+    clearSelection();
+    return true;
+  }
+
+  if (selectedWorkspace.value.activeFootnoteId !== null) {
+    activateFootnote(null);
+    return true;
+  }
+
+  return false;
+}
+
+function resumeTextEditing() {
+  const element = selectedElement.value;
+
+  if (element instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(element);
+    return true;
+  }
+
+  if (element instanceof TextBoxElement || element instanceof DropCapElement) {
+    getElementComponentForElement<
+      InstanceType<typeof DropCap | typeof TextBox>
+    >(element)?.focus();
+    return true;
+  }
+
+  return false;
+}
+
+// Clicking blank page space reaches the end of the main staff. A drag that
+// selects text and ends on blank space also clicks the page, so skip it.
+function onPageBackgroundClick() {
+  if (printMode.value || !(window.getSelection()?.isCollapsed ?? true)) {
+    return;
+  }
+  activateFootnote(null);
+}
+
+// Make a footnote (or the main staff, for null) the active staff with nothing
+// selected, so that typing appends to it.
+function activateFootnote(id: string | null) {
+  const workspace = selectedWorkspace.value;
+  if (workspace.activeFootnoteId !== id) {
+    flushPendingRichTextEditors(workspace);
+    flushLyricsAssignment(workspace);
+  }
+  clearSelection();
+  workspace.activeFootnoteId = id;
 }
 
 function onKeydownNeume(event: KeyboardEvent) {
@@ -4282,7 +4429,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     switch (event.code) {
       case 'End':
         if (selectedWorkspace.value.activeFootnoteId !== null) {
-          selectedElement.value = activeElements.value.at(-1)!;
+          goToEndOfStaff();
           handled = true;
         }
         break;
@@ -4290,13 +4437,13 @@ function onKeydownNeume(event: KeyboardEvent) {
         if (!rtl.value) {
           throttled.moveLeft();
         } else {
-          throttled.moveRight();
+          throttled.moveForward();
         }
         handled = true;
         break;
       case 'ArrowRight':
         if (!rtl.value) {
-          throttled.moveRight();
+          throttled.moveForward();
         } else {
           throttled.moveLeft();
         }
@@ -4335,12 +4482,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
   }
 
-  if (
-    selectedElement.value != null &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.altKey
-  ) {
+  if (canInsertElement() && !event.ctrlKey && !event.metaKey && !event.altKey) {
     if (neumeKeyboard.isModifier(event.code)) {
       keyboardModifier.value = event.code;
       handled = true;
@@ -4355,7 +4497,7 @@ function onKeydownNeume(event: KeyboardEvent) {
       handled = true;
 
       if (quantitativeMapping.acceptsLyricsOption != null) {
-        if (selectedElement.value.elementType === ElementType.Note) {
+        if (selectedElement.value?.elementType === ElementType.Note) {
           throttled.updateNoteAndSave(selectedElement.value as NoteElement, {
             acceptsLyrics: quantitativeMapping.acceptsLyricsOption,
           });
@@ -4402,7 +4544,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
 
     if (
-      selectedElement.value.elementType === ElementType.Note &&
+      selectedElement.value?.elementType === ElementType.Note &&
       !event.repeat
     ) {
       const noteElement = selectedElement.value as NoteElement;
@@ -4555,7 +4697,7 @@ function onKeydownNeume(event: KeyboardEvent) {
         });
       }
     } else if (
-      selectedElement.value.elementType === ElementType.Martyria &&
+      selectedElement.value?.elementType === ElementType.Martyria &&
       !event.repeat
     ) {
       const martyriaElement = selectedElement.value as MartyriaElement;
@@ -5019,31 +5161,24 @@ function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   };
 }
 
-const canCutCopySelected = computed(
-  () => getSelectedNonEmptyElements().length > 0,
+const canCutCopySelected = computed(() =>
+  selectionRange.value != null
+    ? selectedRangeElements.value.size > 0
+    : selectedElement.value != null,
 );
 
 const canPasteSelected = computed(
-  () => clipboard.value.elements.length > 0 && selectedElement.value != null,
+  () => clipboard.value.elements.length > 0 && canInsertElement(),
 );
 
-const canSelectAllElements = computed(() =>
-  activeElements.value.some(
-    (element) => element.elementType !== ElementType.Empty,
-  ),
-);
+const canSelectAllElements = computed(() => activeElements.value.length > 0);
 
-function getSelectedNonEmptyElements() {
+function getSelectedElements() {
   if (selectionRange.value != null) {
-    return [...selectedRangeElements.value].filter(
-      (element) => element.elementType !== ElementType.Empty,
-    );
+    return [...selectedRangeElements.value];
   }
 
-  if (
-    selectedElement.value != null &&
-    selectedElement.value.elementType !== ElementType.Empty
-  ) {
+  if (selectedElement.value != null) {
     return [selectedElement.value];
   }
 
@@ -5057,7 +5192,7 @@ function onCutScoreElements() {
       selectionRange.value.end,
     );
 
-    const elementsToCut = getSelectedNonEmptyElements();
+    const elementsToCut = getSelectedElements();
 
     clipboard.value = createClipboardState(elementsToCut);
 
@@ -5065,31 +5200,25 @@ function onCutScoreElements() {
 
     refreshStaffLyrics();
 
-    selectedElement.value =
-      activeElements.value[Math.min(start, activeElements.value.length - 1)];
+    selectionRange.value = null;
+    selectedElement.value = activeElements.value[start] ?? null;
 
     save();
-  } else if (
-    selectedElement.value != null &&
-    selectedElement.value.elementType !== ElementType.Empty
-  ) {
+  } else if (selectedElement.value != null) {
     const currentIndex = selectedElementIndex.value;
 
     clipboard.value = createClipboardState([selectedElement.value]);
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value =
-      activeElements.value[
-        Math.min(currentIndex, activeElements.value.length - 1)
-      ];
+    selectedElement.value = activeElements.value[currentIndex] ?? null;
 
     save();
   }
 }
 
 function onCopyScoreElements() {
-  const elementsToCopy = getSelectedNonEmptyElements();
+  const elementsToCopy = getSelectedElements();
 
   if (elementsToCopy.length > 0) {
     clipboard.value = createClipboardState(elementsToCopy);
@@ -5170,7 +5299,14 @@ function onPasteScoreElements(includeLyrics: boolean) {
     toast.error(t(($) => $.menu.footnotes.nested, { ns: 'menu' }));
     return;
   }
-  if (clipboard.value.elements.length > 0 && selectedElement.value != null) {
+  if (clipboard.value.elements.length > 0 && canInsertElement()) {
+    // The start of the staff is a gap before the first element, so the first
+    // paste inserts there in every entry mode, as at the end of the staff.
+    if (selectedWorkspace.value.insertAtStart) {
+      onPasteScoreElementsInsert(includeLyrics);
+      return;
+    }
+
     switch (entryMode.value) {
       case EntryMode.Insert:
         onPasteScoreElementsInsert(includeLyrics);
@@ -5186,13 +5322,11 @@ function onPasteScoreElements(includeLyrics: boolean) {
 }
 
 function onPasteScoreElementsInsert(includeLyrics: boolean) {
-  if (selectedElement.value == null || clipboard.value.elements.length === 0) {
+  if (clipboard.value.elements.length === 0) {
     return;
   }
 
-  const insertAtIndex = isLastElement(selectedElement.value)
-    ? selectedElementIndex.value
-    : selectedElementIndex.value + 1;
+  const insertAtIndex = insertionIndexAfterSelection();
 
   const {
     importedStylesCommand,
@@ -5219,11 +5353,12 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
   refreshStaffLyrics();
 
   selectedElement.value = newElements.at(-1)!;
+  scrollElementIntoView(selectedElement.value);
   save();
 }
 
 function onPasteScoreElementsEdit(includeLyrics: boolean) {
-  if (selectedElement.value == null || clipboard.value.elements.length === 0) {
+  if (clipboard.value.elements.length === 0) {
     return;
   }
 
@@ -5238,7 +5373,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     commands.push(importedStylesCommand);
   }
 
-  let currentIndex = selectedElementIndex.value;
+  let currentIndex = insertionIndexOrSelection();
 
   for (const clipboardElement of pastedElements) {
     const currentElement = activeElements.value[currentIndex];
@@ -5252,7 +5387,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
       commands.push(...footnoteRemovalCommands(score.value, [currentElement]));
     }
 
-    if (currentIndex >= activeElements.value.length - 1) {
+    if (currentIndex >= activeElements.value.length) {
       commands.push(
         scoreElementCommandFactory.create('add-to-collection', {
           elements: [clipboardElement],
@@ -5417,18 +5552,24 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     refreshStaffLyrics();
   }
 
+  if (selectedElement.value == null) {
+    selectedElement.value = pastedElements.at(-1)!;
+  }
+  scrollElementIntoView(selectedElement.value);
+
   save();
 }
 
 function onPasteScoreElementsAuto(includeLyrics: boolean) {
   moveRight();
-  const currentIndex = selectedElementIndex.value;
+  const currentIndex = insertionIndexOrSelection();
 
   onPasteScoreElementsEdit(includeLyrics);
 
   // Set the selected element to the last element that was pasted
   selectedElement.value =
     activeElements.value[currentIndex + clipboard.value.elements.length - 1];
+  scrollElementIntoView(selectedElement.value);
 }
 
 function getLyricLength(element: NoteElement) {
@@ -5456,31 +5597,71 @@ function moveLeft() {
     index = activeElements.value.indexOf(selectedElement.value);
   } else if (selectionRange.value) {
     index = selectionRange.value.end;
+  } else if (isNothingSelected()) {
+    index = insertionSlotIndex();
+  }
+
+  // Moving left from the first element reaches the start of the staff.
+  if (index === 0 && selectedElement.value != null) {
+    blurSelectedTextElement(index);
+    goToStartOfStaff();
+    return true;
   }
 
   if (index - 1 >= 0 && isNavigableElement(activeElements.value[index - 1])) {
-    // If the currently selected element is a drop cap or text box, blur it first
-    if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
-    } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
-    }
-
-    selectedElement.value = activeElements.value[index - 1];
-
-    // If the newly selected element is a drop cap or text box, focus it
-    if (selectedElement.value.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index - 1)!.focus();
-    } else if (selectedElement.value.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index - 1)!.focus();
-    } else if (selectedElement.value instanceof RichTextBoxElement) {
-      focusSelectedRichTextBoxEditor(selectedElement.value);
-    }
-
+    blurSelectedTextElement(index);
+    selectElementByKeyboard(activeElements.value[index - 1]);
     return true;
   }
 
   return false;
+}
+
+// Arrow key navigation toward the end of the staff. From the start of the
+// staff, this selects the first element. moveRight() is also used by entry
+// modes, so it never moves from the start.
+function moveForward() {
+  if (!selectedWorkspace.value.insertAtStart) {
+    moveRight();
+    return;
+  }
+
+  const element = activeElements.value[0];
+  if (element !== undefined && isNavigableElement(element)) {
+    selectElementByKeyboard(element);
+  }
+}
+
+// If the selected element is a drop cap or text box, blur it before the
+// selection moves.
+function blurSelectedTextElement(index: number) {
+  if (selectedElement.value?.elementType === ElementType.DropCap) {
+    getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
+  } else if (selectedElement.value?.elementType === ElementType.TextBox) {
+    getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
+  }
+}
+
+// The start and end of the staff have no position on the page, so the
+// element's page may be offscreen and unmounted. Text elements are focused
+// once their page has mounted.
+function selectElementByKeyboard(element: ScoreElement) {
+  const fromSlot = isNothingSelected();
+  selectedElement.value = element;
+
+  if (element instanceof DropCapElement || element instanceof TextBoxElement) {
+    // focusTextElement() reveals the element itself.
+    void focusTextElement(element);
+    return;
+  }
+
+  if (fromSlot) {
+    void revealElement(element);
+  }
+
+  if (element instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(element);
+  }
 }
 
 function moveRight() {
@@ -5492,16 +5673,18 @@ function moveRight() {
     index = selectionRange.value.end;
   }
 
+  const isLast = index === activeElements.value.length - 1;
+
   if (
     index >= 0 &&
-    index + 1 < activeElements.value.length &&
-    isNavigableElement(activeElements.value[index + 1])
+    (isLast || isNavigableElement(activeElements.value[index + 1]))
   ) {
-    // If the currently selected element is a drop cap, blur it first
-    if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
-    } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
+    blurSelectedTextElement(index);
+
+    // Moving right from the last element reaches the end of the staff.
+    if (isLast) {
+      clearSelection();
+      return true;
     }
 
     selectedElement.value = activeElements.value[index + 1];
@@ -5539,13 +5722,16 @@ function moveSelectionLeft() {
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value - 1]);
+  } else if (isNothingSelected()) {
+    // From the end of the staff, start the range on the last element.
+    startSelectionRangeAt(activeElements.value.length - 1);
   }
 }
 
 function moveSelectionRight() {
   if (selectionRange.value != null) {
     if (
-      selectionRange.value.end + 1 < activeElements.value.length - 1 &&
+      selectionRange.value.end + 1 < activeElements.value.length &&
       navigableElements.includes(
         activeElements.value[selectionRange.value.end + 1].elementType,
       )
@@ -5554,13 +5740,28 @@ function moveSelectionRight() {
     }
   } else if (
     selectedElement.value != null &&
-    selectedElementIndex.value + 1 < activeElements.value.length - 1 &&
+    selectedElementIndex.value + 1 < activeElements.value.length &&
     navigableElements.includes(
       activeElements.value[selectedElementIndex.value + 1].elementType,
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value + 1]);
+  } else if (selectedWorkspace.value.insertAtStart) {
+    // From the start of the staff, start the range on the first element.
+    startSelectionRangeAt(0);
   }
+}
+
+function startSelectionRangeAt(index: number) {
+  const element = activeElements.value[index];
+  if (
+    element === undefined ||
+    !navigableElements.includes(element.elementType)
+  ) {
+    return;
+  }
+  selectionRange.value = { start: index, end: index };
+  void revealElement(element);
 }
 
 function getNextLyricBoxIndex() {
@@ -6065,9 +6266,6 @@ async function load() {
 
   addWorkspace(workspace);
   selectedWorkspace.value = workspace;
-
-  selectedElement.value =
-    score.value.staff.elements[score.value.staff.elements.length - 1];
 }
 
 /**
@@ -7473,22 +7671,16 @@ function deleteSelectedElement() {
     return;
   }
 
-  if (selectedElement.value != null && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value != null) {
     const index = selectedElementIndex.value;
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value =
-      activeElements.value[
-        selectedWorkspace.value.activeFootnoteId !== null &&
-        activeElements.value.length > 1
-          ? Math.min(index, activeElements.value.length - 2)
-          : index
-      ];
+    selectedElement.value = activeElements.value[index] ?? null;
 
     save();
   } else if (selectionRange.value != null) {
-    const elementsToDelete = getSelectedNonEmptyElements();
+    const elementsToDelete = getSelectedElements();
 
     commandService.value.executeAsBatch(removalCommands(elementsToDelete));
 
@@ -7499,8 +7691,8 @@ function deleteSelectedElement() {
       selectionRange.value.end,
     );
 
-    selectedElement.value =
-      activeElements.value[Math.min(start, activeElements.value.length - 1)];
+    selectionRange.value = null;
+    selectedElement.value = activeElements.value[start] ?? null;
 
     save();
   }
@@ -7518,12 +7710,10 @@ function deletePreviousElement() {
     return;
   }
 
-  if (
-    selectedElement.value &&
-    selectedElementIndex.value > 0 &&
-    isNavigableElement(activeElements.value[selectedElementIndex.value - 1])
-  ) {
-    removeScoreElement(activeElements.value[selectedElementIndex.value - 1]);
+  const index = canInsertElement() ? insertionIndexOrSelection() : -1;
+
+  if (index > 0 && isNavigableElement(activeElements.value[index - 1])) {
+    removeScoreElement(activeElements.value[index - 1]);
 
     save();
   }
@@ -8162,14 +8352,13 @@ function performZoomToFit() {
 }
 
 function getCurrentPhysicalPageNumber() {
-  if (filteredPages.value.length === 0) {
+  if (pages.value.length === 0) {
     return 1;
   }
 
-  const pageIndex =
-    clamp(currentPageNumber.value, 1, filteredPages.value.length) - 1;
+  const pageIndex = clamp(currentPageNumber.value, 1, pages.value.length) - 1;
 
-  return filteredPages.value[pageIndex].physicalPageNumber;
+  return pages.value[pageIndex].physicalPageNumber;
 }
 
 function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
@@ -8445,8 +8634,6 @@ function onFileMenuNewScore() {
 
   selectedWorkspace.value = workspace;
 
-  selectedElement.value =
-    score.value.staff.elements[score.value.staff.elements.length - 1];
   save();
 }
 
@@ -8556,7 +8743,7 @@ async function awaitBrowserPrintPages(workspace: Workspace) {
         return isLayoutCurrent;
       }
       const pageContents = scorePageContents.value ?? [];
-      if (pageContents.length !== filteredPages.value.length) {
+      if (pageContents.length !== pages.value.length) {
         break;
       }
 
@@ -9128,17 +9315,6 @@ function onFileMenuInsertAlternateLine() {
   }
 }
 
-function contentInsertionIndex() {
-  return (
-    selectedElementIndex.value +
-    (selectedWorkspace.value.activeFootnoteId !== null &&
-    selectedElement.value !== null &&
-    !isLastElement(selectedElement.value)
-      ? 1
-      : 0)
-  );
-}
-
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
@@ -9147,13 +9323,11 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
       ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
       : getTextBoxParagraphStyleFallbackId(element.inline);
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 
-  focusInsertedTextElement(element);
+  void focusTextElement(element);
 }
 
 function onFileMenuInsertRichTextBox() {
@@ -9170,9 +9344,7 @@ function onFileMenuInsertRichTextBox() {
     setRichTextLanguage(element, 'ar', 'rtl');
   }
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 }
@@ -9180,9 +9352,7 @@ function onFileMenuInsertRichTextBox() {
 function onFileMenuInsertModeKey() {
   const element = createDefaultModeKey(score.value.pageSetup);
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   openModeKeyDialog();
 
@@ -9204,9 +9374,7 @@ function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
   element.imageWidth = args.imageWidth;
   element.imageHeight = args.imageHeight;
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 }
@@ -9339,6 +9507,26 @@ async function onFileMenuSaveAs() {
   }
 }
 
+// If the selected element was removed by undo or redo, select the element now
+// at its index, or the end of the staff.
+function reselectAfterHistoryReplay(previousIndex: number) {
+  if (previousIndex < 0) {
+    return;
+  }
+
+  const element = activeElements.value[previousIndex] ?? null;
+
+  if (selectedElement.value !== element) {
+    selectedElement.value = element;
+  }
+
+  // History replay can affect the note display in the neume toolbar, so force
+  // a refresh here.
+  if (element != null) {
+    element.keyHelper++;
+  }
+}
+
 function onFileMenuUndo() {
   // Commit debounced lyrics before replay so they cannot overwrite restored notes.
   flushLyricsAssignment(selectedWorkspace.value);
@@ -9349,20 +9537,7 @@ function onFileMenuUndo() {
 
     refreshLyricsAfterHistoryReplay();
 
-    if (currentIndex > -1) {
-      // If the selected element was removed during the undo process, choose a new one
-      const clampedIndex = Math.min(
-        currentIndex,
-        activeElements.value.length - 1,
-      );
-
-      if (selectedElement.value !== activeElements.value[clampedIndex]) {
-        selectedElement.value = activeElements.value[clampedIndex];
-      }
-
-      // Undo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
-    }
+    reselectAfterHistoryReplay(currentIndex);
   });
 
   save();
@@ -9378,20 +9553,7 @@ function onFileMenuRedo() {
 
     refreshLyricsAfterHistoryReplay();
 
-    if (currentIndex > -1) {
-      // If the selected element was removed during the redo process, choose a new one
-      const clampedIndex = Math.min(
-        currentIndex,
-        activeElements.value.length - 1,
-      );
-
-      if (selectedElement.value !== activeElements.value[clampedIndex]) {
-        selectedElement.value = activeElements.value[clampedIndex];
-      }
-
-      // Redo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
-    }
+    reselectAfterHistoryReplay(currentIndex);
   });
 
   save();
@@ -9457,7 +9619,7 @@ async function onFileMenuCopyAsHtml() {
 
   let copiedElements: ScoreElement[] = [];
 
-  const selectedScoreElements = getSelectedNonEmptyElements();
+  const selectedScoreElements = getSelectedElements();
 
   if (selectedScoreElements.length > 0) {
     copiedElements = selectedScoreElements;
@@ -9647,6 +9809,18 @@ function applyCopiedFormat(
         newValues: rewrittenFormat,
       }),
     );
+  }
+}
+
+function onFileMenuGoToStart() {
+  if (!dialogOpen.value) {
+    goToStartOfStaff();
+  }
+}
+
+function onFileMenuGoToEnd() {
+  if (!dialogOpen.value) {
+    goToEndOfStaff();
   }
 }
 
@@ -10290,7 +10464,7 @@ const contextMenuImageBox = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isImageBoxElement);
 });
 
-function getContextMenuSelectedNonEmptyElements() {
+function getContextMenuSelectedElements() {
   const element = scoreContextMenuTarget.value;
 
   if (element == null) {
@@ -10298,14 +10472,14 @@ function getContextMenuSelectedNonEmptyElements() {
   }
 
   if (selectionRange.value != null && isSelected(element)) {
-    return getSelectedNonEmptyElements();
+    return getSelectedElements();
   }
 
-  return element.elementType !== ElementType.Empty ? [element] : [];
+  return [element];
 }
 
 function getContextMenuSelectedNoteElements() {
-  const selectedElements = getContextMenuSelectedNonEmptyElements();
+  const selectedElements = getContextMenuSelectedElements();
 
   if (
     selectedElements.length < 2 ||
@@ -10326,7 +10500,7 @@ function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
     return null;
   }
 
-  const selectedElements = getContextMenuSelectedNonEmptyElements();
+  const selectedElements = getContextMenuSelectedElements();
 
   return selectedElements.length > 0 && selectedElements.every(predicate)
     ? element
@@ -10648,7 +10822,7 @@ function renderTabLabel(tab: Tab) {
                   @wheel="onPageBackgroundWheel"
                 >
                   <div
-                    v-for="(page, pageIndex) in filteredPages"
+                    v-for="(page, pageIndex) in pages"
                     :key="`page-${pageIndex}`"
                     ref="pagesRef"
                     v-observe-visibility="{
@@ -10659,6 +10833,7 @@ function renderTabLabel(tab: Tab) {
                     class="page"
                     :style="getPageStyle(page)"
                     :class="{ print: printMode }"
+                    @click.self="onPageBackgroundClick"
                   >
                     <ScorePageContent
                       v-if="page.isVisible || printMode"
@@ -10933,24 +11108,32 @@ function renderTabLabel(tab: Tab) {
         </ButtonGroupText>
       </ButtonGroup>
       <ButtonGroup>
-        <ButtonGroupText data-slot="button-group-text">
-          {{
-            $t(($) => $.toolbar.status.line, {
-              ns: 'toolbar',
-              lineNumber: statusLinePosition.lineNumber,
-              lineCount: statusLinePosition.lineCount,
-            })
-          }}
+        <ButtonGroupText
+          v-if="statusInsertionSlotLabel !== null"
+          data-slot="button-group-text"
+        >
+          {{ statusInsertionSlotLabel }}
         </ButtonGroupText>
-        <ButtonGroupText data-slot="button-group-text">
-          {{
-            $t(($) => $.toolbar.status.column, {
-              ns: 'toolbar',
-              columnNumber: statusColumnPosition.columnNumber,
-              columnCount: statusColumnPosition.columnCount,
-            })
-          }}
-        </ButtonGroupText>
+        <template v-else>
+          <ButtonGroupText data-slot="button-group-text">
+            {{
+              $t(($) => $.toolbar.status.line, {
+                ns: 'toolbar',
+                lineNumber: statusLinePosition.lineNumber,
+                lineCount: statusLinePosition.lineCount,
+              })
+            }}
+          </ButtonGroupText>
+          <ButtonGroupText data-slot="button-group-text">
+            {{
+              $t(($) => $.toolbar.status.column, {
+                ns: 'toolbar',
+                columnNumber: statusColumnPosition.columnNumber,
+                columnCount: statusColumnPosition.columnCount,
+              })
+            }}
+          </ButtonGroupText>
+        </template>
         <ButtonGroupText
           v-if="statusNeumeNoteDisplay"
           data-slot="button-group-text"
@@ -11068,7 +11251,7 @@ function renderTabLabel(tab: Tab) {
       v-model:page-range="selectedWorkspace.exportPageRange"
       :loading="exportInProgress"
       :default-format="exportFormat"
-      :page-count="exportPageCount"
+      :page-count="pageCount"
       :show-item-in-folder-supported="ipcService.isShowItemInFolderSupported()"
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"

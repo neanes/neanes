@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  EmptyElement,
   NoteElement,
   RichTextBoxElement,
   TextBoxElement,
@@ -26,7 +25,7 @@ import { orderedFootnotes } from './FootnoteReferences';
 function fixture() {
   const score = new Score();
   const anchors = Array.from({ length: 4 }, () => new NoteElement());
-  score.staff.elements = [...anchors, new EmptyElement()];
+  score.staff.elements = [...anchors];
   score.footnotes = anchors.map((anchor) => {
     const footnote = new Footnote();
     anchor.footnoteId = footnote.id;
@@ -194,7 +193,6 @@ describe('automatic footnote sequences', () => {
       section,
       anchors[2],
       richSection,
-      new EmptyElement(),
     ];
     expect(labels(score)).toEqual(['7', '8', '7', '7']);
     section.content = '';

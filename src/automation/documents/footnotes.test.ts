@@ -132,7 +132,6 @@ describe('footnote transactions', () => {
         });
         expect(body.elements.map((element) => element.elementType)).toEqual([
           ElementType.RichTextBox,
-          ElementType.Empty,
         ]);
         expect(body.elements[0].properties).not.toHaveProperty(
           'footnoteReferences',
@@ -793,7 +792,7 @@ describe('footnote transactions', () => {
     const reference = workspace.score.staff.elements[0] as NoteElement;
     const body = workspace.score.footnotes[0];
     expect(body.id).toBe(reference.footnoteId);
-    expect(body.staff.elements).toHaveLength(3);
+    expect(body.staff.elements).toHaveLength(2);
     expect(
       discovery.location(workspace.score, body.staff.elements[1])?.collection,
     ).toEqual({ kind: 'footnote', footnoteId: body.id });
@@ -804,7 +803,7 @@ describe('footnote transactions', () => {
         elements: [{ elementType: 'Note', properties: { lyrics: 'More' } }],
       },
     ]);
-    expect(body.staff.elements.at(-1)?.elementType).toBe('Empty');
+    expect(body.staff.elements.at(-1)?.elementType).toBe('Note');
     edit([{ action: 'remove', elementRef: discovery.reference(reference) }]);
     expect(workspace.score.footnotes).toHaveLength(0);
     workspace.commandService.undo();
@@ -831,6 +830,6 @@ describe('footnote transactions', () => {
       'INVALID_ELEMENT_EDIT',
     );
     expect(workspace.score.footnotes).toHaveLength(0);
-    expect(workspace.score.staff.elements).toHaveLength(1);
+    expect(workspace.score.staff.elements).toHaveLength(0);
   });
 });

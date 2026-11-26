@@ -35,6 +35,8 @@
     "copyFormat": "Salin Format",
     "pasteFormat": "Tempel Format",
     "find": "Cari",
+    "goToStart": "Pergi ke awal",
+    "goToEnd": "Pergi ke akhir",
     "copyElementLink": "Salin Tautan Elemen",
     "preferences": "Preferensi"
   },
@@ -110,6 +112,7 @@
     "unsupportedExport": "Format ekspor ini belum mendukung catatan kaki. Gunakan PDF atau PNG untuk mempertahankannya.",
     "lyrics": "Lirik Catatan Kaki {{number}}",
     "pasteUnavailable": "Referensi catatan kaki hanya dapat ditempel dari Neanes ke kotak teks kaya di partitur utama.",
-    "properties": "Properti Catatan Kaki…"
+    "properties": "Properti Catatan Kaki…",
+    "emptyPlaceholder": "Catatan kaki kosong"
   }
 }

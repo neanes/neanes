@@ -4,7 +4,6 @@ import { reactive } from 'vue';
 import {
   AlternateLineElement,
   AnnotationElement,
-  EmptyElement,
   FootnoteAnchorElement,
   MartyriaElement,
   NoteElement,
@@ -208,8 +207,8 @@ describe('footnote ownership', () => {
       content: '<p class="neanes-paragraph-style-footnote-text"></p>',
       languageCode: 'el',
     });
-    expect(createFootnote(new NoteElement()).staff.elements).toHaveLength(1);
-    expect(createFootnote(source, false).staff.elements).toHaveLength(1);
+    expect(createFootnote(new NoteElement()).staff.elements).toHaveLength(0);
+    expect(createFootnote(source, false).staff.elements).toHaveLength(0);
   });
 
   it('creates and removes a reference and its body in one undo step', () => {
@@ -297,7 +296,7 @@ describe('footnote ownership', () => {
     const anchors = [reference, new NoteElement(), new NoteElement()];
     const bodies = [workspace.score.footnotes[0]];
     for (const anchor of anchors.slice(1)) {
-      workspace.score.staff.elements.splice(-1, 0, anchor);
+      workspace.score.staff.elements.push(anchor);
       const plan = planFootnoteInsertion(workspace, anchor);
       workspace.commandService.executeAsBatch(plan.commands);
       bodies.push(plan.footnote);
@@ -391,7 +390,7 @@ describe('footnote ownership', () => {
     const bodies = prepareFootnotePaste(pasted, snapshots);
     expect(pasted[0].footnoteId).toBe(bodies[0].id);
     expect(bodies[0].id).not.toBe(footnote.id);
-    expect(bodies[0].staff.elements.at(-1)).toBeInstanceOf(EmptyElement);
+    expect(bodies[0].staff.elements).toHaveLength(2);
     expect(bodies[0].staff.elements[0].lineBreak).toBe(true);
     (bodies[0].staff.elements[0] as TextBoxElement).content = 'Edited copy';
     expect(text.content).toBe('Explanation');

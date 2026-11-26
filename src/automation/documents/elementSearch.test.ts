@@ -255,7 +255,7 @@ describe('element search and reference lookup', () => {
           scope: { kind: 'collection', collection: { kind: 'staff' } },
         }),
       ).elements,
-    ).toHaveLength(5);
+    ).toHaveLength(4);
     expect(
       reader.find(
         score,
@@ -267,7 +267,7 @@ describe('element search and reference lookup', () => {
           },
         }),
       ).elements,
-    ).toHaveLength(8);
+    ).toHaveLength(7);
     expect(
       reader.find(
         score,
@@ -298,8 +298,8 @@ describe('element search and reference lookup', () => {
     );
     expect(window.collection).toEqual({ kind: 'staff' });
     expect(window.start).toBe(0);
-    expect(window.end).toBe(5);
-    expect(window.elements.map((e) => e.index)).toEqual([0, 1, 2, 3, 4]);
+    expect(window.end).toBe(4);
+    expect(window.elements.map((e) => e.index)).toEqual([0, 1, 2, 3]);
     expect(
       reader.lookup(score, lookup(ref)).elements[0].properties,
     ).not.toHaveProperty('content');

@@ -58,11 +58,9 @@ function failed(error: Error) {
   }
 }
 function processPages() {
-  return settlement
-    .paginate({
-      collectDiagnostics: props.overlays.showDeveloperPanels,
-    })
-    .filter((page) => !page.isEmpty);
+  return settlement.paginate({
+    collectDiagnostics: props.overlays.showDeveloperPanels,
+  });
 }
 function measured(heights: TextBoxHeightMeasurement[]) {
   if (stopped) {

@@ -40,7 +40,7 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
   const content =
     '<p>A reference among words that wrap near the end of a line and continue into the next line.</p>';
   await edit([
-    { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+    { action: 'remove_range', start: 0, end: initial.collectionSize },
     {
       action: 'insert',
       elements: Array.from({ length: 6 }, (_, i) => ({
@@ -233,7 +233,7 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
   const geometry = () =>
     evaluate(`(() => {
     const w=window._editor.selectedWorkspace.value;
-    return {main:w.score.staff.elements.filter(e=>e.elementType!=='Empty').map(e=>({id:e.id,page:e.page,line:e.line,x:e.x,width:e.width,height:e.height})), bodies:w.score.footnotes.map(f=>({id:f.id,elements:f.staff.elements.filter(e=>e.elementType!=='Empty').map(e=>({page:e.page,line:e.line,x:e.x,width:e.width,height:e.height}))}))};
+    return {main:w.score.staff.elements.map(e=>({id:e.id,page:e.page,line:e.line,x:e.x,width:e.width,height:e.height})), bodies:w.score.footnotes.map(f=>({id:f.id,elements:f.staff.elements.map(e=>({page:e.page,line:e.line,x:e.x,width:e.width,height:e.height}))}))};
   })()`);
   let baseline = await geometry();
   const baselineWidth = baseline.bodies[0].elements[0].width;
@@ -452,7 +452,7 @@ export async function checkLiveFootnoteSettlement(call, evaluate) {
   const initial = await call('get_elements', args);
   const content = '<p>Reference</p>';
   await edit([
-    { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+    { action: 'remove_range', start: 0, end: initial.collectionSize },
     {
       action: 'insert',
       elements: Array.from({ length: 2 }, (_, index) => ({
@@ -779,7 +779,7 @@ async function createPageRestartFixture(call, title) {
   const insert = (elements, references) =>
     mutate('edit_elements', {
       actions: [
-        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        { action: 'remove_range', start: 0, end: initial.collectionSize },
         { action: 'insert', elements },
         ...references.map(reference),
       ],

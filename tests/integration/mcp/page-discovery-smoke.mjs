@@ -40,7 +40,7 @@ try {
     ...seedArgs,
     expectedRevision: seed.revision,
     actions: [
-      { action: 'remove_range', start: 0, end: seed.elementCount - 1 },
+      { action: 'remove_range', start: 0, end: seed.elementCount },
       {
         action: 'insert',
         elements: [

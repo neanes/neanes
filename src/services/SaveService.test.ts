@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { effect, reactive, stop } from 'vue';
 
 import {
   AcceptsLyricsOption,
@@ -168,6 +169,57 @@ describe('stable lyric acceptance serialization', () => {
       ).toEqual(['', '', '', '']);
     },
   );
+});
+
+describe('reactive score serialization', () => {
+  function createScore() {
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+    const score = new Score();
+    const note = new NoteElement();
+    note.quantitativeNeume = QuantitativeNeume.Oligon;
+    note.lyrics = 'a';
+    score.staff.elements.unshift(note);
+    return score;
+  }
+
+  it('serializes a reactive score like its raw score', () => {
+    const score = createScore();
+
+    expect(SaveService.SaveScoreToJson(reactive(score))).toEqual(
+      SaveService.SaveScoreToJson(score),
+    );
+  });
+
+  it('does not track the score as a dependency', () => {
+    const score = reactive(createScore());
+    let runs = 0;
+    const runner = effect(() => {
+      runs++;
+      SaveService.SaveScoreToJson(score);
+    });
+
+    (score.staff.elements[0] as NoteElement).lyrics = 'b';
+
+    expect(runs).toBe(1);
+    stop(runner);
+  });
+
+  it('does not track styles merged from a reactive array', () => {
+    const score = reactive(createScore());
+    // Pasting a format merges imported styles by spreading the score's
+    // reactive array, so the raw array holds proxies for existing styles.
+    score.paragraphStyles = [...score.paragraphStyles, new ParagraphStyle()];
+    let runs = 0;
+    const runner = effect(() => {
+      runs++;
+      SaveService.SaveScoreToJson(score);
+    });
+
+    score.paragraphStyles[0].displayName = 'Renamed';
+
+    expect(runs).toBe(1);
+    stop(runner);
+  });
 });
 
 describe('martyria quantitative-neume fthora serialization', () => {

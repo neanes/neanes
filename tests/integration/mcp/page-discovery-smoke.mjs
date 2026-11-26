@@ -66,7 +66,7 @@ try {
           },
           {
             elementType: 'TextBox',
-            properties: { content: 'Page three' },
+            properties: { content: 'Page three', pageBreak: true },
           },
         ],
       },
@@ -147,7 +147,7 @@ try {
         )
       : null;
     const pages = await call('get_pages', { ...args, limit: 1 });
-    assert.equal(pages.pageCount, 3);
+    assert.equal(pages.pageCount, 4);
     assert.equal(pages.pages[0].pageNumber, 1);
     assert.equal(pages.pages[0].displayedPageNumber, 10);
     const stable = {
@@ -167,6 +167,32 @@ try {
       [
         [2, 11],
         [3, 12],
+        [4, 13],
+      ],
+    );
+    const trailingPage = remaining.pages[2];
+    assert.equal(trailingPage.lineCount, 0);
+    assert.equal(trailingPage.occurrenceCount, 2);
+    const trailing = await call('get_page_elements', {
+      ...stable,
+      pageNumber: trailingPage.pageNumber,
+    });
+    assert.equal(trailing.pageCount, pages.pageCount);
+    assert.deepEqual(trailing.page, trailingPage);
+    assert.deepEqual(
+      trailing.occurrences.map(({ region, collection }) => ({
+        region,
+        collection,
+      })),
+      [
+        {
+          region: 'header',
+          collection: { kind: 'headers', variant: 'default' },
+        },
+        {
+          region: 'footer',
+          collection: { kind: 'footers', variant: 'default' },
+        },
       ],
     );
     let headerRef;
@@ -219,10 +245,10 @@ try {
     assert.equal(second.occurrences[0].collection.kind, 'children');
     await call(
       'get_page_elements',
-      { ...stable, pageNumber: 4 },
+      { ...stable, pageNumber: 5 },
       'INVALID_PAGE_NUMBER',
     );
-    await call('get_pages', { ...stable, offset: 4 }, 'INVALID_ELEMENT_RANGE');
+    await call('get_pages', { ...stable, offset: 5 }, 'INVALID_ELEMENT_RANGE');
     await call(
       'get_pages',
       { ...args, expectedLayoutId: '0'.repeat(64) },
@@ -366,7 +392,7 @@ try {
           expectedRevision: recovered.revision,
         })
       ).pageCount,
-      3,
+      4,
     );
     if (controlState) {
       assert.equal(

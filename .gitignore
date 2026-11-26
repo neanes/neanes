@@ -4,6 +4,9 @@ lic.json
 .test-files
 .venv
 
+# Claude Code worktrees
+/.claude/worktrees/
+
 # local env files
 .env.local
 .env.*.local

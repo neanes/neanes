@@ -25,6 +25,7 @@ export const pageSetupSchema = z.strictObject({
   direction: z.enum(['ltr', 'rtl']),
   footnoteFormat: z.enum(['numbers', 'symbols']),
   footnoteNumbering: z.enum(['continuous', 'page', 'section']),
+  footnoteLocation: z.enum(['bottomOfPage', 'belowText']),
   footnoteSymbolSequence: z.enum(
     Object.keys(footnoteSymbolSequences) as [
       keyof typeof footnoteSymbolSequences,

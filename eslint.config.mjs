@@ -6,6 +6,7 @@ import pluginVue from 'eslint-plugin-vue';
 export default [
   {
     ignores: [
+      '.claude/worktrees/**/*',
       '.test-files/**/*',
       'dist/**/*',
       'dist-electron/**/*',

@@ -1,6 +1,6 @@
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
   plugins: [vue()],
@@ -11,6 +11,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    exclude: [...configDefaults.exclude, '**/.claude/worktrees/**'],
     coverage: {
       provider: 'istanbul',
       reporter: ['text', 'lcov'],

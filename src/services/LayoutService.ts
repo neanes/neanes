@@ -730,18 +730,22 @@ export class LayoutService {
         pageSetup,
         physicalPage.physicalPageNumber,
       );
-      const footerReservation =
-        decisions[physicalPage.physicalPageNumber - 1].reservation
-          .extraFooterHeightPx;
+      const decision = decisions[physicalPage.physicalPageNumber - 1];
       const bodiesHeight = physicalPage.footnotes.reduce(
         (sum, footnote) => sum + footnote.height,
         0,
       );
       let top =
-        pageSetup.pageHeight -
-        pageSetup.bottomMargin -
-        footerReservation -
-        bodiesHeight;
+        pageSetup.footnoteLocation === 'belowText'
+          ? physicalPage.contentTop +
+            decision.contentBottom +
+            above +
+            below +
+            thickness
+          : pageSetup.pageHeight -
+            pageSetup.bottomMargin -
+            decision.reservation.extraFooterHeightPx -
+            bodiesHeight;
       if (physicalPage.footnoteOverflow) {
         // Invalid content stays editable below the physical page. Export rejects it.
         top =
@@ -789,6 +793,8 @@ export class LayoutService {
           line.footnoteId = body.id;
           top += candidate.height;
         }
+        // An empty body has no lines but still reserves its label line.
+        top = body.top + body.height;
         const bodyPage = new Page();
         bodyPage.physicalPageNumber = physicalPage.physicalPageNumber;
         bodyPage.lines = body.lines;

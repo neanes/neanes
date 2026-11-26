@@ -110,6 +110,8 @@ copying the reference copies the body with a new identity.
 
 `get_page_setup` / `update_page_setup` expose `footnoteFormat` (`numbers` or
 `symbols`), `footnoteNumbering` (`continuous`, `page`, or `section`),
+`footnoteLocation` (`bottomOfPage`, the default, or `belowText`, which places
+the footnote area directly after the page's last line of text),
 `footnoteSymbolSequence` (`standard` or `asterisks`), `firstFootnoteNumber`,
 `showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent),
 `footnoteSpaceAboveRule`, `footnoteSpaceBelowRule`, `footnoteRuleThickness`,

@@ -2177,12 +2177,22 @@ const insertionCaret = computed<InsertionCaret | null>(() => {
     return null;
   }
   const atStart = selectedWorkspace.value.insertAtStart;
+  const footnoteId = selectedWorkspace.value.activeFootnoteId;
   const element = atStart
     ? activeElements.value[0]
     : activeElements.value.at(-1);
-  return element == null
-    ? { kind: 'empty', footnoteId: selectedWorkspace.value.activeFootnoteId }
-    : { kind: 'element', element, after: !atStart };
+  if (element == null) {
+    return footnoteId === null
+      ? { kind: 'page', pageNumber: 1 }
+      : { kind: 'emptyFootnote', footnoteId };
+  }
+  if (!atStart && footnoteId === null && element.pageBreak) {
+    const lastPage = pages.value.at(-1);
+    if (lastPage?.lines.length === 0) {
+      return { kind: 'page', pageNumber: lastPage.physicalPageNumber };
+    }
+  }
+  return { kind: 'element', element, after: !atStart };
 });
 
 const pageInteraction = computed(() => ({
@@ -2828,6 +2838,13 @@ function setSelectionRange(element: ScoreElement) {
     selectedElement.value = null;
   } else if (selectionRange.value != null) {
     selectionRange.value.end = elementIndex;
+  } else if (isNothingSelected()) {
+    // From the insertion slot, the range starts at the nearest element, as
+    // with Shift+Arrow.
+    const start = selectedWorkspace.value.insertAtStart
+      ? 0
+      : activeElements.value.length - 1;
+    selectionRange.value = { start, end: elementIndex };
   }
 }
 
@@ -3294,13 +3311,25 @@ function goToStartOfStaff() {
   leaveTextEditing();
   clearSelection();
   selectedWorkspace.value.insertAtStart = true;
-  scrollElementIntoView(activeElements.value[0]);
+  scrollInsertionCaretIntoView();
 }
 
 function goToEndOfStaff() {
   leaveTextEditing();
   clearSelection();
-  scrollElementIntoView(activeElements.value.at(-1));
+  scrollInsertionCaretIntoView();
+}
+
+function scrollInsertionCaretIntoView() {
+  void nextTick(() => {
+    const caret = insertionCaret.value;
+    if (caret?.kind === 'element') {
+      return revealElement(caret.element);
+    }
+    if (caret?.kind === 'page') {
+      return revealOnPage(caret.pageNumber, '.page-start-caret');
+    }
+  });
 }
 
 function insertScoreElement(
@@ -3324,14 +3353,22 @@ function scrollElementIntoView(element: ScoreElement | null | undefined) {
 // Mount the laid-out element's page, then scroll to the element. Resolves once
 // the page has rendered.
 async function revealElement(element: ScoreElement) {
-  const page = pages.value[element.page - 1];
-  if (page === undefined || element.id == null) {
+  if (element.id == null) {
+    return;
+  }
+  await revealOnPage(element.page, `#${CSS.escape(`element-${element.id}`)}`);
+}
+
+// Mount a page, then scroll to the node matching the selector on it.
+async function revealOnPage(pageNumber: number, selector: string) {
+  const page = pages.value[pageNumber - 1];
+  if (page === undefined) {
     return;
   }
   page.isVisible = true;
   await nextTick();
   pageBackgroundRef.value
-    ?.querySelector(`#${CSS.escape(`element-${element.id}`)}`)
+    ?.querySelector(selector)
     ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
@@ -4227,11 +4264,6 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (event.code === 'Escape' && onEscape()) {
-    event.preventDefault();
-    return;
-  }
-
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
   if (platformService.isMac && isTextInputFocused()) {
@@ -4239,6 +4271,13 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   if (event.defaultPrevented || editorShortcutIgnored) {
+    return;
+  }
+
+  // Docked panes ignore editor shortcuts, so Escape there leaves the score
+  // selection alone.
+  if (event.code === 'Escape' && onEscape()) {
+    event.preventDefault();
     return;
   }
 
@@ -5684,6 +5723,7 @@ function moveRight() {
     // Moving right from the last element reaches the end of the staff.
     if (isLast) {
       clearSelection();
+      scrollInsertionCaretIntoView();
       return true;
     }
 
@@ -5722,7 +5762,7 @@ function moveSelectionLeft() {
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value - 1]);
-  } else if (isNothingSelected()) {
+  } else if (isNothingSelected() && !selectedWorkspace.value.insertAtStart) {
     // From the end of the staff, start the range on the last element.
     startSelectionRangeAt(activeElements.value.length - 1);
   }
@@ -7713,9 +7753,15 @@ function deletePreviousElement() {
   const index = canInsertElement() ? insertionIndexOrSelection() : -1;
 
   if (index > 0 && isNavigableElement(activeElements.value[index - 1])) {
+    // Deleting the trailing page break removes the blank page the caret is
+    // on, so follow the caret back to the new last element.
+    const wasOnTrailingPage = insertionCaret.value?.kind === 'page';
     removeScoreElement(activeElements.value[index - 1]);
 
     save();
+    if (wasOnTrailingPage) {
+      scrollInsertionCaretIntoView();
+    }
   }
 }
 
@@ -9528,28 +9574,28 @@ function reselectAfterHistoryReplay(previousIndex: number) {
 }
 
 function onFileMenuUndo() {
-  // Commit debounced lyrics before replay so they cannot overwrite restored notes.
-  flushLyricsAssignment(selectedWorkspace.value);
-  runWithResizableParagraphStyleRecalc(() => {
-    const currentIndex = selectedElementIndex.value;
-
-    commandService.value.undo();
-
-    refreshLyricsAfterHistoryReplay();
-
-    reselectAfterHistoryReplay(currentIndex);
-  });
-
-  save();
+  replayHistory('undo');
 }
 
 function onFileMenuRedo() {
+  replayHistory('redo');
+}
+
+function trailingCaretPageNumber() {
+  const caret = insertionCaret.value;
+  return caret?.kind === 'page' && caret.pageNumber > 1
+    ? caret.pageNumber
+    : undefined;
+}
+
+function replayHistory(action: 'undo' | 'redo') {
   // Commit debounced lyrics before replay so they cannot overwrite restored notes.
   flushLyricsAssignment(selectedWorkspace.value);
+  const previousTrailingPage = trailingCaretPageNumber();
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
-    commandService.value.redo();
+    commandService.value[action]();
 
     refreshLyricsAfterHistoryReplay();
 
@@ -9557,6 +9603,9 @@ function onFileMenuRedo() {
   });
 
   save();
+  if (trailingCaretPageNumber() !== previousTrailingPage) {
+    scrollInsertionCaretIntoView();
+  }
 }
 
 function onFileMenuCut() {

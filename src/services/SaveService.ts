@@ -1484,6 +1484,7 @@ export class SaveService {
     pageSetup.firstPageNumber = p.firstPageNumber;
     pageSetup.footnoteFormat = p.footnoteFormat;
     pageSetup.footnoteNumbering = p.footnoteNumbering;
+    pageSetup.footnoteLocation = p.footnoteLocation;
     pageSetup.footnoteSymbolSequence = p.footnoteSymbolSequence;
     pageSetup.firstFootnoteNumber =
       p.firstFootnoteNumber !== 1 ? p.firstFootnoteNumber : undefined;
@@ -2283,6 +2284,7 @@ export class SaveService {
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
     pageSetup.footnoteFormat = p.footnoteFormat ?? 'numbers';
     pageSetup.footnoteNumbering = p.footnoteNumbering ?? 'continuous';
+    pageSetup.footnoteLocation = p.footnoteLocation ?? 'bottomOfPage';
     pageSetup.footnoteSymbolSequence = p.footnoteSymbolSequence ?? 'standard';
     pageSetup.firstFootnoteNumber = p.firstFootnoteNumber ?? 1;
     pageSetup.footnoteReferenceParentheses =

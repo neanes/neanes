@@ -87,11 +87,14 @@ describe('whole-footnote page selection', () => {
     expect(pages[0].footnoteIds).toEqual(['a']);
   });
 
-  it('honors explicit breaks without adding a trailing empty page', () => {
+  it('creates a page for an explicit break at the end of the score', () => {
     const lines = [line(10), line(10), line(10)];
     lines[0].pageBreak = true;
     lines[2].pageBreak = true;
-    expect(membership(paginate(lines))).toEqual([[0], [1, 2]]);
+    expect(membership(paginate(lines))).toEqual([[0], [1, 2], []]);
+
+    lines.push(line(10));
+    expect(membership(paginate(lines))).toEqual([[0], [1, 2], [3]]);
   });
 
   it('reports chapter-opening overflow breaks and honors remembered boundaries on a later pass', () => {
@@ -143,6 +146,19 @@ describe('whole-footnote page selection', () => {
     expect(pages[1].footnoteIds).toEqual(['a']);
     expect(pages[1].footnoteOverflow).toBe(false);
     expect(pages[1].lines.map((line) => line.top)).toEqual([0, 20]);
+  });
+
+  it('reports the content bottom of each page, including a drop-cap span', () => {
+    const dropCap = { ...line(20), additionalHeight: 30 };
+    const pages = paginate([line(10), dropCap, line(60), line(15)]);
+    expect(membership(pages)).toEqual([[0, 1, 2], [3]]);
+    expect(pages.map((page) => page.contentBottom)).toEqual([90, 15]);
+
+    const tallDropCap = paginate([
+      line(10),
+      { ...line(20), additionalHeight: 40 },
+    ]);
+    expect(tallDropCap[0].contentBottom).toBe(70);
   });
 
   it('reports overflow when a drop cap extends into the footnote on its own line', () => {

@@ -13,7 +13,13 @@ try {
   const score = path.join(app.directory, path.basename(source));
   await copyFile(source, score);
   app.start({ appArgs: [process.cwd(), score] });
-  const { evaluate, send } = await app.debugger('renderer');
+  const { evaluate, send, on } = await app.debugger('renderer');
+  const tracePath = process.env.NEANES_PROFILE_TRACE;
+  const traceEvents = [];
+  const traceComplete = new Promise((resolve) => {
+    on('Tracing.dataCollected', ({ value }) => traceEvents.push(...value));
+    on('Tracing.tracingComplete', resolve);
+  });
   await app.ready();
   await send('Emulation.setFocusEmulationEnabled', { enabled: true });
   const target = await eventually(async () => {
@@ -73,6 +79,23 @@ try {
     if (attempt === 4 && cpuProfilePath) {
       await send('Profiler.start');
     }
+    if (attempt === 4 && tracePath) {
+      await send('Tracing.start', {
+        transferMode: 'ReportEvents',
+        traceConfig: {
+          includedCategories: [
+            'devtools.timeline',
+            'disabled-by-default-devtools.timeline',
+            'disabled-by-default-devtools.timeline.frame',
+            'blink',
+            'cc',
+            'gpu',
+            'viz',
+            'v8',
+          ],
+        },
+      });
+    }
     const before = await evaluate(`({
       time: performance.now(),
       gorgon: window._editor.selectedElement.value.gorgonNeume,
@@ -123,6 +146,11 @@ try {
     if (attempt >= 4) {
       samples.push(timing);
     }
+  }
+  if (tracePath) {
+    await send('Tracing.end');
+    await traceComplete;
+    await writeFile(tracePath, JSON.stringify({ traceEvents }));
   }
   if (cpuProfilePath) {
     const { profile } = await send('Profiler.stop');
@@ -212,6 +240,21 @@ try {
       samples.map(
         ({ keyPaint, render }) => keyPaint.end - render.start - render.duration,
       ),
+    );
+    report(
+      'Vue patch to keydown processing end (Event Timing)',
+      samples.map(
+        ({ keyPaint, render }) =>
+          keyPaint.processingEnd - render.start - render.duration,
+      ),
+    );
+    report(
+      'keydown processing end to next paint (Event Timing)',
+      samples.map(({ keyPaint }) => keyPaint.end - keyPaint.processingEnd),
+    );
+    report(
+      'keydown input delay (Event Timing)',
+      samples.map(({ keyPaint }) => keyPaint.processingStart - keyPaint.start),
     );
     const paintShares = samples.map(
       ({ keyPaint, editor, layout }) =>

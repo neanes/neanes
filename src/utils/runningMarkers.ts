@@ -59,8 +59,8 @@ export function resolveNextRunningMarkerPageMetadata(
   page: Page,
   previous: RunningMarkerPageMetadata | null,
 ): RunningMarkerPageMetadata {
-  const firstChapter = getFirstRunningMarkerForPage(page, 'chapter');
-  const firstSection = getFirstRunningMarkerForPage(page, 'section');
+  const { chapter: firstChapter, section: firstSection } =
+    getFirstRunningMarkersForPage(page);
 
   const previousChapter = previous?.chapter ?? '';
   const chapter = firstChapter ?? previousChapter;
@@ -88,18 +88,43 @@ export function resolveRunningMarkerPageMetadata(
   return metadata;
 }
 
-function getFirstRunningMarkerForPage(
-  page: Page,
-  role: RunningMarkerRole,
-): string | null {
+// The page's first chapter and section markers, found in one pass. Editors
+// resolve every page after each layout, so this skips non-text elements by
+// their type tag and stops once both markers are found.
+function getFirstRunningMarkersForPage(page: Page) {
+  let chapter: string | null = null;
+  let section: string | null = null;
+
   for (const line of page.lines) {
-    const marker = getFirstRunningMarker(line.elements, role);
-    if (marker != null) {
-      return marker;
+    for (const element of line.elements) {
+      if (
+        element.elementType !== ElementType.TextBox &&
+        element.elementType !== ElementType.RichTextBox
+      ) {
+        continue;
+      }
+      const role = (element as TextBoxElement | RichTextBoxElement)
+        .runningMarkerRole;
+      if (
+        (role === 'chapter' && chapter == null) ||
+        (role === 'section' && section == null)
+      ) {
+        const text = resolveRunningMarkerText(
+          element as TextBoxElement | RichTextBoxElement,
+        );
+        if (role === 'chapter') {
+          chapter = text;
+        } else {
+          section = text;
+        }
+        if (chapter != null && section != null) {
+          return { chapter, section };
+        }
+      }
     }
   }
 
-  return null;
+  return { chapter, section };
 }
 
 export function getFirstRunningMarker(

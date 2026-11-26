@@ -54,7 +54,14 @@ export class Score {
   }
 
   public getStaffForElement(element: ScoreElement) {
-    return this.staves.find((staff) => staff.elements.includes(element));
+    const staves = this.staves;
+    // Layout keeps each element's index current, so look there first. The
+    // full search is the fallback for an element whose index is stale; it
+    // scans (and, in a render, tracks) the whole staff.
+    return (
+      staves.find((staff) => staff.elements[element.index] === element) ??
+      staves.find((staff) => staff.elements.includes(element))
+    );
   }
 
   public get headersAndFooters() {

@@ -34,7 +34,10 @@ import Vue3TabsChrome from 'vue3-tabs-chrome';
 import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
-import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
+import {
+  useTextBoxMeasurement,
+  useWorkspaceMeasurements,
+} from '@/automation/renderer/useWorkspaceMeasurements';
 import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
 import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
@@ -73,7 +76,6 @@ import ScorePageContent from '@/components/ScorePageContent.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import TextBox from '@/components/TextBox.vue';
-import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
 import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
 import ToolbarMain from '@/components/ToolbarMain.vue';
@@ -622,8 +624,16 @@ const noteFormat = ref<ClipboardFormatState<NoteElement>>({
   paragraphStyleIds: [],
   paragraphStyles: [],
 });
-const richTextBoxCalculation = ref(false);
-const richTextBoxCalculationCount = ref(0);
+const richTextBoxMeasurementBatchSize = 4;
+const richTextBoxMeasurement = useTextBoxMeasurement();
+const richTextBoxMeasurementBatch = richTextBoxMeasurement.pending;
+const pendingRichTextBoxRecalculations = new WeakSet<Workspace>();
+let richTextBoxCalculation:
+  | {
+      workspace: Workspace;
+      done: Promise<'settled' | 'superseded' | 'failed'>;
+    }
+  | undefined;
 const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
 const fonts = ref<string[]>([]);
@@ -915,11 +925,22 @@ const footnoteBodyElements = computed(
 
 const resizableRichTextBoxElements = computed(() => {
   return allElements.value.filter(
-    (x) =>
+    (x): x is RichTextBoxElement =>
       x.elementType === ElementType.RichTextBox &&
       !(x as RichTextBoxElement).inline,
   );
 });
+
+watch(selectedWorkspace, (workspace) => {
+  if (richTextBoxCalculation?.workspace === workspace) {
+    return;
+  }
+  cancelRichTextBoxRecalculation();
+  if (pendingRichTextBoxRecalculations.has(workspace)) {
+    recalculateRichTextBoxHeights();
+  }
+});
+onBeforeUnmount(cancelRichTextBoxRecalculation);
 
 const resizableTextBoxElements = computed(() => {
   return allElements.value.filter(
@@ -6539,10 +6560,13 @@ function saveWorkspaceAs(workspace: Workspace) {
   );
 }
 
-function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
+async function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
   workspace: Workspace,
   persist: () => Promise<T>,
 ) {
+  if (pendingRichTextBoxRecalculations.has(workspace)) {
+    await awaitRichTextBoxRecalculation(workspace);
+  }
   return saveDocument(workspace, persist, {
     prepare: prepareWorkspaceForSerialization,
     saved: async (workspace) => {
@@ -7526,7 +7550,6 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
   recordMeasuredHeightChange(element);
-  richTextBoxCalculationCount.value++;
   saveDebounced();
 }
 
@@ -8722,43 +8745,120 @@ function onAudioServiceStop() {
   stopPlaybackClock();
 }
 
+function cancelRichTextBoxRecalculation() {
+  richTextBoxCalculation = undefined;
+  richTextBoxMeasurement.cancel();
+}
+
+async function awaitRichTextBoxRecalculation(workspace: Workspace) {
+  while (pendingRichTextBoxRecalculations.has(workspace)) {
+    if (workspace !== selectedWorkspace.value) {
+      throw new Error('LAYOUT_CONFLICT');
+    }
+    if (richTextBoxCalculation?.workspace !== workspace) {
+      recalculateRichTextBoxHeights();
+    }
+    if ((await richTextBoxCalculation?.done) === 'failed') {
+      throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+    }
+  }
+}
+
 function recalculateRichTextBoxHeights() {
-  if (settleFootnoteReferences.value) {
+  const workspace = selectedWorkspace.value;
+  cancelRichTextBoxRecalculation();
+  if (
+    settleFootnoteReferences.value ||
+    resizableRichTextBoxElements.value.length === 0
+  ) {
+    pendingRichTextBoxRecalculations.delete(workspace);
     return;
   }
-  if (richTextBoxCalculation.value) {
-    richTextBoxCalculation.value = false;
-  }
 
-  nextTick(async () => {
-    const expectedCount = resizableRichTextBoxElements.value.length;
-    richTextBoxCalculationCount.value = 0;
-    richTextBoxCalculation.value = true;
+  pendingRichTextBoxRecalculations.add(workspace);
+  const request = { workspace, done: measure() };
+  richTextBoxCalculation = request;
 
-    const maxTries = 4 * 30; // 30 seconds
-    let tries = 1;
-    let lastCount = 0;
+  async function measure(): Promise<'settled' | 'superseded' | 'failed'> {
+    const { score, contentRevision } = workspace;
+    const elements = resizableRichTextBoxElements.value;
+    const heights = new Map<RichTextBoxElement | TextBoxElement, number>();
+    const isCurrent = () =>
+      richTextBoxCalculation === request &&
+      selectedWorkspace.value === workspace;
+    const contentIsCurrent = () =>
+      workspace.score === score &&
+      workspace.contentRevision === contentRevision;
 
-    // Wait until all rich text boxes have updated
-    const poll = (resolve: (value: unknown) => void) => {
-      if (
-        richTextBoxCalculationCount.value === expectedCount ||
-        tries >= maxTries ||
-        richTextBoxCalculationCount.value < lastCount
+    try {
+      for (
+        let offset = 0;
+        offset < elements.length;
+        offset += richTextBoxMeasurementBatchSize
       ) {
-        resolve(true);
-      } else {
-        tries++;
-        lastCount = richTextBoxCalculationCount.value;
-        setTimeout(() => poll(resolve), 250);
+        // Yield a browser task after the previous offscreen editors unmount.
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        if (!isCurrent() || !contentIsCurrent()) {
+          return 'superseded';
+        }
+        const batch = new Set(
+          elements.slice(offset, offset + richTextBoxMeasurementBatchSize),
+        );
+        for (const { element, height } of await richTextBoxMeasurement.start(
+          workspace,
+          undefined,
+          batch,
+        )) {
+          heights.set(element, height);
+        }
       }
-    };
 
-    await new Promise(poll);
+      if (!isCurrent() || !contentIsCurrent()) {
+        return 'superseded';
+      }
 
-    richTextBoxCalculation.value = false;
-    saveDebounced();
-  });
+      const previousHeights = new Map<
+        RichTextBoxElement | TextBoxElement,
+        number
+      >();
+      for (const [element, height] of heights) {
+        if (Math.abs(element.height - height) > 0.001) {
+          previousHeights.set(element, element.height);
+          element.height = height;
+          recordMeasuredHeightChange(element);
+        }
+      }
+      if (previousHeights.size > 0) {
+        saveDebounced.cancel({ upcomingOnly: true });
+        try {
+          save();
+        } catch (error) {
+          for (const [element, height] of previousHeights) {
+            element.height = height;
+            recordMeasuredHeightChange(element);
+          }
+          throw error;
+        }
+      }
+      pendingRichTextBoxRecalculations.delete(workspace);
+      return 'settled';
+    } catch (error) {
+      if (!isCurrent() || !contentIsCurrent()) {
+        return 'superseded';
+      }
+      console.error(error);
+      return 'failed';
+    } finally {
+      if (isCurrent()) {
+        richTextBoxCalculation = undefined;
+        if (workspace.score !== score) {
+          pendingRichTextBoxRecalculations.delete(workspace);
+        } else if (!contentIsCurrent()) {
+          recalculateRichTextBoxHeights();
+        }
+      }
+    }
+  }
 }
 
 function recalculateTextBoxHeights() {
@@ -8881,6 +8981,7 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
       throw new Error('LAYOUT_CONFLICT');
     }
   } else {
+    await awaitRichTextBoxRecalculation(workspace);
     await nextTick();
   }
   if (source !== toRaw(selectedWorkspace.value) || source.score !== score) {
@@ -9009,6 +9110,13 @@ async function onFileMenuPrint(browserInitiated = false) {
     activeElement = blurActiveElement();
 
     if (browserInitiated) {
+      if (pendingRichTextBoxRecalculations.has(workspace)) {
+        if (richTextBoxCalculation?.workspace !== workspace) {
+          recalculateRichTextBoxHeights();
+        }
+        showBrowserPrintWarning();
+        return;
+      }
       if (settleFootnoteReferences.value && !liveLayout.isSettled) {
         showBrowserPrintWarning();
         return;
@@ -11435,26 +11543,16 @@ function renderTabLabel(tab: Tab) {
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
     />
-    <template v-if="richTextBoxCalculation && !settleFootnoteReferences">
-      <TextBoxRich
-        v-for="element in resizableRichTextBoxElements"
-        :key="element.id!"
-        class="richTextBoxCalculation"
-        :element="element as RichTextBoxElement"
-        :footnote-body="footnoteBodyElements.has(element)"
-        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
-        :page-setup="score.pageSetup"
-        :fonts="fonts"
-        :paragraph-styles="score.paragraphStyles"
-        :initial-martyria-styles="score.initialMartyriaStyles"
-        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
-        :editor-language="ckeditorLanguage"
-        :recalc="true"
-        @update:height="
-          updateRichTextBoxHeight(element as RichTextBoxElement, $event)
-        "
-      />
-    </template>
+    <WorkspaceTextBoxMeasurement
+      v-if="richTextBoxMeasurementBatch"
+      :key="'rich-text-box-batch-' + richTextBoxMeasurementBatch.id"
+      :workspace="richTextBoxMeasurementBatch.workspace"
+      :measurement-boxes="richTextBoxMeasurementBatch.measurementBoxes"
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="richTextBoxMeasurement.complete"
+      @failed="richTextBoxMeasurement.fail"
+    />
     <template v-if="textBoxCalculation && !settleFootnoteReferences">
       <TextBox
         v-for="element in resizableTextBoxElements"
@@ -11523,7 +11621,6 @@ function renderTabLabel(tab: Tab) {
   color: white;
 }
 
-.richTextBoxCalculation,
 .textBoxCalculation {
   position: absolute;
   left: -99999999px;

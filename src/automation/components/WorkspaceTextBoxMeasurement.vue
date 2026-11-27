@@ -24,6 +24,7 @@
         <TextBoxRich
           v-if="element.elementType === ElementType.RichTextBox"
           :ref="(instance) => setMeasurer(element, instance)"
+          class="rich-text-box-measurement"
           :element="element as RichTextBoxElement"
           :footnote-body="footnoteBodyElements.has(element)"
           :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
@@ -164,5 +165,9 @@ onBeforeUnmount(() => {
   left: -99999999px;
   top: 0;
   visibility: hidden;
+}
+
+.rich-text-box-measurement {
+  position: relative;
 }
 </style>

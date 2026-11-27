@@ -822,19 +822,18 @@ export class LayoutService {
     if (edit !== null && previous !== undefined) {
       const range =
         edit.last - edit.first + 1 > preparationLimit
-          ? null
+          ? undefined
           : this.getPreparationRange(previous, elements, edit.first, edit.last);
-      if (range === null) {
-        if (edit.last - edit.first + 1 > preparationLimit) {
-          status = 'bulk edit';
-        }
-      } else {
+      if (range === undefined) {
+        status = 'bulk edit';
+      } else if (range !== null) {
         const candidate = prepare(range);
         prepared += candidate.paragraphs.length;
         // The last note can write a leading hyphen onto the first note of the
         // following paragraph. While this or carried state differs from what
         // that paragraph was prepared with, prepare it too, continuing from
         // the state the range ends with.
+        status = 'bulk edit';
         while (prepared <= preparationLimit) {
           const next = previous.paragraphs[edit.last + 1];
           const exit = candidate.paragraphs.at(-1)!.exit;
@@ -858,17 +857,7 @@ export class LayoutService {
             leadingHyphen: candidate.nextLeadingHyphen,
           });
           prepared += added.paragraphs.length;
-          candidate.paragraphs.push(...added.paragraphs);
-          candidate.nextLeadingHyphen = added.nextLeadingHyphen;
-          for (const note of added.blockedMelismaNotes) {
-            candidate.blockedMelismaNotes.add(note);
-          }
-          for (const [note, plan] of added.atomicMelismaLayout.centeringPlans) {
-            candidate.atomicMelismaLayout.centeringPlans.set(note, plan);
-          }
-        }
-        if (status !== 'reused') {
-          status = 'bulk edit';
+          this.appendPreparedContent(candidate, added);
         }
       }
     }
@@ -941,98 +930,95 @@ export class LayoutService {
 
     endPhase();
     endPhase = startSpan('processPages.paginate');
-    const getContentLines = () =>
-      this.getContentLines(paragraphs.map((paragraph) => paragraph.completed));
-    const contentLines = getContentLines();
-    const paginate = () => {
-      const paginationLines = contentLines.map((candidate) => {
-        const { paragraph, paragraphLineIndex } = candidate;
-        const elements = candidate.positions.flatMap(({ position }) => {
-          const item = paragraph.paragraph[position.item];
-          return item.type === 'box' && 'element' in item
-            ? [(item as ElementBox).element]
-            : [];
-        });
-        const reservedContinuationLines =
-          paragraphLineIndex === 0 ? paragraph.dropCapContinuationLines : 0;
-        // Reserve the full drop-cap height, but only group lines belonging to
-        // its paragraph.
-        const continuationLines = Math.min(
-          reservedContinuationLines,
-          paragraph.lineHeights.length - 1,
-        );
-        return {
-          height: candidate.height,
-          elements,
-          footnoteIds: hasFootnoteReferences
-            ? elements.flatMap(elementFootnoteIds)
-            : [],
-          chapterMarker: pageSetup.headerFooterDifferentChapterOpening
-            ? getFirstRunningMarker(elements, 'chapter')
-            : null,
-          pageBreak: elements.at(-1)?.pageBreak ?? false,
-          continuationLines,
-          additionalHeight: this.getLineSpanHeight(
-            paragraph.lineHeights,
-            1,
-            reservedContinuationLines,
-            neumeLineHeight,
-          ),
-        };
+    const contentLines = this.getContentLines(
+      paragraphs.map((paragraph) => paragraph.completed),
+    );
+    const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
+    const paginationLines = contentLines.map((candidate) => {
+      const { paragraph, paragraphLineIndex } = candidate;
+      const elements = candidate.positions.flatMap(({ position }) => {
+        const item = paragraph.paragraph[position.item];
+        return item.type === 'box' && 'element' in item
+          ? [(item as ElementBox).element]
+          : [];
       });
-      const breaksBefore = new Set<number>();
-      const groupStarts: number[] = [];
-      const onOverflowBreak = options?.onOverflowBreak;
-      if (options?.breaksBefore?.size || onOverflowBreak) {
-        let groupStart = 0;
-        let groupEnd = -1;
-        for (const [index, line] of paginationLines.entries()) {
-          if (index > groupEnd || paginationLines[index - 1]?.pageBreak) {
-            groupStart = index;
-            groupEnd = index + line.continuationLines;
-          }
-          groupStarts.push(groupStart);
-          if (
-            line.elements.some((element) => options?.breaksBefore?.has(element))
-          ) {
-            breaksBefore.add(groupStart);
-          }
+      const reservedContinuationLines =
+        paragraphLineIndex === 0 ? paragraph.dropCapContinuationLines : 0;
+      // Reserve the full drop-cap height, but only group lines belonging to
+      // its paragraph.
+      const continuationLines = Math.min(
+        reservedContinuationLines,
+        paragraph.lineHeights.length - 1,
+      );
+      return {
+        height: candidate.height,
+        elements,
+        footnoteIds: hasFootnoteReferences
+          ? elements.flatMap(elementFootnoteIds)
+          : [],
+        chapterMarker: pageSetup.headerFooterDifferentChapterOpening
+          ? getFirstRunningMarker(elements, 'chapter')
+          : null,
+        pageBreak: elements.at(-1)?.pageBreak ?? false,
+        continuationLines,
+        additionalHeight: this.getLineSpanHeight(
+          paragraph.lineHeights,
+          1,
+          reservedContinuationLines,
+          neumeLineHeight,
+        ),
+      };
+    });
+    const breaksBefore = new Set<number>();
+    const groupStarts: number[] = [];
+    const onOverflowBreak = options?.onOverflowBreak;
+    if (options?.breaksBefore?.size || onOverflowBreak) {
+      let groupStart = 0;
+      let groupEnd = -1;
+      for (const [index, line] of paginationLines.entries()) {
+        if (index > groupEnd || paginationLines[index - 1]?.pageBreak) {
+          groupStart = index;
+          groupEnd = index + line.continuationLines;
+        }
+        groupStarts.push(groupStart);
+        if (
+          line.elements.some((element) => options?.breaksBefore?.has(element))
+        ) {
+          breaksBefore.add(groupStart);
         }
       }
-      return buildContentPages(
-        paginationLines,
-        new Map([...footnotes].map(([id, body]) => [id, body.height])),
-        {
-          innerPageHeight: pageSetup.innerPageHeight,
-          footnoteSpacing: above + below + thickness,
-          getReservation: (pageNumber, isChapterOpening) =>
-            this.getExtraHeaderFooterHeight(
-              score,
-              pageSetup,
-              pageNumber,
-              isChapterOpening,
-            ),
-          breaksBefore,
-          onOverflowBreak: onOverflowBreak
-            ? (index, first, excess, groupEnd) => {
-                const line = paginationLines[index];
-                const boundary = line.elements[0];
-                if (groupStarts[index] === index && boundary) {
-                  onOverflowBreak(
-                    boundary,
-                    paginationLines
-                      .slice(first, groupEnd)
-                      .flatMap((candidate) => candidate.elements),
-                    excess,
-                  );
-                }
+    }
+    const decisions = buildContentPages(
+      paginationLines,
+      new Map([...footnotes].map(([id, body]) => [id, body.height])),
+      {
+        innerPageHeight: pageSetup.innerPageHeight,
+        footnoteSpacing: above + below + thickness,
+        getReservation: (pageNumber, isChapterOpening) =>
+          this.getExtraHeaderFooterHeight(
+            score,
+            pageSetup,
+            pageNumber,
+            isChapterOpening,
+          ),
+        breaksBefore,
+        onOverflowBreak: onOverflowBreak
+          ? (index, first, excess, groupEnd) => {
+              const line = paginationLines[index];
+              const boundary = line.elements[0];
+              if (groupStarts[index] === index && boundary) {
+                onOverflowBreak(
+                  boundary,
+                  paginationLines
+                    .slice(first, groupEnd)
+                    .flatMap((candidate) => candidate.elements),
+                  excess,
+                );
               }
-            : undefined,
-        },
-      );
-    };
-    const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
-    const decisions = paginate();
+            }
+          : undefined,
+      },
+    );
     const findPlacement = (candidate: ContentLine) =>
       previous?.placements.get(candidate.paragraph)?.[
         candidate.paragraphLineIndex
@@ -1744,6 +1730,22 @@ export class LayoutService {
       if (bar !== null) {
         (last as NoteElement).computedMeasureBarRight = bar;
       }
+    }
+  }
+
+  // Append the paragraphs prepared from where target's range ends. The other
+  // fields are fixed per page setup or read only during preparation.
+  private static appendPreparedContent(
+    target: ReturnType<typeof LayoutService.prepareContentLines>,
+    added: ReturnType<typeof LayoutService.prepareContentLines>,
+  ) {
+    target.paragraphs.push(...added.paragraphs);
+    target.nextLeadingHyphen = added.nextLeadingHyphen;
+    for (const note of added.blockedMelismaNotes) {
+      target.blockedMelismaNotes.add(note);
+    }
+    for (const [note, plan] of added.atomicMelismaLayout.centeringPlans) {
+      target.atomicMelismaLayout.centeringPlans.set(note, plan);
     }
   }
 

@@ -361,8 +361,13 @@ interface PreparedParagraph {
   entry: Phase1CarriedState;
   exit: Phase1CarriedState;
   completed: CompletedParagraph;
-  leadingHyphenOffset: number;
-  leadingHyphenWidth: number;
+  leadingHyphen: LeadingHyphen;
+}
+
+// Phase 1 reserves space for a hyphen before a note from the previous note.
+interface LeadingHyphen {
+  offset: number;
+  width: number;
 }
 
 interface ContentLine {
@@ -490,13 +495,10 @@ interface PreviousLayout {
   musicalEntries: Map<ScoreElement, MusicalContext>;
 }
 
-interface PreparationRange {
+type PreparationRange = Pick<PreparedParagraph, 'entry' | 'leadingHyphen'> & {
   start: number;
   end: number;
-  entry: Phase1CarriedState;
-  leadingHyphenOffset: number;
-  leadingHyphenWidth: number;
-}
+};
 
 type LayoutStatus =
   | 'reused'
@@ -562,16 +564,26 @@ export class LayoutService {
       start,
       end,
       entry: paragraph.entry,
-      leadingHyphenOffset: paragraph.leadingHyphenOffset,
-      leadingHyphenWidth: paragraph.leadingHyphenWidth,
+      leadingHyphen: paragraph.leadingHyphen,
     };
   }
 
+  private static getLeadingHyphen(element: ScoreElement | undefined) {
+    return element instanceof NoteElement
+      ? {
+          offset: element.leadingLyricHyphenOffset,
+          width: element.leadingLyricHyphenReservationWidth,
+        }
+      : { offset: 0, width: 0 };
+  }
+
+  // An undefined element is the start of the score.
   private static endsParagraph(
-    element: ScoreElement,
+    element: ScoreElement | undefined,
     next: ScoreElement | null,
   ) {
     return (
+      element === undefined ||
       element.lineBreak ||
       element.pageBreak ||
       isBlockElement(element) ||
@@ -624,12 +636,7 @@ export class LayoutService {
     let end = previous.elements.length - suffixLength;
     for (const [element, oldContext] of previous.musicalEntries) {
       const current = musicalEntries.get(element);
-      if (
-        current !== undefined &&
-        (current.note !== oldContext.note ||
-          current.scale !== oldContext.scale ||
-          current.shift !== oldContext.shift)
-      ) {
+      if (current !== undefined && !deepEquals(current, oldContext)) {
         const oldIndex =
           element.index + (previous.elements.length - elements.length);
         if (oldIndex >= end && previous.elements[oldIndex] === element) {
@@ -679,10 +686,6 @@ export class LayoutService {
       const boundary = paragraphs[last].endIndex + 1;
       if (boundary >= end) {
         const nextIndex = boundary + delta;
-        if (nextIndex <= 0) {
-          // Deleting the opening paragraphs can move the suffix to the start.
-          return null;
-        }
         const next = elements[nextIndex];
         if (
           next === previous.elements[boundary] &&
@@ -694,28 +697,6 @@ export class LayoutService {
       last++;
     }
     return { first, last, boundaryParagraphs };
-  }
-
-  private static sameCarriedState(
-    left: Phase1CarriedState,
-    right: Phase1CarriedState,
-  ) {
-    const a = left.greekMelismaSyllables;
-    const b = right.greekMelismaSyllables;
-    return (
-      left.greekMelismaIsActive === right.greekMelismaIsActive &&
-      left.afterExplicitBreak === right.afterExplicitBreak &&
-      left.pendingGreekPairEndPx === right.pendingGreekPairEndPx &&
-      left.placementGreekMelismaIsActive ===
-        right.placementGreekMelismaIsActive &&
-      left.showPreviousLineHyphen === right.showPreviousLineHyphen &&
-      (a === b ||
-        (a !== null &&
-          b !== null &&
-          a.initial === b.initial &&
-          a.middle === b.middle &&
-          a.final === b.final))
-    );
   }
 
   public static processPages(
@@ -743,14 +724,20 @@ export class LayoutService {
     this.previousLayouts.delete(workspace);
     const musicalEntries = new Map<ScoreElement, MusicalContext>();
     const changedAmbitus: ModeKeyElement[] = [];
-    const trackReuse =
-      incremental !== undefined &&
-      !incremental.forceFull &&
-      !score.staff.lyrics.locked &&
-      !options?.collectDiagnostics &&
-      !options?.breaksBefore?.size &&
-      options?.onOverflowBreak === undefined &&
-      !options?.provisionalFootnoteWidths;
+    // Why this pass is a full layout, or null while reuse is still possible.
+    let status: LayoutStatus | null = incremental?.forceFull
+      ? 'forced full'
+      : score.staff.lyrics.locked
+        ? 'locked lyrics'
+        : options?.collectDiagnostics
+          ? 'diagnostics'
+          : incremental === undefined ||
+              options?.breaksBefore?.size ||
+              options?.onOverflowBreak !== undefined ||
+              options?.provisionalFootnoteWidths
+            ? 'range unavailable'
+            : null;
+    const trackReuse = status === null;
 
     let endPhase = startSpan('processPages.saveElementState');
     assignMissingElementIds(workspace);
@@ -792,13 +779,16 @@ export class LayoutService {
     endPhase();
     endPhase = startSpan('processPages.prepareContentLines');
     const changes = incremental?.changes;
+    if (hasFootnoteReferences && status !== 'forced full') {
+      status = 'footnotes';
+    } else if (status === null && previous === undefined) {
+      status = 'initial';
+    } else if (status === null && changes != null && changes.size > 64) {
+      status = 'bulk edit';
+    }
+    const cacheLayout = trackReuse && !hasFootnoteReferences;
     const edit =
-      trackReuse &&
-      !hasFootnoteReferences &&
-      previous !== undefined &&
-      changes != null &&
-      changes.size > 0 &&
-      changes.size <= 64
+      status === null && previous !== undefined && changes?.size
         ? this.findEditedParagraphs(
             previous,
             elements,
@@ -807,20 +797,6 @@ export class LayoutService {
             changedAmbitus,
           )
         : null;
-    let status: LayoutStatus = 'range unavailable';
-    if (incremental?.forceFull) {
-      status = 'forced full';
-    } else if (hasFootnoteReferences) {
-      status = 'footnotes';
-    } else if (score.staff.lyrics.locked) {
-      status = 'locked lyrics';
-    } else if (options?.collectDiagnostics) {
-      status = 'diagnostics';
-    } else if (previous === undefined) {
-      status = 'initial';
-    } else if (changes != null && changes.size > 64) {
-      status = 'bulk edit';
-    }
 
     // Avoid doing most of a full pass and then paying again on fallback.
     const preparationLimit = Math.ceil((previous?.paragraphs.length ?? 0) / 2);
@@ -841,7 +817,11 @@ export class LayoutService {
     if (edit !== null && previous !== undefined) {
       // The last note can write a leading hyphen onto the first note of the
       // following paragraph. Extend the range if this or carried state changes.
-      while (edit.last - edit.first + 1 <= preparationLimit) {
+      while (true) {
+        if (edit.last - edit.first + 1 > preparationLimit) {
+          status = 'bulk edit';
+          break;
+        }
         const range = this.getPreparationRange(
           previous,
           elements,
@@ -858,15 +838,10 @@ export class LayoutService {
           break;
         }
         const next = previous.paragraphs[edit.last + 1];
-        const { offset, width } = candidate.nextLeadingHyphen;
         if (
           next === undefined ||
-          (this.sameCarriedState(
-            candidate.paragraphs.at(-1)!.exit,
-            next.entry,
-          ) &&
-            offset === next.leadingHyphenOffset &&
-            width === next.leadingHyphenWidth)
+          (deepEquals(candidate.paragraphs.at(-1)!.exit, next.entry) &&
+            deepEquals(candidate.nextLeadingHyphen, next.leadingHyphen))
         ) {
           reuse = range;
           content = candidate;
@@ -876,16 +851,13 @@ export class LayoutService {
         edit.last++;
         edit.boundaryParagraphs++;
       }
-      if (edit.last - edit.first + 1 > preparationLimit) {
-        status = 'bulk edit';
-      }
     }
     if (content === undefined) {
       content = prepare();
       prepared += content.paragraphs.length;
     }
     let paragraphs = content.paragraphs;
-    if (reuse !== null && previous !== undefined && edit !== null) {
+    if (reuse !== null && edit !== null && previous !== undefined) {
       const delta = elements.length - previous.elements.length;
       const suffix = previous.paragraphs.slice(edit.last + 1);
       paragraphs = [
@@ -1063,7 +1035,6 @@ export class LayoutService {
         decisions = paginate();
       }
     }
-    const cacheLayout = trackReuse && !hasFootnoteReferences;
     const placements = new Map<CompletedParagraph, LinePlacement[]>();
     const phasePages: Page[] = [];
     let phasePage: Page | undefined;
@@ -1383,7 +1354,7 @@ export class LayoutService {
       });
     }
     report?.({
-      status,
+      status: status ?? 'range unavailable',
       prepared,
       totalParagraphs: paragraphs.length,
       postprocessedPages: postprocessPages.length,
@@ -1832,13 +1803,13 @@ export class LayoutService {
       pageSetup,
       noteWidthArgs,
       start,
-      end + (elements[end] instanceof NoteElement ? 1 : 0),
+      end + (nextNote === null ? 0 : 1),
     );
     const firstElement = elements[start];
     if (range !== undefined && firstElement instanceof NoteElement) {
-      firstElement.leadingLyricHyphenOffset = range.leadingHyphenOffset;
+      firstElement.leadingLyricHyphenOffset = range.leadingHyphen.offset;
       firstElement.leadingLyricHyphenReservationWidth =
-        range.leadingHyphenWidth;
+        range.leadingHyphen.width;
     }
     endGeometry();
     const endMelismas = startSpan('prepareContentLines.melismas');
@@ -1954,16 +1925,7 @@ export class LayoutService {
         endIndex,
         entry: paragraphEntry,
         exit: carriedState(),
-        leadingHyphenOffset:
-          elements[paragraphStartIndex] instanceof NoteElement
-            ? (elements[paragraphStartIndex] as NoteElement)
-                .leadingLyricHyphenOffset
-            : 0,
-        leadingHyphenWidth:
-          elements[paragraphStartIndex] instanceof NoteElement
-            ? (elements[paragraphStartIndex] as NoteElement)
-                .leadingLyricHyphenReservationWidth
-            : 0,
+        leadingHyphen: this.getLeadingHyphen(elements[paragraphStartIndex]),
         completed: layoutWorkspace.completedParagraphs.at(-1)!,
       });
     };
@@ -3025,10 +2987,7 @@ export class LayoutService {
       measureBarWidthMap,
       atomicMelismaLayout,
       blockedMelismaNotes,
-      nextLeadingHyphen: {
-        offset: nextNote?.leadingLyricHyphenOffset ?? 0,
-        width: nextNote?.leadingLyricHyphenReservationWidth ?? 0,
-      },
+      nextLeadingHyphen: this.getLeadingHyphen(elements[end]),
     };
   }
 
@@ -9236,8 +9195,7 @@ export class LayoutService {
     for (const element of elements) {
       if (
         checkpoints !== undefined &&
-        (previousElement === undefined ||
-          this.endsParagraph(previousElement, element))
+        this.endsParagraph(previousElement, element)
       ) {
         checkpoints.musicalEntries.set(element, {
           note: currentNote,

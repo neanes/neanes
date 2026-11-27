@@ -93,8 +93,10 @@ node tests/integration/layout/random-edits.mjs --skip-build --incremental --scor
 ```
 
 The defaults are 200 edits with seed 1 on each of the bundled LTR and Melkite RTL
-fixtures. Use `--facing` to exercise unequal inside and outside margins on
-the bundled fixtures or on a supplied `.byzx` file. Repeat `--seed` and
+fixtures. Incremental mode also runs a separate scripted case that verifies
+paragraph reuse after an ison edit and layout after deleting the opening
+block. Use `--facing` to exercise unequal inside and outside margins on the
+bundled fixtures or on a supplied `.byzx` file. Repeat `--seed` and
 `--score` to run a matrix. Supplied `.byz` and
 `.byzx` scores are copied and used with their saved direction. The runner selects
 targets both across the score and near the previous edit. It calls the same

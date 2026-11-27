@@ -354,7 +354,7 @@ async function runSequence(fixture, seed) {
   try {
     // A replay's saved input already includes its page setup variant.
     const facing = !replay && values.facing;
-    if (fixture.rtl || facing) {
+    if (fixture.rtl || facing || fixture.checkIncremental) {
       assert.equal(
         path.extname(fixture.file),
         '.byzx',
@@ -369,6 +369,14 @@ async function runSequence(fixture, seed) {
         score.pageSetup.facingPages = true;
         score.pageSetup.leftMargin = 120;
         score.pageSetup.rightMargin = 72.5;
+      }
+      if (fixture.checkIncremental) {
+        score.staff.elements.unshift({
+          elementType: 'TextBox',
+          content: 'Opening paragraph',
+          height: 24,
+          customHeight: 24,
+        });
       }
       await writeFile(file, JSON.stringify(score));
     } else {
@@ -415,11 +423,22 @@ async function runSequence(fixture, seed) {
     let checks = 0;
     const kinds = {};
     const statuses = {};
-    const count = replay?.edits.length ?? steps;
+    const scriptedEdits = fixture.checkIncremental
+      ? [
+          {
+            kind: 'ison',
+            target: { index: 3, type: 'Note' },
+            expectReuse: true,
+          },
+          { kind: 'delete', target: { index: 0, type: 'TextBox' } },
+        ]
+      : null;
+    const edits = replay?.edits ?? scriptedEdits;
+    const count = edits?.length ?? steps;
     for (let i = 0; i < count; i++) {
       result = null;
       const edit =
-        replay?.edits[i] ??
+        edits?.[i] ??
         (await inEditor(
           chooseEdit,
           Array.from({ length: 5 }, random),
@@ -435,6 +454,15 @@ async function runSequence(fixture, seed) {
       assert.ok(result.changed, 'Edit did not change score content');
       assert.ok(result.checks > 0, 'Edit did not run a verified layout');
       assert.ok(result.layouts.length > 0, 'Missing layout diagnostics');
+      if (edit.expectReuse) {
+        assert.ok(
+          result.layouts.some(
+            ({ status, prepared, totalParagraphs }) =>
+              status === 'reused' && prepared < totalParagraphs,
+          ),
+          `Expected paragraph reuse for the ison edit: ${JSON.stringify(result.layouts)}`,
+        );
+      }
       for (const { status } of result.layouts) {
         statuses[status] = (statuses[status] ?? 0) + 1;
       }
@@ -480,6 +508,20 @@ async function runSequence(fixture, seed) {
     return false;
   } finally {
     await app.close();
+  }
+}
+
+if (values.incremental && !replay) {
+  const passed = await runSequence(
+    {
+      name: 'opening-paragraph',
+      file: fixture,
+      checkIncremental: true,
+    },
+    1,
+  );
+  if (!passed) {
+    process.exitCode = 1;
   }
 }
 

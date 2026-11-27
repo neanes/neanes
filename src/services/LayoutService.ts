@@ -679,6 +679,10 @@ export class LayoutService {
       const boundary = paragraphs[last].endIndex + 1;
       if (boundary >= end) {
         const nextIndex = boundary + delta;
+        if (nextIndex <= 0) {
+          // Deleting the opening paragraphs can move the suffix to the start.
+          return null;
+        }
         const next = elements[nextIndex];
         if (
           next === previous.elements[boundary] &&

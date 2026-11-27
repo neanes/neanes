@@ -251,7 +251,7 @@
   </div>
   <div
     v-for="(line, lineIndex) in page.allLines"
-    :key="`line-${pageIndex}-${lineIndex}`"
+    :key="getLineKey(line, lineIndex)"
     class="line"
     :data-footnote-id="line.footnoteId"
   >
@@ -1136,6 +1136,15 @@ function getDeveloperGlueOverlays(
       }),
     };
   });
+}
+
+// Key a line by its first element, so a line that only moves keeps its
+// element wrappers instead of remounting them under another line's key.
+function getLineKey(line: Line, lineIndex: number) {
+  const id = line.elements[0]?.id;
+  return id == null
+    ? `line-index-${lineIndex}`
+    : `line-${line.footnoteId ?? ''}-${id}`;
 }
 
 function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {

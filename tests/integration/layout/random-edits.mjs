@@ -423,6 +423,9 @@ async function runSequence(fixture, seed) {
     let checks = 0;
     const kinds = {};
     const statuses = {};
+    // Reused layouts by the number of paragraphs added at range boundaries.
+    const boundaries = {};
+    let maxShiftedLines = 0;
     const scriptedEdits = fixture.checkIncremental
       ? [
           {
@@ -463,8 +466,17 @@ async function runSequence(fixture, seed) {
           `Expected paragraph reuse for the ison edit: ${JSON.stringify(result.layouts)}`,
         );
       }
-      for (const { status } of result.layouts) {
+      for (const {
+        status,
+        boundaryParagraphs,
+        shiftedLines,
+      } of result.layouts) {
         statuses[status] = (statuses[status] ?? 0) + 1;
+        if (status === 'reused') {
+          boundaries[boundaryParagraphs] =
+            (boundaries[boundaryParagraphs] ?? 0) + 1;
+          maxShiftedLines = Math.max(maxShiftedLines, shiftedLines);
+        }
       }
       checks += result.checks;
       kinds[edit.kind] = (kinds[edit.kind] ?? 0) + 1;
@@ -476,7 +488,7 @@ async function runSequence(fixture, seed) {
       }
     }
     console.log(
-      `PASS ${fixture.name} seed=${seed}: ${count} edits, ${checks} checks ${JSON.stringify(kinds)}; layouts ${JSON.stringify(statuses)}`,
+      `PASS ${fixture.name} seed=${seed}: ${count} edits, ${checks} checks ${JSON.stringify(kinds)}; layouts ${JSON.stringify(statuses)}; boundary paragraphs ${JSON.stringify(boundaries)}; max shifted lines ${maxShiftedLines}`,
     );
     return true;
   } catch (error) {

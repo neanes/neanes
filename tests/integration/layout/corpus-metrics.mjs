@@ -128,6 +128,8 @@ async function edit(editor, { kind, index, lyric }) {
     layoutMs: spans.reduce((sum, span) => sum + span.duration, 0),
     updateMs,
     statuses: layouts?.map(({ status }) => status) ?? spans.map(() => null),
+    boundaryParagraphs: layouts?.map((layout) => layout.boundaryParagraphs),
+    shiftedLines: layouts?.map((layout) => layout.shiftedLines),
   };
 }
 
@@ -198,8 +200,20 @@ async function measure(fixture, previous) {
           );
         }
         if (i >= warmup) {
-          const { layoutMs, updateMs, statuses } = sample;
-          samples.push({ layoutMs, updateMs, statuses });
+          const {
+            layoutMs,
+            updateMs,
+            statuses,
+            boundaryParagraphs,
+            shiftedLines,
+          } = sample;
+          samples.push({
+            layoutMs,
+            updateMs,
+            statuses,
+            boundaryParagraphs,
+            shiftedLines,
+          });
         }
         await evaluate(
           'new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve)))',

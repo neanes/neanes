@@ -73,11 +73,15 @@ async function toggle(editor, { noteIndex, viewPage }) {
     }
   }
   const verify = window.__neanesLayoutVerify;
+  const span = (name) =>
+    window.__neanesLayoutProfile.find(
+      (entry) => entry.name === name && entry.start >= start,
+    );
   return {
     changed: note.lineBreak !== previousBreak,
-    layout: window.__neanesLayoutProfile.find(
-      (entry) => entry.name === 'processPages' && entry.start >= start,
-    ),
+    layout: span('processPages'),
+    positionLines: span('processPages.positionLines')?.duration ?? null,
+    reuse: editor.layoutDiagnostics?.results.at(-1) ?? null,
     counts,
     pagesBefore,
     pagesAfter: mountedPages(),
@@ -186,6 +190,16 @@ try {
           ', ',
         )}; mounted pages ${samples.at(-1).pagesBefore.join(',')} -> ${samples.at(-1).pagesAfter.join(',')}`,
     );
+    if (samples[0].reuse) {
+      const statuses = {};
+      for (const { reuse } of samples) {
+        statuses[reuse.status] = (statuses[reuse.status] ?? 0) + 1;
+      }
+      console.log(
+        `  layouts ${JSON.stringify(statuses)}; median prepared ${field(({ reuse }) => reuse.prepared)}/${samples[0].reuse.totalParagraphs} paragraphs, ` +
+          `shifted ${field(({ reuse }) => reuse.shiftedLines)} lines, positionLines ${field(({ positionLines }) => positionLines).toFixed(1)} ms`,
+      );
+    }
   }
 } finally {
   await app.close();

@@ -485,13 +485,14 @@ interface LinePlacement {
   page: number;
   lineNumber: number;
   top: number;
+  // How far a bar transferred to the first note moved it left.
+  reservation: number;
 }
 
 interface PreviousLayout {
   paragraphs: PreparedParagraph[];
   elements: ScoreElement[];
   placements: Map<CompletedParagraph, LinePlacement[]>;
-  pageCount: number;
   musicalEntries: Map<ScoreElement, MusicalContext>;
 }
 
@@ -508,8 +509,7 @@ type LayoutStatus =
   | 'locked lyrics'
   | 'diagnostics'
   | 'range unavailable'
-  | 'bulk edit'
-  | 'placement moved';
+  | 'bulk edit';
 
 export interface LayoutReuseResult {
   status: LayoutStatus;
@@ -517,7 +517,6 @@ export interface LayoutReuseResult {
   totalParagraphs: number;
   postprocessedPages: number;
   boundaryParagraphs: number;
-  movedLines: number;
   shiftedLines: number;
   duration: number;
 }
@@ -814,51 +813,78 @@ export class LayoutService {
     let reuse: PreparationRange | null = null;
     let content: ReturnType<typeof prepare> | undefined;
     let prepared = 0;
+    const delta = elements.length - (previous?.elements.length ?? 0);
     if (edit !== null && previous !== undefined) {
-      // The last note can write a leading hyphen onto the first note of the
-      // following paragraph. Extend the range if this or carried state changes.
-      while (true) {
+      const range =
+        edit.last - edit.first + 1 > preparationLimit
+          ? null
+          : this.getPreparationRange(previous, elements, edit.first, edit.last);
+      if (range === null) {
         if (edit.last - edit.first + 1 > preparationLimit) {
           status = 'bulk edit';
-          break;
         }
-        const range = this.getPreparationRange(
-          previous,
-          elements,
-          edit.first,
-          edit.last,
-        );
-        if (range === null) {
-          break;
-        }
+      } else {
         const candidate = prepare(range);
         prepared += candidate.paragraphs.length;
-        if (candidate.paragraphs.length > preparationLimit) {
+        // The last note can write a leading hyphen onto the first note of the
+        // following paragraph. While this or carried state differs from what
+        // that paragraph was prepared with, prepare it too, continuing from
+        // the state the range ends with.
+        while (prepared <= preparationLimit) {
+          const next = previous.paragraphs[edit.last + 1];
+          const exit = candidate.paragraphs.at(-1)!.exit;
+          if (
+            next === undefined ||
+            (deepEquals(exit, next.entry) &&
+              deepEquals(candidate.nextLeadingHyphen, next.leadingHyphen))
+          ) {
+            reuse = range;
+            content = candidate;
+            status = 'reused';
+            break;
+          }
+          edit.last++;
+          edit.boundaryParagraphs++;
+          range.end = next.endIndex + 1 + delta;
+          const added = prepare({
+            start: next.startIndex + delta,
+            end: range.end,
+            entry: exit,
+            leadingHyphen: candidate.nextLeadingHyphen,
+          });
+          prepared += added.paragraphs.length;
+          candidate.paragraphs.push(...added.paragraphs);
+          candidate.nextLeadingHyphen = added.nextLeadingHyphen;
+          for (const note of added.blockedMelismaNotes) {
+            candidate.blockedMelismaNotes.add(note);
+          }
+          for (const [note, plan] of added.atomicMelismaLayout.centeringPlans) {
+            candidate.atomicMelismaLayout.centeringPlans.set(note, plan);
+          }
+        }
+        if (status !== 'reused') {
           status = 'bulk edit';
-          break;
         }
-        const next = previous.paragraphs[edit.last + 1];
-        if (
-          next === undefined ||
-          (deepEquals(candidate.paragraphs.at(-1)!.exit, next.entry) &&
-            deepEquals(candidate.nextLeadingHyphen, next.leadingHyphen))
-        ) {
-          reuse = range;
-          content = candidate;
-          status = 'reused';
-          break;
-        }
-        edit.last++;
-        edit.boundaryParagraphs++;
       }
     }
     if (content === undefined) {
       content = prepare();
       prepared += content.paragraphs.length;
     }
+    if (report !== undefined && trackReuse) {
+      // endsParagraph restates the paragraph rules of prepareContentLines to
+      // place the musical checkpoints. Catch any drift between the two.
+      const unchecked = content.paragraphs.find(
+        ({ startIndex }) => !musicalEntries.has(elements[startIndex]),
+      );
+      if (unchecked !== undefined) {
+        throw new Error(
+          `Paragraph at element ${unchecked.startIndex} has no musical checkpoint`,
+        );
+      }
+    }
     let paragraphs = content.paragraphs;
     if (reuse !== null && edit !== null && previous !== undefined) {
-      const delta = elements.length - previous.elements.length;
       const suffix = previous.paragraphs.slice(edit.last + 1);
       paragraphs = [
         ...previous.paragraphs.slice(0, edit.first),
@@ -912,7 +938,7 @@ export class LayoutService {
     endPhase = startSpan('processPages.paginate');
     const getContentLines = () =>
       this.getContentLines(paragraphs.map((paragraph) => paragraph.completed));
-    let contentLines = getContentLines();
+    const contentLines = getContentLines();
     const paginate = () => {
       const paginationLines = contentLines.map((candidate) => {
         const { paragraph, paragraphLineIndex } = candidate;
@@ -1001,44 +1027,16 @@ export class LayoutService {
       );
     };
     const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
-    let decisions = paginate();
-    const offset = (pageIndex: number, top: number) =>
-      pageSetup.topMargin +
-      decisions[pageIndex].reservation.extraHeaderHeightPx +
-      top;
+    const decisions = paginate();
     const findPlacement = (candidate: ContentLine) =>
       previous?.placements.get(candidate.paragraph)?.[
         candidate.paragraphLineIndex
       ];
-    let movedLines = 0;
-    if (reuse !== null && previous !== undefined) {
-      for (const [pageIndex, decision] of decisions.entries()) {
-        for (const [lineIndex, { index, top }] of decision.lines.entries()) {
-          const cached = findPlacement(contentLines[index]);
-          if (
-            cached !== undefined &&
-            (cached.page !== pageIndex + 1 ||
-              cached.lineNumber !== lineIndex + 1 ||
-              Math.abs(cached.top - offset(pageIndex, top)) > 1e-6)
-          ) {
-            movedLines++;
-          }
-        }
-      }
-      if (movedLines > 0 || decisions.length !== previous.pageCount) {
-        status = 'placement moved';
-        reuse = null;
-        content = prepare();
-        prepared += content.paragraphs.length;
-        paragraphs = content.paragraphs;
-        contentLines = getContentLines();
-        decisions = paginate();
-      }
-    }
     const placements = new Map<CompletedParagraph, LinePlacement[]>();
     const phasePages: Page[] = [];
     let phasePage: Page | undefined;
-    let previousLineWasFresh = false;
+    let previousLine: Line | null = null;
+    let shiftedLines = 0;
     endPhase();
     endPhase = startSpan('processPages.positionLines');
     const pages: Page[] = [];
@@ -1050,38 +1048,41 @@ export class LayoutService {
       page.footnoteOverflow = decision.footnoteOverflow;
       const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
       for (const placement of decision.lines) {
-        const previousLine =
-          page.lines.at(-1) ?? pages.at(-1)?.lines.at(-1) ?? null;
         const candidate = contentLines[placement.index];
         const cached = reuse === null ? undefined : findPlacement(candidate);
-        const fresh = cached === undefined;
-        const line =
-          cached?.line ??
-          this.positionContentLine(
+        const top = page.contentTop + placement.top;
+        const lineNumber = page.lines.length + 1;
+        let line: Line;
+        let reservation: number;
+        if (
+          cached !== undefined &&
+          cached.page === page.physicalPageNumber &&
+          cached.lineNumber === lineNumber &&
+          cached.top === top
+        ) {
+          ({ line, reservation } = cached);
+        } else {
+          // A reused line that moved is re-placed, not prepared again.
+          if (cached !== undefined) {
+            shiftedLines++;
+          }
+          ({ line, reservation } = this.positionContentLine(
             candidate,
             pageSetup,
             margins,
-            page.contentTop + placement.top,
+            top,
             page.physicalPageNumber,
-            page.lines.length + 1,
-            previousLineWasFresh ? previousLine : null,
+            lineNumber,
+            previousLine,
             neumeLineHeight,
             lyricsBaseline,
             defaultLyricsFontCss,
             measureBarWidthMap,
-          );
-        if (!fresh && previousLineWasFresh) {
-          // A reused line would have transferred its left bar during positioning.
-          const last = previousLine?.elements.at(-1);
-          const first = line.elements[0];
-          if (last instanceof NoteElement && first !== undefined) {
-            const bar = this.getMeasureBarTransferredFromLineStart(first);
-            if (bar !== null) {
-              last.computedMeasureBarRight = bar;
-            }
-          }
+            cached?.reservation ?? null,
+          ));
         }
-        if (fresh && reuse !== null) {
+        this.transferLineStartBar(previousLine, line);
+        if (cached === undefined && reuse !== null) {
           if (phasePage?.physicalPageNumber !== page.physicalPageNumber) {
             phasePage = new Page();
             phasePage.physicalPageNumber = page.physicalPageNumber;
@@ -1099,11 +1100,12 @@ export class LayoutService {
           records.push({
             line,
             page: page.physicalPageNumber,
-            lineNumber: page.lines.length,
-            top: page.contentTop + placement.top,
+            lineNumber,
+            top,
+            reservation,
           });
         }
-        previousLineWasFresh = fresh;
+        previousLine = line;
       }
       pages.push(page);
     }
@@ -1247,19 +1249,21 @@ export class LayoutService {
           ? margins.contentRight - prepared.gutter + markerGap
           : margins.contentLeft + prepared.gutter - markerGap;
         for (const candidate of prepared.lines) {
-          const line = this.positionContentLine(
+          const previousBodyLine = body.lines.at(-1) ?? null;
+          const { line } = this.positionContentLine(
             candidate,
             setup,
             bodyMargins,
             top,
             physicalPage.physicalPageNumber,
             body.lines.length + 1,
-            body.lines.at(-1) ?? null,
+            previousBodyLine,
             prepared.content.neumeLineHeight,
             prepared.content.lyricsBaseline,
             prepared.content.defaultLyricsFontCss,
             prepared.content.measureBarWidthMap,
           );
+          this.transferLineStartBar(previousBodyLine, line);
           body.lines.push(line);
           line.footnoteId = body.id;
           top += candidate.height;
@@ -1349,7 +1353,6 @@ export class LayoutService {
         paragraphs,
         elements: elements.slice(),
         placements,
-        pageCount: pages.length,
         musicalEntries,
       });
     }
@@ -1359,8 +1362,7 @@ export class LayoutService {
       totalParagraphs: paragraphs.length,
       postprocessedPages: postprocessPages.length,
       boundaryParagraphs: edit?.boundaryParagraphs ?? 0,
-      movedLines,
-      shiftedLines: 0,
+      shiftedLines,
       duration: performance.now() - start,
     });
     return pages;
@@ -1476,7 +1478,10 @@ export class LayoutService {
     lyricsBaseline: number,
     defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
-  ): Line {
+    // Re-place a line positioned by an earlier pass: write only its placement
+    // and repeat the one-time line-start reservation's X offset.
+    replacedReservation: number | null = null,
+  ): { line: Line; reservation: number } {
     const { paragraph: completedParagraph, paragraphLineIndex } = candidate;
     const {
       paragraph,
@@ -1488,6 +1493,7 @@ export class LayoutService {
       dropCapContinuationLines,
     } = completedParagraph;
     const currentLine = new Line();
+    let reservation = replacedReservation ?? 0;
     currentLine.adjustmentRatio = ratios[paragraphLineIndex]!;
     currentLine.diagnostics = diagnostics?.[paragraphLineIndex] ?? null;
     currentLine.paragraphEnd = paragraphLineIndex === lineHeights.length - 1;
@@ -1587,22 +1593,14 @@ export class LayoutService {
         lyricsBaseline,
       );
 
-      // Measure bar transfer logic between lines
-      if (isFirstElementOnLine) {
-        const previousElement = prevLine
-          ? prevLine.elements[prevLine.elements.length - 1]
-          : null;
+      // A left bar on the first element moves to the previous line in
+      // transferLineStartBar.
+      if (isFirstElementOnLine && replacedReservation !== null) {
+        element.x -= replacedReservation;
+      } else if (isFirstElementOnLine) {
+        const previousElement = prevLine?.elements.at(-1);
 
-        if (previousElement?.elementType === ElementType.Note) {
-          // If the new line starts with a left measure, apply it to the
-          // right of the previous line
-          const previousNoteElement = previousElement as NoteElement;
-          const transferredMeasureBar =
-            this.getMeasureBarTransferredFromLineStart(element);
-          if (transferredMeasureBar) {
-            previousNoteElement.computedMeasureBarRight = transferredMeasureBar;
-          }
-        } else if (
+        if (
           element.elementType === ElementType.Note &&
           previousElement?.elementType === ElementType.Martyria &&
           paragraphLineIndex > 0
@@ -1641,6 +1639,7 @@ export class LayoutService {
               noteElement.neumeWidth += reservedWidth;
               noteElement.lyricsHorizontalOffset += reservedWidth;
               element.x -= reservedWidth;
+              reservation = reservedWidth;
             }
           }
         }
@@ -1712,7 +1711,20 @@ export class LayoutService {
         }
       }
     }
-    return currentLine;
+    return { line: currentLine, reservation };
+  }
+
+  // If a line starts with a left bar, draw it at the end of the previous line.
+  private static transferLineStartBar(previousLine: Line | null, line: Line) {
+    const last = previousLine?.elements.at(-1);
+    if (last?.elementType === ElementType.Note) {
+      const bar = this.getMeasureBarTransferredFromLineStart(
+        line.elements[0] ?? null,
+      );
+      if (bar !== null) {
+        (last as NoteElement).computedMeasureBarRight = bar;
+      }
+    }
   }
 
   // Build an independent content sequence before assigning it to physical pages.

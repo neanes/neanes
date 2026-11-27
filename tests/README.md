@@ -104,7 +104,9 @@ editor handlers used for note, pitch (fthora), lyric, melisma, ison, bar, break,
 martyria, mode key with ambitus, insertion, deletion, end-of-score entry, and
 history changes. The handlers are exposed to the runner only in oracle builds.
 Every edit must advance the content revision and run at least one synchronous
-oracle comparison. The summary shows which edit types ran and how often.
+oracle comparison. The summary shows which edit types ran and how often, the
+layout statuses, how many reused layouts added each number of boundary
+paragraphs, and the most reused lines re-placed by one layout.
 
 A failed sequence stops at its first error while the remaining score/seed pairs
 continue. The failure directory contains a copy of the input and a JSON trace
@@ -196,7 +198,7 @@ The table flags median or p95 increases of at least 15% and at least 0.5 ms
 for layout or 2 ms for the editor update. Investigate repeatable increases at
 each score size. Reuse share comes from the editor's layout diagnostics, which
 also include the number of paragraphs prepared (including discarded attempts),
-reused lines that would have moved, and layout duration. Use `--only` with a
+reused lines re-placed after moving, and layout duration. Use `--only` with a
 score name from the table for a focused rerun.
 
 Rebuild the candidate with the parity capture plugin and run the separate
@@ -246,7 +248,13 @@ node tests/integration/layout/profile-edits.mjs /path/to/score.byz /tmp/layout.c
 Run without the CPU profile path when measuring wall-clock timings.
 
 The same profiling build supports the line-break and text-box measurements.
-The lyric focus check also runs on an ordinary Electron build.
+The line-break run also reports each layout's status, prepared paragraphs,
+re-placed lines and the time spent positioning lines. The lyric focus check
+also runs on an ordinary Electron build. It commits a long lyric twice: once
+where later lines only move, and once where the next lyric's own line is
+replaced. Focus must move to the next lyric, or, in the replaced-line case,
+stay in the edited lyric (a known issue, reported as a warning), and typing
+must reach the focused lyric.
 
 ```sh
 node tests/integration/layout/profile-line-shifts.mjs /path/to/long-doc-with-melisma.byz

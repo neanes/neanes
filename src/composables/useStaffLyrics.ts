@@ -16,6 +16,7 @@ export function useStaffLyrics(
   delay: number,
   updateDisplayedLyrics: (note: NoteElement, lyrics: string) => void,
   save: () => void,
+  persistRecovery: (workspace: Workspace) => void,
 ) {
   const noteElementCommandFactory = new CommandFactory<NoteElement>(
     createNoteUpdateCommand,
@@ -35,6 +36,9 @@ export function useStaffLyrics(
   function updateStaffLyrics(staffLyrics: string) {
     const workspace = workspaceRef.value;
 
+    if (workspace.activeStaff.lyrics.text === staffLyrics) {
+      return;
+    }
     workspace.updateStaffLyrics(staffLyrics, workspace.activeStaff);
     scheduleLyricsAssignment(workspace);
   }
@@ -44,7 +48,7 @@ export function useStaffLyrics(
     const staff = workspace.activeStaff;
     const timer = window.setTimeout(() => {
       pendingLyricsAssignmentTimers.delete(workspace.id);
-      assignLyrics(workspace, staff);
+      finishLyricsAssignment(workspace, staff);
     }, delay);
     pendingLyricsAssignmentTimers.set(workspace.id, { timer, staff });
   }
@@ -55,7 +59,19 @@ export function useStaffLyrics(
       return;
     }
     cancelLyricsAssignment(workspace);
-    assignLyrics(workspace, pending.staff);
+    finishLyricsAssignment(workspace, pending.staff);
+  }
+
+  function finishLyricsAssignment(workspace: Workspace, staff: Staff) {
+    if (
+      assignLyrics(workspace, staff, false) &&
+      workspace === workspaceRef.value
+    ) {
+      save();
+    } else {
+      // Staff text can change without changing any rendered syllables.
+      persistRecovery(workspace);
+    }
   }
 
   function cancelLyricsAssignment(workspace: Workspace) {
@@ -83,7 +99,7 @@ export function useStaffLyrics(
     if (
       !workspaceScore.staves.some((current) => toRaw(current) === toRaw(staff))
     ) {
-      return;
+      return false;
     }
     const workspaceElements = staff.elements;
     const workspaceIsSelected = workspace === workspaceRef.value;
@@ -119,17 +135,20 @@ export function useStaffLyrics(
     );
 
     if (updateCommands.length === 0) {
-      return;
+      return false;
     }
 
+    const revision = workspace.contentRevision;
     workspace.commandService.executeAsBatch(
       updateCommands,
       staff.lyrics.locked,
     );
 
-    if (workspaceIsSelected && saveAfterAssignment) {
+    const changed = workspace.contentRevision !== revision;
+    if (changed && workspaceIsSelected && saveAfterAssignment) {
       save();
     }
+    return changed;
   }
 
   function extractStaffLyrics(

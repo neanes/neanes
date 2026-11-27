@@ -241,6 +241,67 @@ async function run() {
     console.log(
       'PASS: saved score reopens in a fresh workspace with clean content',
     );
+
+    await evaluate(`window.__saveSmoke.updateLyricsLocked(true)`);
+    assert.equal((await save()).success, true);
+    const reopenedId = await evaluate(
+      `window.__saveSmoke.selectedWorkspace.id`,
+    );
+    const reopenedRecovery = path.join(
+      profile,
+      'recovery',
+      `${reopenedId}.json`,
+    );
+    const beforeOverflowLyrics = await revision();
+    await evaluate(`
+      const editor = window.__saveSmoke;
+      editor.updateStaffLyrics('Unassigned lyric');
+      editor.onFileMenuUndo();
+    `);
+    assert.equal(await revision(), beforeOverflowLyrics + 1);
+    await waitFor(
+      'recovery of unassigned lyrics after unavailable undo',
+      async () => {
+        const data = await readFile(reopenedRecovery, 'utf8').catch((error) => {
+          if (error.code === 'ENOENT') {
+            return null;
+          }
+          throw error;
+        });
+        return (
+          data !== null &&
+          JSON.parse(JSON.parse(data).envelope.score).staff.lyrics.text ===
+            'Unassigned lyric'
+        );
+      },
+    );
+    console.log(
+      'PASS: unassigned locked lyrics reach recovery without undo history',
+    );
+
+    await evaluate(`
+      const editor = window.__saveSmoke;
+      editor.addQuantitativeNeume('Ison');
+    `);
+    await waitFor('new note mounted', () =>
+      evaluate(
+        `Boolean(document.getElementById('element-' + window.__saveSmoke.selectedElement.id))`,
+      ),
+    );
+    const sameNote = await evaluate(`
+      (async () => {
+        const editor = window.__saveSmoke;
+        const note = editor.selectedElement;
+        const id = 'element-' + note.id;
+        const renderedNote = document.getElementById(id);
+        editor.updateNoteAndSave(note, { acceptsLyrics: note.acceptsLyrics });
+        await new Promise(requestAnimationFrame);
+        return document.getElementById(id) === renderedNote;
+      })()
+    `);
+    assert.equal(sameNote, true);
+    console.log('PASS: a no-op note update keeps the rendered note mounted');
+
     await writeFile(
       path.join(output, 'editor.png'),
       (await window.webContents.capturePage()).toPNG(),

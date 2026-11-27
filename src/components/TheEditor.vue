@@ -889,6 +889,7 @@ const {
   keydownThrottleIntervalMs,
   (note, lyrics) => getLyricsComponentForElement(note)?.setInnerText(lyrics),
   save,
+  persistEditorRecovery,
 );
 const {
   activeStaff,
@@ -3524,6 +3525,10 @@ function addQuantitativeNeume(
             updateNote(selectedElement.value as NoteElement, {
               secondaryGorgonNeume,
             });
+          } else {
+            // Auto already advanced the selection. With no note edit,
+            // save() would run a full layout because no change was recorded.
+            return;
           }
         } else {
           selectedElement.value = switchToSyllable(
@@ -3564,6 +3569,9 @@ function addQuantitativeNeume(
           updateNote(selectedElement.value as NoteElement, {
             secondaryGorgonNeume,
           });
+        } else {
+          // Both fields match. Falling through to save() would run full layout.
+          return;
         }
       } else if (
         navigableElements.includes(selectedElement.value.elementType)
@@ -3612,28 +3620,19 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
     element.auto = false;
   }
 
-  switch (entryMode.value) {
-    case EntryMode.Auto:
-      moveRight();
+  if (entryMode.value === EntryMode.Auto) {
+    moveRight();
+  }
 
-      if (selectedElement.value == null) {
-        insertScoreElement(element);
-      } else {
-        if (selectedElement.value.elementType != ElementType.Martyria) {
-          selectedElement.value = switchToMartyria(selectedElement.value);
-        }
-      }
-      break;
-    case EntryMode.Insert:
-      insertScoreElement(element);
-      break;
-    case EntryMode.Edit:
-      if (selectedElement.value == null) {
-        insertScoreElement(element);
-      } else if (selectedElement.value.elementType != ElementType.Martyria) {
-        selectedElement.value = switchToMartyria(selectedElement.value);
-      }
-      break;
+  const target = selectedElement.value;
+  if (entryMode.value === EntryMode.Insert || target == null) {
+    insertScoreElement(element);
+  } else if (target.elementType === ElementType.Martyria) {
+    // Landing on an existing martyria leaves the score unchanged.
+    // Skip save() to avoid a full layout with no recorded edit.
+    return;
+  } else {
+    selectedElement.value = switchToMartyria(target, element);
   }
 
   save();
@@ -3650,40 +3649,22 @@ function addTempo(neume: TempoSign) {
     editorPreferences.value.getDefaultTempo(neume) ??
     TempoElement.getDefaultBpm(neume);
 
-  switch (entryMode.value) {
-    case EntryMode.Auto:
-      moveRight();
+  if (entryMode.value === EntryMode.Auto) {
+    moveRight();
+  }
 
-      if (selectedElement.value == null) {
-        insertScoreElement(element);
-      } else {
-        if (selectedElement.value.elementType === ElementType.Tempo) {
-          if ((selectedElement.value as TempoElement).neume !== neume) {
-            updateTempo(selectedElement.value as TempoElement, {
-              neume,
-            });
-          }
-        } else {
-          selectedElement.value = switchToTempo(selectedElement.value, element);
-        }
-      }
-      break;
-    case EntryMode.Insert:
-      insertScoreElement(element);
-      break;
-    case EntryMode.Edit:
-      if (selectedElement.value == null) {
-        insertScoreElement(element);
-      } else if (selectedElement.value.elementType === ElementType.Tempo) {
-        if ((selectedElement.value as TempoElement).neume !== neume) {
-          updateTempo(selectedElement.value as TempoElement, {
-            neume,
-          });
-        }
-      } else {
-        selectedElement.value = switchToTempo(selectedElement.value, element);
-      }
-      break;
+  const target = selectedElement.value;
+  if (entryMode.value === EntryMode.Insert || target == null) {
+    insertScoreElement(element);
+  } else if (target instanceof TempoElement) {
+    if (target.neume !== neume) {
+      updateTempo(target, { neume });
+    }
+    // updateTempo() already lays out real changes. The common save() would
+    // run a full layout after either a completed update or an identical sign.
+    return;
+  } else {
+    selectedElement.value = switchToTempo(target, element);
   }
 
   save();
@@ -3889,11 +3870,13 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
   }
 }
 
-function switchToMartyria(element: ScoreElement) {
-  const index = activeElements.value.indexOf(element);
+function switchToMartyria(
+  oldElement: ScoreElement,
+  newElement: MartyriaElement,
+) {
+  const index = activeElements.value.indexOf(oldElement);
 
-  const newElement = new MartyriaElement();
-  newElement.copyBreakStateFrom(element);
+  newElement.copyBreakStateFrom(oldElement);
 
   replaceScoreElement(newElement, index);
 
@@ -4814,11 +4797,6 @@ function onKeydownNeume(event: KeyboardEvent) {
 
       if (
         keyboardModifier.value == null &&
-        neumeKeyboard.isMartyria(event.code)
-      ) {
-        throttled.addAutoMartyria();
-      } else if (
-        keyboardModifier.value == null &&
         neumeKeyboard.isKlasma(event.code)
       ) {
         throttled.setKlasma(noteElement);
@@ -5675,6 +5653,8 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     currentIndex++;
   }
 
+  const workspace = selectedWorkspace.value;
+  const revision = workspace.contentRevision;
   if (commands.length > 0) {
     runWithResizableParagraphStyleRecalc(() => {
       if (commands.length > 1) {
@@ -5683,6 +5663,9 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
         commandService.value.execute(commands[0]);
       }
     });
+  }
+  const changed = workspace.contentRevision !== revision;
+  if (changed) {
     refreshStaffLyrics();
   }
 
@@ -5691,7 +5674,11 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
   }
   scrollElementIntoView(selectedElement.value);
 
-  save();
+  // A paste can move the selection without editing the score. Only request
+  // layout when a command changed the content.
+  if (changed) {
+    save();
+  }
 }
 
 function onPasteScoreElementsAuto(includeLyrics: boolean) {
@@ -6178,7 +6165,9 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
   );
   profile('editor.liveLayoutRefresh', () => liveLayout.refresh(workspace));
 
-  profile('editor.persistLayoutRecovery', persistLayoutRecovery);
+  profile('editor.persistLayoutRecovery', () =>
+    persistEditorRecovery(workspace),
+  );
   endLayout();
   profileRender(processedPages.length);
 }
@@ -6261,7 +6250,7 @@ function publishLayout(
   }
 }
 
-function persistLayoutRecovery() {
+function persistEditorRecovery(workspace: Workspace) {
   // Persist a background recovery snapshot. This deliberately serializes
   // WITHOUT flushing the live rich-text editors: `save()` runs frequently --
   // often via the 250 ms-debounced `saveDebounced` (e.g. on every height change
@@ -6273,22 +6262,22 @@ function persistLayoutRecovery() {
   // prepareWorkspaceForSerialization) always flushes first.
   if (isBrowser.value) {
     const workspaceLocalStorage = {
-      id: selectedWorkspace.value.id,
-      score: JSON.stringify(SaveService.SaveScoreToJson(score.value)),
-      filePath: currentFilePath.value,
-      tempFileName: selectedWorkspace.value.tempFileName,
-      hasUnsavedChanges: hasUnsavedChanges.value,
+      id: workspace.id,
+      score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+      filePath: workspace.filePath,
+      tempFileName: workspace.tempFileName,
+      hasUnsavedChanges: workspace.hasUnsavedChanges,
     } as WorkspaceLocalStorage;
 
     localStorage.setItem(
-      `workspace-${selectedWorkspace.value.id}`,
+      `workspace-${workspace.id}`,
       JSON.stringify(workspaceLocalStorage),
     );
   } else {
-    if (selectedWorkspace.value.hasUnsavedChanges) {
-      scheduleRecoverySnapshot(selectedWorkspace.value);
-    } else if (!selectedWorkspace.value.isRecovered) {
-      void discardRecoverySnapshot(selectedWorkspace.value.id);
+    if (workspace.hasUnsavedChanges) {
+      scheduleRecoverySnapshot(workspace);
+    } else if (!workspace.isRecovered) {
+      void discardRecoverySnapshot(workspace.id);
     }
   }
 }
@@ -7152,17 +7141,26 @@ function updateNoteAndSave(
   element: NoteElement,
   newValues: Partial<NoteElement>,
 ) {
-  updateNote(element, newValues);
-  save();
+  if (updateNote(element, newValues)) {
+    save();
+  }
 }
 
 function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
+  const workspace = selectedWorkspace.value;
+  const revision = workspace.contentRevision;
   commandService.value.execute(
     noteElementCommandFactory.create('update-properties', {
       target: element,
       newValues: newValues,
     }),
   );
+
+  // History records no edit when the submitted values leave the note unchanged.
+  // Return false so updateNoteAndSave() skips a full layout.
+  if (workspace.contentRevision === revision) {
+    return false;
+  }
 
   // Force the element to update so that the neume toolbar updates
   element.keyHelper++;
@@ -7175,6 +7173,7 @@ function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
   ) {
     refreshStaffLyrics();
   }
+  return true;
 }
 
 function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
@@ -9828,6 +9827,11 @@ function trailingCaretPageNumber() {
 function replayHistory(action: 'undo' | 'redo') {
   // Commit debounced lyrics before replay so they cannot overwrite restored notes.
   flushLyricsAssignment(selectedWorkspace.value);
+  // Check after flushing because it can affect history. An unavailable action
+  // has no edit to lay out.
+  if (!(action === 'undo' ? canUndo.value : canRedo.value)) {
+    return;
+  }
   const previousTrailingPage = trailingCaretPageNumber();
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
@@ -10046,6 +10050,8 @@ function onFileMenuPasteFormat() {
 
     commands.push(...targetCommands);
 
+    const workspace = selectedWorkspace.value;
+    const revision = workspace.contentRevision;
     runWithResizableParagraphStyleRecalc(() => {
       if (commands.length > 1) {
         commandService.value.executeAsBatch(commands);
@@ -10053,7 +10059,11 @@ function onFileMenuPasteFormat() {
         commandService.value.execute(commands[0]);
       }
     });
-    save();
+    // A nonempty batch can leave the score unchanged, such as when pasting
+    // the target's current format. Calling save() then would run full layout.
+    if (workspace.contentRevision !== revision) {
+      save();
+    }
   }
 }
 

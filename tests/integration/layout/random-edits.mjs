@@ -15,6 +15,7 @@ const { values } = parseArgs({
   options: {
     help: { type: 'boolean' },
     'skip-build': { type: 'boolean' },
+    incremental: { type: 'boolean' },
     facing: { type: 'boolean' },
     seed: { type: 'string', multiple: true },
     steps: { type: 'string' },
@@ -25,7 +26,7 @@ const { values } = parseArgs({
 
 if (values.help) {
   console.log(
-    'Usage: node tests/integration/layout/random-edits.mjs [--skip-build] [--facing]\n' +
+    'Usage: node tests/integration/layout/random-edits.mjs [--skip-build] [--incremental] [--facing]\n' +
       '       [--seed <uint32>] [--steps <count>] [--score <file.byz|file.byzx>]\n' +
       '       or [--replay <failure.json>]. Repeat --seed or --score for a matrix.',
   );
@@ -85,6 +86,7 @@ if (!values['skip-build']) {
     env: {
       ...process.env,
       VITE_LAYOUT_VERIFY_ENABLED: 'true',
+      VITE_LAYOUT_FORCE_FULL: String(!values.incremental),
     },
   });
   if (build.error) {
@@ -248,6 +250,8 @@ async function applyEdit(editor, { kind, target, value }) {
   const workspace = editor.selectedWorkspace.value;
   const oracle = window.__neanesLayoutVerify;
   const revision = workspace.contentRevision;
+  const layouts = editor.layoutDiagnostics.results;
+  layouts.length = 0;
   const describe = (element) =>
     element && {
       id: element.id,
@@ -328,6 +332,7 @@ async function applyEdit(editor, { kind, target, value }) {
   return {
     changed: workspace.contentRevision > revision,
     checks: state.checks - oracle.checks,
+    layouts: [...layouts],
     difference: state.firstDifference,
     before,
     after: describe(editor.selectedElement.value),
@@ -383,12 +388,18 @@ async function runSequence(fixture, seed) {
         const status = await evaluate(`({
         file: window._editor?.selectedWorkspace.value.filePath,
         hook: !!window._editor?.layoutTest,
+        forceFull: window._editor?.layoutDiagnostics?.forceFull,
         state: window.__neanesLayoutVerify,
       })`);
         assert.equal(status.file, file, 'Awaiting fixture load');
         assert.ok(
           status.hook && status.state?.checks > 0,
           'Build with VITE_LAYOUT_VERIFY_ENABLED=true',
+        );
+        assert.equal(
+          status.forceFull,
+          !values.incremental,
+          'Build with VITE_LAYOUT_FORCE_FULL=true for full layout or VITE_LAYOUT_FORCE_FULL=false for --incremental',
         );
         return status.state;
       },
@@ -403,6 +414,7 @@ async function runSequence(fixture, seed) {
     let lastIndex = 0;
     let checks = 0;
     const kinds = {};
+    const statuses = {};
     const count = replay?.edits.length ?? steps;
     for (let i = 0; i < count; i++) {
       result = null;
@@ -422,6 +434,10 @@ async function runSequence(fixture, seed) {
       );
       assert.ok(result.changed, 'Edit did not change score content');
       assert.ok(result.checks > 0, 'Edit did not run a verified layout');
+      assert.ok(result.layouts.length > 0, 'Missing layout diagnostics');
+      for (const { status } of result.layouts) {
+        statuses[status] = (statuses[status] ?? 0) + 1;
+      }
       checks += result.checks;
       kinds[edit.kind] = (kinds[edit.kind] ?? 0) + 1;
       lastIndex = result.after?.index ?? result.before?.index ?? lastIndex;
@@ -432,7 +448,7 @@ async function runSequence(fixture, seed) {
       }
     }
     console.log(
-      `PASS ${fixture.name} seed=${seed}: ${count} edits, ${checks} checks ${JSON.stringify(kinds)}`,
+      `PASS ${fixture.name} seed=${seed}: ${count} edits, ${checks} checks ${JSON.stringify(kinds)}; layouts ${JSON.stringify(statuses)}`,
     );
     return true;
   } catch (error) {
@@ -458,7 +474,7 @@ async function runSequence(fixture, seed) {
         ) + '\n',
       );
       console.error(
-        `Replay: node tests/integration/layout/random-edits.mjs --skip-build --replay "${report}"`,
+        `Replay: node tests/integration/layout/random-edits.mjs --skip-build ${values.incremental ? '--incremental ' : ''}--replay "${report}"`,
       );
     }
     return false;

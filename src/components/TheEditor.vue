@@ -264,6 +264,7 @@ import {
   LatexFontFaceResolutionError,
 } from '@/services/integration/LatexExporter';
 import {
+  type LayoutReuseResult,
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
@@ -536,6 +537,12 @@ const browserPrintWarning = useTemplateRef<HTMLElement>('browserPrintWarning');
 const canUndo = ref(false);
 const canRedo = ref(false);
 let unsubscribeHistory: (() => void) | undefined;
+let unsubscribeLayoutChanges: (() => void) | undefined;
+let layoutChanges: Set<object> | null = null;
+const forceFullLayout = import.meta.env.VITE_LAYOUT_FORCE_FULL === 'true';
+const reportLayoutReuse =
+  import.meta.env.DEV || layoutProfilingEnabled || layoutVerificationEnabled;
+const layoutResults: LayoutReuseResult[] = [];
 const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
   set: (value: string[]) => setAccordionState('developer', value),
@@ -1876,6 +1883,7 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 });
 
 function onLayoutFontsChanged() {
+  layoutChanges = null;
   liveLayout.clearMeasurements();
   invalidateLiveLayout();
   saveDebounced();
@@ -2029,6 +2037,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   unsubscribeHistory?.();
+  unsubscribeLayoutChanges?.();
 
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
@@ -2164,6 +2173,9 @@ async function initialize() {
     selectedElement,
     selectedWorkspace,
     workspaces,
+    ...(reportLayoutReuse && {
+      layoutDiagnostics: { results: layoutResults, forceFull: forceFullLayout },
+    }),
     ...(layoutProfilingEnabled && {
       layoutProfile: {
         setGorgon,
@@ -3712,8 +3724,19 @@ function onClickPrintScore() {
 
 function observeSelectedHistory() {
   unsubscribeHistory?.();
-  unsubscribeHistory =
-    selectedWorkspace.value.commandService.subscribe(publishHistoryState);
+  unsubscribeLayoutChanges?.();
+  layoutChanges = null;
+  const history = toRaw(selectedWorkspace.value).commandService;
+  unsubscribeHistory = history.subscribe(publishHistoryState);
+  unsubscribeLayoutChanges = history.subscribeChanges((affected) => {
+    if (affected === null) {
+      layoutChanges = null;
+    } else {
+      for (const object of affected) {
+        layoutChanges?.add(toRaw(object));
+      }
+    }
+  });
 }
 
 function publishHistoryState(state: HistoryState) {
@@ -6114,10 +6137,20 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
   // Always publish a layout immediately. Settlement only refines it.
   const workspace = toRaw(selectedWorkspace.value);
   const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
+  const options = layoutOptions();
   const finishVerification = layoutVerificationEnabled
-    ? beginLayoutVerification(workspace, layoutOptions())
+    ? beginLayoutVerification(workspace, options)
     : null;
-  const processedPages = LayoutService.processPages(workspace, layoutOptions());
+  const changes = layoutChanges;
+  layoutChanges = new Set();
+  const processedPages = LayoutService.processPages(workspace, {
+    ...options,
+    incremental: {
+      changes,
+      forceFull: forceFullLayout,
+      report: reportLayoutReuse ? recordLayoutResult : undefined,
+    },
+  });
   finishVerification?.(processedPages);
   profile('editor.publishLayout', () =>
     publishLayout(processedPages, null, lyricSelection),
@@ -6127,6 +6160,13 @@ function publishAndSettleLayout(preserveLyricDraft: boolean) {
   profile('editor.persistLayoutRecovery', persistLayoutRecovery);
   endLayout();
   profileRender(processedPages.length);
+}
+
+function recordLayoutResult(result: LayoutReuseResult) {
+  layoutResults.push(result);
+  if (layoutResults.length > 128) {
+    layoutResults.shift();
+  }
 }
 
 // Time Vue's patch of the published pages and the next painted frame.
@@ -7381,7 +7421,7 @@ function updateRichTextBox(
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
     element.height = newValues.height;
-    profileMeasuredHeightWrite(element);
+    recordMeasuredHeightChange(element);
     save();
     return;
   }
@@ -7471,7 +7511,8 @@ function flushPendingAnnotationEditor() {
   }
 }
 
-function profileMeasuredHeightWrite(element: ScoreElement) {
+function recordMeasuredHeightChange(element: ScoreElement) {
+  layoutChanges?.add(toRaw(element));
   if (layoutProfilingEnabled) {
     performance.mark('editor.textBoxHeightWrite', { detail: element.id });
   }
@@ -7484,7 +7525,7 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
-  profileMeasuredHeightWrite(element);
+  recordMeasuredHeightChange(element);
   richTextBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -7499,7 +7540,7 @@ function updateTextBox(
       return;
     }
     element.height = newValues.height;
-    profileMeasuredHeightWrite(element);
+    recordMeasuredHeightChange(element);
     save();
     return;
   }
@@ -7527,7 +7568,7 @@ function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
-  profileMeasuredHeightWrite(element);
+  recordMeasuredHeightChange(element);
   textBoxCalculationCount.value++;
   saveDebounced();
 }

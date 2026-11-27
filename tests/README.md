@@ -80,13 +80,16 @@ flag on, a difference is also logged in the renderer with `console.error`.
 
 Run `random-edits.mjs` from the repository root. It builds with the same layout
 oracle and launches a disposable Electron editor per score and seed. On macOS,
-run the Electron command outside the agent command sandbox.
+run the Electron command outside the agent command sandbox. Pass
+`--incremental` to exercise paragraph reuse. Without it the harness builds
+with `VITE_LAYOUT_FORCE_FULL=true` for a full-layout comparison. When reusing
+a build with `--skip-build`, the build's force-full setting must match.
 
 ```sh
-node tests/integration/layout/random-edits.mjs
-node tests/integration/layout/random-edits.mjs --skip-build --steps 1000 --seed 1 --seed 20261126
-node tests/integration/layout/random-edits.mjs --skip-build --facing --steps 1000 --seed 1 --seed 20261126
-node tests/integration/layout/random-edits.mjs --skip-build --score /path/to/book.byz --steps 20
+node tests/integration/layout/random-edits.mjs --incremental
+node tests/integration/layout/random-edits.mjs --skip-build --incremental --steps 1000 --seed 1 --seed 20261126
+node tests/integration/layout/random-edits.mjs --skip-build --incremental --facing --steps 1000 --seed 1 --seed 20261126
+node tests/integration/layout/random-edits.mjs --skip-build --incremental --score /path/to/book.byz --steps 20
 ```
 
 The defaults are 200 edits with seed 1 on each of the bundled LTR and Melkite RTL
@@ -108,7 +111,7 @@ edit and element locations when available. Replay that exact sequence using the
 same build and fonts. The runner prints a ready-to-run command.
 
 ```sh
-node tests/integration/layout/random-edits.mjs --skip-build --replay /path/to/failure.json
+node tests/integration/layout/random-edits.mjs --skip-build --incremental --replay /path/to/failure.json
 ```
 
 The oracle compares the synchronous layout, including placements and persisted
@@ -189,8 +192,10 @@ time starts at the edit command and ends after the Vue patch. Reports retain
 the sample data and staff indexes so comparisons use the same edit targets.
 The table flags median or p95 increases of at least 15% and at least 0.5 ms
 for layout or 2 ms for the editor update. Investigate repeatable increases at
-each score size. Reuse share is available when the layout span reports its
-`detail.status`. Use `--only` with a score name from the table for a focused rerun.
+each score size. Reuse share comes from the editor's layout diagnostics, which
+also include the number of paragraphs prepared (including discarded attempts),
+reused lines that would have moved, and layout duration. Use `--only` with a
+score name from the table for a focused rerun.
 
 Rebuild the candidate with the parity capture plugin and run the separate
 layout comparison against pinned master and the approved-fixes reference.

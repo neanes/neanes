@@ -142,12 +142,14 @@ describe('change subscriptions', () => {
       ]),
     );
     history.undo();
+    history.redo();
 
     expect(changes).toEqual([
       [target],
       [collection, element],
       [collection, element, expect.anything(), element, target],
-      [collection, element, expect.anything(), element],
+      [collection, element, expect.anything(), element, target],
+      [collection, element, expect.anything(), element, target],
     ]);
   });
 

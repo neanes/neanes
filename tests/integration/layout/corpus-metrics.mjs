@@ -97,6 +97,10 @@ async function edit(editor, { kind, index, lyric }) {
   ];
   const before = note[field];
   const profile = editor.layoutProfile;
+  const layouts = editor.layoutDiagnostics?.results;
+  if (layouts) {
+    layouts.length = 0;
+  }
   const start = performance.now();
   switch (kind) {
     case 'gorgon':
@@ -123,7 +127,7 @@ async function edit(editor, { kind, index, lyric }) {
     value: note[field],
     layoutMs: spans.reduce((sum, span) => sum + span.duration, 0),
     updateMs,
-    statuses: spans.map((span) => span.detail?.status ?? null),
+    statuses: layouts?.map(({ status }) => status) ?? spans.map(() => null),
   };
 }
 

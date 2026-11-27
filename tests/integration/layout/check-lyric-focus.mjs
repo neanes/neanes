@@ -1,6 +1,8 @@
-// Check focus and caret after a lyric edit re-breaks the first paragraph:
-// once where later lines only move, and once where the next lyric's own line
-// is replaced by a line that starts with another element.
+// Check focus and caret after a lyric edit re-breaks a paragraph: once where
+// later lines only move, once where the next lyric's own line is replaced by
+// a line that starts with another element, and once where the edited and next
+// notes stay on one line but that line's wrapper, and so the edited lyric's
+// control, is replaced.
 import assert from 'node:assert/strict';
 import { copyFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -37,41 +39,27 @@ try {
       ),
     );
 
-  // `remount`: the next note ends its line, so widening the target's lyric
-  // carries both notes to a line that starts with the target.
-  for (const remount of [false, true]) {
-    const target = await evaluate(`(() => {
-      const elements = window._editor.elements.value;
-      const index = elements.findIndex(
-        (item, i) =>
-          item.elementType === 'Note' &&
-          elements[i + 1]?.elementType === 'Note' &&
-          item.page === 1 &&
-          elements[i - 1]?.line === item.line &&
-          elements[i + 1].line === item.line &&
-          (${remount}
-            ? elements[i + 2]?.line !== item.line
-            : elements[i + 2]?.line === item.line),
-      );
-      return {
-        index,
-        id: elements[index]?.id,
-        laterPlacement: [elements.at(-1).page, elements.at(-1).line, elements.at(-1).y],
-      };
-    })()`);
-    assert.ok(target.index >= 0, `No target note (remount: ${remount})`);
-    await eventually(async () => {
+  // Focus the note's lyric with the caret at its end, and record the lyric
+  // control and every mounted line wrapper, keyed by the line's first element.
+  const focusLyric = (id) =>
+    eventually(async () => {
       const focused = await evaluate(`(() => {
-        const note = document.getElementById('element-${target.id}');
+        const note = document.getElementById('element-${id}');
         const lyric = note?.querySelector('.lyrics[contenteditable="plaintext-only"]');
         if (!lyric) {
           note?.scrollIntoView({ block: 'center' });
           return false;
         }
-        // Mark every mounted line wrapper to tell kept wrappers from new ones.
-        for (const line of document.querySelectorAll('.line')) {
-          line.dataset.focusProbe = '1';
+        const elements = window._editor.elements.value;
+        const lines = new Map();
+        for (const wrapper of document.querySelectorAll('.line')) {
+          const id = wrapper.querySelector('.element-box')?.id.slice('element-'.length);
+          const first = elements.find((item) => String(item.id) === id);
+          if (first !== undefined) {
+            lines.set(id, { wrapper, page: first.page, y: first.y });
+          }
         }
+        window.__lyricFocusProbe = { lyric, lines };
         lyric.focus();
         const range = document.createRange();
         range.selectNodeContents(lyric);
@@ -82,48 +70,122 @@ try {
       })()`);
       assert.ok(focused, 'Lyric did not take focus');
     });
-    const text = 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwww';
-    // Space commits the lyric and moves to the next note's lyric. Lyric
-    // navigation is throttled, so leave time after the previous case.
+
+  const state = (index) =>
+    evaluate(`(() => {
+      const elements = window._editor.elements.value;
+      const probe = window.__lyricFocusProbe;
+      const firstOnLine = (item) =>
+        elements.find((x) => x.page === item.page && x.line === item.line).id;
+      const wrapperOf = (id) =>
+        document.getElementById('element-' + id)?.closest('.line') ?? null;
+      const target = elements[${index}];
+      const next = elements[${index + 1}];
+      // Recorded lines that still start with the same element on the same
+      // page, but moved within it.
+      const movedLines = [...probe.lines].flatMap(([id, line]) => {
+        const first = elements.find((item) => String(item.id) === id);
+        return first !== undefined &&
+          firstOnLine(first) === first.id &&
+          first.page === line.page &&
+          first.y !== line.y
+          ? [{ id, kept: wrapperOf(id) === line.wrapper }]
+          : [];
+      });
+      return {
+        laterPlacement: [elements.at(-1).page, elements.at(-1).line, elements.at(-1).y],
+        lyrics: target.lyrics,
+        placement: [target.page, target.line],
+        sameLine: target.page === next.page && target.line === next.line,
+        lyricReplaced: !probe.lyric.isConnected,
+        next: {
+          id: next.id,
+          lyrics: next.lyrics,
+          firstOnLine: firstOnLine(next),
+          lineKept: [...probe.lines.values()].some(
+            (line) => line.wrapper === wrapperOf(next.id),
+          ),
+        },
+        movedLines: movedLines.length,
+        keptMovedLines: movedLines.filter((line) => line.kept).length,
+        focused: document.activeElement?.closest('.element-box')?.id ?? null,
+      };
+    })()`);
+
+  // Space commits the lyric and moves to the next note's lyric. Lyric
+  // navigation is throttled, so leave time after the previous edit.
+  const commit = async (target, text) => {
+    await focusLyric(target.id);
     await new Promise((resolve) => setTimeout(resolve, 500));
     await send('Input.insertText', { text });
     await press('Space', ' ', 32);
-    const state = () =>
-      evaluate(`(() => {
-        const elements = window._editor.elements.value;
-        const active = document.activeElement;
-        const lines = [...document.querySelectorAll('.line')];
-        const next = elements[${target.index + 1}];
-        return {
-          laterPlacement: [elements.at(-1).page, elements.at(-1).line, elements.at(-1).y],
-          lyrics: elements[${target.index}].lyrics,
-          next: {
-            id: next.id,
-            lyrics: next.lyrics,
-            firstOnLine: elements.find(
-              (item) => item.page === next.page && item.line === next.line,
-            ).id,
-            lineKept:
-              document.getElementById('element-' + next.id)?.closest('.line')
-                ?.dataset.focusProbe === '1',
-          },
-          keptLines: lines.filter((line) => line.dataset.focusProbe === '1').length,
-          newLines: lines.filter((line) => line.dataset.focusProbe !== '1').length,
-          focused: active?.closest('.element-box')?.id ?? null,
-        };
-      })()`);
-    const committed = await eventually(async () => {
-      const result = await state();
+    return eventually(async () => {
+      const result = await state(target.index);
       assert.ok(result.lyrics.endsWith(text), 'Lyric was not committed');
       return result;
     });
+  };
+
+  // Focus must have moved to the next lyric, and typing must land there.
+  const checkAdvanced = async (target, committed) => {
+    assert.equal(
+      committed.focused,
+      `element-${committed.next.id}`,
+      'Focus did not move to the next lyric',
+    );
+    await send('Input.insertText', { text: 'abc' });
+    await press('Space', ' ', 32);
+    const typed = await eventually(async () => {
+      const result = await state(target.index);
+      assert.ok(result.next.lyrics.endsWith('abc'), 'Next lyric not typed');
+      return result;
+    });
+    console.log(JSON.stringify(typed.next));
+  };
+
+  const findNote = (predicate) =>
+    evaluate(`(() => {
+      const elements = window._editor.elements.value;
+      const index = elements.findIndex((item, i) =>
+        item.elementType === 'Note' &&
+        elements[i + 1]?.elementType === 'Note' &&
+        (${predicate})(item, i, elements),
+      );
+      return {
+        index,
+        id: elements[index]?.id,
+        placement: [elements[index]?.page, elements[index]?.line],
+        laterPlacement: [elements.at(-1).page, elements.at(-1).line, elements.at(-1).y],
+      };
+    })()`);
+
+  // `remount`: the next note ends its line, so widening the target's lyric
+  // carries both notes to a line that starts with the target.
+  for (const remount of [false, true]) {
+    const target = await findNote(`(item, i, elements) =>
+      item.page === 1 &&
+      elements[i - 1]?.line === item.line &&
+      elements[i + 1].line === item.line &&
+      (${remount}
+        ? elements[i + 2]?.line !== item.line
+        : elements[i + 2]?.line === item.line)`);
+    assert.ok(target.index >= 0, `No target note (remount: ${remount})`);
+    const text = 'wwwwwwwwwwwwwwwwwwwwwwwwwwwwww';
+    const committed = await commit(target, text);
     console.log(JSON.stringify({ remount, target, committed }));
     assert.notDeepEqual(
       committed.laterPlacement,
       target.laterPlacement,
       'The edit did not move later notation',
     );
-    assert.ok(committed.keptLines > 0, 'No moved line kept its wrapper');
+    // Tie the movement to DOM identity: a line keyed by its first element
+    // keeps its wrapper, where a positional key would hand it another's.
+    assert.ok(committed.movedLines > 0, 'No line moved within its page');
+    assert.equal(
+      committed.keptMovedLines,
+      committed.movedLines,
+      'A line that moved within its page did not keep its wrapper',
+    );
     if (remount) {
       assert.equal(
         committed.next.firstOnLine,
@@ -136,32 +198,41 @@ try {
         "The next lyric's line was not replaced",
       );
     }
-    // Known issue, also at 22fac9a9 before lines were keyed by element:
-    // when the edited note wraps to a new line, focus stays in its lyric
-    // instead of moving on. Require that focus survives and typing lands.
-    const movedOn = committed.focused === `element-${committed.next.id}`;
-    if (remount && !movedOn) {
-      assert.equal(
-        committed.focused,
-        `element-${target.id}`,
-        'Focus left the edited and next lyrics',
-      );
-      console.log('WARN focus stayed on the edited lyric after it wrapped');
-    } else {
-      assert.ok(movedOn, 'Focus did not move to the next lyric');
-    }
-    await send('Input.insertText', { text: 'abc' });
-    await press('Space', ' ', 32);
-    const typed = await eventually(async () => {
-      const result = await state();
-      assert.ok(
-        (movedOn ? result.next.lyrics : result.lyrics).endsWith('abc'),
-        'Focused lyric not typed',
-      );
-      return result;
-    });
-    console.log(JSON.stringify(typed.next));
+    await checkAdvanced(target, committed);
   }
+
+  // Make short edits, away from the pages the cases above changed, until one
+  // replaces the edited lyric's control while the edited and next notes stay
+  // on their line, because reflow changed which element starts that line.
+  const tried = [];
+  let sameLine;
+  while (sameLine === undefined && tried.length < 40) {
+    const target = await findNote(`(item, i, elements) =>
+      !${JSON.stringify(tried)}.includes(item.id) &&
+      item.page >= 2 &&
+      item.page <= 3 &&
+      elements[i - 1]?.line === item.line &&
+      elements[i + 1].page === item.page &&
+      elements[i + 1].line === item.line`);
+    assert.ok(target.index >= 0, 'No candidate note for the same-line case');
+    tried.push(target.id);
+    const committed = await commit(target, 'ww');
+    if (
+      committed.sameLine &&
+      committed.lyricReplaced &&
+      committed.placement.join() === target.placement.join()
+    ) {
+      sameLine = { target, committed };
+      console.log(
+        JSON.stringify({ sameLine: true, tries: tried.length, ...sameLine }),
+      );
+      await checkAdvanced(target, committed);
+    }
+  }
+  assert.ok(
+    sameLine !== undefined,
+    `No same-line edit replaced the edited lyric in ${tried.length} tries`,
+  );
   console.log(
     'PASS lyric focus kept across re-broken, shifted and replaced lines',
   );

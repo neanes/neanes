@@ -5929,11 +5929,16 @@ function moveToLyricBox(
     workspace === selectedWorkspace.value &&
     selectedLyrics.value === current &&
     activeElements.value.includes(destination);
+  // When repagination replaces the edited lyric's control, focus is either
+  // lost to the body or restored to the replacement by restoreLyricSelection.
   const canMoveFocus = () =>
     isCurrent() &&
     document.hasFocus() &&
     (document.activeElement === initialFocus ||
-      (document.activeElement === document.body && !source.isConnected));
+      (!source.isConnected &&
+        (document.activeElement === document.body ||
+          document.activeElement ===
+            getLyricsComponentForElement(current)?.htmlElement)));
   const focusDestination = () => {
     const component = getLyricsComponentForElement(destination);
     component?.focus(true);

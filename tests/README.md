@@ -252,9 +252,10 @@ The line-break run also reports each layout's status, prepared paragraphs,
 re-placed lines and the time spent positioning lines. The lyric focus check
 also runs on an ordinary Electron build. It commits a long lyric twice: once
 where later lines only move, and once where the next lyric's own line is
-replaced. Focus must move to the next lyric, or, in the replaced-line case,
-stay in the edited lyric (a known issue, reported as a warning), and typing
-must reach the focused lyric.
+replaced. Lines that move within their page must keep their wrappers. It then
+makes short edits until one replaces the edited lyric's control while the
+edited and next notes stay on their line. In every case focus must move to the
+next lyric, and typing must reach it.
 
 ```sh
 node tests/integration/layout/profile-line-shifts.mjs /path/to/long-doc-with-melisma.byz

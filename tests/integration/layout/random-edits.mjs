@@ -245,6 +245,96 @@ function chooseEdit(editor, rolls, lastIndex) {
   return { kind: 'append', value: neumes[variant] };
 }
 
+// Resolves a scripted target from the current layout, so the page-move
+// sequence does not depend on fixed staff indices. `lines` lists each page's
+// lines as staff index ranges; a negative line counts from the page end.
+function resolveTarget(editor, { at, page, line, after = 0 }) {
+  const elements = editor.elements.value;
+  const lines = [];
+  for (const [index, element] of elements.entries()) {
+    if (element.page !== page) {
+      continue;
+    }
+    const last = lines.at(-1);
+    if (last?.line === element.line) {
+      last.end = index;
+    } else {
+      lines.push({ line: element.line, start: index, end: index });
+    }
+  }
+  const pick = (number) => lines.at(number > 0 ? number - 1 : number);
+  const isNote = (index) => elements[index]?.elementType === 'Note';
+  let index;
+  switch (at) {
+    case 'middle': {
+      // A note inside the line, so a break there splits a paragraph.
+      const { start, end } = pick(line);
+      for (let offset = 0; offset <= end - start; offset++) {
+        const candidate = start + Math.floor((end - start) / 2) + offset;
+        if (
+          candidate < end &&
+          isNote(candidate) &&
+          !elements[candidate].lineBreak
+        ) {
+          index = candidate;
+          break;
+        }
+      }
+      break;
+    }
+    case 'end':
+      index = pick(line).end;
+      break;
+    case 'pageStart':
+      // The first page start after `after` that is a note after a note with
+      // no break, so a left bar there transfers to the previous page.
+      index = elements.findIndex(
+        (element, candidate) =>
+          candidate > after &&
+          element.page !== elements[candidate - 1].page &&
+          isNote(candidate) &&
+          isNote(candidate - 1) &&
+          !elements[candidate - 1].lineBreak &&
+          !elements[candidate - 1].pageBreak,
+      );
+      if (index < 0) {
+        index = undefined;
+      }
+      break;
+  }
+  if (index === undefined) {
+    throw new Error(`No target for ${JSON.stringify({ at, page, line })}`);
+  }
+  return { index, type: elements[index].elementType };
+}
+
+// Staff indices where a new page starts, and whether that page boundary
+// falls between two notes with no explicit break (inside a paragraph).
+function pageStarts(editor) {
+  const elements = editor.elements.value;
+  const starts = [];
+  for (let index = 1; index < elements.length; index++) {
+    const previous = elements[index - 1];
+    if (elements[index].page !== previous.page) {
+      starts.push({
+        index,
+        inParagraph:
+          previous.elementType === 'Note' &&
+          elements[index].elementType === 'Note' &&
+          !previous.lineBreak &&
+          !previous.pageBreak,
+      });
+    }
+  }
+  return starts;
+}
+
+function isFirstOnPage(editor, index) {
+  const elements = editor.elements.value;
+  const element = elements[index];
+  return element.line === 1 && elements[index - 1]?.page === element.page - 1;
+}
+
 async function applyEdit(editor, { kind, target, value }) {
   const test = editor.layoutTest;
   const workspace = editor.selectedWorkspace.value;
@@ -287,6 +377,12 @@ async function applyEdit(editor, { kind, target, value }) {
       test.setIson(element, 'Ison.Ni');
       break;
     case 'bar':
+      test.setMeasureBarNote(element, 'MeasureBarRight');
+      break;
+    case 'barParagraph':
+      // Two commands: a line break before the note, then a left bar on it.
+      editor.selectedElement.value = editor.elements.value[target.index - 1];
+      test.toggleLineBreak(null);
       test.setMeasureBarNote(element, 'MeasureBarRight');
       break;
     case 'lineBreak':
@@ -354,7 +450,12 @@ async function runSequence(fixture, seed) {
   try {
     // A replay's saved input already includes its page setup variant.
     const facing = !replay && values.facing;
-    if (fixture.rtl || facing || fixture.checkIncremental) {
+    if (
+      fixture.rtl ||
+      facing ||
+      fixture.checkIncremental ||
+      fixture.pageMoves
+    ) {
       assert.equal(
         path.extname(fixture.file),
         '.byzx',
@@ -369,6 +470,32 @@ async function runSequence(fixture, seed) {
         score.pageSetup.facingPages = true;
         score.pageSetup.leftMargin = 120;
         score.pageSetup.rightMargin = 72.5;
+      }
+      if (fixture.pageMoves) {
+        // About six pages. Without headers, a page break moves every later
+        // line by one page and nothing else; with them, content tops also
+        // differ: a tall first page header and taller even page headers.
+        const notes = score.staff.elements.filter(
+          ({ elementType }) => elementType !== 'Empty',
+        );
+        score.staff.elements = [...notes, ...notes, ...notes];
+      }
+      if (fixture.pageMoves === 'headers') {
+        Object.assign(score.pageSetup, {
+          showHeader: true,
+          headerDifferentFirstPage: true,
+          headerDifferentOddEven: true,
+        });
+        for (const [key, height] of [
+          ['firstPage', 110],
+          ['odd', 20],
+          ['even', 70],
+        ]) {
+          Object.assign(score.headers[key].elements[0], {
+            height,
+            customHeight: height,
+          });
+        }
       }
       if (fixture.checkIncremental) {
         score.staff.elements.unshift({
@@ -426,19 +553,75 @@ async function runSequence(fixture, seed) {
     // Reused layouts by the number of paragraphs added at range boundaries.
     const boundaries = {};
     let maxShiftedLines = 0;
-    const scriptedEdits = fixture.checkIncremental
-      ? [
-          {
-            kind: 'ison',
-            target: { index: 3, type: 'Note' },
-            expectReuse: true,
-          },
-          { kind: 'delete', target: { index: 0, type: 'TextBox' } },
-        ]
-      : null;
+    let barTarget = null;
+    const pageMoves = { later: 0, earlier: 0, parity: 0 };
+    const middle = { at: 'middle', page: 1, line: 2 };
+    // `again` repeats the edit with that id on the same target, undoing it.
+    const pageMoveEdits = [
+      // Splits a paragraph on page 1: later lines, including whole
+      // paragraphs, move to later pages and the page splits move.
+      {
+        id: 'split',
+        kind: 'lineBreak',
+        select: middle,
+        expect: ['later', 'split'],
+      },
+      { kind: 'lineBreak', again: 'split', expect: ['earlier', 'split'] },
+      // Pushes the rest of the score by most of a page.
+      {
+        id: 'push',
+        kind: 'pageBreak',
+        select: { at: 'end', page: 1, line: 1 },
+        expect: ['later', 'parity'],
+      },
+      // Splits the now single-line page 1, which moves every later line by
+      // exactly one page with the same line number (and, without headers,
+      // the same top).
+      {
+        id: 'onePage',
+        kind: 'pageBreak',
+        select: { at: 'middle', page: 1, line: 1 },
+        expect: ['later', 'parity'],
+      },
+      { kind: 'pageBreak', again: 'onePage', expect: ['earlier', 'parity'] },
+      { kind: 'pageBreak', again: 'push', expect: ['earlier', 'parity'] },
+      // A left bar on a note that starts both a page and a paragraph
+      // transfers to the last line of the previous page. Moving both lines
+      // and back re-applies the transfer to re-placed lines; editing the
+      // paragraph before it re-prepares the line that takes the bar while
+      // the barred line is reused.
+      { kind: 'barParagraph', select: { at: 'pageStart' }, bar: true },
+      { id: 'barMove', kind: 'lineBreak', select: middle, expect: ['later'] },
+      {
+        kind: 'lineBreak',
+        again: 'barMove',
+        expect: ['earlier', 'barAcrossPage'],
+      },
+      {
+        kind: 'ison',
+        beforeBar: true,
+        expect: ['barAcrossPage'],
+        expectReuse: true,
+      },
+    ].map((edit) => ({
+      expectReuse: edit.kind === 'lineBreak' || edit.kind === 'pageBreak',
+      ...edit,
+    }));
+    const scriptedEdits = fixture.pageMoves
+      ? pageMoveEdits
+      : fixture.checkIncremental
+        ? [
+            {
+              kind: 'ison',
+              target: { index: 3, type: 'Note' },
+              expectReuse: true,
+            },
+            { kind: 'delete', target: { index: 0, type: 'TextBox' } },
+          ]
+        : null;
     const edits = replay?.edits ?? scriptedEdits;
-    const count = edits?.length ?? steps;
-    for (let i = 0; i < count; i++) {
+    const count = () => edits?.length ?? steps;
+    for (let i = 0; i < count(); i++) {
       result = null;
       const edit =
         edits?.[i] ??
@@ -447,6 +630,22 @@ async function runSequence(fixture, seed) {
           Array.from({ length: 5 }, random),
           lastIndex,
         ));
+      const template = edit.bar && edit.select ? { ...edit } : null;
+      if (edit.again) {
+        edit.target = trace.edits.find(({ id }) => id === edit.again).target;
+        delete edit.again;
+      } else if (edit.beforeBar) {
+        edit.target = { index: barTarget - 1, type: 'Note' };
+        delete edit.beforeBar;
+      } else if (edit.select) {
+        // Replays keep the resolved target.
+        edit.target = await inEditor(resolveTarget, edit.select);
+        delete edit.select;
+      }
+      if (edit.bar) {
+        barTarget = edit.target.index;
+      }
+      const startsBefore = edit.expect ? await inEditor(pageStarts) : null;
       trace.edits.push(edit);
       result = await inEditor(applyEdit, edit);
       assert.equal(
@@ -457,38 +656,101 @@ async function runSequence(fixture, seed) {
       assert.ok(result.changed, 'Edit did not change score content');
       assert.ok(result.checks > 0, 'Edit did not run a verified layout');
       assert.ok(result.layouts.length > 0, 'Missing layout diagnostics');
+      if (template && !(await inEditor(isFirstOnPage, barTarget))) {
+        // The new break or bar re-broke the page, so the note no longer
+        // starts it. Undo both and try the next page start.
+        edits.splice(
+          i + 1,
+          0,
+          { kind: 'undo' },
+          { kind: 'undo' },
+          { ...template, select: { at: 'pageStart', after: barTarget } },
+        );
+      }
+      for (const expectation of edit.expect ?? []) {
+        const total = (field) =>
+          result.layouts.reduce((sum, layout) => sum + layout[field], 0);
+        switch (expectation) {
+          case 'later':
+            assert.ok(
+              total('linesToLaterPage') > 0,
+              `Expected lines moved to a later page: ${JSON.stringify(result.layouts)}`,
+            );
+            break;
+          case 'earlier':
+            assert.ok(
+              total('linesToEarlierPage') > 0,
+              `Expected lines moved to an earlier page: ${JSON.stringify(result.layouts)}`,
+            );
+            break;
+          case 'parity':
+            assert.ok(
+              total('parityChangedLines') > 0,
+              `Expected lines that changed page parity: ${JSON.stringify(result.layouts)}`,
+            );
+            break;
+          case 'split': {
+            const startsAfter = await inEditor(pageStarts);
+            assert.notDeepEqual(
+              startsAfter,
+              startsBefore,
+              'Expected page splits to move',
+            );
+            assert.ok(
+              startsAfter.some(({ inParagraph }) => inParagraph),
+              `Expected a page split inside a paragraph: ${JSON.stringify(startsAfter)}`,
+            );
+            break;
+          }
+          case 'barAcrossPage':
+            assert.ok(
+              await inEditor(isFirstOnPage, barTarget),
+              'Expected the barred note to start a page',
+            );
+            break;
+          default:
+            throw new Error(`Unknown expectation: ${expectation}`);
+        }
+      }
       if (edit.expectReuse) {
         assert.ok(
           result.layouts.some(
             ({ status, prepared, totalParagraphs }) =>
               status === 'reused' && prepared < totalParagraphs,
           ),
-          `Expected paragraph reuse for the ison edit: ${JSON.stringify(result.layouts)}`,
+          `Expected paragraph reuse for the ${edit.kind} edit: ${JSON.stringify(result.layouts)}`,
         );
       }
       for (const {
         status,
         boundaryParagraphs,
         shiftedLines,
+        linesToLaterPage,
+        linesToEarlierPage,
+        parityChangedLines,
       } of result.layouts) {
         statuses[status] = (statuses[status] ?? 0) + 1;
         if (status === 'reused') {
           boundaries[boundaryParagraphs] =
             (boundaries[boundaryParagraphs] ?? 0) + 1;
           maxShiftedLines = Math.max(maxShiftedLines, shiftedLines);
+          // Layouts that moved reused lines to a later or earlier page.
+          pageMoves.later += linesToLaterPage > 0 ? 1 : 0;
+          pageMoves.earlier += linesToEarlierPage > 0 ? 1 : 0;
+          pageMoves.parity += parityChangedLines > 0 ? 1 : 0;
         }
       }
       checks += result.checks;
       kinds[edit.kind] = (kinds[edit.kind] ?? 0) + 1;
       lastIndex = result.after?.index ?? result.before?.index ?? lastIndex;
-      if ((i + 1) % 250 === 0 && i + 1 < count) {
+      if ((i + 1) % 250 === 0 && i + 1 < count()) {
         console.log(
-          `${fixture.name} seed=${seed}: ${i + 1}/${count} edits checked`,
+          `${fixture.name} seed=${seed}: ${i + 1}/${count()} edits checked`,
         );
       }
     }
     console.log(
-      `PASS ${fixture.name} seed=${seed}: ${count} edits, ${checks} checks ${JSON.stringify(kinds)}; layouts ${JSON.stringify(statuses)}; boundary paragraphs ${JSON.stringify(boundaries)}; max shifted lines ${maxShiftedLines}`,
+      `PASS ${fixture.name} seed=${seed}: ${count()} edits, ${checks} checks ${JSON.stringify(kinds)}; layouts ${JSON.stringify(statuses)}; boundary paragraphs ${JSON.stringify(boundaries)}; max shifted lines ${maxShiftedLines}; layouts with page moves ${JSON.stringify(pageMoves)}`,
     );
     return true;
   } catch (error) {
@@ -524,16 +786,21 @@ async function runSequence(fixture, seed) {
 }
 
 if (values.incremental && !replay) {
-  const passed = await runSequence(
+  for (const scripted of [
+    { name: 'opening-paragraph', file: fixture, checkIncremental: true },
+    { name: 'page-moves', file: fixture, pageMoves: 'plain' },
+    { name: 'page-moves-headers', file: fixture, pageMoves: 'headers' },
+    { name: 'page-moves-rtl', file: fixture, pageMoves: 'plain', rtl: true },
     {
-      name: 'opening-paragraph',
+      name: 'page-moves-headers-rtl',
       file: fixture,
-      checkIncremental: true,
+      pageMoves: 'headers',
+      rtl: true,
     },
-    1,
-  );
-  if (!passed) {
-    process.exitCode = 1;
+  ]) {
+    if (!(await runSequence(scripted, 1))) {
+      process.exitCode = 1;
+    }
   }
 }
 

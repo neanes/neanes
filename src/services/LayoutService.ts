@@ -518,6 +518,11 @@ export interface LayoutReuseResult {
   postprocessedPages: number;
   boundaryParagraphs: number;
   shiftedLines: number;
+  // Shifted lines that changed page, by direction, and those whose page
+  // parity changed (facing margins).
+  linesToLaterPage: number;
+  linesToEarlierPage: number;
+  parityChangedLines: number;
   duration: number;
 }
 
@@ -1037,6 +1042,9 @@ export class LayoutService {
     let phasePage: Page | undefined;
     let previousLine: Line | null = null;
     let shiftedLines = 0;
+    let linesToLaterPage = 0;
+    let linesToEarlierPage = 0;
+    let parityChangedLines = 0;
     endPhase();
     endPhase = startSpan('processPages.positionLines');
     const pages: Page[] = [];
@@ -1065,6 +1073,15 @@ export class LayoutService {
           // A reused line that moved is re-placed, not prepared again.
           if (cached !== undefined) {
             shiftedLines++;
+            const pageDelta = page.physicalPageNumber - cached.page;
+            if (pageDelta > 0) {
+              linesToLaterPage++;
+            } else if (pageDelta < 0) {
+              linesToEarlierPage++;
+            }
+            if (pageDelta % 2 !== 0) {
+              parityChangedLines++;
+            }
           }
           ({ line, reservation } = this.positionContentLine(
             candidate,
@@ -1363,6 +1380,9 @@ export class LayoutService {
       postprocessedPages: postprocessPages.length,
       boundaryParagraphs: edit?.boundaryParagraphs ?? 0,
       shiftedLines,
+      linesToLaterPage,
+      linesToEarlierPage,
+      parityChangedLines,
       duration: performance.now() - start,
     });
     return pages;

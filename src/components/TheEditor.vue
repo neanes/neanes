@@ -624,9 +624,8 @@ const noteFormat = ref<ClipboardFormatState<NoteElement>>({
   paragraphStyleIds: [],
   paragraphStyles: [],
 });
-const richTextBoxMeasurementBatchSize = 4;
 const richTextBoxMeasurement = useTextBoxMeasurement();
-const richTextBoxMeasurementBatch = richTextBoxMeasurement.pending;
+const richTextBoxMeasurementRequest = richTextBoxMeasurement.pending;
 const pendingRichTextBoxRecalculations = new WeakSet<Workspace>();
 let richTextBoxCalculation:
   | {
@@ -8781,7 +8780,6 @@ function recalculateRichTextBoxHeights() {
   async function measure(): Promise<'settled' | 'superseded' | 'failed'> {
     const { score, contentRevision } = workspace;
     const elements = resizableRichTextBoxElements.value;
-    const heights = new Map<RichTextBoxElement | TextBoxElement, number>();
     const isCurrent = () =>
       richTextBoxCalculation === request &&
       selectedWorkspace.value === workspace;
@@ -8790,27 +8788,11 @@ function recalculateRichTextBoxHeights() {
       workspace.contentRevision === contentRevision;
 
     try {
-      for (
-        let offset = 0;
-        offset < elements.length;
-        offset += richTextBoxMeasurementBatchSize
-      ) {
-        // Yield a browser task after the previous offscreen editors unmount.
-        await new Promise<void>((resolve) => setTimeout(resolve, 0));
-        if (!isCurrent() || !contentIsCurrent()) {
-          return 'superseded';
-        }
-        const batch = new Set(
-          elements.slice(offset, offset + richTextBoxMeasurementBatchSize),
-        );
-        for (const { element, height } of await richTextBoxMeasurement.start(
-          workspace,
-          undefined,
-          batch,
-        )) {
-          heights.set(element, height);
-        }
-      }
+      const heights = await richTextBoxMeasurement.start(
+        workspace,
+        undefined,
+        new Set(elements),
+      );
 
       if (!isCurrent() || !contentIsCurrent()) {
         return 'superseded';
@@ -8820,7 +8802,7 @@ function recalculateRichTextBoxHeights() {
         RichTextBoxElement | TextBoxElement,
         number
       >();
-      for (const [element, height] of heights) {
+      for (const { element, height } of heights) {
         if (Math.abs(element.height - height) > 0.001) {
           previousHeights.set(element, element.height);
           element.height = height;
@@ -11554,10 +11536,11 @@ function renderTabLabel(tab: Tab) {
       @export-as-latex="exportAsLatex"
     />
     <WorkspaceTextBoxMeasurement
-      v-if="richTextBoxMeasurementBatch"
-      :key="'rich-text-box-batch-' + richTextBoxMeasurementBatch.id"
-      :workspace="richTextBoxMeasurementBatch.workspace"
-      :measurement-boxes="richTextBoxMeasurementBatch.measurementBoxes"
+      v-if="richTextBoxMeasurementRequest"
+      :key="'rich-text-box-recalculation-' + richTextBoxMeasurementRequest.id"
+      :workspace="richTextBoxMeasurementRequest.workspace"
+      :measurement-boxes="richTextBoxMeasurementRequest.measurementBoxes"
+      reuse-rich-text-editors
       :fonts="fonts"
       :editor-language="ckeditorLanguage"
       @complete="richTextBoxMeasurement.complete"

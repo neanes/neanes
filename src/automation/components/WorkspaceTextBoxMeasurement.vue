@@ -20,7 +20,10 @@
     />
     <template v-else>
       <component :is="'style'">{{ paragraphStyleCss }}</component>
-      <template v-for="(element, index) in elements" :key="index">
+      <template
+        v-for="(element, index) in displayedElements"
+        :key="measurementEditors?.direction ?? index"
+      >
         <TextBoxRich
           v-if="element.elementType === ElementType.RichTextBox"
           :ref="(instance) => setMeasurer(element, instance)"
@@ -38,6 +41,7 @@
           :editor-language="editorLanguage"
           :edit-mode="false"
           :recalc="true"
+          :measurement-editors="measurementEditors"
         />
         <TextBox
           v-else
@@ -52,7 +56,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, useId } from 'vue';
+import { getLanguageDirection, type LanguageDirection } from 'ckeditor5';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  shallowRef,
+  useId,
+} from 'vue';
 
 import ScorePrintPages from '@/components/ScorePrintPages.vue';
 import TextBox from '@/components/TextBox.vue';
@@ -70,12 +82,17 @@ import {
   type MeasuredTextBox,
   type TextBoxHeightMeasurement,
 } from '@/services/rendering/textBoxMeasurement';
+import {
+  getInitialRichTextBoxLanguage,
+  getRichTextLanguageCode,
+} from '@/utils/richTextLanguage';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 
 const props = defineProps<{
   workspace: Workspace;
   templatePages?: Page[];
   measurementBoxes?: ReadonlySet<MeasuredTextBox>;
+  reuseRichTextEditors?: boolean;
   fonts: string[];
   editorLanguage: string;
 }>();
@@ -89,6 +106,40 @@ const elements =
   props.measurementBoxes === undefined
     ? getResizableTextBoxes(props.workspace.score)
     : [...props.measurementBoxes];
+// CKEditor's indent and table converters capture direction during setup.
+const groups = new Map<LanguageDirection, RichTextBoxElement[]>();
+if (props.reuseRichTextEditors) {
+  for (const element of elements) {
+    if (element.elementType === ElementType.RichTextBox) {
+      const box = element as RichTextBoxElement;
+      const language = getInitialRichTextBoxLanguage(
+        box,
+        props.workspace.score.pageSetup,
+      );
+      const direction = getLanguageDirection(
+        getRichTextLanguageCode(language ?? 'en'),
+      );
+      const group = groups.get(direction);
+      if (group === undefined) {
+        groups.set(direction, [box]);
+      } else {
+        group.push(box);
+      }
+    }
+  }
+}
+const currentBox = shallowRef<RichTextBoxElement>();
+const measurementEditors = shallowRef<{
+  direction: LanguageDirection;
+  multipanel: boolean;
+}>();
+const displayedElements = computed(() =>
+  props.reuseRichTextEditors
+    ? currentBox.value === undefined
+      ? []
+      : [currentBox.value]
+    : elements,
+);
 const footnoteBodyElements = new Set(
   props.workspace.score.footnotes.flatMap((body) => body.staff.elements),
 );
@@ -98,25 +149,29 @@ const paragraphStyleCss = computed(() =>
     `#${styleScopeId} .ck-content`,
   ),
 );
-const measurers = new Map<
-  MeasuredTextBox,
-  { measureTextBox(): Promise<TextBoxHeightMeasurement> }
->();
+interface TextBoxMeasurer {
+  measureTextBox(): Promise<TextBoxHeightMeasurement>;
+}
+const measurers = new Map<MeasuredTextBox, TextBoxMeasurer>();
+let reusableMeasurer: TextBoxMeasurer | null = null;
 let disposed = false;
-const timer = setTimeout(() => {
-  if (!disposed) {
-    emit('failed', new Error('TEXT_BOX_MEASUREMENT_FAILED'));
-  }
-}, 30_000);
+let timer = startTimeout();
+
+function startTimeout() {
+  return setTimeout(
+    () => failed(new Error('TEXT_BOX_MEASUREMENT_FAILED')),
+    30_000,
+  );
+}
 
 function setMeasurer(element: MeasuredTextBox, instance: unknown) {
-  if (instance == null) {
+  const measurer = instance as TextBoxMeasurer | null;
+  if (props.reuseRichTextEditors) {
+    reusableMeasurer = measurer;
+  } else if (measurer === null) {
     measurers.delete(element);
   } else {
-    measurers.set(
-      element,
-      instance as { measureTextBox(): Promise<TextBoxHeightMeasurement> },
-    );
+    measurers.set(element, measurer);
   }
 }
 
@@ -134,12 +189,52 @@ function failed(error: Error) {
   }
 }
 
+async function measureWithReusableEditors() {
+  const { score, contentRevision } = props.workspace;
+  const heights: TextBoxHeightMeasurement[] = [];
+  let sliceStarted = performance.now();
+  for (const [direction, boxes] of groups) {
+    measurementEditors.value = {
+      direction,
+      multipanel: boxes.some((box) => box.multipanel),
+    };
+    for (const box of boxes) {
+      if (
+        disposed ||
+        props.workspace.score !== score ||
+        props.workspace.contentRevision !== contentRevision
+      ) {
+        throw new Error('LAYOUT_CONFLICT');
+      }
+
+      currentBox.value = box;
+      await nextTick();
+      if (reusableMeasurer === null) {
+        throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+      }
+      heights.push(await reusableMeasurer.measureTextBox());
+      if (performance.now() - sliceStarted >= 8) {
+        clearTimeout(timer);
+        timer = startTimeout();
+        // Give the browser time to paint and handle input between measurements.
+        await new Promise<void>((resolve) => setTimeout(resolve, 0));
+        sliceStarted = performance.now();
+      }
+    }
+  }
+  return heights;
+}
+
 onMounted(async () => {
   if (props.templatePages !== undefined) {
     return;
   }
   try {
     await nextTick();
+    if (props.reuseRichTextEditors) {
+      complete(await measureWithReusableEditors());
+      return;
+    }
     if (measurers.size !== elements.length) {
       throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
     }

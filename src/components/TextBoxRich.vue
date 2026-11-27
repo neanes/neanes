@@ -8,18 +8,30 @@
   >
     <span class="handle"></span>
     <div
-      v-if="element.multipanel"
-      class="rich-text-box-multipanel-container"
-      :style="multipanelContainerStyle"
+      v-if="element.multipanel || measurementEditors"
+      :class="
+        element.multipanel
+          ? 'rich-text-box-multipanel-container'
+          : {
+              'rich-text-measurement-single': true,
+              'rich-text-measurement-scrollable':
+                element.scrollable && !footnoteBody,
+            }
+      "
+      :style="
+        element.multipanel ? multipanelContainerStyle : singleMeasurementStyle
+      "
     >
       <RichTextEditor
-        :key="`left-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
+        v-if="element.multipanel || measurementEditors?.multipanel"
+        :key="`left-${editorLanguage}-${configuredContentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorLeft"
         class="rich-text-editor multipanel left"
         :owner="element"
         :footnote-markers="footnoteMarkers"
         :footnotes-editable="editMode && !recalc"
-        :model-value="contentLeft"
+        :model-value="measurementEditors ? '' : contentLeft"
+        :measurement-only="measurementEditors !== undefined"
         content-key="contentLeft"
         :config="editorConfig"
         @blur="onBlur"
@@ -29,13 +41,14 @@
         @mode-key-change="update"
       />
       <RichTextEditor
-        :key="`center-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
+        :key="`center-${editorLanguage}-${configuredContentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorCenter"
         class="rich-text-editor multipanel center"
         :owner="element"
         :footnote-markers="footnoteMarkers"
         :footnotes-editable="editMode && !recalc"
-        :model-value="contentCenter"
+        :model-value="measurementEditors ? '' : contentCenter"
+        :measurement-only="measurementEditors !== undefined"
         content-key="contentCenter"
         :config="editorConfig"
         @blur="onBlur"
@@ -45,13 +58,15 @@
         @mode-key-change="update"
       />
       <RichTextEditor
-        :key="`right-${editorLanguage}-${contentLanguage}-${paragraphStyleDefinitionKey}`"
+        v-if="element.multipanel || measurementEditors?.multipanel"
+        :key="`right-${editorLanguage}-${configuredContentLanguage}-${paragraphStyleDefinitionKey}`"
         ref="editorRight"
         class="rich-text-editor multipanel right"
         :owner="element"
         :footnote-markers="footnoteMarkers"
         :footnotes-editable="editMode && !recalc"
-        :model-value="contentRight"
+        :model-value="measurementEditors ? '' : contentRight"
+        :measurement-only="measurementEditors !== undefined"
         content-key="contentRight"
         :config="editorConfig"
         @blur="onBlur"
@@ -148,7 +163,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Editor, EditorConfig, FontSizeOption } from 'ckeditor5';
+import {
+  type Editor,
+  type EditorConfig,
+  type FontSizeOption,
+  type LanguageDirection,
+} from 'ckeditor5';
 import { useTranslation } from 'i18next-vue';
 import { debounce, throttle } from 'throttle-debounce';
 import type { PropType, StyleValue } from 'vue';
@@ -162,6 +182,7 @@ import {
 } from 'vue';
 import type { ComponentExposed } from 'vue-component-type-helpers';
 
+import { Footnotes } from '@/ckeditor-plugins/footnotes/footnotes';
 import InsertModeKey from '@/ckeditor-plugins/insertmodekey/insertmodekey';
 import InsertModeKeyEditing from '@/ckeditor-plugins/insertmodekey/insertmodekeyediting';
 import RichTextEditor from '@/components/RichTextEditor.vue';
@@ -190,10 +211,12 @@ import type { TokenMetadata, TokenScope } from '@/utils/replaceTokens';
 import { replaceTokens } from '@/utils/replaceTokens';
 import {
   applyRichTextLanguageToEditor,
+  getInitialRichTextBoxLanguage,
   getRichTextLanguage,
   getRichTextLanguageCode,
   getRichTextLanguageDirection,
   hasMeaningfulRichTextEditorContent,
+  inferRichTextEditorDirection,
   inferRichTextEditorLanguage,
   inferSharedRichTextEditorLanguage,
   RICH_TEXT_LANGUAGE_OPTIONS,
@@ -269,6 +292,13 @@ const props = defineProps({
     type: String as PropType<TokenScope>,
     default: 'body',
   },
+  measurementEditors: {
+    type: Object as PropType<{
+      direction: LanguageDirection;
+      multipanel: boolean;
+    }>,
+    default: undefined,
+  },
   recalc: {
     type: Boolean,
     default: false,
@@ -306,45 +336,21 @@ const { observe: observeInlineBottom } = useResizeObserver();
 
 const htmlElement = computed(() => container.value!);
 
-const activeContentValues = computed(() => {
-  if (props.element.multipanel) {
-    return [
-      props.element.contentLeft,
-      props.element.contentCenter,
-      props.element.contentRight,
-    ];
-  }
-
-  if (props.element.inline) {
-    return [props.element.content, props.element.contentBottom];
-  }
-
-  return [props.element.content];
-});
-
-const hasStoredContent = computed(() =>
-  activeContentValues.value.some((html) => html.trim() !== ''),
+const defaultInitialLanguage = computed(() =>
+  getInitialRichTextBoxLanguage(props.element, props.pageSetup),
 );
 
-const defaultInitialLanguage = computed(() => {
-  const storedLanguage = getRichTextLanguage(props.element);
+const contentLanguage = computed(() =>
+  getRichTextLanguageCode(defaultInitialLanguage.value ?? 'en'),
+);
 
-  if (storedLanguage != null) {
-    return storedLanguage;
-  }
-
-  return !hasStoredContent.value &&
-    (props.pageSetup.melkiteRtl || props.pageSetup.numerals === 'easternArabic')
-    ? 'ar:rtl'
-    : null;
-});
-
-const contentLanguage = computed(() => {
-  const language =
-    getRichTextLanguage(props.element) ?? defaultInitialLanguage.value;
-
-  return language == null ? 'en' : getRichTextLanguageCode(language);
-});
+const configuredContentLanguage = computed(() =>
+  props.measurementEditors === undefined
+    ? contentLanguage.value
+    : props.measurementEditors.direction === 'rtl'
+      ? 'ar'
+      : 'en',
+);
 
 const fallbackParagraphStyleId = computed(() =>
   getTextBoxParagraphStyleFallbackId(props.element.inline),
@@ -387,7 +393,7 @@ const editorConfig = computed((): EditorConfig => {
     },
     language: {
       ui: props.editorLanguage,
-      content: contentLanguage.value,
+      content: configuredContentLanguage.value,
       textPartLanguage: RICH_TEXT_LANGUAGE_OPTIONS,
     },
     style: {
@@ -514,7 +520,11 @@ function getMinimumFontSizeInEditor(editor: Editor) {
     sizes.push(selectedFontSizeInPt);
   }
 
-  for (const root of editor.model.document.roots) {
+  // Reused editors retain deleted content in CKEditor's graveyard.
+  const roots = props.measurementEditors
+    ? editor.model.document.getRoots()
+    : editor.model.document.roots;
+  for (const root of roots) {
     for (const item of editor.model.createRangeIn(root).getItems()) {
       const fontSize = item.getAttribute('fontSize');
 
@@ -571,6 +581,11 @@ const textBoxStyle = computed(() => {
 
   return style;
 });
+
+const singleMeasurementStyle = computed(() => ({
+  '--rich-text-measurement-width': textBoxStyle.value.width,
+  '--rich-text-measurement-max-height': textBoxStyle.value.maxHeight,
+}));
 
 const textBoxTopInnerContainerStyle = computed(() => {
   // The top text box is aligned such that the middle of the oligon sits in middle of the font.
@@ -659,7 +674,9 @@ watch(
 onBeforeUnmount(() => {
   unmounting.value = true;
   debouncedPhoneHome.cancel();
-  update();
+  if (props.measurementEditors === undefined) {
+    update();
+  }
   // Observers are disconnected automatically by useResizeObserver's own
   // onBeforeUnmount hook.
 });
@@ -689,8 +706,15 @@ const editorsReady = Promise.withResolvers<void>();
 const readyEditors = new WeakSet<InlineEditor>();
 function markEditorReady(editor: InlineEditor) {
   readyEditors.add(editor);
+  const instances = props.measurementEditors?.multipanel
+    ? [
+        getEditorInstanceLeft(),
+        getEditorInstanceCenter(),
+        getEditorInstanceRight(),
+      ]
+    : getActiveEditorInstances();
   if (
-    getActiveEditorInstances().every(
+    instances.every(
       (instance) => instance != null && readyEditors.has(instance),
     )
   ) {
@@ -705,6 +729,15 @@ async function whenReady() {
 
 async function measureTextBox() {
   await whenReady();
+  if (props.measurementEditors) {
+    if (props.element.multipanel) {
+      loadMeasurementContent(getEditorInstanceLeft()!, contentLeft.value);
+      loadMeasurementContent(getEditorInstanceCenter()!, contentCenter.value);
+      loadMeasurementContent(getEditorInstanceRight()!, contentRight.value);
+    } else {
+      loadMeasurementContent(getEditorInstanceCenter()!, content.value);
+    }
+  }
   await document.fonts.ready;
   refreshCkContentFontSize();
   await nextTick();
@@ -715,7 +748,28 @@ async function measureTextBox() {
   return { element: props.element, width: props.element.width, height };
 }
 
+function loadMeasurementContent(editor: InlineEditor, html: string) {
+  const language = contentLanguage.value;
+  editor.plugins.get(Footnotes).setMarkers(props.footnoteMarkers);
+  editor.config.set('insertNeume', editorConfig.value.insertNeume);
+  editor.data.set(html);
+  applyInitialLanguage(editor);
+
+  const view = editor.editing.view;
+  const direction =
+    inferRichTextEditorDirection(editor) ??
+    editor.locale.contentLanguageDirection;
+  view.change((writer) => {
+    writer.setAttribute('lang', language, view.document.getRoot()!);
+    writer.setAttribute('dir', direction, view.document.getRoot()!);
+  });
+}
+
 function getActiveEditorInstances() {
+  if (props.measurementEditors && !props.element.multipanel) {
+    return [getEditorInstanceCenter()];
+  }
+
   if (props.element.multipanel) {
     return [
       getEditorInstanceLeft(),
@@ -788,6 +842,11 @@ function observeCkContentFontSize(editor: InlineEditor) {
 }
 
 async function onEditorReady(editor: InlineEditor) {
+  if (props.measurementEditors) {
+    markEditorReady(editor);
+    return;
+  }
+
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
   markEditorReady(editor);
@@ -835,6 +894,11 @@ function observeBlockHeight() {
 }
 
 async function onEditorReadyMultipanelSide(editor: InlineEditor) {
+  if (props.measurementEditors) {
+    markEditorReady(editor);
+    return;
+  }
+
   applyInitialLanguage(editor);
   await initializeCkContentFontSize();
   markEditorReady(editor);
@@ -1152,6 +1216,23 @@ defineExpose({
   position: absolute;
   right: 0;
   transform-origin: top right;
+}
+
+/* Vue owns the wrapper classes. Keep the classes on CKEditor's editable
+   roots stable while switching measurement layouts. */
+.rich-text-measurement-single > .left,
+.rich-text-measurement-single > .right {
+  display: none;
+}
+
+.rich-text-measurement-single > .center {
+  min-width: 0;
+  width: var(--rich-text-measurement-width);
+  max-height: var(--rich-text-measurement-max-height, none);
+}
+
+.rich-text-measurement-scrollable > .center {
+  overflow-y: auto;
 }
 
 .inline-container {

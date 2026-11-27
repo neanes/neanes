@@ -239,6 +239,12 @@ const props = defineProps({
     >,
     default: undefined,
   },
+  // A moved line keeps its wrapper, and layout writes y on the raw element,
+  // so the page passes y to refresh the scrollable height cap.
+  layoutY: {
+    type: Number,
+    default: undefined,
+  },
   footnoteBody: {
     type: Boolean,
     default: false,
@@ -572,7 +578,7 @@ const textBoxStyle = computed(() => {
     props.element,
     props.pageSetup,
     props.footnoteBody,
-    layout.value.y,
+    props.layoutY ?? layout.value.y,
   );
   const style: StyleValue = {
     width: `${layout.value.width}px`, // no zoom because we scale with the transform

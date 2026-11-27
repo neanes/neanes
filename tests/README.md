@@ -123,6 +123,31 @@ musical fields, with a numeric tolerance of 1e-6. Use the scripted UI checks
 for input behavior and the settlement
 checks for asynchronously measured rich text.
 
+## Page-dependent measured inputs
+
+`check-page-inputs.mjs` checks inputs that the DOM measures after layout and
+that depend on placement: a scrollable rich-text box's height cap (its page
+bottom minus its y), and header and footer templates whose token expansion
+(chapter, page numbers) changes by page. The synchronous oracle cannot see
+these. Each scenario runs twice in a disposable editor of an oracle build,
+with paragraph reuse and with full layout forced at runtime. After every edit
+it visits each page, waits until no layout or height write happens, and
+compares element geometry, template heights and the rendered boxes'
+rectangles and text. It also fails if a scrollable box's rendered cap does not
+match its current y, if a step does not settle, if no edit reuses paragraphs,
+or if the layout oracle reports a difference. The scrollable scenarios run in
+LTR and Arabic RTL.
+
+```sh
+node tests/integration/layout/check-page-inputs.mjs
+node tests/integration/layout/check-page-inputs.mjs --skip-build --only scrollable-cap
+```
+
+A repeated header or footer template has one height, taken from the page
+that measured it last, so wrapping that differs by page never settles, with
+either layout path. The header scenarios therefore use chapter titles that
+wrap the same on every page.
+
 ## Full layout parity against master
 
 Build each of the three Electron checkouts with the same test-only capture

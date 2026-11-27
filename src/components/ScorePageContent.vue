@@ -539,6 +539,7 @@
           :element="element as RichTextBoxElement"
           :footnote-body="line.footnoteId !== null"
           :layout-geometry="richTextGeometry(element as RichTextBoxElement)"
+          :layout-y="element.y"
           :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
           :inline-page-center-offset="inlinePageCenter - element.x"
           :page-setup="score.pageSetup"

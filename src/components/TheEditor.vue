@@ -541,7 +541,7 @@ const canRedo = ref(false);
 let unsubscribeHistory: (() => void) | undefined;
 let unsubscribeLayoutChanges: (() => void) | undefined;
 let layoutChanges: Set<object> | null = null;
-const forceFullLayout = import.meta.env.VITE_LAYOUT_FORCE_FULL === 'true';
+let forceFullLayout = import.meta.env.VITE_LAYOUT_FORCE_FULL === 'true';
 const reportLayoutReuse =
   import.meta.env.DEV || layoutProfilingEnabled || layoutVerificationEnabled;
 const layoutResults: LayoutReuseResult[] = [];
@@ -2195,7 +2195,12 @@ async function initialize() {
     selectedWorkspace,
     workspaces,
     ...(reportLayoutReuse && {
-      layoutDiagnostics: { results: layoutResults, forceFull: forceFullLayout },
+      layoutDiagnostics: {
+        results: layoutResults,
+        get forceFull() {
+          return forceFullLayout;
+        },
+      },
     }),
     ...(layoutProfilingEnabled && {
       layoutProfile: {
@@ -2245,6 +2250,10 @@ async function initialize() {
         deleteSelectedElement,
         replayHistory,
         flushRender: () => nextTick(),
+        // Compares a live editor's settled geometry with full layout.
+        setForceFullLayout(value: boolean) {
+          forceFullLayout = value;
+        },
       },
     }),
   };

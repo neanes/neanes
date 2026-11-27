@@ -7,10 +7,7 @@ import {
 } from '@/models/Element';
 import { Score } from '@/models/Score';
 
-import {
-  changedTextBoxHeights,
-  getResizableTextBoxes,
-} from './textBoxMeasurement';
+import { getResizableTextBoxes } from './textBoxMeasurement';
 
 describe('workspace text box measurement targets', () => {
   it('includes body and every header/footer variant, while excluding inline and fixed-height boxes', () => {
@@ -47,21 +44,5 @@ describe('workspace text box measurement targets', () => {
     const score = new Score();
     score.staff.elements = [];
     expect(getResizableTextBoxes(score)).toEqual([]);
-  });
-});
-
-describe('changed text box heights', () => {
-  it('keeps heights beyond the on-page write threshold at the measured width', () => {
-    const changed = new TextBoxElement();
-    const unchanged = new RichTextBoxElement();
-    unchanged.height = 52;
-    const stale = new TextBoxElement();
-    expect(
-      changedTextBoxHeights([
-        { element: changed, width: changed.width, height: 52 },
-        { element: unchanged, width: unchanged.width, height: 52.0005 },
-        { element: stale, width: stale.width + 1, height: 52 },
-      ]),
-    ).toEqual(new Map([[changed, 52]]));
   });
 });

@@ -45,18 +45,3 @@ export function richTextBoxHeightCap(
     ? pageSetup.pageHeight - y - pageSetup.bottomMargin
     : undefined;
 }
-
-// Measured heights that differ from the saved ones by more than the on-page
-// height writes allow. A measurement at another width is stale and skipped.
-export function changedTextBoxHeights(heights: TextBoxHeightMeasurement[]) {
-  const changes = new Map<MeasuredTextBox, number>();
-  for (const { element, width, height } of heights) {
-    if (
-      Math.abs(element.width - width) <= 0.01 &&
-      Math.abs(element.height - height) > 0.001
-    ) {
-      changes.set(element, height);
-    }
-  }
-  return changes;
-}

@@ -675,6 +675,10 @@ async function runSequence(fixture, seed) {
         ];
         if (fixture.rtl) {
           arabicRtlScore(score);
+          // The lyric editor stores a joining tatweel on RTL continuations.
+          for (const index of [16, 18]) {
+            score.staff.elements[index].lyrics = '\u0640';
+          }
         }
       }
       await writeFile(file, JSON.stringify(score));
@@ -822,7 +826,11 @@ async function runSequence(fixture, seed) {
         value: fixture.rtl ? '\u0646\u0627' : 'ries',
         expect: ['orphan'],
       },
-      { kind: 'delete', target: { index: 17, type: 'TextBox' } },
+      {
+        kind: 'delete',
+        target: { index: 17, type: 'TextBox' },
+        expect: ['joined'],
+      },
       { kind: 'undo', expect: ['orphan'] },
       { kind: 'redo' },
       { kind: 'undo', expect: ['orphan'] },
@@ -944,14 +952,42 @@ async function runSequence(fixture, seed) {
                 isFullMelisma: elements[18].isFullMelisma,
                 hyphens: elements[18].hyphenOffsets.length,
                 melismaText: elements[18].melismaText,
+                lyrics: elements[18].lyrics,
+                hidesOrphanedTatweel: elements[18].hidesOrphanedTatweel,
+                // Rendered lone-tatweel lyrics: the orphan's is transparent.
+                drawnTatweels: [...document.querySelectorAll('.lyrics')]
+                  .filter((lyric) => lyric.textContent === '\u0640')
+                  .map(
+                    (lyric) =>
+                      getComputedStyle(lyric).color === 'rgba(0, 0, 0, 0)',
+                  ),
               };
             });
+            // An RTL orphan keeps its stored tatweel but does not draw it.
             assert.deepEqual(orphan, {
               before: 'TextBox',
               type: 'Note',
               isFullMelisma: false,
               hyphens: 0,
               melismaText: '',
+              lyrics: fixture.rtl ? '\u0640' : '',
+              hidesOrphanedTatweel: !!fixture.rtl,
+              drawnTatweels: fixture.rtl ? [false, true] : [],
+            });
+            break;
+          }
+          case 'joined': {
+            // Without the box the continuation draws its tatweel again.
+            const joined = await inEditor((editor) => {
+              const note = editor.elements.value[17];
+              return {
+                type: note.elementType,
+                hidesOrphanedTatweel: note.hidesOrphanedTatweel,
+              };
+            });
+            assert.deepEqual(joined, {
+              type: 'Note',
+              hidesOrphanedTatweel: false,
             });
             break;
           }

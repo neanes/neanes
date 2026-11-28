@@ -1,6 +1,6 @@
+import type { RichTextBoxElement } from '@/models/Element';
 import {
   ElementType,
-  RichTextBoxElement,
   type RunningMarkerRole,
   type ScoreElement,
   TextBoxElement,
@@ -133,11 +133,14 @@ export function getFirstRunningMarker(
 ): string | null {
   for (const element of elements) {
     if (
-      (element instanceof TextBoxElement ||
-        element instanceof RichTextBoxElement) &&
-      element.runningMarkerRole === role
+      (element.elementType === ElementType.TextBox ||
+        element.elementType === ElementType.RichTextBox) &&
+      (element as TextBoxElement | RichTextBoxElement).runningMarkerRole ===
+        role
     ) {
-      const text = resolveRunningMarkerText(element);
+      const text = resolveRunningMarkerText(
+        element as TextBoxElement | RichTextBoxElement,
+      );
       if (text != null) {
         return text;
       }

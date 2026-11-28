@@ -1098,12 +1098,13 @@ export class LayoutService {
     const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
     const paginationLines = contentLines.map((candidate) => {
       const { paragraph, paragraphLineIndex } = candidate;
-      const elements = candidate.positions.flatMap(({ position }) => {
+      const elements: ScoreElement[] = [];
+      for (const { position } of candidate.positions) {
         const item = paragraph.paragraph[position.item];
-        return item.type === 'box' && 'element' in item
-          ? [(item as ElementBox).element]
-          : [];
-      });
+        if (item.type === 'box' && 'element' in item) {
+          elements.push((item as ElementBox).element);
+        }
+      }
       const reservedContinuationLines =
         paragraphLineIndex === 0 ? paragraph.dropCapContinuationLines : 0;
       // Reserve the full drop-cap height, but only group lines belonging to

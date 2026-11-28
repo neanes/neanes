@@ -34,6 +34,61 @@ async function waitFor(description, check) {
   }
 }
 
+async function checkBackgroundTabSave(evaluate) {
+  // A paragraph style change leaves rich-text box heights pending. Switching
+  // tabs cancels the measurement; saving the background tab (as on close or
+  // quit) must still write it with its last measured heights.
+  const scorePath = path.join(output, 'background-tab.byzx');
+  const result = await evaluate(`
+    (async () => {
+      const editor = window.__saveSmoke;
+      editor.onFileMenuNewScore();
+      const background = editor.selectedWorkspace;
+      background.filePath = ${JSON.stringify(scorePath)};
+      editor.onFileMenuInsertRichTextBox();
+      editor.updateParagraphStyles(
+        background.score.paragraphStyles.map((style) => {
+          const clone = style.clone();
+          if (clone.id === 'default-text') {
+            clone.overrides = { ...clone.overrides, fontSize: 40 };
+          }
+          return clone;
+        }),
+      );
+      const pendingBeforeSwitch =
+        editor.pendingRichTextBoxRecalculations.has(background);
+      editor.onFileMenuNewScore();
+      const switched = editor.selectedWorkspace.id !== background.id;
+      const pendingAfterSwitch =
+        editor.pendingRichTextBoxRecalculations.has(background);
+      const saveResult = await editor.saveWorkspace(background);
+      return {
+        pendingBeforeSwitch,
+        switched,
+        pendingAfterSwitch,
+        success: saveResult.success,
+        dirty: background.hasUnsavedChanges,
+      };
+    })()
+  `);
+  assert.deepEqual(result, {
+    pendingBeforeSwitch: true,
+    switched: true,
+    pendingAfterSwitch: true,
+    success: true,
+    dirty: false,
+  });
+  const saved = JSON.parse(await readFile(scorePath, 'utf8'));
+  assert.ok(
+    saved.staff.elements.some(
+      (element) => element.elementType === 'RichTextBox',
+    ),
+  );
+  console.log(
+    'PASS: a background tab with pending rich-text measurement saves with its last heights',
+  );
+}
+
 async function run() {
   await app.whenReady();
   const window = await waitFor(
@@ -301,6 +356,8 @@ async function run() {
     `);
     assert.equal(sameNote, true);
     console.log('PASS: a no-op note update keeps the rendered note mounted');
+
+    await checkBackgroundTabSave(evaluate);
 
     await writeFile(
       path.join(output, 'editor.png'),
@@ -908,6 +965,8 @@ async function run() {
   console.log(
     'PASS: a recovered document saved with newer edits becomes normally clean after undo; immediate close removes all recovery candidates',
   );
+  await checkBackgroundTabSave(evaluate);
+
   await writeFile(
     path.join(output, 'editor.png'),
     (await window.webContents.capturePage()).toPNG(),

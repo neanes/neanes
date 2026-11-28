@@ -6601,7 +6601,7 @@ async function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
   persist: () => Promise<T>,
 ) {
   if (pendingRichTextBoxRecalculations.has(workspace)) {
-    await awaitRichTextBoxRecalculation(workspace);
+    await awaitRichTextBoxRecalculation(workspace, { requireSelected: false });
   }
   return saveDocument(workspace, persist, {
     prepare: prepareWorkspaceForSerialization,
@@ -8796,10 +8796,19 @@ function cancelRichTextBoxRecalculation() {
   richTextBoxMeasurement.cancel();
 }
 
-async function awaitRichTextBoxRecalculation(workspace: Workspace) {
+// Output needs the measured heights, so the workspace must stay selected.
+// Saving does not: a background workspace is saved with its last measured
+// heights and stays pending, so it is measured again when it is selected.
+async function awaitRichTextBoxRecalculation(
+  workspace: Workspace,
+  { requireSelected }: { requireSelected: boolean },
+) {
   while (pendingRichTextBoxRecalculations.has(workspace)) {
     if (workspace !== selectedWorkspace.value) {
-      throw new Error('LAYOUT_CONFLICT');
+      if (requireSelected) {
+        throw new Error('LAYOUT_CONFLICT');
+      }
+      return;
     }
     if (richTextBoxCalculation?.workspace !== workspace) {
       recalculateRichTextBoxHeights();
@@ -9010,7 +9019,7 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
       throw new Error('LAYOUT_CONFLICT');
     }
   } else {
-    await awaitRichTextBoxRecalculation(workspace);
+    await awaitRichTextBoxRecalculation(workspace, { requireSelected: true });
     await nextTick();
   }
   if (source !== toRaw(selectedWorkspace.value) || source.score !== score) {

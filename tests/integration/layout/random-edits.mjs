@@ -499,7 +499,7 @@ async function runSequence(fixture, seed) {
   let snapshotReady = false;
   try {
     // A replay's saved input already includes its page setup variant.
-    const facing = !replay && values.facing;
+    const facing = !replay && (values.facing || fixture.facing);
     if (
       fixture.rtl ||
       facing ||
@@ -532,6 +532,24 @@ async function runSequence(fixture, seed) {
           ({ elementType }) => elementType !== 'Empty',
         );
         score.staff.elements = [...notes, ...notes, ...notes];
+      }
+      if (fixture.wrappingMelismas) {
+        // Melismas long enough to wrap over automatic line and page breaks.
+        score.staff.elements = score.staff.elements.flatMap((element) =>
+          element.elementType === 'Note' &&
+          element.isMelismaStart &&
+          !element.isHyphen
+            ? [
+                element,
+                ...Array.from({ length: 30 }, () => ({
+                  elementType: 'Note',
+                  quantitativeNeume: 'Oligon',
+                  lyrics: '',
+                  isMelisma: true,
+                })),
+              ]
+            : [element],
+        );
       }
       if (fixture.pageMoves === 'headers') {
         Object.assign(score.pageSetup, {
@@ -979,6 +997,15 @@ if (values.incremental && !replay) {
     { name: 'footnotes-rtl', file: fixture, footnotes: true, rtl: true },
     { name: 'page-moves-headers', file: fixture, pageMoves: 'headers' },
     { name: 'page-moves-rtl', file: fixture, pageMoves: 'plain', rtl: true },
+    {
+      // Lines that change page parity move by different amounts.
+      name: 'page-moves-wrapping-melismas-rtl-facing',
+      file: fixture,
+      pageMoves: 'plain',
+      wrappingMelismas: true,
+      rtl: true,
+      facing: true,
+    },
     {
       name: 'page-moves-headers-rtl',
       file: fixture,

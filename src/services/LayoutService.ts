@@ -8080,12 +8080,10 @@ export class LayoutService {
                 element.melismaWidth = 0;
               }
             } else {
-              const nextNoteElement = nextElement as NoteElement;
-
-              if (
-                nextElement == null ||
-                nextElement.elementType !== ElementType.Note
-              ) {
+              // At an automatic wrap the next note is on the next line, so
+              // the tatweel runs to the end of this line, as underscores and
+              // hyphens do.
+              if (nextNoteElement == null) {
                 if (finalElement) {
                   end =
                     finalElement.x +

@@ -1,6 +1,6 @@
-import type { RichTextBoxElement } from '@/models/Element';
 import {
   ElementType,
+  type RichTextBoxElement,
   type RunningMarkerRole,
   type ScoreElement,
   TextBoxElement,
@@ -97,21 +97,16 @@ function getFirstRunningMarkersForPage(page: Page) {
 
   for (const line of page.lines) {
     for (const element of line.elements) {
-      if (
-        element.elementType !== ElementType.TextBox &&
-        element.elementType !== ElementType.RichTextBox
-      ) {
+      const marker = asTextBox(element);
+      if (marker === null) {
         continue;
       }
-      const role = (element as TextBoxElement | RichTextBoxElement)
-        .runningMarkerRole;
+      const role = marker.runningMarkerRole;
       if (
         (role === 'chapter' && chapter == null) ||
         (role === 'section' && section == null)
       ) {
-        const text = resolveRunningMarkerText(
-          element as TextBoxElement | RichTextBoxElement,
-        );
+        const text = resolveRunningMarkerText(marker);
         if (role === 'chapter') {
           chapter = text;
         } else {
@@ -132,15 +127,9 @@ export function getFirstRunningMarker(
   role: RunningMarkerRole,
 ): string | null {
   for (const element of elements) {
-    if (
-      (element.elementType === ElementType.TextBox ||
-        element.elementType === ElementType.RichTextBox) &&
-      (element as TextBoxElement | RichTextBoxElement).runningMarkerRole ===
-        role
-    ) {
-      const text = resolveRunningMarkerText(
-        element as TextBoxElement | RichTextBoxElement,
-      );
+    const marker = asTextBox(element);
+    if (marker?.runningMarkerRole === role) {
+      const text = resolveRunningMarkerText(marker);
       if (text != null) {
         return text;
       }
@@ -244,17 +233,21 @@ function normalizeRunningMarkerText(value: string | null | undefined) {
 }
 
 export function isSectionMarker(element: ScoreElement) {
-  if (
-    element.elementType !== ElementType.TextBox &&
-    element.elementType !== ElementType.RichTextBox
-  ) {
-    return false;
-  }
-  const marker = element as TextBoxElement | RichTextBoxElement;
+  const marker = asTextBox(element);
   return (
-    marker.runningMarkerRole === 'section' &&
+    marker?.runningMarkerRole === 'section' &&
     resolveRunningMarkerText(marker) !== null
   );
+}
+
+// A text box or rich text box, matched by type tag.
+function asTextBox(
+  element: ScoreElement,
+): TextBoxElement | RichTextBoxElement | null {
+  return element.elementType === ElementType.TextBox ||
+    element.elementType === ElementType.RichTextBox
+    ? (element as TextBoxElement | RichTextBoxElement)
+    : null;
 }
 
 // Section numbering for a staff, resolved once so that lookups do not rescan

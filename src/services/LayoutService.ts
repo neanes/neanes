@@ -757,18 +757,22 @@ export class LayoutService {
   private static findEditedParagraphs(
     previous: PreviousLayout,
     elements: ScoreElement[],
-    changes: ReadonlySet<object>,
+    changedRange: { start: number; suffixLength: number },
     musicalEntries: Map<ScoreElement, MusicalContext>,
     changedAmbitus: ModeKeyElement[],
   ) {
-    const range = this.getChangedRange(previous, elements, [
-      ...changes,
-      ...changedAmbitus,
-    ]);
-    if (range === null) {
-      return null;
-    }
-    const { start, suffixLength } = range;
+    // Mode keys whose ambitus changed are staff elements, so they only widen
+    // the range.
+    const ambitusRange = this.getChangedRange(
+      previous,
+      elements,
+      changedAmbitus,
+    );
+    const start = Math.min(changedRange.start, ambitusRange?.start ?? Infinity);
+    const suffixLength = Math.min(
+      changedRange.suffixLength,
+      ambitusRange?.suffixLength ?? Infinity,
+    );
     let end = previous.elements.length - suffixLength;
     for (const [element, oldContext] of previous.musicalEntries) {
       const current = musicalEntries.get(element);
@@ -898,9 +902,18 @@ export class LayoutService {
     endPhase = startSpan('processPages.orderFootnotes');
     const references = orderedFootnotes(score, true);
     const hasFootnoteReferences = references.length > 0;
-    const footnoteObjects = this.getFootnoteObjects(score);
+    // Only a pass that records its layout needs the footnote index.
+    const footnoteObjects = trackReuse
+      ? this.getFootnoteObjects(score)
+      : new Map<object, Footnote>();
+    if (status === null && needsFootnoteSettlement(score)) {
+      status = 'footnote settlement';
+    } else if (status === null && previous === undefined) {
+      status = 'initial';
+    }
+    // Only a pass that can still reuse the previous layout maps its changes.
     const changes =
-      incremental?.changes && previous !== undefined
+      status === null && previous !== undefined && incremental?.changes
         ? this.getMainStaffChanges(
             incremental.changes,
             score,
@@ -908,12 +921,8 @@ export class LayoutService {
             footnoteObjects,
             previous.footnoteObjects,
           )
-        : incremental?.changes;
-    if (status === null && needsFootnoteSettlement(score)) {
-      status = 'footnote settlement';
-    } else if (status === null && previous === undefined) {
-      status = 'initial';
-    } else if (status === null && changes != null && changes.size > 64) {
+        : null;
+    if (changes !== null && changes.size > 64) {
       status = 'bulk edit';
     }
     const changedRange =
@@ -923,9 +932,7 @@ export class LayoutService {
     endPhase();
     endPhase = startSpan('processPages.calculateMartyriae');
     const musicalSpan =
-      changedRange !== null
-        ? this.getMusicalSpan(elements, changedRange)
-        : null;
+      changedRange && this.getMusicalSpan(elements, changedRange);
     const musicalContexts =
       musicalSpan !== null && previous !== undefined
         ? this.calculateMusicalSpan(
@@ -954,11 +961,11 @@ export class LayoutService {
     endPhase = startSpan('processPages.prepareContentLines');
     const cacheLayout = trackReuse;
     const edit =
-      status === null && previous !== undefined && changes?.size
+      changedRange !== null && previous !== undefined
         ? this.findEditedParagraphs(
             previous,
             elements,
-            changes,
+            changedRange,
             musicalEntries,
             changedAmbitus,
           )

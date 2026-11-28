@@ -1,10 +1,22 @@
-import type { Command } from '../CommandService';
+import { type Command, getAffectedObjects } from '../CommandService';
 
 // A property edit can combine independent state contracts into one undo step.
 export class CompositeCommand implements Command {
   private applied: Command[] = [];
 
   constructor(private readonly commands: Command[]) {}
+
+  public affectedObjects() {
+    const affected: object[] = [];
+    for (const command of this.commands) {
+      const objects = getAffectedObjects(command);
+      if (objects === null) {
+        return null;
+      }
+      affected.push(...objects);
+    }
+    return affected;
+  }
 
   public execute() {
     this.applied = this.commands.filter((command) => command.execute());

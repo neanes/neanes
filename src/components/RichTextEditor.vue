@@ -52,6 +52,7 @@ defineOptions({
 const props = defineProps<{
   config: EditorConfig;
   modelValue: string;
+  measurementOnly?: boolean;
   owner: object;
   contentKey?: RichTextBoxContentKey;
   footnotesEditable?: boolean;
@@ -82,7 +83,7 @@ watch(
   () => props.footnoteMarkers,
   (markers) => {
     const editor = instance.value;
-    if (editor !== undefined) {
+    if (editor !== undefined && !props.measurementOnly) {
       editor.plugins.get(Footnotes).setMarkers(markers ?? {});
     }
   },
@@ -95,7 +96,7 @@ function canFlush(modelValue: string) {
 }
 
 watch([() => props.modelValue, instance], ([next, editor]) => {
-  if (editor != null) {
+  if (editor != null && !props.measurementOnly) {
     if (next !== editor.getData()) {
       applyingModel = true;
       try {
@@ -151,6 +152,11 @@ function refreshBaseDirection(editor: InlineEditor) {
 }
 
 function onReady(editor: InlineEditor) {
+  if (props.measurementOnly) {
+    emit('ready', editor);
+    return;
+  }
+
   const plugin = editor.plugins.get(Footnotes);
   plugin.setMarkers(props.footnoteMarkers ?? {});
   if (footnotes !== null) {

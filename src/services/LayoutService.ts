@@ -14,10 +14,8 @@ import type {
   DropCapElement,
   ImageBoxElement,
   MartyriaElement,
-  NoteElement,
   RichTextBoxElement,
   RichTextFootnoteMarker,
-  ScoreElement,
   TempoElement,
   TextBoxElement,
 } from '@/models/Element';
@@ -31,8 +29,11 @@ import {
   isTieNeume,
   LineBreakType,
   ModeKeyElement,
+  NoteElement,
+  ScoreElement,
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
+import type { Footnote } from '@/models/Footnote';
 import type { Header } from '@/models/Header';
 import type {
   InitialMartyriaAmbitusLayout,
@@ -109,6 +110,7 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
+import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { assignMissingElementIds } from '@/models/Workspace';
 import {
@@ -123,6 +125,7 @@ import {
   positionFootnoteMarker,
   resolveFootnoteSpacing,
 } from '@/services/FootnoteLayout';
+import { needsFootnoteSettlement } from '@/services/FootnoteReferences';
 import {
   elementFootnoteIds,
   orderedFootnotes,
@@ -138,6 +141,7 @@ import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import type { ResolvedFontStyle } from '@/utils/fontStyle';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
+import { accumulate, now, profile, startSpan } from '@/utils/layoutProfiler';
 import { lowRootSignMap } from '@/utils/NeumeUtils';
 import type { ResolvedPageMargins } from '@/utils/PageMargins';
 import { resolvePageMargins } from '@/utils/PageMargins';
@@ -173,6 +177,11 @@ import {
 const textWidthCache = new Map<string, number>();
 const neumeWidthCache = new Map<string, number>();
 const noteInkBoundsCache = new Map<string, InkBounds>();
+// Collision boxes depend only on a note's glyphs and the font data, which, as
+// for the caches above, does not change for a given family. The cached boxes
+// are frozen so that a caller that mutates them fails instead of corrupting
+// later layouts.
+const noteCollisionGlyphBoxesCache = new Map<string, readonly NoteGlyphBox[]>();
 const idealMaxAdjustmentRatio = 1;
 const adjustmentRatioCapStep = 0.05;
 const maxAdjustmentRatioSearchLimit = 4096;
@@ -336,6 +345,34 @@ interface CompletedParagraph {
   dropCapContinuationLines: number;
 }
 
+// Phase 1 state that carries from one paragraph into the next. Everything
+// else in the layout workspace is reset when a paragraph ends.
+interface Phase1CarriedState {
+  greekMelismaIsActive: boolean;
+  greekMelismaSyllables: MelismaSyllables | null;
+  pendingGreekPairEndPx: number | null;
+  afterMelismaBreak: boolean;
+  placementGreekMelismaIsActive: boolean;
+  showPreviousLineHyphen: boolean;
+}
+
+// One paragraph built by Phase 1: the element range that produced it, the
+// carried state on entry and exit, and the broken paragraph.
+interface PreparedParagraph {
+  startIndex: number;
+  endIndex: number;
+  entry: Phase1CarriedState;
+  exit: Phase1CarriedState;
+  completed: CompletedParagraph;
+  leadingHyphen: LeadingHyphen;
+}
+
+// Phase 1 reserves space for a hyphen before a note from the previous note.
+interface LeadingHyphen {
+  offset: number;
+  width: number;
+}
+
 interface ContentLine {
   paragraph: CompletedParagraph;
   paragraphLineIndex: number;
@@ -446,7 +483,65 @@ interface AtomicMelismaLayout {
 }
 
 type LayoutInput = Pick<Workspace, 'score' | 'nextId'>;
+interface LinePlacement {
+  line: Line;
+  page: number;
+  lineNumber: number;
+  top: number;
+  // How far a bar transferred to the first note moved it left.
+  reservation: number;
+}
+
+interface PreviousLayout {
+  paragraphs: PreparedParagraph[];
+  elements: ScoreElement[];
+  placements: Map<CompletedParagraph, LinePlacement[]>;
+  musicalEntries: Map<ScoreElement, MusicalContext>;
+  // The musical context at each footnote reference.
+  footnoteContexts: Map<ScoreElement, MusicalContext>;
+  // Each footnote's own objects and body elements, so a change to a body
+  // element removed since is still recognized.
+  footnoteObjects: Map<object, Footnote>;
+}
+
+type PreparationRange = Pick<PreparedParagraph, 'entry' | 'leadingHyphen'> & {
+  start: number;
+  end: number;
+};
+
+type LayoutStatus =
+  | 'reused'
+  | 'initial'
+  | 'forced full'
+  | 'footnote settlement'
+  | 'locked lyrics'
+  | 'diagnostics'
+  | 'range unavailable'
+  | 'bulk edit';
+
+export interface LayoutReuseResult {
+  status: LayoutStatus;
+  prepared: number;
+  totalParagraphs: number;
+  postprocessedPages: number;
+  boundaryParagraphs: number;
+  shiftedLines: number;
+  // Shifted lines that changed page, by direction, and those whose page
+  // parity changed (facing margins).
+  linesToLaterPage: number;
+  linesToEarlierPage: number;
+  parityChangedLines: number;
+  // Elements the musical pass walked, or null for the whole score.
+  musicalSpanElements: number | null;
+  duration: number;
+}
+
 type LayoutOptions = LayoutDiagnosticsOptions & {
+  incremental?: {
+    changes: ReadonlySet<object> | null;
+    forceFull?: boolean;
+    report?: (result: LayoutReuseResult) => void;
+  };
   provisionalFootnoteWidths?: boolean;
   breaksBefore?: ReadonlySet<ScoreElement>;
   onOverflowBreak?: (
@@ -457,14 +552,338 @@ type LayoutOptions = LayoutDiagnosticsOptions & {
 };
 
 export class LayoutService {
+  private static readonly previousLayouts = new WeakMap<
+    LayoutInput,
+    PreviousLayout
+  >();
+
+  private static getPreparationRange(
+    previous: PreviousLayout,
+    elements: ScoreElement[],
+    first: number,
+    last: number,
+  ): PreparationRange | null {
+    const paragraph = previous.paragraphs[first];
+    const start = paragraph.startIndex;
+    const oldEnd = previous.paragraphs[last].endIndex + 1;
+    const end = oldEnd + elements.length - previous.elements.length;
+    if (
+      start >= end ||
+      (start > 0 && elements[start - 1] !== previous.elements[start - 1]) ||
+      elements[end] !== previous.elements[oldEnd]
+    ) {
+      return null;
+    }
+    return {
+      start,
+      end,
+      entry: paragraph.entry,
+      leadingHyphen: paragraph.leadingHyphen,
+    };
+  }
+
+  private static getLeadingHyphen(element: ScoreElement | undefined) {
+    return element instanceof NoteElement
+      ? {
+          offset: element.leadingLyricHyphenOffset,
+          width: element.leadingLyricHyphenReservationWidth,
+        }
+      : { offset: 0, width: 0 };
+  }
+
+  // An undefined element is the start of the score.
+  private static endsParagraph(
+    element: ScoreElement | undefined,
+    next: ScoreElement | null,
+  ) {
+    return (
+      element === undefined ||
+      element.lineBreak ||
+      element.pageBreak ||
+      isBlockElement(element) ||
+      isBlockElement(next) ||
+      isRightAlignedMartyria(element) ||
+      (this.isFillWidthElement(element) && !isRightAlignedMartyria(next))
+    );
+  }
+
+  private static getFootnoteObjects(score: Score) {
+    const objects = new Map<object, Footnote>();
+    for (const footnote of score.footnotes) {
+      objects.set(footnote, footnote);
+      objects.set(footnote.staff, footnote);
+      objects.set(footnote.staff.elements, footnote);
+      for (const element of footnote.staff.elements) {
+        objects.set(element, footnote);
+      }
+    }
+    return objects;
+  }
+
+  // Footnote bodies are prepared in full on every pass, and they reach the
+  // main staff only through pagination. A body change therefore stands for
+  // its reference, whose paragraph gives the pass a range. The footnote list
+  // changes only together with the references that add or remove an entry.
+  private static getMainStaffChanges(
+    changes: ReadonlySet<object>,
+    score: Score,
+    references: ReturnType<typeof orderedFootnotes>,
+    footnoteObjects: Map<object, Footnote>,
+    previousFootnoteObjects: Map<object, Footnote>,
+  ): ReadonlySet<object> {
+    if (footnoteObjects.size === 0 && previousFootnoteObjects.size === 0) {
+      return changes;
+    }
+    const referenceById = new Map(
+      references.map(({ footnote, reference }) => [footnote.id, reference]),
+    );
+    const result = new Set<object>();
+    for (const changed of changes) {
+      if (changed === score.footnotes) {
+        continue;
+      }
+      const footnote =
+        footnoteObjects.get(changed) ?? previousFootnoteObjects.get(changed);
+      if (footnote === undefined) {
+        result.add(changed);
+        continue;
+      }
+      // An unreferenced body is not laid out.
+      const reference = referenceById.get(footnote.id);
+      if (reference !== undefined) {
+        result.add(reference);
+      }
+    }
+    return result;
+  }
+
+  // Elements before `start` and the last `suffixLength` elements are the
+  // same in both layouts, or null if a change is not a staff element.
+  private static getChangedRange(
+    previous: PreviousLayout,
+    elements: ScoreElement[],
+    changes: Iterable<object>,
+  ) {
+    let start = previous.elements.length;
+    let suffixLength = previous.elements.length;
+    for (const changed of changes) {
+      if (changed === elements) {
+        continue;
+      }
+      if (!(changed instanceof ScoreElement)) {
+        return null;
+      }
+      const index = changed.index;
+      const oldIndex =
+        previous.elements[index] === changed
+          ? index
+          : previous.elements.indexOf(changed);
+      const newIndex = elements[index] === changed ? index : -1;
+      if (oldIndex === -1 && newIndex === -1) {
+        return null;
+      }
+      if (oldIndex >= 0) {
+        start = Math.min(start, oldIndex);
+        suffixLength = Math.min(
+          suffixLength,
+          previous.elements.length - oldIndex - 1,
+        );
+      }
+      if (newIndex >= 0) {
+        start = Math.min(start, newIndex);
+        suffixLength = Math.min(suffixLength, elements.length - newIndex - 1);
+      }
+    }
+    if (suffixLength === previous.elements.length) {
+      return null;
+    }
+    return { start, suffixLength };
+  }
+
+  // The mode-key spans that contain the changed elements, from the reset
+  // before them (or the score start) up to the next reset after them.
+  private static getMusicalSpan(
+    elements: ScoreElement[],
+    { start, suffixLength }: { start: number; suffixLength: number },
+  ) {
+    let first = Math.min(start, elements.length) - 1;
+    while (first > 0 && !this.resetsMusicalState(elements[first])) {
+      first--;
+    }
+    let end = elements.length - suffixLength;
+    while (end < elements.length && !this.resetsMusicalState(elements[end])) {
+      end++;
+    }
+    return { start: Math.max(first, 0), end };
+  }
+
+  // Runs the musical pass over the changed mode-key spans only. Everything
+  // outside them, including paragraph entry and footnote contexts, is kept
+  // from the previous layout.
+  private static calculateMusicalSpan(
+    previous: PreviousLayout,
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    span: { start: number; end: number },
+    musicalEntries: Map<ScoreElement, MusicalContext>,
+    changedAmbitus: ModeKeyElement[],
+  ) {
+    const kept = (element: ScoreElement, end: number) =>
+      elements[element.index] === element &&
+      (element.index < span.start || element.index >= end);
+    // The span records the checkpoint at its end.
+    for (const [element, context] of previous.musicalEntries) {
+      if (kept(element, span.end + 1)) {
+        musicalEntries.set(element, context);
+      }
+    }
+    // A later span's first element and the one before it are unchanged, so
+    // its first checkpoint keeps its recorded entry. A reset ignores it. A
+    // span at the score start starts from the default, since its first
+    // element may have moved there, as when the opening mode key is deleted.
+    const contexts = this.calculateMartyriae(
+      elements,
+      pageSetup,
+      span.start === 0
+        ? undefined
+        : previous.musicalEntries.get(elements[span.start]),
+      { musicalEntries, changedAmbitus },
+      span,
+    );
+    for (const [element, context] of previous.footnoteContexts) {
+      if (kept(element, span.end)) {
+        contexts.set(element, context);
+      }
+    }
+    return contexts;
+  }
+
+  private static findEditedParagraphs(
+    previous: PreviousLayout,
+    elements: ScoreElement[],
+    changedRange: { start: number; suffixLength: number },
+    musicalEntries: Map<ScoreElement, MusicalContext>,
+    changedAmbitus: ModeKeyElement[],
+  ) {
+    // Mode keys whose ambitus changed are staff elements, so they only widen
+    // the range.
+    const ambitusRange = this.getChangedRange(
+      previous,
+      elements,
+      changedAmbitus,
+    );
+    const start = Math.min(changedRange.start, ambitusRange?.start ?? Infinity);
+    const suffixLength = Math.min(
+      changedRange.suffixLength,
+      ambitusRange?.suffixLength ?? Infinity,
+    );
+    let end = previous.elements.length - suffixLength;
+    for (const [element, oldContext] of previous.musicalEntries) {
+      const current = musicalEntries.get(element);
+      if (current !== undefined && !deepEquals(current, oldContext)) {
+        const oldIndex =
+          element.index + (previous.elements.length - elements.length);
+        if (oldIndex >= end && previous.elements[oldIndex] === element) {
+          end = oldIndex + 1;
+        }
+      }
+    }
+    const delta = elements.length - previous.elements.length;
+    const paragraphs = previous.paragraphs;
+    let first = paragraphs.findIndex(
+      (paragraph) => paragraph.endIndex >= start,
+    );
+    if (first === -1) {
+      first = paragraphs.length - 1;
+    }
+    if (first < 0) {
+      return null;
+    }
+    let boundaryParagraphs = 0;
+    // A changed first element can change the previous paragraph's last glue,
+    // its transferred bar, or the implicit break itself.
+    if (first > 0 && paragraphs[first].startIndex === start) {
+      const before = elements[start - 1];
+      const following = elements[start] ?? null;
+      const oldFollowing = previous.elements[start];
+      const crossesNoteBoundary =
+        (before instanceof NoteElement ||
+          this.isMelismaContinuationElement(before)) &&
+        (following instanceof NoteElement ||
+          oldFollowing instanceof NoteElement);
+      const transfersLeftBar =
+        before instanceof NoteElement &&
+        (following?.elementType === ElementType.Martyria ||
+          oldFollowing.elementType === ElementType.Martyria);
+      if (
+        !this.endsParagraph(before, following) ||
+        crossesNoteBoundary ||
+        transfersLeftBar
+      ) {
+        first--;
+        boundaryParagraphs++;
+      }
+    }
+
+    let last = first;
+    while (last + 1 < paragraphs.length) {
+      const boundary = paragraphs[last].endIndex + 1;
+      if (boundary >= end) {
+        const nextIndex = boundary + delta;
+        const next = elements[nextIndex];
+        if (
+          next === previous.elements[boundary] &&
+          this.endsParagraph(elements[nextIndex - 1], next)
+        ) {
+          break;
+        }
+      }
+      last++;
+    }
+    return { first, last, boundaryParagraphs };
+  }
+
   public static processPages(
+    workspace: LayoutInput,
+    options?: LayoutOptions,
+  ): Page[] {
+    return profile('processPages', () =>
+      this.processPagesUnprofiled(workspace, options),
+    );
+  }
+
+  private static processPagesUnprofiled(
     workspace: LayoutInput,
     options?: LayoutOptions,
   ): Page[] {
     const score = workspace.score;
     const pageSetup = score.pageSetup;
     const elements = score.staff.elements;
+    const incremental = options?.incremental;
+    const report = incremental?.report;
+    const start = report === undefined ? 0 : performance.now();
+    const previous = this.previousLayouts.get(workspace);
+    // Any pass mutates layout fields in place. An interrupted or detached pass
+    // must never leave an earlier record eligible for reuse.
+    this.previousLayouts.delete(workspace);
+    const musicalEntries = new Map<ScoreElement, MusicalContext>();
+    const changedAmbitus: ModeKeyElement[] = [];
+    // Why this pass is a full layout, or null while reuse is still possible.
+    let status: LayoutStatus | null = incremental?.forceFull
+      ? 'forced full'
+      : score.staff.lyrics.locked
+        ? 'locked lyrics'
+        : options?.collectDiagnostics
+          ? 'diagnostics'
+          : incremental === undefined ||
+              options?.breaksBefore?.size ||
+              options?.onOverflowBreak !== undefined ||
+              options?.provisionalFootnoteWidths
+            ? 'range unavailable'
+            : null;
+    const trackReuse = status === null;
 
+    let endPhase = startSpan('processPages.saveElementState');
     assignMissingElementIds(workspace);
     score.staves.forEach((staff) =>
       staff.elements.forEach((element, index) => {
@@ -483,31 +902,177 @@ export class LayoutService {
       this.saveElementState(element);
     });
 
-    const musicalContexts = this.calculateMartyriae(elements, pageSetup);
+    endPhase();
+    endPhase = startSpan('processPages.orderFootnotes');
     const references = orderedFootnotes(score, true);
     const hasFootnoteReferences = references.length > 0;
+    // Only a pass that records its layout needs the footnote index.
+    const footnoteObjects = trackReuse
+      ? this.getFootnoteObjects(score)
+      : new Map<object, Footnote>();
+    if (status === null && needsFootnoteSettlement(score)) {
+      status = 'footnote settlement';
+    } else if (status === null && previous === undefined) {
+      status = 'initial';
+    }
+    // Only a pass that can still reuse the previous layout maps its changes.
+    const changes =
+      status === null && previous !== undefined && incremental?.changes
+        ? this.getMainStaffChanges(
+            incremental.changes,
+            score,
+            references,
+            footnoteObjects,
+            previous.footnoteObjects,
+          )
+        : null;
+    if (changes !== null && changes.size > 64) {
+      status = 'bulk edit';
+    }
+    const changedRange =
+      status === null && previous !== undefined && changes?.size
+        ? this.getChangedRange(previous, elements, changes)
+        : null;
+    endPhase();
+    endPhase = startSpan('processPages.calculateMartyriae');
+    const musicalSpan =
+      changedRange && this.getMusicalSpan(elements, changedRange);
+    const musicalContexts =
+      musicalSpan !== null && previous !== undefined
+        ? this.calculateMusicalSpan(
+            previous,
+            elements,
+            pageSetup,
+            musicalSpan,
+            musicalEntries,
+            changedAmbitus,
+          )
+        : this.calculateMartyriae(
+            elements,
+            pageSetup,
+            undefined,
+            trackReuse ? { musicalEntries, changedAmbitus } : undefined,
+          );
+    endPhase();
+    endPhase = startSpan('processPages.prepareFootnotes');
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
       references,
       options,
     );
-    const content = this.prepareContentLines(
-      elements,
-      pageSetup,
-      score.paragraphStyles,
-      score.initialMartyriaStyles,
-      score.defaultInitialMartyriaStyleId,
-      options,
-    );
+    endPhase();
+    endPhase = startSpan('processPages.prepareContentLines');
+    const cacheLayout = trackReuse;
+    const edit =
+      changedRange !== null && previous !== undefined
+        ? this.findEditedParagraphs(
+            previous,
+            elements,
+            changedRange,
+            musicalEntries,
+            changedAmbitus,
+          )
+        : null;
+
+    // Avoid doing most of a full pass and then paying again on fallback.
+    const preparationLimit = Math.ceil((previous?.paragraphs.length ?? 0) / 2);
+    const prepare = (range?: PreparationRange) =>
+      this.prepareContentLines(
+        elements,
+        pageSetup,
+        score.paragraphStyles,
+        score.initialMartyriaStyles,
+        score.defaultInitialMartyriaStyleId,
+        options,
+        range,
+      );
+
+    let reuse: PreparationRange | null = null;
+    let content: ReturnType<typeof prepare> | undefined;
+    let prepared = 0;
+    const delta = elements.length - (previous?.elements.length ?? 0);
+    if (edit !== null && previous !== undefined) {
+      const range =
+        edit.last - edit.first + 1 > preparationLimit
+          ? undefined
+          : this.getPreparationRange(previous, elements, edit.first, edit.last);
+      if (range === undefined) {
+        status = 'bulk edit';
+      } else if (range !== null) {
+        const candidate = prepare(range);
+        prepared += candidate.paragraphs.length;
+        // The last note can write a leading hyphen onto the first note of the
+        // following paragraph. While this or carried state differs from what
+        // that paragraph was prepared with, prepare it too, continuing from
+        // the state the range ends with.
+        status = 'bulk edit';
+        while (prepared <= preparationLimit) {
+          const next = previous.paragraphs[edit.last + 1];
+          const exit = candidate.paragraphs.at(-1)!.exit;
+          if (
+            next === undefined ||
+            (deepEquals(exit, next.entry) &&
+              deepEquals(candidate.nextLeadingHyphen, next.leadingHyphen))
+          ) {
+            reuse = range;
+            content = candidate;
+            status = 'reused';
+            break;
+          }
+          edit.last++;
+          edit.boundaryParagraphs++;
+          range.end = next.endIndex + 1 + delta;
+          const added = prepare({
+            start: next.startIndex + delta,
+            end: range.end,
+            entry: exit,
+            leadingHyphen: candidate.nextLeadingHyphen,
+          });
+          prepared += added.paragraphs.length;
+          this.appendPreparedContent(candidate, added);
+        }
+      }
+    }
+    if (content === undefined) {
+      content = prepare();
+      prepared += content.paragraphs.length;
+    }
+    if (report !== undefined && trackReuse) {
+      // endsParagraph restates the paragraph rules of prepareContentLines to
+      // place the musical checkpoints. Catch any drift between the two.
+      const unchecked = content.paragraphs.find(
+        ({ startIndex }) => !musicalEntries.has(elements[startIndex]),
+      );
+      if (unchecked !== undefined) {
+        throw new Error(
+          `Paragraph at element ${unchecked.startIndex} has no musical checkpoint`,
+        );
+      }
+    }
+    let paragraphs = content.paragraphs;
+    if (reuse !== null && edit !== null && previous !== undefined) {
+      const suffix = previous.paragraphs.slice(edit.last + 1);
+      paragraphs = [
+        ...previous.paragraphs.slice(0, edit.first),
+        ...paragraphs,
+        ...(delta === 0
+          ? suffix
+          : suffix.map((paragraph) => ({
+              ...paragraph,
+              startIndex: paragraph.startIndex + delta,
+              endIndex: paragraph.endIndex + delta,
+            }))),
+      ];
+    }
+    endPhase();
+    endPhase = startSpan('processPages.headersAndFooters');
     const {
-      layoutWorkspace,
       neumeHeight,
       neumeLineHeight,
       lyricsBaseline,
       defaultLyricsFontCss,
       measureBarWidthMap,
-      atomicMelismaLayout,
     } = content;
 
     // Process Header and Footers
@@ -536,17 +1101,21 @@ export class LayoutService {
       }
     }
 
+    endPhase();
+    endPhase = startSpan('processPages.paginate');
     const contentLines = this.getContentLines(
-      layoutWorkspace.completedParagraphs,
+      paragraphs.map((paragraph) => paragraph.completed),
     );
+    const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
     const paginationLines = contentLines.map((candidate) => {
       const { paragraph, paragraphLineIndex } = candidate;
-      const elements = candidate.positions.flatMap(({ position }) => {
+      const elements: ScoreElement[] = [];
+      for (const { position } of candidate.positions) {
         const item = paragraph.paragraph[position.item];
-        return item.type === 'box' && 'element' in item
-          ? [(item as ElementBox).element]
-          : [];
-      });
+        if (item.type === 'box' && 'element' in item) {
+          elements.push((item as ElementBox).element);
+        }
+      }
       const reservedContinuationLines =
         paragraphLineIndex === 0 ? paragraph.dropCapContinuationLines : 0;
       // Reserve the full drop-cap height, but only group lines belonging to
@@ -593,7 +1162,6 @@ export class LayoutService {
         }
       }
     }
-    const { above, below, thickness } = resolveFootnoteSpacing(pageSetup);
     const decisions = buildContentPages(
       paginationLines,
       new Map([...footnotes].map(([id, body]) => [id, body.height])),
@@ -625,6 +1193,20 @@ export class LayoutService {
           : undefined,
       },
     );
+    const findPlacement = (candidate: ContentLine) =>
+      previous?.placements.get(candidate.paragraph)?.[
+        candidate.paragraphLineIndex
+      ];
+    const placements = new Map<CompletedParagraph, LinePlacement[]>();
+    const phasePages: Page[] = [];
+    let phasePage: Page | undefined;
+    let previousLine: Line | null = null;
+    let shiftedLines = 0;
+    let linesToLaterPage = 0;
+    let linesToEarlierPage = 0;
+    let parityChangedLines = 0;
+    endPhase();
+    endPhase = startSpan('processPages.positionLines');
     const pages: Page[] = [];
     for (const [index, decision] of decisions.entries()) {
       const page = new Page();
@@ -634,23 +1216,73 @@ export class LayoutService {
       page.footnoteOverflow = decision.footnoteOverflow;
       const margins = resolvePageMargins(pageSetup, page.physicalPageNumber);
       for (const placement of decision.lines) {
-        const previousLine =
-          page.lines.at(-1) ?? pages.at(-1)?.lines.at(-1) ?? null;
-        page.lines.push(
-          this.positionContentLine(
-            contentLines[placement.index],
+        const candidate = contentLines[placement.index];
+        const cached = reuse === null ? undefined : findPlacement(candidate);
+        const top = page.contentTop + placement.top;
+        const lineNumber = page.lines.length + 1;
+        let line: Line;
+        let reservation: number;
+        if (
+          cached !== undefined &&
+          cached.page === page.physicalPageNumber &&
+          cached.lineNumber === lineNumber &&
+          cached.top === top
+        ) {
+          ({ line, reservation } = cached);
+        } else {
+          // A reused line that moved is re-placed, not prepared again.
+          if (cached !== undefined) {
+            shiftedLines++;
+            const pageDelta = page.physicalPageNumber - cached.page;
+            if (pageDelta > 0) {
+              linesToLaterPage++;
+            } else if (pageDelta < 0) {
+              linesToEarlierPage++;
+            }
+            if (pageDelta % 2 !== 0) {
+              parityChangedLines++;
+            }
+          }
+          ({ line, reservation } = this.positionContentLine(
+            candidate,
             pageSetup,
             margins,
-            page.contentTop + placement.top,
+            top,
             page.physicalPageNumber,
-            page.lines.length + 1,
+            lineNumber,
             previousLine,
             neumeLineHeight,
             lyricsBaseline,
             defaultLyricsFontCss,
             measureBarWidthMap,
-          ),
-        );
+            cached?.reservation ?? null,
+          ));
+        }
+        this.transferLineStartBar(previousLine, line);
+        if (cached === undefined && reuse !== null) {
+          if (phasePage?.physicalPageNumber !== page.physicalPageNumber) {
+            phasePage = new Page();
+            phasePage.physicalPageNumber = page.physicalPageNumber;
+            phasePages.push(phasePage);
+          }
+          phasePage.lines.push(line);
+        }
+        page.lines.push(line);
+        if (cacheLayout) {
+          let records = placements.get(candidate.paragraph);
+          if (records === undefined) {
+            records = [];
+            placements.set(candidate.paragraph, records);
+          }
+          records.push({
+            line,
+            page: page.physicalPageNumber,
+            lineNumber,
+            top,
+            reservation,
+          });
+        }
+        previousLine = line;
       }
       pages.push(page);
     }
@@ -708,20 +1340,37 @@ export class LayoutService {
       });
     }
 
-    this.centerMeasureBars(pages, pageSetup, measureBarWidthMap);
+    endPhase();
+    endPhase = startSpan('processPages.centerMeasureBars');
+    const postprocessPages = reuse === null ? pages : phasePages;
+    this.centerMeasureBars(postprocessPages, pageSetup, measureBarWidthMap);
+    endPhase();
+    endPhase = startSpan('processPages.addMelismas');
     this.addMelismas(
-      pages,
+      postprocessPages,
       pageSetup,
       defaultLyricsFontCss,
       measureBarWidthMap,
-      atomicMelismaLayout.centeringPlans,
+      content.atomicMelismaLayout.centeringPlans,
       content.blockedMelismaNotes,
+      reuse !== null
+        ? {
+            following: elements[reuse.end] ?? null,
+            greekIsActive: reuse.entry.placementGreekMelismaIsActive,
+            greekSyllables: reuse.entry.greekMelismaSyllables,
+            leadingHyphen: reuse.entry.showPreviousLineHyphen,
+          }
+        : undefined,
     );
 
+    endPhase();
+    endPhase = startSpan('processPages.alignIsonIndicators');
     if (pageSetup.alignIsonIndicators) {
-      this.alignIsonIndicators(pages, pageSetup);
+      this.alignIsonIndicators(postprocessPages, pageSetup);
     }
 
+    endPhase();
+    endPhase = startSpan('processPages.footnoteBodies');
     const markerGap = footnoteBodyMarkerGap(score.paragraphStyles);
     for (const physicalPage of pages) {
       if (physicalPage.footnotes.length === 0) {
@@ -777,19 +1426,21 @@ export class LayoutService {
           ? margins.contentRight - prepared.gutter + markerGap
           : margins.contentLeft + prepared.gutter - markerGap;
         for (const candidate of prepared.lines) {
-          const line = this.positionContentLine(
+          const previousBodyLine = body.lines.at(-1) ?? null;
+          const { line } = this.positionContentLine(
             candidate,
             setup,
             bodyMargins,
             top,
             physicalPage.physicalPageNumber,
             body.lines.length + 1,
-            body.lines.at(-1) ?? null,
+            previousBodyLine,
             prepared.content.neumeLineHeight,
             prepared.content.lyricsBaseline,
             prepared.content.defaultLyricsFontCss,
             prepared.content.measureBarWidthMap,
           );
+          this.transferLineStartBar(previousBodyLine, line);
           body.lines.push(line);
           line.footnoteId = body.id;
           top += candidate.height;
@@ -838,6 +1489,8 @@ export class LayoutService {
     }
 
     // Record element updates
+    endPhase();
+    endPhase = startSpan('processPages.checkElementState');
     score.staves.forEach((staff) =>
       staff.elements.forEach((element) => {
         if (
@@ -860,16 +1513,41 @@ export class LayoutService {
     score.headersAndFooters.forEach((element) => {
       this.checkElementState(element);
     });
+    endPhase();
 
-    if (layoutWorkspace.loggingEnabled) {
+    if (content.layoutWorkspace.loggingEnabled) {
       console.log(
         'avg ratio',
-        layoutWorkspace.completedParagraphs
+        paragraphs
+          .map((paragraph) => paragraph.completed)
           .flatMap((p) => p.ratios)
           .reduce((sum, ratio, _, arr) => sum + ratio / arr.length, 0),
       );
     }
 
+    if (cacheLayout) {
+      this.previousLayouts.set(workspace, {
+        paragraphs,
+        elements: elements.slice(),
+        placements,
+        musicalEntries,
+        footnoteContexts: musicalContexts,
+        footnoteObjects,
+      });
+    }
+    report?.({
+      status: status ?? 'range unavailable',
+      prepared,
+      totalParagraphs: paragraphs.length,
+      postprocessedPages: postprocessPages.length,
+      boundaryParagraphs: edit?.boundaryParagraphs ?? 0,
+      shiftedLines,
+      linesToLaterPage,
+      linesToEarlierPage,
+      parityChangedLines,
+      musicalSpanElements: musicalSpan && musicalSpan.end - musicalSpan.start,
+      duration: performance.now() - start,
+    });
     return pages;
   }
 
@@ -983,7 +1661,10 @@ export class LayoutService {
     lyricsBaseline: number,
     defaultLyricsFontCss: string,
     measureBarWidthMap: Map<MeasureBar, number>,
-  ): Line {
+    // Re-place a line positioned by an earlier pass: write only its placement
+    // and repeat the one-time line-start reservation's X offset.
+    replacedReservation: number | null = null,
+  ): { line: Line; reservation: number } {
     const { paragraph: completedParagraph, paragraphLineIndex } = candidate;
     const {
       paragraph,
@@ -995,6 +1676,7 @@ export class LayoutService {
       dropCapContinuationLines,
     } = completedParagraph;
     const currentLine = new Line();
+    let reservation = replacedReservation ?? 0;
     currentLine.adjustmentRatio = ratios[paragraphLineIndex]!;
     currentLine.diagnostics = diagnostics?.[paragraphLineIndex] ?? null;
     currentLine.paragraphEnd = paragraphLineIndex === lineHeights.length - 1;
@@ -1094,22 +1776,14 @@ export class LayoutService {
         lyricsBaseline,
       );
 
-      // Measure bar transfer logic between lines
-      if (isFirstElementOnLine) {
-        const previousElement = prevLine
-          ? prevLine.elements[prevLine.elements.length - 1]
-          : null;
+      // A left bar on the first element moves to the previous line in
+      // transferLineStartBar.
+      if (isFirstElementOnLine && replacedReservation !== null) {
+        element.x -= replacedReservation;
+      } else if (isFirstElementOnLine) {
+        const previousElement = prevLine?.elements.at(-1);
 
-        if (previousElement?.elementType === ElementType.Note) {
-          // If the new line starts with a left measure, apply it to the
-          // right of the previous line
-          const previousNoteElement = previousElement as NoteElement;
-          const transferredMeasureBar =
-            this.getMeasureBarTransferredFromLineStart(element);
-          if (transferredMeasureBar) {
-            previousNoteElement.computedMeasureBarRight = transferredMeasureBar;
-          }
-        } else if (
+        if (
           element.elementType === ElementType.Note &&
           previousElement?.elementType === ElementType.Martyria &&
           paragraphLineIndex > 0
@@ -1148,6 +1822,7 @@ export class LayoutService {
               noteElement.neumeWidth += reservedWidth;
               noteElement.lyricsHorizontalOffset += reservedWidth;
               element.x -= reservedWidth;
+              reservation = reservedWidth;
             }
           }
         }
@@ -1219,7 +1894,36 @@ export class LayoutService {
         }
       }
     }
-    return currentLine;
+    return { line: currentLine, reservation };
+  }
+
+  // If a line starts with a left bar, draw it at the end of the previous line.
+  private static transferLineStartBar(previousLine: Line | null, line: Line) {
+    const last = previousLine?.elements.at(-1);
+    if (last?.elementType === ElementType.Note) {
+      const bar = this.getMeasureBarTransferredFromLineStart(
+        line.elements[0] ?? null,
+      );
+      if (bar !== null) {
+        (last as NoteElement).computedMeasureBarRight = bar;
+      }
+    }
+  }
+
+  // Append the paragraphs prepared from where target's range ends. The other
+  // fields are fixed per page setup or read only during preparation.
+  private static appendPreparedContent(
+    target: ReturnType<typeof LayoutService.prepareContentLines>,
+    added: ReturnType<typeof LayoutService.prepareContentLines>,
+  ) {
+    target.paragraphs.push(...added.paragraphs);
+    target.nextLeadingHyphen = added.nextLeadingHyphen;
+    for (const note of added.blockedMelismaNotes) {
+      target.blockedMelismaNotes.add(note);
+    }
+    for (const [note, plan] of added.atomicMelismaLayout.centeringPlans) {
+      target.atomicMelismaLayout.centeringPlans.set(note, plan);
+    }
   }
 
   // Build an independent content sequence before assigning it to physical pages.
@@ -1231,7 +1935,16 @@ export class LayoutService {
     initialMartyriaStyles: InitialMartyriaStyle[],
     defaultInitialMartyriaStyleId: string,
     options?: LayoutDiagnosticsOptions,
+    range?: PreparationRange,
   ) {
+    const start = range?.start ?? 0;
+    const end = range?.end ?? elements.length;
+    if (range !== undefined && elements[end] instanceof NoteElement) {
+      elements = elements.slice();
+      elements[end] = Object.assign(new NoteElement(), elements[end]);
+    }
+    const nextNote =
+      elements[end] instanceof NoteElement ? elements[end] : null;
     const layoutWorkspace: LayoutWorkspace = {
       pageSetup,
       pendingParagraph: [],
@@ -1295,18 +2008,40 @@ export class LayoutService {
       paragraphStyles: paragraphStyles,
     };
 
-    this.precomputeNoteGeometry(elements, pageSetup, noteWidthArgs);
+    const endGeometry = startSpan('prepareContentLines.noteGeometry');
+    this.precomputeNoteGeometry(
+      elements,
+      pageSetup,
+      noteWidthArgs,
+      start,
+      end + (nextNote === null ? 0 : 1),
+    );
+    const firstElement = elements[start];
+    if (range !== undefined && firstElement instanceof NoteElement) {
+      firstElement.leadingLyricHyphenOffset = range.leadingHyphen.offset;
+      firstElement.leadingLyricHyphenReservationWidth =
+        range.leadingHyphen.width;
+    }
+    endGeometry();
+    const endMelismas = startSpan('prepareContentLines.melismas');
     const greekMelismaPairs = this.prepareGreekMelismaPairs(
       elements,
       pageSetup,
       measureBarWidthMap,
+      start,
+      end,
+      range?.entry.greekMelismaIsActive,
     );
 
     const atomicMelismaLayout = this.prepareAtomicMelismaLayout(
       elements,
       pageSetup,
       measureBarWidthMap,
+      start,
+      end,
     );
+
+    endMelismas();
 
     // Keep this encoding's elasticity non-negative so adjustment ratios retain
     // their conventional meaning and tex-linebreak can use its suffix-floor
@@ -1344,15 +2079,78 @@ export class LayoutService {
     };
 
     // Phase 1: Build paragraphs as sequences of boxes, glue, and penalties
-    let phase1GreekMelismaIsActive = false;
-    let phase1GreekMelismaSyllables: MelismaSyllables | null = null;
-    let pendingGreekPairEndPx: number | null = null;
+    const endParagraphs = startSpan('prepareContentLines.paragraphs');
+    // Adjacent note boundaries share a note. Its collision inputs are fixed
+    // during encoding, so only retain the last note's boxes.
+    let collisionNote: NoteElement | null = null;
+    let collisionBoxes: readonly NoteGlyphBox[] = [];
+    const getCollisionBoxes = (note: NoteElement) => {
+      if (note !== collisionNote) {
+        collisionBoxes = this.getCachedNoteCollisionGlyphBoxes(
+          note,
+          pageSetup,
+          measureBarWidthMap,
+        );
+        collisionNote = note;
+      }
+      return collisionBoxes;
+    };
+    // Measure each mode-key font once during this pass. A later pass can
+    // then pick up newly loaded fonts.
+    const modeKeyFontMetrics = new Map<
+      string,
+      ReturnType<typeof TextMeasurementService.getFontVerticalMetrics>
+    >();
+    const getModeKeyFontMetrics = (font: string) => {
+      let metrics = modeKeyFontMetrics.get(font);
+      if (metrics === undefined) {
+        metrics = TextMeasurementService.getFontVerticalMetrics(font);
+        modeKeyFontMetrics.set(font, metrics);
+      }
+      return metrics;
+    };
+    let phase1GreekMelismaIsActive = range?.entry.greekMelismaIsActive ?? false;
+    let phase1GreekMelismaSyllables =
+      range?.entry.greekMelismaSyllables ?? null;
+    let pendingGreekPairEndPx = range?.entry.pendingGreekPairEndPx ?? null;
     // Orphaned continuation notes stay editable after a melisma break.
-    let afterMelismaBreak = false;
+    let afterMelismaBreak = range?.entry.afterMelismaBreak ?? false;
     const blockedMelismaNotes = new Set<NoteElement>();
-    for (let i = 0; i < elements.length; i++) {
+    let placementGreekMelismaIsActive =
+      range?.entry.placementGreekMelismaIsActive ?? false;
+    let showPreviousLineHyphen = range?.entry.showPreviousLineHyphen ?? false;
+    const carriedState = (): Phase1CarriedState => ({
+      greekMelismaIsActive: phase1GreekMelismaIsActive,
+      greekMelismaSyllables: phase1GreekMelismaSyllables,
+      pendingGreekPairEndPx,
+      afterMelismaBreak,
+      placementGreekMelismaIsActive,
+      showPreviousLineHyphen,
+    });
+    const paragraphs: PreparedParagraph[] = [];
+    let paragraphStartIndex = 0;
+    let paragraphEntry = carriedState();
+    const recordParagraph = (endIndex: number) => {
+      paragraphs.push({
+        startIndex: paragraphStartIndex,
+        endIndex,
+        entry: paragraphEntry,
+        exit: carriedState(),
+        leadingHyphen: this.getLeadingHyphen(elements[paragraphStartIndex]),
+        completed: layoutWorkspace.completedParagraphs.at(-1)!,
+      });
+    };
+    for (let i = start; i < end; i++) {
+      if (layoutWorkspace.pendingParagraph.length === 0) {
+        paragraphStartIndex = i;
+        paragraphEntry = carriedState();
+      }
       const element = elements[i];
+      // Phase 2 shows a hyphen before the first note, even when that note
+      // isn't the next element and Phase 1 reserved no space for it.
+      showPreviousLineHyphen = false;
       if (this.isBreakElement(element)) {
+        placementGreekMelismaIsActive = false;
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
         // A drop cap starts a syllable, so the continuations after it are
@@ -1478,6 +2276,8 @@ export class LayoutService {
             modeKeyElement,
             pageSetup,
             resolvedInitialMartyriaStyle,
+            false,
+            getModeKeyFontMetrics,
           );
           this.addBox(
             pageSetup.innerPageWidth,
@@ -1738,6 +2538,19 @@ export class LayoutService {
           }
           layoutWorkspace.pendingLeadingLyricHyphenReservationWidth =
             nextLeadingLyricHyphenReservation;
+          showPreviousLineHyphen =
+            !noteElement.pageBreak &&
+            !blockedMelismaNotes.has(noteElement) &&
+            this.mayShowLeadingLyricHyphen(
+              noteElement,
+              pageSetup,
+              placementGreekMelismaIsActive,
+            );
+          placementGreekMelismaIsActive = this.getGreekMelismaIsActiveAfterNote(
+            noteElement,
+            pageSetup,
+            placementGreekMelismaIsActive,
+          );
           phase1GreekMelismaIsActive =
             LayoutService.getGreekMelismaIsActiveAfterNote(
               noteElement,
@@ -1773,6 +2586,7 @@ export class LayoutService {
                   layoutWorkspace,
                   minimumLyricGap,
                   measureBarWidthMap,
+                  getCollisionBoxes,
                 ));
           const m_i = Math.max(
             ordinaryBoundaryWidth,
@@ -2310,6 +3124,7 @@ export class LayoutService {
       }
 
       if (this.endsMelismaAtBreak(element)) {
+        placementGreekMelismaIsActive = false;
         phase1GreekMelismaIsActive = false;
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
@@ -2358,6 +3173,7 @@ export class LayoutService {
           neumeLineHeight,
           neumeHeight,
         );
+        recordParagraph(i);
       }
 
       if (layoutWorkspace.diagnostics != null) {
@@ -2374,10 +3190,14 @@ export class LayoutService {
         neumeLineHeight,
         neumeHeight,
       );
+      recordParagraph(end - 1);
     }
+
+    endParagraphs();
 
     return {
       layoutWorkspace,
+      paragraphs,
       neumeHeight,
       neumeLineHeight,
       lyricsBaseline,
@@ -2385,6 +3205,7 @@ export class LayoutService {
       measureBarWidthMap,
       atomicMelismaLayout,
       blockedMelismaNotes,
+      nextLeadingHyphen: this.getLeadingHyphen(elements[end]),
     };
   }
 
@@ -3061,6 +3882,8 @@ export class LayoutService {
     pageSetup: PageSetup,
     resolvedStyle: ResolvedInitialMartyriaStyle,
     embedded = false,
+    getFontMetrics = (font: string) =>
+      TextMeasurementService.getFontVerticalMetrics(font),
   ) {
     const { primaryAppearance } = resolvedStyle;
 
@@ -3073,6 +3896,7 @@ export class LayoutService {
       element,
       pageSetup,
       resolvedStyle,
+      getFontMetrics,
     );
 
     if (!embedded) {
@@ -3092,6 +3916,7 @@ export class LayoutService {
             sample,
             pageSetup,
             resolvedStyle,
+            getFontMetrics,
           ).layout.inkBounds;
         },
       );
@@ -3112,6 +3937,7 @@ export class LayoutService {
     element: ModeKeyElement,
     pageSetup: PageSetup,
     resolvedStyle: ResolvedInitialMartyriaStyle,
+    getFontMetrics: typeof TextMeasurementService.getFontVerticalMetrics,
   ) {
     const neumeFontFamily = element.computedFontFamily;
     const neumeFontSize = element.computedFontSize;
@@ -3138,8 +3964,9 @@ export class LayoutService {
       neumeBaselineCorrection,
     });
     const baseFont = resolveFontCss(baseTextAppearance);
-    let top = -TextMeasurementService.getFontBoundingBoxAscent(baseFont);
-    let bottom = TextMeasurementService.getFontBoundingBoxDescent(baseFont);
+    const baseFontMetrics = getFontMetrics(baseFont);
+    let top = -baseFontMetrics.ascent;
+    let bottom = baseFontMetrics.descent;
     const inkBounds = { top: 0, bottom: 0 };
     const includeInk = (inkTop: number, inkBottom: number) => {
       inkBounds.top = Math.min(inkBounds.top, inkTop);
@@ -3152,7 +3979,7 @@ export class LayoutService {
       fontStyle: DEFAULT_FONT_STYLE,
       fontSize: neumeFontSize,
     });
-    let flowTop = -TextMeasurementService.getFontBoundingBoxAscent(flowFont);
+    let flowTop = -getFontMetrics(flowFont).ascent;
     let width = 0;
 
     // The text whose font a word space next to a run is set in.
@@ -3243,9 +4070,9 @@ export class LayoutService {
           baselineShift: 0,
           stackedCharacters: {
             geometry,
-            lineHeight: TextMeasurementService.getFontHeight(
+            lineHeight: getFontMetrics(
               resolveFontCss({ fontFamily, fontStyle, fontSize }),
-            ),
+            ).height,
           },
           pitch: null,
         });
@@ -3265,8 +4092,8 @@ export class LayoutService {
         });
         flowTop = Math.min(
           flowTop,
-          -TextMeasurementService.getFontBoundingBoxAscent(glyphFont),
-          -TextMeasurementService.getFontBoundingBoxAscent(noteTextFont),
+          -getFontMetrics(glyphFont).ascent,
+          -getFontMetrics(noteTextFont).ascent,
         );
         // Glyph notes sit on the neume baseline like every other glyph; the
         // marks above them move with them.
@@ -3389,10 +4216,7 @@ export class LayoutService {
         appearance.fontVariantCaps,
       );
       width += metrics.width;
-      flowTop = Math.min(
-        flowTop,
-        -TextMeasurementService.getFontBoundingBoxAscent(font),
-      );
+      flowTop = Math.min(flowTop, -getFontMetrics(font).ascent);
       const glyphBaselineCorrection =
         run.kind === 'glyph' ? neumeBaselineCorrection : 0;
       includeInk(
@@ -4051,6 +4875,8 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
+    start = 0,
+    end = elements.length,
   ): AtomicMelismaLayout {
     const layout: AtomicMelismaLayout = {
       boundaries: new Map(),
@@ -4062,7 +4888,7 @@ export class LayoutService {
       return layout;
     }
 
-    for (let startIndex = 0; startIndex < elements.length; startIndex++) {
+    for (let startIndex = start; startIndex < end; startIndex++) {
       const startElement = elements[startIndex];
       if (startElement.elementType !== ElementType.Note) {
         continue;
@@ -4209,8 +5035,19 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     noteWidthArgs: GetNoteWidthArgs,
+    start = 0,
+    end = elements.length,
   ) {
-    for (const element of elements) {
+    // Most notes share a lyrics style, so resolve each distinct style and
+    // override combination once per layout. Paragraph styles do not change
+    // during a layout.
+    const lyricsFonts = new Map<
+      string,
+      { css: string; fontVariantCaps: string; height: number }
+    >();
+
+    for (let i = start; i < end; i++) {
+      const element = elements[i];
       if (element.elementType !== ElementType.Note) {
         continue;
       }
@@ -4232,21 +5069,31 @@ export class LayoutService {
       noteElement.leadingLyricHyphenReservationWidth = 0;
 
       noteElement.computedIsonOffsetY = noteElement.isonOffsetY;
-      const resolvedLyricsStyle = this.getResolvedLyricsStyle(
-        noteElement,
-        noteWidthArgs.paragraphStyles,
-      );
-      noteElement.lyricsFontCss = resolveFontCss(resolvedLyricsStyle);
-      noteElement.computedLyricsFontVariantCaps =
-        resolvedLyricsStyle.fontVariantCaps ?? 'normal';
-      noteElement.lyricsFontHeight =
-        TextMeasurementService.getCachedFontVerticalMetrics(
-          noteElement.lyricsFontCss,
-        ).height;
+      const overrides = noteElement.getParagraphStyleOverrides();
+      const lyricsFontKey = `${noteElement.lyricsParagraphStyleId}|${JSON.stringify(overrides)}`;
+      let lyricsFont = lyricsFonts.get(lyricsFontKey);
+      if (lyricsFont === undefined) {
+        const resolvedLyricsStyle = resolveParagraphStyle(
+          noteWidthArgs.paragraphStyles,
+          noteElement.lyricsParagraphStyleId,
+          overrides,
+        );
+        const css = resolveFontCss(resolvedLyricsStyle);
+        lyricsFont = {
+          css,
+          fontVariantCaps: resolvedLyricsStyle.fontVariantCaps ?? 'normal',
+          height:
+            TextMeasurementService.getCachedFontVerticalMetrics(css).height,
+        };
+        lyricsFonts.set(lyricsFontKey, lyricsFont);
+      }
+      noteElement.lyricsFontCss = lyricsFont.css;
+      noteElement.computedLyricsFontVariantCaps = lyricsFont.fontVariantCaps;
+      noteElement.lyricsFontHeight = lyricsFont.height;
       this.getNoteWidth(noteElement, pageSetup, noteWidthArgs);
     }
 
-    for (let i = 0; i < elements.length; i++) {
+    for (let i = start; i < end; i++) {
       const element = elements[i];
       if (element.elementType !== ElementType.Note) {
         continue;
@@ -4536,10 +5383,9 @@ export class LayoutService {
       return false;
     }
 
-    return (
-      !MelismaHelperGreek.isGreek(noteElement.lyrics) &&
-      !MelismaHelperGreek.isGreek(noteElement.melismaText)
-    );
+    // The carried state describes this pass. melismaText is written during
+    // positioning and can still contain a vowel from an earlier layout.
+    return !MelismaHelperGreek.isGreek(noteElement.lyrics);
   }
 
   private static getGreekMelismaIsActiveAfterNote(
@@ -4562,18 +5408,6 @@ export class LayoutService {
     this.addPenalty(workspace, MAX_COST, 0, 'prevent-break');
   }
 
-  private static resolvePreferredInterNoteSpacing(
-    naturalWidth: number,
-    preferredMinimumWidths: Array<number | null>,
-  ) {
-    return Math.max(
-      naturalWidth,
-      ...preferredMinimumWidths.filter(
-        (width): width is number => width != null,
-      ),
-    );
-  }
-
   private static getStructuralInterNoteMinimumWidths(
     noteElement: NoteElement,
     nextNoteElement: NoteElement,
@@ -4581,6 +5415,7 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
     inlineSpacing: number,
     leftTuck: number,
+    getCollisionBoxes?: (note: NoteElement) => readonly NoteGlyphBox[],
   ) {
     const noteVisualMinimumWidth = this.getNoteVisualMinimumSpacing(
       noteElement,
@@ -4588,6 +5423,7 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
       inlineSpacing,
+      getCollisionBoxes,
     );
     // A zero visual minimum is the collision helper's generic lower clamp,
     // not a real geometry requirement when the user deliberately requests
@@ -4635,10 +5471,11 @@ export class LayoutService {
         0,
       );
 
-    return this.resolvePreferredInterNoteSpacing(inlineSpacing, [
-      visualMinimumWidth,
-      measureBarMinimumWidth,
-    ]);
+    return Math.max(
+      inlineSpacing,
+      visualMinimumWidth ?? -Infinity,
+      measureBarMinimumWidth ?? -Infinity,
+    );
   }
 
   private static calculateInterNoteSpacing(
@@ -4651,6 +5488,7 @@ export class LayoutService {
     workspace: LayoutWorkspace,
     minimumLyricGap: number,
     measureBarWidthMap: Map<MeasureBar, number>,
+    getCollisionBoxes: (note: NoteElement) => readonly NoteGlyphBox[],
   ) {
     // Base m_i without the lyric-collision term ell_i. Can be
     // negative when T_i^left is large, i.e. when the cancellation
@@ -4668,9 +5506,7 @@ export class LayoutService {
             measureBarWidthMap,
           );
 
-        return this.resolvePreferredInterNoteSpacing(baseWidth, [
-          terminalMeasureBarMinimum,
-        ]);
+        return Math.max(baseWidth, terminalMeasureBarMinimum);
       }
 
       if (!this.shouldUseMeasureBarMinimumForNonNoteSpacing(nextElement)) {
@@ -4683,9 +5519,7 @@ export class LayoutService {
         workspace.pageSetup,
         measureBarWidthMap,
       );
-      return this.resolvePreferredInterNoteSpacing(baseWidth, [
-        measureBarMinimum,
-      ]);
+      return Math.max(baseWidth, measureBarMinimum);
     }
 
     const currentOverhangs = this.getNeumeOverhangs(
@@ -4725,6 +5559,7 @@ export class LayoutService {
         measureBarWidthMap,
         inlineSpacing,
         leftTuck,
+        getCollisionBoxes,
       );
     const ordinaryBaseWidth =
       inlineSpacing + rightProjection - leftTuck - rightTuck;
@@ -4775,13 +5610,14 @@ export class LayoutService {
           this.getLyricTextLeft(nextNoteElement)
         : null;
 
-    return this.resolvePreferredInterNoteSpacing(baseWidth, [
-      visualMinimumWidth,
-      measureBarMinimumWidth,
-      lyricMinimumWidth,
-      melismaMinimumWidth,
-      centeredMelismaFollowingLyricMinimumWidth,
-    ]);
+    return Math.max(
+      baseWidth,
+      visualMinimumWidth ?? -Infinity,
+      measureBarMinimumWidth ?? -Infinity,
+      lyricMinimumWidth ?? -Infinity,
+      melismaMinimumWidth ?? -Infinity,
+      centeredMelismaFollowingLyricMinimumWidth ?? -Infinity,
+    );
   }
 
   private static shouldUseMeasureBarMinimumForNonNoteSpacing(
@@ -4870,21 +5706,16 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
     clearance: number,
+    getCollisionBoxes: (note: NoteElement) => readonly NoteGlyphBox[] = (
+      note,
+    ) => this.getNoteCollisionGlyphBoxes(note, pageSetup, measureBarWidthMap),
   ) {
     if (right == null) {
       return 0;
     }
 
-    const leftBoxes = this.getNoteCollisionGlyphBoxes(
-      left,
-      pageSetup,
-      measureBarWidthMap,
-    );
-    const rightBoxes = this.getNoteCollisionGlyphBoxes(
-      right,
-      pageSetup,
-      measureBarWidthMap,
-    );
+    const leftBoxes = getCollisionBoxes(left);
+    const rightBoxes = getCollisionBoxes(right);
 
     return this.getMinimumSpacingForNoteGlyphBoxes(
       left.neumeWidth,
@@ -4904,8 +5735,8 @@ export class LayoutService {
 
   private static getMinimumSpacingForNoteGlyphBoxes(
     leftWidth: number,
-    leftBoxes: NoteGlyphBox[],
-    rightBoxes: NoteGlyphBox[],
+    leftBoxes: readonly NoteGlyphBox[],
+    rightBoxes: readonly NoteGlyphBox[],
     clearance: number,
     verticalTolerance = 0,
   ) {
@@ -4957,6 +5788,23 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
     leftBarReserveOverride: number | null = null,
   ) {
+    // Callers may add to the returned array.
+    return [
+      ...this.getCachedNoteCollisionGlyphBoxes(
+        noteElement,
+        pageSetup,
+        measureBarWidthMap,
+        leftBarReserveOverride,
+      ),
+    ];
+  }
+
+  private static getCachedNoteCollisionGlyphBoxes(
+    noteElement: NoteElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    leftBarReserveOverride: number | null = null,
+  ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
     const fontSize = pageSetup.neumeDefaultFontSize;
     const glyphs = this.getNoteCollisionGlyphs(
@@ -4965,6 +5813,33 @@ export class LayoutService {
       measureBarWidthMap,
       leftBarReserveOverride,
     );
+    let key = `${fontFamily}|${fontSize}|`;
+    for (const glyph of glyphs) {
+      const offsetX = glyph.offsetX ?? 0;
+      const offsetY = glyph.offsetY ?? 0;
+      key += `${glyph.glyphName},${glyph.kind}`;
+      if (glyph.x !== 0 || glyph.y !== 0 || offsetX !== 0 || offsetY !== 0) {
+        key += `,${glyph.x},${glyph.y},${offsetX},${offsetY}`;
+      }
+      key += ';';
+    }
+    let boxes = noteCollisionGlyphBoxesCache.get(key);
+    if (boxes === undefined) {
+      boxes = this.computeNoteCollisionGlyphBoxes(
+        fontFamily,
+        fontSize,
+        glyphs,
+      ).map((box) => Object.freeze(box));
+      noteCollisionGlyphBoxesCache.set(key, boxes);
+    }
+    return boxes;
+  }
+
+  private static computeNoteCollisionGlyphBoxes(
+    fontFamily: string,
+    fontSize: number,
+    glyphs: NoteCollisionGlyph[],
+  ): NoteGlyphBox[] {
     const resolvedGlyphNames = fontService.resolveContextualSubstitutions(
       fontFamily,
       glyphs.map((glyph) => glyph.glyphName),
@@ -5033,16 +5908,7 @@ export class LayoutService {
       y: 0,
     });
 
-    for (const mark of this.getNoteCollisionMarks(noteElement)) {
-      glyphs.push({
-        glyphName: NeumeMappingService.getMapping(mark.neume).glyphName,
-        kind: 'mark',
-        x: bodyLeft,
-        y: 0,
-        offsetX: mark.offsetX,
-        offsetY: mark.offsetY,
-      });
-    }
+    this.addNoteCollisionMarkGlyphs(glyphs, noteElement, bodyLeft);
 
     if (noteElement.vareia && pageSetup.melkiteRtl) {
       glyphs.push(
@@ -5156,44 +6022,45 @@ export class LayoutService {
     );
   }
 
-  private static getNoteCollisionMarks(noteElement: NoteElement) {
-    const marks: Array<{
-      neume: Neume;
-      offsetX?: number | null;
-      offsetY?: number | null;
-    }> = [];
-
+  private static addNoteCollisionMarkGlyphs(
+    glyphs: NoteCollisionGlyph[],
+    note: NoteElement,
+    bodyLeft: number,
+  ) {
     const add = (
       neume: Neume | null | undefined,
       offsetX?: number | null,
       offsetY?: number | null,
     ) => {
       if (neume != null && !isTieNeume(neume)) {
-        marks.push({ neume, offsetX, offsetY });
+        glyphs.push({
+          glyphName: NeumeMappingService.getMapping(neume).glyphName,
+          kind: 'mark',
+          x: bodyLeft,
+          y: 0,
+          offsetX,
+          offsetY,
+        });
       }
     };
 
     for (const slot of noteMarkSlots) {
-      add(
-        slot.neume(noteElement),
-        slot.offsetX(noteElement),
-        slot.offsetY(noteElement),
-      );
+      const neume = slot.neume(note);
+      if (neume != null) {
+        add(neume, slot.offsetX(note), slot.offsetY(note));
+      }
     }
 
-    const measureBarLeft =
-      noteElement.measureBarLeft ?? noteElement.computedMeasureBarLeft;
+    const measureBarLeft = note.measureBarLeft ?? note.computedMeasureBarLeft;
     if (isMeasureBarAboveVariant(measureBarLeft)) {
       add(
         measureBarLeft,
-        noteElement.measureBarLeftOffsetX,
-        noteElement.measureBarLeftOffsetY,
+        note.measureBarLeftOffsetX,
+        note.measureBarLeftOffsetY,
       );
     }
 
-    add(noteElement.tie, noteElement.tieOffsetX, noteElement.tieOffsetY);
-
-    return marks;
+    add(note.tie, note.tieOffsetX, note.tieOffsetY);
   }
 
   private static getMartyriaCollisionGlyphBoxes(
@@ -5888,11 +6755,13 @@ export class LayoutService {
     lineLengths: number | number[],
     maxAdjustmentRatio: number | null,
   ): LineBreakSolution {
+    const breakLinesStart = now();
     const breakpoints = breakLines(items, lineLengths, {
       maxAdjustmentRatio,
       initialMaxAdjustmentRatio: maxAdjustmentRatio ?? Number.POSITIVE_INFINITY,
       adjacentLooseTightPenalty: MAX_COST * 0.7,
     });
+    accumulate('breakLines', breakLinesStart);
     const ratios = adjustmentRatios(items, lineLengths, breakpoints);
 
     return {
@@ -6174,10 +7043,12 @@ export class LayoutService {
     if (workspace.loggingEnabled) {
       console.log('Breaking lines', pendingParagraph);
     }
+    const breakStart = now();
     const solution = this.breakParagraphOptimally(
       pendingParagraph,
       lineLengths,
     );
+    accumulate('breakParagraph', breakStart);
     const { breakpoints, ratios } = solution;
 
     // We have a winner
@@ -6481,17 +7352,6 @@ export class LayoutService {
     }
 
     return elementWidthPx;
-  }
-
-  private static getResolvedLyricsStyle(
-    noteElement: NoteElement,
-    paragraphStyles: ParagraphStyle[],
-  ) {
-    return resolveParagraphStyle(
-      paragraphStyles,
-      noteElement.lyricsParagraphStyleId,
-      noteElement.getParagraphStyleOverrides(),
-    );
   }
 
   private static getDefaultLyricsFont(paragraphStyles: ParagraphStyle[]) {
@@ -6918,6 +7778,12 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
     centeringPlans: ReadonlyMap<NoteElement, MelismaCenteringPlan>,
     blockedMelismaNotes: ReadonlySet<NoteElement>,
+    boundary?: {
+      following: ScoreElement | null;
+      greekIsActive: boolean;
+      greekSyllables: MelismaSyllables | null;
+      leadingHyphen: boolean;
+    },
   ) {
     // First calculate some constants
 
@@ -6949,14 +7815,17 @@ export class LayoutService {
       measureBarWidthMap,
       runningElaphronLeftOffsets,
       centeringPlans,
+      boundary?.following,
     );
     const greekMelismaTexts = this.layoutGreekMelismaText(
       pages,
       pageSetup,
       measureBarWidthMap,
+      boundary?.greekSyllables,
     );
-    let phase2GreekMelismaIsActive = false;
-    let previousLineEndingMayShowLeadingLyricHyphen = false;
+    let phase2GreekMelismaIsActive = boundary?.greekIsActive ?? false;
+    let previousLineEndingMayShowLeadingLyricHyphen =
+      boundary?.leadingHyphen ?? false;
     for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
       const page = pages[pageIndex];
 
@@ -6967,6 +7836,7 @@ export class LayoutService {
           pages,
           pageIndex,
           lineIndex,
+          boundary?.following,
         );
 
         const indexOfFirstNote = line.elements.findIndex(
@@ -7548,84 +8418,72 @@ export class LayoutService {
     measureBar: MeasureBar | null = null,
     edge: MeasureBarAnchorEdge | null = null,
   ) {
+    const bounds = this.getRelativeMeasureBarAnchorBounds(
+      element,
+      pageSetup,
+      measureBarWidthMap,
+      measureBar,
+      edge,
+    );
+    return { left: element.x + bounds.left, right: element.x + bounds.right };
+  }
+
+  // Phase 1 must not read the position from the last layout. Adding and
+  // subtracting that origin can change the collision test at an ink edge.
+  private static getRelativeMeasureBarAnchorBounds(
+    element: ScoreElement,
+    pageSetup: PageSetup,
+    measureBarWidthMap: Map<MeasureBar, number>,
+    measureBar: MeasureBar | null = null,
+    edge: MeasureBarAnchorEdge | null = null,
+  ) {
     if (
-      element.elementType === ElementType.Note ||
+      element instanceof NoteElement ||
       element.elementType === ElementType.Martyria
     ) {
       const owner = element as NoteElement | MartyriaElement;
-      const left =
-        owner.x + this.getMeasureBarLeftReserve(owner, measureBarWidthMap);
-      const right =
-        owner.x +
-        this.getMeasureBarOwnerWidth(owner) -
-        this.getVisibleMeasureBarRightWidth(owner, measureBarWidthMap);
-
-      if (element.elementType === ElementType.Note) {
-        return measureBar == null || edge == null
-          ? { left, right }
-          : this.getNoteBoundsForMeasureBar(
-              element as NoteElement,
-              { left, right },
-              measureBar,
-              edge,
-              pageSetup,
-              measureBarWidthMap,
-            );
+      const fallback = {
+        left: this.getMeasureBarLeftReserve(owner, measureBarWidthMap),
+        right:
+          this.getMeasureBarOwnerWidth(owner) -
+          this.getVisibleMeasureBarRightWidth(owner, measureBarWidthMap),
+      };
+      if (measureBar === null || edge === null) {
+        return fallback;
       }
-
+      if (owner instanceof NoteElement) {
+        return this.getBoundsForMeasureBar(
+          this.getNoteCollisionGlyphBoxes(owner, pageSetup, measureBarWidthMap),
+          fallback,
+          measureBar,
+          edge,
+          pageSetup,
+          // Marks beside the bar do not clamp it.
+          (box, barBox) => this.noteGlyphBoxesOverlap(box, barBox),
+        );
+      }
       if (
-        measureBar != null &&
-        edge != null &&
         (edge === 'left'
-          ? this.getVisibleMeasureBarLeft(owner) !== measureBar
-          : this.getVisibleMeasureBarRight(owner) !== measureBar)
+          ? this.getVisibleMeasureBarLeft(owner)
+          : this.getVisibleMeasureBarRight(owner)) !== measureBar
       ) {
         return this.getMartyriaBoundsForMeasureBar(
-          element as MartyriaElement,
-          { left, right },
+          owner,
+          fallback,
           measureBar,
           edge,
           pageSetup,
         );
       }
-
-      return { left, right };
+      return fallback;
     }
 
-    return {
-      left: element.x,
-      right: element.x + element.width,
-    };
-  }
-
-  private static getNoteBoundsForMeasureBar(
-    noteElement: NoteElement,
-    fallbackBounds: { left: number; right: number },
-    measureBar: MeasureBar,
-    edge: MeasureBarAnchorEdge,
-    pageSetup: PageSetup,
-    measureBarWidthMap: Map<MeasureBar, number>,
-  ) {
-    return this.getBoundsForMeasureBar(
-      noteElement.x,
-      this.getNoteCollisionGlyphBoxes(
-        noteElement,
-        pageSetup,
-        measureBarWidthMap,
-      ),
-      fallbackBounds,
-      measureBar,
-      edge,
-      pageSetup,
-      // Notes test full 2D overlap so marks beside the bar do not clamp it.
-      (box, barBox) => this.noteGlyphBoxesOverlap(box, barBox),
-    );
+    return { left: 0, right: element.width };
   }
 
   // The horizontal extents of the owner glyph boxes that overlap the measure
   // bar's clearance box, or the fallback bounds if none do.
   private static getBoundsForMeasureBar(
-    ownerX: number,
     ownerBoxes: NoteGlyphBox[],
     fallbackBounds: { left: number; right: number },
     measureBar: MeasureBar,
@@ -7637,16 +8495,11 @@ export class LayoutService {
       measureBar,
       edge,
       fallbackBounds,
-      ownerX,
       pageSetup,
     );
-    const overlappingBoxes = ownerBoxes
-      .filter((box) => overlapsBar(box, barBox))
-      .map((box) => ({
-        left: ownerX + box.left,
-        right: ownerX + box.right,
-      }));
-
+    const overlappingBoxes = ownerBoxes.filter((box) =>
+      overlapsBar(box, barBox),
+    );
     if (overlappingBoxes.length === 0) {
       return fallbackBounds;
     }
@@ -7664,32 +8517,30 @@ export class LayoutService {
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
   ) {
-    const fallbackBounds = this.getMeasureBarAnchorBounds(
+    const fallback = this.getRelativeMeasureBarAnchorBounds(
       owner,
       pageSetup,
       measureBarWidthMap,
     );
     const bounds =
-      owner.elementType === ElementType.Note
-        ? this.getNoteBoundsForMeasureBar(
-            owner as NoteElement,
-            fallbackBounds,
-            measureBar,
-            edge,
+      owner instanceof NoteElement
+        ? this.getRelativeMeasureBarAnchorBounds(
+            owner,
             pageSetup,
             measureBarWidthMap,
+            measureBar,
+            edge,
           )
         : this.getMartyriaBoundsForMeasureBar(
-            owner as MartyriaElement,
-            fallbackBounds,
+            owner,
+            fallback,
             measureBar,
             edge,
             pageSetup,
           );
-
     return edge === 'left'
-      ? Math.max(0, fallbackBounds.left - bounds.left)
-      : Math.max(0, bounds.right - fallbackBounds.right);
+      ? Math.max(0, fallback.left - bounds.left)
+      : Math.max(0, bounds.right - fallback.right);
   }
 
   private static getMartyriaBoundsForMeasureBar(
@@ -7700,7 +8551,6 @@ export class LayoutService {
     pageSetup: PageSetup,
   ) {
     return this.getBoundsForMeasureBar(
-      martyriaElement.x,
       this.getMartyriaCollisionGlyphBoxes(martyriaElement, pageSetup),
       fallbackBounds,
       measureBar,
@@ -7716,7 +8566,6 @@ export class LayoutService {
     measureBar: MeasureBar,
     edge: MeasureBarAnchorEdge,
     fallbackBounds: { left: number; right: number },
-    ownerX: number,
     pageSetup: PageSetup,
   ) {
     const barBox = this.getGlyphBox(
@@ -7728,18 +8577,15 @@ export class LayoutService {
     );
     const clearance = this.getMeasureBarCollisionSpacing(pageSetup);
     const barWidth = barBox.right - barBox.left;
-    const clearanceLeft =
-      edge === 'left'
-        ? fallbackBounds.left - ownerX - clearance - barWidth
-        : fallbackBounds.right - ownerX;
-    const clearanceRight =
-      edge === 'left'
-        ? fallbackBounds.left - ownerX
-        : fallbackBounds.right - ownerX + clearance + barWidth;
-
     return {
-      left: clearanceLeft,
-      right: clearanceRight,
+      left:
+        edge === 'left'
+          ? fallbackBounds.left - clearance - barWidth
+          : fallbackBounds.right,
+      right:
+        edge === 'left'
+          ? fallbackBounds.left
+          : fallbackBounds.right + clearance + barWidth,
       top: barBox.top,
       bottom: barBox.bottom,
     };
@@ -7788,8 +8634,6 @@ export class LayoutService {
   ) {
     const barBoxes = this.getMeasureBarCollisionBoxes(
       measureBar,
-      'left',
-      { left: 0, right: 0 },
       0,
       pageSetup,
     ).filter((barBox) =>
@@ -7915,13 +8759,7 @@ export class LayoutService {
     }
 
     const barWidth = measureBarWidthMap.get(measureBar) ?? 0;
-    const barBoxes = this.getMeasureBarCollisionBoxes(
-      measureBar,
-      'left',
-      { left: 0, right: 0 },
-      0,
-      pageSetup,
-    );
+    const barBoxes = this.getMeasureBarCollisionBoxes(measureBar, 0, pageSetup);
     const noteBoxes = this.getNoteCollisionGlyphBoxes(
       owner as NoteElement,
       pageSetup,
@@ -8190,30 +9028,28 @@ export class LayoutService {
       pageSetup,
       measureBarWidthMap,
     );
-    const ownerBounds = this.getMeasureBarAnchorBounds(
+    const ownerBounds = this.getRelativeMeasureBarAnchorBounds(
       leftAnchor,
       pageSetup,
       measureBarWidthMap,
       measureBar,
       'right',
     );
-    const nextBounds = this.getMeasureBarAnchorBounds(
+    const nextBounds = this.getRelativeMeasureBarAnchorBounds(
       rightAnchor,
       pageSetup,
       measureBarWidthMap,
       measureBar,
       'left',
     );
-    const ownerBoundsRight = ownerBounds.right - leftAnchor.x;
-    const nextBoundsLeft = nextBounds.left - rightAnchor.x;
 
     return Math.max(
       0,
-      ownerBoundsRight +
+      ownerBounds.right +
         2 * clearance -
         ownerClampExtents.left -
         leftWidth -
-        nextBoundsLeft +
+        nextBounds.left +
         nextClampExtents.right,
     );
   }
@@ -8277,16 +9113,14 @@ export class LayoutService {
       }
 
       const leftWidth = leftNote.neumeWidth;
-      const fallbackBounds = this.getMeasureBarAnchorBounds(
+      const fallbackBounds = this.getRelativeMeasureBarAnchorBounds(
         leftNote,
         pageSetup,
         measureBarWidthMap,
       );
       const barBoxes = this.getMeasureBarCollisionBoxes(
         measureBarRight,
-        'right',
-        fallbackBounds,
-        leftNote.x,
+        fallbackBounds.right,
         pageSetup,
       );
       const rightBoxes = this.getMartyriaCollisionGlyphBoxes(
@@ -8332,8 +9166,6 @@ export class LayoutService {
       );
       const barBoxes = this.getMeasureBarCollisionBoxes(
         measureBarLeft,
-        'left',
-        { left: 0, right: 0 },
         0,
         pageSetup,
       );
@@ -8362,16 +9194,14 @@ export class LayoutService {
     const leftWidth = leftNote.neumeWidth;
 
     if (measureBarRight != null) {
-      const fallbackBounds = this.getMeasureBarAnchorBounds(
+      const fallbackBounds = this.getRelativeMeasureBarAnchorBounds(
         leftNote,
         pageSetup,
         measureBarWidthMap,
       );
       const barBoxes = this.getMeasureBarCollisionBoxes(
         measureBarRight,
-        'right',
-        fallbackBounds,
-        leftNote.x,
+        fallbackBounds.right,
         pageSetup,
       );
       const rightBoxes = this.getNoteCollisionGlyphBoxes(
@@ -8420,8 +9250,6 @@ export class LayoutService {
       );
       const barBoxes = this.getMeasureBarCollisionBoxes(
         measureBarLeft,
-        'left',
-        { left: 0, right: 0 },
         0,
         pageSetup,
       );
@@ -8439,9 +9267,7 @@ export class LayoutService {
 
   private static getMeasureBarCollisionBoxes(
     measureBar: MeasureBar,
-    edge: MeasureBarAnchorEdge,
-    fallbackBounds: { left: number; right: number },
-    ownerX: number,
+    offsetX: number,
     pageSetup: PageSetup,
   ) {
     const fontFamily = pageSetup.neumeDefaultFontFamily;
@@ -8455,23 +9281,12 @@ export class LayoutService {
         ? regionBoxes
         : [this.getGlyphBox(fontFamily, glyphName, 0, 0, fontSize)];
 
-    return barBoxes.map((barBox) => {
-      const barLeft =
-        edge === 'left'
-          ? barBox.left
-          : fallbackBounds.right - ownerX + barBox.left;
-      const barRight =
-        edge === 'left'
-          ? barBox.right
-          : fallbackBounds.right - ownerX + barBox.right;
-
-      return {
-        left: barLeft,
-        right: barRight,
-        top: barBox.top,
-        bottom: barBox.bottom,
-      };
-    });
+    return barBoxes.map((barBox) => ({
+      left: offsetX + barBox.left,
+      right: offsetX + barBox.right,
+      top: barBox.top,
+      bottom: barBox.bottom,
+    }));
   }
 
   private static measureBarHasCollisionRegions(
@@ -8530,10 +9345,14 @@ export class LayoutService {
   }
 
   private static getNoteNeumesForMeasurement(noteElement: NoteElement) {
-    return [
-      noteElement.quantitativeNeume,
-      ...noteMarkSlots.map((slot) => slot.neume(noteElement)),
-    ].filter((x) => x != null);
+    const neumes: Neume[] = [noteElement.quantitativeNeume];
+    for (const slot of noteMarkSlots) {
+      const neume = slot.neume(noteElement);
+      if (neume != null) {
+        neumes.push(neume);
+      }
+    }
+    return neumes;
   }
 
   private static getNoteNeumesForInkMeasurement(noteElement: NoteElement) {
@@ -8546,6 +9365,12 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     initialContext?: MusicalContext,
+    checkpoints?: Pick<PreviousLayout, 'musicalEntries'> & {
+      changedAmbitus: ModeKeyElement[];
+    },
+    // Only elements[start, end). The checkpoint at `end`, if any, is the
+    // state the range ends with.
+    { start, end } = { start: 0, end: elements.length },
   ) {
     let currentNote = initialContext?.note ?? 0;
     let currentShift = initialContext?.shift ?? 0;
@@ -8561,7 +9386,48 @@ export class LayoutService {
     let ambitusHighShift = 0;
     let currentModeKey: ModeKeyElement | null = null;
 
-    for (const element of elements) {
+    const finishAmbitus = (modeKey: ModeKeyElement) => {
+      const check = checkpoints !== undefined && modeKey.showAmbitus;
+      const low = modeKey.ambitusLowNote;
+      const high = modeKey.ambitusHighNote;
+      const lowRoot = modeKey.ambitusLowRootSign;
+      const highRoot = modeKey.ambitusHighRootSign;
+      this.assignAmbitus({
+        currentModeKey: modeKey,
+        ambitusLow,
+        ambitusHigh,
+        ambitusLowScale,
+        ambitusLowShift,
+        ambitusHighScale,
+        ambitusHighShift,
+      });
+      if (
+        check &&
+        (low !== modeKey.ambitusLowNote ||
+          high !== modeKey.ambitusHighNote ||
+          lowRoot !== modeKey.ambitusLowRootSign ||
+          highRoot !== modeKey.ambitusHighRootSign)
+      ) {
+        checkpoints.changedAmbitus.push(modeKey);
+      }
+    };
+
+    const recordCheckpoint = (index: number) => {
+      if (
+        checkpoints !== undefined &&
+        this.endsParagraph(elements[index - 1], elements[index])
+      ) {
+        checkpoints.musicalEntries.set(elements[index], {
+          note: currentNote,
+          scale: currentScale,
+          shift: currentShift,
+        });
+      }
+    };
+
+    for (let index = start; index < end; index++) {
+      const element = elements[index];
+      recordCheckpoint(index);
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
 
@@ -8664,15 +9530,7 @@ export class LayoutService {
         const modeKey = element as ModeKeyElement;
 
         if (currentModeKey) {
-          this.assignAmbitus({
-            currentModeKey,
-            ambitusLow,
-            ambitusHigh,
-            ambitusLowScale,
-            ambitusLowShift,
-            ambitusHighScale,
-            ambitusHighShift,
-          });
+          finishAmbitus(currentModeKey);
         }
 
         ambitusLow = Number.MAX_SAFE_INTEGER;
@@ -8790,15 +9648,7 @@ export class LayoutService {
 
         if (richTextBox.modeChange || embeddedModeKey != null) {
           if (currentModeKey) {
-            this.assignAmbitus({
-              currentModeKey,
-              ambitusLow,
-              ambitusHigh,
-              ambitusLowScale,
-              ambitusLowShift,
-              ambitusHighScale,
-              ambitusHighShift,
-            });
+            finishAmbitus(currentModeKey);
           }
 
           ambitusLow = Number.MAX_SAFE_INTEGER;
@@ -8839,18 +9689,24 @@ export class LayoutService {
       }
     }
 
+    if (end < elements.length) {
+      recordCheckpoint(end);
+    }
     if (currentModeKey) {
-      this.assignAmbitus({
-        currentModeKey,
-        ambitusLow,
-        ambitusHigh,
-        ambitusLowScale,
-        ambitusLowShift,
-        ambitusHighScale,
-        ambitusHighShift,
-      });
+      finishAmbitus(currentModeKey);
     }
     return contexts;
+  }
+
+  // Mode keys and mode changes reset note, scale and shift from their own
+  // fields and start a new ambitus, so no musical state crosses them.
+  private static resetsMusicalState(element: ScoreElement) {
+    return (
+      element.elementType === ElementType.ModeKey ||
+      (element.elementType === ElementType.RichTextBox &&
+        ((element as RichTextBoxElement).modeChange ||
+          getLastEmbeddedModeKey(element as RichTextBoxElement) != null))
+    );
   }
 
   /** The note, scale, and shift a mode key starts the music in. */
@@ -9644,6 +10500,7 @@ export class LayoutService {
     pages: Page[],
     pageIndex: number,
     lineIndex: number,
+    following: ScoreElement | null = null,
   ) {
     const lines = pages[pageIndex].lines;
 
@@ -9662,7 +10519,7 @@ export class LayoutService {
       return pages[pageIndex + 1].lines[0].elements[0];
     }
 
-    return null;
+    return following;
   }
 
   // Returns where an underscore melisma ends before any clamp against the
@@ -9726,6 +10583,7 @@ export class LayoutService {
     measureBarWidthMap: Map<MeasureBar, number>,
     runningElaphronLeftOffsets: ReadonlyMap<QuantitativeNeume, number>,
     centeringPlans: ReadonlyMap<NoteElement, MelismaCenteringPlan>,
+    following?: ScoreElement | null,
   ) {
     if (centeringPlans.size === 0) {
       return;
@@ -9740,6 +10598,7 @@ export class LayoutService {
           pages,
           pageIndex,
           lineIndex,
+          following,
         );
         let followingLyric: NoteElement | null = null;
 
@@ -9877,9 +10736,18 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
+    startIndex = 0,
+    endIndex = elements.length,
+    greekIsActive = false,
   ) {
-    const pairs = this.getGreekMelismaPairs(elements, pageSetup);
-    for (let index = 0; index < elements.length; index++) {
+    const pairs = this.getGreekMelismaPairs(
+      elements,
+      pageSetup,
+      greekIsActive,
+      startIndex,
+      endIndex,
+    );
+    for (let index = startIndex; index < endIndex; index++) {
       const element = elements[index];
       if (element.elementType !== ElementType.Note) {
         continue;
@@ -9920,12 +10788,14 @@ export class LayoutService {
     elements: ScoreElement[],
     pageSetup: PageSetup,
     greekIsActive = false,
+    startIndex = 0,
+    endIndex = elements.length,
   ) {
     const pairs = new Map<NoteElement, NoteElement>();
     if (pageSetup.disableGreekMelismata || pageSetup.melkiteRtl) {
       return pairs;
     }
-    for (let index = 0; index < elements.length; index++) {
+    for (let index = startIndex; index < endIndex; index++) {
       const element = elements[index];
       if (this.isBreakElement(element)) {
         greekIsActive = false;
@@ -9986,13 +10856,14 @@ export class LayoutService {
     pages: Page[],
     pageSetup: PageSetup,
     measureBarWidthMap: Map<MeasureBar, number>,
+    initialSyllables: MelismaSyllables | null = null,
   ) {
     const texts = new Map<NoteElement, string>();
     if (pageSetup.disableGreekMelismata) {
       return texts;
     }
 
-    let syllables: MelismaSyllables | null = null;
+    let syllables = initialSyllables;
     for (const page of pages) {
       const resolvedMargins = resolvePageMargins(
         pageSetup,

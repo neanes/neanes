@@ -32,6 +32,7 @@ function createNotationUpdateCommand<
     commands.push(
       new StateEditCommand({
         ...notation,
+        targets: [target],
         apply: () => {
           for (const key of Object.keys(notationValues) as (keyof T)[]) {
             if (!Object.is(target[key], notationValues[key])) {

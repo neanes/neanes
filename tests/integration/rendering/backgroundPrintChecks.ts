@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict';
-import { writeFile } from 'node:fs/promises';
+import { access, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { BrowserWindow } from 'electron';
+import { PDFDocument } from 'pdf-lib';
 
 import { getNativePrintPageSize } from '../../../electron/main/export/pageSize';
-import { renderSnapshot } from '../../../electron/main/export/renderSnapshot';
+import { printPdf } from '../../../electron/main/export/printPdf';
+import { renderPdf } from '../../../electron/main/export/renderPdf';
 import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 
 export async function checkPrintPreparation(options: {
@@ -16,57 +19,65 @@ export async function checkPrintPreparation(options: {
 }) {
   const original = JSON.stringify(options.snapshot);
   const sourceUrl = options.owner.webContents.getURL();
-  await renderSnapshot({
-    snapshot: options.snapshot,
+  const data = await renderPdf({
+    args: { snapshot: options.snapshot, landscape: false },
     parent: options.owner,
-    completeHasDialog: true,
     preload: path.join(options.root, 'dist-electron/preload/index.js'),
     entry: path.join(options.root, 'dist/export.html'),
+    pageSize: 'Letter',
     signal: new AbortController().signal,
-    async complete(window) {
+  });
+  const document = await PDFDocument.load(data);
+  assert.equal(document.getPageCount(), 2);
+  await writeFile(path.join(options.output, 'native-print-prepared.pdf'), data);
+
+  let viewerFile = '';
+  const result = await printPdf({
+    data,
+    fileName: 'Score: "draft"/1',
+    parent: options.owner,
+    async print(window) {
       assert.notEqual(window, options.owner);
       assert.equal(window.getParentWindow(), options.owner);
-      const prepared = await window.webContents.executeJavaScript(`(() => {
-        const root = document.querySelector('.score-print-pages');
-        return {
-          zoom: getComputedStyle(root).getPropertyValue('--zoom').trim(),
-          residue: getComputedStyle(root).getPropertyValue('--zoom-residue').trim(),
-          title: document.title,
-          pages: [...root.querySelectorAll('.page')].map(page => ({
-            width: page.getBoundingClientRect().width,
-            height: page.getBoundingClientRect().height,
-            text: page.textContent,
-          })),
-        };
-      })()`);
-      assert.equal(prepared.zoom, '1');
-      assert.equal(prepared.residue, '0');
-      assert.equal(prepared.title, options.snapshot.title);
-      assert.equal(prepared.pages.length, 2);
-      for (const page of prepared.pages) {
-        assert.equal(page.width, 816);
-        assert.equal(page.height, 1056);
-        assert(page.text.length > 100);
-      }
-      assert.equal(
-        getNativePrintPageSize({
-          pageSize: 'Letter',
-          pageWidthInches: 8.5,
-          pageHeightInches: 11,
-        }),
-        'Letter',
-      );
-      // Capture the prepared pages without submitting a physical print job.
-      const pdf = await window.webContents.printToPDF({ pageSize: 'Letter' });
-      await writeFile(
-        path.join(options.output, 'native-print-prepared.pdf'),
-        pdf,
-      );
+      assert.equal(window.isVisible(), false);
+      viewerFile = fileURLToPath(window.webContents.getURL());
+      assert.equal(path.basename(viewerFile), 'Score_ _draft__1.pdf');
+      await access(viewerFile);
+      // The native dialog is not opened here, so no print job is submitted.
+      return 'ready';
     },
   });
+  assert.equal(result, 'ready');
+  await assert.rejects(access(viewerFile));
+
+  // The next character would cross the byte limit by one byte.
+  const longTitlePrefix = 'a' + '\u00e9'.repeat(97);
+  await assert.rejects(
+    printPdf({
+      data,
+      fileName: longTitlePrefix + '\u00e9'.repeat(40),
+      parent: options.owner,
+      async print(window) {
+        viewerFile = fileURLToPath(window.webContents.getURL());
+        assert.equal(path.basename(viewerFile), longTitlePrefix + '.pdf');
+        throw new Error('print failed');
+      },
+    }),
+    /print failed/,
+  );
+  await assert.rejects(access(viewerFile));
+
+  assert.equal(
+    getNativePrintPageSize({
+      pageSize: 'Letter',
+      pageWidthInches: 8.5,
+      pageHeightInches: 11,
+    }),
+    'Letter',
+  );
   assert.equal(options.owner.webContents.getURL(), sourceUrl);
   assert.equal(JSON.stringify(options.snapshot), original);
   console.log(
-    'PASS: detached native-print preparation, canonical geometry, owner/snapshot preservation',
+    'PASS: native print through the PDF viewer, readiness, viewer parenting, temporary file cleanup',
   );
 }

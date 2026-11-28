@@ -37,7 +37,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
     "electron-updater": "^6.8.11",
-    "i18next": "^27.1.5",
+    "i18next": "^27.2.2",
     "i18next-pseudo": "^2.2.1",
     "image-size": "^2.1.0",
     "jszip": "^3.10.2",

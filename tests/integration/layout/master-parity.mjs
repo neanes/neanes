@@ -52,6 +52,7 @@ const work = await mkdtemp(path.join(tmpdir(), 'neanes-layout-parity-'));
 const allowedChanges = [
   '021584fb (master equivalent 300d8048): end melismas at explicit page breaks',
   '2b6190f5 (master equivalent d40e4d55): end melismas at explicit line breaks',
+  '2600a12e, a1d2841c, 3136c725 (master equivalent a0c2d585): end melismas at every paragraph break, keep drop cap continuations, run wrapping RTL tatweels to the line end',
 ];
 
 async function capture(build, fixture, target) {

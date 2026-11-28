@@ -9,6 +9,236 @@ import { createSmokeApp } from './smokeApp.mjs';
 import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
 
+async function checkFootnoteLineBreaks({ call, edit, evaluate }) {
+  const doc = await call('create_document', {
+    documentScope: 'editor',
+    title: 'Rich footnote line breaks',
+  });
+  const args = { documentScope: 'editor', documentId: doc.documentId };
+  const initial = await call('get_elements', args);
+  const lines = [
+    'Earlier words before',
+    'alpha-alpha-alpha-alpha-alpha',
+    'alpha&shy;alpha&shy;alpha&shy;alpha&shy;alpha',
+    '春夏秋冬春夏秋冬春夏秋冬春夏秋冬',
+    'Earlier words together',
+    'Earlier words before&shy;',
+    'Earlier words before&#8203;',
+    'Earlier words before<span style="white-space: pre-wrap">   </span>',
+    'Earlier words <span class="neanes-ck-neume" neumetype="single" neume="Ison"></span>',
+  ];
+  const groupIndex = 4;
+  const content = lines
+    .map((line, index) => `<p>${line}${index > groupIndex ? ' after' : ''}</p>`)
+    .join('');
+  const offsets = lines.map((line) => content.indexOf(line) + line.length);
+  await edit(args, [
+    { action: 'remove_range', start: 0, end: initial.collectionSize },
+    {
+      action: 'insert',
+      elements: [
+        {
+          elementType: 'RichTextBox',
+          clientId: 'wrap',
+          properties: { content },
+        },
+      ],
+    },
+    ...[...offsets, offsets[groupIndex]]
+      .sort((a, b) => b - a)
+      .map((htmlOffset) => ({
+        action: 'insert_footnote',
+        elementRef: '@wrap',
+        contentKey: 'content',
+        htmlOffset,
+        elements: [{ elementType: 'Note' }],
+      })),
+  ]);
+  await eventually(async () =>
+    assert.equal(
+      await evaluate(
+        "document.querySelectorAll('.page .neanes-footnote').length",
+      ),
+      lines.length + 1,
+    ),
+  );
+  const result = await evaluate(`(async () => {
+    await document.fonts.ready;
+    const markers = [...document.querySelectorAll('.page .neanes-footnote')];
+    const paragraphs = [...new Set(markers.map(marker => marker.closest('p')))];
+    const editor = markers[0].closest('.rich-text-editor').ckeditorInstance;
+    function measure(paragraph) {
+      const marker = paragraph.querySelector('.neanes-footnote');
+      const wrapper = marker.closest('.neanes-footnote-nowrap');
+      const text = document.createRange();
+      text.selectNodeContents(wrapper.firstChild);
+      const textTop = text.getBoundingClientRect().top;
+      return {
+        textTop,
+        markerOffset: marker.getBoundingClientRect().top - textTop,
+        height: paragraph.getBoundingClientRect().height,
+        overflow: paragraph.scrollWidth > paragraph.clientWidth + 1,
+      };
+    }
+    function measureOrphan(paragraph, wide) {
+      for (let width = paragraph.clientWidth; width > 10; width--) {
+        paragraph.style.width = width + 'px';
+        const trial = measure(paragraph);
+        if (trial.markerOffset > wide.markerOffset + 2) {
+          return trial;
+        }
+      }
+    }
+    const groupIndex = ${groupIndex};
+    const [ordinary, ...breakable] = paragraphs.slice(0, groupIndex);
+    ordinary.style.width = '600px';
+    const wide = measure(ordinary);
+    const wrapper = ordinary.querySelector('.neanes-footnote-nowrap');
+    wrapper.style.textWrapMode = 'wrap';
+    const orphan = measureOrphan(ordinary, wide);
+    wrapper.style.removeProperty('text-wrap-mode');
+    const joined = measure(ordinary);
+    const wordStart = document.createRange();
+    const precedingText = wrapper.previousSibling;
+    const wordOffset = precedingText.data.lastIndexOf(' ');
+    wordStart.setStart(precedingText, wordOffset + 1);
+    wordStart.setEnd(precedingText, wordOffset + 2);
+    const wordStartTop = wordStart.getBoundingClientRect().top;
+    const wraps = breakable.map(paragraph => {
+      paragraph.style.width = '600px';
+      const wide = measure(paragraph);
+      paragraph.style.width = '80px';
+      const narrow = measure(paragraph);
+      return { wide, narrow };
+    });
+    const anchors = paragraphs.slice(groupIndex + 1).map(paragraph => {
+      paragraph.style.width = '600px';
+      const wide = measure(paragraph);
+      const marker = paragraph.querySelector('.neanes-footnote');
+      const wrapper = marker.closest('.neanes-footnote-nowrap');
+      const anchor = wrapper.firstChild;
+      const gap = wrapper.querySelector('[style*="white-space"]');
+      const spaceCollapse = gap && getComputedStyle(gap).whiteSpaceCollapse;
+      const spaces = gap?.textContent.length;
+      wrapper.style.textWrapMode = 'wrap';
+      gap?.style.setProperty('text-wrap-mode', 'wrap', 'important');
+      const orphan = measureOrphan(paragraph, wide);
+      wrapper.style.removeProperty('text-wrap-mode');
+      gap?.style.removeProperty('text-wrap-mode');
+      return { wide, orphan, joined: measure(paragraph), anchorText: anchor.textContent,
+        neume: anchor instanceof HTMLElement && anchor.classList.contains('neanes-ck-neume'),
+        spaceCollapse, spaces };
+    });
+    const root = editor.model.document.getRoot();
+    const group = root.getChild(groupIndex);
+    const second = [...group.getChildren()].filter(node => node.is('element', 'footnoteReference'))[1];
+    const groupParagraph = paragraphs[groupIndex];
+    const wrappedCount = () => groupParagraph
+      .querySelectorAll('.neanes-footnote-nowrap .neanes-footnote').length;
+    const separators = [' ', String.fromCodePoint(0x200b), String.fromCodePoint(0xad)];
+    const separated = separators.map(separator => {
+      editor.model.change(writer => writer.insertText(separator, group, second.startOffset));
+      const wrapper = groupParagraph.querySelector('.neanes-footnote-nowrap');
+      const [left, right] = groupParagraph.querySelectorAll('.neanes-footnote');
+      const sameLine = () => Math.abs(left.getBoundingClientRect().top - right.getBoundingClientRect().top) < 2;
+      const count = wrappedCount();
+      wrapper.style.textWrapMode = 'wrap';
+      for (let width = 600; width > 10; width--) {
+        groupParagraph.style.width = width + 'px';
+        if (!sameLine()) break;
+      }
+      const split = !sameLine();
+      wrapper.style.removeProperty('text-wrap-mode');
+      const joined = sameLine();
+      editor.execute('undo');
+      return { count, split, joined };
+    });
+    editor.model.change(writer => writer.insertElement('softBreak', group, second.startOffset));
+    const explicitBreak = wrappedCount();
+    const neume = [...root.getChild(paragraphs.length - 1).getChildren()]
+      .find(node => node.is('element', 'neume'));
+    editor.model.change(writer => writer.setAttribute('alignRight', true, neume));
+    const wrapsAlignedNeume = !!paragraphs.at(-1).querySelector('.neanes-footnote-nowrap');
+    return { wide, orphan, joined, wordStartTop, wraps, anchors, separated, explicitBreak, wrapsAlignedNeume };
+  })()`);
+  assert.ok(result.orphan, 'The old break can strand an ordinary marker');
+  assert.ok(result.joined.textTop > result.orphan.textTop);
+  assert.equal(result.joined.textTop, result.wordStartTop);
+  assert.equal(result.joined.markerOffset, result.wide.markerOffset);
+  for (const [index, { wide, narrow }] of result.wraps.entries()) {
+    const label = lines[index + 1];
+    assert.ok(narrow.height > wide.height, label);
+    assert.ok(!narrow.overflow, label);
+    assert.equal(narrow.markerOffset, wide.markerOffset, label);
+  }
+  for (const [index, label] of [
+    'space',
+    'zero-width space',
+    'soft hyphen',
+  ].entries()) {
+    assert.deepEqual(
+      result.separated[index],
+      { count: 2, split: true, joined: true },
+      label,
+    );
+  }
+  assert.equal(result.explicitBreak, 1, 'An explicit line break ends the run');
+  for (const [index, { wide, orphan, joined }] of result.anchors.entries()) {
+    const label = lines[groupIndex + 1 + index];
+    assert.ok(orphan, label);
+    assert.equal(joined.markerOffset, wide.markerOffset, label);
+  }
+  assert.equal(result.anchors[0].anchorText, 'e\u00ad');
+  assert.equal(result.anchors[1].anchorText, 'e\u200b');
+  assert.equal(result.anchors[2].spaceCollapse, 'preserve');
+  assert.equal(result.anchors[2].spaces, 3);
+  assert.ok(result.anchors[3].neume);
+  assert.ok(!result.wrapsAlignedNeume);
+  const malformedIds = await evaluate(`(async () => {
+    const active = document.querySelector('.page .rich-text-editor').ckeditorInstance;
+    const editor = await active.constructor.create('', {
+      licenseKey: active.config.get('licenseKey'),
+      fontSize: active.config.get('fontSize'),
+    });
+    try {
+      const reference = '<span class="neanes-footnote" data-footnote-id="75d4d7b3-7561-41fe-a6d3-e8c53f4a3bc1"></span>';
+      editor.setData('<p>First' + reference + '</p><p>Second' + reference + '</p>');
+      const editable = editor.ui.getEditableElement();
+      const wrapperParagraphs = () => [...editable.querySelectorAll('.neanes-footnote-nowrap')]
+        .map(wrapper => wrapper.closest('p').textContent);
+      const duplicateCount = editable.querySelectorAll('.neanes-footnote').length;
+      const duplicateWraps = wrapperParagraphs();
+      const root = editor.model.document.getRoot();
+      editor.model.change(writer => writer.remove(root.getChild(0)));
+      const remainingWraps = wrapperParagraphs();
+      editor.setData('<p>First</p><p>Second</p>');
+      // The HTML upcast requires the ID attribute. Insert missing IDs at the
+      // model level to verify the post-fixer can also handle them.
+      editor.model.change(writer => {
+        for (const paragraph of root.getChildren()) {
+          writer.appendElement('footnoteReference', paragraph);
+        }
+      });
+      const missingCount = editable.querySelectorAll('.neanes-footnote').length;
+      return { duplicateCount, duplicateWraps, remainingWraps, missingCount, missingWraps: wrapperParagraphs() };
+    } finally {
+      await editor.destroy();
+    }
+  })()`);
+  assert.deepEqual(malformedIds, {
+    duplicateCount: 2,
+    duplicateWraps: ['First?'],
+    remainingWraps: ['Second?'],
+    missingCount: 2,
+    missingWraps: [],
+  });
+  await call('close_document', {
+    ...args,
+    expectedRevision: (await call('get_document_properties', args)).revision,
+    discardUnsavedChanges: true,
+  });
+}
+
 const app = await createSmokeApp('neanes-rich-text-footnotes-', {
   keepArtifacts: true,
 });
@@ -124,6 +354,7 @@ try {
     }
   }
   await checkRichTextScorePaste({ call, evaluate, menu });
+  await checkFootnoteLineBreaks({ call, edit, evaluate });
   for (const [name, layout, panel, key] of [
     ['ordinary', {}, 'single', 'content'],
     ['inline-top', { inline: true }, 'inline-top', 'content'],
@@ -228,6 +459,19 @@ try {
         ),
         '1',
       ),
+    );
+    assert.deepEqual(
+      await evaluate(`(() => {
+        const marker = document.querySelector('.page .neanes-footnote');
+        const wrapper = marker.closest('.neanes-footnote-nowrap');
+        return wrapper && { text: wrapper.textContent, wrapMode: getComputedStyle(wrapper).textWrapMode };
+      })()`),
+      { text: 'e1', wrapMode: 'nowrap' },
+      'Only the end of the word and the rendered marker share a no-wrap span',
+    );
+    assert.doesNotMatch(
+      await evaluate(`${e}.getData()`),
+      /neanes-footnote-nowrap/,
     );
     await click('.page .neanes-footnote');
     await evaluate('new Promise(resolve => setTimeout(resolve, 0))');

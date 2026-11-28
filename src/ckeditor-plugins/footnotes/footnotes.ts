@@ -1,6 +1,7 @@
 import {
   ClipboardPipeline,
   Command,
+  type ModelWriter,
   Plugin,
   toWidget,
   type ViewDowncastWriter,
@@ -8,12 +9,17 @@ import {
   Widget,
 } from 'ckeditor5';
 
+import { NEUME_ELEMENT } from '@/ckeditor-plugins/insertneume/insertneumeediting';
 import type { RichTextFootnoteMarker } from '@/models/Element';
 import {
   FOOTNOTE_ATTRIBUTE,
   FOOTNOTE_CLASS,
   FOOTNOTE_ELEMENT,
 } from '@/services/RichTextFootnotes';
+
+const FOOTNOTE_WRAP = 'neanesFootnoteWrap';
+const graphemes = new Intl.Segmenter('und', { granularity: 'grapheme' });
+const trailingInvisibleText = /[\t\p{Zs}\p{Default_Ignorable_Code_Point}]+$/u;
 
 class InsertFootnoteCommand extends Command {
   public insert: (() => void) | undefined;
@@ -86,6 +92,7 @@ export class Footnotes extends Plugin {
         return toWidget(view, writer);
       },
     });
+    this.registerWrapConversion();
     const clipboard = editor.plugins.get(ClipboardPipeline);
     editor.editing.view.document.on('clipboardOutput', (_event, data) => {
       editor.editing.view.change((writer) => {
@@ -137,6 +144,132 @@ export class Footnotes extends Plugin {
       }
     });
     editor.commands.add('insertFootnote', new InsertFootnoteCommand(editor));
+  }
+  private registerWrapConversion() {
+    const editor = this.editor;
+    editor.conversion.for('editingDowncast').add((dispatcher) => {
+      dispatcher.on(
+        `addMarker:${FOOTNOTE_WRAP}`,
+        (
+          event,
+          { markerName, markerRange, item },
+          { consumable, mapper, writer },
+        ) => {
+          if (item || !consumable.consume(markerRange, event.name)) {
+            return;
+          }
+          const wrapper = writer.createAttributeElement(
+            'span',
+            { class: 'neanes-footnote-nowrap' },
+            { id: markerName, priority: 1 },
+          );
+          const range = writer.wrap(mapper.toViewRange(markerRange), wrapper);
+          for (const element of range.getItems()) {
+            if (element.is('attributeElement') && element.isSimilar(wrapper)) {
+              mapper.bindElementToMarker(element, markerName);
+            }
+          }
+        },
+      );
+      dispatcher.on(
+        `removeMarker:${FOOTNOTE_WRAP}`,
+        (_event, { markerName }, { mapper, writer }) => {
+          for (const wrapper of mapper.markerNameToElements(markerName) ?? []) {
+            mapper.unbindElementFromMarkerName(wrapper, markerName);
+            writer.unwrap(writer.createRangeOn(wrapper), wrapper);
+          }
+          writer.clearClonedElementsGroup(markerName);
+        },
+      );
+    });
+    editor.model.document.registerPostFixer((writer) =>
+      this.updateWrapRanges(writer),
+    );
+  }
+  private updateWrapRanges(writer: ModelWriter) {
+    const { model } = this.editor;
+    if (model.document.differ.getChanges().length === 0) {
+      return false;
+    }
+
+    // These ranges only drive the editing view. CKEditor tracks their positions
+    // when text moves, and the post-fixer rechecks the word boundaries.
+    const existing = new Set(model.markers.getMarkersGroup(FOOTNOTE_WRAP));
+    const wrappedIds = new Set<string>();
+    let changed = false;
+    for (const root of model.document.getRoots()) {
+      for (const item of writer.createRangeIn(root).getItems()) {
+        if (!item.is('element', FOOTNOTE_ELEMENT)) {
+          continue;
+        }
+        const id = item.getAttribute('footnoteId');
+        if (typeof id !== 'string' || id === '' || wrappedIds.has(id)) {
+          continue;
+        }
+        let precedingText = '';
+        let previous = item.previousSibling;
+        while (previous?.is('$text')) {
+          precedingText = previous.data + precedingText;
+          previous = previous.previousSibling;
+        }
+        const text = precedingText.replace(trailingInvisibleText, '');
+        const grapheme = graphemes.segment(text).containing(text.length - 1);
+        // Keep the last visible grapheme and any trailing controls with the
+        // marker while leaving earlier line breaks to the browser.
+        let start;
+        if (grapheme) {
+          start = writer
+            .createPositionBefore(item)
+            .getShiftedBy(grapheme.index - precedingText.length);
+        } else if (
+          previous?.is('element', NEUME_ELEMENT) &&
+          previous.getAttribute('alignRight') !== true
+        ) {
+          start = writer.createPositionBefore(previous);
+        } else {
+          continue;
+        }
+        let last = item;
+        for (let node = last.nextSibling; node; node = node.nextSibling) {
+          if (node.is('element', FOOTNOTE_ELEMENT)) {
+            last = node;
+          } else if (
+            !node.is('$text') ||
+            node.data.replace(trailingInvisibleText, '') !== ''
+          ) {
+            break;
+          }
+        }
+        const range = writer.createRange(
+          start,
+          writer.createPositionAfter(last),
+        );
+        // A malformed document can repeat an ID. Only the first eligible
+        // reference owns its wrap marker so the post-fixer converges.
+        wrappedIds.add(id);
+        const name = `${FOOTNOTE_WRAP}:${id}`;
+        const marker = model.markers.get(name);
+        if (marker) {
+          existing.delete(marker);
+          if (marker.getRange().isEqual(range)) {
+            continue;
+          }
+          writer.updateMarker(marker, { range });
+        } else {
+          writer.addMarker(name, {
+            range,
+            usingOperation: false,
+            affectsData: false,
+          });
+        }
+        changed = true;
+      }
+    }
+    for (const marker of existing) {
+      writer.removeMarker(marker);
+      changed = true;
+    }
+    return changed;
   }
   public enableInsertion(insert: () => void) {
     const command = this.editor.commands.get(

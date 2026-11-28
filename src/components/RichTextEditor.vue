@@ -482,6 +482,15 @@ defineExpose({
 </style>
 
 <style>
+.neanes-footnote-nowrap {
+  text-wrap-mode: nowrap;
+}
+
+.neanes-footnote-nowrap * {
+  /* Preserve whitespace handling from inline styles and disable wrapping. */
+  text-wrap-mode: nowrap !important;
+}
+
 .neanes-footnote {
   font: normal var(--footnote-reference-size) / 1
     var(--footnote-reference-family);

@@ -54,6 +54,7 @@ const allowedChanges = [
   '2b6190f5 (master equivalent d40e4d55): end melismas at explicit line breaks',
   '2600a12e, a1d2841c, 3136c725 (master equivalent a0c2d585): end melismas at every paragraph break, keep drop cap continuations, run wrapping RTL tatweels to the line end',
   '002c7156, d7893a58 (master equivalent d28c4147): orphan continuations at every paragraph end, no joining tatweel across explicit breaks',
+  '35e0d226 (master equivalent 789eca10): hide the lone tatweel of an orphaned Arabic continuation',
 ];
 
 async function capture(build, fixture, target) {
@@ -219,6 +220,11 @@ try {
           break;
         }
         const [master, reference, current] = row.map(({ value }) => value);
+        // Display fields added by an approved change are absent from master,
+        // where they always had their default.
+        if (index > 0 && master?.elementType === 'Note') {
+          master.hidesOrphanedTatweel ??= false;
+        }
         if (index === 0) {
           pageCounts = {
             master: master.length,

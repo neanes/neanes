@@ -159,10 +159,10 @@ wrap the same on every page.
 
 Build each of the three Electron checkouts with the same test-only capture
 plugin. Install the pinned dependencies in each checkout first. Use master
-`af40dbce` as the baseline and `d28c4147` (branch `fix/end-melismas-at-breaks`)
+`af40dbce` as the baseline and `789eca10` (branch `fix/end-melismas-at-breaks`)
 as the reference for the approved melisma fixes: melismas end at every paragraph
-break, continuations after one are orphaned except after a drop cap, and wrapping
-RTL tatweels run to the line end. The baseline and reference builds can be reused.
+break, continuations after one are orphaned except after a drop cap (an orphan's
+lone tatweel is hidden), and wrapping RTL tatweels run to the line end. The baseline and reference builds can be reused.
 
 ```sh
 PARITY_BUILD=/path/to/c1/tests/integration/layout/parity-build.mjs

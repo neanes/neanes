@@ -3,6 +3,7 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 import JSZip from 'jszip';
+import { PDFDocument } from 'pdf-lib';
 
 import { readScoreSnapshot } from './readScoreSnapshot.mjs';
 import { checkSettings } from './settingsChecks.mjs';
@@ -272,15 +273,15 @@ try {
         expectedRevision: current.revision,
         filePath: customPdfPath,
       });
-      const customPdf = (await fs.readFile(customPdfPath)).toString('latin1');
-      const mediaBoxes = [...customPdf.matchAll(/\/MediaBox\s*\[([^\]]+)\]/g)];
-      assert.ok(
-        mediaBoxes.length > 0,
-        'Export must specify PDF paper dimensions.',
+      const customPdf = await PDFDocument.load(
+        await fs.readFile(customPdfPath),
       );
-      for (const [, dimensions] of mediaBoxes) {
+      const pages = customPdf.getPages();
+      assert.ok(pages.length > 0, 'Export must contain at least one page.');
+      for (const page of pages) {
+        const { x, y, width, height } = page.getMediaBox();
         assert.deepEqual(
-          dimensions.trim().split(/\s+/).map(Number),
+          [x, y, width, height],
           landscape ? [0, 0, 648, 432] : [0, 0, 432, 648],
           `Custom 6 x 9 ${orientation} paper must be oriented exactly once.`,
         );

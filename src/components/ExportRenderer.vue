@@ -1,32 +1,58 @@
 <template>
+  <ScorePrintPages
+    v-if="pdfBatch"
+    :key="pdfBatch.offset"
+    ref="pdfPrintPages"
+    :workspace="workspace"
+    :pages="pdfBatch.pages"
+    :fonts="fonts"
+    :editor-language="snapshot.editorLanguage"
+    :overlays="snapshot.overlays"
+    :page-offset="pdfBatch.offset"
+    :metadata="pdfBatch.metadata"
+    render-only
+    @ready="printPdfBatch"
+    @failed="failed"
+  />
   <SettledScorePages
+    v-else
     ref="settledPages"
     :workspace="workspace"
     :fonts="fonts"
     :editor-language="snapshot.editorLanguage"
     :overlays="snapshot.overlays"
+    :measurement-boxes="pdfMeasurementBoxes"
     @ready="complete"
     @failed="failed"
   />
 </template>
 <script setup lang="ts">
 import { getFontEmbedCSS, toPng } from 'html-to-image';
-import { useTemplateRef } from 'vue';
+import { shallowRef, useTemplateRef } from 'vue';
 
+import ScorePrintPages from '@/components/ScorePrintPages.vue';
 import SettledScorePages from '@/components/SettledScorePages.vue';
 import { IpcRendererChannels } from '@/ipc/ipcChannels';
 import type { Page } from '@/models/Page';
 import { Workspace } from '@/models/Workspace';
 import { fontCatalog } from '@/services/FontCatalog';
+import {
+  collectPdfElementLinkTargets,
+  preparePdfElementLinks,
+} from '@/services/rendering/pdfElementLinks';
+import { getPrintPageMetadata } from '@/services/rendering/printPageMetadata';
 import type {
+  PdfRenderOptions,
   PngRenderOptions,
   ScoreRenderSnapshot,
 } from '@/services/rendering/scoreRenderSnapshot';
+import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
 import { SaveService } from '@/services/SaveService';
 
 const props = defineProps<{
   snapshot: ScoreRenderSnapshot;
   png?: PngRenderOptions;
+  pdf?: PdfRenderOptions;
 }>();
 const workspace = new Workspace();
 fontCatalog.restoreSystemFonts(props.snapshot.systemFonts);
@@ -50,7 +76,59 @@ function failed(error: Error) {
 }
 const settledPages =
   useTemplateRef<InstanceType<typeof SettledScorePages>>('settledPages');
+const pdfPrintPages =
+  useTemplateRef<InstanceType<typeof ScorePrintPages>>('pdfPrintPages');
+const pdfLinkTargets = props.pdf
+  ? collectPdfElementLinkTargets(props.snapshot.score)
+  : [];
+// PDF settlement mounts only the text boxes it measures; pages render in batches.
+const pdfMeasurementBoxes = props.pdf
+  ? new Set(getResizableTextBoxes(workspace.score))
+  : undefined;
+let pdfPages: Page[] = [];
+let pdfPageMetadata: ReturnType<typeof getPrintPageMetadata> = [];
+const pdfBatch = shallowRef<{
+  offset: number;
+  pages: Page[];
+  metadata: ReturnType<typeof getPrintPageMetadata>;
+}>();
+
+function showPdfBatch(offset: number) {
+  const end = offset + props.pdf!.batchSize;
+  pdfBatch.value = {
+    offset,
+    pages: pdfPages.slice(offset, end),
+    metadata: pdfPageMetadata.slice(offset, end),
+  };
+}
+
+async function printPdfBatch() {
+  try {
+    const batch = pdfBatch.value!;
+    preparePdfElementLinks(
+      pdfPrintPages.value!.getPages(),
+      pdfLinkTargets,
+      props.pdf!.elementLinkBaseUrl,
+    );
+    await window.ipcRenderer.invoke(IpcRendererChannels.ExportRendererPdfBatch);
+    const nextOffset = batch.offset + batch.pages.length;
+    if (nextOffset < pdfPages.length) {
+      showPdfBatch(nextOffset);
+    } else {
+      ready(pdfPages.length);
+    }
+  } catch (error) {
+    failed(error instanceof Error ? error : new Error(String(error)));
+  }
+}
+
 async function complete(pages: Page[]) {
+  if (props.pdf) {
+    pdfPages = pages;
+    pdfPageMetadata = getPrintPageMetadata(workspace, pages);
+    showPdfBatch(0);
+    return;
+  }
   if (props.png) {
     try {
       const selected = settledPages
@@ -102,11 +180,15 @@ async function complete(pages: Page[]) {
       return;
     }
   }
+  ready(pages.length);
+}
+
+function ready(pageCount: number) {
   if (!finished) {
     finished = true;
     window.ipcRenderer.send(IpcRendererChannels.ExportRendererResult, {
       success: true,
-      pageCount: pages.length,
+      pageCount,
     });
   }
 }

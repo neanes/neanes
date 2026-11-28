@@ -1,6 +1,7 @@
 {
   "editor": {
     "printFailed": "Partitura nu a putut fi tipărită.",
+    "printLoading": "Se pregătește tipărirea...",
     "unexpectedError": "A apărut o eroare neașteptată.",
     "rangeOverflow": "Interval depășit",
     "openFailed": "Deschiderea a eșuat",

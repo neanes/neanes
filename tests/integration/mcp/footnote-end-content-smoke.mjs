@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 
+import { PDFDocument } from 'pdf-lib';
+
 import { createSmokeApp } from './smokeApp.mjs';
 import { connectStdioClient, createToolCaller } from './smokeClient.mjs';
 import { eventually } from './smokePolling.mjs';
@@ -341,10 +343,8 @@ try {
     filePath: pdf,
   });
   assert.ok((await stat(pdf)).size > 1000);
-  assert.equal(
-    (await readFile(pdf, 'latin1')).match(/\/Type\s*\/Page\b/g).length,
-    pages.pageCount,
-  );
+  const exported = await PDFDocument.load(await readFile(pdf));
+  assert.equal(exported.getPageCount(), pages.pageCount);
   const preview = await call('preview_page', {
     ...args,
     expectedRevision: (await properties()).revision,
@@ -421,10 +421,8 @@ try {
       expectedRevision: (await props()).revision,
       filePath: tightPdf,
     });
-    assert.equal(
-      (await readFile(tightPdf, 'latin1')).match(/\/Type\s*\/Page\b/g).length,
-      1,
-    );
+    const tightExport = await PDFDocument.load(await readFile(tightPdf));
+    assert.equal(tightExport.getPageCount(), 1);
 
     const updateTightPage = async (changes) =>
       call('update_page_setup', {

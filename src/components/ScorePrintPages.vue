@@ -17,7 +17,7 @@
         :ref="collectPage"
         :score="workspace.score"
         :page="page"
-        :page-index="pageIndex"
+        :page-index="pageIndex + pageOffset"
         :workspace-id="workspace.id"
         :metadata="pageMetadata[pageIndex]"
         :is-chapter-opening="pageMetadata[pageIndex].isChapterOpening"
@@ -45,21 +45,29 @@ import type { ScoreOverlaySettings } from '@/models/EditorPreferences';
 import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
 import { getPrintPageMetadata } from '@/services/rendering/printPageMetadata';
-import type {
-  MeasuredTextBox,
-  TextBoxHeightMeasurement,
+import {
+  getResizableTextBoxes,
+  type MeasuredTextBox,
+  type TextBoxHeightMeasurement,
 } from '@/services/rendering/textBoxMeasurement';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
-const props = defineProps<{
-  workspace: Workspace;
-  pages: Page[];
-  fonts: string[];
-  editorLanguage: string;
-  overlays: ScoreOverlaySettings;
-  measureTextOnly?: boolean;
-  measurementBoxes?: ReadonlySet<MeasuredTextBox>;
-}>();
+const props = withDefaults(
+  defineProps<{
+    workspace: Workspace;
+    pages: Page[];
+    fonts: string[];
+    editorLanguage: string;
+    overlays: ScoreOverlaySettings;
+    measureTextOnly?: boolean;
+    measurementBoxes?: ReadonlySet<MeasuredTextBox>;
+    renderOnly?: boolean;
+    pageOffset?: number;
+    metadata?: ReturnType<typeof getPrintPageMetadata>;
+  }>(),
+  { measurementBoxes: undefined, pageOffset: 0, metadata: undefined },
+);
 const emit = defineEmits<{
+  ready: [];
   measured: [heights: TextBoxHeightMeasurement[]];
   failed: [error: Error];
 }>();
@@ -76,8 +84,8 @@ const pageStyle = computed(() => ({
   width: `${score.value.pageSetup.pageWidth}px`,
   height: `${score.value.pageSetup.pageHeight}px`,
 }));
-const pageMetadata = computed(() =>
-  getPrintPageMetadata(props.workspace, props.pages),
+const pageMetadata = computed(
+  () => props.metadata ?? getPrintPageMetadata(props.workspace, props.pages),
 );
 const pageContents = new Set<InstanceType<typeof ScorePageContent>>();
 function collectPage(instance: unknown) {
@@ -99,12 +107,24 @@ onMounted(async () => {
     await document.fonts.ready;
     await nextTick();
     if (!props.measureTextOnly) {
-      await Promise.all(
-        [...root.value!.querySelectorAll('img')].map((image) => image.decode()),
-      );
+      const images = [...root.value!.querySelectorAll('img')];
+      // CKEditor marks sized images as lazy. A hidden window never scrolls
+      // them into view, so they would not load and decode() would not settle.
+      for (const image of images) {
+        image.loading = 'eager';
+      }
+      await Promise.all(images.map((image) => image.decode()));
     }
+    if (props.renderOnly) {
+      if (!disposed) {
+        emit('ready');
+      }
+      return;
+    }
+    const targets =
+      props.measurementBoxes ?? new Set(getResizableTextBoxes(score.value));
     const heights = await Promise.all(
-      [...pageContents].map((page) => page.measureTextBoxes()),
+      [...pageContents].map((page) => page.measureTextBoxes(targets)),
     );
     if (!disposed) {
       emit('measured', heights.flat());

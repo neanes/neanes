@@ -20,10 +20,16 @@ export interface PngRenderOptions {
   transparentBackground: boolean;
 }
 
+export interface PdfRenderOptions {
+  batchSize: number;
+  elementLinkBaseUrl: string;
+}
+
 export type SnapshotRenderResult =
   { success: true; pageCount: number } | { success: false; message?: string };
 
 export interface SnapshotRenderRequest {
   snapshot: ScoreRenderSnapshot;
   png?: PngRenderOptions;
+  pdf?: PdfRenderOptions;
 }

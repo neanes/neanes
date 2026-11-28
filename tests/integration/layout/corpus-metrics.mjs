@@ -130,6 +130,7 @@ async function edit(editor, { kind, index, lyric }) {
     statuses: layouts?.map(({ status }) => status) ?? spans.map(() => null),
     boundaryParagraphs: layouts?.map((layout) => layout.boundaryParagraphs),
     shiftedLines: layouts?.map((layout) => layout.shiftedLines),
+    musicalSpanElements: layouts?.map((layout) => layout.musicalSpanElements),
   };
 }
 
@@ -206,6 +207,7 @@ async function measure(fixture, previous) {
             statuses,
             boundaryParagraphs,
             shiftedLines,
+            musicalSpanElements,
           } = sample;
           samples.push({
             layoutMs,
@@ -213,6 +215,7 @@ async function measure(fixture, previous) {
             statuses,
             boundaryParagraphs,
             shiftedLines,
+            musicalSpanElements,
           });
         }
         await evaluate(

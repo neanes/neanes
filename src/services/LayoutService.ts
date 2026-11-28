@@ -497,6 +497,8 @@ interface PreviousLayout {
   elements: ScoreElement[];
   placements: Map<CompletedParagraph, LinePlacement[]>;
   musicalEntries: Map<ScoreElement, MusicalContext>;
+  // The musical context at each footnote reference.
+  footnoteContexts: Map<ScoreElement, MusicalContext>;
   // Each footnote's own objects and body elements, so a change to a body
   // element removed since is still recognized.
   footnoteObjects: Map<object, Footnote>;
@@ -529,6 +531,8 @@ export interface LayoutReuseResult {
   linesToLaterPage: number;
   linesToEarlierPage: number;
   parityChangedLines: number;
+  // Elements the musical pass walked, or null for the whole score.
+  musicalSpanElements: number | null;
   duration: number;
 }
 
@@ -653,16 +657,16 @@ export class LayoutService {
     return result;
   }
 
-  private static findEditedParagraphs(
+  // Elements before `start` and the last `suffixLength` elements are the
+  // same in both layouts, or null if a change is not a staff element.
+  private static getChangedRange(
     previous: PreviousLayout,
     elements: ScoreElement[],
-    changes: ReadonlySet<object>,
-    musicalEntries: Map<ScoreElement, MusicalContext>,
-    changedAmbitus: ModeKeyElement[],
+    changes: Iterable<object>,
   ) {
     let start = previous.elements.length;
     let suffixLength = previous.elements.length;
-    for (const changed of [...changes, ...changedAmbitus]) {
+    for (const changed of changes) {
       if (changed === elements) {
         continue;
       }
@@ -693,6 +697,78 @@ export class LayoutService {
     if (suffixLength === previous.elements.length) {
       return null;
     }
+    return { start, suffixLength };
+  }
+
+  // The mode-key spans that contain the changed elements, from the reset
+  // before them (or the score start) up to the next reset after them.
+  private static getMusicalSpan(
+    elements: ScoreElement[],
+    { start, suffixLength }: { start: number; suffixLength: number },
+  ) {
+    let first = Math.min(start, elements.length) - 1;
+    while (first > 0 && !this.resetsMusicalState(elements[first])) {
+      first--;
+    }
+    let end = elements.length - suffixLength;
+    while (end < elements.length && !this.resetsMusicalState(elements[end])) {
+      end++;
+    }
+    return { start: Math.max(first, 0), end };
+  }
+
+  // Runs the musical pass over the changed mode-key spans only. Everything
+  // outside them, including paragraph entry and footnote contexts, is kept
+  // from the previous layout.
+  private static calculateMusicalSpan(
+    previous: PreviousLayout,
+    elements: ScoreElement[],
+    pageSetup: PageSetup,
+    span: { start: number; end: number },
+    musicalEntries: Map<ScoreElement, MusicalContext>,
+    changedAmbitus: ModeKeyElement[],
+  ) {
+    const kept = (element: ScoreElement, end: number) =>
+      elements[element.index] === element &&
+      (element.index < span.start || element.index >= end);
+    // The span records the checkpoint at its end.
+    for (const [element, context] of previous.musicalEntries) {
+      if (kept(element, span.end + 1)) {
+        musicalEntries.set(element, context);
+      }
+    }
+    // The span's first element and the one before it are unchanged, so the
+    // first checkpoint keeps its recorded entry. A reset ignores it.
+    const contexts = this.calculateMartyriae(
+      elements,
+      pageSetup,
+      previous.musicalEntries.get(elements[span.start]),
+      { musicalEntries, changedAmbitus },
+      span,
+    );
+    for (const [element, context] of previous.footnoteContexts) {
+      if (kept(element, span.end)) {
+        contexts.set(element, context);
+      }
+    }
+    return contexts;
+  }
+
+  private static findEditedParagraphs(
+    previous: PreviousLayout,
+    elements: ScoreElement[],
+    changes: ReadonlySet<object>,
+    musicalEntries: Map<ScoreElement, MusicalContext>,
+    changedAmbitus: ModeKeyElement[],
+  ) {
+    const range = this.getChangedRange(previous, elements, [
+      ...changes,
+      ...changedAmbitus,
+    ]);
+    if (range === null) {
+      return null;
+    }
+    const { start, suffixLength } = range;
     let end = previous.elements.length - suffixLength;
     for (const [element, oldContext] of previous.musicalEntries) {
       const current = musicalEntries.get(element);
@@ -819,26 +895,10 @@ export class LayoutService {
     });
 
     endPhase();
-    endPhase = startSpan('processPages.calculateMartyriae');
-    const musicalContexts = this.calculateMartyriae(
-      elements,
-      pageSetup,
-      undefined,
-      trackReuse ? { musicalEntries, changedAmbitus } : undefined,
-    );
-    endPhase();
-    endPhase = startSpan('processPages.prepareFootnotes');
+    endPhase = startSpan('processPages.orderFootnotes');
     const references = orderedFootnotes(score, true);
     const hasFootnoteReferences = references.length > 0;
     const footnoteObjects = this.getFootnoteObjects(score);
-    const footnotes = this.prepareFootnotes(
-      workspace,
-      musicalContexts,
-      references,
-      options,
-    );
-    endPhase();
-    endPhase = startSpan('processPages.prepareContentLines');
     const changes =
       incremental?.changes && previous !== undefined
         ? this.getMainStaffChanges(
@@ -856,6 +916,42 @@ export class LayoutService {
     } else if (status === null && changes != null && changes.size > 64) {
       status = 'bulk edit';
     }
+    const changedRange =
+      status === null && previous !== undefined && changes?.size
+        ? this.getChangedRange(previous, elements, changes)
+        : null;
+    endPhase();
+    endPhase = startSpan('processPages.calculateMartyriae');
+    const musicalSpan =
+      changedRange !== null
+        ? this.getMusicalSpan(elements, changedRange)
+        : null;
+    const musicalContexts =
+      musicalSpan !== null && previous !== undefined
+        ? this.calculateMusicalSpan(
+            previous,
+            elements,
+            pageSetup,
+            musicalSpan,
+            musicalEntries,
+            changedAmbitus,
+          )
+        : this.calculateMartyriae(
+            elements,
+            pageSetup,
+            undefined,
+            trackReuse ? { musicalEntries, changedAmbitus } : undefined,
+          );
+    endPhase();
+    endPhase = startSpan('processPages.prepareFootnotes');
+    const footnotes = this.prepareFootnotes(
+      workspace,
+      musicalContexts,
+      references,
+      options,
+    );
+    endPhase();
+    endPhase = startSpan('processPages.prepareContentLines');
     const cacheLayout = trackReuse;
     const edit =
       status === null && previous !== undefined && changes?.size
@@ -1423,6 +1519,7 @@ export class LayoutService {
         elements: elements.slice(),
         placements,
         musicalEntries,
+        footnoteContexts: musicalContexts,
         footnoteObjects,
       });
     }
@@ -1436,6 +1533,7 @@ export class LayoutService {
       linesToLaterPage,
       linesToEarlierPage,
       parityChangedLines,
+      musicalSpanElements: musicalSpan && musicalSpan.end - musicalSpan.start,
       duration: performance.now() - start,
     });
     return pages;
@@ -9251,6 +9349,9 @@ export class LayoutService {
     checkpoints?: Pick<PreviousLayout, 'musicalEntries'> & {
       changedAmbitus: ModeKeyElement[];
     },
+    // Only elements[start, end). The checkpoint at `end`, if any, is the
+    // state the range ends with.
+    { start, end } = { start: 0, end: elements.length },
   ) {
     let currentNote = initialContext?.note ?? 0;
     let currentShift = initialContext?.shift ?? 0;
@@ -9292,19 +9393,22 @@ export class LayoutService {
       }
     };
 
-    let previousElement: ScoreElement | undefined;
-    for (const element of elements) {
+    const recordCheckpoint = (index: number) => {
       if (
         checkpoints !== undefined &&
-        this.endsParagraph(previousElement, element)
+        this.endsParagraph(elements[index - 1], elements[index])
       ) {
-        checkpoints.musicalEntries.set(element, {
+        checkpoints.musicalEntries.set(elements[index], {
           note: currentNote,
           scale: currentScale,
           shift: currentShift,
         });
       }
-      previousElement = element;
+    };
+
+    for (let index = start; index < end; index++) {
+      const element = elements[index];
+      recordCheckpoint(index);
       if (element.elementType === ElementType.Note) {
         const note = element as NoteElement;
 
@@ -9566,10 +9670,24 @@ export class LayoutService {
       }
     }
 
+    if (end < elements.length) {
+      recordCheckpoint(end);
+    }
     if (currentModeKey) {
       finishAmbitus(currentModeKey);
     }
     return contexts;
+  }
+
+  // Mode keys and mode changes reset note, scale and shift from their own
+  // fields and start a new ambitus, so no musical state crosses them.
+  private static resetsMusicalState(element: ScoreElement) {
+    return (
+      element.elementType === ElementType.ModeKey ||
+      (element.elementType === ElementType.RichTextBox &&
+        ((element as RichTextBoxElement).modeChange ||
+          getLastEmbeddedModeKey(element as RichTextBoxElement) != null))
+    );
   }
 
   /** The note, scale, and shift a mode key starts the music in. */

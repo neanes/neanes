@@ -617,6 +617,8 @@ async function runSequence(fixture, seed) {
     // Reused layouts by the number of paragraphs added at range boundaries.
     const boundaries = {};
     let maxShiftedLines = 0;
+    // Layouts whose musical pass walked only the edited mode-key spans.
+    const musicalSpans = { layouts: 0, maxElements: 0 };
     let barTarget = null;
     const pageMoves = { later: 0, earlier: 0, parity: 0 };
     const middle = { at: 'middle', page: 1, line: 2 };
@@ -831,8 +833,16 @@ async function runSequence(fixture, seed) {
         linesToLaterPage,
         linesToEarlierPage,
         parityChangedLines,
+        musicalSpanElements,
       } of result.layouts) {
         statuses[status] = (statuses[status] ?? 0) + 1;
+        if (musicalSpanElements != null) {
+          musicalSpans.layouts++;
+          musicalSpans.maxElements = Math.max(
+            musicalSpans.maxElements,
+            musicalSpanElements,
+          );
+        }
         if (status === 'reused') {
           boundaries[boundaryParagraphs] =
             (boundaries[boundaryParagraphs] ?? 0) + 1;
@@ -853,7 +863,7 @@ async function runSequence(fixture, seed) {
       }
     }
     console.log(
-      `PASS ${fixture.name} seed=${seed}: ${count()} edits, ${checks} checks ${JSON.stringify(kinds)}; layouts ${JSON.stringify(statuses)}; boundary paragraphs ${JSON.stringify(boundaries)}; max shifted lines ${maxShiftedLines}; layouts with page moves ${JSON.stringify(pageMoves)}`,
+      `PASS ${fixture.name} seed=${seed}: ${count()} edits, ${checks} checks ${JSON.stringify(kinds)}; layouts ${JSON.stringify(statuses)}; boundary paragraphs ${JSON.stringify(boundaries)}; max shifted lines ${maxShiftedLines}; layouts with page moves ${JSON.stringify(pageMoves)}; musical span passes ${JSON.stringify(musicalSpans)}`,
     );
     return true;
   } catch (error) {

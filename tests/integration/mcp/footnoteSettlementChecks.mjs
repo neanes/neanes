@@ -862,6 +862,194 @@ export async function checkTextBoxMeasurementReuse(call, evaluate) {
   );
 }
 
+// Repeated templates are measured as they print, where rich-text overflow is
+// visible. A scrollbar from wide content must not add height that print omits.
+export async function checkPrintOverflowMeasurement(call, evaluate) {
+  const { args, mutate, insert, content } = await createPageRestartFixture(
+    call,
+    'Print overflow measurement',
+  );
+  // Styled scrollbars are never overlays, so the case also holds on macOS.
+  await evaluate(`(() => {
+    const style = document.createElement('style');
+    style.id = 'classic-scrollbars';
+    style.textContent =
+      '::-webkit-scrollbar { width: 14px; height: 14px; }' +
+      '::-webkit-scrollbar-thumb { background: gray; }';
+    document.head.append(style);
+  })()`);
+  try {
+    await mutate('update_header_footer_settings', {
+      changes: { showHeader: true },
+    });
+    const wide =
+      '<figure class="table"><table><tbody><tr><td>' +
+      'W'.repeat(80) +
+      '</td></tr></tbody></table></figure>';
+    await insert(
+      [
+        {
+          elementType: 'RichTextBox',
+          clientId: 'anchor',
+          properties: { content },
+        },
+        {
+          elementType: 'RichTextBox',
+          clientId: 'wide',
+          properties: { content: wide, scrollable: true },
+        },
+      ],
+      ['anchor'],
+    );
+    await call('get_pages', args);
+    const heights = await evaluate(`(() => {
+      const editable = document.querySelector(
+        '.page .line:not([data-footnote-id]) .ck-content.single.scrollable',
+      );
+      const scrolling = editable.offsetHeight;
+      editable.style.setProperty('overflow', 'visible', 'important');
+      const visible = editable.offsetHeight;
+      editable.style.removeProperty('overflow');
+      return {
+        settled: window._editor.score.value.staff.elements[1].height,
+        scrolling,
+        visible,
+      };
+    })()`);
+    assert.ok(
+      heights.scrolling > heights.visible,
+      'Wide content shows a horizontal scrollbar: ' + JSON.stringify(heights),
+    );
+    assert.ok(
+      // offsetHeight rounds; a counted scrollbar adds far more than 1 px.
+      Math.abs(heights.settled - heights.visible) < 1,
+      'Template measurement omits the scrollbar: ' + JSON.stringify(heights),
+    );
+  } finally {
+    await evaluate("document.getElementById('classic-scrollbars').remove()");
+  }
+  console.log(
+    'PASS: template measurement uses print overflow for scrollable rich text',
+  );
+}
+
+// A rich-text footer on repeated templates is measured once for each distinct
+// tokenized content, in one reused editor, and settles at its tallest page.
+export async function checkTemplateRichTextVariants(call, evaluate) {
+  const { args, mutate, insert, content } = await createPageRestartFixture(
+    call,
+    'Template rich-text variants',
+  );
+  const longChapter = 'Second chapter title '.repeat(8).trim();
+  await insert(
+    [
+      {
+        elementType: 'TextBox',
+        properties: { content: 'One', runningMarkerRole: 'chapter' },
+      },
+      {
+        elementType: 'RichTextBox',
+        clientId: 'first',
+        properties: { content, pageBreak: true },
+      },
+      {
+        elementType: 'TextBox',
+        properties: { content: longChapter, runningMarkerRole: 'chapter' },
+      },
+      {
+        elementType: 'RichTextBox',
+        clientId: 'second',
+        properties: { content },
+      },
+    ],
+    ['first', 'second'],
+  );
+  const footer = await call('get_elements', {
+    ...args,
+    collection: { kind: 'footers', variant: 'default' },
+  });
+  // Both pages open a chapter; keep them on the default footer.
+  await mutate('update_header_footer_settings', {
+    changes: { showFooter: true, headerFooterDifferentChapterOpening: false },
+  });
+  await evaluate(`(() => {
+    window.templatePeak = 0;
+    window.templateObserver = new MutationObserver(() => {
+      const count = document.querySelectorAll(
+        '.workspace-text-box-measurement .rich-text-box-container',
+      ).length;
+      window.templatePeak = Math.max(window.templatePeak, count);
+    });
+    window.templateObserver.observe(document.body, { childList: true, subtree: true });
+  })()`);
+  try {
+    await mutate('edit_elements', {
+      actions: [
+        {
+          action: 'replace',
+          elementRef: footer.elements[0].elementRef,
+          element: {
+            elementType: 'RichTextBox',
+            properties: {
+              multipanel: true,
+              contentLeft: '<p>$:chapter</p>',
+              contentCenter: '<p>Footer center</p>',
+              contentRight: '<p>$p</p>',
+            },
+          },
+        },
+      ],
+    });
+    assert.equal((await call('get_pages', args)).pageCount, 2);
+    const geometry = await eventually(async () => {
+      const geometry = await evaluate(`(() => {
+        const score = window._editor.score.value;
+        const pages = [...document.querySelectorAll('.page:not(.print)')].map(page => {
+          const box = [...page.querySelectorAll('.rich-text-box-container')]
+            .find(box => box.textContent.includes('Footer center'));
+          if (box === undefined) {
+            return { text: page.textContent.slice(0, 200), height: null };
+          }
+          const panels = [...box.querySelectorAll('.ck-content')];
+          const zoom = Number(getComputedStyle(panels[0]).getPropertyValue('--zoom'));
+          return {
+            text: box.textContent,
+            height: Math.max(...panels.map(panel => panel.getBoundingClientRect().height)) / zoom,
+          };
+        });
+        return { settled: score.footers.default.elements[0].height, pages };
+      })()`);
+      assert.equal(geometry.pages.length, 2, JSON.stringify(geometry));
+      assert.ok(
+        geometry.pages[1].text.includes(longChapter),
+        JSON.stringify(geometry),
+      );
+      return geometry;
+    });
+    const [first, second] = geometry.pages.map(({ height }) => height);
+    assert.ok(
+      second > first,
+      'The long chapter wraps the second page footer: ' +
+        JSON.stringify(geometry),
+    );
+    assert.ok(
+      Math.abs(geometry.settled - second) < 0.05,
+      'The footer settles at its tallest tokenized variant: ' +
+        JSON.stringify(geometry),
+    );
+    assert.equal(
+      await evaluate('window.templatePeak'),
+      1,
+      'Template rich text is measured in one reused editor',
+    );
+  } finally {
+    await evaluate('window.templateObserver.disconnect()');
+  }
+  console.log(
+    'PASS: template rich-text footers measure each tokenized variant in one reused editor',
+  );
+}
+
 export async function checkFillWidthReference(call, evaluate) {
   const { args, mutate, settings, insert, content } =
     await createPageRestartFixture(call, 'Fill-width reference');

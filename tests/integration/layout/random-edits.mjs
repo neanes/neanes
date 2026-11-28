@@ -502,6 +502,7 @@ async function runSequence(fixture, seed) {
       fixture.rtl ||
       facing ||
       fixture.checkIncremental ||
+      fixture.openingModeKey ||
       fixture.pageMoves ||
       fixture.footnotes
     ) {
@@ -552,6 +553,17 @@ async function runSequence(fixture, seed) {
           content: 'Opening paragraph',
           height: 24,
           customHeight: 24,
+        });
+      }
+      if (fixture.openingModeKey) {
+        // Starts the music on Ga instead of the score default.
+        score.staff.elements.unshift({
+          elementType: 'ModeKey',
+          alignment: 'center',
+          mode: 3,
+          scale: 'Diatonic',
+          scaleNote: 'Ga',
+          martyria: 'Alpha',
         });
       }
       if (fixture.footnotes) {
@@ -707,7 +719,10 @@ async function runSequence(fixture, seed) {
               },
               { kind: 'delete', target: { index: 0, type: 'TextBox' } },
             ]
-          : null;
+          : fixture.openingModeKey
+            ? // The music after the deleted key starts from the score default.
+              [{ kind: 'delete', target: { index: 0, type: 'ModeKey' } }]
+            : null;
     const edits = replay?.edits ?? scriptedEdits;
     const count = () => edits?.length ?? steps;
     for (let i = 0; i < count(); i++) {
@@ -901,6 +916,7 @@ async function runSequence(fixture, seed) {
 if (values.incremental && !replay) {
   for (const scripted of [
     { name: 'opening-paragraph', file: fixture, checkIncremental: true },
+    { name: 'opening-mode-key', file: fixture, openingModeKey: true },
     { name: 'page-moves', file: fixture, pageMoves: 'plain' },
     { name: 'footnotes', file: fixture, footnotes: true },
     { name: 'footnotes-rtl', file: fixture, footnotes: true, rtl: true },

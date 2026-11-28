@@ -737,12 +737,16 @@ export class LayoutService {
         musicalEntries.set(element, context);
       }
     }
-    // The span's first element and the one before it are unchanged, so the
-    // first checkpoint keeps its recorded entry. A reset ignores it.
+    // A later span's first element and the one before it are unchanged, so
+    // its first checkpoint keeps its recorded entry. A reset ignores it. A
+    // span at the score start starts from the default, since its first
+    // element may have moved there, as when the opening mode key is deleted.
     const contexts = this.calculateMartyriae(
       elements,
       pageSetup,
-      previous.musicalEntries.get(elements[span.start]),
+      span.start === 0
+        ? undefined
+        : previous.musicalEntries.get(elements[span.start]),
       { musicalEntries, changedAmbitus },
       span,
     );

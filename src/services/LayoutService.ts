@@ -2310,7 +2310,6 @@ export class LayoutService {
       }
 
       if (this.endsMelismaAtBreak(element)) {
-        afterMelismaBreak = true;
         phase1GreekMelismaIsActive = false;
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
@@ -2349,6 +2348,9 @@ export class LayoutService {
       // and the paragraph is about to end. In the latter case, endParagraph()
       // removes that trailing glue and replaces it with finishing glue.
       if (lineBreak) {
+        // Every paragraph end, including one before or after a block
+        // element, leaves the continuations that follow it orphaned.
+        afterMelismaBreak = true;
         this.endParagraph(
           justifyLastLine,
           layoutWorkspace,

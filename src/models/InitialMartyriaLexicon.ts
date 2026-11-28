@@ -3,11 +3,14 @@ import { ModeSign } from '@/models/Neumes';
 import {
   INITIAL_MARTYRIA_LABEL_VARIANTS,
   INITIAL_MARTYRIA_LANGUAGE_IDS,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
+  INITIAL_MARTYRIA_NUMERAL_KINDS,
   INITIAL_MARTYRIA_NUMERAL_QUALIFIERS,
   INITIAL_MARTYRIA_NUMERAL_STYLES,
   type InitialMartyriaCanonicalNote,
   type InitialMartyriaLabelVariant,
   type InitialMartyriaLanguageId,
+  type InitialMartyriaModeNameSemantics,
   type InitialMartyriaNoteNames,
   type InitialMartyriaNumeralQualifier,
   type InitialMartyriaNumeralStyle,
@@ -24,6 +27,10 @@ export const initialMartyriaCanonicalNotes: InitialMartyriaCanonicalNote[] = [
   ModeSign.Ke,
   ModeSign.Zo,
 ];
+
+/* The same notes keyed by scale degree: degree 0 is Pa, wrapping to Ni. */
+export const initialMartyriaCanonicalNotesByScaleDegree: InitialMartyriaCanonicalNote[] =
+  [...initialMartyriaCanonicalNotes.slice(1), ModeSign.Ni];
 
 /*
  * These note names are score content, deliberately kept independent of the
@@ -133,9 +140,29 @@ const arabicTransliteratedNoteNames: InitialMartyriaNoteNames = {
 
 type InitialMartyriaModeTexts = Readonly<Record<ModeKeyMode, string>>;
 
+type InitialMartyriaPronunciationOverrides = Partial<{
+  label: string;
+  ordinalWords: InitialMartyriaModeTexts;
+  plagalWord: string;
+  plagalCounterpartWord: string;
+  plagalCounterpartOrdinalWords: Partial<Record<ModeKeyMode, string>>;
+  graveWord: string;
+  /** Cardinal words for languages that print cardinals only as numerals. */
+  cardinalWords: InitialMartyriaModeTexts;
+}>;
+
 interface InitialMartyriaLexiconBase {
   /** Reading direction of the language's mode-name phrases. */
   direction: 'ltr' | 'rtl';
+  /** Words introducing the physical starting note in a spoken mode name. */
+  startingNotePrefix: string;
+  /** Spoken forms that differ from the text printed in the score. */
+  pronunciationOverrides?: InitialMartyriaPronunciationOverrides;
+  /**
+   * How the sign group alone is read, since it prints no words to read: the
+   * language's conventional name for the mode the sign stands for.
+   */
+  modeSignAloneReading: InitialMartyriaModeNameSemantics;
   /** The word naming the concept of a mode (Mode, Tono, Glas). */
   label: string;
   /** Lowercase the label when an ordinal precedes it. */
@@ -147,6 +174,11 @@ interface InitialMartyriaLexiconBase {
   /** Ordinal words in the form used before the label (Spanish apocope). */
   ordinalWordsPrenominal?: InitialMartyriaModeTexts;
   cardinalWords?: InitialMartyriaModeTexts;
+  /**
+   * Read every mode number aloud as an ordinal, whatever it prints:
+   * Romanian Glas 1 reads Glasul intai, not glas unu.
+   */
+  readsNumbersAsOrdinals?: true;
   alphabeticNumerals?: InitialMartyriaModeTexts;
   /**
    * Whether formatOrdinal ends digit ordinals in letters that a font's
@@ -237,6 +269,20 @@ function formatEnglishOrdinal(
     : base;
 }
 
+/* The sign read as the absolute ordinal: Tono quinto, Glasul al cincilea. */
+const ordinalPostnominalAbsoluteReading: InitialMartyriaModeNameSemantics = {
+  numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+  numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+  modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+};
+
+/* The sign read as the ordinal of its authentic counterpart: Plagal of the First. */
+const ordinalPostnominalCounterpartReading: InitialMartyriaModeNameSemantics = {
+  numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+  numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
+  modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+};
+
 export const initialMartyriaLexicons: Record<
   InitialMartyriaLanguageId,
   InitialMartyriaLexicon
@@ -250,6 +296,29 @@ export const initialMartyriaLexicons: Record<
     // https://byzantine-music.apostoliki-diakonia.gr/Texts/texts.asp?main=Anastasimatarion.htm
     direction: 'ltr',
     usesGreekScript: true,
+    startingNotePrefix: 'εκ του',
+    pronunciationOverrides: {
+      label: 'Ήχος',
+      ordinalWords: {
+        1: 'Πρώτος',
+        2: 'Δεύτερος',
+        3: 'Τρίτος',
+        4: 'Τέταρτος',
+        5: 'Πέμπτος',
+        6: 'Έκτος',
+        7: 'Έβδομος',
+        8: 'Όγδοος',
+      },
+      plagalWord: 'Πλάγιος',
+      plagalCounterpartWord: 'Πλάγιος του',
+      plagalCounterpartOrdinalWords: {
+        5: 'Πρώτου',
+        6: 'Δευτέρου',
+        8: 'Τετάρτου',
+      },
+      graveWord: 'Βαρύς',
+    },
+    modeSignAloneReading: ordinalPostnominalCounterpartReading,
     label: 'Ἦχος',
     ordinalWords: {
       1: 'πρῶτος',
@@ -292,6 +361,13 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: transliteratedGreekNoteNames,
+    startingNotePrefix: 'from',
+    modeSignAloneReading: {
+      numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+      numeralQualifier: INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Prenominal,
+      modeNamingScheme:
+        INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
+    },
     label: 'Mode',
     ordinalWords: {
       1: 'First',
@@ -337,6 +413,20 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: spanishTransliteratedNoteNames,
+    startingNotePrefix: 'desde',
+    pronunciationOverrides: {
+      cardinalWords: {
+        1: 'uno',
+        2: 'dos',
+        3: 'tres',
+        4: 'cuatro',
+        5: 'cinco',
+        6: 'seis',
+        7: 'siete',
+        8: 'ocho',
+      },
+    },
+    modeSignAloneReading: ordinalPostnominalAbsoluteReading,
     label: 'Tono',
     lowercaseTrailingLabel: true,
     ordinalWords: {
@@ -379,6 +469,8 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: churchSlavonicTransliteratedNoteNames,
+    startingNotePrefix: 'ѿ',
+    modeSignAloneReading: ordinalPostnominalAbsoluteReading,
     label: 'Гла́съ',
     lowercaseTrailingLabel: true,
     ordinalWords: {
@@ -440,6 +532,8 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: russianTransliteratedNoteNames,
+    startingNotePrefix: 'от',
+    modeSignAloneReading: ordinalPostnominalAbsoluteReading,
     label: 'Глас',
     lowercaseTrailingLabel: true,
     ordinalWords: {
@@ -491,6 +585,8 @@ export const initialMartyriaLexicons: Record<
     direction: 'rtl',
     usesGreekScript: false,
     transliteratedNoteNames: arabicTransliteratedNoteNames,
+    startingNotePrefix: 'من',
+    modeSignAloneReading: ordinalPostnominalAbsoluteReading,
     label: 'اللحن',
     ordinalWords: {
       1: 'الأول',
@@ -504,19 +600,23 @@ export const initialMartyriaLexicons: Record<
     },
   },
   [INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian]: {
-    // Romanian chant books write bare Glas with an Arabic digit, read as a
-    // cardinal (Glas 1, glas unu), or Glas beside the mode sign alone, read as
-    // a definite ordinal (Glasul intai, Glasul al doilea). Glas comes from the
-    // Slavic tradition, which counts 1-8 and has no plagal term, so the
-    // plagal modes are read as fifth, sixth, and eighth. A Romanian psaltic
-    // reviewer rejected Roman numerals with bare Glas, written ordinals
-    // (Glasul al II-lea), prenominal ordinals (Primul glas), laturas, which
-    // appears only in theory books, and terminal punctuation.
+    // Romanian chant books write bare Glas with an Arabic digit (Glas 1) or
+    // Glas beside the mode sign alone. Both are read as a definite ordinal
+    // (Glasul intai, Glasul al doilea), never as a cardinal (glas unu). Glas
+    // comes from the Slavic tradition, which counts 1-8 and has no plagal
+    // term, so the plagal modes are read as fifth, sixth, and eighth. A
+    // Romanian psaltic reviewer gave the natural spoken readings of the
+    // eight modes as Glasul intai to Glasul al optulea, rejected the
+    // cardinal reading, and rejected Roman numerals with bare Glas, written
+    // ordinals (Glasul al II-lea), prenominal ordinals (Primul glas),
+    // laturas, which appears only in theory books, and terminal punctuation.
     // https://doom.lingv.ro/cautare/q/al%20doilea
     // https://arhiepiscopiabucurestilor.ro/stiri/evenimente-bisericesti/cantarile-sfintei-liturghii-glasurile-i-si-al-vii-lea
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: romanianTransliteratedNoteNames,
+    startingNotePrefix: 'de la',
+    modeSignAloneReading: ordinalPostnominalAbsoluteReading,
     label: 'Glas',
     labelWithOrdinal: 'Glasul',
     ordinalWords: {
@@ -529,16 +629,7 @@ export const initialMartyriaLexicons: Record<
       7: 'al șaptelea',
       8: 'al optulea',
     },
-    cardinalWords: {
-      1: 'unu',
-      2: 'doi',
-      3: 'trei',
-      4: 'patru',
-      5: 'cinci',
-      6: 'șase',
-      7: 'șapte',
-      8: 'opt',
-    },
+    readsNumbersAsOrdinals: true,
     // The stacked plagal sign follows Glas, beside the mode sign.
     absoluteModeSignFollowsLabel: true,
   },
@@ -556,6 +647,8 @@ export const initialMartyriaLexicons: Record<
     direction: 'ltr',
     usesGreekScript: false,
     transliteratedNoteNames: indonesianTransliteratedNoteNames,
+    startingNotePrefix: 'dari',
+    modeSignAloneReading: ordinalPostnominalCounterpartReading,
     label: 'Modus',
     ordinalWords: {
       1: 'Pertama',
@@ -650,6 +743,18 @@ export function getInitialMartyriaLabel(
   structure: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
 ) {
   return getInitialMartyriaLexicon(structure).label;
+}
+
+/**
+ * The lexicon a structure is read aloud with: its printed words, with the
+ * spoken forms folded in where they differ (modern Greek accents for the
+ * polytonic text).
+ */
+export function getInitialMartyriaSpokenLexicon(
+  structure: Pick<InitialMartyriaStructure, 'languageId' | 'labelVariant'>,
+): InitialMartyriaLexicon {
+  const lexicon = getInitialMartyriaLexicon(structure);
+  return { ...lexicon, ...lexicon.pronunciationOverrides };
 }
 
 export function usesGreekScript(languageId: InitialMartyriaLanguageId) {

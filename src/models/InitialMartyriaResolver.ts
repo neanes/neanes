@@ -7,6 +7,8 @@ import {
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
 } from '@/models/ParagraphStyle';
+import { getScaleNoteValue, ScaleNote } from '@/models/Scales';
+import { capitalizeInitial } from '@/utils/capitalizeInitial';
 import { DEFAULT_FONT_STYLE } from '@/utils/fontConstants';
 import {
   composeNumericVariant,
@@ -17,8 +19,10 @@ import { getScoreDefaultInitialMartyriaStyle } from './InitialMartyriaCommonWord
 import {
   arabicIndicDigits,
   getInitialMartyriaLexicon,
+  getInitialMartyriaSpokenLexicon,
   hasRaisableOrdinalSuffix,
   initialMartyriaCanonicalNotes,
+  initialMartyriaCanonicalNotesByScaleDegree,
   type InitialMartyriaLexicon,
   originalGreekNoteNames,
   romanNumerals,
@@ -44,6 +48,7 @@ import {
   type InitialMartyriaStyle,
   type InitialMartyriaStyleResolution,
   type InitialMartyriaTextSemantic,
+  type InitialMartyriaTextStructure,
   type InitialMartyriaWrittenModeNameSemantics,
   isInitialMartyriaModeSignAloneStructure,
   isInitialMartyriaTextStructure,
@@ -219,11 +224,6 @@ function usesPlagalAbbreviationInText(
   ).plagalAbbreviationNumeralStyles.includes(structure.numeralStyle);
 }
 
-function capitalizeInitial(value: string) {
-  const [first, ...rest] = [...value];
-  return `${first.toLocaleUpperCase()}${rest.join('')}`;
-}
-
 /** A prenominal mode name puts the mode word after the numeral. */
 function usesTrailingLabel(
   semantics: Pick<InitialMartyriaModeNameSemantics, 'numeralQualifier'>,
@@ -294,6 +294,153 @@ function orderInitialMartyriaModeName<T>(
   return counterpartMarkerPosition === 'beforeNumeral'
     ? [label, marker, identifier]
     : [marker, label, identifier];
+}
+
+/**
+ * The spoken mode name for one mode under some mode-name semantics. The
+ * numeral is always read as a word, so "Mode 5" and "Mode V" both read
+ * "Mode Five"; a printed plagal sign is not read on its own, since the
+ * semantics already say whether the mode is named plagal.
+ */
+function getInitialMartyriaModeNameReading(
+  printedSemantics: InitialMartyriaModeNameSemantics,
+  lexicon: InitialMartyriaLexicon,
+  mode: ModeKeyMode,
+) {
+  const semantics: InitialMartyriaModeNameSemantics =
+    lexicon.readsNumbersAsOrdinals
+      ? {
+          ...printedSemantics,
+          numeralKind: INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+        }
+      : printedSemantics;
+  const grave = usesGraveNaming(semantics, mode);
+  let identifier: string | null = null;
+  let marker: string | null = null;
+  if (grave && lexicon.graveWord != null) {
+    if (lexicon.graveWordAfterLabel) {
+      identifier = lexicon.graveWord;
+    } else {
+      marker = lexicon.graveWord;
+    }
+  } else {
+    // The counterpart form (Greek genitive) wins where the language has one.
+    identifier = getInitialMartyriaNumeralWord(
+      grave
+        ? {
+            ...semantics,
+            modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+          }
+        : semantics,
+      lexicon,
+      mode,
+    );
+    if (isPlagalMode(mode) && usesPlagalNaming(semantics)) {
+      marker = getPlagalMarkerWord(semantics, lexicon) ?? null;
+    }
+  }
+  const label = getInitialMartyriaLabelText(
+    lexicon,
+    usesTrailingLabel(semantics),
+    semantics.numeralKind === INITIAL_MARTYRIA_NUMERAL_KINDS.Ordinal,
+  );
+
+  return orderInitialMartyriaModeName(
+    semantics,
+    lexicon,
+    identifier,
+    marker,
+    label,
+  )
+    .filter((component): component is string => component != null)
+    .join(' ');
+}
+
+/**
+ * How a structure names one mode aloud. Text with the sign reads the text
+ * alone, since the sign repeats it. The sign alone, which prints no words,
+ * reads as the language's conventional name for the mode it stands for.
+ */
+export function getInitialMartyriaModeReading(
+  structure: InitialMartyriaStructure,
+  mode: ModeKeyMode,
+) {
+  if (isInitialMartyriaModeSignAloneStructure(structure)) {
+    const lexicon = getInitialMartyriaSpokenLexicon({
+      languageId: structure.languageId,
+    });
+    return getInitialMartyriaModeNameReading(
+      lexicon.modeSignAloneReading,
+      lexicon,
+      mode,
+    );
+  }
+  return getInitialMartyriaModeNameReading(
+    structure,
+    getInitialMartyriaSpokenLexicon(structure),
+    mode,
+  );
+}
+
+const keLowNoteValue = getScaleNoteValue(ScaleNote.KeLow);
+const zoHighNoteValue = getScaleNoteValue(ScaleNote.ZoHigh);
+
+/** What a reading needs of an initial martyria: its mode and its notes. */
+type InitialMartyriaReadingContext = Pick<
+  InitialMartyriaContext,
+  'mode' | 'physicalNote' | 'pitchCluster'
+>;
+
+/*
+ * The starting note read aloud: "from Pa". It names the notes the martyria
+ * prints, since the reading stands in for them. A martyria that prints no
+ * note names its physical starting note, with its octave marked.
+ */
+function getInitialMartyriaStartingNoteReading(
+  structure: InitialMartyriaStructure,
+  { physicalNote, pitchCluster }: InitialMartyriaReadingContext,
+) {
+  const lexicon = getInitialMartyriaLexicon(structure);
+  const noteNames = lexicon.usesGreekScript
+    ? originalGreekNoteNames
+    : lexicon.transliteratedNoteNames;
+  const printedNames = [pitchCluster.primary, pitchCluster.secondary]
+    .filter((pitchNote) => pitchNote != null)
+    .map((pitchNote) => noteNames.names[pitchNote.note]);
+  if (printedNames.length > 0) {
+    return `${lexicon.startingNotePrefix} ${printedNames.join(' ')}`;
+  }
+
+  const physicalNoteValue = getScaleNoteValue(physicalNote);
+  const canonicalNote =
+    initialMartyriaCanonicalNotesByScaleDegree[
+      ((physicalNoteValue % 7) + 7) % 7
+    ];
+  let noteName = noteNames.names[canonicalNote];
+
+  if (physicalNoteValue <= keLowNoteValue) {
+    noteName = noteName.toLocaleLowerCase(noteNames.languageTag);
+  } else if (physicalNoteValue >= zoHighNoteValue) {
+    noteName += "'";
+  }
+
+  return `${lexicon.startingNotePrefix} ${noteName}`;
+}
+
+/**
+ * The reading shown under a wording picker preview: the spoken mode name
+ * followed by the starting note or notes.
+ */
+export function getInitialMartyriaPronunciation(
+  structure: InitialMartyriaStructure,
+  context: InitialMartyriaReadingContext,
+) {
+  const modeName = getInitialMartyriaModeReading(structure, context.mode);
+  const startingNote = getInitialMartyriaStartingNoteReading(
+    structure,
+    context,
+  );
+  return `${modeName} ${startingNote}`;
 }
 
 /*
@@ -558,6 +705,46 @@ function getInitialMartyriaStructureAxisSignature(
       ? [structure.numeralStyle, structure.numberingSystem]
       : [undefined, undefined]),
   ].join('/');
+}
+
+/**
+ * How a text structure prints the number of a mode counted 1 to 8 (1, 1st,
+ * I, First), whatever its naming of plagal modes: the number form it uses,
+ * shown in the language's own spelling.
+ */
+export function getInitialMartyriaNumberForm(
+  structure: InitialMartyriaTextStructure,
+  mode: ModeKeyMode,
+) {
+  return getInitialMartyriaNumeralText(
+    {
+      ...structure,
+      modeNamingScheme: INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
+    },
+    getInitialMartyriaLexicon(structure),
+    mode,
+  )!;
+}
+
+/**
+ * Where a named structure prints the mode word: before or after the number
+ * of a text phrase, or before or after the sign. The first mode shows it
+ * plainly, with no plagal or grave word in the way.
+ */
+export function getInitialMartyriaLabelPosition(
+  structure: InitialMartyriaNamedStructure,
+): 'before' | 'after' {
+  const components = getInitialMartyriaComponents(structure, 1);
+  const labelIndex = components.findIndex(
+    (component) => component.kind === 'text' && component.semantic === 'label',
+  );
+  const identifierIndex = components.findIndex((component) =>
+    structure.modeIdentificationMethod ===
+    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSign
+      ? component.kind === 'modeSign'
+      : component.kind === 'text' && component.semantic === 'numeral',
+  );
+  return labelIndex < identifierIndex ? 'before' : 'after';
 }
 
 /** The printed form of one mode: its components, encoded as text. */

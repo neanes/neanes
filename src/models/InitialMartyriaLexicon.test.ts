@@ -12,6 +12,8 @@ import {
 import { getInitialMartyriaLabelVariants } from '@/models/InitialMartyriaLexicon';
 import {
   getInitialMartyriaContext,
+  getInitialMartyriaModeReading,
+  getInitialMartyriaPronunciation,
   modeKeyModes,
 } from '@/models/InitialMartyriaResolver';
 import {
@@ -928,6 +930,163 @@ describe('InitialMartyriaLexicon', () => {
     expect(corpus).toMatchSnapshot();
   });
 
+  it('reads every legal structure', () => {
+    const corpus = [...getUniqueLegalInitialMartyriaStructures().values()].map(
+      (structure) => ({
+        structure: describeStructure(structure),
+        modes: modeKeyModes.map(
+          (mode) =>
+            `${mode}: ${getInitialMartyriaPronunciation(
+              structure,
+              getInitialMartyriaContext(elementForMode(mode)),
+            )}`,
+        ),
+      }),
+    );
+    for (const entry of corpus) {
+      for (const line of entry.modes) {
+        expect(line, entry.structure).not.toMatch(/undefined|null|\s\s/);
+      }
+    }
+    expect(corpus).toMatchSnapshot();
+  });
+
+  it('reads a row that stands for several structures as the structure it keeps', () => {
+    const readingOf = (
+      base: Parameters<typeof enumerateInitialMartyriaStructures>[0],
+      printed: (structure: InitialMartyriaStructure) => boolean,
+    ) => {
+      const rows = enumerateInitialMartyriaStructures(base).filter((row) =>
+        printed(row.structure),
+      );
+      expect(rows).toHaveLength(1);
+      return getInitialMartyriaModeReading(rows[0].structure, 5);
+    };
+    const romanNumerals = (structure: InitialMartyriaStructure) =>
+      structure.modeIdentificationMethod !== 'mode-sign' &&
+      structure.modeIdentificationMethod !== 'mode-sign-alone' &&
+      structure.numeralStyle === 'roman-numerals' &&
+      structure.numeralQualifier === 'postnominal';
+    const everyRow = () => true;
+
+    expect(
+      getInitialMartyriaModeReading(
+        styleFromWording('spanishTonoRomanNumeral').structure,
+        5,
+      ),
+    ).toBe('Tono quinto');
+    expect(
+      readingOf(
+        {
+          languageId: 'es',
+          modeIdentificationMethod: 'text',
+          transliterateNoteNames: false,
+        },
+        romanNumerals,
+      ),
+    ).toBe('Tono quinto');
+    expect(
+      readingOf(
+        {
+          languageId: 'es',
+          modeIdentificationMethod: 'mode-sign',
+          transliterateNoteNames: false,
+        },
+        everyRow,
+      ),
+    ).toBe('Tono quinto');
+    expect(
+      readingOf(
+        {
+          languageId: 'en',
+          modeIdentificationMethod: 'mode-sign',
+          transliterateNoteNames: false,
+        },
+        (structure) =>
+          structure.modeIdentificationMethod === 'mode-sign' &&
+          structure.numeralQualifier === 'postnominal' &&
+          structure.modeNamingScheme !== 'absolute',
+      ),
+    ).toBe('Plagal Mode One');
+    expect(
+      readingOf(
+        {
+          languageId: 'id',
+          modeIdentificationMethod: 'mode-sign',
+          transliterateNoteNames: false,
+        },
+        everyRow,
+      ),
+    ).toBe('Plagal dari Modus Pertama');
+  });
+
+  it('reads the sign beside the mode word as the number it stands for', () => {
+    const englishMode = styleFromWording('englishModeBeforeSign').structure;
+    const englishTone = styleFromWording('englishToneBeforeSign').structure;
+
+    expect(
+      getInitialMartyriaPronunciation(
+        englishMode,
+        getInitialMartyriaContext(elementForMode(5)),
+      ),
+    ).toBe('Mode Five from Pa');
+    expect(getInitialMartyriaModeReading(englishTone, 5)).toBe('Tone Five');
+  });
+
+  it('reads every Romanian wording as the reviewer prefers', () => {
+    // Natural spoken readings of the eight modes, from a Romanian psaltic
+    // reviewer, who rejected the cardinal reading (glas unu) of Glas 1.
+    const expected = [
+      'Glasul întâi',
+      'Glasul al doilea',
+      'Glasul al treilea',
+      'Glasul al patrulea',
+      'Glasul al cincilea',
+      'Glasul al șaselea',
+      'Glasul al șaptelea',
+      'Glasul al optulea',
+    ];
+    const romanianStructures: InitialMartyriaStructure[] = [
+      styleFromWording('romanianTraditionalSign').structure,
+      styleFromWording('romanianGlasNumber').structure,
+      {
+        languageId: 'ro',
+        modeIdentificationMethod: 'text',
+        numeralKind: 'cardinal',
+        numeralStyle: 'digits',
+        numeralQualifier: 'postnominal',
+        modeNamingScheme: 'absolute',
+        transliterateNoteNames: false,
+      },
+      {
+        languageId: 'ro',
+        modeIdentificationMethod: 'mode-sign-alone',
+        transliterateNoteNames: false,
+      },
+    ];
+
+    for (const structure of romanianStructures) {
+      expect(
+        modeKeyModes.map((mode) =>
+          getInitialMartyriaModeReading(structure, mode),
+        ),
+      ).toEqual(expected);
+    }
+  });
+
+  it('reads the sign alone as the mode it stands for', () => {
+    expect(
+      getInitialMartyriaPronunciation(
+        {
+          languageId: 'en',
+          modeIdentificationMethod: 'mode-sign-alone',
+          transliterateNoteNames: true,
+        },
+        getInitialMartyriaContext(elementForMode(5)),
+      ),
+    ).toBe('Plagal of First Mode from Pa');
+  });
+
   it('renders the attested run sequence for every attested structure and mode', () => {
     expect(expectedRunsByStructure.map(([label]) => label)).toEqual(
       Object.keys(attestedStructures),
@@ -954,6 +1113,20 @@ describe('InitialMartyriaLexicon', () => {
       physicalNote: ScaleNote.Ke,
       pitchCluster: { primary: { note: ModeSign.Pa } },
     });
+  });
+
+  it('reads the notes the martyria prints, or else its physical note', () => {
+    const english = styleFromWording('englishModeBeforeSign').structure;
+    const readingOf = (templateId: number) =>
+      getInitialMartyriaPronunciation(
+        english,
+        getInitialMartyriaContext(elementForTemplate(templateId)),
+      );
+
+    // Starts on Ke but prints Pa, which the reading names.
+    expect(readingOf(506)).toBe('Mode Five from Pa');
+    // Prints no note, so the reading names the high Pa it starts on.
+    expect(readingOf(105)).toBe("Mode One from Pa'");
   });
 
   it('uses the note names defined by each structure', () => {

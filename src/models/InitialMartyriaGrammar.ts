@@ -58,13 +58,19 @@ export const initialMartyriaModeIdentificationMethods = [
   INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone,
 ] as const;
 
+/*
+ * The enumeration order of the naming schemes. Where two schemes print alike
+ * (English [pl] Mode [sign]), the row keeps the first, so the plagal class
+ * comes first: that row reads Plagal Mode One.
+ */
 export const initialMartyriaModeNamingSchemes = [
-  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute,
 ] as const;
 
-const relationalModeNamingSchemes = [
+/** The naming schemes that name a plagal mode by an authentic one. */
+export const relationalModeNamingSchemes = [
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart,
   INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass,
 ] as const;
@@ -314,17 +320,21 @@ const initialMartyriaNumeralKinds: InitialMartyriaNumeralKind[] = [
   INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
 ];
 
-export const initialMartyriaNumeralForms: InitialMartyriaNumeralForm[] = [
+/** The numeral styles, plainest first. */
+export const initialMartyriaNumeralStyles = [
   INITIAL_MARTYRIA_NUMERAL_STYLES.Digits,
   INITIAL_MARTYRIA_NUMERAL_STYLES.RomanNumerals,
   INITIAL_MARTYRIA_NUMERAL_STYLES.AlphabeticNumerals,
   INITIAL_MARTYRIA_NUMERAL_STYLES.Words,
-].flatMap((numeralStyle) =>
-  initialMartyriaNumeralKinds.map((numeralKind) => ({
-    numeralKind,
-    numeralStyle,
-  })),
-);
+];
+
+export const initialMartyriaNumeralForms: InitialMartyriaNumeralForm[] =
+  initialMartyriaNumeralStyles.flatMap((numeralStyle) =>
+    initialMartyriaNumeralKinds.map((numeralKind) => ({
+      numeralKind,
+      numeralStyle,
+    })),
+  );
 
 function supportsNumeralForm(
   lexicon: InitialMartyriaLexicon,

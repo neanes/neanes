@@ -1306,6 +1306,7 @@ export class ByzHtmlExporter {
     return `<div class="${className}"${languageAttributes}${styleAttribute}>${content}</div\n${this.getIndentationString(indentation)}>`;
   }
 
+  // BYZHTML's music fonts position marks on the original Greek glyphs.
   private exportModeKeySignature(element: ModeKeyElement, indentation: number) {
     let inner = this.exportNeume(ModeSign.Ekhos, indentation);
 
@@ -1348,7 +1349,6 @@ export class ByzHtmlExporter {
     indentation: number,
     embedded = false,
   ) {
-    // BYZHTML's music fonts position marks on the original Greek glyphs.
     let inner = this.exportModeKeySignature(element, indentation + 2);
 
     let rightContainer = false;

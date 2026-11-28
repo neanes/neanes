@@ -1,7 +1,8 @@
 <template>
   <Dialog v-model:open="open">
     <DialogContent
-      class="grid h-[42rem] max-h-[calc(100dvh-4rem)] grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-[60rem]"
+      class="grid h-[48rem] max-h-[calc(100dvh-4rem)] grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-[60rem]"
+      @open-auto-focus="revealCurrentWording"
       @close-auto-focus="emit('close-auto-focus', $event)"
     >
       <DialogHeader>
@@ -76,41 +77,110 @@
               {{ choice.label }}
             </ToggleGroupItem>
           </ToggleGroup>
+
+          <Field
+            v-if="!languageUsesGreekScript"
+            orientation="horizontal"
+            class="w-auto sm:ml-3"
+          >
+            <Switch
+              id="initial-martyria-picker-transliterate"
+              v-model="transliterateNoteNames"
+            />
+            <FieldContent>
+              <FieldLabel for="initial-martyria-picker-transliterate">
+                {{
+                  $t(
+                    ($) =>
+                      $.dialog.initialMartyriaStyles.transliterateNoteNames,
+                    { ns },
+                  )
+                }}
+              </FieldLabel>
+              <FieldDescription>
+                {{
+                  $t(
+                    ($) =>
+                      $.dialog.initialMartyriaStyles.transliterateNoteNamesHint,
+                    { ns },
+                  )
+                }}
+              </FieldDescription>
+            </FieldContent>
+          </Field>
         </div>
 
-        <Field
-          v-if="!languageUsesGreekScript"
-          orientation="horizontal"
-          class="w-auto"
+        <div
+          v-if="filterControls.length > 0"
+          class="flex flex-col gap-1.5"
+          role="group"
+          :aria-label="
+            $t(($) => $.dialog.initialMartyriaStyles.filters.label, { ns })
+          "
         >
-          <Switch
-            id="initial-martyria-picker-transliterate"
-            v-model="transliterateNoteNames"
-          />
-          <FieldContent>
-            <FieldLabel for="initial-martyria-picker-transliterate">
-              {{
-                $t(
-                  ($) => $.dialog.initialMartyriaStyles.transliterateNoteNames,
-                  { ns },
-                )
-              }}
-            </FieldLabel>
-            <FieldDescription>
-              {{
-                $t(
-                  ($) =>
-                    $.dialog.initialMartyriaStyles.transliterateNoteNamesHint,
-                  { ns },
-                )
-              }}
-            </FieldDescription>
-          </FieldContent>
-        </Field>
+          <div
+            v-for="filter in filterControls"
+            :key="filter.name"
+            class="flex flex-wrap items-center gap-x-3 gap-y-1"
+          >
+            <span
+              :id="`initial-martyria-picker-filter-${filter.name}`"
+              class="w-32 flex-none text-xs text-muted-foreground"
+            >
+              {{ filter.label }}
+            </span>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              size="sm"
+              class="flex-wrap"
+              :model-value="filter.value ?? allFilterValue"
+              :aria-labelledby="`initial-martyria-picker-filter-${filter.name}`"
+              @update:model-value="setFilter(filter.name, $event)"
+            >
+              <ToggleGroupItem
+                :value="allFilterValue"
+                :aria-label="formatOptionLabel(allLabel, filter.allCount)"
+              >
+                {{ allLabel }}
+                <span class="text-muted-foreground tabular-nums">{{
+                  filter.allCount
+                }}</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                v-for="option in filter.options"
+                :key="option.value"
+                :value="option.value"
+                :disabled="option.count === 0 && option.value !== filter.value"
+                :aria-label="formatOptionLabel(option.label, option.count)"
+              >
+                <span
+                  :lang="option.lang"
+                  :style="
+                    option.lang == null
+                      ? undefined
+                      : getInitialMartyriaLanguageTextStyle(option.lang)
+                  "
+                  >{{ option.label }}</span
+                >
+                <span class="text-muted-foreground tabular-nums">{{
+                  option.count
+                }}</span>
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <p
+              v-if="filter.name === 'plagal' && plagalHint != null"
+              class="basis-full text-xs text-muted-foreground sm:pl-35"
+            >
+              {{ plagalHint }}
+            </p>
+          </div>
+        </div>
       </div>
 
       <ScrollArea class="min-h-0 border">
         <div
+          ref="list"
           role="group"
           :aria-label="
             $t(($) => $.dialog.initialMartyriaStyles.wordingChoices, { ns })
@@ -132,45 +202,54 @@
             </span>
           </div>
 
-          <template v-for="group in commonGroups" :key="group.key">
-            <p :class="groupHeadingClass">{{ group.label }}</p>
+          <p
+            v-if="currentWordingFiltered"
+            class="flex flex-wrap items-center gap-2 border-b px-3 py-1.5 text-xs text-muted-foreground"
+          >
+            {{
+              $t(($) => $.dialog.initialMartyriaStyles.currentWordingFiltered, {
+                ns,
+              })
+            }}
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              class="h-auto p-0 text-xs"
+              @click="clearFilters"
+            >
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.clearFilters, { ns })
+              }}
+            </Button>
+          </p>
+
+          <template v-for="group in visibleGroups" :key="group.key">
+            <p :class="groupHeadingClass">{{ getGroupLabel(group.key) }}</p>
             <InitialMartyriaWordingRow
               v-for="row in group.rows"
               :key="row.key"
-              v-bind="rowProps(row)"
+              v-bind="rowProps(row, group.key)"
               @select="choose(row)"
             />
           </template>
 
-          <Collapsible v-if="moreGroups.length > 0" v-model:open="moreOpen">
-            <CollapsibleTrigger as-child>
-              <button
-                type="button"
-                class="flex w-full items-center gap-1.5 border-b bg-muted/40 px-3 py-2 text-left text-xs font-medium transition-colors hover:bg-muted focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
-              >
-                <PhCaretRight
-                  class="size-3.5 transition-transform"
-                  :class="moreOpen && 'rotate-90'"
-                />
-                {{
-                  $t(($) => $.dialog.initialMartyriaStyles.moreWordings, {
-                    ns,
-                  })
-                }}
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <template v-for="group in moreGroups" :key="group.key">
-                <p :class="groupHeadingClass">{{ group.label }}</p>
-                <InitialMartyriaWordingRow
-                  v-for="row in group.rows"
-                  :key="row.key"
-                  v-bind="rowProps(row)"
-                  @select="choose(row)"
-                />
-              </template>
-            </CollapsibleContent>
-          </Collapsible>
+          <div
+            v-if="visibleGroups.length === 0"
+            class="flex flex-col items-center gap-2 px-3 py-8 text-center text-sm text-muted-foreground"
+          >
+            {{ $t(($) => $.dialog.initialMartyriaStyles.noMatches, { ns }) }}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              @click="clearFilters"
+            >
+              {{
+                $t(($) => $.dialog.initialMartyriaStyles.clearFilters, { ns })
+              }}
+            </Button>
+          </div>
         </div>
       </ScrollArea>
 
@@ -186,18 +265,13 @@
 </template>
 
 <script setup lang="ts">
-import { PhCaretRight } from '@phosphor-icons/vue';
+import type { SelectorParam } from 'i18next';
 import { useTranslation } from 'i18next-vue';
 import type { AcceptableValue } from 'reka-ui';
 import { computed, ref, watch } from 'vue';
 
 import InitialMartyriaWordingRow from '@/components/InitialMartyriaWordingRow.vue';
 import { Button } from '@/components/ui/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import {
   Dialog,
   DialogClose,
@@ -224,7 +298,6 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
-  commonInitialMartyriaWordings,
   createInitialMartyriaStyleFromWording,
   DEFAULT_INITIAL_MARTYRIA_WORDING_NAME,
   getCommonInitialMartyriaWording,
@@ -232,33 +305,28 @@ import {
   getDefaultInitialMartyriaTransliteration,
 } from '@/models/InitialMartyriaCommonWordings';
 import {
-  enumerateInitialMartyriaStructures,
-  initialMartyriaModeIdentificationMethods,
-} from '@/models/InitialMartyriaGrammar';
-import {
   getInitialMartyriaLabel,
   getInitialMartyriaLabelVariants,
   usesGreekScript,
 } from '@/models/InitialMartyriaLexicon';
-import {
-  getInitialMartyriaWordingKey,
-  getSupportedInitialMartyriaLettering,
-} from '@/models/InitialMartyriaResolver';
+import { getInitialMartyriaWordingKey } from '@/models/InitialMartyriaResolver';
 import {
   INITIAL_MARTYRIA_LANGUAGE_IDS,
-  INITIAL_MARTYRIA_LETTERINGS,
-  INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS,
+  INITIAL_MARTYRIA_MODE_NAMING_SCHEMES,
   type InitialMartyriaLabelVariant,
   type InitialMartyriaLanguageId,
   initialMartyriaLanguageIds,
   type InitialMartyriaLettering,
+  type InitialMartyriaModeNamingScheme,
   type InitialMartyriaStructure,
   type InitialMartyriaStyle,
 } from '@/models/InitialMartyriaStyle';
 import type { PageSetup } from '@/models/PageSetup';
 import type { ParagraphStyle } from '@/models/ParagraphStyle';
+import { capitalizeInitial } from '@/utils/capitalizeInitial';
 import {
   getInitialMartyriaLanguageName,
+  getInitialMartyriaLanguageTextStyle,
   getInitialMartyriaModeIdentificationMethodLabel,
 } from '@/utils/initialMartyriaLabels';
 import { isOneOf } from '@/utils/isOneOf';
@@ -267,8 +335,23 @@ import {
   getSample,
   getWordingSampleModes,
 } from './InitialMartyriaStylesDialog.shared';
+import {
+  buildInitialMartyriaWordingList,
+  createInitialMartyriaWordingFilterSelection,
+  filterInitialMartyriaWordingList,
+  getInitialMartyriaWordingFilters,
+  getInitialMartyriaWordingRows,
+  INITIAL_MARTYRIA_COMMON_GROUP,
+  INITIAL_MARTYRIA_NEUME_FONT_GROUP,
+  type InitialMartyriaCaptionPart,
+  type InitialMartyriaWordingFilterName,
+  type InitialMartyriaWordingGroupKey,
+  type InitialMartyriaWordingRow as WordingRow,
+} from './InitialMartyriaWordingList';
 
 const ns = 'dialog';
+
+type DialogSelector = SelectorParam<'dialog'>;
 
 const groupHeadingClass =
   'border-b bg-muted/20 px-3 py-1 text-[11px] font-medium text-muted-foreground';
@@ -276,8 +359,9 @@ const groupHeadingClass =
 /**
  * Chooses how an initial martyria reads: a language, its word for the mode
  * where it has more than one, whether its note names are transliterated, and
- * one of the wordings the language allows. The common wordings come first;
- * every other wording is kept in a collapsed section. Each is previewed in
+ * one of the wordings the language allows. Every wording is listed: the
+ * common ones first, then the rest grouped by how they show the mode;
+ * filters narrow the list by what prints. Each wording is previewed, with its reading, in
  * enough modes to tell it apart from the rest.
  */
 const props = defineProps<{
@@ -310,7 +394,11 @@ const languageId = ref<InitialMartyriaLanguageId>(
 );
 const labelVariant = ref<InitialMartyriaLabelVariant | undefined>();
 const transliterateNoteNames = ref(false);
-const moreOpen = ref(false);
+const filterSelection = ref(createInitialMartyriaWordingFilterSelection());
+
+function clearFilters() {
+  filterSelection.value = createInitialMartyriaWordingFilterSelection();
+}
 
 const languageUsesGreekScript = computed(() =>
   usesGreekScript(languageId.value),
@@ -348,15 +436,8 @@ function setLabelChoice(value: AcceptableValue | AcceptableValue[]) {
   } else {
     return;
   }
-  moreOpen.value = false;
+  clearFilters();
 }
-
-/** The choices above, as set on every wording the picker lists. */
-const chosenAxes = computed(() => ({
-  languageId: languageId.value,
-  labelVariant: labelVariant.value,
-  transliterateNoteNames: transliterateNoteNames.value,
-}));
 
 const orderedLanguageIds = computed(() => [
   props.preferredLanguageId,
@@ -373,7 +454,7 @@ function setLanguage(value: AcceptableValue) {
   languageId.value = id;
   labelVariant.value = undefined;
   transliterateNoteNames.value = getDefaultInitialMartyriaTransliteration(id);
-  moreOpen.value = false;
+  clearFilters();
 }
 
 /*
@@ -395,40 +476,230 @@ const currentKey = computed(() =>
     : getInitialMartyriaWordingKey(props.editingStyle),
 );
 
+/** Every wording of the language and mode word, before filtering. */
+const groups = computed(() =>
+  buildInitialMartyriaWordingList({
+    languageId: languageId.value,
+    labelVariant: labelVariant.value,
+    transliterateNoteNames: transliterateNoteNames.value,
+  }),
+);
+
+const visibleGroups = computed(() =>
+  filterInitialMartyriaWordingList(groups.value, filterSelection.value),
+);
+
+const filters = computed(() =>
+  getInitialMartyriaWordingFilters(groups.value, filterSelection.value),
+);
+
+const currentWordingFiltered = computed(() => {
+  const key = currentKey.value;
+  return (
+    key != null &&
+    getInitialMartyriaWordingRows(groups.value).some(
+      (row) => row.key === key,
+    ) &&
+    !getInitialMartyriaWordingRows(visibleGroups.value).some(
+      (row) => row.key === key,
+    )
+  );
+});
+
 /*
- * A row holds only the wording; its preview style is built by the row
- * itself, so rows in the collapsed section build none, and a change of
- * selection or typography leaves the rows and samples alone.
+ * The toggle groups cannot hold an absent value either, so All goes by a
+ * value no option uses.
  */
-interface WordingRow {
-  key: string;
-  structure: InitialMartyriaStructure;
-  lettering: InitialMartyriaLettering;
-  /** The captions of the common wordings written this way. */
-  captions: string[];
+const allFilterValue = '*';
+
+const allLabel = computed(() =>
+  t(($) => $.dialog.initialMartyriaStyles.filters.all, { ns }),
+);
+
+function formatOptionLabel(label: string, count: number) {
+  return t(($) => $.dialog.initialMartyriaStyles.filters.optionWithCount, {
+    ns,
+    label,
+    count,
+  });
 }
 
-function createRow(
-  structure: InitialMartyriaStructure,
-  lettering: InitialMartyriaLettering,
-  captions: string[],
-): WordingRow {
-  const wording = {
-    structure,
-    lettering: getSupportedInitialMartyriaLettering(lettering, structure),
+interface FilterControl {
+  name: InitialMartyriaWordingFilterName;
+  label: string;
+  value: string | null;
+  allCount: number;
+  options: {
+    value: string;
+    label: string;
+    /** The language of a label taken from the language's own words. */
+    lang?: InitialMartyriaLanguageId;
+    count: number;
+  }[];
+}
+
+const filterLabelSelectors: [
+  InitialMartyriaWordingFilterName,
+  DialogSelector,
+][] = [
+  ['number', ($) => $.dialog.initialMartyriaStyles.filters.number],
+  ['plagal', ($) => $.dialog.initialMartyriaStyles.filters.plagal],
+  ['method', ($) => $.dialog.initialMartyriaStyles.filters.method],
+];
+
+/** The filters the language offers, in the order they are shown. */
+const filterControls = computed(() => {
+  const { number, plagal, method, allCounts } = filters.value;
+  const lang = languageId.value;
+  const optionsByName: Record<
+    InitialMartyriaWordingFilterName,
+    FilterControl['options'] | undefined
+  > = {
+    number: number?.map((option) => ({ ...option, lang })),
+    plagal: plagal?.map((option) => ({ ...option, lang })),
+    method: method?.map((option) => ({
+      ...option,
+      label: getInitialMartyriaModeIdentificationMethodLabel(t, option.value),
+    })),
   };
-  return {
-    key: getInitialMartyriaWordingKey(wording),
-    ...wording,
-    captions,
+  return filterLabelSelectors.flatMap(([name, labelSelector]) => {
+    const options = optionsByName[name];
+    return options == null
+      ? []
+      : [
+          {
+            name,
+            label: t(labelSelector, { ns }),
+            value: filterSelection.value[name],
+            allCount: allCounts[name],
+            options,
+          } satisfies FilterControl,
+        ];
+  });
+});
+
+function setFilter(
+  name: InitialMartyriaWordingFilterName,
+  value: AcceptableValue | AcceptableValue[],
+) {
+  // Clicking the pressed item deselects it; the choice stays.
+  if (typeof value !== 'string' || value === '') {
+    return;
+  }
+  filterSelection.value = {
+    ...filterSelection.value,
+    [name]: value === allFilterValue ? null : value,
   };
+}
+
+const plagalHintSelectors = {
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart]: ($) =>
+    $.dialog.initialMartyriaStyles.plagalHints.authenticCounterpart,
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass]: ($) =>
+    $.dialog.initialMartyriaStyles.plagalHints.plagalClass,
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute]: ($) =>
+    $.dialog.initialMartyriaStyles.plagalHints.absolute,
+} satisfies Record<InitialMartyriaModeNamingScheme, DialogSelector>;
+
+/** How the chosen plagal naming works, or nothing while All is chosen. */
+const plagalHint = computed(() => {
+  const scheme = filterSelection.value.plagal;
+  return scheme == null ? null : t(plagalHintSelectors[scheme], { ns });
+});
+
+function getGroupLabel(key: InitialMartyriaWordingGroupKey) {
+  switch (key) {
+    case INITIAL_MARTYRIA_NEUME_FONT_GROUP:
+      return t(($) => $.dialog.initialMartyriaStyles.neumeFontPresets, { ns });
+    case INITIAL_MARTYRIA_COMMON_GROUP:
+      return t(($) => $.dialog.initialMartyriaStyles.commonWordings, { ns });
+    default:
+      return getInitialMartyriaModeIdentificationMethodLabel(t, key);
+  }
+}
+
+const list = ref<HTMLElement | null>(null);
+
+/*
+ * Changing a wording opens on the style's current row, which may be far
+ * down the list when it is not a common wording.
+ */
+function revealCurrentWording() {
+  list.value
+    ?.querySelector('[aria-pressed="true"]')
+    ?.scrollIntoView({ block: 'center' });
 }
 
 const captionList = computed(
   () => new Intl.ListFormat(i18next.language, { style: 'short', type: 'unit' }),
 );
 
-function rowProps(row: WordingRow) {
+const plagalCaptionSelectors = {
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.AuthenticCounterpart]: ($) =>
+    $.dialog.initialMartyriaStyles.captionParts.plagal.authenticCounterpart,
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.PlagalClass]: ($) =>
+    $.dialog.initialMartyriaStyles.captionParts.plagal.plagalClass,
+  [INITIAL_MARTYRIA_MODE_NAMING_SCHEMES.Absolute]: ($) =>
+    $.dialog.initialMartyriaStyles.captionParts.plagal.absolute,
+} satisfies Record<InitialMartyriaModeNamingScheme, DialogSelector>;
+
+const labelPositionCaptionSelectors = {
+  number: {
+    before: ($) =>
+      $.dialog.initialMartyriaStyles.captionParts.labelBeforeNumber,
+    after: ($) => $.dialog.initialMartyriaStyles.captionParts.labelAfterNumber,
+  },
+  sign: {
+    before: ($) => $.dialog.initialMartyriaStyles.captionParts.labelBeforeSign,
+    after: ($) => $.dialog.initialMartyriaStyles.captionParts.labelAfterSign,
+  },
+} satisfies Record<
+  'number' | 'sign',
+  Record<'before' | 'after', DialogSelector>
+>;
+
+function formatCaptionPart(part: InitialMartyriaCaptionPart) {
+  switch (part.kind) {
+    case 'number':
+      return t(($) => $.dialog.initialMartyriaStyles.captionParts.number, {
+        ns,
+        number: part.number,
+      });
+    case 'plagal':
+      return t(plagalCaptionSelectors[part.scheme], { ns });
+    case 'labelPosition':
+      return t(labelPositionCaptionSelectors[part.identifier][part.position], {
+        ns,
+        label: part.label,
+      });
+    case 'noWords':
+      return t(($) => $.dialog.initialMartyriaStyles.captionParts.noWords, {
+        ns,
+      });
+  }
+}
+
+/**
+ * A common wording keeps its curated caption; any other row is described by
+ * the parts that set it apart from the rest of its group.
+ */
+function getCaption(row: WordingRow) {
+  if (row.commonWordingNames.length > 0) {
+    return captionList.value.format([
+      ...new Set(
+        row.commonWordingNames.map((name) =>
+          t(getCommonInitialMartyriaWordingCaptionSelector(name), { ns }),
+        ),
+      ),
+    ]);
+  }
+  return capitalizeInitial(
+    captionList.value.format(row.captionParts.map(formatCaptionPart)),
+    i18next.language,
+  );
+}
+
+function rowProps(row: WordingRow, groupKey: InitialMartyriaWordingGroupKey) {
   return {
     base: previewBase.value,
     structure: row.structure,
@@ -436,125 +707,30 @@ function rowProps(row: WordingRow) {
     samples: samples.value,
     paragraphStyles: props.paragraphStyles,
     pageSetup: props.pageSetup,
-    caption:
-      row.captions.length > 0 ? captionList.value.format(row.captions) : null,
+    caption: getCaption(row),
+    // The common group mixes ways of showing the mode, so each row names its
+    // own, as the other groups do in their headings.
+    methodLabel:
+      groupKey === INITIAL_MARTYRIA_COMMON_GROUP
+        ? getInitialMartyriaModeIdentificationMethodLabel(
+            t,
+            row.structure.modeIdentificationMethod,
+          )
+        : null,
+    captionQuotesLanguage: row.captionQuotesLanguage,
     selected: row.key === currentKey.value,
     inUse: row.key !== currentKey.value && props.usedWordingKeys.has(row.key),
   };
 }
 
 /*
- * The common wordings of the language and mode word, with the choices
- * above in place of their own, then the sign group alone. Wordings that then
- * print alike share a row.
- */
-const commonGroups = computed(() => {
-  const neumeFontRows: WordingRow[] = [];
-  const textRows: WordingRow[] = [];
-  for (const wording of commonInitialMartyriaWordings) {
-    if (
-      wording.structure.languageId !== languageId.value ||
-      wording.structure.labelVariant !== labelVariant.value
-    ) {
-      continue;
-    }
-    const usesNeumeFont =
-      wording.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont;
-    const rows = usesNeumeFont ? neumeFontRows : textRows;
-    const row = createRow(
-      { ...wording.structure, ...chosenAxes.value },
-      wording.lettering,
-      [
-        t(getCommonInitialMartyriaWordingCaptionSelector(wording.name), {
-          ns: 'dialog',
-        }),
-      ],
-    );
-    const existing = rows.find((other) => other.key === row.key);
-    if (existing != null) {
-      existing.captions.push(...row.captions);
-    } else {
-      rows.push(row);
-    }
-  }
-  // The sign group alone has no word for the mode, so it is the same row
-  // whichever word is chosen.
-  const modeSignAloneMethod =
-    INITIAL_MARTYRIA_MODE_IDENTIFICATION_METHODS.ModeSignAlone;
-  const [{ structure: modeSignAloneStructure }] =
-    enumerateInitialMartyriaStructures({
-      ...chosenAxes.value,
-      modeIdentificationMethod: modeSignAloneMethod,
-    });
-  const modeSignAloneCaption = [
-    getInitialMartyriaModeIdentificationMethodLabel(t, modeSignAloneMethod),
-  ];
-  textRows.push(
-    createRow(
-      modeSignAloneStructure,
-      INITIAL_MARTYRIA_LETTERINGS.Text,
-      modeSignAloneCaption,
-    ),
-  );
-  const neumeFontRow = createRow(
-    modeSignAloneStructure,
-    INITIAL_MARTYRIA_LETTERINGS.MusicFont,
-    modeSignAloneCaption,
-  );
-  if (neumeFontRow.lettering === INITIAL_MARTYRIA_LETTERINGS.MusicFont) {
-    neumeFontRows.push(neumeFontRow);
-  }
-  return [
-    {
-      key: 'neume-font',
-      label: t(($) => $.dialog.initialMartyriaStyles.neumeFontPresets, { ns }),
-      rows: neumeFontRows,
-    },
-    {
-      key: 'common',
-      label: t(($) => $.dialog.initialMartyriaStyles.commonWordings, { ns }),
-      rows: textRows,
-    },
-  ].filter((group) => group.rows.length > 0);
-});
-
-const commonKeys = computed(
-  () =>
-    new Set(
-      commonGroups.value.flatMap((group) => group.rows.map((row) => row.key)),
-    ),
-);
-
-/** Every other text wording of the language, by how it names the mode. */
-const moreGroups = computed(() =>
-  initialMartyriaModeIdentificationMethods
-    .map((modeIdentificationMethod) => ({
-      key: modeIdentificationMethod,
-      label: getInitialMartyriaModeIdentificationMethodLabel(
-        t,
-        modeIdentificationMethod,
-      ),
-      rows: enumerateInitialMartyriaStructures({
-        ...chosenAxes.value,
-        modeIdentificationMethod,
-      })
-        .map(({ structure }) =>
-          createRow(structure, INITIAL_MARTYRIA_LETTERINGS.Text, []),
-        )
-        .filter((row) => !commonKeys.value.has(row.key)),
-    }))
-    .filter((group) => group.rows.length > 0),
-);
-
-/*
  * The modes every row is previewed in: enough of them to tell every
- * wording of the language apart, so no two rows ever look the same.
+ * wording of the language apart, so no two rows ever look the same. They
+ * come from the whole list, so filtering never moves the columns.
  */
 const samples = computed(() =>
   getWordingSampleModes(
-    [...commonGroups.value, ...moreGroups.value].flatMap((group) =>
-      group.rows.map((row) => row.structure),
-    ),
+    getInitialMartyriaWordingRows(groups.value).map((row) => row.structure),
   ).map(getSample),
 );
 
@@ -572,9 +748,8 @@ function choose(row: WordingRow) {
 
 /*
  * Each opening starts from the style being changed, or from the preferred
- * language with its usual word and transliteration.
- * When the current wording is not a common one, the section holding it
- * starts open.
+ * language with its usual word and transliteration, with every filter at
+ * All.
  */
 watch(
   open,
@@ -588,11 +763,7 @@ watch(
     transliterateNoteNames.value =
       style?.structure.transliterateNoteNames ??
       getDefaultInitialMartyriaTransliteration(languageId.value);
-    moreOpen.value =
-      currentKey.value != null &&
-      moreGroups.value.some((group) =>
-        group.rows.some((row) => row.key === currentKey.value),
-      );
+    clearFilters();
   },
   { immediate: true },
 );

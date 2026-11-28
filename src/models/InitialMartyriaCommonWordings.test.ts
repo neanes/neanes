@@ -186,11 +186,17 @@ describe('InitialMartyriaCommonWordings', () => {
       }
     }
 
-    // Captions label the wordings of one language and lettering in the
-    // wording picker, so they only need to be distinct there, in every
-    // locale.
+    // Captions label the common wordings of one language and word for the
+    // mode, in one lettering. The picker names how each shows the mode
+    // beside its caption, so captions only need to be distinct among
+    // wordings that show the mode alike, in every locale.
     const getCaptionScope = (wording: CommonInitialMartyriaWording) =>
-      `${wording.structure.languageId}:${wording.lettering}`;
+      [
+        wording.structure.languageId,
+        wording.structure.labelVariant,
+        wording.lettering,
+        wording.structure.modeIdentificationMethod,
+      ].join(':');
     const captionScopes = new Set(
       commonInitialMartyriaWordings.map(getCaptionScope),
     );

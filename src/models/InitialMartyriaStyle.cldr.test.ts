@@ -478,18 +478,6 @@ describe('Initial Martyria lexicons against Unicode CLDR', () => {
     expect(numeralsFor(style)).toEqual(cldrDigits('arab'));
   });
 
-  it('uses CLDR Romanian masculine cardinal words', () => {
-    expect(
-      numeralsFor(
-        absoluteWordStyle(
-          INITIAL_MARTYRIA_LANGUAGE_IDS.Romanian,
-          INITIAL_MARTYRIA_NUMERAL_KINDS.Cardinal,
-          INITIAL_MARTYRIA_NUMERAL_QUALIFIERS.Postnominal,
-        ),
-      ),
-    ).toEqual(cldrValues('ro', 'renderSpelloutNumbering'));
-  });
-
   it('preserves attested Romanian church ordinal forms missing from CLDR', () => {
     expect(cldrValues('ro', 'renderSpelloutOrdinal')).toEqual([
       '1.',

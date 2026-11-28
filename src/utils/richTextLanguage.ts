@@ -10,6 +10,8 @@ import type {
   ModelRootElement,
 } from 'ckeditor5';
 
+import { escapeHtmlAttribute } from '@/utils/escapeHtmlAttribute';
+
 export const RICH_TEXT_LANGUAGE_OPTIONS = [
   { title: 'Greek', languageCode: 'el', textDirection: 'ltr' },
   { title: 'Arabic', languageCode: 'ar', textDirection: 'rtl' },
@@ -60,13 +62,7 @@ export function getRichTextLanguageAttributes(language: string | null): string {
   }
 
   const [languageCode, textDirection] = language.split(':');
-  const escapedLanguageCode = languageCode
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-
-  return ` lang="${escapedLanguageCode}" dir="${normalizeTextDirection(
+  return ` lang="${escapeHtmlAttribute(languageCode)}" dir="${normalizeTextDirection(
     languageCode,
     textDirection,
   )}"`;

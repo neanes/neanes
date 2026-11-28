@@ -196,6 +196,8 @@ export const automationResultSchemas = {
     defaultStyleId: z.string(),
     styles: z.array(initialMartyriaStyleSchema),
     presets: z.array(initialMartyriaStyleSchema).optional(),
+    /** Each listed style and preset ID, with its readings of modes 1-8. */
+    modeReadings: z.record(z.string(), z.array(z.string()).length(8)),
   }),
   edit_initial_martyria_styles: documentSummarySchema.extend({
     defaultStyleId: z.string(),

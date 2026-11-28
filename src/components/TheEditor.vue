@@ -11601,7 +11601,6 @@ function renderTabLabel(tab: Tab) {
       :key="'rich-text-box-recalculation-' + richTextBoxMeasurementRequest.id"
       :workspace="richTextBoxMeasurementRequest.workspace"
       :measurement-boxes="richTextBoxMeasurementRequest.measurementBoxes"
-      reuse-rich-text-editors
       :fonts="fonts"
       :editor-language="ckeditorLanguage"
       @complete="richTextBoxMeasurement.complete"

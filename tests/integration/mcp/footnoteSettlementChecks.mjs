@@ -874,6 +874,77 @@ export async function checkTextBoxMeasurementReuse(call, evaluate) {
   );
 }
 
+// Repeated templates are measured as they print, where rich-text overflow is
+// visible. A scrollbar from wide content must not add height that print omits.
+export async function checkPrintOverflowMeasurement(call, evaluate) {
+  const { args, mutate, insert, content } = await createPageRestartFixture(
+    call,
+    'Print overflow measurement',
+  );
+  // Styled scrollbars are never overlays, so the case also holds on macOS.
+  await evaluate(`(() => {
+    const style = document.createElement('style');
+    style.id = 'classic-scrollbars';
+    style.textContent =
+      '::-webkit-scrollbar { width: 14px; height: 14px; }' +
+      '::-webkit-scrollbar-thumb { background: gray; }';
+    document.head.append(style);
+  })()`);
+  try {
+    await mutate('update_header_footer_settings', {
+      changes: { showHeader: true },
+    });
+    const wide =
+      '<figure class="table"><table><tbody><tr><td>' +
+      'W'.repeat(80) +
+      '</td></tr></tbody></table></figure>';
+    await insert(
+      [
+        {
+          elementType: 'RichTextBox',
+          clientId: 'anchor',
+          properties: { content },
+        },
+        {
+          elementType: 'RichTextBox',
+          clientId: 'wide',
+          properties: { content: wide, scrollable: true },
+        },
+      ],
+      ['anchor'],
+    );
+    await call('get_pages', args);
+    const heights = await evaluate(`(() => {
+      const editable = document.querySelector(
+        '.page .line:not([data-footnote-id]) .ck-content.single.scrollable',
+      );
+      const scrolling = editable.offsetHeight;
+      editable.style.setProperty('overflow', 'visible', 'important');
+      const visible = editable.offsetHeight;
+      editable.style.removeProperty('overflow');
+      return {
+        settled: window._editor.score.value.staff.elements[1].height,
+        scrolling,
+        visible,
+      };
+    })()`);
+    assert.ok(
+      heights.scrolling > heights.visible,
+      'Wide content shows a horizontal scrollbar: ' + JSON.stringify(heights),
+    );
+    assert.ok(
+      // offsetHeight rounds; a counted scrollbar adds far more than 1 px.
+      Math.abs(heights.settled - heights.visible) < 1,
+      'Template measurement omits the scrollbar: ' + JSON.stringify(heights),
+    );
+  } finally {
+    await evaluate("document.getElementById('classic-scrollbars').remove()");
+  }
+  console.log(
+    'PASS: template measurement uses print overflow for scrollable rich text',
+  );
+}
+
 export async function checkFillWidthReference(call, evaluate) {
   const { args, mutate, settings, insert, content } =
     await createPageRestartFixture(call, 'Fill-width reference');

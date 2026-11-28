@@ -10,6 +10,7 @@ import {
   checkFootnoteSettlement,
   checkLiveFootnoteSettlement,
   checkMarkerWidthThreshold,
+  checkPrintOverflowMeasurement,
   checkTextBoxMeasurementReuse,
 } from './footnoteSettlementChecks.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
@@ -950,6 +951,7 @@ try {
   } finally {
     await socket.send('Emulation.setFocusEmulationEnabled', { enabled: false });
   }
+  await checkPrintOverflowMeasurement(call, evaluate);
   await checkFootnoteSettlement(call, evaluate, app.directory);
   console.log(
     `PASS: marker properties, context menus, numbering, previews, Undo/Redo, save/reopen, rendering. Artifacts: ${app.directory}`,

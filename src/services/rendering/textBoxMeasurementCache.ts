@@ -1,106 +1,39 @@
-import {
-  ElementType,
-  RichTextBoxElement,
-  type ScoreElement,
-  TextBoxAlignment,
-} from '@/models/Element';
+import { RichTextBoxElement, type ScoreElement } from '@/models/Element';
 import type { Page } from '@/models/Page';
 import type { Workspace } from '@/models/Workspace';
-import { replaceTokens, type TokenMetadata } from '@/utils/replaceTokens';
 
-import { getPrintPageMetadata } from './printPageMetadata';
 import {
+  activeTextBoxContent,
   getResizableTextBoxes,
+  getTextBoxVariants,
   type MeasuredTextBox,
   richTextBoxHeightCap,
   type TextBoxHeightMeasurement,
 } from './textBoxMeasurement';
 
-function activeContent(box: MeasuredTextBox) {
-  return box.multipanel
-    ? [box.contentLeft, box.contentCenter, box.contentRight]
-    : [box.content];
-}
-
 function getMeasurementContexts(workspace: Workspace, pages?: Page[]) {
-  const { score } = workspace;
-  const resizable = getResizableTextBoxes(score);
+  const resizable = getResizableTextBoxes(workspace.score);
   if (pages === undefined) {
     return new Map(resizable.map((box) => [box, new Set<string>()]));
   }
-
-  const boxes = new Set<ScoreElement>(resizable);
-  const contexts = new Map<MeasuredTextBox, Set<string>>();
-  function add(element: ScoreElement, metadata?: TokenMetadata) {
-    if (!boxes.has(element)) {
-      return;
-    }
-    const box = element as MeasuredTextBox;
-    const variants = contexts.get(box) ?? new Set<string>();
-    if (metadata !== undefined) {
-      const content = activeContent(box);
-      if (content.some((html) => html.includes('$'))) {
-        const alignments = box.multipanel
-          ? [
-              TextBoxAlignment.Left,
-              TextBoxAlignment.Center,
-              TextBoxAlignment.Right,
-            ]
-          : [
-              box instanceof RichTextBoxElement
-                ? TextBoxAlignment.Center
-                : box.computedAlignment,
-            ];
-        variants.add(
-          JSON.stringify(
-            content.map((html, index) =>
-              replaceTokens(html, metadata, alignments[index]),
-            ),
-          ),
-        );
-      }
-    }
-    contexts.set(box, variants);
-  }
-
-  const metadata = getPrintPageMetadata(workspace, pages);
-  const staff = new Set(score.staff.elements);
-  for (const [index, page] of pages.entries()) {
-    const context = metadata[index];
-    const pageNumber = page.physicalPageNumber;
-    if (score.pageSetup.showHeader) {
-      add(
-        score.getHeaderForPage(pageNumber, context.isChapterOpening)
-          .elements[0],
-        context,
-      );
-    }
-    for (const line of page.allLines) {
-      for (const element of line.elements) {
-        add(
-          element,
-          element.elementType === ElementType.TextBox && staff.has(element)
-            ? context
-            : undefined,
-        );
-      }
-    }
-    if (score.pageSetup.showFooter) {
-      add(
-        score.getFooterForPage(pageNumber, context.isChapterOpening)
-          .elements[0],
-        context,
-      );
-    }
-  }
-  return contexts;
+  const variants = getTextBoxVariants(workspace, pages, new Set(resizable));
+  return new Map(
+    [...variants].map(([box, boxVariants]) => [
+      box,
+      new Set(
+        [...boxVariants.keys()].filter(
+          (variant): variant is string => variant !== undefined,
+        ),
+      ),
+    ]),
+  );
 }
 
 function boxStyleAndContent(box: MeasuredTextBox, richTextStyle: string) {
   return JSON.stringify([
     box.elementType,
     box.multipanel,
-    activeContent(box),
+    activeTextBoxContent(box),
     box instanceof RichTextBoxElement
       ? [richTextStyle, box.languageCode, box.textDirection]
       : [

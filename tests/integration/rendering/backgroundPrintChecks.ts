@@ -50,13 +50,16 @@ export async function checkPrintPreparation(options: {
   assert.equal(result, 'ready');
   await assert.rejects(access(viewerFile));
 
+  // The next character would cross the byte limit by one byte.
+  const longTitlePrefix = 'a' + '\u00e9'.repeat(97);
   await assert.rejects(
     printPdf({
       data,
-      fileName: 'failure',
+      fileName: longTitlePrefix + '\u00e9'.repeat(40),
       parent: options.owner,
       async print(window) {
         viewerFile = fileURLToPath(window.webContents.getURL());
+        assert.equal(path.basename(viewerFile), longTitlePrefix + '.pdf');
         throw new Error('print failed');
       },
     }),

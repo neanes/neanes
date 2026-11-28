@@ -80,5 +80,17 @@ function sanitizeFileName(fileName: string) {
     // Path separators, characters Windows rejects, and control characters.
     .replace(/[/\\:*?"<>|\u0000-\u001f]/g, '_')
     .trim();
-  return `${base || 'score'}.pdf`;
+  const extension = '.pdf';
+  // Leave room in the path for the temporary directory and the extension.
+  const maxBaseBytes = 200 - Buffer.byteLength(extension);
+  let bytes = 0;
+  let end = 0;
+  for (const character of base) {
+    bytes += Buffer.byteLength(character);
+    if (bytes > maxBaseBytes) {
+      break;
+    }
+    end += character.length;
+  }
+  return `${base.slice(0, end) || 'score'}${extension}`;
 }

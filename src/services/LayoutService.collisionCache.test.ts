@@ -142,31 +142,36 @@ function computeBoxes(note: NoteElement, setup: PageSetup, override?: number) {
 }
 
 describe('LayoutService note collision glyph box cache', () => {
-  it('returns the same boxes as a fresh computation for every note', () => {
-    const notes = createNotes(1000);
-    const setups = createSetups();
-    const overrides = [undefined, 7.5];
+  // Warming and checking every combination can exceed 5 seconds on Windows CI.
+  it(
+    'returns the same boxes as a fresh computation for every note',
+    { timeout: 30_000 },
+    () => {
+      const notes = createNotes(1000);
+      const setups = createSetups();
+      const overrides = [undefined, 7.5];
 
-    // Fill the cache with every combination before checking any of them, so
-    // that a key that misses an input returns another note's boxes.
-    for (const setup of setups) {
-      for (const note of notes) {
-        for (const override of overrides) {
-          getBoxes(note, setup, override);
+      // Fill the cache with every combination before checking any of them, so
+      // that a key that misses an input returns another note's boxes.
+      for (const setup of setups) {
+        for (const note of notes) {
+          for (const override of overrides) {
+            getBoxes(note, setup, override);
+          }
         }
       }
-    }
 
-    for (const setup of setups) {
-      for (const note of notes) {
-        for (const override of overrides) {
-          expect(getBoxes(note, setup, override)).toEqual(
-            computeBoxes(note, setup, override),
-          );
+      for (const setup of setups) {
+        for (const note of notes) {
+          for (const override of overrides) {
+            expect(getBoxes(note, setup, override)).toEqual(
+              computeBoxes(note, setup, override),
+            );
+          }
         }
       }
-    }
-  });
+    },
+  );
 
   it('returns a new array of frozen boxes on every call', () => {
     const note = new NoteElement();

@@ -15,6 +15,7 @@ import {
   isRightAlignedMartyria,
   LineBreakType,
 } from '@/models/Element';
+import { getModeKeyTrailingGlyphGroups } from '@/models/ModeKeys';
 import type { Neume } from '@/models/Neumes';
 import {
   MeasureBar,
@@ -1333,11 +1334,11 @@ export class ByzHtmlExporter {
       this.config.classFthora,
     );
     inner += this.exportNeume(element.quantitativeNeumeAboveNote2, indentation);
-    inner += this.exportNeume(element.quantitativeNeumeRight, indentation);
-    inner += this.exportNeume(
-      element.fthoraAboveQuantitativeNeumeRight,
-      indentation,
-    );
+    for (const group of getModeKeyTrailingGlyphGroups(element)) {
+      for (const neume of group) {
+        inner += this.exportNeume(neume, indentation);
+      }
+    }
 
     return inner;
   }

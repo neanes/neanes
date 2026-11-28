@@ -99,10 +99,8 @@ this list as well as created element references.
 
 Read the musical anchor's read-only `footnoteId`, calculated `footnoteNumber` (automatic references only), and `footnoteMarker` (the displayed label), then use
 `collection: { kind: "footnote", footnoteId }` with normal element readers/edits.
-The body retains its terminal Empty element and its own lyrics. In populated
-bodies the terminal has no layout box, reservation, or page occurrence; completely
-empty bodies retain the visible insertion target and its page occurrence.
-Collection readers and edits continue to include the terminal. Musical state
+The body has its own elements and lyrics; an empty body has no elements and
+lays out as its label line only. Musical state
 starts from immediately after the anchor and then evolves independently. Rich
 references use the context at their textbox. With no explicit body elements, a
 rich reference creates an empty RichTextBox styled with Footnote Text; musical
@@ -112,6 +110,8 @@ copying the reference copies the body with a new identity.
 
 `get_page_setup` / `update_page_setup` expose `footnoteFormat` (`numbers` or
 `symbols`), `footnoteNumbering` (`continuous`, `page`, or `section`),
+`footnoteLocation` (`bottomOfPage`, the default, or `belowText`, which places
+the footnote area directly after the page's last line of text),
 `footnoteSymbolSequence` (`standard` or `asterisks`), `firstFootnoteNumber`,
 `showFootnoteHorizontalRule`, `footnoteHorizontalRuleLength` (percent),
 `footnoteSpaceAboveRule`, `footnoteSpaceBelowRule`, `footnoteRuleThickness`,

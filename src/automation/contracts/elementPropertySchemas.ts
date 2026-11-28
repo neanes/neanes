@@ -345,9 +345,6 @@ export const elementPropertySchemas = {
     bpm: z.number(),
     spaceAfter: z.number(),
   }),
-  [ElementType.Empty]: z.strictObject({
-    ...breaks,
-  }),
   [ElementType.TextBox]: z.strictObject({
     ...breaks,
     paragraphStyleId: z.string(),
@@ -519,6 +516,9 @@ export const elementPropertySchemas = {
     quantitativeNeumeAboveNote: z.enum(Neumes.ModeSign).optional(),
     quantitativeNeumeAboveNote2: z.enum(Neumes.ModeSign).optional(),
     quantitativeNeumeRight: z.enum(Neumes.QuantitativeNeume).optional(),
+    timeNeumeAboveQuantitativeNeumeRight: z.enum(Neumes.TimeNeume).optional(),
+    quantitativeNeumeRight2: z.enum(Neumes.QuantitativeNeume).optional(),
+    gorgonAboveQuantitativeNeumeRight2: z.enum(Neumes.GorgonNeume).optional(),
     fontSize: z.number().optional(),
     strokeWidth: z.number().optional(),
     marginBottom: z.number(),

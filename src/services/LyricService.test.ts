@@ -1,5 +1,6 @@
 import { readFile } from 'fs/promises';
 import { describe, expect, it } from 'vitest';
+import { effect, reactive, stop } from 'vue';
 
 import type { ScoreElement } from '../models/Element';
 import {
@@ -42,6 +43,25 @@ describe('LyricService (English)', () => {
     expect(first.isHyphen).toBe(true);
     expect(second.lyrics).toBe('le');
     expect(lyricService.extractLyrics(elements, false)).toBe('Al-le');
+  });
+
+  it('extracts reactive elements like raw elements without tracking them', () => {
+    const lyricService = new LyricService();
+    const raw: ScoreElement[] = [createNote('one'), createNote('two')];
+    const elements = reactive(raw);
+
+    expect(lyricService.extractLyrics(elements, false)).toBe(
+      lyricService.extractLyrics(raw, false),
+    );
+
+    let runs = 0;
+    const runner = effect(() => {
+      runs++;
+      lyricService.extractLyrics(elements, false);
+    });
+    (elements[0] as NoteElement).lyrics = 'three';
+    expect(runs).toBe(1);
+    stop(runner);
   });
 
   it('should extract single word', () => {
@@ -549,6 +569,46 @@ describe('LyricService (Arab phonetics)', () => {
     );
 
     expect(lyricService.extractLyrics(scoreElements, false)).toEqual(lyrics);
+  });
+});
+
+describe('Melkite RTL joining tatweel', () => {
+  const tatweel = '\u0640';
+  const update = (
+    previousFields: Partial<NoteElement>,
+    lyrics: string,
+  ): Partial<NoteElement> | null => {
+    const previous = new NoteElement();
+    Object.assign(previous, { isMelisma: true, ...previousFields });
+    const note = new NoteElement();
+    previous.index = 0;
+    note.index = 1;
+    return new LyricService().getLyricUpdateValues(
+      note,
+      lyrics,
+      [previous, note],
+      true,
+      () => {},
+    );
+  };
+
+  it('joins a lyric after a melisma', () => {
+    expect(update({}, '\u0646\u0627')?.lyrics).toBe(tatweel + '\u0646\u0627');
+  });
+
+  it.each(['lineBreak', 'pageBreak'] as const)(
+    'does not join a lyric across an explicit %s',
+    (breakType) => {
+      expect(update({ [breakType]: true }, '\u0646\u0627')?.lyrics).toBe(
+        '\u0646\u0627',
+      );
+    },
+  );
+
+  it('keeps a typed tatweel across an explicit break', () => {
+    expect(update({ lineBreak: true }, tatweel + '\u0646\u0627')?.lyrics).toBe(
+      tatweel + '\u0646\u0627',
+    );
   });
 });
 

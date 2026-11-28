@@ -176,7 +176,7 @@ try {
       },
     }));
     const inserted = await edit([
-      { action: 'remove_range', start: 0, end: existing.collectionSize - 1 },
+      { action: 'remove_range', start: 0, end: existing.collectionSize },
       { action: 'insert', elements: notes },
       {
         action: 'insert_footnote',
@@ -268,7 +268,7 @@ try {
     });
     assert.deepEqual(
       body.elements.map((entry) => entry.elementType),
-      ['TextBox', 'Note', 'Note', 'Empty'],
+      ['TextBox', 'Note', 'Note'],
     );
     const otherBody = await call('get_elements', {
       ...args,
@@ -332,6 +332,45 @@ try {
       } finally {
         await send('Emulation.setEmulatedMedia', { features: [] });
       }
+      // Below Text places the separator after the last main-score line
+      // instead of above the bottom margin.
+      const footnoteGeometry = () =>
+        evaluate(`(() => {
+          const page = document.querySelector('.page-background .page');
+          const origin = page.getBoundingClientRect().top;
+          const rule = page.querySelector('.footnote-rule').getBoundingClientRect();
+          const text = [...page.querySelectorAll('.line:not([data-footnote-id]) .element-box')]
+            .map(element => element.getBoundingClientRect().bottom);
+          const body = page.querySelector('.footnote-body').getBoundingClientRect();
+          return {
+            ruleTop: rule.top - origin,
+            textBottom: Math.max(...text) - origin,
+            bodyTop: body.top - origin,
+          };
+        })()`);
+      const atBottom = await footnoteGeometry();
+      const setLocation = async (footnoteLocation) =>
+        call('update_page_setup', {
+          ...args,
+          expectedRevision: (await call('get_document_properties', args))
+            .revision,
+          changes: { footnoteLocation },
+        });
+      await setLocation('belowText');
+      assert.equal(
+        (await call('get_page_setup', args)).settings.footnoteLocation,
+        'belowText',
+      );
+      await eventually(async () => {
+        const belowText = await footnoteGeometry();
+        assert.ok(belowText.ruleTop < atBottom.ruleTop - 100);
+        assert.ok(belowText.ruleTop > belowText.textBottom);
+        assert.ok(belowText.bodyTop > belowText.ruleTop);
+      });
+      await setLocation('bottomOfPage');
+      await eventually(async () =>
+        assert.equal((await footnoteGeometry()).ruleTop, atBottom.ruleTop),
+      );
       await evaluateMain(
         `process.getBuiltinModule('module').createRequire(process.cwd()+'/package.json')('electron').BrowserWindow.getAllWindows().find(w => w.webContents.getURL().includes('/index.html')).webContents.send('FileMenuViewPaneVisibility', {paneId:'lyrics', visible:true})`,
       );
@@ -493,7 +532,7 @@ try {
           ...args,
           collection: bodySelector,
         });
-        assert.equal(body.collectionSize, 5);
+        assert.equal(body.collectionSize, 4);
       });
       assert.deepEqual(
         (await call('get_elements', args)).elements.map(
@@ -562,7 +601,7 @@ try {
       assert.equal(
         (await call('get_elements', { ...args, collection: bodySelector }))
           .collectionSize,
-        4,
+        3,
       );
       await evaluate(
         `window._editor.selectedWorkspace.value.commandService.redo()`,
@@ -570,7 +609,7 @@ try {
       assert.equal(
         (await call('get_elements', { ...args, collection: bodySelector }))
           .collectionSize,
-        5,
+        4,
       );
       await evaluate(
         `window._editor.selectedWorkspace.value.commandService.undo()`,
@@ -784,7 +823,7 @@ try {
         footnoteId: copyMain.elements[0].properties.footnoteId,
       },
     });
-    assert.equal(copiedBody.collectionSize, 4);
+    assert.equal(copiedBody.collectionSize, 3);
     await closeDocument(call, args);
     for (const extension of ['byzx', 'byz']) {
       const reopened = await call('open_document', {
@@ -805,7 +844,7 @@ try {
         ...reopenedArgs,
         collection: bodySelector,
       });
-      assert.equal(reopenedBody.collectionSize, 4);
+      assert.equal(reopenedBody.collectionSize, 3);
       await closeDocument(call, reopenedArgs);
     }
     console.log(

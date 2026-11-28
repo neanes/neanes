@@ -14,7 +14,6 @@ import type {
   NoteElement,
   ScoreElement,
 } from './Element';
-import { ElementType } from './Element';
 import type { LyricSetup } from './LyricSetup';
 import { Score } from './Score';
 import type { ScoreElementSelectionRange } from './ScoreElementSelectionRange';
@@ -83,6 +82,9 @@ export class Workspace {
   public selectedLyrics: NoteElement | null = null;
   public activeFootnoteId: string | null = null;
   public selectionRange: ScoreElementSelectionRange | null = null;
+  // With nothing selected, inserts go to the start of the active staff
+  // instead of the end. Editor state only; never saved.
+  public insertAtStart: boolean = false;
   public zoom: number = 1;
   public zoomFitMode: ZoomFitMode | null = null;
   public entryMode: EntryMode = EntryMode.Auto;
@@ -189,7 +191,7 @@ export function assignMissingElementIds(
 ) {
   for (const staff of workspace.score.staves) {
     for (const element of staff.elements) {
-      if (element.id == null && element.elementType !== ElementType.Empty) {
+      if (element.id == null) {
         element.id = workspace.nextId;
       }
     }

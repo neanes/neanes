@@ -21,7 +21,6 @@ export interface InitialMartyriaLayout {
   /** One entry per run in resolution.runs. */
   runs: InitialMartyriaRunLayout[];
   trailingSeparator: InitialMartyriaSeparatorLayout;
-  neumeBaselineCorrection: number;
   /** The tempo and ambitus glyphs beside the signature. */
   accessory: InitialMartyriaAccessoryLayout;
   /** Set when the ambitus is drawn. */
@@ -66,8 +65,12 @@ export interface InitialMartyriaPitchRunLayout {
   primary: InitialMartyriaPitchGeometry | null;
   secondary: InitialMartyriaPitchGeometry | null;
   clusterSeparatorWidth: number;
-  /** The glue between the last note and the trailing glyphs. */
+  /** The gap between the last note and the first trailing glyph group. */
+  noteToTrailingWidth: number;
+  /** The glue between trailing glyph groups. */
   trailingGlueWidth: number;
+  /** Downward offset of each trailing glyph group from the text baseline. */
+  trailingGlyphTopOffsets: number[];
 }
 
 export interface InitialMartyriaAccessoryLayout {

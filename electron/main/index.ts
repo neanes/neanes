@@ -2150,6 +2150,28 @@ function createMenu() {
             win?.webContents.send(IpcMainChannels.FileMenuFind);
           },
         },
+        {
+          label: i18next.t(($) => $.menu.edit.goToStart),
+          accelerator: 'CmdOrCtrl+Home',
+          click(menuItem, browserWindow, event) {
+            // The renderer handles the accelerator so that text fields keep
+            // their own Ctrl/Cmd+Home behavior.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuGoToStart);
+            }
+          },
+        },
+        {
+          label: i18next.t(($) => $.menu.edit.goToEnd),
+          accelerator: 'CmdOrCtrl+End',
+          click(menuItem, browserWindow, event) {
+            // The renderer handles the accelerator so that text fields keep
+            // their own Ctrl/Cmd+End behavior.
+            if (!event.triggeredByAccelerator) {
+              win?.webContents.send(IpcMainChannels.FileMenuGoToEnd);
+            }
+          },
+        },
         { type: 'separator' },
         {
           label: i18next.t(($) => $.menu.edit.copyFormat),

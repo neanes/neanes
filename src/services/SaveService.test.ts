@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import { effect, reactive, stop } from 'vue';
 
 import {
   AcceptsLyricsOption,
   DropCapElement,
-  EmptyElement,
+  ElementType,
   LineBreakType,
   MartyriaElement,
   ModeKeyElement,
@@ -38,7 +39,6 @@ import {
 } from '@/models/ParagraphStyle';
 import {
   DropCapElement as DropCapElement_v1,
-  EmptyElement as EmptyElement_v1,
   LineBreakType as LineBreakType_v1,
   MartyriaElement as MartyriaElement_v1,
   ModeKeyElement as ModeKeyElement_v1,
@@ -118,6 +118,15 @@ function createParagraphStylesWithBuiltInOverrides(
   return styles;
 }
 
+// Files used to end every staff with this sentinel element.
+function legacyEmptyElement(lineBreak?: boolean, pageBreak?: boolean) {
+  return {
+    elementType: 'Empty',
+    lineBreak,
+    pageBreak,
+  } as unknown as ScoreElement_v1;
+}
+
 function loadLegacyElements(...legacyElements: ScoreElement_v1[]) {
   const saved = createLegacyScore();
 
@@ -160,6 +169,57 @@ describe('stable lyric acceptance serialization', () => {
       ).toEqual(['', '', '', '']);
     },
   );
+});
+
+describe('reactive score serialization', () => {
+  function createScore() {
+    (globalThis as { APP_VERSION?: string }).APP_VERSION = 'test';
+    const score = new Score();
+    const note = new NoteElement();
+    note.quantitativeNeume = QuantitativeNeume.Oligon;
+    note.lyrics = 'a';
+    score.staff.elements.unshift(note);
+    return score;
+  }
+
+  it('serializes a reactive score like its raw score', () => {
+    const score = createScore();
+
+    expect(SaveService.SaveScoreToJson(reactive(score))).toEqual(
+      SaveService.SaveScoreToJson(score),
+    );
+  });
+
+  it('does not track the score as a dependency', () => {
+    const score = reactive(createScore());
+    let runs = 0;
+    const runner = effect(() => {
+      runs++;
+      SaveService.SaveScoreToJson(score);
+    });
+
+    (score.staff.elements[0] as NoteElement).lyrics = 'b';
+
+    expect(runs).toBe(1);
+    stop(runner);
+  });
+
+  it('does not track styles merged from a reactive array', () => {
+    const score = reactive(createScore());
+    // Pasting a format merges imported styles by spreading the score's
+    // reactive array, so the raw array holds proxies for existing styles.
+    score.paragraphStyles = [...score.paragraphStyles, new ParagraphStyle()];
+    let runs = 0;
+    const runner = effect(() => {
+      runs++;
+      SaveService.SaveScoreToJson(score);
+    });
+
+    score.paragraphStyles[0].displayName = 'Renamed';
+
+    expect(runs).toBe(1);
+    stop(runner);
+  });
 });
 
 describe('martyria quantitative-neume fthora serialization', () => {
@@ -246,7 +306,7 @@ describe('SaveService break constraints', () => {
     const loaded = loadLegacyElements(
       withLegacyJustifiedBreak(new NoteElement_v1()),
       new NoteElement_v1(),
-      new EmptyElement_v1(),
+      legacyEmptyElement(),
     );
 
     expect(loaded.staff.elements[0].lineBreak).toBe(false);
@@ -257,7 +317,7 @@ describe('SaveService break constraints', () => {
     const loaded = loadLegacyElements(
       withLegacyJustifiedBreak(new NoteElement_v1()),
       new NoteElement_v1(),
-      new EmptyElement_v1(),
+      legacyEmptyElement(),
     );
 
     const resaved = SaveService.SaveScoreToJson(loaded);
@@ -269,19 +329,36 @@ describe('SaveService break constraints', () => {
     expect(reloaded.staff.elements[1]).toMatchObject({ keepWithNext: true });
   });
 
-  it('does not carry a legacy justified break onto the trailing empty element', () => {
+  it('drops a legacy justified break before the trailing empty element', () => {
     const loaded = loadLegacyElements(
       new NoteElement_v1(),
       withLegacyJustifiedBreak(new NoteElement_v1()),
-      new EmptyElement_v1(),
+      legacyEmptyElement(),
     );
 
+    expect(loaded.staff.elements).toHaveLength(2);
     expect(loaded.staff.elements[1].lineBreak).toBe(false);
-    expect(loaded.staff.elements[2]).not.toHaveProperty('keepWithNext');
+  });
+
+  it('drops the legacy empty element and its breaks from every staff', () => {
+    const saved = createLegacyScore();
+    saved.staff.elements = [new NoteElement_v1(), legacyEmptyElement(true)];
+    const footnote = new Footnote_v1();
+    footnote.id = 'footnote';
+    footnote.staff.elements = [legacyEmptyElement(false, true)];
+    saved.footnotes = [footnote];
+
+    const loaded = SaveService.LoadScore_v1(saved);
+
+    expect(loaded.staff.elements.map((element) => element.elementType)).toEqual(
+      [ElementType.Note],
+    );
+    expect(loaded.footnotes[0].staff.elements).toEqual([]);
 
     const resaved = SaveService.SaveScoreToJson(loaded);
 
-    expect(resaved.staff.elements[2]).not.toHaveProperty('keepWithNext');
+    expect(resaved.staff.elements).toHaveLength(1);
+    expect(resaved.footnotes?.[0].staff.elements).toEqual([]);
   });
 
   it('does not carry a legacy justified break onto an unsupported element', () => {
@@ -291,7 +368,7 @@ describe('SaveService break constraints', () => {
     const loaded = loadLegacyElements(
       withLegacyJustifiedBreak(new NoteElement_v1()),
       textBox,
-      new EmptyElement_v1(),
+      legacyEmptyElement(),
     );
 
     expect(loaded.staff.elements[0].lineBreak).toBe(false);
@@ -303,12 +380,7 @@ describe('SaveService break constraints', () => {
     const martyria = new MartyriaElement();
     const textBox = new TextBoxElement();
 
-    score.staff.elements = [
-      new NoteElement(),
-      martyria,
-      textBox,
-      new EmptyElement(),
-    ];
+    score.staff.elements = [new NoteElement(), martyria, textBox];
 
     const saved = SaveService.SaveScoreToJson(score);
 
@@ -326,7 +398,7 @@ describe('SaveService break constraints', () => {
 
     note.keepWithNext = true;
     note.lineBreak = true;
-    score.staff.elements = [note, new NoteElement(), new EmptyElement()];
+    score.staff.elements = [note, new NoteElement()];
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
@@ -343,7 +415,7 @@ describe('SaveService break constraints', () => {
     centered.lineBreak = true;
     centered.lineBreakType = LineBreakType.Center;
     plain.lineBreak = true;
-    score.staff.elements = [centered, plain, new EmptyElement()];
+    score.staff.elements = [centered, plain];
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
 
@@ -1373,12 +1445,12 @@ describe('SaveService font styles', () => {
 
     const saved = SaveService.SaveScoreToJson(score);
     const loaded = SaveService.LoadScore_v1(saved);
-    const loadedNote = loaded.staff.elements[1] as NoteElement;
-    const loadedTextBox = loaded.staff.elements[2] as TextBoxElement;
-    const loadedDropCap = loaded.staff.elements[3] as DropCapElement;
-    const savedNote = saved.staff.elements[1] as NoteElement_v1;
-    const savedTextBox = saved.staff.elements[2] as TextBoxElement_v1;
-    const savedDropCap = saved.staff.elements[3] as DropCapElement_v1;
+    const loadedNote = loaded.staff.elements[0] as NoteElement;
+    const loadedTextBox = loaded.staff.elements[1] as TextBoxElement;
+    const loadedDropCap = loaded.staff.elements[2] as DropCapElement;
+    const savedNote = saved.staff.elements[0] as NoteElement_v1;
+    const savedTextBox = saved.staff.elements[1] as TextBoxElement_v1;
+    const savedDropCap = saved.staff.elements[2] as DropCapElement_v1;
 
     expect(savedNote.lyricsStrokeColor).toBe('currentcolor');
     expect(savedTextBox.strokeColor).toBe('#123456');

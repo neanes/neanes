@@ -10,6 +10,10 @@ export class RemoveFromCollectionCommand<T> implements Command {
 
   constructor(private args: RemoveFromCollectionCommandArgs<T>) {}
 
+  public affectedObjects() {
+    return [this.args.collection, this.args.element] as object[];
+  }
+
   public execute() {
     this.index = this.args.collection.indexOf(this.args.element);
 

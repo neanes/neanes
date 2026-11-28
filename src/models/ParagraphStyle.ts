@@ -273,6 +273,22 @@ export function resolveParagraphStyle(
   return resolved;
 }
 
+/**
+ * Applies element overrides to an already resolved style, giving the same
+ * result as `resolveParagraphStyle` with those overrides. Callers that
+ * resolve many elements against the same styles can resolve each style once.
+ */
+export function applyElementParagraphStyleOverrides(
+  resolvedStyle: ResolvedParagraphStyle,
+  elementOverrides: ParagraphStyleOverrides,
+): ResolvedParagraphStyle {
+  const resolved = { ...resolvedStyle };
+
+  applyParagraphStyleOverrides(resolved, elementOverrides);
+
+  return resolved;
+}
+
 export function wouldCreateParagraphStyleCycle(
   styles: ParagraphStyle[],
   styleId: string,

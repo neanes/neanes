@@ -149,7 +149,7 @@ describe('copying staff ranges', () => {
       });
       expect(saved(source)).toBe(before);
       destination.commandService.undo();
-      expect(destination.score.staff.elements).toHaveLength(1);
+      expect(destination.score.staff.elements).toHaveLength(0);
       destination.commandService.redo();
       expect(destination.score.staff.elements[0]).toBe(copied);
     },
@@ -181,11 +181,10 @@ describe('copying staff ranges', () => {
     source.score.staff.elements.splice(0, 0, ...originals);
     const before = saved(source);
     const revision = source.contentRevision;
-    const sentinel = destination.score.staff.elements[0];
     const plan = planElementCopy(source, destination, { start: 0 });
-    expect(destination.score.staff.elements).toHaveLength(1);
+    expect(destination.score.staff.elements).toHaveLength(0);
     expect(applyElementEdits(destination, plan)).toBe(true);
-    const copies = destination.score.staff.elements.slice(0, -1);
+    const copies = destination.score.staff.elements;
     copies.forEach((copy, index) => {
       expect(toRaw(copy)).not.toBe(originals[index]);
     });
@@ -217,9 +216,9 @@ describe('copying staff ranges', () => {
     expect(saved(source)).toBe(before);
     expect(source.contentRevision).toBe(revision);
     destination.commandService.undo();
-    expect(destination.score.staff.elements).toEqual([sentinel]);
+    expect(destination.score.staff.elements).toEqual([]);
     destination.commandService.redo();
-    expect(destination.score.staff.elements.slice(0, -1)).toEqual(copies);
+    expect(destination.score.staff.elements).toEqual(copies);
     copiedNote.annotations[0].text = 'Changed';
     expect(annotation.text).toBe('');
   });
@@ -266,7 +265,7 @@ describe('copying staff ranges', () => {
     });
     destination.commandService.undo();
     expect(destination.score.paragraphStyles).toEqual(originalStyles);
-    expect(destination.score.staff.elements).toHaveLength(1);
+    expect(destination.score.staff.elements).toHaveLength(0);
     destination.commandService.redo();
     expect(destination.score.paragraphStyles).toHaveLength(
       originalStyles.length + 2,
@@ -308,12 +307,12 @@ describe('copying staff ranges', () => {
       planElementCopy(document, document, { start: 0, end: 2, index: 1 }),
     );
     expect(
-      document.score.staff.elements
-        .slice(0, -1)
-        .map((element) => (element as NoteElement).lyrics),
+      document.score.staff.elements.map(
+        (element) => (element as NoteElement).lyrics,
+      ),
     ).toEqual(['A', 'A', 'B', 'B', 'C']);
     document.commandService.undo();
-    expect(document.score.staff.elements.slice(0, -1)).toEqual(notes);
+    expect(document.score.staff.elements).toEqual(notes);
   });
 
   it('rejects invalid ranges and locked destinations without changing either document', () => {

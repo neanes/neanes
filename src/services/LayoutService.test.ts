@@ -172,6 +172,39 @@ describe('LayoutService.calculateMartyriae', () => {
     expect(mainMartyria.note).toBe(Note.Thi);
   });
 
+  it('limits a pass to a mode-key span and records the checkpoint at its end', () => {
+    const setup = new PageSetup();
+    const first = new ModeKeyElement();
+    const note = new NoteElement();
+    const martyria = new MartyriaElement();
+    const second = new ModeKeyElement();
+    second.scaleNote = ScaleNote.Ga;
+    const later = new MartyriaElement();
+    const elements = [first, note, martyria, second, later];
+    LayoutService.calculateMartyriae(elements, setup);
+    expect(later.note).toBe(Note.Ga);
+    note.quantitativeNeume = QuantitativeNeume.Oligon;
+    later.note = Note.Pa;
+    const musicalEntries = new Map();
+    const changedAmbitus: ModeKeyElement[] = [];
+    LayoutService.calculateMartyriae(
+      elements,
+      setup,
+      undefined,
+      { musicalEntries, changedAmbitus },
+      { start: 0, end: 3 },
+    );
+    expect(martyria.note).toBe(Note.Vou);
+    expect(first.ambitusHighNote).toBe(Note.Vou);
+    expect(changedAmbitus).toEqual([]);
+    expect(musicalEntries.get(second)).toEqual({
+      note: getNoteValue(Note.Vou),
+      scale: Scale.Diatonic,
+      shift: 0,
+    });
+    expect(later.note).toBe(Note.Pa);
+  });
+
   it('inherits scale and virtual pitch, while a manual body martyria can reset them', () => {
     const setup = new PageSetup();
     const note = new NoteElement();
@@ -289,6 +322,73 @@ describe('LayoutService.calculateMartyriae', () => {
     expect(martyria.quantitativeNeumeFthoraCarry).toBeNull();
     expect(nextMartyria.scale).toBe(Scale.Zygos);
   });
+});
+
+describe('Melisma continuation across line breaks', () => {
+  it.each(['automatic', 'lineBreak', 'pageBreak'] as const)(
+    'uses the next line only for an automatic wrap (%s)',
+    (breakType) => {
+      const start = new NoteElement();
+      start.isMelisma = true;
+      start.isMelismaStart = true;
+      const continuation = new NoteElement();
+      continuation.isMelisma = true;
+      const tempo = new TempoElement();
+      if (breakType !== 'automatic') {
+        tempo[breakType] = true;
+      }
+      const following = new NoteElement();
+      following.isMelisma = true;
+
+      const { finalElement, nextElement } =
+        LayoutService.findFinalAndNextElement(
+          getLine(start, continuation, tempo),
+          start,
+          following,
+          1,
+        );
+
+      expect(finalElement).toBe(
+        breakType === 'automatic' ? tempo : continuation,
+      );
+      expect(nextElement).toBe(breakType === 'automatic' ? following : null);
+    },
+  );
+});
+
+describe('Melisma continuation across implicit paragraph breaks', () => {
+  it.each(['right-aligned martyria', 'fill-width text box'] as const)(
+    'ends the melisma before a line-ending %s',
+    (boundaryType) => {
+      const start = new NoteElement();
+      start.isMelisma = true;
+      start.isMelismaStart = true;
+      const continuation = new NoteElement();
+      continuation.isMelisma = true;
+      let boundary: MartyriaElement | TextBoxElement;
+      if (boundaryType === 'right-aligned martyria') {
+        boundary = new MartyriaElement();
+        boundary.alignRight = true;
+      } else {
+        boundary = new TextBoxElement();
+        boundary.inline = true;
+        boundary.fillWidth = true;
+      }
+      const following = new NoteElement();
+      following.isMelisma = true;
+
+      const { finalElement, nextElement } =
+        LayoutService.findFinalAndNextElement(
+          getLine(start, continuation, boundary),
+          start,
+          following,
+          1,
+        );
+
+      expect(finalElement).toBe(continuation);
+      expect(nextElement).toBeNull();
+    },
+  );
 });
 
 describe.each([true, false])(

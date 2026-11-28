@@ -102,8 +102,14 @@ try {
       properties: [],
       expectedRevision: before.revision,
     });
-    assert.equal(elementSection.elements.length, 1);
-    assert.deepEqual(elementSection.elements[0].properties, {});
+    // Private documents start with an empty staff.
+    assert.equal(
+      elementSection.elements.length,
+      Math.min(1, before.elementCount),
+    );
+    for (const element of elementSection.elements) {
+      assert.deepEqual(element.properties, {});
+    }
     await call(
       'edit_elements',
       {
@@ -299,10 +305,11 @@ try {
             elementType: 'Note',
             properties: { lyrics: 'partial' },
           },
-          { action: 'remove_range', start: 0, end: invalidBefore.elementCount },
+          // Annotations belong to notes, so the staff rejects this one.
+          { action: 'insert', elements: [{ elementType: 'Annotation' }] },
         ],
       },
-      'INVALID_ELEMENT_EDIT',
+      'INVALID_ELEMENT_COLLECTION',
     );
     assert.deepEqual(await readScoreSnapshot(call, args), invalidBefore);
     await call(

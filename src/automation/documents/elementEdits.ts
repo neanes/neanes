@@ -24,7 +24,7 @@ import {
 } from '@/models/Element';
 import type { Footnote } from '@/models/Footnote';
 import type { LyricSetup } from '@/models/LyricSetup';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+import { modeKeyTemplateFields, modeKeyTemplates } from '@/models/ModeKeys';
 import {
   getSecondaryNeume,
   getTertiaryNeume,
@@ -67,7 +67,6 @@ import {
   type ElementEditBatch,
   elementEditPropertySchemas,
 } from '../contracts/elementEditSchema';
-import { modeKeyTemplateFields } from '../contracts/modeKeyTemplates';
 import type { ElementDiscovery } from './elementDiscovery';
 import {
   childCollections,
@@ -318,10 +317,7 @@ export function planElementEdits(
       throw new Error('LYRICS_LOCKED');
     }
     validateProperties(properties);
-    const defaults =
-      element.elementType === ElementType.Empty
-        ? undefined
-        : new constructors[element.elementType]();
+    const defaults = new constructors[element.elementType]();
     const update: Record<string, unknown> = {};
     for (const key of reset) {
       if (
@@ -331,7 +327,7 @@ export function planElementEdits(
       ) {
         throw new Error('INVALID_ELEMENT_EDIT');
       }
-      update[key] = Reflect.get(defaults!, key);
+      update[key] = Reflect.get(defaults, key);
     }
     Object.assign(update, properties);
     if (typeof properties.imagePath === 'string') {
@@ -619,11 +615,7 @@ export function planElementEdits(
       }
     } else if (action.action === 'insert') {
       const collection = resolveCollection(action.collection);
-      const index =
-        action.index ??
-        (collection === staff || action.collection.kind === 'footnote'
-          ? collection.length - 1
-          : collection.length);
+      const index = action.index ?? collection.length;
       if (index > collection.length) {
         throw new Error('INVALID_ELEMENT_RANGE');
       }
@@ -646,9 +638,6 @@ export function planElementEdits(
       applyProperties(element, action.properties, action.reset);
     } else if (action.action === 'replace' || action.action === 'remove') {
       const element = resolve(action.elementRef);
-      if (element.elementType === ElementType.Empty) {
-        throw new Error('INVALID_ELEMENT_EDIT');
-      }
       const { collection, index } = location(element);
       const replacement =
         action.action === 'replace'
@@ -673,11 +662,6 @@ export function planElementEdits(
     } else if (action.action === 'remove_range') {
       const collection = resolveCollection(action.collection);
       const removed = range(collection, action.start, action.end);
-      if (
-        removed.some((element) => element.elementType === ElementType.Empty)
-      ) {
-        throw new Error('INVALID_ELEMENT_EDIT');
-      }
       collection.splice(action.start, removed.length);
     } else if (action.action === 'set_staff_lyrics') {
       const collection = resolveCollection(action.collection);
@@ -795,15 +779,6 @@ export function planElementEdits(
       }
     }
   };
-  if (
-    staff.length === 0 ||
-    staff.at(-1)!.elementType !== ElementType.Empty ||
-    staff
-      .slice(0, -1)
-      .some((element) => element.elementType === ElementType.Empty)
-  ) {
-    throw new Error('INVALID_ELEMENT_EDIT');
-  }
   validate(
     staff,
     [
@@ -815,22 +790,12 @@ export function planElementEdits(
       ElementType.DropCap,
       ElementType.ModeKey,
       ElementType.ImageBox,
-      ElementType.Empty,
     ],
     0,
     true,
   );
   for (const [name, elements] of roots) {
     if (name.startsWith('footnotes.')) {
-      if (
-        elements.length === 0 ||
-        elements.at(-1)!.elementType !== ElementType.Empty ||
-        elements
-          .slice(0, -1)
-          .some((element) => element.elementType === ElementType.Empty)
-      ) {
-        throw new Error('INVALID_ELEMENT_EDIT');
-      }
       if (elements.some((element) => element.pageBreak)) {
         throw new Error('INVALID_ELEMENT_EDIT');
       }
@@ -843,7 +808,6 @@ export function planElementEdits(
         ElementType.DropCap,
         ElementType.ModeKey,
         ElementType.ImageBox,
-        ElementType.Empty,
       ]);
     } else if (name !== 'staff') {
       if (elements.length !== 1) {

@@ -10,6 +10,12 @@ import type {
   TextBoxElement,
 } from '@/models/Element';
 
+// The caret is anchored to an element, the start of a page, or an empty footnote.
+export type InsertionCaret =
+  | { kind: 'element'; element: ScoreElement; after: boolean }
+  | { kind: 'page'; pageNumber: number }
+  | { kind: 'emptyFootnote'; footnoteId: string };
+
 export interface ScorePageInteraction {
   isSelected(element: ScoreElement): boolean;
   isAudioSelected(element: ScoreElement): boolean;
@@ -17,6 +23,9 @@ export interface ScorePageInteraction {
   selectedHeaderFooterElement: ScoreElement | null;
   selectedAnnotationElement: AnnotationElement | null;
   selectedAlternateLineElement: AlternateLineElement | null;
+  activeFootnoteId: string | null;
+  // With nothing selected, the insertion caret of the active staff.
+  insertionCaret: InsertionCaret | null;
   isLyricsLocked(element: ScoreElement): boolean;
 }
 
@@ -24,6 +33,7 @@ export interface ScorePageInteraction {
 export interface ScorePageEvents {
   selectElement: [element: ScoreElement];
   returnToFootnoteReference: [element: ScoreElement];
+  activateFootnote: [id: string];
   selectLyrics: [element: NoteElement];
   selectHeaderFooter: [element: ScoreElement];
   selectHeaderRichTextBox: [pageIndex: number];

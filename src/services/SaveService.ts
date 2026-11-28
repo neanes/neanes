@@ -1,3 +1,5 @@
+import { toRaw } from 'vue';
+
 import type { ScoreElement } from '@/models/Element';
 import {
   AcceptsLyricsOption,
@@ -5,7 +7,6 @@ import {
   AnnotationElement,
   DropCapElement,
   ElementType,
-  EmptyElement,
   ImageBoxElement,
   LineBreakType,
   MartyriaElement,
@@ -57,7 +58,6 @@ import {
   AnnotationElement as AnnotationElement_v1,
   DropCapElement as DropCapElement_v1,
   ElementType as ElementType_v1,
-  EmptyElement as EmptyElement_v1,
   ImageBoxElement as ImageBoxElement_v1,
   LineBreakType as LineBreakType_v1,
   MartyriaElement as MartyriaElement_v1,
@@ -1271,7 +1271,17 @@ export class SaveService {
     return { score, repairedFootnoteReferences };
   }
 
-  public static SaveScoreToJson(s: Score) {
+  /**
+   * Serializes the current score. Callers that need reactive updates must
+   * track score changes explicitly.
+   */
+  public static SaveScoreToJson(reactiveScore: Score) {
+    // Read through the raw score. Serialization only reads, and Vue's proxy
+    // traps (with dependency tracking) dominated its cost for large scores.
+    // Collections built by spreading a reactive array (for example styles
+    // merged on paste) hold proxies inside the raw score, so collection
+    // entries are unwrapped too.
+    const s = toRaw(reactiveScore);
     const score = new Score_v1();
 
     score.staff = new Staff_v1();
@@ -1289,11 +1299,13 @@ export class SaveService {
     }
     this.SavePageSetup(score.pageSetup, s.pageSetup);
     score.paragraphStyles = s.paragraphStyles.map((style) =>
-      this.SaveParagraphStyle(style),
+      this.SaveParagraphStyle(toRaw(style)),
     );
     score.initialMartyriaStyles =
       s.initialMartyriaStyles.length > 0
-        ? s.initialMartyriaStyles.map(saveInitialMartyriaStyle)
+        ? s.initialMartyriaStyles.map((style) =>
+            saveInitialMartyriaStyle(toRaw(style)),
+          )
         : undefined;
     score.defaultInitialMartyriaStyleId = s.defaultInitialMartyriaStyleId;
     this.SaveLyricSetup(score.staff.lyrics, s.staff.lyrics);
@@ -1314,7 +1326,7 @@ export class SaveService {
     score.footnotes =
       s.footnotes.length === 0
         ? undefined
-        : s.footnotes.map((footnote) => this.SaveFootnote(footnote));
+        : s.footnotes.map((footnote) => this.SaveFootnote(toRaw(footnote)));
 
     return score;
   }
@@ -1330,16 +1342,14 @@ export class SaveService {
 
   public static SaveElements(elements: ScoreElement[]): ScoreElement_v1[] {
     const result: ScoreElement_v1[] = [];
-    for (const e of elements) {
-      let element: ScoreElement_v1 = new EmptyElement_v1();
+    for (const entry of elements) {
+      const e = toRaw(entry);
+      let element: ScoreElement_v1;
 
       switch (e.elementType) {
         case ElementType.DropCap:
           element = new DropCapElement_v1();
           this.SaveDropCap(element as DropCapElement_v1, e as DropCapElement);
-          break;
-        case ElementType.Empty:
-          element = new EmptyElement_v1();
           break;
         case ElementType.Martyria:
           element = new MartyriaElement_v1();
@@ -1380,6 +1390,7 @@ export class SaveService {
           break;
         default:
           console.warn('Unrecognized element in score', e.elementType);
+          continue;
       }
 
       element.id = e.id ?? undefined;
@@ -1488,6 +1499,7 @@ export class SaveService {
     pageSetup.firstPageNumber = p.firstPageNumber;
     pageSetup.footnoteFormat = p.footnoteFormat;
     pageSetup.footnoteNumbering = p.footnoteNumbering;
+    pageSetup.footnoteLocation = p.footnoteLocation;
     pageSetup.footnoteSymbolSequence = p.footnoteSymbolSequence;
     pageSetup.firstFootnoteNumber =
       p.firstFootnoteNumber !== 1 ? p.firstFootnoteNumber : undefined;
@@ -2005,6 +2017,11 @@ export class SaveService {
     element.quantitativeNeumeAboveNote2 =
       e.quantitativeNeumeAboveNote2 || undefined;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight || undefined;
+    element.timeNeumeAboveQuantitativeNeumeRight =
+      e.timeNeumeAboveQuantitativeNeumeRight ?? undefined;
+    element.quantitativeNeumeRight2 = e.quantitativeNeumeRight2 ?? undefined;
+    element.gorgonAboveQuantitativeNeumeRight2 =
+      e.gorgonAboveQuantitativeNeumeRight2 ?? undefined;
     element.martyria = e.martyria;
     element.color = e.color ?? undefined;
     element.fontSize = e.fontSize ?? undefined;
@@ -2136,7 +2153,14 @@ export class SaveService {
     const result: ScoreElement[] = [];
     for (let i = 0; i < elements.length; i++) {
       const e = elements[i];
-      let element: ScoreElement = new EmptyElement();
+
+      // Files used to end every staff with an Empty sentinel element. Any
+      // break it carried is discarded.
+      if ((e.elementType as string) === 'Empty') {
+        continue;
+      }
+
+      let element: ScoreElement;
 
       switch (e.elementType) {
         case ElementType_v1.DropCap:
@@ -2146,9 +2170,6 @@ export class SaveService {
             e as DropCapElement_v1,
             pageSetup,
           );
-          break;
-        case ElementType_v1.Empty:
-          element = new EmptyElement();
           break;
         case ElementType_v1.Martyria:
           element = new MartyriaElement();
@@ -2205,6 +2226,7 @@ export class SaveService {
             'v1',
             e.elementType,
           );
+          continue;
       }
 
       const legacyElement = e as ScoreElement_v1 &
@@ -2277,6 +2299,7 @@ export class SaveService {
     pageSetup.firstPageNumber = p.firstPageNumber ?? pageSetup.firstPageNumber;
     pageSetup.footnoteFormat = p.footnoteFormat ?? 'numbers';
     pageSetup.footnoteNumbering = p.footnoteNumbering ?? 'continuous';
+    pageSetup.footnoteLocation = p.footnoteLocation ?? 'bottomOfPage';
     pageSetup.footnoteSymbolSequence = p.footnoteSymbolSequence ?? 'standard';
     pageSetup.firstFootnoteNumber = p.firstFootnoteNumber ?? 1;
     pageSetup.footnoteReferenceParentheses =
@@ -3123,6 +3146,11 @@ export class SaveService {
     element.quantitativeNeumeAboveNote = e.quantitativeNeumeAboveNote ?? null;
     element.quantitativeNeumeAboveNote2 = e.quantitativeNeumeAboveNote2 ?? null;
     element.quantitativeNeumeRight = e.quantitativeNeumeRight ?? null;
+    element.timeNeumeAboveQuantitativeNeumeRight =
+      e.timeNeumeAboveQuantitativeNeumeRight ?? null;
+    element.quantitativeNeumeRight2 = e.quantitativeNeumeRight2 ?? null;
+    element.gorgonAboveQuantitativeNeumeRight2 =
+      e.gorgonAboveQuantitativeNeumeRight2 ?? null;
     element.martyria = e.martyria;
     element.color = e.color ?? null;
     element.fontSize = e.fontSize ?? null;

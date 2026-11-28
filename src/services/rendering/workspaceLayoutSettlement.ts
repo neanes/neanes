@@ -5,8 +5,9 @@ import type { LayoutDiagnosticsOptions } from '@/models/LayoutDiagnostics';
 import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { automaticFootnoteMarker } from '@/services/FootnoteMarker';
-import { elementFootnoteIds } from '@/services/FootnoteReferences';
+import { needsFootnoteSettlement } from '@/services/FootnoteReferences';
 import { LayoutService } from '@/services/LayoutService';
+import { startSpan } from '@/utils/layoutProfiler';
 
 import { LayoutReconciliation } from './layoutReconciliation';
 import {
@@ -14,24 +15,7 @@ import {
   type TextBoxHeightMeasurement,
 } from './textBoxMeasurement';
 
-export function needsFootnoteSettlement(score: Score) {
-  if (score.pageSetup.footnoteNumbering !== 'page') {
-    return false;
-  }
-  const automatic = new Set(
-    score.footnotes
-      .filter((body) => body.marker === null)
-      .map((body) => body.id),
-  );
-  return (
-    automatic.size > 0 &&
-    score.staff.elements.some(
-      (element) =>
-        element instanceof RichTextBoxElement &&
-        elementFootnoteIds(element).some((id) => automatic.has(id)),
-    )
-  );
-}
+export { needsFootnoteSettlement };
 
 export class WorkspaceLayoutSettlement {
   private readonly heights = new LayoutReconciliation();
@@ -65,6 +49,7 @@ export class WorkspaceLayoutSettlement {
           ]),
         )
       : undefined;
+    const endPaginate = startSpan('settlement.paginate');
     const pages = LayoutService.processPages(this.workspace, {
       ...options,
       provisionalFootnoteWidths: this.provisional,
@@ -106,6 +91,7 @@ export class WorkspaceLayoutSettlement {
       // A new marker width can undo wrapping even at the same box width.
       this.heights.resetPageCaps(changedBoxes);
     }
+    endPaginate();
     return pages;
   }
 

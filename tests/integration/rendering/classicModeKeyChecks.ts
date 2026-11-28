@@ -11,10 +11,8 @@ import {
   getCommonInitialMartyriaWording,
 } from '../../../src/models/InitialMartyriaCommonWordings';
 import { modeKeyTemplates } from '../../../src/models/ModeKeys';
-import {
-  EmptyElement,
-  ModeKeyElement,
-} from '../../../src/models/save/v1/Element';
+import { ModeSign, QuantitativeNeume } from '../../../src/models/Neumes';
+import { ModeKeyElement } from '../../../src/models/save/v1/Element';
 import type { InitialMartyriaStyle } from '../../../src/models/save/v1/InitialMartyriaStyle';
 import type { ScoreRenderSnapshot } from '../../../src/services/rendering/scoreRenderSnapshot';
 
@@ -37,6 +35,7 @@ export async function checkClassicModeKeys(options: {
   owner: BrowserWindow;
 }) {
   const snapshot = structuredClone(options.snapshot);
+  snapshot.score.pageSetup.neumeDefaultFontFamily = 'Neanes';
   const styles = [
     savedStyleFromWording('classic', 'Classic'),
     savedStyleFromWording('greekTraditionalSign', 'Traditional Greek'),
@@ -59,7 +58,14 @@ export async function checkClassicModeKeys(options: {
       );
     }
   }
-  snapshot.score.staff.elements.push(new EmptyElement());
+  const templateKeyCount = snapshot.score.staff.elements.length;
+  snapshot.score.staff.elements.push(
+    Object.assign(new ModeKeyElement(), {
+      initialMartyriaStyleId: styles[1].id,
+      note: ModeSign.Pa,
+      quantitativeNeumeRight: QuantitativeNeume.Oligon,
+    }),
+  );
   await renderSnapshot({
     snapshot,
     parent: options.owner,
@@ -135,24 +141,42 @@ export async function checkClassicModeKeys(options: {
         glyphs: string;
         fonts: string[];
         finite: boolean;
+        pitchGapWidth: number | null;
+        pitchWordSpaceWidth: number | null;
       }[] = await window.webContents.executeJavaScript(`
+          const context = document.createElement('canvas').getContext('2d');
           [...document.querySelectorAll('.mode-key-container')].map(key => {
             const signature = key.querySelector('.mode-key-signature');
             const runs = [...signature.querySelectorAll('.mode-key-run')];
             const rect = key.getBoundingClientRect();
+            const trailing = signature.querySelector('.pitch-trailing');
+            const note = Array.from(
+              trailing?.parentElement.querySelectorAll('.starting-pitch-note > :not(.pitch-mark)') ?? [],
+            ).at(-1);
+            let pitchWordSpaceWidth = null;
+            if (note && !note.classList.contains('neume')) {
+              const font = getComputedStyle(note);
+              context.font = [font.fontStyle, font.fontWeight, font.fontSize, font.fontFamily].join(' ');
+              context.fontVariantCaps = font.fontVariantCaps;
+              pitchWordSpaceWidth = context.measureText(' ').width;
+            }
             return {
               textRuns: runs.filter(run => !run.querySelector('.neume')).length,
               glyphs: [...signature.querySelectorAll('.neume')].map(glyph => glyph.textContent).join(''),
               fonts: runs.map(run => getComputedStyle(run).fontFamily),
               finite: [rect.width, rect.height, rect.top].every(Number.isFinite) && rect.height > 0,
+              pitchGapWidth: note
+                ? trailing.getBoundingClientRect().left - note.parentElement.getBoundingClientRect().right
+                : null,
+              pitchWordSpaceWidth,
             };
           })
         `);
-      assert.equal(keys.length, modeKeyTemplates.length * 2);
+      assert.equal(keys.length, templateKeyCount + 1);
       // Bare asserts would make Node describe the failure by re-parsing the
       // bundled source, which fails on the music font's private-use
       // characters and hides the real failure, so every check is described.
-      for (let index = 0; index < keys.length; index += 2) {
+      for (let index = 0; index < templateKeyCount; index += 2) {
         const template = modeKeyTemplates[index / 2].id;
         const classic = keys[index];
         const traditional = keys[index + 1];
@@ -181,7 +205,56 @@ export async function checkClassicModeKeys(options: {
           traditional.fonts.some((font) => font.includes('GFS Didot')),
           `Traditional Greek does not use GFS Didot in template ${template}`,
         );
+        const notation = modeKeyTemplates[index / 2];
+        if (notation.note != null && notation.quantitativeNeumeRight != null) {
+          // Both styles use the same Greek text appearance. Classic uses it
+          // for the word space even though its starting note is a glyph.
+          const expected = traditional.pitchWordSpaceWidth;
+          assert(
+            expected != null && expected > 0,
+            `Expected a word space width in template ${template}`,
+          );
+          for (const [offset, key] of [classic, traditional].entries()) {
+            const width = key.pitchGapWidth;
+            assert(
+              width != null && Math.abs(width - expected) < 0.05,
+              `${styleOf(index + offset)} pitch gap in template ${template} is ${width}px, expected a ${expected}px word space`,
+            );
+          }
+        }
       }
+      const oligonBottomOffset: number | null = await window.webContents
+        .executeJavaScript(`(() => {
+        const key = document.querySelectorAll('.mode-key-container')[${templateKeyCount}];
+        const note = key?.querySelector('.starting-pitch-note > :not(.pitch-mark)');
+        const oligon = key?.querySelector('.pitch-trailing-group .neume');
+        if (!note || !oligon) {
+          return null;
+        }
+
+        // An empty baseline-aligned inline block has its baseline at its
+        // bottom edge and follows any positioning applied to the glyph.
+        const baseline = (element) => {
+          const probe = document.createElement('span');
+          probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+          element.prepend(probe);
+          const y = probe.getBoundingClientRect().bottom;
+          probe.remove();
+          return y;
+        };
+        const textBaseline = baseline(note);
+        const oligonStyle = getComputedStyle(oligon);
+        const context = document.createElement('canvas').getContext('2d');
+        context.font = [oligonStyle.fontStyle, oligonStyle.fontWeight, '1000px', oligonStyle.fontFamily].join(' ');
+        const descent = context.measureText(oligon.textContent).actualBoundingBoxDescent;
+        const oligonBottom = baseline(oligon) + descent * parseFloat(oligonStyle.fontSize) / 1000;
+        return oligonBottom - textBaseline;
+      })()`);
+      assert(oligonBottomOffset != null, 'Expected a trailing oligon');
+      assert(
+        Math.abs(oligonBottomOffset) < 0.5,
+        `Trailing oligon bottom is ${oligonBottomOffset}px from the text baseline`,
+      );
       await writeFile(
         path.join(options.output, 'classic-mode-keys.pdf'),
         await window.webContents.printToPDF({
@@ -200,6 +273,6 @@ export async function checkClassicModeKeys(options: {
     },
   });
   console.log(
-    'PASS: Classic glyphs and Traditional Greek text render every template through the shared renderer with centered pitch marks',
+    'PASS: Classic and Traditional Greek mode keys render with centered pitch marks and a baseline-aligned trailing oligon',
   );
 }

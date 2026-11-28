@@ -69,7 +69,6 @@ export const discoveredElementSchema = z.discriminatedUnion('elementType', [
   elementResult(ElementType.Note),
   elementResult(ElementType.Martyria),
   elementResult(ElementType.Tempo),
-  elementResult(ElementType.Empty),
   elementResult(ElementType.TextBox),
   elementResult(ElementType.RichTextBox),
   elementResult(ElementType.DropCap),
@@ -145,13 +144,10 @@ export function getElementCatalog(
         : {}),
       ...(query.view === 'edit' || query.view === 'both'
         ? {
-            editProperties:
-              type === ElementType.Empty
-                ? null
-                : compactJsonSchema(
-                    pick(elementEditPropertySchemas[type]),
-                    'input',
-                  ),
+            editProperties: compactJsonSchema(
+              pick(elementEditPropertySchemas[type]),
+              'input',
+            ),
           }
         : {}),
     };

@@ -30,7 +30,7 @@ try {
     ...args,
     expectedRevision: initial.revision,
     actions: [
-      { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+      { action: 'remove_range', start: 0, end: initial.collectionSize },
       {
         action: 'insert',
         elements: [

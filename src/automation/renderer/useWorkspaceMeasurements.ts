@@ -63,9 +63,13 @@ function useMeasurement<Result>() {
   };
 }
 
+export function useTextBoxMeasurement() {
+  return useMeasurement<TextBoxHeightMeasurement[]>();
+}
+
 export function useWorkspaceMeasurements() {
   return {
-    textBoxes: useMeasurement<TextBoxHeightMeasurement[]>(),
+    textBoxes: useTextBoxMeasurement(),
     pages: useMeasurement<Page[]>(),
   };
 }

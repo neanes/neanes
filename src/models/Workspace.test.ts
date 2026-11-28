@@ -22,7 +22,7 @@ it('assigns reactive, serializable element IDs before pagination', () => {
   const footnote = new Footnote();
   footnote.staff.elements.unshift(new NoteElement());
   workspace.score.footnotes.push(footnote);
-  const [, selected, placeholder] = workspace.score.staff.elements;
+  const [, selected] = workspace.score.staff.elements;
   const canCopyLink = computed(() => selected.id != null);
   expect(canCopyLink.value).toBe(false);
   const revision = workspace.contentRevision;
@@ -32,9 +32,8 @@ it('assigns reactive, serializable element IDs before pagination', () => {
 
   expect(canCopyLink.value).toBe(true);
   const saved = SaveService.SaveElements(workspace.score.staff.elements);
-  expect(saved.map((element) => element.id)).toEqual([12, 13, undefined]);
+  expect(saved.map((element) => element.id)).toEqual([12, 13]);
   expect(SaveService.SaveFootnote(footnote).staff.elements[0].id).toBe(14);
-  expect(placeholder.id).toBeNull();
   expect(workspace.contentRevision).toBe(revision);
 });
 
@@ -219,11 +218,11 @@ describe('workspace content revisions', () => {
     history.undo();
     expect(collection[0]).toBe(first);
     history.undo();
-    expect(collection).toHaveLength(1);
+    expect(collection).toHaveLength(0);
     history.redo();
     history.redo();
     history.redo();
-    expect(collection).toHaveLength(1);
+    expect(collection).toHaveLength(0);
     expect(workspace.contentRevision).toBe(9);
   });
 

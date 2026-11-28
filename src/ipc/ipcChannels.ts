@@ -50,6 +50,8 @@ export enum IpcMainChannels {
   FileMenuSelectAll = 'FileMenuSelectAll',
 
   FileMenuFind = 'FileMenuFind',
+  FileMenuGoToStart = 'FileMenuGoToStart',
+  FileMenuGoToEnd = 'FileMenuGoToEnd',
 
   FileMenuWindowPreviousTab = 'FileMenuWindowPreviousTab',
   FileMenuWindowNextTab = 'FileMenuWindowNextTab',

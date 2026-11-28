@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  EmptyElement,
-  NoteElement,
-  RichTextBoxElement,
-} from '@/models/Element';
+import { NoteElement, RichTextBoxElement } from '@/models/Element';
 import { Footnote } from '@/models/Footnote';
 import { Score } from '@/models/Score';
 import { SaveService } from '@/services/SaveService';
@@ -41,7 +37,7 @@ describe('footnote reference repair on load', () => {
     const second = new Footnote();
     note.footnoteId = first.id;
     box.content = `<p>A${richTextFootnoteHtml(second.id)}B</p>`;
-    score.staff.elements = [note, box, new EmptyElement()];
+    score.staff.elements = [note, box];
     score.footnotes = [first, second];
 
     const saved = SaveService.SaveScoreToJson(score);
@@ -60,7 +56,7 @@ describe('footnote reference repair on load', () => {
     const body = new Footnote();
     note.footnoteId = MISSING_ID;
     box.content = `<p>A${richTextFootnoteHtml(MISSING_ID)}B${richTextFootnoteHtml(body.id)}C</p>`;
-    score.staff.elements = [note, box, new EmptyElement()];
+    score.staff.elements = [note, box];
     score.footnotes = [body];
 
     expect(
@@ -87,7 +83,7 @@ describe('footnote reference repair on load', () => {
     first.footnoteId = body.id;
     second.footnoteId = body.id;
     box.content = `<p>${richTextFootnoteHtml(body.id)}X${richTextFootnoteHtml(body.id)}</p>`;
-    score.staff.elements = [first, second, box, new EmptyElement()];
+    score.staff.elements = [first, second, box];
     score.footnotes = [body];
 
     const loaded = reload(score);
@@ -110,7 +106,7 @@ describe('footnote reference repair on load', () => {
       '<p>A<span class="neanes-footnote" data-footnote-id="bad"></span>B' +
       '<span class="neanes-footnote"></span>C' +
       `<span class="neanes-ck-neume">N${richTextFootnoteHtml(body.id)}</span>D</p>`;
-    score.staff.elements = [box, new EmptyElement()];
+    score.staff.elements = [box];
     score.footnotes = [body];
 
     const loaded = reload(score);
@@ -134,12 +130,12 @@ describe('footnote reference repair on load', () => {
     reference.footnoteId = inner.id;
     nestedNote.footnoteId = inner.id;
     nestedBox.content = `<p>Body${richTextFootnoteHtml(inner.id)}</p>`;
-    outer.staff.elements = [nestedNote, nestedBox, new EmptyElement()];
+    outer.staff.elements = [nestedNote, nestedBox];
     header.content = `<p>Header${richTextFootnoteHtml(outer.id)}</p>`;
     footer.content = `<p>Footer${richTextFootnoteHtml(inner.id)}</p>`;
     score.headers.default.elements = [header];
     score.footers.default.elements = [footer];
-    score.staff.elements = [anchor, reference, new EmptyElement()];
+    score.staff.elements = [anchor, reference];
     score.footnotes = [outer, inner];
 
     const loaded = reload(score);
@@ -164,7 +160,7 @@ describe('footnote reference repair on load', () => {
     box.multipanel = true;
     box.content = `<p>Hidden${richTextFootnoteHtml(hidden.id)}</p>`;
     box.contentCenter = `<p>Shown${richTextFootnoteHtml(shown.id)}</p>`;
-    score.staff.elements = [box, new EmptyElement()];
+    score.staff.elements = [box];
     score.footnotes = [hidden, shown];
 
     const loaded = reload(score);
@@ -190,7 +186,7 @@ describe('footnote reference repair on load', () => {
     note.footnoteId = kept.id;
     header.content = `<p>Header${richTextFootnoteHtml(headerOnly.id)}</p>`;
     score.headers.default.elements = [header];
-    score.staff.elements = [note, new EmptyElement()];
+    score.staff.elements = [note];
     score.footnotes = [unreferenced, kept, headerOnly];
 
     const { score: loaded, repairedFootnoteReferences } =

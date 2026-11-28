@@ -44,7 +44,7 @@ export async function checkFootnoteMarkers(call, evaluate, directory) {
       ...args,
       expectedRevision: doc.revision,
       actions: [
-        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        { action: 'remove_range', start: 0, end: initial.collectionSize },
         {
           action: 'insert',
           elements: Array.from({ length: scenario.count }, (_, index) => ({
@@ -203,7 +203,7 @@ export async function checkFootnoteMarkerCollisionSpacing(
       });
       const initial = await call('get_elements', args);
       await edit([
-        { action: 'remove_range', start: 0, end: initial.collectionSize - 1 },
+        { action: 'remove_range', start: 0, end: initial.collectionSize },
         {
           action: 'insert',
           elements: [0, 1].map((index) => ({

@@ -237,6 +237,8 @@
     "diatonic": "Διατονικός",
     "enharmonic": "Εναρμόνιος",
     "pentaphonicMakamFerahnak": "Πεντάφωνος (Μακάμ Φεραχνάκ)",
-    "diphonic": "Δίφωνος"
+    "diphonic": "Δίφωνος",
+    "sticheraricFromNi": "Στιχηραρικός από Νη",
+    "slowDiphonic": "Αργός δίφωνος"
   }
 }

@@ -43,7 +43,7 @@ try {
     );
   }
   const catalog = await call('get_element_catalog', { includeNeumes: true });
-  assert.equal(catalog.elementTypes.length, 11);
+  assert.equal(catalog.elementTypes.length, 10);
   assert.ok(catalog.neumes.QuantitativeNeume.includes('Oligon'));
   const seed = await call('create_document');
   const { score } = await readScoreSnapshot(call, {
@@ -91,6 +91,7 @@ try {
         { ...element, lineHeight: 1.2 },
       ];
     }),
+    // Older files end with this sentinel, which loading drops.
     { elementType: 'Empty' },
   ];
   await fs.writeFile(fixture, JSON.stringify(score));

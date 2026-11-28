@@ -35,14 +35,14 @@ try {
     const src = { ...scope, documentId: source.documentId };
     const dst = { ...scope, documentId: destination.documentId };
     // New scores include the normal default title and mode key. Start this
-    // fixture with only the terminal sentinel in each document.
+    // fixture with an empty staff in each document.
     for (const args of [src, dst]) {
       const page = await call('get_elements', args);
       const cleared = await call('edit_elements', {
         ...args,
         expectedRevision: page.revision,
         actions: [
-          { action: 'remove_range', start: 0, end: page.collectionSize - 1 },
+          { action: 'remove_range', start: 0, end: page.collectionSize },
         ],
       });
       if (args === src) {
@@ -253,14 +253,14 @@ try {
       // Exercise real editor history: the styles and passage undo together.
       const targetWorkspace = `window._editor.workspaces.value.find(w => w.id === ${JSON.stringify(destination.documentId)})`;
       await evaluate(`${targetWorkspace}.commandService.undo()`);
-      assert.equal((await call('get_elements', dst)).elements.length, 1);
+      assert.equal((await call('get_elements', dst)).elements.length, 0);
       assert.ok(
         !(await call('get_paragraph_styles', dst)).styles.some(
           (style) => style.id === imported.id,
         ),
       );
       await evaluate(`${targetWorkspace}.commandService.redo()`);
-      assert.equal((await call('get_elements', dst)).elements.length, 4);
+      assert.equal((await call('get_elements', dst)).elements.length, 3);
     }
     const current = await call('get_document_properties', dst);
     const withoutLyrics = await call('copy_elements', {

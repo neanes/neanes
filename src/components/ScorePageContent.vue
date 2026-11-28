@@ -177,6 +177,45 @@
     class="footnote-rule"
     :style="footnoteRuleStyle"
   />
+  <div
+    v-for="footnote in page.footnotes"
+    :key="`footnote-body-${footnote.id}`"
+    :data-footnote-id="footnote.id"
+    class="footnote-body"
+    :class="{
+      active: !printMode && interaction?.activeFootnoteId === footnote.id,
+    }"
+    :style="footnoteBodyAreaStyle(footnote)"
+    @click.self="!printMode && emit('activateFootnote', footnote.id)"
+  />
+  <template v-if="!printMode">
+    <span
+      v-for="footnote in page.footnotes.filter(
+        (footnote) => footnote.lines.length === 0,
+      )"
+      :key="`footnote-placeholder-${footnote.id}`"
+      :data-footnote-id="footnote.id"
+      class="footnote-placeholder"
+      :class="
+        emptyFootnoteCaret?.footnoteId === footnote.id ? caretClass : undefined
+      "
+      :style="footnotePlaceholderStyle(footnote)"
+    >
+      <span
+        v-if="interaction?.activeFootnoteId !== footnote.id"
+        class="placeholder-text"
+        >{{
+          i18next.t(($) => $.menu.footnotes.emptyPlaceholder, { ns: 'menu' })
+        }}</span
+      >
+    </span>
+    <span
+      v-if="showPageStartCaret"
+      class="page-start-caret"
+      :class="caretClass"
+      :style="pageStartCaretStyle"
+    />
+  </template>
   <button
     v-for="footnote in page.footnotes"
     :id="`footnote-${footnote.id}`"
@@ -188,6 +227,7 @@
     :title="
       i18next.t(($) => $.menu.footnotes.returnToReference, { ns: 'menu' })
     "
+    @click="!printMode && emit('activateFootnote', footnote.id)"
     @dblclick="
       !printMode && emit('returnToFootnoteReference', footnote.reference)
     "
@@ -211,7 +251,7 @@
   </div>
   <div
     v-for="(line, lineIndex) in page.allLines"
-    :key="`line-${pageIndex}-${lineIndex}`"
+    :key="getLineKey(line, lineIndex)"
     class="line"
     :data-footnote-id="line.footnoteId"
   >
@@ -220,6 +260,7 @@
       :id="element.id === null ? undefined : `element-${element.id}`"
       :key="`element-${workspaceId}-${element.id}-${element.keyHelper}`"
       class="element-box"
+      :class="caretElement === element ? caretClass : undefined"
       :style="getElementStyle(element)"
       @contextmenu="emit('onScoreElementContextMenu', element)"
     >
@@ -338,7 +379,16 @@
               :class="{
                 selectedLyrics: element === selectedLyrics,
               }"
-              :style="{ minWidth: withZoom(element.width) }"
+              :style="{
+                minWidth: withZoom(element.width),
+                // Hide the glyph's fill and stroke but keep its width, and
+                // show it while editing.
+                opacity:
+                  (element as NoteElement).hidesOrphanedTatweel &&
+                  element !== selectedLyrics
+                    ? 0
+                    : undefined,
+              }"
               :content="(element as NoteElement).lyrics"
               :editable="!printMode && !isLyricsLocked(element)"
               white-space="nowrap"
@@ -465,24 +515,6 @@
           <div class="lyrics"></div>
         </div>
       </template>
-      <template v-else-if="isEmptyElement(element)">
-        <div
-          :ref="setTemplateRef(`element-${getElementKey(element)}`)"
-          class="neume-box"
-        >
-          <span v-if="element.pageBreak" class="page-break"> <PhFile /></span>
-          <span v-if="element.lineBreak" class="line-break"
-            ><PhParagraph weight="fill"
-          /></span>
-          <EmptyNeumeBox
-            class="empty-neume-box"
-            :class="[{ selected: isSelected(element) }]"
-            :style="getEmptyBoxStyle(element as EmptyElement)"
-            @select-single="emit('selectElement', element)"
-          ></EmptyNeumeBox>
-          <div class="lyrics"></div>
-        </div>
-      </template>
       <template v-else-if="isTextBoxElement(element)">
         <span v-if="element.pageBreak" class="page-break-2"><PhFile /></span>
         <span v-if="element.lineBreak" class="line-break-2"
@@ -516,6 +548,7 @@
           :element="element as RichTextBoxElement"
           :footnote-body="line.footnoteId !== null"
           :layout-geometry="richTextGeometry(element as RichTextBoxElement)"
+          :layout-y="element.y"
           :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
           :inline-page-center-offset="inlinePageCenter - element.x"
           :page-setup="score.pageSetup"
@@ -722,7 +755,6 @@ import ContentEditable from '@/components/ContentEditable.vue';
 import DropCap from '@/components/DropCap.vue';
 import ImageBox from '@/components/ImageBox.vue';
 import ModeKey from '@/components/ModeKey.vue';
-import EmptyNeumeBox from '@/components/NeumeBoxEmpty.vue';
 import MartyriaNeumeBox from '@/components/NeumeBoxMartyria.vue';
 import SyllableNeumeBox from '@/components/NeumeBoxSyllable.vue';
 import TempoNeumeBox from '@/components/NeumeBoxTempo.vue';
@@ -734,7 +766,6 @@ import type { ScoreOverlaySettings } from '@/models/EditorPreferences';
 import {
   type DropCapElement,
   ElementType,
-  type EmptyElement,
   FootnoteAnchorElement,
   type ImageBoxElement,
   isKeepWithNextActive,
@@ -748,7 +779,7 @@ import {
   type TextBoxElement,
 } from '@/models/Element';
 import type { BoxOverlayDiagnostics } from '@/models/LayoutDiagnostics';
-import type { Line, Page } from '@/models/Page';
+import type { Line, Page, PageFootnote } from '@/models/Page';
 import {
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   getTextBoxParagraphStyleFallbackId,
@@ -769,7 +800,6 @@ import type {
 } from '@/services/rendering/textBoxMeasurement';
 import {
   isDropCapElement,
-  isEmptyElement,
   isImageBoxElement,
   isMartyriaElement,
   isModeKeyElement,
@@ -863,7 +893,6 @@ const {
   getFooterHorizontalRuleStyle,
   getLyricStyle,
   getLeadingLyricHyphenStyle,
-  getEmptyBoxStyle,
   getElementStyle,
   getMelismaStyle,
   getMelismaUnderscoreStyleInner,
@@ -887,6 +916,63 @@ const footnoteRuleStyle = computed(() => {
     borderTopWidth: withZoom(props.page.footnoteRuleThickness),
     borderColor: props.score.pageSetup.footnoteRuleColor,
   };
+});
+function footnoteBodyAreaStyle(footnote: PageFootnote) {
+  const margins = getResolvedMarginsForPage(props.page);
+  return {
+    left: withZoom(margins.contentLeft),
+    top: withZoom(footnote.top),
+    width: withZoom(margins.contentWidth),
+    height: withZoom(footnote.height),
+  };
+}
+// The placeholder follows the label, outside the layout.
+function footnotePlaceholderStyle(footnote: PageFootnote) {
+  const style = footnoteBodyStyles.value.get(footnote.id)!;
+  return {
+    ...style,
+    transform: undefined,
+    left: rtl.value ? undefined : style.left,
+    right: rtl.value
+      ? withZoom(props.score.pageSetup.pageWidth - footnote.labelX)
+      : undefined,
+    paddingInline: withZoom(4),
+  };
+}
+const caret = computed(() =>
+  props.printMode ? null : (props.interaction?.insertionCaret ?? null),
+);
+const caretElement = computed(() =>
+  caret.value?.kind === 'element' ? caret.value.element : null,
+);
+const emptyFootnoteCaret = computed(() =>
+  caret.value?.kind === 'emptyFootnote' ? caret.value : null,
+);
+// The caret is drawn on the inline end side after the last element. With
+// physical offsets, that is the right side, mirrored for RTL scores.
+const caretClass = computed(() => {
+  const after = caret.value?.kind === 'element' && caret.value.after;
+  return after !== rtl.value
+    ? 'insertion-caret insertion-caret-right'
+    : 'insertion-caret';
+});
+const showPageStartCaret = computed(
+  () =>
+    caret.value?.kind === 'page' &&
+    caret.value.pageNumber === props.page.physicalPageNumber,
+);
+const pageStartCaretStyle = computed(() => {
+  const margins = getResolvedMarginsForPage(props.page);
+  const pageSetup = props.score.pageSetup;
+  return {
+    left: rtl.value ? undefined : withZoom(margins.contentLeft),
+    right: rtl.value
+      ? withZoom(pageSetup.pageWidth - margins.contentRight)
+      : undefined,
+    top: withZoom(props.page.contentTop),
+    // With the inherited line height, one line is as tall as a neume box.
+    fontSize: withZoom(pageSetup.neumeDefaultFontSize),
+  } as CSSProperties;
 });
 const bodyMarkerTypography = computed(() =>
   footnoteMarkerStyle(props.score.paragraphStyles, 'body'),
@@ -942,8 +1028,7 @@ const footnoteBodyStyles = computed(() => {
         first &&
         (isSyllableElement(first) ||
           isMartyriaElement(first) ||
-          isTempoElement(first) ||
-          isEmptyElement(first))
+          isTempoElement(first))
       ) {
         contextCss.lineHeight = 'inherit';
         contextCss.fontFamily = props.score.pageSetup.neumeDefaultFontFamily;
@@ -1060,6 +1145,15 @@ function getDeveloperGlueOverlays(
       }),
     };
   });
+}
+
+// Key a line by its first element, so a line that only moves keeps its
+// element wrappers instead of remounting them under another line's key.
+function getLineKey(line: Line, lineIndex: number) {
+  const id = line.elements[0]?.id;
+  return id == null
+    ? `line-index-${lineIndex}`
+    : `line-${line.footnoteId ?? ''}-${id}`;
 }
 
 function getDeveloperBoxOverlays(page: Page, line: Line, lineIndex: number) {
@@ -1521,6 +1615,29 @@ defineExpose({
   cursor: default;
   white-space: nowrap;
 }
+.footnote-body {
+  position: absolute;
+}
+.footnote-body.active {
+  outline: 1px dashed color-mix(in srgb, currentColor 35%, transparent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, currentColor 3%, transparent);
+}
+.footnote-placeholder,
+.page-start-caret {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  /* Keeps one line of height for the caret when there is no text. */
+  min-height: 1lh;
+}
+.footnote-placeholder {
+  white-space: nowrap;
+}
+.placeholder-text {
+  font-style: italic;
+  opacity: 0.45;
+}
 .footnote-body-marker {
   display: inline-block;
   line-height: 1;
@@ -1702,6 +1819,36 @@ defineExpose({
   position: absolute;
 }
 
+/* Marks the insertion point at the start of the staff (before the first
+   element), at the end (after the last element), or, in an empty staff, where
+   its first element will go. The box's height sets the caret's height. */
+.insertion-caret::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--caret-offset, 0);
+  width: max(1px, calc(2px * var(--zoom, 1)));
+  background: currentColor;
+  pointer-events: none;
+  animation: insertion-caret-blink 1s steps(1) infinite;
+}
+
+.insertion-caret.insertion-caret-right::before {
+  left: auto;
+  right: var(--caret-offset, 0);
+}
+
+.element-box.insertion-caret {
+  --caret-offset: calc(-4px * var(--zoom, 1));
+}
+
+@keyframes insertion-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
 .neume-box {
   display: flex;
   flex-direction: column;
@@ -1760,10 +1907,6 @@ defineExpose({
 
 .melisma-text {
   opacity: 0.5;
-}
-
-.page.print .empty-neume-box {
-  visibility: hidden;
 }
 
 .page.print .text-box-container,
@@ -1895,10 +2038,6 @@ defineExpose({
 }
 
 @media print {
-  .empty-neume-box {
-    visibility: hidden;
-  }
-
   .text-box-container {
     border: none;
     outline: none;

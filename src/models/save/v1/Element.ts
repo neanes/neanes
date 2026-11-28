@@ -22,7 +22,6 @@ import { Scale, ScaleNote } from './Scales';
 export enum ElementType {
   Note = 'Note',
   Martyria = 'Martyria',
-  Empty = 'Empty',
   TextBox = 'TextBox',
   RichTextBox = 'RichTextBox',
   DropCap = 'DropCap',
@@ -199,10 +198,6 @@ export class TempoElement extends ScoreElement {
   public error: boolean = false;
 }
 
-export class EmptyElement extends ScoreElement {
-  public readonly elementType: ElementType = ElementType.Empty;
-}
-
 export enum TextBoxAlignment {
   Center = 'center',
   Justify = 'justify',
@@ -299,6 +294,11 @@ export class ModeKeyElement extends ScoreElement {
   public fthoraAboveNote2: Fthora | undefined = undefined;
   public fthoraAboveQuantitativeNeumeRight: Fthora | undefined = undefined;
   public quantitativeNeumeRight: QuantitativeNeume | undefined = undefined;
+  public timeNeumeAboveQuantitativeNeumeRight: TimeNeume | undefined =
+    undefined;
+  public quantitativeNeumeRight2: QuantitativeNeume | undefined = undefined;
+  public gorgonAboveQuantitativeNeumeRight2: GorgonNeume | undefined =
+    undefined;
   public quantitativeNeumeAboveNote: ModeSign | undefined = undefined;
   public quantitativeNeumeAboveNote2: ModeSign | undefined = undefined;
   public color: string | undefined = undefined;

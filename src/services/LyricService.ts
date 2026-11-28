@@ -1,3 +1,5 @@
+import { toRaw } from 'vue';
+
 import type {
   DropCapElement,
   MartyriaElement,
@@ -35,14 +37,18 @@ export type UpdateDropCapCallback = (
 
 export class LyricService {
   /**
-   * Extracts lyrics from score elements
-   * @param elements The elements from which lyrics are extracted
+   * Extracts lyrics from score elements. Callers that need reactive updates
+   * must track changes to the elements explicitly.
+   * @param reactiveElements The elements from which lyrics are extracted
    * @returns A string containing the extracted lyrics.
    */
   extractLyrics(
-    elements: ScoreElement[],
+    reactiveElements: ScoreElement[],
     disableGreekMelismata: boolean,
   ): string {
+    // Read the raw elements. Extraction only reads, and Vue's proxy traps
+    // dominated its cost for large scores.
+    const elements = toRaw(reactiveElements);
     let lyrics = '';
 
     // Set to true if we need to add a space before the next character
@@ -575,9 +581,13 @@ export class LyricService {
       if (currentIndex > 0) {
         const previousElement = elements[currentIndex - 1];
 
+        // A melisma does not continue past an explicit break, so the lyric
+        // after it gets no joining tatweel. A typed tatweel is kept.
         if (
           previousElement.elementType === ElementType.Note &&
           (previousElement as NoteElement).isMelisma &&
+          !previousElement.lineBreak &&
+          !previousElement.pageBreak &&
           !lyrics.startsWith(TATWEEL)
         ) {
           lyrics = TATWEEL + lyrics;

@@ -39,6 +39,7 @@ export class UpdatePropertiesCommand<T> extends StateEditCommand<
       );
 
     super({
+      targets: [target as object],
       capture,
       apply: () => {
         const before = capture();

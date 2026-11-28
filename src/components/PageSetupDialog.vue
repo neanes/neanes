@@ -550,6 +550,26 @@
 
                 <template v-else-if="section.value === 'footnotes'">
                   <Field orientation="horizontal">
+                    <FieldLabel for="page-setup-footnote-location">{{
+                      $t(($) => $.dialog.pageSetup.footnoteLocation, {
+                        ns: 'dialog',
+                      })
+                    }}</FieldLabel>
+                    <Select v-model="form.footnoteLocation">
+                      <SelectTrigger id="page-setup-footnote-location"
+                        ><SelectValue
+                      /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="[value, label] in footnoteLocationOptions"
+                          :key="value"
+                          :value="value"
+                          >{{ $t(label, { ns: 'dialog' }) }}</SelectItem
+                        >
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field orientation="horizontal">
                     <FieldLabel for="page-setup-footnote-format">{{
                       $t(($) => $.dialog.pageSetup.footnoteFormat, {
                         ns: 'dialog',
@@ -1976,6 +1996,13 @@ const footnoteFormat = computed({
     }
   },
 });
+const footnoteLocationOptions = new Map<
+  PageSetup['footnoteLocation'],
+  DialogSelector
+>([
+  ['bottomOfPage', ($) => $.dialog.pageSetup.footnoteBottomOfPage],
+  ['belowText', ($) => $.dialog.pageSetup.footnoteBelowText],
+]);
 const footnoteNumberingOptions = new Map<
   PageSetup['footnoteNumbering'],
   DialogSelector

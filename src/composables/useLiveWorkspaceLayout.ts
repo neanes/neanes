@@ -15,6 +15,7 @@ import type {
   TextBoxHeightMeasurement,
 } from '@/services/rendering/textBoxMeasurement';
 import { TextBoxMeasurementCache } from '@/services/rendering/textBoxMeasurementCache';
+import { now, profile, recordAsyncSpan } from '@/utils/layoutProfiler';
 
 export type LiveLayoutTrial = {
   isCurrent: () => boolean;
@@ -104,6 +105,13 @@ export function useLiveWorkspaceLayout(options: {
       source.contentRevision === contentRevision;
 
     async function run(): Promise<LiveLayoutOutcome> {
+      const runStart = now();
+      const outcome = await runUnprofiled();
+      recordAsyncSpan('settlement.total', runStart, { outcome });
+      return outcome;
+    }
+
+    async function runUnprofiled(): Promise<LiveLayoutOutcome> {
       // Let canceled measurement components unmount before starting another.
       await nextTick();
       await document.fonts.ready;
@@ -113,7 +121,9 @@ export function useLiveWorkspaceLayout(options: {
       return options.settle(workspace, {
         isCurrent,
         async measure(layoutOptions, prepare) {
-          const detached = detachLayout(source);
+          const detached = profile('settlement.detachLayout', () =>
+            detachLayout(source),
+          );
           prepare(detached.copies);
           const result = await settleWorkspace(
             detached.workspace,
@@ -122,7 +132,8 @@ export function useLiveWorkspaceLayout(options: {
               if (!isCurrent()) {
                 throw new Error('LAYOUT_MEASUREMENT_STALE');
               }
-              return measurements.measure(
+              const measureStart = now();
+              const heights = await measurements.measure(
                 detached.workspace,
                 templatePages,
                 detached.originals,
@@ -135,6 +146,10 @@ export function useLiveWorkspaceLayout(options: {
                   ),
                 isCurrent,
               );
+              recordAsyncSpan('settlement.measureTextBoxes', measureStart, {
+                boxes: heights.length,
+              });
+              return heights;
             },
             layoutOptions,
           );

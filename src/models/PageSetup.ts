@@ -1,6 +1,7 @@
 import { Unit } from '../utils/Unit';
 import type {
   FootnoteFormat,
+  FootnoteLocation,
   FootnoteNumbering,
   FootnoteSymbolSequence,
 } from './FootnoteNumbering';
@@ -120,6 +121,7 @@ export class PageSetup {
   public firstPageNumber = 1;
   public footnoteFormat: FootnoteFormat = 'numbers';
   public footnoteNumbering: FootnoteNumbering = 'continuous';
+  public footnoteLocation: FootnoteLocation = 'bottomOfPage';
   public footnoteSymbolSequence: FootnoteSymbolSequence = 'standard';
   public firstFootnoteNumber = 1;
   public footnoteReferenceParentheses = true;

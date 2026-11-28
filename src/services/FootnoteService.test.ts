@@ -4,7 +4,6 @@ import { reactive } from 'vue';
 import {
   AlternateLineElement,
   AnnotationElement,
-  EmptyElement,
   FootnoteAnchorElement,
   MartyriaElement,
   NoteElement,
@@ -208,8 +207,8 @@ describe('footnote ownership', () => {
       content: '<p class="neanes-paragraph-style-footnote-text"></p>',
       languageCode: 'el',
     });
-    expect(createFootnote(new NoteElement()).staff.elements).toHaveLength(1);
-    expect(createFootnote(source, false).staff.elements).toHaveLength(1);
+    expect(createFootnote(new NoteElement()).staff.elements).toHaveLength(0);
+    expect(createFootnote(source, false).staff.elements).toHaveLength(0);
   });
 
   it('creates and removes a reference and its body in one undo step', () => {
@@ -297,7 +296,7 @@ describe('footnote ownership', () => {
     const anchors = [reference, new NoteElement(), new NoteElement()];
     const bodies = [workspace.score.footnotes[0]];
     for (const anchor of anchors.slice(1)) {
-      workspace.score.staff.elements.splice(-1, 0, anchor);
+      workspace.score.staff.elements.push(anchor);
       const plan = planFootnoteInsertion(workspace, anchor);
       workspace.commandService.executeAsBatch(plan.commands);
       bodies.push(plan.footnote);
@@ -391,7 +390,7 @@ describe('footnote ownership', () => {
     const bodies = prepareFootnotePaste(pasted, snapshots);
     expect(pasted[0].footnoteId).toBe(bodies[0].id);
     expect(bodies[0].id).not.toBe(footnote.id);
-    expect(bodies[0].staff.elements.at(-1)).toBeInstanceOf(EmptyElement);
+    expect(bodies[0].staff.elements).toHaveLength(2);
     expect(bodies[0].staff.elements[0].lineBreak).toBe(true);
     (bodies[0].staff.elements[0] as TextBoxElement).content = 'Edited copy';
     expect(text.content).toBe('Explanation');
@@ -469,6 +468,7 @@ describe('footnote ownership', () => {
     workspace.score.pageSetup.footnoteRuleColor = '#800000';
     workspace.score.pageSetup.showFootnoteHorizontalRule = false;
     workspace.score.pageSetup.footnoteReferenceParentheses = false;
+    workspace.score.pageSetup.footnoteLocation = 'belowText';
     reference.footnoteNumber = 12;
     const saved = SaveService.SaveScoreToJson(workspace.score);
     const loaded = SaveService.LoadScoreFromJson(
@@ -482,16 +482,19 @@ describe('footnote ownership', () => {
     expect(loaded.pageSetup.footnoteSpaceBelowRule).toBe(0.3);
     expect(loaded.pageSetup.footnoteRuleThickness).toBe(0.05);
     expect(loaded.pageSetup.footnoteRuleColor).toBe('#800000');
+    expect(loaded.pageSetup.footnoteLocation).toBe('belowText');
 
     delete saved.pageSetup.footnoteSpaceAboveRule;
     delete saved.pageSetup.footnoteSpaceBelowRule;
     delete saved.pageSetup.footnoteRuleThickness;
     delete saved.pageSetup.footnoteRuleColor;
+    delete saved.pageSetup.footnoteLocation;
     const defaults = SaveService.LoadScoreFromJson(saved).pageSetup;
     expect(defaults.footnoteSpaceAboveRule).toBe(Unit.fromPt(6));
     expect(defaults.footnoteSpaceBelowRule).toBe(Unit.fromPt(2.6));
     expect(defaults.footnoteRuleThickness).toBe(Unit.fromPt(1));
     expect(defaults.footnoteRuleColor).toBe('#000000');
+    expect(defaults.footnoteLocation).toBe('bottomOfPage');
     expect(loaded.pageSetup.showFootnoteHorizontalRule).toBe(false);
     expect(loaded.pageSetup.footnoteReferenceParentheses).toBe(false);
     delete saved.pageSetup.footnoteReferenceParentheses;

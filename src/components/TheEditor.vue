@@ -34,7 +34,10 @@ import Vue3TabsChrome from 'vue3-tabs-chrome';
 import WorkspacePageMeasurement from '@/automation/components/WorkspacePageMeasurement.vue';
 import WorkspaceTextBoxMeasurement from '@/automation/components/WorkspaceTextBoxMeasurement.vue';
 import { useEditorDocumentAutomation } from '@/automation/renderer/useEditorDocumentAutomation';
-import { useWorkspaceMeasurements } from '@/automation/renderer/useWorkspaceMeasurements';
+import {
+  useTextBoxMeasurement,
+  useWorkspaceMeasurements,
+} from '@/automation/renderer/useWorkspaceMeasurements';
 import { INSERT_MODE_KEY_COMMAND } from '@/ckeditor-plugins/insertmodekey/insertmodekeycommand';
 import { UPDATE_MODE_KEY_ATTRIBUTES_COMMAND } from '@/ckeditor-plugins/insertmodekey/updatemodekeyattributescommand';
 import AboutDialog from '@/components/AboutDialog.vue';
@@ -65,12 +68,14 @@ import type { InspectorContext } from '@/components/properties/InspectorContext'
 import PropertiesPane from '@/components/properties/PropertiesPane.vue';
 import RecoveryDialog from '@/components/RecoveryDialog.vue';
 import RichTextToolbar from '@/components/RichTextToolbar.vue';
-import type { ScorePageHandlers } from '@/components/ScorePageContent.types';
+import type {
+  InsertionCaret,
+  ScorePageHandlers,
+} from '@/components/ScorePageContent.types';
 import ScorePageContent from '@/components/ScorePageContent.vue';
 import SearchText from '@/components/SearchText.vue';
 import SyllablePositioningDialog from '@/components/SyllablePositioningDialog.vue';
 import TextBox from '@/components/TextBox.vue';
-import TextBoxRich from '@/components/TextBoxRich.vue';
 import ToolbarDropCap from '@/components/ToolbarDropCap.vue';
 import ToolbarLyrics from '@/components/ToolbarLyrics.vue';
 import ToolbarMain from '@/components/ToolbarMain.vue';
@@ -163,7 +168,7 @@ import type {
   ElementOverlayBox,
   ElementOverlayDiagnostics,
 } from '@/models/LayoutDiagnostics';
-import { modeKeyTemplates } from '@/models/ModeKeys';
+import { modeKeyTemplateFields, modeKeyTemplates } from '@/models/ModeKeys';
 import type { NeumeCombination } from '@/models/NeumeCommonCombinations';
 import { getNoteLabelSelector } from '@/models/NeumeI18nMappings';
 import {
@@ -246,6 +251,7 @@ import { fontCatalog } from '@/services/FontCatalog';
 import {
   captureFootnotes,
   elementFootnoteIds,
+  footnoteMarkerUpdateCommand,
   footnoteRemovalCommands,
   orderedFootnotes,
   planFootnoteInsertion,
@@ -261,6 +267,7 @@ import {
   LatexFontFaceResolutionError,
 } from '@/services/integration/LatexExporter';
 import {
+  type LayoutReuseResult,
   LayoutService,
   type OverlayDiagnosticsContext,
 } from '@/services/LayoutService';
@@ -273,6 +280,11 @@ import {
 import { getBundledFontLoadDescriptors } from '@/services/rendering/fontReadiness';
 import type { ScoreRenderSnapshot } from '@/services/rendering/scoreRenderSnapshot';
 import type { LiveLayoutOutcome } from '@/services/rendering/settleWorkspace';
+import { getResizableTextBoxes } from '@/services/rendering/textBoxMeasurement';
+import {
+  beginLayoutVerification,
+  layoutVerificationEnabled,
+} from '@/services/rendering/verifyLayout';
 import { assertVisualExportFits } from '@/services/rendering/visualExportValidation';
 import { needsFootnoteSettlement } from '@/services/rendering/workspaceLayoutSettlement';
 import { SaveService } from '@/services/SaveService';
@@ -310,6 +322,12 @@ import { getCursorPosition } from '@/utils/getCursorPosition';
 import { getFileNameFromPath } from '@/utils/getFileNameFromPath';
 import { isElectron } from '@/utils/isElectron';
 import {
+  layoutProfilingEnabled,
+  profile,
+  recordAsyncSpan,
+  startSpan,
+} from '@/utils/layoutProfiler';
+import {
   getModeKeyStyleReferences,
   getScoreModeKeyHosts,
 } from '@/utils/modeKeyStyleReferences';
@@ -327,7 +345,9 @@ import {
 import { richTextParagraphStyleClassName } from '@/utils/richTextParagraphStyleClasses';
 import { buildRichTextParagraphStyleCss } from '@/utils/richTextParagraphStyleCss';
 import {
-  isSectionMarker,
+  getSectionCount,
+  getSectionNumber,
+  indexSectionMarkers,
   resolveRunningMarkerPageMetadata,
 } from '@/utils/runningMarkers';
 import { shallowEquals } from '@/utils/shallowEquals';
@@ -385,7 +405,6 @@ const navigableElements = [
   ElementType.Note,
   ElementType.Martyria,
   ElementType.Tempo,
-  ElementType.Empty,
   ElementType.DropCap,
   ElementType.TextBox,
   ElementType.ImageBox,
@@ -521,6 +540,12 @@ const browserPrintWarning = useTemplateRef<HTMLElement>('browserPrintWarning');
 const canUndo = ref(false);
 const canRedo = ref(false);
 let unsubscribeHistory: (() => void) | undefined;
+let unsubscribeLayoutChanges: (() => void) | undefined;
+let layoutChanges: Set<object> | null = null;
+let forceFullLayout = import.meta.env.VITE_LAYOUT_FORCE_FULL === 'true';
+const reportLayoutReuse =
+  import.meta.env.DEV || layoutProfilingEnabled || layoutVerificationEnabled;
+const layoutResults: LayoutReuseResult[] = [];
 const developerPaneOpenSections = computed({
   get: () => accordionStateFor('developer'),
   set: (value: string[]) => setAccordionState('developer', value),
@@ -600,8 +625,15 @@ const noteFormat = ref<ClipboardFormatState<NoteElement>>({
   paragraphStyleIds: [],
   paragraphStyles: [],
 });
-const richTextBoxCalculation = ref(false);
-const richTextBoxCalculationCount = ref(0);
+const richTextBoxMeasurement = useTextBoxMeasurement();
+const richTextBoxMeasurementRequest = richTextBoxMeasurement.pending;
+const pendingRichTextBoxRecalculations = new WeakSet<Workspace>();
+let richTextBoxCalculation:
+  | {
+      workspace: Workspace;
+      done: Promise<'settled' | 'superseded' | 'failed'>;
+    }
+  | undefined;
 const textBoxCalculation = ref(false);
 const textBoxCalculationCount = ref(0);
 const fonts = ref<string[]>([]);
@@ -857,6 +889,7 @@ const {
   keydownThrottleIntervalMs,
   (note, lyrics) => getLyricsComponentForElement(note)?.setInnerText(lyrics),
   save,
+  persistEditorRecovery,
 );
 const {
   activeStaff,
@@ -893,11 +926,22 @@ const footnoteBodyElements = computed(
 
 const resizableRichTextBoxElements = computed(() => {
   return allElements.value.filter(
-    (x) =>
+    (x): x is RichTextBoxElement =>
       x.elementType === ElementType.RichTextBox &&
       !(x as RichTextBoxElement).inline,
   );
 });
+
+watch(selectedWorkspace, (workspace) => {
+  if (richTextBoxCalculation?.workspace === workspace) {
+    return;
+  }
+  cancelRichTextBoxRecalculation();
+  if (pendingRichTextBoxRecalculations.has(workspace)) {
+    recalculateRichTextBoxHeights();
+  }
+});
+onBeforeUnmount(cancelRichTextBoxRecalculation);
 
 const resizableTextBoxElements = computed(() => {
   return allElements.value.filter(
@@ -907,14 +951,16 @@ const resizableTextBoxElements = computed(() => {
 });
 
 const lyrics = computed(() => activeStaff.value.lyrics.text);
-const activeLyricsLabel = computed(() => {
+const activeOrderedFootnote = computed(() => {
   const activeId = selectedWorkspace.value.activeFootnoteId;
-  if (activeId === null) {
-    return t(($) => $.menu.view.lyrics, { ns: 'menu' });
-  }
-  const footnote = orderedFootnotes(score.value).find(
-    ({ footnote }) => footnote.id === activeId,
-  );
+  return activeId === null
+    ? undefined
+    : orderedFootnotes(score.value).find(
+        ({ footnote }) => footnote.id === activeId,
+      );
+});
+const activeLyricsLabel = computed(() => {
+  const footnote = activeOrderedFootnote.value;
   return footnote === undefined
     ? t(($) => $.menu.view.lyrics, { ns: 'menu' })
     : t(($) => $.menu.footnotes.lyrics, {
@@ -930,11 +976,7 @@ const isLyricsManagerOpen = computed(() => {
 });
 
 const pageCount = computed(() => {
-  return filteredPages.value.length;
-});
-
-const exportPageCount = computed(() => {
-  return pages.value.filter((page) => !page.isEmpty).length;
+  return pages.value.length;
 });
 
 const statusPageCount = computed(() => Math.max(1, pageCount.value));
@@ -1043,7 +1085,7 @@ const previousElementOnLine = computed(() => {
 const nextElementOnLine = computed(() => {
   const index = selectedElementIndex.value;
 
-  if (index + 1 >= activeElements.value.length - 1) {
+  if (index < 0 || index + 1 >= activeElements.value.length) {
     return null;
   }
 
@@ -1407,6 +1449,14 @@ const statusPositionElementOnPage = computed(() => {
     : getFirstElementForPage(statusPageNumber.value);
 });
 
+// Section markers and element indexes change only when a layout is
+// published, which replaces `pages`. Index the raw elements once per layout
+// instead of rescanning them through reactive proxies for every lookup.
+const sectionMarkerIndex = computed(() => {
+  void pages.value;
+  return indexSectionMarkers(toRaw(score.value.staff.elements));
+});
+
 const statusSectionNumber = computed(() => {
   const element = statusActiveElement.value;
 
@@ -1427,10 +1477,12 @@ const statusSectionNumber = computed(() => {
     : getSectionNumberForPage(statusPageNumber.value);
 });
 
-const statusSectionCount = computed(() => getSectionCount());
+const statusSectionCount = computed(() =>
+  getSectionCount(sectionMarkerIndex.value),
+);
 
 const statusContentLines = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
+  const page = pages.value[statusPageNumber.value - 1];
   const element = statusPositionElementOnPage.value;
   const body =
     element == null
@@ -1442,7 +1494,7 @@ const statusContentLines = computed(() => {
 });
 
 const statusLinePosition = computed(() => {
-  const page = filteredPages.value[statusPageNumber.value - 1];
+  const page = pages.value[statusPageNumber.value - 1];
   const lineCount = Math.max(statusContentLines.value.length, 1);
   const lineNumber =
     statusPositionElementOnPage.value?.line ??
@@ -1467,6 +1519,24 @@ const statusColumnPosition = computed(() => {
     columnNumber: elementIndex >= 0 ? elementIndex + 1 : 1,
     columnCount,
   };
+});
+
+// With nothing selected, the status bar shows the insertion slot (the start
+// or end of the active staff) instead of a line and column.
+const statusInsertionSlotLabel = computed(() => {
+  if (!isNothingSelected()) {
+    return null;
+  }
+  const atStart = selectedWorkspace.value.insertAtStart;
+  if (selectedWorkspace.value.activeFootnoteId === null) {
+    return atStart
+      ? t(($) => $.toolbar.status.startOfScore, { ns: 'toolbar' })
+      : t(($) => $.toolbar.status.endOfScore, { ns: 'toolbar' });
+  }
+  const number = activeOrderedFootnote.value?.marker ?? '';
+  return atStart
+    ? t(($) => $.toolbar.status.startOfFootnote, { ns: 'toolbar', number })
+    : t(($) => $.toolbar.status.endOfFootnote, { ns: 'toolbar', number });
 });
 
 const statusNeumeNoteDisplay = computed(() => {
@@ -1559,12 +1629,11 @@ const activeDialog = computed(
 );
 const dialogOpen = computed(() => activeDialog.value !== null);
 
-const filteredPages = computed(() => {
-  return printMode.value ? pages.value.filter((x) => !x.isEmpty) : pages.value;
-});
-
+// Running markers come from element content and positions, which change
+// only when a layout is published, so read the raw pages: walking every
+// element through reactive proxies was slow for long scores.
 const runningMarkerPageMetadata = computed(() =>
-  resolveRunningMarkerPageMetadata(filteredPages.value),
+  resolveRunningMarkerPageMetadata(pages.value.map((page) => toRaw(page))),
 );
 
 provide(
@@ -1580,6 +1649,7 @@ const throttled = {
   moveToNextLyricBox: throttle(keydownThrottleIntervalMs, moveToNextLyricBox),
   moveLeft: throttle(keydownThrottleIntervalMs, moveLeft),
   moveRight: throttle(keydownThrottleIntervalMs, moveRight),
+  moveForward: throttle(keydownThrottleIntervalMs, moveForward),
   moveSelectionLeft: throttle(keydownThrottleIntervalMs, moveSelectionLeft),
   moveSelectionRight: throttle(keydownThrottleIntervalMs, moveSelectionRight),
   deleteSelectedElement: throttle(
@@ -1704,6 +1774,18 @@ watch(
   },
 );
 
+// Selecting anything leaves the start of the staff. Sync, so a later
+// clearSelection() in the same tick returns to the end of the staff.
+watch(
+  () => !isNothingSelected(),
+  (somethingSelected) => {
+    if (somethingSelected) {
+      selectedWorkspace.value.insertAtStart = false;
+    }
+  },
+  { flush: 'sync' },
+);
+
 watch(selectedWorkspaceId, () => {
   window.document.title = windowTitle.value;
 
@@ -1823,6 +1905,7 @@ watch(playbackSettingsDialogIsOpen, (isOpen, wasOpen) => {
 });
 
 function onLayoutFontsChanged() {
+  layoutChanges = null;
   liveLayout.clearMeasurements();
   invalidateLiveLayout();
   saveDebounced();
@@ -1911,6 +1994,8 @@ onMounted(() => {
   EventBus.$on(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$on(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$on(IpcMainChannels.FileMenuFind, onFileMenuFind);
+  EventBus.$on(IpcMainChannels.FileMenuGoToStart, onFileMenuGoToStart);
+  EventBus.$on(IpcMainChannels.FileMenuGoToEnd, onFileMenuGoToEnd);
   EventBus.$on(
     IpcMainChannels.FileMenuWindowPreviousTab,
     onFileMenuWindowPreviousTab,
@@ -1974,6 +2059,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   unsubscribeHistory?.();
+  unsubscribeLayoutChanges?.();
 
   // Remove the debugging variable from window
   (window as any)._editor = undefined;
@@ -2035,6 +2121,8 @@ onBeforeUnmount(() => {
   EventBus.$off(IpcMainChannels.FileMenuSelectAll, onFileMenuSelectAll);
   EventBus.$off(IpcMainChannels.FileMenuPasteFormat, onFileMenuPasteFormat);
   EventBus.$off(IpcMainChannels.FileMenuFind, onFileMenuFind);
+  EventBus.$off(IpcMainChannels.FileMenuGoToStart, onFileMenuGoToStart);
+  EventBus.$off(IpcMainChannels.FileMenuGoToEnd, onFileMenuGoToEnd);
   EventBus.$off(
     IpcMainChannels.FileMenuWindowPreviousTab,
     onFileMenuWindowPreviousTab,
@@ -2107,6 +2195,101 @@ async function initialize() {
     selectedElement,
     selectedWorkspace,
     workspaces,
+    ...(reportLayoutReuse && {
+      layoutDiagnostics: {
+        results: layoutResults,
+        get forceFull() {
+          return forceFullLayout;
+        },
+      },
+    }),
+    ...(layoutProfilingEnabled && {
+      layoutProfile: {
+        setGorgon,
+        updateLyrics,
+        toggleLineBreak,
+        flushRender: () => nextTick(),
+        updateZoom,
+        saveFile: () => saveWorkspace(selectedWorkspace.value),
+        async measureAllTextBoxes() {
+          const workspace = toRaw(selectedWorkspace.value);
+          const boxes = new Set(getResizableTextBoxes(workspace.score));
+          const start = performance.now();
+          const heights = await liveLayoutMeasurement.start(
+            workspace,
+            undefined,
+            boxes,
+          );
+          return {
+            duration: performance.now() - start,
+            boxes: boxes.size,
+            heights: heights.map(({ element, height }) => [element.id, height]),
+          };
+        },
+      },
+    }),
+    ...(layoutVerificationEnabled && {
+      layoutTest: {
+        history: () => ({ canUndo: canUndo.value, canRedo: canRedo.value }),
+        setEntryMode: updateEntryMode,
+        addQuantitativeNeume,
+        addAutoMartyria,
+        insertModeKeyWithAmbitus() {
+          const element = createDefaultModeKey(score.value.pageSetup);
+          element.showAmbitus = true;
+          insertScoreElement(element);
+          save();
+        },
+        updateNoteFthora,
+        updateLyrics,
+        updateModeKey,
+        updateMartyria,
+        setIson,
+        setMeasureBarNote,
+        toggleLineBreak,
+        togglePageBreak,
+        deleteSelectedElement,
+        replayHistory,
+        lineForElement: (element: ScoreElement) =>
+          pages.value[element.page - 1]?.lines[element.line - 1],
+        // Footnote edits that leave the main staff active, so later edits
+        // still target it.
+        toggleFootnote(reference: FootnoteAnchorElement) {
+          commandService.value.executeAsBatch(
+            reference.footnoteId === null
+              ? planFootnoteInsertion(selectedWorkspace.value, reference)
+                  .commands
+              : planFootnoteRemoval(score.value, reference),
+          );
+          save();
+        },
+        appendToFootnote(id: string, neume: QuantitativeNeume | 'Martyria') {
+          activateFootnote(id);
+          selectedWorkspace.value.insertAtStart = false;
+          updateEntryMode(EntryMode.Insert);
+          if (neume === 'Martyria') {
+            addAutoMartyria();
+          } else {
+            addQuantitativeNeume(neume);
+          }
+          activateFootnote(null);
+        },
+        setFootnoteMarker(id: string, marker: string | null) {
+          const footnote = score.value.footnotes.find(
+            (body) => body.id === id,
+          )!;
+          commandService.value.execute(
+            footnoteMarkerUpdateCommand(footnote, marker),
+          );
+          save();
+        },
+        flushRender: () => nextTick(),
+        // Compares a live editor's settled geometry with full layout.
+        setForceFullLayout(value: boolean) {
+          forceFullLayout = value;
+        },
+      },
+    }),
   };
 
   try {
@@ -2139,6 +2322,31 @@ async function initialize() {
 const { resolvedDefaultLyricsStyle, getResolvedMarginsForPage } =
   useScoreRendering(score, zoom);
 
+// With nothing selected, a caret marks the insertion slot at the start or end
+// of the active staff, so it is clear where typed neumes will go.
+const insertionCaret = computed<InsertionCaret | null>(() => {
+  if (!isNothingSelected()) {
+    return null;
+  }
+  const atStart = selectedWorkspace.value.insertAtStart;
+  const footnoteId = selectedWorkspace.value.activeFootnoteId;
+  const element = atStart
+    ? activeElements.value[0]
+    : activeElements.value.at(-1);
+  if (element == null) {
+    return footnoteId === null
+      ? { kind: 'page', pageNumber: 1 }
+      : { kind: 'emptyFootnote', footnoteId };
+  }
+  if (!atStart && footnoteId === null && element.pageBreak) {
+    const lastPage = pages.value.at(-1);
+    if (lastPage?.lines.length === 0) {
+      return { kind: 'page', pageNumber: lastPage.physicalPageNumber };
+    }
+  }
+  return { kind: 'element', element, after: !atStart };
+});
+
 const pageInteraction = computed(() => ({
   isSelected,
   isAudioSelected,
@@ -2147,6 +2355,8 @@ const pageInteraction = computed(() => ({
   selectedAnnotationElement: selectedWorkspace.value.selectedAnnotationElement,
   selectedAlternateLineElement:
     selectedWorkspace.value.selectedAlternateLineElement,
+  activeFootnoteId: selectedWorkspace.value.activeFootnoteId,
+  insertionCaret: insertionCaret.value,
   isLyricsLocked: (element: ScoreElement) =>
     staffForElement(element)?.lyrics.locked ?? true,
 }));
@@ -2154,14 +2364,10 @@ const pageHandlers: ScorePageHandlers = {
   selectElement: (element) => {
     selectedElement.value = element;
   },
+  activateFootnote: (id) => activateFootnote(id),
   returnToFootnoteReference: (element) => {
     selectedElement.value = element;
-    pages.value[element.page - 1].isVisible = true;
-    nextTick(() =>
-      pageBackgroundRef.value
-        ?.querySelector(`#element-${element.id}`)
-        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
-    );
+    scrollElementIntoView(element);
   },
   selectLyrics: (element) => {
     selectedLyrics.value = element;
@@ -2399,7 +2605,7 @@ function showExportReplyToast(
 }
 
 function getHeaderForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const pageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
@@ -2410,7 +2616,7 @@ function getHeaderForPageIndex(pageIndex: number) {
 }
 
 function getFooterForPageIndex(pageIndex: number) {
-  const pageNumber = filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const pageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
 
@@ -2423,8 +2629,7 @@ function getFooterForPageIndex(pageIndex: number) {
 function getHeaderFooterVariantForPageIndex(
   pageIndex: number,
 ): HeaderFooterVariant {
-  const physicalPageNumber =
-    filteredPages.value[pageIndex]?.physicalPageNumber ?? 1;
+  const physicalPageNumber = pages.value[pageIndex]?.physicalPageNumber ?? 1;
   const isChapterOpening =
     runningMarkerPageMetadata.value[pageIndex]?.isChapterOpening ?? false;
   const isOddDisplayedPage = isDisplayedPageNumberOdd(
@@ -2508,9 +2713,9 @@ function getHeaderFooterBadgeStyle(
 }
 
 function getTokenMetadata(pageIndex: number): TokenMetadata {
-  const physicalPageNumber = filteredPages.value[pageIndex].physicalPageNumber;
+  const physicalPageNumber = pages.value[pageIndex].physicalPageNumber;
   const lastPhysicalPageNumber =
-    filteredPages.value[filteredPages.value.length - 1].physicalPageNumber;
+    pages.value[pages.value.length - 1].physicalPageNumber;
   const runningMarkers = runningMarkerPageMetadata.value[pageIndex];
 
   return {
@@ -2684,16 +2889,14 @@ function setTextRangeBoundary(
 }
 
 function getFirstElementForPage(pageNumber: number) {
-  const page = filteredPages.value[pageNumber - 1];
+  const page = pages.value[pageNumber - 1];
 
   if (!page) {
     return null;
   }
 
   return (
-    page.lines
-      .flatMap((line) => line.elements)
-      .find((element) => element.elementType !== ElementType.Empty) ?? null
+    page.lines.find((line) => line.elements.length > 0)?.elements[0] ?? null
   );
 }
 
@@ -2702,9 +2905,7 @@ function getFirstLineNumberForPage(page: Page | undefined) {
     return null;
   }
 
-  const lineIndex = page.lines.findIndex((line) =>
-    line.elements.some((element) => element.elementType !== ElementType.Empty),
-  );
+  const lineIndex = page.lines.findIndex((line) => line.elements.length > 0);
 
   return lineIndex >= 0 ? lineIndex + 1 : null;
 }
@@ -2716,99 +2917,31 @@ function getSectionNumberForPage(pageNumber: number) {
 }
 
 function getSectionAnchorIndexForPage(pageNumber: number) {
-  const page = filteredPages.value[pageNumber - 1];
-
-  if (page == null) {
+  if (pages.value[pageNumber - 1] == null) {
     return 0;
   }
 
-  const firstPageElement = getPageElements(page).find(
-    (element) => element.elementType !== ElementType.Empty,
-  );
+  const firstPageElement = getFirstElementForPage(pageNumber);
 
   if (firstPageElement) {
     return firstPageElement.index;
   }
 
   for (let pageIndex = pageNumber - 2; pageIndex >= 0; pageIndex--) {
-    const prevPage = filteredPages.value[pageIndex];
+    const element = pages.value[pageIndex].lines
+      .findLast((line) => line.elements.length > 0)
+      ?.elements.at(-1);
 
-    for (
-      let lineIndex = prevPage.lines.length - 1;
-      lineIndex >= 0;
-      lineIndex--
-    ) {
-      const line = prevPage.lines[lineIndex];
-
-      for (
-        let elementIndex = line.elements.length - 1;
-        elementIndex >= 0;
-        elementIndex--
-      ) {
-        const element = line.elements[elementIndex];
-
-        if (element.elementType !== ElementType.Empty) {
-          return element.index;
-        }
-      }
+    if (element) {
+      return element.index;
     }
   }
 
   return 0;
 }
 
-function getPageElements(page: Page) {
-  return page.lines.flatMap((line) => line.elements);
-}
-
 function getSectionNumberForElementIndex(elementIndex: number) {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
-  if (sectionMarkers.length === 0) {
-    return 1;
-  }
-
-  const firstScoreElementIndex = scoreElements[0].index;
-  const hasDefaultSectionBeforeFirstMarker =
-    sectionMarkers[0].index > firstScoreElementIndex;
-  const markersAtOrBeforeElement = sectionMarkers.filter(
-    (element) => element.index <= elementIndex,
-  ).length;
-
-  if (markersAtOrBeforeElement === 0) {
-    return 1;
-  }
-
-  return (
-    markersAtOrBeforeElement + (hasDefaultSectionBeforeFirstMarker ? 1 : 0)
-  );
-}
-
-function getSectionCount() {
-  const scoreElements = score.value.staff.elements.filter(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (scoreElements.length === 0) {
-    return 1;
-  }
-
-  const sectionMarkers = scoreElements.filter(isSectionMarker);
-  if (sectionMarkers.length === 0) {
-    return 1;
-  }
-
-  return (
-    sectionMarkers.length +
-    (sectionMarkers[0].index > scoreElements[0].index ? 1 : 0)
-  );
+  return getSectionNumber(sectionMarkerIndex.value, elementIndex);
 }
 
 function setSelectionRange(element: ScoreElement) {
@@ -2832,25 +2965,23 @@ function setSelectionRange(element: ScoreElement) {
     selectedElement.value = null;
   } else if (selectionRange.value != null) {
     selectionRange.value.end = elementIndex;
+  } else if (isNothingSelected()) {
+    // From the insertion slot, the range starts at the nearest element, as
+    // with Shift+Arrow.
+    const start = selectedWorkspace.value.insertAtStart
+      ? 0
+      : activeElements.value.length - 1;
+    selectionRange.value = { start, end: elementIndex };
   }
 }
 
 function onSelectAllScoreElements() {
-  const firstElementIndex = activeElements.value.findIndex(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-  const lastElementIndex = activeElements.value.findLastIndex(
-    (element) => element.elementType !== ElementType.Empty,
-  );
-
-  if (firstElementIndex < 0 || lastElementIndex < 0) {
+  if (activeElements.value.length === 0) {
     return;
   }
 
-  selectedElement.value = null;
-  selectedLyrics.value = null;
-  selectedHeaderFooterElement.value = null;
-  selectionRange.value = { start: firstElementIndex, end: lastElementIndex };
+  clearSelection();
+  selectionRange.value = { start: 0, end: activeElements.value.length - 1 };
 }
 
 function getNormalizedSelectionRange() {
@@ -3245,10 +3376,127 @@ function setAccordionState(paneId: WorkspacePaneId, value: string[]) {
   saveEditorEnvironment();
 }
 
-function isLastElement(element: ScoreElement) {
+// With nothing selected, inserts go to the insertion slot at the start or end
+// of the active staff.
+function isNothingSelected() {
+  const workspace = selectedWorkspace.value;
   return (
-    activeElements.value.indexOf(element) === activeElements.value.length - 1
+    workspace.selectedElement == null &&
+    workspace.selectionRange == null &&
+    workspace.selectedLyrics == null &&
+    workspace.selectedHeaderFooterElement == null &&
+    workspace.selectedAnnotationElement == null &&
+    workspace.selectedAlternateLineElement == null
   );
+}
+
+function canInsertElement() {
+  return selectedElement.value != null || isNothingSelected();
+}
+
+// With nothing selected, inserts go to the start or end of the active staff.
+function insertionSlotIndex() {
+  return selectedWorkspace.value.insertAtStart
+    ? 0
+    : activeElements.value.length;
+}
+
+// Inserts go after the selected element, or into the insertion slot when
+// nothing is selected.
+function insertionIndexAfterSelection() {
+  return selectedElement.value == null
+    ? insertionSlotIndex()
+    : selectedElementIndex.value + 1;
+}
+
+// The selected element, or the insertion slot when nothing is selected.
+function insertionIndexOrSelection() {
+  return selectedElement.value == null
+    ? insertionSlotIndex()
+    : selectedElementIndex.value;
+}
+
+// Clears the selection, which leaves the insertion slot at the end of the
+// active staff.
+function clearSelection() {
+  selectedElement.value = null;
+  selectionRange.value = null;
+  selectedLyrics.value = null;
+  selectedHeaderFooterElement.value = null;
+  selectedWorkspace.value.insertAtStart = false;
+}
+
+// Leaves any text element being edited before moving the insertion point.
+function leaveTextEditing() {
+  if (isTextInputFocused()) {
+    flushPendingRichTextEditors(selectedWorkspace.value);
+    blurActiveElement();
+  }
+}
+
+function goToStartOfStaff() {
+  leaveTextEditing();
+  clearSelection();
+  selectedWorkspace.value.insertAtStart = true;
+  scrollInsertionCaretIntoView();
+}
+
+function goToEndOfStaff() {
+  leaveTextEditing();
+  clearSelection();
+  scrollInsertionCaretIntoView();
+}
+
+function scrollInsertionCaretIntoView() {
+  void nextTick(() => {
+    const caret = insertionCaret.value;
+    if (caret?.kind === 'element') {
+      return revealElement(caret.element);
+    }
+    if (caret?.kind === 'page') {
+      return revealOnPage(caret.pageNumber, '.page-start-caret');
+    }
+  });
+}
+
+function insertScoreElement(
+  element: ScoreElement,
+  insertAtIndex = insertionIndexAfterSelection(),
+) {
+  addScoreElement(element, insertAtIndex);
+  selectedElement.value = element;
+  scrollElementIntoView(element);
+}
+
+// Callers run save() synchronously after this, which lays out the element and
+// assigns its page and id. Pages are virtualized, so show the page first.
+function scrollElementIntoView(element: ScoreElement | null | undefined) {
+  if (element == null) {
+    return;
+  }
+  void nextTick(() => revealElement(element));
+}
+
+// Mount the laid-out element's page, then scroll to the element. Resolves once
+// the page has rendered.
+async function revealElement(element: ScoreElement) {
+  if (element.id == null) {
+    return;
+  }
+  await revealOnPage(element.page, `#${CSS.escape(`element-${element.id}`)}`);
+}
+
+// Mount a page, then scroll to the node matching the selector on it.
+async function revealOnPage(pageNumber: number, selector: string) {
+  const page = pages.value[pageNumber - 1];
+  if (page === undefined) {
+    return;
+  }
+  page.isVisible = true;
+  await nextTick();
+  pageBackgroundRef.value
+    ?.querySelector(selector)
+    ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 
 function insertPelastikon() {
@@ -3267,7 +3515,7 @@ function addQuantitativeNeume(
   quantitativeNeume: QuantitativeNeume,
   secondaryGorgonNeume: GorgonNeume | null = null,
 ) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3295,13 +3543,12 @@ function addQuantitativeNeume(
 
   switch (entryMode.value) {
     case EntryMode.Auto:
-      if (!isLastElement(selectedElement.value) && !moveRight()) {
+      if (selectedElement.value != null && !moveRight()) {
         return;
       }
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-        selectedElement.value = element;
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else {
         if (selectedElement.value.elementType === ElementType.Note) {
           if (
@@ -3320,6 +3567,10 @@ function addQuantitativeNeume(
             updateNote(selectedElement.value as NoteElement, {
               secondaryGorgonNeume,
             });
+          } else {
+            // Auto already advanced the selection. With no note edit,
+            // save() would run a full layout because no change was recorded.
+            return;
           }
         } else {
           selectedElement.value = switchToSyllable(
@@ -3330,24 +3581,19 @@ function addQuantitativeNeume(
       }
       break;
     case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        if (selectedElement.value.elementType === ElementType.Note) {
-          const selectedElementAsNote = selectedElement.value as NoteElement;
+      if (selectedElement.value?.elementType === ElementType.Note) {
+        const selectedElementAsNote = selectedElement.value as NoteElement;
 
-          element.isMelisma = selectedElementAsNote.isMelisma;
-          element.isHyphen = selectedElementAsNote.isHyphen;
-        }
-
-        addScoreElement(element, selectedElementIndex.value + 1);
+        element.isMelisma = selectedElementAsNote.isMelisma;
+        element.isHyphen = selectedElementAsNote.isHyphen;
       }
-      selectedElement.value = element;
+
+      insertScoreElement(element);
       break;
 
     case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
+      if (selectedElement.value == null) {
+        insertScoreElement(element);
       } else if (selectedElement.value.elementType === ElementType.Note) {
         if (
           (selectedElement.value as NoteElement).quantitativeNeume !==
@@ -3365,6 +3611,9 @@ function addQuantitativeNeume(
           updateNote(selectedElement.value as NoteElement, {
             secondaryGorgonNeume,
           });
+        } else {
+          // Both fields match. Falling through to save() would run full layout.
+          return;
         }
       } else if (
         navigableElements.includes(selectedElement.value.elementType)
@@ -3401,7 +3650,7 @@ function addNeumeCombination(combo: NeumeCombination) {
 }
 
 function addAutoMartyria(alignRight?: boolean, note?: Note) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3413,41 +3662,26 @@ function addAutoMartyria(alignRight?: boolean, note?: Note) {
     element.auto = false;
   }
 
-  switch (entryMode.value) {
-    case EntryMode.Auto:
-      moveRight();
+  if (entryMode.value === EntryMode.Auto) {
+    moveRight();
+  }
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-        selectedElement.value = element;
-      } else {
-        if (selectedElement.value.elementType != ElementType.Martyria) {
-          selectedElement.value = switchToMartyria(selectedElement.value);
-        }
-      }
-      break;
-    case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        addScoreElement(element, selectedElementIndex.value + 1);
-      }
-      selectedElement.value = element;
-      break;
-    case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else if (selectedElement.value.elementType != ElementType.Martyria) {
-        selectedElement.value = switchToMartyria(selectedElement.value);
-      }
-      break;
+  const target = selectedElement.value;
+  if (entryMode.value === EntryMode.Insert || target == null) {
+    insertScoreElement(element);
+  } else if (target.elementType === ElementType.Martyria) {
+    // Landing on an existing martyria leaves the score unchanged.
+    // Skip save() to avoid a full layout with no recorded edit.
+    return;
+  } else {
+    selectedElement.value = switchToMartyria(target, element);
   }
 
   save();
 }
 
 function addTempo(neume: TempoSign) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
@@ -3457,79 +3691,55 @@ function addTempo(neume: TempoSign) {
     editorPreferences.value.getDefaultTempo(neume) ??
     TempoElement.getDefaultBpm(neume);
 
-  switch (entryMode.value) {
-    case EntryMode.Auto:
-      moveRight();
+  if (entryMode.value === EntryMode.Auto) {
+    moveRight();
+  }
 
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-        selectedElement.value = element;
-      } else {
-        if (selectedElement.value.elementType === ElementType.Tempo) {
-          if ((selectedElement.value as TempoElement).neume !== neume) {
-            updateTempo(selectedElement.value as TempoElement, {
-              neume,
-            });
-          }
-        } else {
-          selectedElement.value = switchToTempo(selectedElement.value, element);
-        }
-      }
-      break;
-    case EntryMode.Insert:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else {
-        addScoreElement(element, selectedElementIndex.value + 1);
-      }
-      selectedElement.value = element;
-      break;
-    case EntryMode.Edit:
-      if (isLastElement(selectedElement.value)) {
-        addScoreElement(element, selectedElementIndex.value);
-      } else if (selectedElement.value.elementType === ElementType.Tempo) {
-        if ((selectedElement.value as TempoElement).neume !== neume) {
-          updateTempo(selectedElement.value as TempoElement, {
-            neume,
-          });
-        }
-      } else {
-        selectedElement.value = switchToTempo(selectedElement.value, element);
-      }
-      break;
+  const target = selectedElement.value;
+  if (entryMode.value === EntryMode.Insert || target == null) {
+    insertScoreElement(element);
+  } else if (target instanceof TempoElement) {
+    if (target.neume !== neume) {
+      updateTempo(target, { neume });
+    }
+    // updateTempo() already lays out real changes. The common save() would
+    // run a full layout after either a completed update or an identical sign.
+    return;
+  } else {
+    selectedElement.value = switchToTempo(target, element);
   }
 
   save();
 }
 
 function addDropCap(after: boolean) {
-  if (selectedElement.value == null) {
+  if (!canInsertElement()) {
     return;
   }
 
   const element = new DropCapElement();
   element.lineSpan = score.value.pageSetup.dropCapDefaultLineSpan;
 
-  if (after && !isLastElement(selectedElement.value)) {
-    addScoreElement(element, selectedElementIndex.value + 1);
-  } else {
-    addScoreElement(element, selectedElementIndex.value);
-  }
-
-  selectedElement.value = element;
+  insertScoreElement(
+    element,
+    after ? insertionIndexAfterSelection() : insertionIndexOrSelection(),
+  );
   save();
 
-  focusInsertedTextElement(element);
+  void focusTextElement(element);
 }
 
-function focusInsertedTextElement(element: DropCapElement | TextBoxElement) {
-  nextTick(() => {
-    if (toRaw(selectedElement.value) === element) {
-      getElementComponentForElement<
-        InstanceType<typeof DropCap | typeof TextBox>
-      >(element)?.focus();
-    }
-  });
+// The element's page may be unmounted, so wait for the layout from save() and
+// for the page to render before focusing.
+async function focusTextElement(element: DropCapElement | TextBoxElement) {
+  await nextTick();
+  await revealElement(element);
+  // Callers may pass either the raw element or its reactive proxy.
+  if (toRaw(selectedElement.value) === toRaw(element)) {
+    getElementComponentForElement<
+      InstanceType<typeof DropCap | typeof TextBox>
+    >(element)?.focus();
+  }
 }
 
 function onClickAddImage() {
@@ -3558,8 +3768,19 @@ function onClickPrintScore() {
 
 function observeSelectedHistory() {
   unsubscribeHistory?.();
-  unsubscribeHistory =
-    selectedWorkspace.value.commandService.subscribe(publishHistoryState);
+  unsubscribeLayoutChanges?.();
+  layoutChanges = null;
+  const history = toRaw(selectedWorkspace.value).commandService;
+  unsubscribeHistory = history.subscribe(publishHistoryState);
+  unsubscribeLayoutChanges = history.subscribeChanges((affected) => {
+    if (affected === null) {
+      layoutChanges = null;
+    } else {
+      for (const object of affected) {
+        layoutChanges?.add(toRaw(object));
+      }
+    }
+  });
 }
 
 function publishHistoryState(state: HistoryState) {
@@ -3571,7 +3792,7 @@ function publishHistoryState(state: HistoryState) {
     )
   ) {
     workspace.activeFootnoteId = null;
-    workspace.selectedElement = workspace.score.staff.elements.at(-1)!;
+    workspace.selectedElement = null;
     workspace.selectedLyrics = null;
     workspace.selectedAnnotationElement = null;
     workspace.selectedAlternateLineElement = null;
@@ -3609,9 +3830,12 @@ function openFootnote(
     return;
   }
   page.isVisible = true;
-  selectedElement.value = footnote.staff.elements.at(
-    footnote.staff.elements.length > 1 ? -2 : -1,
-  )!;
+  const last = footnote.staff.elements.at(-1);
+  if (last === undefined) {
+    activateFootnote(footnote.id);
+  } else {
+    selectedElement.value = last;
+  }
   if (selectedElement.value instanceof RichTextBoxElement) {
     focusSelectedRichTextBoxEditor(selectedElement.value);
   }
@@ -3648,7 +3872,7 @@ function togglePageBreak() {
   if (!isMainStaff.value) {
     return;
   }
-  if (selectedElement.value && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value) {
     commandService.value.execute(
       scoreElementCommandFactory.create('update-properties', {
         target: selectedElement.value,
@@ -3665,7 +3889,7 @@ function togglePageBreak() {
 }
 
 function toggleLineBreak(lineBreakType: LineBreakType | null) {
-  if (selectedElement.value && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value) {
     // Requesting the alignment a break already has removes it; requesting the
     // other alignment switches the break rather than clearing it.
     const lineBreak = !(
@@ -3688,11 +3912,13 @@ function toggleLineBreak(lineBreakType: LineBreakType | null) {
   }
 }
 
-function switchToMartyria(element: ScoreElement) {
-  const index = activeElements.value.indexOf(element);
+function switchToMartyria(
+  oldElement: ScoreElement,
+  newElement: MartyriaElement,
+) {
+  const index = activeElements.value.indexOf(oldElement);
 
-  const newElement = new MartyriaElement();
-  newElement.copyBreakStateFrom(element);
+  newElement.copyBreakStateFrom(oldElement);
 
   replaceScoreElement(newElement, index);
 
@@ -3835,7 +4061,7 @@ function getTextBoxComponentRefs<T>(
     components.push(component);
   }
 
-  for (let pageIndex = 0; pageIndex < filteredPages.value.length; pageIndex++) {
+  for (let pageIndex = 0; pageIndex < pages.value.length; pageIndex++) {
     const pageContent = getPageContent(pageIndex);
     if (pageContent == null) {
       continue;
@@ -4158,18 +4384,6 @@ function onKeydown(event: KeyboardEvent) {
     return;
   }
 
-  if (
-    event.code === 'Escape' &&
-    selectedWorkspace.value.activeFootnoteId !== null &&
-    selectedElement.value instanceof RichTextBoxElement &&
-    isTextInputFocused()
-  ) {
-    flushPendingRichTextEditors(selectedWorkspace.value);
-    blurActiveElement();
-    event.preventDefault();
-    return;
-  }
-
   const editorShortcutIgnored = isEditorShortcutIgnored(event);
 
   if (platformService.isMac && isTextInputFocused()) {
@@ -4177,6 +4391,13 @@ function onKeydown(event: KeyboardEvent) {
   }
 
   if (event.defaultPrevented || editorShortcutIgnored) {
+    return;
+  }
+
+  // Docked panes ignore editor shortcuts, so Escape there leaves the score
+  // selection alone.
+  if (event.code === 'Escape' && onEscape()) {
+    event.preventDefault();
     return;
   }
 
@@ -4218,6 +4439,14 @@ function onKeydown(event: KeyboardEvent) {
       throttled.onSelectAllScoreElements();
       event.preventDefault();
       return;
+    } else if (event.code === 'Home' && !event.shiftKey) {
+      goToStartOfStaff();
+      event.preventDefault();
+      return;
+    } else if (event.code === 'End' && !event.shiftKey) {
+      goToEndOfStaff();
+      event.preventDefault();
+      return;
     } else if (event.code === 'KeyI' && !event.shiftKey) {
       switch (entryMode.value) {
         case EntryMode.Auto:
@@ -4251,17 +4480,94 @@ function onKeydown(event: KeyboardEvent) {
     return onKeydownLyrics(event);
   }
 
-  if (selectedElement.value?.elementType === ElementType.DropCap) {
-    return onKeydownDropCap(event);
+  // A text element that is selected but not being edited is handled like any
+  // other element.
+  if (isTextInputFocused()) {
+    if (selectedElement.value?.elementType === ElementType.DropCap) {
+      return onKeydownDropCap(event);
+    }
+
+    if (selectedElement.value?.elementType === ElementType.TextBox) {
+      return onKeydownTextBox(event);
+    }
+
+    return;
   }
 
-  if (selectedElement.value?.elementType === ElementType.TextBox) {
-    return onKeydownTextBox(event);
+  if (event.code === 'Enter' && resumeTextEditing()) {
+    event.preventDefault();
+    return;
   }
 
-  if (!isTextInputFocused()) {
-    return onKeydownNeume(event);
+  return onKeydownNeume(event);
+}
+
+// Escape steps out one level: stop editing a text element (it stays selected),
+// then clear the selection, then leave the active footnote.
+function onEscape() {
+  if (selectedLyrics.value != null) {
+    return false;
   }
+
+  if (isTextInputFocused()) {
+    // A text input outside the page handles its own Escape.
+    if (!pageBackgroundRef.value?.contains(document.activeElement)) {
+      return false;
+    }
+    leaveTextEditing();
+    return true;
+  }
+
+  if (!isNothingSelected()) {
+    clearSelection();
+    return true;
+  }
+
+  if (selectedWorkspace.value.activeFootnoteId !== null) {
+    activateFootnote(null);
+    return true;
+  }
+
+  return false;
+}
+
+function resumeTextEditing() {
+  const element = selectedElement.value;
+
+  if (element instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(element);
+    return true;
+  }
+
+  if (element instanceof TextBoxElement || element instanceof DropCapElement) {
+    getElementComponentForElement<
+      InstanceType<typeof DropCap | typeof TextBox>
+    >(element)?.focus();
+    return true;
+  }
+
+  return false;
+}
+
+// Clicking blank page space reaches the end of the main staff. A drag that
+// selects text and ends on blank space also clicks the page, so skip it.
+function onPageBackgroundClick() {
+  if (printMode.value || !(window.getSelection()?.isCollapsed ?? true)) {
+    return;
+  }
+  activateFootnote(null);
+}
+
+// Make a footnote (or the main staff, for null) the active staff with nothing
+// selected, so that typing appends to it.
+function activateFootnote(id: string | null) {
+  const workspace = selectedWorkspace.value;
+  if (workspace.activeFootnoteId !== id) {
+    flushPendingRichTextEditors(workspace);
+    flushLyricsAssignment(workspace);
+  }
+  clearSelection();
+  workspace.activeFootnoteId = id;
 }
 
 function onKeydownNeume(event: KeyboardEvent) {
@@ -4282,7 +4588,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     switch (event.code) {
       case 'End':
         if (selectedWorkspace.value.activeFootnoteId !== null) {
-          selectedElement.value = activeElements.value.at(-1)!;
+          goToEndOfStaff();
           handled = true;
         }
         break;
@@ -4290,13 +4596,13 @@ function onKeydownNeume(event: KeyboardEvent) {
         if (!rtl.value) {
           throttled.moveLeft();
         } else {
-          throttled.moveRight();
+          throttled.moveForward();
         }
         handled = true;
         break;
       case 'ArrowRight':
         if (!rtl.value) {
-          throttled.moveRight();
+          throttled.moveForward();
         } else {
           throttled.moveLeft();
         }
@@ -4335,12 +4641,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
   }
 
-  if (
-    selectedElement.value != null &&
-    !event.ctrlKey &&
-    !event.metaKey &&
-    !event.altKey
-  ) {
+  if (canInsertElement() && !event.ctrlKey && !event.metaKey && !event.altKey) {
     if (neumeKeyboard.isModifier(event.code)) {
       keyboardModifier.value = event.code;
       handled = true;
@@ -4355,7 +4656,7 @@ function onKeydownNeume(event: KeyboardEvent) {
       handled = true;
 
       if (quantitativeMapping.acceptsLyricsOption != null) {
-        if (selectedElement.value.elementType === ElementType.Note) {
+        if (selectedElement.value?.elementType === ElementType.Note) {
           throttled.updateNoteAndSave(selectedElement.value as NoteElement, {
             acceptsLyrics: quantitativeMapping.acceptsLyricsOption,
           });
@@ -4402,7 +4703,7 @@ function onKeydownNeume(event: KeyboardEvent) {
     }
 
     if (
-      selectedElement.value.elementType === ElementType.Note &&
+      selectedElement.value?.elementType === ElementType.Note &&
       !event.repeat
     ) {
       const noteElement = selectedElement.value as NoteElement;
@@ -4538,11 +4839,6 @@ function onKeydownNeume(event: KeyboardEvent) {
 
       if (
         keyboardModifier.value == null &&
-        neumeKeyboard.isMartyria(event.code)
-      ) {
-        throttled.addAutoMartyria();
-      } else if (
-        keyboardModifier.value == null &&
         neumeKeyboard.isKlasma(event.code)
       ) {
         throttled.setKlasma(noteElement);
@@ -4555,7 +4851,7 @@ function onKeydownNeume(event: KeyboardEvent) {
         });
       }
     } else if (
-      selectedElement.value.elementType === ElementType.Martyria &&
+      selectedElement.value?.elementType === ElementType.Martyria &&
       !event.repeat
     ) {
       const martyriaElement = selectedElement.value as MartyriaElement;
@@ -5019,31 +5315,24 @@ function createClipboardState(elementsToCopy: ScoreElement[]): ClipboardState {
   };
 }
 
-const canCutCopySelected = computed(
-  () => getSelectedNonEmptyElements().length > 0,
+const canCutCopySelected = computed(() =>
+  selectionRange.value != null
+    ? selectedRangeElements.value.size > 0
+    : selectedElement.value != null,
 );
 
 const canPasteSelected = computed(
-  () => clipboard.value.elements.length > 0 && selectedElement.value != null,
+  () => clipboard.value.elements.length > 0 && canInsertElement(),
 );
 
-const canSelectAllElements = computed(() =>
-  activeElements.value.some(
-    (element) => element.elementType !== ElementType.Empty,
-  ),
-);
+const canSelectAllElements = computed(() => activeElements.value.length > 0);
 
-function getSelectedNonEmptyElements() {
+function getSelectedElements() {
   if (selectionRange.value != null) {
-    return [...selectedRangeElements.value].filter(
-      (element) => element.elementType !== ElementType.Empty,
-    );
+    return [...selectedRangeElements.value];
   }
 
-  if (
-    selectedElement.value != null &&
-    selectedElement.value.elementType !== ElementType.Empty
-  ) {
+  if (selectedElement.value != null) {
     return [selectedElement.value];
   }
 
@@ -5057,7 +5346,7 @@ function onCutScoreElements() {
       selectionRange.value.end,
     );
 
-    const elementsToCut = getSelectedNonEmptyElements();
+    const elementsToCut = getSelectedElements();
 
     clipboard.value = createClipboardState(elementsToCut);
 
@@ -5065,31 +5354,25 @@ function onCutScoreElements() {
 
     refreshStaffLyrics();
 
-    selectedElement.value =
-      activeElements.value[Math.min(start, activeElements.value.length - 1)];
+    selectionRange.value = null;
+    selectedElement.value = activeElements.value[start] ?? null;
 
     save();
-  } else if (
-    selectedElement.value != null &&
-    selectedElement.value.elementType !== ElementType.Empty
-  ) {
+  } else if (selectedElement.value != null) {
     const currentIndex = selectedElementIndex.value;
 
     clipboard.value = createClipboardState([selectedElement.value]);
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value =
-      activeElements.value[
-        Math.min(currentIndex, activeElements.value.length - 1)
-      ];
+    selectedElement.value = activeElements.value[currentIndex] ?? null;
 
     save();
   }
 }
 
 function onCopyScoreElements() {
-  const elementsToCopy = getSelectedNonEmptyElements();
+  const elementsToCopy = getSelectedElements();
 
   if (elementsToCopy.length > 0) {
     clipboard.value = createClipboardState(elementsToCopy);
@@ -5170,7 +5453,14 @@ function onPasteScoreElements(includeLyrics: boolean) {
     toast.error(t(($) => $.menu.footnotes.nested, { ns: 'menu' }));
     return;
   }
-  if (clipboard.value.elements.length > 0 && selectedElement.value != null) {
+  if (clipboard.value.elements.length > 0 && canInsertElement()) {
+    // The start of the staff is a gap before the first element, so the first
+    // paste inserts there in every entry mode, as at the end of the staff.
+    if (selectedWorkspace.value.insertAtStart) {
+      onPasteScoreElementsInsert(includeLyrics);
+      return;
+    }
+
     switch (entryMode.value) {
       case EntryMode.Insert:
         onPasteScoreElementsInsert(includeLyrics);
@@ -5186,13 +5476,11 @@ function onPasteScoreElements(includeLyrics: boolean) {
 }
 
 function onPasteScoreElementsInsert(includeLyrics: boolean) {
-  if (selectedElement.value == null || clipboard.value.elements.length === 0) {
+  if (clipboard.value.elements.length === 0) {
     return;
   }
 
-  const insertAtIndex = isLastElement(selectedElement.value)
-    ? selectedElementIndex.value
-    : selectedElementIndex.value + 1;
+  const insertAtIndex = insertionIndexAfterSelection();
 
   const {
     importedStylesCommand,
@@ -5219,11 +5507,12 @@ function onPasteScoreElementsInsert(includeLyrics: boolean) {
   refreshStaffLyrics();
 
   selectedElement.value = newElements.at(-1)!;
+  scrollElementIntoView(selectedElement.value);
   save();
 }
 
 function onPasteScoreElementsEdit(includeLyrics: boolean) {
-  if (selectedElement.value == null || clipboard.value.elements.length === 0) {
+  if (clipboard.value.elements.length === 0) {
     return;
   }
 
@@ -5238,7 +5527,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     commands.push(importedStylesCommand);
   }
 
-  let currentIndex = selectedElementIndex.value;
+  let currentIndex = insertionIndexOrSelection();
 
   for (const clipboardElement of pastedElements) {
     const currentElement = activeElements.value[currentIndex];
@@ -5252,7 +5541,7 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
       commands.push(...footnoteRemovalCommands(score.value, [currentElement]));
     }
 
-    if (currentIndex >= activeElements.value.length - 1) {
+    if (currentIndex >= activeElements.value.length) {
       commands.push(
         scoreElementCommandFactory.create('add-to-collection', {
           elements: [clipboardElement],
@@ -5406,6 +5695,8 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
     currentIndex++;
   }
 
+  const workspace = selectedWorkspace.value;
+  const revision = workspace.contentRevision;
   if (commands.length > 0) {
     runWithResizableParagraphStyleRecalc(() => {
       if (commands.length > 1) {
@@ -5414,21 +5705,34 @@ function onPasteScoreElementsEdit(includeLyrics: boolean) {
         commandService.value.execute(commands[0]);
       }
     });
+  }
+  const changed = workspace.contentRevision !== revision;
+  if (changed) {
     refreshStaffLyrics();
   }
 
-  save();
+  if (selectedElement.value == null) {
+    selectedElement.value = pastedElements.at(-1)!;
+  }
+  scrollElementIntoView(selectedElement.value);
+
+  // A paste can move the selection without editing the score. Only request
+  // layout when a command changed the content.
+  if (changed) {
+    save();
+  }
 }
 
 function onPasteScoreElementsAuto(includeLyrics: boolean) {
   moveRight();
-  const currentIndex = selectedElementIndex.value;
+  const currentIndex = insertionIndexOrSelection();
 
   onPasteScoreElementsEdit(includeLyrics);
 
   // Set the selected element to the last element that was pasted
   selectedElement.value =
     activeElements.value[currentIndex + clipboard.value.elements.length - 1];
+  scrollElementIntoView(selectedElement.value);
 }
 
 function getLyricLength(element: NoteElement) {
@@ -5456,31 +5760,71 @@ function moveLeft() {
     index = activeElements.value.indexOf(selectedElement.value);
   } else if (selectionRange.value) {
     index = selectionRange.value.end;
+  } else if (isNothingSelected()) {
+    index = insertionSlotIndex();
+  }
+
+  // Moving left from the first element reaches the start of the staff.
+  if (index === 0 && selectedElement.value != null) {
+    blurSelectedTextElement(index);
+    goToStartOfStaff();
+    return true;
   }
 
   if (index - 1 >= 0 && isNavigableElement(activeElements.value[index - 1])) {
-    // If the currently selected element is a drop cap or text box, blur it first
-    if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
-    } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
-    }
-
-    selectedElement.value = activeElements.value[index - 1];
-
-    // If the newly selected element is a drop cap or text box, focus it
-    if (selectedElement.value.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index - 1)!.focus();
-    } else if (selectedElement.value.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index - 1)!.focus();
-    } else if (selectedElement.value instanceof RichTextBoxElement) {
-      focusSelectedRichTextBoxEditor(selectedElement.value);
-    }
-
+    blurSelectedTextElement(index);
+    selectElementByKeyboard(activeElements.value[index - 1]);
     return true;
   }
 
   return false;
+}
+
+// Arrow key navigation toward the end of the staff. From the start of the
+// staff, this selects the first element. moveRight() is also used by entry
+// modes, so it never moves from the start.
+function moveForward() {
+  if (!selectedWorkspace.value.insertAtStart) {
+    moveRight();
+    return;
+  }
+
+  const element = activeElements.value[0];
+  if (element !== undefined && isNavigableElement(element)) {
+    selectElementByKeyboard(element);
+  }
+}
+
+// If the selected element is a drop cap or text box, blur it before the
+// selection moves.
+function blurSelectedTextElement(index: number) {
+  if (selectedElement.value?.elementType === ElementType.DropCap) {
+    getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
+  } else if (selectedElement.value?.elementType === ElementType.TextBox) {
+    getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
+  }
+}
+
+// The start and end of the staff have no position on the page, so the
+// element's page may be offscreen and unmounted. Text elements are focused
+// once their page has mounted.
+function selectElementByKeyboard(element: ScoreElement) {
+  const fromSlot = isNothingSelected();
+  selectedElement.value = element;
+
+  if (element instanceof DropCapElement || element instanceof TextBoxElement) {
+    // focusTextElement() reveals the element itself.
+    void focusTextElement(element);
+    return;
+  }
+
+  if (fromSlot) {
+    void revealElement(element);
+  }
+
+  if (element instanceof RichTextBoxElement) {
+    focusSelectedRichTextBoxEditor(element);
+  }
 }
 
 function moveRight() {
@@ -5492,16 +5836,19 @@ function moveRight() {
     index = selectionRange.value.end;
   }
 
+  const isLast = index === activeElements.value.length - 1;
+
   if (
     index >= 0 &&
-    index + 1 < activeElements.value.length &&
-    isNavigableElement(activeElements.value[index + 1])
+    (isLast || isNavigableElement(activeElements.value[index + 1]))
   ) {
-    // If the currently selected element is a drop cap, blur it first
-    if (selectedElement.value?.elementType === ElementType.DropCap) {
-      getElementComponent<InstanceType<typeof DropCap>>(index)!.blur();
-    } else if (selectedElement.value?.elementType === ElementType.TextBox) {
-      getElementComponent<InstanceType<typeof TextBox>>(index)!.blur();
+    blurSelectedTextElement(index);
+
+    // Moving right from the last element reaches the end of the staff.
+    if (isLast) {
+      clearSelection();
+      scrollInsertionCaretIntoView();
+      return true;
     }
 
     selectedElement.value = activeElements.value[index + 1];
@@ -5539,13 +5886,16 @@ function moveSelectionLeft() {
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value - 1]);
+  } else if (isNothingSelected() && !selectedWorkspace.value.insertAtStart) {
+    // From the end of the staff, start the range on the last element.
+    startSelectionRangeAt(activeElements.value.length - 1);
   }
 }
 
 function moveSelectionRight() {
   if (selectionRange.value != null) {
     if (
-      selectionRange.value.end + 1 < activeElements.value.length - 1 &&
+      selectionRange.value.end + 1 < activeElements.value.length &&
       navigableElements.includes(
         activeElements.value[selectionRange.value.end + 1].elementType,
       )
@@ -5554,13 +5904,28 @@ function moveSelectionRight() {
     }
   } else if (
     selectedElement.value != null &&
-    selectedElementIndex.value + 1 < activeElements.value.length - 1 &&
+    selectedElementIndex.value + 1 < activeElements.value.length &&
     navigableElements.includes(
       activeElements.value[selectedElementIndex.value + 1].elementType,
     )
   ) {
     setSelectionRange(activeElements.value[selectedElementIndex.value + 1]);
+  } else if (selectedWorkspace.value.insertAtStart) {
+    // From the start of the staff, start the range on the first element.
+    startSelectionRangeAt(0);
   }
+}
+
+function startSelectionRangeAt(index: number) {
+  const element = activeElements.value[index];
+  if (
+    element === undefined ||
+    !navigableElements.includes(element.elementType)
+  ) {
+    return;
+  }
+  selectionRange.value = { start: index, end: index };
+  void revealElement(element);
 }
 
 function getNextLyricBoxIndex() {
@@ -5607,11 +5972,16 @@ function moveToLyricBox(
     workspace === selectedWorkspace.value &&
     selectedLyrics.value === current &&
     activeElements.value.includes(destination);
+  // When repagination replaces the edited lyric's control, focus is either
+  // lost to the body or restored to the replacement by restoreLyricSelection.
   const canMoveFocus = () =>
     isCurrent() &&
     document.hasFocus() &&
     (document.activeElement === initialFocus ||
-      (document.activeElement === document.body && !source.isConnected));
+      (!source.isConnected &&
+        (document.activeElement === document.body ||
+          document.activeElement ===
+            getLyricsComponentForElement(current)?.htmlElement)));
   const focusDestination = () => {
     const component = getLyricsComponentForElement(destination);
     component?.focus(true);
@@ -5772,6 +6142,7 @@ async function runLiveSettlement(
   const trialOwner = rawOwner == null ? undefined : result.copies.get(rawOwner);
   const previousContent =
     rawOwner == null ? [] : contentKeys.map((key) => rawOwner[key]);
+  const endReplay = startSpan('settlement.replay');
   let processedPages: Page[];
   try {
     if (rawOwner !== null && trialOwner instanceof RichTextBoxElement) {
@@ -5793,7 +6164,11 @@ async function runLiveSettlement(
   for (const box of resized) {
     box.updated = true;
   }
-  publishLayout(processedPages, activeBox, lyricSelection);
+  profile('editor.publishLayout', () =>
+    publishLayout(processedPages, activeBox, lyricSelection),
+  );
+  endReplay();
+  profileRender(processedPages.length);
   return 'settled';
 }
 
@@ -5812,18 +6187,57 @@ function saveCommittedLyrics() {
 }
 
 function publishAndSettleLayout(preserveLyricDraft: boolean) {
+  const endLayout = startSpan('editor.layout');
   refineLayoutDebounced.cancel({ upcomingOnly: true });
   // Always publish a layout immediately. Settlement only refines it.
   const workspace = toRaw(selectedWorkspace.value);
   const lyricSelection = captureSelectedLyricSelection(preserveLyricDraft);
-  publishLayout(
-    LayoutService.processPages(workspace, layoutOptions()),
-    null,
-    lyricSelection,
+  const options = layoutOptions();
+  const finishVerification = layoutVerificationEnabled
+    ? beginLayoutVerification(workspace, options)
+    : null;
+  const changes = layoutChanges;
+  layoutChanges = new Set();
+  const processedPages = LayoutService.processPages(workspace, {
+    ...options,
+    incremental: {
+      changes,
+      forceFull: forceFullLayout,
+      report: reportLayoutReuse ? recordLayoutResult : undefined,
+    },
+  });
+  finishVerification?.(processedPages);
+  profile('editor.publishLayout', () =>
+    publishLayout(processedPages, null, lyricSelection),
   );
-  liveLayout.refresh(workspace);
+  profile('editor.liveLayoutRefresh', () => liveLayout.refresh(workspace));
 
-  persistLayoutRecovery();
+  profile('editor.persistLayoutRecovery', () =>
+    persistEditorRecovery(workspace),
+  );
+  endLayout();
+  profileRender(processedPages.length);
+}
+
+function recordLayoutResult(result: LayoutReuseResult) {
+  layoutResults.push(result);
+  if (layoutResults.length > 128) {
+    layoutResults.shift();
+  }
+}
+
+// Time Vue's patch of the published pages and the next painted frame.
+function profileRender(pageCount: number) {
+  if (!layoutProfilingEnabled) {
+    return;
+  }
+  const start = performance.now();
+  nextTick(() => {
+    recordAsyncSpan('editor.render', start, { pages: pageCount });
+    requestAnimationFrame(() =>
+      setTimeout(() => recordAsyncSpan('editor.frame', start)),
+    );
+  });
 }
 
 function publishLayout(
@@ -5883,7 +6297,7 @@ function publishLayout(
   }
 }
 
-function persistLayoutRecovery() {
+function persistEditorRecovery(workspace: Workspace) {
   // Persist a background recovery snapshot. This deliberately serializes
   // WITHOUT flushing the live rich-text editors: `save()` runs frequently --
   // often via the 250 ms-debounced `saveDebounced` (e.g. on every height change
@@ -5895,22 +6309,22 @@ function persistLayoutRecovery() {
   // prepareWorkspaceForSerialization) always flushes first.
   if (isBrowser.value) {
     const workspaceLocalStorage = {
-      id: selectedWorkspace.value.id,
-      score: JSON.stringify(SaveService.SaveScoreToJson(score.value)),
-      filePath: currentFilePath.value,
-      tempFileName: selectedWorkspace.value.tempFileName,
-      hasUnsavedChanges: hasUnsavedChanges.value,
+      id: workspace.id,
+      score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+      filePath: workspace.filePath,
+      tempFileName: workspace.tempFileName,
+      hasUnsavedChanges: workspace.hasUnsavedChanges,
     } as WorkspaceLocalStorage;
 
     localStorage.setItem(
-      `workspace-${selectedWorkspace.value.id}`,
+      `workspace-${workspace.id}`,
       JSON.stringify(workspaceLocalStorage),
     );
   } else {
-    if (selectedWorkspace.value.hasUnsavedChanges) {
-      scheduleRecoverySnapshot(selectedWorkspace.value);
-    } else if (!selectedWorkspace.value.isRecovered) {
-      void discardRecoverySnapshot(selectedWorkspace.value.id);
+    if (workspace.hasUnsavedChanges) {
+      scheduleRecoverySnapshot(workspace);
+    } else if (!workspace.isRecovered) {
+      void discardRecoverySnapshot(workspace.id);
     }
   }
 }
@@ -6065,9 +6479,6 @@ async function load() {
 
   addWorkspace(workspace);
   selectedWorkspace.value = workspace;
-
-  selectedElement.value =
-    score.value.staff.elements[score.value.staff.elements.length - 1];
 }
 
 /**
@@ -6097,7 +6508,9 @@ function getRecoverySnapshotArgs(workspace: Workspace): RecoverySnapshotArgs {
     tempFileName: workspace.tempFileName,
     hasUnsavedChanges: workspace.hasUnsavedChanges,
     preserveCurrentSnapshot: workspace.isRecovered,
-    score: JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+    score: profile('editor.recoverySnapshot.serialize', () =>
+      JSON.stringify(SaveService.SaveScoreToJson(workspace.score)),
+    ),
     sourceMtimeMs: workspace.sourceMtimeMs,
     sourceSize: workspace.sourceSize,
   };
@@ -6183,10 +6596,13 @@ function saveWorkspaceAs(workspace: Workspace) {
   );
 }
 
-function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
+async function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
   workspace: Workspace,
   persist: () => Promise<T>,
 ) {
+  if (pendingRichTextBoxRecalculations.has(workspace)) {
+    await awaitRichTextBoxRecalculation(workspace, { requireHeights: false });
+  }
   return saveDocument(workspace, persist, {
     prepare: prepareWorkspaceForSerialization,
     saved: async (workspace) => {
@@ -6772,17 +7188,26 @@ function updateNoteAndSave(
   element: NoteElement,
   newValues: Partial<NoteElement>,
 ) {
-  updateNote(element, newValues);
-  save();
+  if (updateNote(element, newValues)) {
+    save();
+  }
 }
 
 function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
+  const workspace = selectedWorkspace.value;
+  const revision = workspace.contentRevision;
   commandService.value.execute(
     noteElementCommandFactory.create('update-properties', {
       target: element,
       newValues: newValues,
     }),
   );
+
+  // History records no edit when the submitted values leave the note unchanged.
+  // Return false so updateNoteAndSave() skips a full layout.
+  if (workspace.contentRevision === revision) {
+    return false;
+  }
 
   // Force the element to update so that the neume toolbar updates
   element.keyHelper++;
@@ -6795,6 +7220,7 @@ function updateNote(element: NoteElement, newValues: Partial<NoteElement>) {
   ) {
     refreshStaffLyrics();
   }
+  return true;
 }
 
 function updateNoteFthora(element: NoteElement, fthora: Fthora | null) {
@@ -7065,6 +7491,7 @@ function updateRichTextBox(
   // Measured height is a cache, not a content edit or undo step.
   if (Object.keys(newValues).length === 1 && newValues.height !== undefined) {
     element.height = newValues.height;
+    recordMeasuredHeightChange(element);
     save();
     return;
   }
@@ -7154,6 +7581,13 @@ function flushPendingAnnotationEditor() {
   }
 }
 
+function recordMeasuredHeightChange(element: ScoreElement) {
+  layoutChanges?.add(toRaw(element));
+  if (layoutProfilingEnabled) {
+    performance.mark('editor.textBoxHeightWrite', { detail: element.id });
+  }
+}
+
 function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   if (settleFootnoteReferences.value) {
     return;
@@ -7161,7 +7595,7 @@ function updateRichTextBoxHeight(element: RichTextBoxElement, height: number) {
   // The height could be updated by many rich text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
-  richTextBoxCalculationCount.value++;
+  recordMeasuredHeightChange(element);
   saveDebounced();
 }
 
@@ -7175,6 +7609,7 @@ function updateTextBox(
       return;
     }
     element.height = newValues.height;
+    recordMeasuredHeightChange(element);
     save();
     return;
   }
@@ -7202,6 +7637,7 @@ function updateTextBoxHeight(element: TextBoxElement, height: number) {
   // The height could be updated by many text box elements at once
   // (e.g. if PageSetup changes) so we debounce the save.
   element.height = height;
+  recordMeasuredHeightChange(element);
   textBoxCalculationCount.value++;
   saveDebounced();
 }
@@ -7239,42 +7675,12 @@ function updateModeKeyFromTemplate(
   updateModeKey(element, getModeKeyTemplateUpdates(template));
 }
 
-function getModeKeyTemplateUpdates(template: ModeKeyElement) {
-  const {
-    templateId,
-    mode,
-    scale,
-    scaleNote,
-    fthora,
-    martyria,
-    fthoraAboveNote,
-    fthoraAboveNote2,
-    fthoraAboveQuantitativeNeumeRight,
-    note,
-    note2,
-    quantitativeNeumeAboveNote,
-    quantitativeNeumeAboveNote2,
-    quantitativeNeumeRight,
-  } = template;
-
-  const newValues = {
-    templateId,
-    mode,
-    scale,
-    scaleNote,
-    fthora,
-    martyria,
-    fthoraAboveNote,
-    fthoraAboveNote2,
-    fthoraAboveQuantitativeNeumeRight,
-    note,
-    note2,
-    quantitativeNeumeAboveNote,
-    quantitativeNeumeAboveNote2,
-    quantitativeNeumeRight,
-  };
-
-  return newValues;
+function getModeKeyTemplateUpdates(
+  template: ModeKeyElement,
+): Partial<ModeKeyElement> {
+  return Object.fromEntries(
+    modeKeyTemplateFields.map((key) => [key, template[key]]),
+  );
 }
 
 function applyModeKeyDialogTemplate(template: ModeKeyElement) {
@@ -7503,22 +7909,16 @@ function deleteSelectedElement() {
     return;
   }
 
-  if (selectedElement.value != null && !isLastElement(selectedElement.value)) {
+  if (selectedElement.value != null) {
     const index = selectedElementIndex.value;
 
     removeScoreElement(selectedElement.value);
 
-    selectedElement.value =
-      activeElements.value[
-        selectedWorkspace.value.activeFootnoteId !== null &&
-        activeElements.value.length > 1
-          ? Math.min(index, activeElements.value.length - 2)
-          : index
-      ];
+    selectedElement.value = activeElements.value[index] ?? null;
 
     save();
   } else if (selectionRange.value != null) {
-    const elementsToDelete = getSelectedNonEmptyElements();
+    const elementsToDelete = getSelectedElements();
 
     commandService.value.executeAsBatch(removalCommands(elementsToDelete));
 
@@ -7529,8 +7929,8 @@ function deleteSelectedElement() {
       selectionRange.value.end,
     );
 
-    selectedElement.value =
-      activeElements.value[Math.min(start, activeElements.value.length - 1)];
+    selectionRange.value = null;
+    selectedElement.value = activeElements.value[start] ?? null;
 
     save();
   }
@@ -7548,14 +7948,18 @@ function deletePreviousElement() {
     return;
   }
 
-  if (
-    selectedElement.value &&
-    selectedElementIndex.value > 0 &&
-    isNavigableElement(activeElements.value[selectedElementIndex.value - 1])
-  ) {
-    removeScoreElement(activeElements.value[selectedElementIndex.value - 1]);
+  const index = canInsertElement() ? insertionIndexOrSelection() : -1;
+
+  if (index > 0 && isNavigableElement(activeElements.value[index - 1])) {
+    // Deleting the trailing page break removes the blank page the caret is
+    // on, so follow the caret back to the new last element.
+    const wasOnTrailingPage = insertionCaret.value?.kind === 'page';
+    removeScoreElement(activeElements.value[index - 1]);
 
     save();
+    if (wasOnTrailingPage) {
+      scrollInsertionCaretIntoView();
+    }
   }
 }
 
@@ -8192,14 +8596,13 @@ function performZoomToFit() {
 }
 
 function getCurrentPhysicalPageNumber() {
-  if (filteredPages.value.length === 0) {
+  if (pages.value.length === 0) {
     return 1;
   }
 
-  const pageIndex =
-    clamp(currentPageNumber.value, 1, filteredPages.value.length) - 1;
+  const pageIndex = clamp(currentPageNumber.value, 1, pages.value.length) - 1;
 
-  return filteredPages.value[pageIndex].physicalPageNumber;
+  return pages.value[pageIndex].physicalPageNumber;
 }
 
 function alignZoomFitScroll(mode: ZoomFitMode, zoomValue: number) {
@@ -8388,43 +8791,116 @@ function onAudioServiceStop() {
   stopPlaybackClock();
 }
 
+function cancelRichTextBoxRecalculation() {
+  richTextBoxCalculation = undefined;
+  richTextBoxMeasurement.cancel();
+}
+
+// Output needs current measured heights: the workspace must stay selected and
+// the measurement must succeed. Saving does not: it writes the last measured
+// heights when the workspace is in the background or the measurement fails,
+// and the workspace stays pending, so it is measured again later.
+async function awaitRichTextBoxRecalculation(
+  workspace: Workspace,
+  { requireHeights }: { requireHeights: boolean },
+) {
+  while (pendingRichTextBoxRecalculations.has(workspace)) {
+    if (workspace !== selectedWorkspace.value) {
+      if (requireHeights) {
+        throw new Error('LAYOUT_CONFLICT');
+      }
+      return;
+    }
+    if (richTextBoxCalculation?.workspace !== workspace) {
+      recalculateRichTextBoxHeights();
+    }
+    if ((await richTextBoxCalculation?.done) === 'failed') {
+      if (requireHeights) {
+        throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+      }
+      return;
+    }
+  }
+}
+
 function recalculateRichTextBoxHeights() {
-  if (settleFootnoteReferences.value) {
+  const workspace = selectedWorkspace.value;
+  cancelRichTextBoxRecalculation();
+  if (
+    settleFootnoteReferences.value ||
+    resizableRichTextBoxElements.value.length === 0
+  ) {
+    pendingRichTextBoxRecalculations.delete(workspace);
     return;
   }
-  if (richTextBoxCalculation.value) {
-    richTextBoxCalculation.value = false;
-  }
 
-  nextTick(async () => {
-    const expectedCount = resizableRichTextBoxElements.value.length;
-    richTextBoxCalculationCount.value = 0;
-    richTextBoxCalculation.value = true;
+  pendingRichTextBoxRecalculations.add(workspace);
+  const request = { workspace, done: measure() };
+  richTextBoxCalculation = request;
 
-    const maxTries = 4 * 30; // 30 seconds
-    let tries = 1;
-    let lastCount = 0;
+  async function measure(): Promise<'settled' | 'superseded' | 'failed'> {
+    const { score, contentRevision } = workspace;
+    const elements = resizableRichTextBoxElements.value;
+    const isCurrent = () =>
+      richTextBoxCalculation === request &&
+      selectedWorkspace.value === workspace;
+    const contentIsCurrent = () =>
+      workspace.score === score &&
+      workspace.contentRevision === contentRevision;
 
-    // Wait until all rich text boxes have updated
-    const poll = (resolve: (value: unknown) => void) => {
-      if (
-        richTextBoxCalculationCount.value === expectedCount ||
-        tries >= maxTries ||
-        richTextBoxCalculationCount.value < lastCount
-      ) {
-        resolve(true);
-      } else {
-        tries++;
-        lastCount = richTextBoxCalculationCount.value;
-        setTimeout(() => poll(resolve), 250);
+    try {
+      const heights = await richTextBoxMeasurement.start(
+        workspace,
+        undefined,
+        new Set(elements),
+      );
+
+      if (!isCurrent() || !contentIsCurrent()) {
+        return 'superseded';
       }
-    };
 
-    await new Promise(poll);
-
-    richTextBoxCalculation.value = false;
-    saveDebounced();
-  });
+      const previousHeights = new Map<
+        RichTextBoxElement | TextBoxElement,
+        number
+      >();
+      for (const { element, height } of heights) {
+        if (Math.abs(element.height - height) > 0.001) {
+          previousHeights.set(element, element.height);
+          element.height = height;
+          recordMeasuredHeightChange(element);
+        }
+      }
+      if (previousHeights.size > 0) {
+        saveDebounced.cancel({ upcomingOnly: true });
+        try {
+          save();
+        } catch (error) {
+          for (const [element, height] of previousHeights) {
+            element.height = height;
+            recordMeasuredHeightChange(element);
+          }
+          throw error;
+        }
+      }
+      pendingRichTextBoxRecalculations.delete(workspace);
+      return 'settled';
+    } catch (error) {
+      if (!isCurrent() || !contentIsCurrent()) {
+        return 'superseded';
+      }
+      console.error(error);
+      return 'failed';
+    } finally {
+      if (isCurrent()) {
+        richTextBoxCalculation = undefined;
+        if (workspace.score !== score) {
+          pendingRichTextBoxRecalculations.delete(workspace);
+        } else if (!contentIsCurrent()) {
+          recalculateRichTextBoxHeights();
+        }
+      }
+    }
+  }
 }
 
 function recalculateTextBoxHeights() {
@@ -8475,8 +8951,6 @@ function onFileMenuNewScore() {
 
   selectedWorkspace.value = workspace;
 
-  selectedElement.value =
-    score.value.staff.elements[score.value.staff.elements.length - 1];
   save();
 }
 
@@ -8549,6 +9023,7 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
       throw new Error('LAYOUT_CONFLICT');
     }
   } else {
+    await awaitRichTextBoxRecalculation(workspace, { requireHeights: true });
     await nextTick();
   }
   if (source !== toRaw(selectedWorkspace.value) || source.score !== score) {
@@ -8586,7 +9061,7 @@ async function awaitBrowserPrintPages(workspace: Workspace) {
         return isLayoutCurrent;
       }
       const pageContents = scorePageContents.value ?? [];
-      if (pageContents.length !== filteredPages.value.length) {
+      if (pageContents.length !== pages.value.length) {
         break;
       }
 
@@ -8686,6 +9161,13 @@ async function onFileMenuPrint(browserInitiated = false) {
     activeElement = blurActiveElement();
 
     if (browserInitiated) {
+      if (pendingRichTextBoxRecalculations.has(workspace)) {
+        if (richTextBoxCalculation?.workspace !== workspace) {
+          recalculateRichTextBoxHeights();
+        }
+        showBrowserPrintWarning();
+        return;
+      }
       if (settleFootnoteReferences.value && !liveLayout.isSettled) {
         showBrowserPrintWarning();
         return;
@@ -9167,17 +9649,6 @@ function onFileMenuInsertAlternateLine() {
   }
 }
 
-function contentInsertionIndex() {
-  return (
-    selectedElementIndex.value +
-    (selectedWorkspace.value.activeFootnoteId !== null &&
-    selectedElement.value !== null &&
-    !isLastElement(selectedElement.value)
-      ? 1
-      : 0)
-  );
-}
-
 function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
   const element = new TextBoxElement();
   element.inline = args?.inline ?? false;
@@ -9186,13 +9657,11 @@ function onFileMenuInsertTextBox(args?: FileMenuInsertTextboxArgs) {
       ? BUILT_IN_PARAGRAPH_STYLE_IDS.FootnoteText
       : getTextBoxParagraphStyleFallbackId(element.inline);
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 
-  focusInsertedTextElement(element);
+  void focusTextElement(element);
 }
 
 function onFileMenuInsertRichTextBox() {
@@ -9209,9 +9678,7 @@ function onFileMenuInsertRichTextBox() {
     setRichTextLanguage(element, 'ar', 'rtl');
   }
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 }
@@ -9219,9 +9686,7 @@ function onFileMenuInsertRichTextBox() {
 function onFileMenuInsertModeKey() {
   const element = createDefaultModeKey(score.value.pageSetup);
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   openModeKeyDialog();
 
@@ -9243,9 +9708,7 @@ function onFileMenuInsertImage(args: FileMenuOpenImageArgs) {
   element.imageWidth = args.imageWidth;
   element.imageHeight = args.imageHeight;
 
-  addScoreElement(element, contentInsertionIndex());
-
-  selectedElement.value = element;
+  insertScoreElement(element);
 
   save();
 }
@@ -9378,62 +9841,64 @@ async function onFileMenuSaveAs() {
   }
 }
 
+// If the selected element was removed by undo or redo, select the element now
+// at its index, or the end of the staff.
+function reselectAfterHistoryReplay(previousIndex: number) {
+  if (previousIndex < 0) {
+    return;
+  }
+
+  const element = activeElements.value[previousIndex] ?? null;
+
+  if (selectedElement.value !== element) {
+    selectedElement.value = element;
+  }
+
+  // History replay can affect the note display in the neume toolbar, so force
+  // a refresh here.
+  if (element != null) {
+    element.keyHelper++;
+  }
+}
+
 function onFileMenuUndo() {
-  // Commit debounced lyrics before replay so they cannot overwrite restored notes.
-  flushLyricsAssignment(selectedWorkspace.value);
-  runWithResizableParagraphStyleRecalc(() => {
-    const currentIndex = selectedElementIndex.value;
-
-    commandService.value.undo();
-
-    refreshLyricsAfterHistoryReplay();
-
-    if (currentIndex > -1) {
-      // If the selected element was removed during the undo process, choose a new one
-      const clampedIndex = Math.min(
-        currentIndex,
-        activeElements.value.length - 1,
-      );
-
-      if (selectedElement.value !== activeElements.value[clampedIndex]) {
-        selectedElement.value = activeElements.value[clampedIndex];
-      }
-
-      // Undo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
-    }
-  });
-
-  save();
+  replayHistory('undo');
 }
 
 function onFileMenuRedo() {
+  replayHistory('redo');
+}
+
+function trailingCaretPageNumber() {
+  const caret = insertionCaret.value;
+  return caret?.kind === 'page' && caret.pageNumber > 1
+    ? caret.pageNumber
+    : undefined;
+}
+
+function replayHistory(action: 'undo' | 'redo') {
   // Commit debounced lyrics before replay so they cannot overwrite restored notes.
   flushLyricsAssignment(selectedWorkspace.value);
+  // Check after flushing because it can affect history. An unavailable action
+  // has no edit to lay out.
+  if (!(action === 'undo' ? canUndo.value : canRedo.value)) {
+    return;
+  }
+  const previousTrailingPage = trailingCaretPageNumber();
   runWithResizableParagraphStyleRecalc(() => {
     const currentIndex = selectedElementIndex.value;
 
-    commandService.value.redo();
+    commandService.value[action]();
 
     refreshLyricsAfterHistoryReplay();
 
-    if (currentIndex > -1) {
-      // If the selected element was removed during the redo process, choose a new one
-      const clampedIndex = Math.min(
-        currentIndex,
-        activeElements.value.length - 1,
-      );
-
-      if (selectedElement.value !== activeElements.value[clampedIndex]) {
-        selectedElement.value = activeElements.value[clampedIndex];
-      }
-
-      // Redo can affect the note display in the neume toolbar, so force a refresh here.
-      selectedElement.value.keyHelper++;
-    }
+    reselectAfterHistoryReplay(currentIndex);
   });
 
   save();
+  if (trailingCaretPageNumber() !== previousTrailingPage) {
+    scrollInsertionCaretIntoView();
+  }
 }
 
 function onFileMenuCut() {
@@ -9496,7 +9961,7 @@ async function onFileMenuCopyAsHtml() {
 
   let copiedElements: ScoreElement[] = [];
 
-  const selectedScoreElements = getSelectedNonEmptyElements();
+  const selectedScoreElements = getSelectedElements();
 
   if (selectedScoreElements.length > 0) {
     copiedElements = selectedScoreElements;
@@ -9637,6 +10102,8 @@ function onFileMenuPasteFormat() {
 
     commands.push(...targetCommands);
 
+    const workspace = selectedWorkspace.value;
+    const revision = workspace.contentRevision;
     runWithResizableParagraphStyleRecalc(() => {
       if (commands.length > 1) {
         commandService.value.executeAsBatch(commands);
@@ -9644,7 +10111,11 @@ function onFileMenuPasteFormat() {
         commandService.value.execute(commands[0]);
       }
     });
-    save();
+    // A nonempty batch can leave the score unchanged, such as when pasting
+    // the target's current format. Calling save() then would run full layout.
+    if (workspace.contentRevision !== revision) {
+      save();
+    }
   }
 }
 
@@ -9686,6 +10157,18 @@ function applyCopiedFormat(
         newValues: rewrittenFormat,
       }),
     );
+  }
+}
+
+function onFileMenuGoToStart() {
+  if (!dialogOpen.value) {
+    goToStartOfStaff();
+  }
+}
+
+function onFileMenuGoToEnd() {
+  if (!dialogOpen.value) {
+    goToEndOfStaff();
   }
 }
 
@@ -10329,7 +10812,7 @@ const contextMenuImageBox = computed(() => {
   return getContextMenuTargetForHomogeneousSelection(isImageBoxElement);
 });
 
-function getContextMenuSelectedNonEmptyElements() {
+function getContextMenuSelectedElements() {
   const element = scoreContextMenuTarget.value;
 
   if (element == null) {
@@ -10337,14 +10820,14 @@ function getContextMenuSelectedNonEmptyElements() {
   }
 
   if (selectionRange.value != null && isSelected(element)) {
-    return getSelectedNonEmptyElements();
+    return getSelectedElements();
   }
 
-  return element.elementType !== ElementType.Empty ? [element] : [];
+  return [element];
 }
 
 function getContextMenuSelectedNoteElements() {
-  const selectedElements = getContextMenuSelectedNonEmptyElements();
+  const selectedElements = getContextMenuSelectedElements();
 
   if (
     selectedElements.length < 2 ||
@@ -10365,7 +10848,7 @@ function getContextMenuTargetForHomogeneousSelection<T extends ScoreElement>(
     return null;
   }
 
-  const selectedElements = getContextMenuSelectedNonEmptyElements();
+  const selectedElements = getContextMenuSelectedElements();
 
   return selectedElements.length > 0 && selectedElements.every(predicate)
     ? element
@@ -10687,7 +11170,7 @@ function renderTabLabel(tab: Tab) {
                   @wheel="onPageBackgroundWheel"
                 >
                   <div
-                    v-for="(page, pageIndex) in filteredPages"
+                    v-for="(page, pageIndex) in pages"
                     :key="`page-${pageIndex}`"
                     ref="pagesRef"
                     v-observe-visibility="{
@@ -10698,6 +11181,7 @@ function renderTabLabel(tab: Tab) {
                     class="page"
                     :style="getPageStyle(page)"
                     :class="{ print: printMode }"
+                    @click.self="onPageBackgroundClick"
                   >
                     <ScorePageContent
                       v-if="page.isVisible || printMode"
@@ -10972,24 +11456,32 @@ function renderTabLabel(tab: Tab) {
         </ButtonGroupText>
       </ButtonGroup>
       <ButtonGroup>
-        <ButtonGroupText data-slot="button-group-text">
-          {{
-            $t(($) => $.toolbar.status.line, {
-              ns: 'toolbar',
-              lineNumber: statusLinePosition.lineNumber,
-              lineCount: statusLinePosition.lineCount,
-            })
-          }}
+        <ButtonGroupText
+          v-if="statusInsertionSlotLabel !== null"
+          data-slot="button-group-text"
+        >
+          {{ statusInsertionSlotLabel }}
         </ButtonGroupText>
-        <ButtonGroupText data-slot="button-group-text">
-          {{
-            $t(($) => $.toolbar.status.column, {
-              ns: 'toolbar',
-              columnNumber: statusColumnPosition.columnNumber,
-              columnCount: statusColumnPosition.columnCount,
-            })
-          }}
-        </ButtonGroupText>
+        <template v-else>
+          <ButtonGroupText data-slot="button-group-text">
+            {{
+              $t(($) => $.toolbar.status.line, {
+                ns: 'toolbar',
+                lineNumber: statusLinePosition.lineNumber,
+                lineCount: statusLinePosition.lineCount,
+              })
+            }}
+          </ButtonGroupText>
+          <ButtonGroupText data-slot="button-group-text">
+            {{
+              $t(($) => $.toolbar.status.column, {
+                ns: 'toolbar',
+                columnNumber: statusColumnPosition.columnNumber,
+                columnCount: statusColumnPosition.columnCount,
+              })
+            }}
+          </ButtonGroupText>
+        </template>
         <ButtonGroupText
           v-if="statusNeumeNoteDisplay"
           data-slot="button-group-text"
@@ -11107,32 +11599,23 @@ function renderTabLabel(tab: Tab) {
       v-model:page-range="selectedWorkspace.exportPageRange"
       :loading="exportInProgress"
       :default-format="exportFormat"
-      :page-count="exportPageCount"
+      :page-count="pageCount"
       :show-item-in-folder-supported="ipcService.isShowItemInFolderSupported()"
       @export-as-png="exportAsPng"
       @export-as-music-xml="exportAsMusicXml"
       @export-as-latex="exportAsLatex"
     />
-    <template v-if="richTextBoxCalculation && !settleFootnoteReferences">
-      <TextBoxRich
-        v-for="element in resizableRichTextBoxElements"
-        :key="element.id!"
-        class="richTextBoxCalculation"
-        :element="element as RichTextBoxElement"
-        :footnote-body="footnoteBodyElements.has(element)"
-        :footnote-markers="(element as RichTextBoxElement).footnoteMarkers"
-        :page-setup="score.pageSetup"
-        :fonts="fonts"
-        :paragraph-styles="score.paragraphStyles"
-        :initial-martyria-styles="score.initialMartyriaStyles"
-        :default-initial-martyria-style-id="score.defaultInitialMartyriaStyleId"
-        :editor-language="ckeditorLanguage"
-        :recalc="true"
-        @update:height="
-          updateRichTextBoxHeight(element as RichTextBoxElement, $event)
-        "
-      />
-    </template>
+    <WorkspaceTextBoxMeasurement
+      v-if="richTextBoxMeasurementRequest"
+      :key="'rich-text-box-recalculation-' + richTextBoxMeasurementRequest.id"
+      :workspace="richTextBoxMeasurementRequest.workspace"
+      :measurement-boxes="richTextBoxMeasurementRequest.measurementBoxes"
+      reuse-rich-text-editors
+      :fonts="fonts"
+      :editor-language="ckeditorLanguage"
+      @complete="richTextBoxMeasurement.complete"
+      @failed="richTextBoxMeasurement.fail"
+    />
     <template v-if="textBoxCalculation && !settleFootnoteReferences">
       <TextBox
         v-for="element in resizableTextBoxElements"
@@ -11201,7 +11684,6 @@ function renderTabLabel(tab: Tab) {
   color: white;
 }
 
-.richTextBoxCalculation,
 .textBoxCalculation {
   position: absolute;
   left: -99999999px;

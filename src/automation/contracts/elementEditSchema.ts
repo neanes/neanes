@@ -274,7 +274,7 @@ function validateProperties(
 // enum into the tools/list prompt. Detailed schemas are available on demand.
 const elementDefinitionSchema = z
   .strictObject({
-    elementType: z.enum(ElementType).exclude(['Empty']),
+    elementType: z.enum(ElementType),
     properties: propertyValues,
     clientId: clientId.optional(),
   })
@@ -388,7 +388,7 @@ const elementEditActionSchema = z.discriminatedUnion('action', [
     .strictObject({
       action: z.literal('update'),
       elementRef: editReferenceSchema,
-      elementType: z.enum(ElementType).exclude(['Empty']),
+      elementType: z.enum(ElementType),
       properties: propertyValues,
       reset: z.array(z.string()).default([]),
     })

@@ -1,6 +1,6 @@
 import {
   ElementType,
-  RichTextBoxElement,
+  type RichTextBoxElement,
   type RunningMarkerRole,
   type ScoreElement,
   TextBoxElement,
@@ -59,8 +59,8 @@ export function resolveNextRunningMarkerPageMetadata(
   page: Page,
   previous: RunningMarkerPageMetadata | null,
 ): RunningMarkerPageMetadata {
-  const firstChapter = getFirstRunningMarkerForPage(page, 'chapter');
-  const firstSection = getFirstRunningMarkerForPage(page, 'section');
+  const { chapter: firstChapter, section: firstSection } =
+    getFirstRunningMarkersForPage(page);
 
   const previousChapter = previous?.chapter ?? '';
   const chapter = firstChapter ?? previousChapter;
@@ -88,18 +88,38 @@ export function resolveRunningMarkerPageMetadata(
   return metadata;
 }
 
-function getFirstRunningMarkerForPage(
-  page: Page,
-  role: RunningMarkerRole,
-): string | null {
+// The page's first chapter and section markers, found in one pass. Editors
+// resolve every page after each layout, so this skips non-text elements by
+// their type tag and stops once both markers are found.
+function getFirstRunningMarkersForPage(page: Page) {
+  let chapter: string | null = null;
+  let section: string | null = null;
+
   for (const line of page.lines) {
-    const marker = getFirstRunningMarker(line.elements, role);
-    if (marker != null) {
-      return marker;
+    for (const element of line.elements) {
+      const marker = asTextBox(element);
+      if (marker === null) {
+        continue;
+      }
+      const role = marker.runningMarkerRole;
+      if (
+        (role === 'chapter' && chapter == null) ||
+        (role === 'section' && section == null)
+      ) {
+        const text = resolveRunningMarkerText(marker);
+        if (role === 'chapter') {
+          chapter = text;
+        } else {
+          section = text;
+        }
+        if (chapter != null && section != null) {
+          return { chapter, section };
+        }
+      }
     }
   }
 
-  return null;
+  return { chapter, section };
 }
 
 export function getFirstRunningMarker(
@@ -107,12 +127,9 @@ export function getFirstRunningMarker(
   role: RunningMarkerRole,
 ): string | null {
   for (const element of elements) {
-    if (
-      (element instanceof TextBoxElement ||
-        element instanceof RichTextBoxElement) &&
-      element.runningMarkerRole === role
-    ) {
-      const text = resolveRunningMarkerText(element);
+    const marker = asTextBox(element);
+    if (marker?.runningMarkerRole === role) {
+      const text = resolveRunningMarkerText(marker);
       if (text != null) {
         return text;
       }
@@ -216,15 +233,70 @@ function normalizeRunningMarkerText(value: string | null | undefined) {
 }
 
 export function isSectionMarker(element: ScoreElement) {
-  if (
-    element.elementType !== ElementType.TextBox &&
-    element.elementType !== ElementType.RichTextBox
-  ) {
-    return false;
-  }
-  const marker = element as TextBoxElement | RichTextBoxElement;
+  const marker = asTextBox(element);
   return (
-    marker.runningMarkerRole === 'section' &&
+    marker?.runningMarkerRole === 'section' &&
     resolveRunningMarkerText(marker) !== null
   );
+}
+
+// A text box or rich text box, matched by type tag.
+function asTextBox(
+  element: ScoreElement,
+): TextBoxElement | RichTextBoxElement | null {
+  return element.elementType === ElementType.TextBox ||
+    element.elementType === ElementType.RichTextBox
+    ? (element as TextBoxElement | RichTextBoxElement)
+    : null;
+}
+
+// Section numbering for a staff, resolved once so that lookups do not rescan
+// every element (or re-parse rich-text markers).
+export interface SectionMarkerIndex {
+  // Element indexes of the section markers, in ascending order.
+  markerIndexes: number[];
+  // Whether content precedes the first marker, forming an implicit first
+  // section.
+  hasLeadingSection: boolean;
+}
+
+export function indexSectionMarkers(
+  elements: readonly ScoreElement[],
+): SectionMarkerIndex {
+  const markerIndexes = elements
+    .filter(isSectionMarker)
+    .map((element) => element.index);
+
+  return {
+    markerIndexes,
+    hasLeadingSection: markerIndexes.length > 0 && markerIndexes[0] > 0,
+  };
+}
+
+export function getSectionCount({
+  markerIndexes,
+  hasLeadingSection,
+}: SectionMarkerIndex) {
+  return markerIndexes.length === 0
+    ? 1
+    : markerIndexes.length + (hasLeadingSection ? 1 : 0);
+}
+
+export function getSectionNumber(
+  { markerIndexes, hasLeadingSection }: SectionMarkerIndex,
+  elementIndex: number,
+) {
+  // Count the markers at or before the element (upper bound).
+  let low = 0;
+  let high = markerIndexes.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (markerIndexes[mid] <= elementIndex) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  return low === 0 ? 1 : low + (hasLeadingSection ? 1 : 0);
 }

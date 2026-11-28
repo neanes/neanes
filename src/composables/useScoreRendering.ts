@@ -2,12 +2,12 @@ import { computed, type CSSProperties, type Ref, type StyleValue } from 'vue';
 
 import {
   type DropCapElement,
-  type EmptyElement,
   type NoteElement,
   type ScoreElement,
 } from '@/models/Element';
 import type { Page } from '@/models/Page';
 import {
+  applyElementParagraphStyleOverrides,
   BUILT_IN_PARAGRAPH_STYLE_IDS,
   type ResolvedParagraphStyle,
   resolveParagraphStyle,
@@ -18,6 +18,7 @@ import {
   TextMeasurementService,
 } from '@/services/TextMeasurementService';
 import { TATWEEL } from '@/utils/constants';
+import { toCssText } from '@/utils/cssText';
 import { isDropCapElement } from '@/utils/elementTypeGuards';
 import { resolveFontCss, resolveFontStyle } from '@/utils/fontStyle';
 import { getFontFamilyWithFallback } from '@/utils/getFontFamilyWithFallback';
@@ -32,12 +33,32 @@ export function useScoreRendering(score: Ref<Score>, zoom: Ref<number>) {
       BUILT_IN_PARAGRAPH_STYLE_IDS.Lyrics,
     ),
   );
+  // Every note resolves its lyrics style on each render, so resolve each
+  // paragraph style's inheritance chain once per change to the styles.
+  const resolvedParagraphStyles = computed(() => {
+    const styles = score.value.paragraphStyles;
+    const resolved = new Map<string | null, ResolvedParagraphStyle>([
+      [null, resolveParagraphStyle(styles, null)],
+    ]);
+    for (const style of styles) {
+      resolved.set(style.id, resolveParagraphStyle(styles, style.id));
+    }
+    return resolved;
+  });
   function getResolvedLyricsStyle(element: NoteElement) {
-    return resolveParagraphStyle(
-      score.value.paragraphStyles,
-      element.lyricsParagraphStyleId,
-      element.getParagraphStyleOverrides(),
-    );
+    const styleId = element.lyricsParagraphStyleId ?? null;
+    const resolvedStyle = resolvedParagraphStyles.value.get(styleId);
+    // An unknown style id falls back as resolveParagraphStyle does.
+    return resolvedStyle == null
+      ? resolveParagraphStyle(
+          score.value.paragraphStyles,
+          styleId,
+          element.getParagraphStyleOverrides(),
+        )
+      : applyElementParagraphStyleOverrides(
+          resolvedStyle,
+          element.getParagraphStyleOverrides(),
+        );
   }
   function getResolvedMarginsForPage(page: Page) {
     return resolvePageMargins(score.value.pageSetup, page.physicalPageNumber);
@@ -270,14 +291,16 @@ export function useScoreRendering(score: Ref<Score>, zoom: Ref<number>) {
         resolvedLyricsStyle.fontVariantAlternates ?? undefined,
       textDecoration: resolvedLyricsStyle.textDecoration ?? undefined,
       color: resolvedLyricsStyle.color,
-      webkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
-      webkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
+      WebkitTextStrokeWidth: withZoom(resolvedLyricsStyle.strokeWidth),
+      WebkitTextStrokeColor: resolvedLyricsStyle.strokeColor,
       lineHeight: displayedGeometry.lineHeight,
     } as CSSProperties;
   }
 
+  // The lyric, leading hyphen and element styles are bound as CSS text: see
+  // toCssText.
   function getLyricStyle(element: NoteElement) {
-    return {
+    return toCssText({
       ...getLyricStyleBase(element),
       paddingLeft:
         (!element.isFullMelisma ||
@@ -295,31 +318,24 @@ export function useScoreRendering(score: Ref<Score>, zoom: Ref<number>) {
         ? withZoom(Math.min(0, element.lyricsHorizontalOffset))
         : undefined,
       textAlign: element.alignLeft ? 'left' : undefined,
-    } as CSSProperties;
+    });
   }
 
   function getLeadingLyricHyphenStyle(element: NoteElement) {
-    return {
+    return toCssText({
       ...getLyricStyleBase(element),
       left: withZoom(element.leadingLyricHyphenOffset),
-    } as CSSProperties;
-  }
-
-  function getEmptyBoxStyle(element: EmptyElement) {
-    return {
-      width: withZoom(element.width),
-      height: withZoom(element.height),
-    } as StyleValue;
+    });
   }
 
   function getElementStyle(element: ScoreElement) {
-    return {
+    return toCssText({
       left: !rtl.value ? withZoom(element.x) : undefined,
       right: rtl.value ? withZoom(element.x) : undefined,
       top: isDropCapElement(element)
         ? getDisplayedDropCapTop(element)
         : withZoom(element.y),
-    } as StyleValue;
+    });
   }
 
   function getMelismaStyle(element: NoteElement) {
@@ -364,7 +380,6 @@ export function useScoreRendering(score: Ref<Score>, zoom: Ref<number>) {
     getFooterHorizontalRuleStyle,
     getLyricStyle,
     getLeadingLyricHyphenStyle,
-    getEmptyBoxStyle,
     getElementStyle,
     getMelismaStyle,
     getMelismaUnderscoreStyleInner,

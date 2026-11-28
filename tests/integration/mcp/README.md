@@ -143,8 +143,7 @@ See `src/services/history/README.md` for the accepted compromises; these tests d
 not require a unified history, historical selection replay, or native history
 survival across score-driven editor replacement.
 
-The `footnote-end-content` scenario checks hidden populated-body terminators,
-visible empty-body targets, reference focus, appending after text and music,
+The `footnote-end-content` scenario checks visible empty-body targets, reference focus, appending after text and music,
 keyboard end navigation, deletion/undo/redo, stable pagination, and PDF/PNG output.
 It launches a real disposable Electron app; use unsandboxed execution on macOS.
 

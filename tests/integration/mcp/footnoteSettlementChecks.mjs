@@ -120,20 +120,10 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
       const owner = workspace.score.staff.elements.find(element => element.footnoteMarkers?.[id]);
       const page = document.querySelectorAll('.page-background .page')[owner.page - 1];
       const widget = page?.querySelector('.neanes-footnote[data-footnote-id="' + id + '"]');
-      if (!widget || !widget.nextSibling) {
+      if (!widget) {
         page?.scrollIntoView({block: 'start'});
         return null;
       }
-      const paragraph = widget.parentElement;
-      const origin = paragraph.getBoundingClientRect();
-      const box = widget.getBoundingClientRect();
-      const text = widget.nextSibling;
-      const range = document.createRange();
-      range.selectNode(text);
-      const wrapping = [...range.getClientRects()].map(
-        rect => [rect.x - origin.x, rect.y - origin.y, rect.width, rect.height]
-          .map(n => Number(n.toFixed(2))),
-      );
       const label = widget.textContent;
       const sample = widget.cloneNode(false);
       sample.removeAttribute('id');
@@ -149,8 +139,6 @@ export async function checkFootnoteSettlement(call, evaluate, directory) {
       return {
         label,
         width: Number(getComputedStyle(widget).width.replace('px', '')),
-        height: box.height,
-        wrapping,
         naturalWidths,
       };
       })()`);

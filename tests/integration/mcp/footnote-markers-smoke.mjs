@@ -11,6 +11,7 @@ import {
   checkLiveFootnoteSettlement,
   checkMarkerWidthThreshold,
   checkPrintOverflowMeasurement,
+  checkTemplateRichTextVariants,
   checkTextBoxMeasurementReuse,
 } from './footnoteSettlementChecks.mjs';
 import { createSmokeApp } from './smokeApp.mjs';
@@ -952,6 +953,7 @@ try {
     await socket.send('Emulation.setFocusEmulationEnabled', { enabled: false });
   }
   await checkPrintOverflowMeasurement(call, evaluate);
+  await checkTemplateRichTextVariants(call, evaluate);
   await checkFootnoteSettlement(call, evaluate, app.directory);
   console.log(
     `PASS: marker properties, context menus, numbering, previews, Undo/Redo, save/reopen, rendering. Artifacts: ${app.directory}`,

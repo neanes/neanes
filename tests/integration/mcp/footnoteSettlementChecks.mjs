@@ -945,6 +945,123 @@ export async function checkPrintOverflowMeasurement(call, evaluate) {
   );
 }
 
+// A rich-text footer on repeated templates is measured once for each distinct
+// tokenized content, in one reused editor, and settles at its tallest page.
+export async function checkTemplateRichTextVariants(call, evaluate) {
+  const { args, mutate, insert, content } = await createPageRestartFixture(
+    call,
+    'Template rich-text variants',
+  );
+  const longChapter = 'Second chapter title '.repeat(8).trim();
+  await insert(
+    [
+      {
+        elementType: 'TextBox',
+        properties: { content: 'One', runningMarkerRole: 'chapter' },
+      },
+      {
+        elementType: 'RichTextBox',
+        clientId: 'first',
+        properties: { content, pageBreak: true },
+      },
+      {
+        elementType: 'TextBox',
+        properties: { content: longChapter, runningMarkerRole: 'chapter' },
+      },
+      {
+        elementType: 'RichTextBox',
+        clientId: 'second',
+        properties: { content },
+      },
+    ],
+    ['first', 'second'],
+  );
+  const footer = await call('get_elements', {
+    ...args,
+    collection: { kind: 'footers', variant: 'default' },
+  });
+  // Both pages open a chapter; keep them on the default footer.
+  await mutate('update_header_footer_settings', {
+    changes: { showFooter: true, headerFooterDifferentChapterOpening: false },
+  });
+  await evaluate(`(() => {
+    window.templatePeak = 0;
+    window.templateObserver = new MutationObserver(() => {
+      const count = document.querySelectorAll(
+        '.workspace-text-box-measurement .rich-text-box-container',
+      ).length;
+      window.templatePeak = Math.max(window.templatePeak, count);
+    });
+    window.templateObserver.observe(document.body, { childList: true, subtree: true });
+  })()`);
+  try {
+    await mutate('edit_elements', {
+      actions: [
+        {
+          action: 'replace',
+          elementRef: footer.elements[0].elementRef,
+          element: {
+            elementType: 'RichTextBox',
+            properties: {
+              multipanel: true,
+              contentLeft: '<p>$:chapter</p>',
+              contentCenter: '<p>Footer center</p>',
+              contentRight: '<p>$p</p>',
+            },
+          },
+        },
+      ],
+    });
+    assert.equal((await call('get_pages', args)).pageCount, 2);
+    const geometry = await eventually(async () => {
+      const geometry = await evaluate(`(() => {
+        const score = window._editor.score.value;
+        const pages = [...document.querySelectorAll('.page:not(.print)')].map(page => {
+          const box = [...page.querySelectorAll('.rich-text-box-container')]
+            .find(box => box.textContent.includes('Footer center'));
+          if (box === undefined) {
+            return { text: page.textContent.slice(0, 200), height: null };
+          }
+          const panels = [...box.querySelectorAll('.ck-content')];
+          const zoom = Number(getComputedStyle(panels[0]).getPropertyValue('--zoom'));
+          return {
+            text: box.textContent,
+            height: Math.max(...panels.map(panel => panel.getBoundingClientRect().height)) / zoom,
+          };
+        });
+        return { settled: score.footers.default.elements[0].height, pages };
+      })()`);
+      assert.equal(geometry.pages.length, 2, JSON.stringify(geometry));
+      assert.ok(
+        geometry.pages[1].text.includes(longChapter),
+        JSON.stringify(geometry),
+      );
+      return geometry;
+    });
+    const [first, second] = geometry.pages.map(({ height }) => height);
+    assert.ok(
+      second > first,
+      'The long chapter wraps the second page footer: ' +
+        JSON.stringify(geometry),
+    );
+    assert.ok(
+      Math.abs(geometry.settled - second) < 0.05,
+      'The footer settles at its tallest tokenized variant: ' +
+        JSON.stringify(geometry),
+    );
+    assert.equal(
+      await evaluate('window.templatePeak'),
+      1,
+      'Template rich text is measured in one reused editor',
+    );
+  } finally {
+    await evaluate('window.templateObserver.disconnect()');
+  }
+  console.log(
+    'PASS: template rich-text footers measure each tokenized variant in one reused editor',
+  );
+}
+
 export async function checkFillWidthReference(call, evaluate) {
   const { args, mutate, settings, insert, content } =
     await createPageRestartFixture(call, 'Fill-width reference');

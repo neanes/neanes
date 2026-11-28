@@ -93,16 +93,20 @@ node tests/integration/layout/random-edits.mjs --skip-build --incremental --scor
 ```
 
 The defaults are 200 edits with seed 1 on each of the bundled LTR and Melkite RTL
-fixtures. Incremental mode also runs a separate scripted case that verifies
-paragraph reuse after an ison edit and layout after deleting the opening
-block. Use `--facing` to exercise unequal inside and outside margins on the
+fixtures. Incremental mode also runs separate scripted cases: paragraph reuse
+after an ison edit and layout after deleting the opening block; lines moved to
+later and earlier pages; and, in LTR and Arabic RTL, a footnote on a page-1
+note with body notes and a martyria, a pitch change that the body's martyria
+must follow during a reused layout, custom and automatic markers, removal and
+undo. Use `--facing` to exercise unequal inside and outside margins on the
 bundled fixtures or on a supplied `.byzx` file. Repeat `--seed` and
 `--score` to run a matrix. Supplied `.byz` and
 `.byzx` scores are copied and used with their saved direction. The runner selects
 targets both across the score and near the previous edit. It calls the same
 editor handlers used for note, pitch (fthora), lyric, melisma, ison, bar, break,
-martyria, mode key with ambitus, insertion, deletion, end-of-score entry, and
-history changes. The handlers are exposed to the runner only in oracle builds.
+martyria, mode key with ambitus, insertion, deletion, end-of-score entry,
+footnote (adding or removing a note's footnote, appending to its body, and
+toggling a custom marker), and history changes. The handlers are exposed to the runner only in oracle builds.
 Every edit must advance the content revision and run at least one synchronous
 oracle comparison. The summary shows which edit types ran and how often, the
 layout statuses, how many reused layouts added each number of boundary
@@ -127,16 +131,19 @@ checks for asynchronously measured rich text.
 
 `check-page-inputs.mjs` checks inputs that the DOM measures after layout and
 that depend on placement: a scrollable rich-text box's height cap (its page
-bottom minus its y), and header and footer templates whose token expansion
-(chapter, page numbers) changes by page. The synchronous oracle cannot see
-these. Each scenario runs twice in a disposable editor of an oracle build,
+bottom minus its y), header and footer templates whose chapter and page
+tokens change by page, and a block rich-text box that wraps when an earlier
+footnote advances its label to a wider automatic symbol. The synchronous
+oracle cannot see these. Each scenario runs twice in a disposable editor,
 with paragraph reuse and with full layout forced at runtime. After every edit
 it visits each page, waits until no layout or height write happens, and
 compares element geometry, template heights and the rendered boxes'
 rectangles and text. It also fails if a scrollable box's rendered cap does not
 match its current y, if a step does not settle, if no edit reuses paragraphs,
-or if the layout oracle reports a difference. The scrollable scenarios run in
-LTR and Arabic RTL.
+if the rendered footnote label differs from the expected one, if renumbering
+fails to reuse the box's line on the initial layout or to grow the box after
+measurement, or if the layout oracle reports a difference. The scrollable and
+footnote scenarios run in LTR and Arabic RTL.
 
 ```sh
 node tests/integration/layout/check-page-inputs.mjs

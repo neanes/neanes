@@ -251,6 +251,7 @@ import { fontCatalog } from '@/services/FontCatalog';
 import {
   captureFootnotes,
   elementFootnoteIds,
+  footnoteMarkerUpdateCommand,
   footnoteRemovalCommands,
   orderedFootnotes,
   planFootnoteInsertion,
@@ -2249,6 +2250,39 @@ async function initialize() {
         togglePageBreak,
         deleteSelectedElement,
         replayHistory,
+        lineForElement: (element: ScoreElement) =>
+          pages.value[element.page - 1]?.lines[element.line - 1],
+        // Footnote edits that leave the main staff active, so later edits
+        // still target it.
+        toggleFootnote(reference: FootnoteAnchorElement) {
+          commandService.value.executeAsBatch(
+            reference.footnoteId === null
+              ? planFootnoteInsertion(selectedWorkspace.value, reference)
+                  .commands
+              : planFootnoteRemoval(score.value, reference),
+          );
+          save();
+        },
+        appendToFootnote(id: string, neume: QuantitativeNeume | 'Martyria') {
+          activateFootnote(id);
+          selectedWorkspace.value.insertAtStart = false;
+          updateEntryMode(EntryMode.Insert);
+          if (neume === 'Martyria') {
+            addAutoMartyria();
+          } else {
+            addQuantitativeNeume(neume);
+          }
+          activateFootnote(null);
+        },
+        setFootnoteMarker(id: string, marker: string | null) {
+          const footnote = score.value.footnotes.find(
+            (body) => body.id === id,
+          )!;
+          commandService.value.execute(
+            footnoteMarkerUpdateCommand(footnote, marker),
+          );
+          save();
+        },
         flushRender: () => nextTick(),
         // Compares a live editor's settled geometry with full layout.
         setForceFullLayout(value: boolean) {

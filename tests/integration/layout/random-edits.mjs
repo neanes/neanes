@@ -135,10 +135,23 @@ function chooseEdit(editor, rolls, lastIndex) {
     'delete',
     'martyria',
     'modeKey',
+    'footnote',
+    'footnoteBody',
+    'footnoteMarker',
     'undo',
     'redo',
   ];
-  const kind = editKinds[Math.floor(kindRoll * editKinds.length)];
+  let kind = editKinds[Math.floor(kindRoll * editKinds.length)];
+  if (
+    (kind === 'footnoteBody' || kind === 'footnoteMarker') &&
+    !elements.some(
+      (element) => element.elementType === 'Note' && element.footnoteId != null,
+    )
+  ) {
+    // Body and marker edits need a footnote; add one instead.
+    kind = 'footnote';
+  }
+  const needsFootnote = kind === 'footnoteBody' || kind === 'footnoteMarker';
   const neumes = ['Ison', 'Oligon', 'Apostrophos', 'Petasti'];
   const variant = Math.floor(variantRoll * neumes.length);
   if (
@@ -168,7 +181,10 @@ function chooseEdit(editor, rolls, lastIndex) {
     const index =
       (start + direction * offset + elements.length) % elements.length;
     const element = elements[index];
-    if (element.elementType !== type) {
+    if (
+      element.elementType !== type ||
+      (needsFootnote && element.footnoteId == null)
+    ) {
       continue;
     }
 
@@ -222,13 +238,26 @@ function chooseEdit(editor, rolls, lastIndex) {
           value: element.scaleNote === 'Pa' ? 'Ni' : 'Pa',
         };
       case 'insert':
+      case 'footnoteBody':
         return { kind, target, value: neumes[variant] };
+      case 'footnoteMarker':
+        return {
+          kind,
+          target,
+          value:
+            editor.score.value.footnotes.find(
+              ({ id }) => id === element.footnoteId,
+            ).marker === null
+              ? '*'
+              : null,
+        };
       case 'martyria':
       case 'ison':
       case 'bar':
       case 'lineBreak':
       case 'pageBreak':
       case 'delete':
+      case 'footnote':
         return { kind, target };
     }
 
@@ -329,6 +358,15 @@ function pageStarts(editor) {
   return starts;
 }
 
+// The notes of the martyriae in every footnote body.
+function footnoteMartyriae(editor) {
+  return editor.score.value.footnotes.flatMap(({ staff }) =>
+    staff.elements
+      .filter(({ elementType }) => elementType === 'Martyria')
+      .map(({ note, scale, rootSign }) => `${note}/${scale}/${rootSign}`),
+  );
+}
+
 function isFirstOnPage(editor, index) {
   const elements = editor.elements.value;
   const element = elements[index];
@@ -415,6 +453,16 @@ async function applyEdit(editor, { kind, target, value }) {
     case 'insertModeKey':
       test.insertModeKeyWithAmbitus();
       break;
+    case 'footnote':
+      // Adds an empty body, or removes the reference and its body.
+      test.toggleFootnote(element);
+      break;
+    case 'footnoteBody':
+      test.appendToFootnote(element.footnoteId, value);
+      break;
+    case 'footnoteMarker':
+      test.setFootnoteMarker(element.footnoteId, value);
+      break;
     case 'undo':
     case 'redo':
       test.replayHistory(kind);
@@ -454,7 +502,8 @@ async function runSequence(fixture, seed) {
       fixture.rtl ||
       facing ||
       fixture.checkIncremental ||
-      fixture.pageMoves
+      fixture.pageMoves ||
+      fixture.footnotes
     ) {
       assert.equal(
         path.extname(fixture.file),
@@ -503,6 +552,21 @@ async function runSequence(fixture, seed) {
           content: 'Opening paragraph',
           height: 24,
           customHeight: 24,
+        });
+      }
+      if (fixture.footnotes) {
+        // Reset the context just after the anchor's opening paragraph.
+        const firstBreak = score.staff.elements.findIndex(
+          ({ lineBreak }) => lineBreak,
+        );
+        assert.ok(firstBreak >= 0, 'Expected an opening line break');
+        score.staff.elements.splice(firstBreak + 1, 0, {
+          elementType: 'ModeKey',
+          alignment: 'center',
+          mode: 1,
+          scale: 'Diatonic',
+          scaleNote: 'Pa',
+          martyria: 'Alpha',
         });
       }
       await writeFile(file, JSON.stringify(score));
@@ -607,18 +671,41 @@ async function runSequence(fixture, seed) {
       expectReuse: edit.kind === 'lineBreak' || edit.kind === 'pageBreak',
       ...edit,
     }));
+    // A footnote on a page-1 note: an empty body, body notes and a martyria
+    // that inherits the anchor's musical context, a context change at the
+    // anchor, marker changes, removal and undo.
+    const footnoteEdits = [
+      { id: 'ref', kind: 'footnote', select: middle },
+      { kind: 'footnoteBody', again: 'ref', value: 'Oligon' },
+      { kind: 'footnoteBody', again: 'ref', value: 'Martyria' },
+      {
+        kind: 'fthora',
+        again: 'ref',
+        value: 'HardChromaticPa_Top',
+        expect: ['bodyChanged'],
+      },
+      { kind: 'footnoteMarker', again: 'ref', value: '*' },
+      { kind: 'footnoteMarker', again: 'ref', value: null },
+      { kind: 'undo' },
+      { kind: 'footnoteBody', again: 'ref', value: 'Apostrophos' },
+      { kind: 'undo' },
+      { kind: 'footnote', again: 'ref' },
+      { kind: 'undo' },
+    ].map((edit) => ({ expectReuse: true, ...edit }));
     const scriptedEdits = fixture.pageMoves
       ? pageMoveEdits
-      : fixture.checkIncremental
-        ? [
-            {
-              kind: 'ison',
-              target: { index: 3, type: 'Note' },
-              expectReuse: true,
-            },
-            { kind: 'delete', target: { index: 0, type: 'TextBox' } },
-          ]
-        : null;
+      : fixture.footnotes
+        ? footnoteEdits
+        : fixture.checkIncremental
+          ? [
+              {
+                kind: 'ison',
+                target: { index: 3, type: 'Note' },
+                expectReuse: true,
+              },
+              { kind: 'delete', target: { index: 0, type: 'TextBox' } },
+            ]
+          : null;
     const edits = replay?.edits ?? scriptedEdits;
     const count = () => edits?.length ?? steps;
     for (let i = 0; i < count(); i++) {
@@ -646,6 +733,9 @@ async function runSequence(fixture, seed) {
         barTarget = edit.target.index;
       }
       const startsBefore = edit.expect ? await inEditor(pageStarts) : null;
+      const bodiesBefore = edit.expect
+        ? await inEditor(footnoteMartyriae)
+        : null;
       trace.edits.push(edit);
       result = await inEditor(applyEdit, edit);
       assert.equal(
@@ -699,6 +789,19 @@ async function runSequence(fixture, seed) {
             assert.ok(
               startsAfter.some(({ inParagraph }) => inParagraph),
               `Expected a page split inside a paragraph: ${JSON.stringify(startsAfter)}`,
+            );
+            break;
+          }
+          case 'bodyChanged': {
+            const bodiesAfter = await inEditor(footnoteMartyriae);
+            assert.ok(
+              bodiesAfter.length > 0,
+              'Expected a martyria in a footnote body',
+            );
+            assert.notDeepEqual(
+              bodiesAfter,
+              bodiesBefore,
+              'Expected the footnote body to follow the anchor context',
             );
             break;
           }
@@ -789,6 +892,8 @@ if (values.incremental && !replay) {
   for (const scripted of [
     { name: 'opening-paragraph', file: fixture, checkIncremental: true },
     { name: 'page-moves', file: fixture, pageMoves: 'plain' },
+    { name: 'footnotes', file: fixture, footnotes: true },
+    { name: 'footnotes-rtl', file: fixture, footnotes: true, rtl: true },
     { name: 'page-moves-headers', file: fixture, pageMoves: 'headers' },
     { name: 'page-moves-rtl', file: fixture, pageMoves: 'plain', rtl: true },
     {

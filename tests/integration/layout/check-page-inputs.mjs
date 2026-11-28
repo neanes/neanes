@@ -1,9 +1,9 @@
-// Page-dependent measured inputs (A5, C1.4): a reused line whose scrollable
-// rich-text cap changes, and header/footer templates whose token expansion
-// changes. The synchronous oracle cannot see these, because the new heights
-// come from the DOM after layout. Each scenario runs twice in a disposable
-// editor, once with paragraph reuse and once with full layout forced at
-// runtime, and compares the geometry once on-page measurements have settled.
+// Page-dependent measured inputs (A5, C1.4, C1.5): a reused line whose
+// scrollable rich-text cap changes, header/footer templates whose token
+// expansion changes, and a block rich-text box whose footnote label changes.
+// The synchronous oracle cannot see the new heights measured by the DOM.
+// Each scenario runs twice in a disposable editor, once with paragraph reuse
+// and once with full layout forced, and compares settled geometry.
 // Build with VITE_LAYOUT_VERIFY_ENABLED=true.
 //
 //   node tests/integration/layout/check-page-inputs.mjs [--skip-build] [--only <name>]
@@ -25,6 +25,11 @@ const { values } = parseArgs({
   },
 });
 
+const boxFootnote = '00000000-0000-4000-8000-000000000099';
+const symbolRepetitions = 40;
+const narrowMarker = '\u00a7'.repeat(symbolRepetitions);
+const wideMarker = '\u00b6'.repeat(symbolRepetitions);
+
 // Each edit names a target resolved in the live editor before editing.
 const scenarios = [
   {
@@ -36,6 +41,16 @@ const scenarios = [
     name: 'scrollable-cap-rtl',
     score: () => scrollableScore(true),
     edits: scrollableEdits(),
+  },
+  {
+    name: 'footnote-marker',
+    score: () => footnoteScore(false),
+    edits: footnoteEdits(),
+  },
+  {
+    name: 'footnote-marker-rtl',
+    score: () => footnoteScore(true),
+    edits: footnoteEdits(),
   },
   {
     name: 'header-tokens-plain',
@@ -116,6 +131,68 @@ function scrollableScore(rtl) {
     arabicRtlScore(score);
   }
   return score;
+}
+
+function footnoteScore(rtl) {
+  const score = clone(fixture);
+  // The fourth standard symbol is narrower than the fifth. Repeating them
+  // leaves enough room for the first label and forces the second to wrap.
+  score.pageSetup.footnoteFormat = 'symbols';
+  score.pageSetup.firstFootnoteNumber = 6 * (symbolRepetitions - 1) + 4;
+  const words = Array.from({ length: rtl ? 9 : 7 }, () =>
+    rtl ? 'سطر' : 'word',
+  ).join(' ');
+  const text = rtl
+    ? `<span style="font-family:'Noto Naskh Arabic'">${words}</span>`
+    : words;
+  score.staff.elements = [
+    ...plainNotes(24),
+    {
+      elementType: 'RichTextBox',
+      content: `<p>${text} <span class="neanes-footnote" data-footnote-id="${boxFootnote}"></span></p>`,
+      height: 20,
+    },
+    ...plainNotes(24, 24),
+  ];
+  score.footnotes = [
+    { id: boxFootnote, staff: { elements: [], lyrics: { text: '' } } },
+  ];
+  if (rtl) {
+    arabicRtlScore(score);
+  }
+  return score;
+}
+
+function footnoteEdits() {
+  // An earlier reference advances the box to the wider automatic symbol.
+  return [
+    {
+      label: 'footnote before the box (wider automatic symbol)',
+      kind: 'footnote',
+      at: 10,
+      boxLabel: wideMarker,
+      expectBoxReuse: true,
+    },
+    {
+      label: 'wide custom marker',
+      kind: 'marker',
+      value: 'WWWWWWWWWWWWWWWW',
+      boxLabel: 'WWWWWWWWWWWWWWWW',
+    },
+    {
+      label: 'automatic marker again',
+      kind: 'marker',
+      value: null,
+      boxLabel: wideMarker,
+    },
+    {
+      label: 'remove the footnote (narrower automatic symbol)',
+      kind: 'footnote',
+      at: 10,
+      boxLabel: narrowMarker,
+    },
+    { label: 'note in the box footnote body', kind: 'footnoteBody' },
+  ];
 }
 
 function headerScore(rich) {
@@ -319,19 +396,34 @@ async function snapshot(editor) {
 }
 
 // Runs in the renderer.
-async function edit(editor, { kind, at }) {
+async function edit(editor, { kind, at, value, expectBoxReuse }, boxFootnote) {
   const test = editor.layoutTest;
   const layouts = editor.layoutDiagnostics.results;
   layouts.length = 0;
   const note = editor.elements.value.filter(
     ({ elementType }) => elementType === 'Note',
   )[at];
-  editor.selectedElement.value = note;
+  const box = expectBoxReuse
+    ? editor.elements.value.find(
+        ({ elementType }) => elementType === 'RichTextBox',
+      )
+    : undefined;
+  const previousBoxLine = box && test.lineForElement(box);
+  editor.selectedElement.value = note ?? null;
   if (kind === 'lineBreak') {
     test.toggleLineBreak(null);
-  } else {
+  } else if (kind === 'pageBreak') {
     test.togglePageBreak();
+  } else if (kind === 'footnote') {
+    test.toggleFootnote(note);
+  } else if (kind === 'marker') {
+    test.setFootnoteMarker(boxFootnote, value);
+  } else {
+    test.appendToFootnote(boxFootnote, 'Oligon');
   }
+  // Compare the published lines before the DOM reports the new height.
+  const boxLineReused =
+    !!previousBoxLine && previousBoxLine === test.lineForElement(box);
   await test.flushRender();
   const result = layouts[0];
   return {
@@ -339,6 +431,7 @@ async function edit(editor, { kind, at }) {
     prepared: result?.prepared,
     total: result?.totalParagraphs,
     shiftedLines: result?.shiftedLines,
+    boxLineReused,
   };
 }
 
@@ -397,7 +490,7 @@ async function run(scenario, forceFull) {
       { label: 'open', settled: opened, geometry: await inEditor(snapshot) },
     ];
     for (const step of scenario.edits) {
-      const layout = await inEditor(edit, step);
+      const layout = await inEditor(edit, step, boxFootnote);
       if (forceFull) {
         assert.equal(
           layout?.status,
@@ -473,6 +566,31 @@ for (const scenario of selectedScenarios) {
     );
     if (unsettled || difference || stale.length) {
       failed = true;
+    }
+    const expected = scenario.edits[index - 1];
+    if (expected?.boxLabel) {
+      // Both modes share the renderer, so also check the label it shows.
+      const text = step.geometry.dom
+        .flat()
+        .find(({ text }) => /word|سطر/.test(text))?.text;
+      if (!text?.endsWith(expected.boxLabel)) {
+        failed = true;
+        console.log(`    BOX LABEL: expected ${expected.boxLabel} in ${text}`);
+      }
+    }
+    if (expected?.expectBoxReuse) {
+      if (step.layout.status !== 'reused' || !step.layout.boxLineReused) {
+        failed = true;
+        console.log('    BOX LINE WAS NOT REUSED');
+      }
+      const boxHeight = (geometry) =>
+        geometry.elements.find(({ type }) => type === 'RichTextBox').height;
+      const before = boxHeight(reused.steps[index - 1].geometry);
+      const after = boxHeight(step.geometry);
+      if (!(after > before)) {
+        failed = true;
+        console.log(`    BOX DID NOT GROW: ${before} -> ${after}`);
+      }
     }
   }
 }

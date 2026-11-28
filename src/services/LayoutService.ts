@@ -33,6 +33,7 @@ import {
   ScoreElement,
 } from '@/models/Element';
 import type { Footer } from '@/models/Footer';
+import type { Footnote } from '@/models/Footnote';
 import type { Header } from '@/models/Header';
 import type {
   InitialMartyriaAmbitusLayout,
@@ -109,6 +110,7 @@ import {
   Scale,
   ScaleNote,
 } from '@/models/Scales';
+import type { Score } from '@/models/Score';
 import type { Workspace } from '@/models/Workspace';
 import { assignMissingElementIds } from '@/models/Workspace';
 import {
@@ -123,6 +125,7 @@ import {
   positionFootnoteMarker,
   resolveFootnoteSpacing,
 } from '@/services/FootnoteLayout';
+import { needsFootnoteSettlement } from '@/services/FootnoteReferences';
 import {
   elementFootnoteIds,
   orderedFootnotes,
@@ -494,6 +497,9 @@ interface PreviousLayout {
   elements: ScoreElement[];
   placements: Map<CompletedParagraph, LinePlacement[]>;
   musicalEntries: Map<ScoreElement, MusicalContext>;
+  // Each footnote's own objects and body elements, so a change to a body
+  // element removed since is still recognized.
+  footnoteObjects: Map<object, Footnote>;
 }
 
 type PreparationRange = Pick<PreparedParagraph, 'entry' | 'leadingHyphen'> & {
@@ -505,7 +511,7 @@ type LayoutStatus =
   | 'reused'
   | 'initial'
   | 'forced full'
-  | 'footnotes'
+  | 'footnote settlement'
   | 'locked lyrics'
   | 'diagnostics'
   | 'range unavailable'
@@ -595,6 +601,56 @@ export class LayoutService {
       isRightAlignedMartyria(element) ||
       (this.isFillWidthElement(element) && !isRightAlignedMartyria(next))
     );
+  }
+
+  private static getFootnoteObjects(score: Score) {
+    const objects = new Map<object, Footnote>();
+    for (const footnote of score.footnotes) {
+      objects.set(footnote, footnote);
+      objects.set(footnote.staff, footnote);
+      objects.set(footnote.staff.elements, footnote);
+      for (const element of footnote.staff.elements) {
+        objects.set(element, footnote);
+      }
+    }
+    return objects;
+  }
+
+  // Footnote bodies are prepared in full on every pass, and they reach the
+  // main staff only through pagination. A body change therefore stands for
+  // its reference, whose paragraph gives the pass a range. The footnote list
+  // changes only together with the references that add or remove an entry.
+  private static getMainStaffChanges(
+    changes: ReadonlySet<object>,
+    score: Score,
+    references: ReturnType<typeof orderedFootnotes>,
+    footnoteObjects: Map<object, Footnote>,
+    previousFootnoteObjects: Map<object, Footnote>,
+  ): ReadonlySet<object> {
+    if (footnoteObjects.size === 0 && previousFootnoteObjects.size === 0) {
+      return changes;
+    }
+    const referenceById = new Map(
+      references.map(({ footnote, reference }) => [footnote.id, reference]),
+    );
+    const result = new Set<object>();
+    for (const changed of changes) {
+      if (changed === score.footnotes) {
+        continue;
+      }
+      const footnote =
+        footnoteObjects.get(changed) ?? previousFootnoteObjects.get(changed);
+      if (footnote === undefined) {
+        result.add(changed);
+        continue;
+      }
+      // An unreferenced body is not laid out.
+      const reference = referenceById.get(footnote.id);
+      if (reference !== undefined) {
+        result.add(reference);
+      }
+    }
+    return result;
   }
 
   private static findEditedParagraphs(
@@ -774,6 +830,7 @@ export class LayoutService {
     endPhase = startSpan('processPages.prepareFootnotes');
     const references = orderedFootnotes(score, true);
     const hasFootnoteReferences = references.length > 0;
+    const footnoteObjects = this.getFootnoteObjects(score);
     const footnotes = this.prepareFootnotes(
       workspace,
       musicalContexts,
@@ -782,15 +839,24 @@ export class LayoutService {
     );
     endPhase();
     endPhase = startSpan('processPages.prepareContentLines');
-    const changes = incremental?.changes;
-    if (hasFootnoteReferences && status !== 'forced full') {
-      status = 'footnotes';
+    const changes =
+      incremental?.changes && previous !== undefined
+        ? this.getMainStaffChanges(
+            incremental.changes,
+            score,
+            references,
+            footnoteObjects,
+            previous.footnoteObjects,
+          )
+        : incremental?.changes;
+    if (status === null && needsFootnoteSettlement(score)) {
+      status = 'footnote settlement';
     } else if (status === null && previous === undefined) {
       status = 'initial';
     } else if (status === null && changes != null && changes.size > 64) {
       status = 'bulk edit';
     }
-    const cacheLayout = trackReuse && !hasFootnoteReferences;
+    const cacheLayout = trackReuse;
     const edit =
       status === null && previous !== undefined && changes?.size
         ? this.findEditedParagraphs(
@@ -1357,6 +1423,7 @@ export class LayoutService {
         elements: elements.slice(),
         placements,
         musicalEntries,
+        footnoteObjects,
       });
     }
     report?.({

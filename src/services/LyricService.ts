@@ -581,9 +581,13 @@ export class LyricService {
       if (currentIndex > 0) {
         const previousElement = elements[currentIndex - 1];
 
+        // A melisma does not continue past an explicit break, so the lyric
+        // after it gets no joining tatweel. A typed tatweel is kept.
         if (
           previousElement.elementType === ElementType.Note &&
           (previousElement as NoteElement).isMelisma &&
+          !previousElement.lineBreak &&
+          !previousElement.pageBreak &&
           !lyrics.startsWith(TATWEEL)
         ) {
           lyrics = TATWEEL + lyrics;

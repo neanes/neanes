@@ -572,6 +572,46 @@ describe('LyricService (Arab phonetics)', () => {
   });
 });
 
+describe('Melkite RTL joining tatweel', () => {
+  const tatweel = '\u0640';
+  const update = (
+    previousFields: Partial<NoteElement>,
+    lyrics: string,
+  ): Partial<NoteElement> | null => {
+    const previous = new NoteElement();
+    Object.assign(previous, { isMelisma: true, ...previousFields });
+    const note = new NoteElement();
+    previous.index = 0;
+    note.index = 1;
+    return new LyricService().getLyricUpdateValues(
+      note,
+      lyrics,
+      [previous, note],
+      true,
+      () => {},
+    );
+  };
+
+  it('joins a lyric after a melisma', () => {
+    expect(update({}, '\u0646\u0627')?.lyrics).toBe(tatweel + '\u0646\u0627');
+  });
+
+  it.each(['lineBreak', 'pageBreak'] as const)(
+    'does not join a lyric across an explicit %s',
+    (breakType) => {
+      expect(update({ [breakType]: true }, '\u0646\u0627')?.lyrics).toBe(
+        '\u0646\u0627',
+      );
+    },
+  );
+
+  it('keeps a typed tatweel across an explicit break', () => {
+    expect(update({ lineBreak: true }, tatweel + '\u0646\u0627')?.lyrics).toBe(
+      tatweel + '\u0646\u0627',
+    );
+  });
+});
+
 describe('Stable lyric defaults', () => {
   it.each([QuantitativeNeume.Hyporoe, QuantitativeNeume.KentemataPlusOligon])(
     'keeps Default syllable acceptance on %s through lyric and neume edits',

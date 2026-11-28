@@ -1347,19 +1347,24 @@ export class LayoutService {
     let phase1GreekMelismaIsActive = false;
     let phase1GreekMelismaSyllables: MelismaSyllables | null = null;
     let pendingGreekPairEndPx: number | null = null;
-    // Orphaned continuation notes stay editable after an explicit break.
-    let afterExplicitBreak = false;
+    // Orphaned continuation notes stay editable after a melisma break.
+    let afterMelismaBreak = false;
     const blockedMelismaNotes = new Set<NoteElement>();
     for (let i = 0; i < elements.length; i++) {
       const element = elements[i];
       if (this.isBreakElement(element)) {
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
+        // A drop cap starts a syllable, so the continuations after it are
+        // its own, not orphans of a melisma that ended at the break.
+        if (element.elementType === ElementType.DropCap) {
+          afterMelismaBreak = false;
+        }
       } else if (element.elementType === ElementType.Note) {
-        if (afterExplicitBreak && this.isPartOfSameMelisma(element)) {
+        if (afterMelismaBreak && this.isPartOfSameMelisma(element)) {
           blockedMelismaNotes.add(element as NoteElement);
         } else {
-          afterExplicitBreak = false;
+          afterMelismaBreak = false;
         }
       }
       if (layoutWorkspace.diagnostics != null) {
@@ -1670,7 +1675,7 @@ export class LayoutService {
           const nextNoteElement = this.getNoteIfPresentAt(elements, i + 1);
           const afterNextNoteElement = this.getNoteIfPresentAt(elements, i + 2);
           const nextGeneratedBounds =
-            !this.endsMelismaAtExplicitBreak(noteElement) &&
+            !this.endsMelismaAtBreak(noteElement) &&
             greekPairEnd == null &&
             nextNoteElement != null &&
             nextNoteElement.lyrics.length === 0 &&
@@ -1784,7 +1789,7 @@ export class LayoutService {
 
           // Combine the graded automatic penalties with the resolved absolute
           // constraint for this boundary, then clamp the total to MAX_COST.
-          // An explicit break ends an atomic melisma group, so a prefix
+          // A melisma break ends an atomic melisma group, so a prefix
           // boundary never carries one.
           const breakConstraint = this.getMelismaBreakConstraint(
             noteElement,
@@ -2304,8 +2309,8 @@ export class LayoutService {
           );
       }
 
-      if (this.endsMelismaAtExplicitBreak(element)) {
-        afterExplicitBreak = true;
+      if (this.endsMelismaAtBreak(element)) {
+        afterMelismaBreak = true;
         phase1GreekMelismaIsActive = false;
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
@@ -4035,7 +4040,7 @@ export class LayoutService {
       this.getUnpunctuatedLyricWidth(noteElement) >
         noteElement.neumeWidth - noteElement.lyricsHorizontalOffset &&
       (!noteElement.isHyphen ||
-        (!this.endsMelismaAtExplicitBreak(noteElement) &&
+        (!this.endsMelismaAtBreak(noteElement) &&
           this.isPartOfSameMelisma(nextNoteElement)))
     );
   }
@@ -4111,8 +4116,8 @@ export class LayoutService {
           protectedBoundaryCount = groupNotes.length;
         }
 
-        // An explicit break ends the group, so no prefix boundary carries one.
-        if (this.endsMelismaAtExplicitBreak(note)) {
+        // A melisma break ends the group, so no prefix boundary carries one.
+        if (this.endsMelismaAtBreak(note)) {
           break;
         }
 
@@ -4135,7 +4140,7 @@ export class LayoutService {
       }
 
       if (
-        !this.endsMelismaAtExplicitBreak(note) &&
+        !this.endsMelismaAtBreak(note) &&
         this.hasNonNoteMelismaContinuation(elements, noteIndex + 1)
       ) {
         continue;
@@ -4150,7 +4155,7 @@ export class LayoutService {
       // group is too narrow. Negative spacing can narrow the span after it
       // first contains the lyric, so the first containing note is not enough.
       // When the whole group, which ends at the melisma's end or first
-      // explicit break, is narrower than its lyric, every boundary is
+      // melisma break, is narrower than its lyric, every boundary is
       // protected.
       protectedBoundaryCount = Math.min(
         protectedBoundaryCount,
@@ -7210,12 +7215,10 @@ export class LayoutService {
                 element.melismaWidth = 0;
               }
             } else {
-              const nextNoteElement = nextElement as NoteElement;
-
-              if (
-                nextElement == null ||
-                nextElement.elementType !== ElementType.Note
-              ) {
+              // At an automatic wrap the next note is on the next line, so
+              // the tatweel runs to the end of this line, as underscores and
+              // hyphens do.
+              if (nextNoteElement == null) {
                 if (finalElement) {
                   end =
                     finalElement.x +
@@ -7261,7 +7264,7 @@ export class LayoutService {
         }
 
         const last = line.elements.at(-1);
-        if (this.endsMelismaAtExplicitBreak(last)) {
+        if (this.endsMelismaAtBreak(last)) {
           phase2GreekMelismaIsActive = false;
         }
         previousLineEndingMayShowLeadingLyricHyphen =
@@ -9932,7 +9935,7 @@ export class LayoutService {
         if (
           greekIsActive &&
           note.quantitativeNeume === QuantitativeNeume.Apostrophos &&
-          !this.endsMelismaAtExplicitBreak(note) &&
+          !this.endsMelismaAtBreak(note) &&
           next?.quantitativeNeume === QuantitativeNeume.Hyporoe &&
           this.isPartOfSameMelisma(next) &&
           next.lyrics.length === 0
@@ -9940,7 +9943,7 @@ export class LayoutService {
           pairs.set(note, next);
         }
       }
-      if (this.endsMelismaAtExplicitBreak(element)) {
+      if (this.endsMelismaAtBreak(element)) {
         greekIsActive = false;
       }
     }
@@ -10032,7 +10035,7 @@ export class LayoutService {
         )) {
           texts.set(note, text);
         }
-        if (this.endsMelismaAtExplicitBreak(line.elements.at(-1))) {
+        if (this.endsMelismaAtBreak(line.elements.at(-1))) {
           syllables = null;
         }
       }
@@ -10245,7 +10248,7 @@ export class LayoutService {
         if (crossedNonNoteElement) {
           return true;
         }
-        if (this.endsMelismaAtExplicitBreak(element)) {
+        if (this.endsMelismaAtBreak(element)) {
           return false;
         }
 
@@ -10253,7 +10256,7 @@ export class LayoutService {
       }
 
       if (
-        this.endsMelismaAtExplicitBreak(element) ||
+        this.endsMelismaAtBreak(element) ||
         !this.isMelismaContinuationElement(element)
       ) {
         return false;
@@ -10289,8 +10292,17 @@ export class LayoutService {
     return null;
   }
 
-  private static endsMelismaAtExplicitBreak(element: ScoreElement | undefined) {
-    return element !== undefined && (element.lineBreak || element.pageBreak);
+  // Melismas end at paragraph breaks: explicit line and page breaks, and the
+  // melisma continuation elements that end a paragraph on their own (a
+  // right-aligned martyria, a fill-width text box). Automatic wraps continue.
+  private static endsMelismaAtBreak(element: ScoreElement | undefined) {
+    return (
+      element !== undefined &&
+      (element.lineBreak ||
+        element.pageBreak ||
+        isRightAlignedMartyria(element) ||
+        this.isFillWidthElement(element))
+    );
   }
 
   private static isBreakElement(element: ScoreElement) {
@@ -10315,7 +10327,7 @@ export class LayoutService {
     firstElementOnNextLine: ScoreElement | null,
     startIndex: number,
   ) {
-    if (this.endsMelismaAtExplicitBreak(line.elements.at(-1))) {
+    if (this.endsMelismaAtBreak(line.elements.at(-1))) {
       firstElementOnNextLine = null;
     }
 

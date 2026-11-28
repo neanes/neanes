@@ -323,6 +323,41 @@ describe('Melisma continuation across line breaks', () => {
   );
 });
 
+describe('Melisma continuation across implicit paragraph breaks', () => {
+  it.each(['right-aligned martyria', 'fill-width text box'] as const)(
+    'ends the melisma before a line-ending %s',
+    (boundaryType) => {
+      const start = new NoteElement();
+      start.isMelisma = true;
+      start.isMelismaStart = true;
+      const continuation = new NoteElement();
+      continuation.isMelisma = true;
+      let boundary: MartyriaElement | TextBoxElement;
+      if (boundaryType === 'right-aligned martyria') {
+        boundary = new MartyriaElement();
+        boundary.alignRight = true;
+      } else {
+        boundary = new TextBoxElement();
+        boundary.inline = true;
+        boundary.fillWidth = true;
+      }
+      const following = new NoteElement();
+      following.isMelisma = true;
+
+      const { finalElement, nextElement } =
+        LayoutService.findFinalAndNextElement(
+          getLine(start, continuation, boundary),
+          start,
+          following,
+          1,
+        );
+
+      expect(finalElement).toBe(continuation);
+      expect(nextElement).toBeNull();
+    },
+  );
+});
+
 describe.each([true, false])(
   'LayoutService.findFinalAndNextElement',
   (isHyphen) => {

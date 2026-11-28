@@ -14,7 +14,6 @@ import {
 } from 'pdf-lib';
 
 import {
-  EmptyElement,
   RichTextBoxElement,
   TextBoxElement,
 } from '../../../src/models/save/v1/Element';
@@ -75,7 +74,7 @@ export async function checkPdfBatches(
     page.pageBreak = true;
     return page;
   });
-  snapshot.score.staff.elements = [first, ...middle, last, new EmptyElement()];
+  snapshot.score.staff.elements = [first, ...middle, last];
   const footer = new TextBoxElement();
   footer.content = 'Page $p / $n';
   Object.assign(snapshot.score.pageSetup, {

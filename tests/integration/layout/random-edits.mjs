@@ -21,6 +21,7 @@ const { values } = parseArgs({
     steps: { type: 'string' },
     score: { type: 'string', multiple: true },
     replay: { type: 'string' },
+    sequence: { type: 'string', multiple: true },
   },
 });
 
@@ -28,7 +29,8 @@ if (values.help) {
   console.log(
     'Usage: node tests/integration/layout/random-edits.mjs [--skip-build] [--incremental] [--facing]\n' +
       '       [--seed <uint32>] [--steps <count>] [--score <file.byz|file.byzx>]\n' +
-      '       or [--replay <failure.json>]. Repeat --seed or --score for a matrix.',
+      '       or [--replay <failure.json>]. Repeat --seed or --score for a matrix.\n' +
+      '       --incremental --sequence <name> runs only that scripted sequence.',
   );
   process.exit(0);
 }
@@ -504,7 +506,8 @@ async function runSequence(fixture, seed) {
       fixture.checkIncremental ||
       fixture.openingModeKey ||
       fixture.pageMoves ||
-      fixture.footnotes
+      fixture.footnotes ||
+      fixture.melismaLookahead
     ) {
       assert.equal(
         path.extname(fixture.file),
@@ -580,6 +583,39 @@ async function runSequence(fixture, seed) {
           scaleNote: 'Pa',
           martyria: 'Alpha',
         });
+      }
+      if (fixture.melismaLookahead) {
+        // A melisma before a right-aligned martyria, which ends its
+        // paragraph, then a tempo and a continuation note in the next one.
+        // The melisma ends at the martyria, so editing the note after the
+        // tempo must not change the earlier paragraph.
+        const note = (fields) => ({
+          elementType: 'Note',
+          quantitativeNeume: 'Ison',
+          lyrics: 'la',
+          ...fields,
+        });
+        const fillers = Array.from({ length: 4 }, () => note());
+        // Paragraphs around it keep the edit below the bulk-edit cutoff.
+        const paragraphs = Array.from({ length: 3 }, () => [
+          ...fillers,
+          note({ lineBreak: true }),
+        ]).flat();
+        score.staff.elements = [
+          ...paragraphs,
+          ...fillers,
+          note({ lyrics: 'glorified', isMelisma: true, isMelismaStart: true }),
+          note({ quantitativeNeume: 'Oligon', lyrics: '', isMelisma: true }),
+          { elementType: 'Martyria', auto: true, alignRight: true },
+          { elementType: 'Tempo', neume: 'Moderate' },
+          note({ quantitativeNeume: 'Oligon', lyrics: '', isMelisma: true }),
+          ...fillers,
+          note({ lineBreak: true }),
+          ...paragraphs,
+        ];
+        if (fixture.rtl) {
+          arabicRtlScore(score);
+        }
       }
       await writeFile(file, JSON.stringify(score));
     } else {
@@ -706,23 +742,37 @@ async function runSequence(fixture, seed) {
       { kind: 'footnote', again: 'ref' },
       { kind: 'undo' },
     ].map((edit) => ({ expectReuse: true, ...edit }));
+    // The note after the tempo gets a syllable, then is a continuation again.
+    const lookahead = { index: 23, type: 'Note' };
+    const melismaLookaheadEdits = [
+      {
+        kind: 'lyrics',
+        target: lookahead,
+        value: fixture.rtl ? '\u0646\u0627' : 'have',
+      },
+      { kind: 'undo' },
+      { kind: 'redo' },
+      { kind: 'undo' },
+    ].map((edit) => ({ expectReuse: true, ...edit }));
     const scriptedEdits = fixture.pageMoves
       ? pageMoveEdits
-      : fixture.footnotes
-        ? footnoteEdits
-        : fixture.checkIncremental
-          ? [
-              {
-                kind: 'ison',
-                target: { index: 3, type: 'Note' },
-                expectReuse: true,
-              },
-              { kind: 'delete', target: { index: 0, type: 'TextBox' } },
-            ]
-          : fixture.openingModeKey
-            ? // The music after the deleted key starts from the score default.
-              [{ kind: 'delete', target: { index: 0, type: 'ModeKey' } }]
-            : null;
+      : fixture.melismaLookahead
+        ? melismaLookaheadEdits
+        : fixture.footnotes
+          ? footnoteEdits
+          : fixture.checkIncremental
+            ? [
+                {
+                  kind: 'ison',
+                  target: { index: 3, type: 'Note' },
+                  expectReuse: true,
+                },
+                { kind: 'delete', target: { index: 0, type: 'TextBox' } },
+              ]
+            : fixture.openingModeKey
+              ? // The music after the deleted key starts from the score default.
+                [{ kind: 'delete', target: { index: 0, type: 'ModeKey' } }]
+              : null;
     const edits = replay?.edits ?? scriptedEdits;
     const count = () => edits?.length ?? steps;
     for (let i = 0; i < count(); i++) {
@@ -919,6 +969,13 @@ if (values.incremental && !replay) {
     { name: 'opening-mode-key', file: fixture, openingModeKey: true },
     { name: 'page-moves', file: fixture, pageMoves: 'plain' },
     { name: 'footnotes', file: fixture, footnotes: true },
+    { name: 'melisma-lookahead', file: fixture, melismaLookahead: true },
+    {
+      name: 'melisma-lookahead-rtl',
+      file: fixture,
+      melismaLookahead: true,
+      rtl: true,
+    },
     { name: 'footnotes-rtl', file: fixture, footnotes: true, rtl: true },
     { name: 'page-moves-headers', file: fixture, pageMoves: 'headers' },
     { name: 'page-moves-rtl', file: fixture, pageMoves: 'plain', rtl: true },
@@ -928,14 +985,17 @@ if (values.incremental && !replay) {
       pageMoves: 'headers',
       rtl: true,
     },
-  ]) {
+  ].filter(
+    ({ name }) =>
+      values.sequence === undefined || values.sequence.includes(name),
+  )) {
     if (!(await runSequence(scripted, 1))) {
       process.exitCode = 1;
     }
   }
 }
 
-for (const score of fixtures) {
+for (const score of values.sequence === undefined ? fixtures : []) {
   for (const seed of replay ? [replay.seed] : seeds) {
     if (!(await runSequence(score, seed))) {
       process.exitCode = 1;

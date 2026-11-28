@@ -954,13 +954,10 @@ async function runSequence(fixture, seed) {
                 melismaText: elements[18].melismaText,
                 lyrics: elements[18].lyrics,
                 hidesOrphanedTatweel: elements[18].hidesOrphanedTatweel,
-                // Rendered lone-tatweel lyrics: the orphan's is transparent.
+                // Rendered lone-tatweel lyrics: only the orphan's is hidden.
                 drawnTatweels: [...document.querySelectorAll('.lyrics')]
                   .filter((lyric) => lyric.textContent === '\u0640')
-                  .map(
-                    (lyric) =>
-                      getComputedStyle(lyric).color === 'rgba(0, 0, 0, 0)',
-                  ),
+                  .map((lyric) => getComputedStyle(lyric).opacity === '0'),
               };
             });
             // An RTL orphan keeps its stored tatweel but does not draw it.

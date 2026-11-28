@@ -381,11 +381,12 @@
               }"
               :style="{
                 minWidth: withZoom(element.width),
-                // Keep the hidden glyph's width; show it while editing.
-                color:
+                // Hide the glyph's fill and stroke but keep its width, and
+                // show it while editing.
+                opacity:
                   (element as NoteElement).hidesOrphanedTatweel &&
                   element !== selectedLyrics
-                    ? 'transparent'
+                    ? 0
                     : undefined,
               }"
               :content="(element as NoteElement).lyrics"

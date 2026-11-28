@@ -507,7 +507,8 @@ async function runSequence(fixture, seed) {
       fixture.openingModeKey ||
       fixture.pageMoves ||
       fixture.footnotes ||
-      fixture.melismaLookahead
+      fixture.melismaLookahead ||
+      fixture.melismaBlockBreak
     ) {
       assert.equal(
         path.extname(fixture.file),
@@ -627,6 +628,47 @@ async function runSequence(fixture, seed) {
           { elementType: 'Martyria', auto: true, alignRight: true },
           { elementType: 'Tempo', neume: 'Moderate' },
           note({ quantitativeNeume: 'Oligon', lyrics: '', isMelisma: true }),
+          ...fillers,
+          note({ lineBreak: true }),
+          ...paragraphs,
+        ];
+        if (fixture.rtl) {
+          arabicRtlScore(score);
+        }
+      }
+      if (fixture.melismaBlockBreak) {
+        // A hyphenated melisma split by a block text box. The continuation
+        // after the box starts a new paragraph, so it is an orphan.
+        const note = (fields) => ({
+          elementType: 'Note',
+          quantitativeNeume: 'Ison',
+          lyrics: 'la',
+          ...fields,
+        });
+        const fillers = Array.from({ length: 4 }, () => note());
+        const paragraphs = Array.from({ length: 3 }, () => [
+          ...fillers,
+          note({ lineBreak: true }),
+        ]).flat();
+        const continuation = () =>
+          note({ lyrics: '', isMelisma: true, isHyphen: true });
+        score.staff.elements = [
+          ...paragraphs,
+          note({
+            lyrics: 'glo',
+            isMelisma: true,
+            isMelismaStart: true,
+            isHyphen: true,
+          }),
+          continuation(),
+          {
+            elementType: 'TextBox',
+            content: 'Block',
+            height: 24,
+            customHeight: 24,
+          },
+          continuation(),
+          note({ lyrics: 'ry' }),
           ...fillers,
           note({ lineBreak: true }),
           ...paragraphs,
@@ -772,25 +814,40 @@ async function runSequence(fixture, seed) {
       { kind: 'redo' },
       { kind: 'undo' },
     ].map((edit) => ({ expectReuse: true, ...edit }));
+    // Delete the box between the two halves of the melisma, then restore it.
+    const blockBreakEdits = [
+      {
+        kind: 'lyrics',
+        target: { index: 19, type: 'Note' },
+        value: fixture.rtl ? '\u0646\u0627' : 'ries',
+        expect: ['orphan'],
+      },
+      { kind: 'delete', target: { index: 17, type: 'TextBox' } },
+      { kind: 'undo', expect: ['orphan'] },
+      { kind: 'redo' },
+      { kind: 'undo', expect: ['orphan'] },
+    ];
     const scriptedEdits = fixture.pageMoves
       ? pageMoveEdits
-      : fixture.melismaLookahead
-        ? melismaLookaheadEdits
-        : fixture.footnotes
-          ? footnoteEdits
-          : fixture.checkIncremental
-            ? [
-                {
-                  kind: 'ison',
-                  target: { index: 3, type: 'Note' },
-                  expectReuse: true,
-                },
-                { kind: 'delete', target: { index: 0, type: 'TextBox' } },
-              ]
-            : fixture.openingModeKey
-              ? // The music after the deleted key starts from the score default.
-                [{ kind: 'delete', target: { index: 0, type: 'ModeKey' } }]
-              : null;
+      : fixture.melismaBlockBreak
+        ? blockBreakEdits
+        : fixture.melismaLookahead
+          ? melismaLookaheadEdits
+          : fixture.footnotes
+            ? footnoteEdits
+            : fixture.checkIncremental
+              ? [
+                  {
+                    kind: 'ison',
+                    target: { index: 3, type: 'Note' },
+                    expectReuse: true,
+                  },
+                  { kind: 'delete', target: { index: 0, type: 'TextBox' } },
+                ]
+              : fixture.openingModeKey
+                ? // The music after the deleted key starts from the score default.
+                  [{ kind: 'delete', target: { index: 0, type: 'ModeKey' } }]
+                : null;
     const edits = replay?.edits ?? scriptedEdits;
     const count = () => edits?.length ?? steps;
     for (let i = 0; i < count(); i++) {
@@ -875,6 +932,27 @@ async function runSequence(fixture, seed) {
               startsAfter.some(({ inParagraph }) => inParagraph),
               `Expected a page split inside a paragraph: ${JSON.stringify(startsAfter)}`,
             );
+            break;
+          }
+          case 'orphan': {
+            // The continuation after the block box shows no melisma.
+            const orphan = await inEditor((editor) => {
+              const elements = editor.elements.value;
+              return {
+                before: elements[17].elementType,
+                type: elements[18].elementType,
+                isFullMelisma: elements[18].isFullMelisma,
+                hyphens: elements[18].hyphenOffsets.length,
+                melismaText: elements[18].melismaText,
+              };
+            });
+            assert.deepEqual(orphan, {
+              before: 'TextBox',
+              type: 'Note',
+              isFullMelisma: false,
+              hyphens: 0,
+              melismaText: '',
+            });
             break;
           }
           case 'bodyChanged': {
@@ -988,6 +1066,13 @@ if (values.incremental && !replay) {
     { name: 'page-moves', file: fixture, pageMoves: 'plain' },
     { name: 'footnotes', file: fixture, footnotes: true },
     { name: 'melisma-lookahead', file: fixture, melismaLookahead: true },
+    { name: 'melisma-block-break', file: fixture, melismaBlockBreak: true },
+    {
+      name: 'melisma-block-break-rtl',
+      file: fixture,
+      melismaBlockBreak: true,
+      rtl: true,
+    },
     {
       name: 'melisma-lookahead-rtl',
       file: fixture,

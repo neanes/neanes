@@ -2153,6 +2153,11 @@ export class LayoutService {
         placementGreekMelismaIsActive = false;
         phase1GreekMelismaSyllables = null;
         pendingGreekPairEndPx = null;
+        // A drop cap starts a syllable, so the continuations after it are
+        // its own, not orphans of a melisma that ended at the break.
+        if (element.elementType === ElementType.DropCap) {
+          afterMelismaBreak = false;
+        }
       } else if (element.elementType === ElementType.Note) {
         if (afterMelismaBreak && this.isPartOfSameMelisma(element)) {
           blockedMelismaNotes.add(element as NoteElement);

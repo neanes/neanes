@@ -14,7 +14,18 @@ export interface Command {
   execute(): boolean;
   undo(): boolean;
   redo(): boolean;
+  // The objects whose state the command changes, or null (or no method) when
+  // unknown. Incremental layout relies on this to find changed paragraphs.
+  affectedObjects?(): readonly object[] | null;
 }
+
+export function getAffectedObjects(command: Command) {
+  return command.affectedObjects?.() ?? null;
+}
+
+// Receives the objects changed by an executed, undone or redone command, or
+// null when they are unknown.
+type ChangeListener = (affected: readonly object[] | null) => void;
 
 interface HistoryEntry {
   commands: Command[];
@@ -75,6 +86,7 @@ export class CommandService {
   private index: number = -1;
 
   private listeners = new Set<HistoryListener>();
+  private changeListeners = new Set<ChangeListener>();
 
   constructor(private contentChanges = new ContentChangeTracker()) {}
 
@@ -92,6 +104,23 @@ export class CommandService {
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  public subscribeChanges(listener: ChangeListener): () => void {
+    this.changeListeners.add(listener);
+    return () => {
+      this.changeListeners.delete(listener);
+    };
+  }
+
+  private notifyChanged(command: Command) {
+    if (this.changeListeners.size === 0) {
+      return;
+    }
+    const affected = getAffectedObjects(command);
+    for (const listener of this.changeListeners) {
+      listener(affected);
+    }
   }
 
   private get state(): HistoryState {
@@ -121,7 +150,13 @@ export class CommandService {
     } catch (error) {
       // The failing command or earlier commands may already have changed data.
       this.contentChanges.markChanged();
+      for (const command of batch) {
+        this.notifyChanged(command);
+      }
       throw error;
+    }
+    for (const command of applied) {
+      this.notifyChanged(command);
     }
 
     if (applied.length === 0) {
@@ -173,9 +208,13 @@ export class CommandService {
     try {
       for (const command of commands) {
         changed = command[direction]() || changed;
+        this.notifyChanged(command);
       }
     } catch (error) {
       this.contentChanges.markChanged();
+      for (const command of commands) {
+        this.notifyChanged(command);
+      }
       throw error;
     }
     if (changed) {

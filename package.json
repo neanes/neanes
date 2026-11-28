@@ -31,7 +31,8 @@
     "web:build": "vue-tsc --noEmit && vite build --mode web",
     "test:integration:mcp": "node tests/integration/mcp/run.mjs",
     "test:integration:rendering": "node tests/integration/rendering/background-pdf-smoke.mjs",
-    "test:integration:saving": "node tests/integration/saving/revision-smoke.mjs"
+    "test:integration:saving": "node tests/integration/saving/revision-smoke.mjs",
+    "test:integration:layout": "node tests/integration/layout/verify-edits.mjs"
   },
   "main": "dist-electron/main/index.js",
   "dependencies": {

@@ -172,6 +172,39 @@ describe('LayoutService.calculateMartyriae', () => {
     expect(mainMartyria.note).toBe(Note.Thi);
   });
 
+  it('limits a pass to a mode-key span and records the checkpoint at its end', () => {
+    const setup = new PageSetup();
+    const first = new ModeKeyElement();
+    const note = new NoteElement();
+    const martyria = new MartyriaElement();
+    const second = new ModeKeyElement();
+    second.scaleNote = ScaleNote.Ga;
+    const later = new MartyriaElement();
+    const elements = [first, note, martyria, second, later];
+    LayoutService.calculateMartyriae(elements, setup);
+    expect(later.note).toBe(Note.Ga);
+    note.quantitativeNeume = QuantitativeNeume.Oligon;
+    later.note = Note.Pa;
+    const musicalEntries = new Map();
+    const changedAmbitus: ModeKeyElement[] = [];
+    LayoutService.calculateMartyriae(
+      elements,
+      setup,
+      undefined,
+      { musicalEntries, changedAmbitus },
+      { start: 0, end: 3 },
+    );
+    expect(martyria.note).toBe(Note.Vou);
+    expect(first.ambitusHighNote).toBe(Note.Vou);
+    expect(changedAmbitus).toEqual([]);
+    expect(musicalEntries.get(second)).toEqual({
+      note: getNoteValue(Note.Vou),
+      scale: Scale.Diatonic,
+      shift: 0,
+    });
+    expect(later.note).toBe(Note.Pa);
+  });
+
   it('inherits scale and virtual pitch, while a manual body martyria can reset them', () => {
     const setup = new PageSetup();
     const note = new NoteElement();

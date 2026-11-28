@@ -25,6 +25,27 @@ export function elementFootnoteIds(element: ScoreElement): string[] {
       : [];
 }
 
+// Page-restarted automatic labels in rich text change its measured width
+// with the page, so layout must settle against measured heights.
+export function needsFootnoteSettlement(score: Score) {
+  if (score.pageSetup.footnoteNumbering !== 'page') {
+    return false;
+  }
+  const automatic = new Set(
+    score.footnotes
+      .filter((body) => body.marker === null)
+      .map((body) => body.id),
+  );
+  return (
+    automatic.size > 0 &&
+    score.staff.elements.some(
+      (element) =>
+        element instanceof RichTextBoxElement &&
+        elementFootnoteIds(element).some((id) => automatic.has(id)),
+    )
+  );
+}
+
 // Before pagination, count through each run between explicit page breaks.
 // This bounds the label ordinal before any automatic page breaks are known.
 export function orderedFootnotes(score: Score, beforePagination = false) {

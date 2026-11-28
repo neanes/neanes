@@ -8,8 +8,17 @@ export interface ReplaceElementInCollectionCommandArgs<T> {
 
 export class ReplaceElementInCollectionCommand<T> implements Command {
   private replacedElement?: T;
+  private applied = false;
 
   constructor(private args: ReplaceElementInCollectionCommandArgs<T>) {}
+
+  public affectedObjects() {
+    return [
+      this.args.collection,
+      this.args.element,
+      ...(this.replacedElement === undefined ? [] : [this.replacedElement]),
+    ] as object[];
+  }
 
   public execute() {
     this.replacedElement = this.args.collection[this.args.replaceAtIndex];
@@ -20,25 +29,26 @@ export class ReplaceElementInCollectionCommand<T> implements Command {
     }
 
     this.args.collection.splice(this.args.replaceAtIndex, 1, this.args.element);
+    this.applied = true;
     return true;
   }
 
   public undo() {
-    if (this.replacedElement) {
+    if (this.applied && this.replacedElement !== undefined) {
       this.args.collection.splice(
         this.args.replaceAtIndex,
         1,
         this.replacedElement,
       );
 
-      this.replacedElement = undefined;
+      this.applied = false;
       return true;
     }
     return false;
   }
 
   public redo() {
-    if (!this.replacedElement) {
+    if (!this.applied) {
       return this.execute();
     }
     return false;

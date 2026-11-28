@@ -90,8 +90,15 @@ export async function connectCdp(
   }
   let nextId = 0;
   const pending = new Map();
+  const listeners = new Map();
   socket.addEventListener('message', (event) => {
     const reply = JSON.parse(event.data);
+    if (reply.method) {
+      for (const listener of listeners.get(reply.method) ?? []) {
+        listener(reply.params);
+      }
+      return;
+    }
     const request = pending.get(reply.id);
     if (!request) {
       return;
@@ -144,6 +151,9 @@ export async function connectCdp(
   }
   return {
     send,
+    on(method, listener) {
+      listeners.set(method, [...(listeners.get(method) ?? []), listener]);
+    },
     async evaluate(expression, options) {
       return (
         await send(

@@ -10,6 +10,10 @@ import type {
   ModelRootElement,
 } from 'ckeditor5';
 
+import type { RichTextBoxElement } from '@/models/Element';
+import type { PageSetup } from '@/models/PageSetup';
+import { activeRichTextContentKeys } from '@/services/RichTextFootnotes';
+
 export const RICH_TEXT_LANGUAGE_OPTIONS = [
   { title: 'Greek', languageCode: 'el', textDirection: 'ltr' },
   { title: 'Arabic', languageCode: 'ar', textDirection: 'rtl' },
@@ -38,6 +42,19 @@ export function getRichTextLanguage(
   }
 
   return `${owner.languageCode}:${owner.textDirection}`;
+}
+
+export function getInitialRichTextBoxLanguage(
+  box: RichTextBoxElement,
+  pageSetup: PageSetup,
+) {
+  return (
+    getRichTextLanguage(box) ??
+    ((pageSetup.melkiteRtl || pageSetup.numerals === 'easternArabic') &&
+    activeRichTextContentKeys(box).every((key) => box[key].trim() === '')
+      ? 'ar:rtl'
+      : null)
+  );
 }
 
 export function setRichTextLanguage(

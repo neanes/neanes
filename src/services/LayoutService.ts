@@ -7013,6 +7013,8 @@ export class LayoutService {
           element.showLeadingLyricHyphen = false;
           element.melismaWidth = 0;
           element.isFullMelisma = isIntermediateMelismaAtStartOfLine;
+          element.hidesOrphanedTatweel =
+            blockedMelismaNotes.has(element) && element.lyrics === TATWEEL;
 
           // A leading hyphen between written syllables is allowed at a line
           // break even though the melisma itself cannot cross it.

@@ -379,7 +379,15 @@
               :class="{
                 selectedLyrics: element === selectedLyrics,
               }"
-              :style="{ minWidth: withZoom(element.width) }"
+              :style="{
+                minWidth: withZoom(element.width),
+                // Keep the hidden glyph's width; show it while editing.
+                color:
+                  (element as NoteElement).hidesOrphanedTatweel &&
+                  element !== selectedLyrics
+                    ? 'transparent'
+                    : undefined,
+              }"
               :content="(element as NoteElement).lyrics"
               :editable="!printMode && !isLyricsLocked(element)"
               white-space="nowrap"

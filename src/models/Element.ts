@@ -557,6 +557,10 @@ export class NoteElement extends FootnoteAnchorElement {
   public leadingLyricHyphenOffset: number = 0;
   public leadingLyricHyphenReservationWidth: number = 0;
   public isFullMelisma: boolean = false;
+  // An orphaned continuation after a melisma break whose stored lyric is the
+  // lone joining tatweel. The glyph is not drawn; the lyric is kept, so
+  // removing the break restores the continuation.
+  public hidesOrphanedTatweel: boolean = false;
   public melismaWidth: number = 0;
   public lyricsVerticalOffset: number = 0;
   public lyricsHorizontalOffset: number = 0;

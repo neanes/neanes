@@ -587,11 +587,11 @@ Distance Between Baselines = Lyrics Vertical Offset + Neume Descent + Lyrics Asc
                 : undefined,
             } as LatexNoteElement;
 
-            const hasLyrics = note.lyrics != '' || note.melismaText != '';
+            const lyrics = note.hidesOrphanedTatweel ? '' : note.lyrics;
+            const hasLyrics = lyrics != '' || note.melismaText != '';
 
             if (hasLyrics) {
-              noteInfo.lyrics =
-                note.lyrics != '' ? note.lyrics : note.melismaText;
+              noteInfo.lyrics = lyrics != '' ? lyrics : note.melismaText;
               noteInfo.lyricsLeftAlign = note.alignLeft || undefined;
               noteInfo.lyricsHorizontalOffset =
                 note.lyricsHorizontalOffset != 0

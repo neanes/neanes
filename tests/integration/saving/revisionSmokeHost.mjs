@@ -89,6 +89,62 @@ async function checkBackgroundTabSave(evaluate) {
   );
 }
 
+async function checkMeasurementFailureSave(evaluate) {
+  // A failed rich-text height measurement must not block saving the selected
+  // tab: the save writes the last measured heights.
+  const scorePath = path.join(output, 'measurement-failure.byzx');
+  const result = await evaluate(`
+    (async () => {
+      const editor = window.__saveSmoke;
+      editor.onFileMenuNewScore();
+      const workspace = editor.selectedWorkspace;
+      workspace.filePath = ${JSON.stringify(scorePath)};
+      editor.onFileMenuInsertRichTextBox();
+      // Let the new box's editor start, and save its initial content first.
+      for (let attempt = 0; ; attempt++) {
+        const box = document.querySelector('.rich-text-box-container.selected');
+        if (box?.__vueParentComponent.setupState.getEditorInstance()?.state === 'ready') {
+          break;
+        }
+        if (attempt > 200) {
+          throw new Error('Rich-text editor did not start');
+        }
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      await editor.saveWorkspace(workspace);
+      editor.updateParagraphStyles(
+        workspace.score.paragraphStyles.map((style) => {
+          const clone = style.clone();
+          if (clone.id === 'default-text') {
+            clone.overrides = { ...clone.overrides, fontSize: 36 };
+          }
+          return clone;
+        }),
+      );
+      const pending = editor.pendingRichTextBoxRecalculations.has(workspace);
+      const saving = editor.saveWorkspace(workspace);
+      // The same path the measuring component reports a failure through.
+      editor.richTextBoxMeasurement.fail(new Error('Measurement failed'));
+      const saveResult = await saving;
+      return {
+        pending,
+        success: saveResult.success,
+        dirty: workspace.hasUnsavedChanges,
+      };
+    })()
+  `);
+  assert.deepEqual(result, { pending: true, success: true, dirty: false });
+  const saved = JSON.parse(await readFile(scorePath, 'utf8'));
+  assert.ok(
+    saved.staff.elements.some(
+      (element) => element.elementType === 'RichTextBox',
+    ),
+  );
+  console.log(
+    'PASS: a failed rich-text measurement does not block saving; the save keeps the last heights',
+  );
+}
+
 async function run() {
   await app.whenReady();
   const window = await waitFor(
@@ -358,6 +414,7 @@ async function run() {
     console.log('PASS: a no-op note update keeps the rendered note mounted');
 
     await checkBackgroundTabSave(evaluate);
+    await checkMeasurementFailureSave(evaluate);
 
     await writeFile(
       path.join(output, 'editor.png'),
@@ -966,6 +1023,7 @@ async function run() {
     'PASS: a recovered document saved with newer edits becomes normally clean after undo; immediate close removes all recovery candidates',
   );
   await checkBackgroundTabSave(evaluate);
+  await checkMeasurementFailureSave(evaluate);
 
   await writeFile(
     path.join(output, 'editor.png'),

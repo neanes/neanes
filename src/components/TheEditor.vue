@@ -6601,7 +6601,7 @@ async function saveWorkspaceWithRevision<T extends DocumentSaveResult>(
   persist: () => Promise<T>,
 ) {
   if (pendingRichTextBoxRecalculations.has(workspace)) {
-    await awaitRichTextBoxRecalculation(workspace, { requireSelected: false });
+    await awaitRichTextBoxRecalculation(workspace, { requireHeights: false });
   }
   return saveDocument(workspace, persist, {
     prepare: prepareWorkspaceForSerialization,
@@ -8796,16 +8796,17 @@ function cancelRichTextBoxRecalculation() {
   richTextBoxMeasurement.cancel();
 }
 
-// Output needs the measured heights, so the workspace must stay selected.
-// Saving does not: a background workspace is saved with its last measured
-// heights and stays pending, so it is measured again when it is selected.
+// Output needs current measured heights: the workspace must stay selected and
+// the measurement must succeed. Saving does not: it writes the last measured
+// heights when the workspace is in the background or the measurement fails,
+// and the workspace stays pending, so it is measured again later.
 async function awaitRichTextBoxRecalculation(
   workspace: Workspace,
-  { requireSelected }: { requireSelected: boolean },
+  { requireHeights }: { requireHeights: boolean },
 ) {
   while (pendingRichTextBoxRecalculations.has(workspace)) {
     if (workspace !== selectedWorkspace.value) {
-      if (requireSelected) {
+      if (requireHeights) {
         throw new Error('LAYOUT_CONFLICT');
       }
       return;
@@ -8814,7 +8815,10 @@ async function awaitRichTextBoxRecalculation(
       recalculateRichTextBoxHeights();
     }
     if ((await richTextBoxCalculation?.done) === 'failed') {
-      throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+      if (requireHeights) {
+        throw new Error('TEXT_BOX_MEASUREMENT_FAILED');
+      }
+      return;
     }
   }
 }
@@ -9019,7 +9023,7 @@ async function awaitBrowserOutputLayout(workspace: Workspace) {
       throw new Error('LAYOUT_CONFLICT');
     }
   } else {
-    await awaitRichTextBoxRecalculation(workspace, { requireSelected: true });
+    await awaitRichTextBoxRecalculation(workspace, { requireHeights: true });
     await nextTick();
   }
   if (source !== toRaw(selectedWorkspace.value) || source.score !== score) {
